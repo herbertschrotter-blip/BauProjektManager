@@ -9,7 +9,9 @@
 
 | Feature | Beschreibung | Status |
 |---------|-------------|--------|
-| SQLite-Datenbank | Projekte dauerhaft speichern in bpm.db | ⬜ Nächster Schritt |
+| SQLite-Datenbank | Projekte dauerhaft speichern in bpm.db | ✅ Erledigt |
+| ID-Fix | Auto-Increment IDs (proj_001, client_001, bldg_001) | ⬜ Nächster Schritt |
+| Architektur v1.5 | Doku aktualisieren (.NET 10, Client, Adresse) | ⬜ |
 | registry.json Export | SQLite → JSON für VBA-Makros | ⬜ |
 | Suchfeld Projekte | Schnellsuche in der Projektliste | ⬜ |
 
@@ -41,10 +43,52 @@
 
 ---
 
-## Ideen / Noch nicht eingeordnet
+## Modul: Arbeitszeiterfassung (Nach V1)
 
-- (Hier neue Ideen eintragen)
+**Konzept:** WPF-Eingabemaske schreibt direkt in Excel-Datei. Kein eigenes DB-Modul — Excel bleibt die Wahrheitsquelle für Zeitdaten.
+
+**Architektur:**
+- WPF = schöne Eingabemaske (Dropdowns, Kalender, Dark Theme)
+- Baustellen-Dropdown aus bpm.db / registry.json
+- Daten werden per ClosedXML direkt in Excel geschrieben
+- Excel behält alle Formeln, Power Query, Pivot, Auswertungen
+- Lohnbüro liest Excel auf OneDrive
+
+**Excel-Architektur (Master-Prompt vorhanden):**
+- Haupttabelle: tbl_Zeiten (append-only, Single Point of Truth)
+- Stammdaten: tbl_Mitarbeiter, tbl_Stundenarten, tbl_Statuscodes
+- Arbeitszeitmodelle historisiert
+- Überstundenregeln historisiert
+- Überstunden werden berechnet, nie gespeichert
+- Power Query für Joins, Historienlogik, Soll/Ist
+
+**WPF-Maske schreibt in Excel:**
+- Felder: Datum, Arbeiter (Dropdown), Baustelle (Dropdown), Stundenart, Stunden
+- Button "Speichern" → neue Zeile in tbl_Zeiten per ClosedXML
+- Validierung in WPF (Pflichtfelder, Plausibilität)
+- Baustellen aus bpm.db, Rest aus Excel-Stammdaten
+
+**Reihenfolge:**
+1. Excel-Architektur fertig (nach ChatGPT Master-Prompt)
+2. WPF-Eingabemaske als neues Modul im BauProjektManager
+3. ClosedXML-Anbindung (lesen + schreiben)
+
+| Feature | Status |
+|---------|--------|
+| Excel-Architektur (tbl_Zeiten etc.) | ⬜ Eigenes Projekt |
+| WPF-Eingabemaske | ⬜ |
+| ClosedXML liest/schreibt Excel | ⬜ |
+| Baustellen-Dropdown aus bpm.db | ⬜ |
+| Überstunden-Auswertung in Excel | ⬜ |
 
 ---
 
-*Datei wird laufend aktualisiert. Neue Ideen einfach unten eintragen oder Herbert sagt sie Claude.*
+## Ideen / Noch nicht eingeordnet
+
+- VS Code für mehrzeiliges Suchen/Ersetzen (VS Studio kann das nicht gut)
+- Rainbow Braces Extension für VS Studio
+- DB Browser for SQLite installieren (zum Nachschauen der DB)
+
+---
+
+*Datei wird laufend von Claude aktualisiert wenn Herbert neue Ideen hat.*

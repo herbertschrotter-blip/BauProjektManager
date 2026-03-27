@@ -1,0 +1,27 @@
+root = true
+
+# Alle Dateien
+[*]
+indent_style = space
+indent_size = 4
+end_of_line = crlf
+charset = utf-8-bom
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# C# Dateien
+[*.cs]
+# Namespace ohne Klammern (file-scoped)
+csharp_style_namespace_declarations = file_scoped:suggestion
+
+# var nur bei offensichtlichem Typ
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = false:suggestion
+
+# Klammern auf neuer Zeile (Allman Style)
+csharp_new_line_before_open_brace = all
+
+# XAML Dateien
+[*.xaml]
+indent_size = 4

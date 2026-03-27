@@ -29,7 +29,7 @@ public partial class App : Application
             .CreateLogger();
 
         Log.Information("=== BauProjektManager gestartet ===");
-        Log.Information("Version: {Version}", "0.5.0");
+        Log.Information("Version: {Version}", "0.8.2");
         Log.Information("OS: {OS}", Environment.OSVersion);
         Log.Information("Machine: {Machine}", Environment.MachineName);
 

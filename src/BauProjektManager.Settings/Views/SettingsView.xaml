@@ -1,0 +1,17 @@
+<UserControl x:Class="BauProjektManager.Settings.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock Text="⚙ Einstellungen" 
+                       FontSize="24" Foreground="#CCCCCC"
+                       HorizontalAlignment="Center" Margin="0,0,0,20"/>
+            <TextBlock Text="Hier kommen die Projekteinstellungen hin." 
+                       FontSize="14" Foreground="#999999"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Text="(Nächster Schritt: Projektliste + Projekt anlegen)" 
+                       FontSize="12" Foreground="#666666"
+                       HorizontalAlignment="Center" Margin="0,10,0,0"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

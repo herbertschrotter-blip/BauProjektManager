@@ -8,6 +8,7 @@ namespace BauProjektManager.Infrastructure.Persistence;
 /// <summary>
 /// SQLite database service — manages bpm.db in %LocalAppData%\BauProjektManager\.
 /// Creates tables on first run, provides CRUD for Projects and Clients.
+/// IDs are auto-incremented with prefix: proj_001, client_001, bldg_001.
 /// </summary>
 public class ProjectDatabase : IDisposable
 {
@@ -29,6 +30,10 @@ public class ProjectDatabase : IDisposable
         {
             _connection = new SqliteConnection($"Data Source={_dbPath}");
             _connection.Open();
+            // Enable WAL mode for better concurrency
+            using var walCmd = _connection.CreateCommand();
+            walCmd.CommandText = "PRAGMA journal_mode=WAL;";
+            walCmd.ExecuteNonQuery();
             EnsureTables();
         }
         return _connection;
@@ -41,7 +46,8 @@ public class ProjectDatabase : IDisposable
         var cmd = conn.CreateCommand();
         cmd.CommandText = """
             CREATE TABLE IF NOT EXISTS clients (
-                id TEXT PRIMARY KEY,
+                seq INTEGER PRIMARY KEY AUTOINCREMENT,
+                id TEXT UNIQUE NOT NULL,
                 company TEXT NOT NULL DEFAULT '',
                 contact_person TEXT NOT NULL DEFAULT '',
                 phone TEXT NOT NULL DEFAULT '',
@@ -50,7 +56,8 @@ public class ProjectDatabase : IDisposable
             );
 
             CREATE TABLE IF NOT EXISTS projects (
-                id TEXT PRIMARY KEY,
+                seq INTEGER PRIMARY KEY AUTOINCREMENT,
+                id TEXT UNIQUE NOT NULL,
                 project_number TEXT NOT NULL DEFAULT '',
                 name TEXT NOT NULL DEFAULT '',
                 full_name TEXT NOT NULL DEFAULT '',
@@ -92,7 +99,8 @@ public class ProjectDatabase : IDisposable
             );
 
             CREATE TABLE IF NOT EXISTS buildings (
-                id TEXT PRIMARY KEY,
+                seq INTEGER PRIMARY KEY AUTOINCREMENT,
+                id TEXT UNIQUE NOT NULL,
                 project_id TEXT NOT NULL,
                 name TEXT NOT NULL DEFAULT '',
                 short_name TEXT NOT NULL DEFAULT '',
@@ -104,10 +112,25 @@ public class ProjectDatabase : IDisposable
             CREATE TABLE IF NOT EXISTS schema_version (
                 version TEXT NOT NULL
             );
-
-            INSERT OR IGNORE INTO schema_version (version) VALUES ('1.0');
             """;
         cmd.ExecuteNonQuery();
+
+        // Set or update schema version
+        cmd = conn.CreateCommand();
+        cmd.CommandText = "DELETE FROM schema_version; INSERT INTO schema_version (version) VALUES ('1.1');";
+        cmd.ExecuteNonQuery();
+    }
+
+    // === ID GENERATION ===
+
+    private string GenerateNextId(string prefix, string table)
+    {
+        var conn = GetConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = $"SELECT MAX(seq) FROM {table}";
+        var result = cmd.ExecuteScalar();
+        var nextNum = result is DBNull || result is null ? 1 : Convert.ToInt64(result) + 1;
+        return $"{prefix}_{nextNum:D3}";
     }
 
     // === PROJECTS ===
@@ -140,11 +163,19 @@ public class ProjectDatabase : IDisposable
     {
         var conn = GetConnection();
 
-        // Save client first if exists
+        // Generate new ID if needed
+        bool isNew = string.IsNullOrEmpty(project.Id) || !ProjectExists(project.Id);
+        if (isNew)
+        {
+            project.Id = GenerateNextId("proj", "projects");
+        }
+
+        // Save client first if has data
+        string? clientId = null;
         if (!string.IsNullOrEmpty(project.Client.Company) ||
             !string.IsNullOrEmpty(project.Client.ContactPerson))
         {
-            SaveClient(project.Client, project.Id);
+            clientId = SaveClient(project.Client, project.Id);
         }
 
         var cmd = conn.CreateCommand();
@@ -189,8 +220,6 @@ public class ProjectDatabase : IDisposable
                 tags = @tags, notes = @notes, updated_at = datetime('now')
             """;
 
-        var clientId = !string.IsNullOrEmpty(project.Client.Company) ? $"client_{project.Id}" : null;
-
         cmd.Parameters.AddWithValue("@id", project.Id);
         cmd.Parameters.AddWithValue("@project_number", project.ProjectNumber);
         cmd.Parameters.AddWithValue("@name", project.Name);
@@ -230,6 +259,15 @@ public class ProjectDatabase : IDisposable
         SaveBuildings(project.Id, project.Buildings);
     }
 
+    private bool ProjectExists(string projectId)
+    {
+        var conn = GetConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT COUNT(*) FROM projects WHERE id = @id";
+        cmd.Parameters.AddWithValue("@id", projectId);
+        return Convert.ToInt64(cmd.ExecuteScalar()) > 0;
+    }
+
     public void DeleteProject(string projectId)
     {
         var conn = GetConnection();
@@ -247,10 +285,25 @@ public class ProjectDatabase : IDisposable
 
     // === CLIENTS ===
 
-    private void SaveClient(Client client, string projectId)
+    private string SaveClient(Client client, string projectId)
     {
         var conn = GetConnection();
-        var clientId = $"client_{projectId}";
+
+        // Check if project already has a client
+        var checkCmd = conn.CreateCommand();
+        checkCmd.CommandText = "SELECT client_id FROM projects WHERE id = @id";
+        checkCmd.Parameters.AddWithValue("@id", projectId);
+        var existingClientId = checkCmd.ExecuteScalar() as string;
+
+        string clientId;
+        if (!string.IsNullOrEmpty(existingClientId))
+        {
+            clientId = existingClientId;
+        }
+        else
+        {
+            clientId = GenerateNextId("client", "clients");
+        }
 
         var cmd = conn.CreateCommand();
         cmd.CommandText = """
@@ -267,6 +320,8 @@ public class ProjectDatabase : IDisposable
         cmd.Parameters.AddWithValue("@email", client.Email);
         cmd.Parameters.AddWithValue("@notes", client.Notes);
         cmd.ExecuteNonQuery();
+
+        return clientId;
     }
 
     // === BUILDINGS ===
@@ -312,12 +367,16 @@ public class ProjectDatabase : IDisposable
         // Insert new
         foreach (var building in buildings)
         {
+            var id = string.IsNullOrEmpty(building.Id)
+                ? GenerateNextId("bldg", "buildings")
+                : building.Id;
+
             var cmd = conn.CreateCommand();
             cmd.CommandText = """
                 INSERT INTO buildings (id, project_id, name, short_name, type, levels)
                 VALUES (@id, @project_id, @name, @short_name, @type, @levels)
                 """;
-            cmd.Parameters.AddWithValue("@id", string.IsNullOrEmpty(building.Id) ? $"bldg_{Guid.NewGuid():N}" : building.Id);
+            cmd.Parameters.AddWithValue("@id", id);
             cmd.Parameters.AddWithValue("@project_id", projectId);
             cmd.Parameters.AddWithValue("@name", building.Name);
             cmd.Parameters.AddWithValue("@short_name", building.ShortName);

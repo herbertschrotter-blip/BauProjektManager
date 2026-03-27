@@ -2,5 +2,6 @@
   <Folder Name="/src/">
     <Project Path="src/BauProjektManager.App/BauProjektManager.App.csproj" />
     <Project Path="src/BauProjektManager.Domain/BauProjektManager.Domain.csproj" />
+    <Project Path="src/BauProjektManager.Infrastructure/BauProjektManager.Infrastructure.csproj" />
   </Folder>
 </Solution>

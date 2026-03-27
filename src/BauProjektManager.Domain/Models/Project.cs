@@ -1,0 +1,26 @@
+using BauProjektManager.Domain.Enums;
+
+namespace BauProjektManager.Domain.Models;
+
+/// <summary>
+/// Ein Bauprojekt — zentrale Entität im BauProjektManager.
+/// </summary>
+public class Project
+{
+    public string Id { get; set; } = string.Empty;
+    public string ProjectNumber { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+    public ProjectStatus Status { get; set; } = ProjectStatus.Active;
+    public ProjectLocation Location { get; set; } = new();
+    public ProjectTimeline Timeline { get; set; } = new();
+    public List<Building> Buildings { get; set; } = [];
+    public ProjectPaths Paths { get; set; } = new();
+    public string Tags { get; set; } = string.Empty;
+    public string Notes { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Ordnername im Format YYYYMM_Kurzname (z.B. 202512_ÖWG-Dobl-Zwaring).
+    /// </summary>
+    public string FolderName => $"{ProjectNumber}_{Name}";
+}

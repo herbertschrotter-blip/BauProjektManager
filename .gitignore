@@ -1,0 +1,13 @@
+## Visual Studio
+.vs/
+*.user
+*.suo
+
+## Build
+bin/
+obj/
+
+## OS
+Thumbs.db
+Desktop.ini
+.DS_Store

@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <Version>0.2.0</Version>
+    <Authors>Herbert Schrotter</Authors>
+    <Company>BauProjektManager</Company>
+  </PropertyGroup>
+</Project>

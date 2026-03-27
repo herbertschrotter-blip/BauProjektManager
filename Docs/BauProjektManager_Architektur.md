@@ -2,9 +2,9 @@
 
 **Version:** 1.4.0  
 **Datum:** 27.03.2026  
-**Sprache:** C# (.NET 8 LTS), WPF (XAML), MVVM  
+**Sprache:** C# (.NET 10 LTS), WPF (XAML), MVVM  
 **Frameworks:** CommunityToolkit.Mvvm, Serilog, ClosedXML, PdfPig, QuestPDF  
-**Basis:** v1.3 + 2 externe Reviews + 13 verbindliche Entscheidungen  
+**Basis:** v1.4 + Phase 0/1 Implementierung + Herberts Feedback  
 **Autor:** Herbert + Claude  
 
 ---
@@ -226,6 +226,7 @@ public class Project
     public ProjectStatus Status { get; set; }         // Active, Completed, Archived
     public ProjectLocation Location { get; set; }
     public ProjectTimeline Timeline { get; set; }
+    public Client Client { get; set; }                // Auftraggeber/Bauherr
     public List<Building> Buildings { get; set; }
     public ProjectPaths Paths { get; set; }
     public string Tags { get; set; }
@@ -234,7 +235,12 @@ public class Project
 
 public class ProjectLocation
 {
-    public string Address { get; set; }               // "Hauptstraße 15, 8143 Dobl"
+    // Adresse (aufgeteilt für spätere Google Maps API)
+    public string Street { get; set; }                // "Hauptstraße"
+    public string HouseNumber { get; set; }           // "15"
+    public string PostalCode { get; set; }            // "8143"
+    public string City { get; set; }                  // "Dobl"
+    // Verwaltung
     public string Municipality { get; set; }          // "Dobl-Zwaring"
     public string District { get; set; }              // "Graz-Umgebung"
     public string State { get; set; }                 // "Steiermark"
@@ -244,6 +250,8 @@ public class ProjectLocation
     public string CadastralKg { get; set; }           // "63201"
     public string CadastralKgName { get; set; }       // "Dobl"
     public string CadastralGst { get; set; }          // "123/1, 123/2, 124"
+    // Computed
+    public string FormattedAddress { get; }           // "Hauptstraße 15, 8143 Dobl"
 }
 
 public class ProjectTimeline
@@ -272,6 +280,15 @@ public class ProjectPaths
     public string Documents { get; set; }             // "Dokumente"
     public string Protocols { get; set; }             // "Protokolle"
     public string Invoices { get; set; }              // "Rechnungen"
+}
+
+public class Client
+{
+    public string Company { get; set; }               // "ÖWG Wohnbau"
+    public string ContactPerson { get; set; }         // "Ing. Müller"
+    public string Phone { get; set; }                 // "0316/12345"
+    public string Email { get; set; }                 // "mueller@oewg.at"
+    public string Notes { get; set; }
 }
 
 public enum ProjectStatus { Active, Completed, Archived }
@@ -1341,7 +1358,7 @@ App             → alles (DI verdrahtet hier)
 
 | Thema | Entscheidung |
 |-------|-------------|
-| **Sprache** | C# (.NET 8 LTS) |
+| **Sprache** | C# (.NET 10 LTS) |
 | **GUI** | WPF (XAML) |
 | **Architektur** | Modularer Monolith (feste Registrierung, kein Plugin) |
 | **MVVM** | CommunityToolkit.Mvvm |
@@ -1474,7 +1491,7 @@ Detaillierte Coding Standards: siehe `CODING_STANDARDS.md`
 
 ---
 
-*Dokument Version 1.4.0 — 27.03.2026*
+*Dokument Version 1.5.0 — 27.03.2026*
 
 *Basis: v1.3 + 2 Review-Runden (ChatGPT) + Gegen-Review (Claude) + 13 verbindliche Entscheidungen*
 
@@ -1491,3 +1508,10 @@ Detaillierte Coding Standards: siehe `CODING_STANDARDS.md`
 - *V1-Scope radikal reduziert (nur PlanManager + Shell + Einstellungen)*
 - *Coding Standards ergänzt + Mini Definition of Done*
 - *Module (Dashboard, Bautagebuch etc.) nur angerissen → eigene Dokumente*
+
+*Kernänderungen gegenüber v1.4:*
+- *.NET 10 LTS statt .NET 8 LTS*
+- *ProjectLocation aufgeteilt: Street, HouseNumber, PostalCode, City*
+- *Neues Client-Modell (Auftraggeber: Company, ContactPerson, Phone, Email)*
+- *Projektnummer automatisch aus Projektstart-Datum (YYYYMM)*
+- *Baustart als separates Feld entfernt (Projektstart reicht)*

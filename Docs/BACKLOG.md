@@ -10,10 +10,12 @@
 | Feature | Beschreibung | Status |
 |---------|-------------|--------|
 | SQLite-Datenbank | Projekte dauerhaft speichern in bpm.db | ✅ Erledigt |
-| ID-Fix | Auto-Increment IDs (proj_001, client_001, bldg_001) | ⬜ Nächster Schritt |
+| ID-Fix | Auto-Increment IDs (proj_001, client_001, bldg_001) | ✅ Erledigt |
+| registry.json Export | SQLite → JSON für VBA-Makros, Export-Ordner | ✅ Erledigt |
+| **Ersteinrichtung** | **Basispfad konfigurieren (OneDrive kann D:, E: etc. sein). Beim ersten Start abfragen, in settings.json speichern. MUSS VOR PlanManager kommen!** | ⬜ Nächster Schritt |
 | Architektur v1.5 | Doku aktualisieren (.NET 10, Client, Adresse) | ⬜ |
-| registry.json Export | SQLite → JSON für VBA-Makros | ⬜ |
 | Suchfeld Projekte | Schnellsuche in der Projektliste | ⬜ |
+| **PlanManager** | Dateinamen-Parser, Segment-Zuweiser, Import-Workflow | ⬜ Nach Ersteinrichtung |
 
 ---
 
@@ -88,6 +90,7 @@
 - VS Code für mehrzeiliges Suchen/Ersetzen (VS Studio kann das nicht gut)
 - Rainbow Braces Extension für VS Studio
 - DB Browser for SQLite installieren (zum Nachschauen der DB)
+- Ersteinrichtung: OneDrive-Pfad automatisch erkennen (Environment Variable?)
 
 ---
 

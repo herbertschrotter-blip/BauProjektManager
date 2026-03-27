@@ -5,17 +5,48 @@
 
 ---
 
-## V1 — Aktuelle Phase
+## V1 — Phase 1: Einstellungen (fast fertig)
 
-| Feature | Beschreibung | Status |
-|---------|-------------|--------|
-| SQLite-Datenbank | Projekte dauerhaft speichern in bpm.db | ✅ Erledigt |
-| ID-Fix | Auto-Increment IDs (proj_001, client_001, bldg_001) | ✅ Erledigt |
-| registry.json Export | SQLite → JSON für VBA-Makros, Export-Ordner | ✅ Erledigt |
-| **Ersteinrichtung** | **Basispfad konfigurieren (OneDrive kann D:, E: etc. sein). Beim ersten Start abfragen, in settings.json speichern. MUSS VOR PlanManager kommen!** | ⬜ Nächster Schritt |
-| Architektur v1.5 | Doku aktualisieren (.NET 10, Client, Adresse) | ⬜ |
-| Suchfeld Projekte | Schnellsuche in der Projektliste | ⬜ |
-| **PlanManager** | Dateinamen-Parser, Segment-Zuweiser, Import-Workflow | ⬜ Nach Ersteinrichtung |
+| # | Feature | Beschreibung | Status |
+|---|---------|-------------|--------|
+| 1 | App-Shell + Navigation | MainWindow, Sidebar, Statusleiste | ✅ Erledigt |
+| 2 | Serilog Logging | File + Console, tägl. Rotation, 30 Tage | ✅ Erledigt |
+| 3 | Domain-Modelle | Project, Client, Building, Location, Timeline, Paths | ✅ Erledigt |
+| 4 | Projektliste + Dialog | DataGrid, Bearbeiten-Dialog mit allen Feldern | ✅ Erledigt |
+| 5 | SQLite-Datenbank | bpm.db mit Projects, Clients, Buildings Tabellen | ✅ Erledigt |
+| 6 | Auto-Increment IDs | proj_001, client_001, bldg_001 | ✅ Erledigt |
+| 7 | registry.json Export | Flat JSON für VBA, atomisch geschrieben | ✅ Erledigt |
+| 8 | Git-Aufräumung | Hilfsmodule + Export aus Tracking entfernt | ✅ Erledigt |
+| 9 | **Ersteinrichtung** | OneDrive auto-erkennen ($env:OneDrive), Arbeitsordner wählen, Archiv-Ordner wählen, settings.json pro Rechner speichern | ⬜ Nächster Schritt |
+| 10 | **.bpm-manifest** | Versteckte Datei in jedem Projektordner erstellen (Ausweis), bei Umbenennung → Auto-Suche + Pfad aktualisieren | ⬜ |
+| 11 | **Projekt archivieren** | Status → Completed → Ordner in Archiv verschieben, Pfad aktualisieren | ⬜ |
+| 12 | **Single-Writer Mutex** | Nur eine App-Instanz gleichzeitig (Architektur Kap. 15) | ⬜ |
+| 13 | Suchfeld Projekte | Schnellsuche/Filter in der Projektliste | ⬜ |
+| 14 | Versionsnummer im Log | Automatisch aus Assembly, nicht hardcoded | ⬜ |
+| 15 | Architektur v1.5 | Doku aktualisieren (.NET 10, Client, Adresse, Manifest) | ⬜ |
+
+---
+
+## V1 — Phase 2: PlanManager (der große Brocken)
+
+| # | Feature | Beschreibung | Status |
+|---|---------|-------------|--------|
+| 16 | Dateinamen-Parser | Segmente splitten an Trennzeichen | ⬜ |
+| 17 | Segment-Zuweiser GUI | 3-Schritt-Wizard (Typ wählen, Muster, Ordner) | ⬜ |
+| 18 | Plantyp-Erkennung | prefix/contains/regex Muster matchen | ⬜ |
+| 19 | PatternTemplates | Vorschlagslogik beim Profil-Anlegen | ⬜ |
+| 20 | profiles.json | Pro Projekt auf OneDrive speichern | ⬜ |
+| 21 | pattern-templates.json | Globale Musterbibliothek auf OneDrive | ⬜ |
+| 22 | Import-Workflow Schritt 1-5 | Scan, Parse, Validate, Classify, Plan | ⬜ |
+| 23 | Import-Vorschau (Schritt 6) | GUI mit Status, Rechtsklick-Korrektur | ⬜ |
+| 24 | Import-Execute (Schritt 7-8) | Dateien verschieben, Journal, Finalize | ⬜ |
+| 25 | Index-Archivierung | Alte Indizes → _Archiv/ verschieben | ⬜ |
+| 26 | Undo-Journal (SQLite) | 3 Tabellen: journal, actions, action_files | ⬜ |
+| 27 | Recovery (Schritt 9) | Beim App-Start: pending → Reparatur anbieten | ⬜ |
+| 28 | Undo (Schritt 10) | Journal rückwärts, Dateien zurück | ⬜ |
+| 29 | Backup vor Import | SQLite + JSON als .bak kopieren | ⬜ |
+| 30 | Unbekannte Dateien Dialog | Profil erweitern / Neues Profil / Skip | ⬜ |
+| 31 | Erkennungs-Konflikt Dialog | Mehrere Profile passen → User wählt | ⬜ |
 
 ---
 
@@ -26,6 +57,10 @@
 | Adressbuch | Eigene Kontakt-DB in SQLite, projektübergreifend | ⬜ |
 | Bauherren-/Firmenliste | Dropdown "Auftraggeber wählen" statt jedes Mal tippen | ⬜ |
 | Button "Aus Adressbuch" | Im Projekt-Dialog neben Auftraggeber | ⬜ |
+| Planlisten-Import | Excel (.xlsx) + Soll/Ist-Abgleich | ⬜ |
+| Planlisten-Export | Excel + PDF (ClosedXML + QuestPDF) | ⬜ |
+| Schnellsuche Pläne | Plan finden über alle Projekte | ⬜ |
+| CSV-Import | Für Planlisten | ⬜ |
 
 ---
 
@@ -42,6 +77,9 @@
 | Wetter-API | Wetterdaten pro Baustelle | ⬜ |
 | Foto-Modul | OneDrive-Baustellenfotos nach Projekt/Datum | ⬜ |
 | Excel/Word Vorlagen | COM Interop, Projektdaten in Vorlagen befüllen | ⬜ |
+| PDF-Vorschau | Pläne in der App anzeigen | ⬜ |
+| VERALTET-Stempel | Auf alte Plan-PDFs stempeln | ⬜ |
+| Auto-Update | App-Update-Mechanismus | ⬜ |
 
 ---
 
@@ -90,7 +128,8 @@
 - VS Code für mehrzeiliges Suchen/Ersetzen (VS Studio kann das nicht gut)
 - Rainbow Braces Extension für VS Studio
 - DB Browser for SQLite installieren (zum Nachschauen der DB)
-- Ersteinrichtung: OneDrive-Pfad automatisch erkennen (Environment Variable?)
+- Projekt-Ordner aus App heraus im Explorer öffnen (Button)
+- Projektordner beim Anlegen automatisch erstellen (mit Unterordner-Struktur)
 
 ---
 

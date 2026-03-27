@@ -1,4 +1,4 @@
-using BauProjektManager.Domain.Enums;
+﻿using BauProjektManager.Domain.Enums;
 
 namespace BauProjektManager.Domain.Models;
 
@@ -14,6 +14,7 @@ public class Project
     public ProjectStatus Status { get; set; } = ProjectStatus.Active;
     public ProjectLocation Location { get; set; } = new();
     public ProjectTimeline Timeline { get; set; } = new();
+    public Client Client { get; set; } = new();
     public List<Building> Buildings { get; set; } = [];
     public ProjectPaths Paths { get; set; } = new();
     public string Tags { get; set; } = string.Empty;
@@ -23,4 +24,15 @@ public class Project
     /// Ordnername im Format YYYYMM_Kurzname (z.B. 202512_ÖWG-Dobl-Zwaring).
     /// </summary>
     public string FolderName => $"{ProjectNumber}_{Name}";
+
+    /// <summary>
+    /// Generiert die Projektnummer aus dem Projektstart-Datum (YYYYMM).
+    /// </summary>
+    public void UpdateProjectNumberFromStart()
+    {
+        if (Timeline.ProjectStart.HasValue)
+        {
+            ProjectNumber = Timeline.ProjectStart.Value.ToString("yyyyMM");
+        }
+    }
 }

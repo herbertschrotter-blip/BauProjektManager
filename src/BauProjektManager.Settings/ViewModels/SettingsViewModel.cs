@@ -1,6 +1,8 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
+using System.Windows;
 using BauProjektManager.Domain.Enums;
 using BauProjektManager.Domain.Models;
+using BauProjektManager.Settings.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -31,10 +33,25 @@ public partial class SettingsViewModel : ObservableObject
                 Status = ProjectStatus.Active,
                 Location = new ProjectLocation
                 {
-                    Address = "Hauptstraße 15, 8143 Dobl",
+                    Street = "Hauptstraße",
+                    HouseNumber = "15",
+                    PostalCode = "8143",
+                    City = "Dobl",
                     Municipality = "Dobl-Zwaring",
                     District = "Graz-Umgebung",
                     State = "Steiermark"
+                },
+                Client = new Client
+                {
+                    Company = "ÖWG Wohnbau",
+                    ContactPerson = "Ing. Müller",
+                    Phone = "0316/12345",
+                    Email = "mueller@oewg.at"
+                },
+                Timeline = new ProjectTimeline
+                {
+                    ProjectStart = new DateTime(2025, 12, 1),
+                    ConstructionStart = new DateTime(2026, 6, 1)
                 },
                 Buildings =
                 [
@@ -57,6 +74,10 @@ public partial class SettingsViewModel : ObservableObject
                     Municipality = "Kapfenberg",
                     District = "Bruck-Mürzzuschlag",
                     State = "Steiermark"
+                },
+                Timeline = new ProjectTimeline
+                {
+                    ProjectStart = new DateTime(2023, 2, 1)
                 }
             },
             new Project
@@ -71,6 +92,11 @@ public partial class SettingsViewModel : ObservableObject
                     Municipality = "Leoben",
                     District = "Leoben",
                     State = "Steiermark"
+                },
+                Timeline = new ProjectTimeline
+                {
+                    ProjectStart = new DateTime(2022, 1, 1),
+                    ActualEnd = new DateTime(2024, 6, 30)
                 }
             }
         ];
@@ -82,12 +108,39 @@ public partial class SettingsViewModel : ObservableObject
         var newProject = new Project
         {
             Id = $"proj_{DateTime.Now:yyyyMMdd_HHmmss}",
-            ProjectNumber = DateTime.Now.ToString("yyyyMM"),
-            Name = "Neues-Projekt",
-            FullName = "Neues Projekt",
-            Status = ProjectStatus.Active
+            Status = ProjectStatus.Active,
+            Timeline = new ProjectTimeline
+            {
+                ProjectStart = DateTime.Today
+            }
         };
-        Projects.Add(newProject);
-        SelectedProject = newProject;
+        newProject.UpdateProjectNumberFromStart();
+
+        var dialog = new ProjectEditDialog(newProject);
+        dialog.Owner = Application.Current.MainWindow;
+        if (dialog.ShowDialog() == true)
+        {
+            Projects.Add(dialog.Project);
+            SelectedProject = dialog.Project;
+        }
+    }
+
+    [RelayCommand]
+    private void EditProject()
+    {
+        if (SelectedProject is null) return;
+
+        var dialog = new ProjectEditDialog(SelectedProject);
+        dialog.Owner = Application.Current.MainWindow;
+        if (dialog.ShowDialog() == true)
+        {
+            // ObservableCollection refreshen
+            int index = Projects.IndexOf(SelectedProject);
+            if (index >= 0)
+            {
+                Projects[index] = dialog.Project;
+                SelectedProject = dialog.Project;
+            }
+        }
     }
 }

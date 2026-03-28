@@ -17,13 +17,15 @@
 | 6 | Auto-Increment IDs | proj_001, client_001, bldg_001 | ✅ Erledigt |
 | 7 | registry.json Export | Flat JSON für VBA, atomisch geschrieben | ✅ Erledigt |
 | 8 | Git-Aufräumung | Hilfsmodule + Export aus Tracking entfernt | ✅ Erledigt |
-| 9 | **Ersteinrichtung** | OneDrive auto-erkennen ($env:OneDrive), Arbeitsordner wählen, Archiv-Ordner wählen, settings.json pro Rechner speichern | ⬜ Nächster Schritt |
-| 10 | **.bpm-manifest** | Versteckte Datei in jedem Projektordner erstellen (Ausweis), bei Umbenennung → Auto-Suche + Pfad aktualisieren | ⬜ |
-| 11 | **Projekt archivieren** | Status → Completed → Ordner in Archiv verschieben, Pfad aktualisieren | ⬜ |
-| 12 | **Single-Writer Mutex** | Nur eine App-Instanz gleichzeitig (Architektur Kap. 15) | ⬜ |
-| 13 | Suchfeld Projekte | Schnellsuche/Filter in der Projektliste | ⬜ |
-| 14 | Versionsnummer im Log | Automatisch aus Assembly, nicht hardcoded | ⬜ |
-| 15 | Architektur v1.5 | Doku aktualisieren (.NET 10, Client, Adresse, Manifest) | ⬜ |
+| 9 | Ersteinrichtung | OneDrive auto-erkennen, Arbeitsordner, Archivordner, settings.json | ✅ Erledigt (v0.10.0) |
+| 10 | **Projektordner erstellen** | **Beim Anlegen automatisch nummerierte Ordnerstruktur erstellen (01_Pläne, 02_Fotos etc.). Ordner-Template änderbar in settings.json. _Eingang Unterordner in 01_Pläne.** | ⬜ Nächster Schritt |
+| 11 | **.bpm-manifest** | Versteckte Datei in jedem Projektordner erstellen (Ausweis), bei Umbenennung → Auto-Suche + Pfad aktualisieren | ⬜ |
+| 12 | **Projekt archivieren** | Status → Completed → Ordner in Archiv verschieben, Pfad aktualisieren | ⬜ |
+| 13 | **Pfade änderbar** | Button in Einstellungen um Setup-Dialog erneut zu öffnen (OneDrive, Arbeitsordner, Archivordner) | ⬜ |
+| 14 | **Single-Writer Mutex** | Nur eine App-Instanz gleichzeitig (Architektur Kap. 15) | ⬜ |
+| 15 | Suchfeld Projekte | Schnellsuche/Filter in der Projektliste | ⬜ |
+| 16 | Versionsnummer im Log | Automatisch aus Assembly, nicht hardcoded | ⬜ |
+| 17 | Architektur v1.5 | Doku aktualisieren (.NET 10, Client, Adresse, Manifest, Ordnerstruktur) | ⬜ |
 
 ---
 
@@ -31,22 +33,22 @@
 
 | # | Feature | Beschreibung | Status |
 |---|---------|-------------|--------|
-| 16 | Dateinamen-Parser | Segmente splitten an Trennzeichen | ⬜ |
-| 17 | Segment-Zuweiser GUI | 3-Schritt-Wizard (Typ wählen, Muster, Ordner) | ⬜ |
-| 18 | Plantyp-Erkennung | prefix/contains/regex Muster matchen | ⬜ |
-| 19 | PatternTemplates | Vorschlagslogik beim Profil-Anlegen | ⬜ |
-| 20 | profiles.json | Pro Projekt auf OneDrive speichern | ⬜ |
-| 21 | pattern-templates.json | Globale Musterbibliothek auf OneDrive | ⬜ |
-| 22 | Import-Workflow Schritt 1-5 | Scan, Parse, Validate, Classify, Plan | ⬜ |
-| 23 | Import-Vorschau (Schritt 6) | GUI mit Status, Rechtsklick-Korrektur | ⬜ |
-| 24 | Import-Execute (Schritt 7-8) | Dateien verschieben, Journal, Finalize | ⬜ |
-| 25 | Index-Archivierung | Alte Indizes → _Archiv/ verschieben | ⬜ |
-| 26 | Undo-Journal (SQLite) | 3 Tabellen: journal, actions, action_files | ⬜ |
-| 27 | Recovery (Schritt 9) | Beim App-Start: pending → Reparatur anbieten | ⬜ |
-| 28 | Undo (Schritt 10) | Journal rückwärts, Dateien zurück | ⬜ |
-| 29 | Backup vor Import | SQLite + JSON als .bak kopieren | ⬜ |
-| 30 | Unbekannte Dateien Dialog | Profil erweitern / Neues Profil / Skip | ⬜ |
-| 31 | Erkennungs-Konflikt Dialog | Mehrere Profile passen → User wählt | ⬜ |
+| 18 | Dateinamen-Parser | Segmente splitten an Trennzeichen | ⬜ |
+| 19 | Segment-Zuweiser GUI | 3-Schritt-Wizard (Typ wählen, Muster, Ordner) | ⬜ |
+| 20 | Plantyp-Erkennung | prefix/contains/regex Muster matchen | ⬜ |
+| 21 | PatternTemplates | Vorschlagslogik beim Profil-Anlegen | ⬜ |
+| 22 | profiles.json | Pro Projekt auf OneDrive speichern | ⬜ |
+| 23 | pattern-templates.json | Globale Musterbibliothek auf OneDrive | ⬜ |
+| 24 | Import-Workflow Schritt 1-5 | Scan, Parse, Validate, Classify, Plan | ⬜ |
+| 25 | Import-Vorschau (Schritt 6) | GUI mit Status, Rechtsklick-Korrektur | ⬜ |
+| 26 | Import-Execute (Schritt 7-8) | Dateien verschieben, Journal, Finalize | ⬜ |
+| 27 | Index-Archivierung | Alte Indizes → _Archiv/ verschieben | ⬜ |
+| 28 | Undo-Journal (SQLite) | 3 Tabellen: journal, actions, action_files | ⬜ |
+| 29 | Recovery (Schritt 9) | Beim App-Start: pending → Reparatur anbieten | ⬜ |
+| 30 | Undo (Schritt 10) | Journal rückwärts, Dateien zurück | ⬜ |
+| 31 | Backup vor Import | SQLite + JSON als .bak kopieren | ⬜ |
+| 32 | Unbekannte Dateien Dialog | Profil erweitern / Neues Profil / Skip | ⬜ |
+| 33 | Erkennungs-Konflikt Dialog | Mehrere Profile passen → User wählt | ⬜ |
 
 ---
 
@@ -129,7 +131,9 @@
 - Rainbow Braces Extension für VS Studio
 - DB Browser for SQLite installieren (zum Nachschauen der DB)
 - Projekt-Ordner aus App heraus im Explorer öffnen (Button)
-- Projektordner beim Anlegen automatisch erstellen (mit Unterordner-Struktur)
+- Ordner-Template: User soll Ordner hinzufügen/umbenennen/Reihenfolge ändern können
+- Ordner nummeriert: 01_Pläne, 02_Fotos, 03_Dokumente etc.
+- Pfade-Erkennung via .bpm-manifest bei Ordner-Umbenennung
 
 ---
 

@@ -1,11 +1,20 @@
-# BauProjektManager — Architektur & Spezifikation
+﻿# BauProjektManager — Architektur & Spezifikation
 
-**Version:** 1.4.0  
-**Datum:** 27.03.2026  
+**Version:** 1.5.0  
+**Datum:** 29.03.2026  
 **Sprache:** C# (.NET 10 LTS), WPF (XAML), MVVM  
 **Frameworks:** CommunityToolkit.Mvvm, Serilog, ClosedXML, PdfPig, QuestPDF  
-**Basis:** v1.4 + Phase 0/1 Implementierung + Herberts Feedback  
+**Basis:** v1.4 + Phase 0/1 Implementierung + Herberts Feedback + Docs-Reorganisation  
 **Autor:** Herbert + Claude  
+
+**Verwandte Dokumente:**
+- [ADR.md](ADR.md) — 23 Architecture Decision Records
+- [VISION.md](VISION.md) — Nordstern, Schmerzpunkte, Zielgruppe
+- [DEPENDENCY-MAP.md](DEPENDENCY-MAP.md) — Solution-Struktur + Ökosystem
+- [CHANGELOG.md](CHANGELOG.md) — Versionshistorie ab v0.0.0
+- [BACKLOG.md](BACKLOG.md) — Feature-Liste mit Status
+- [CODING_STANDARDS.md](CODING_STANDARDS.md) — Code-Richtlinien
+- Modul-Konzepte: [Docs/Konzepte/](Konzepte/) — Detaillierte Konzeptdokumente pro Modul
 
 ---
 
@@ -15,9 +24,11 @@
 
 Ein modulares Desktop-Tool für Baustellen-Management in Österreich (Steiermark). Eine einzige Anwendung mit internen Feature-Modulen. Offline-fähig, lokal auf OneDrive, kein Cloud-Abo.
 
+Ausführliche Vision, Schmerzpunkte und Zielgruppe: siehe [VISION.md](VISION.md).
+
 ### 1.2 Architekturmodell: Modularer Monolith
 
-Eine einzige Anwendung (`BauProjektManager.exe`) mit fest registrierten Feature-Modulen. Kein Plugin-System, kein dynamisches Laden, kein `IBpmModule` Interface. Module sind separate C#-Projekte (DLLs), werden aber direkt im DI-Container als konkrete Typen registriert.
+Eine einzige Anwendung (`BauProjektManager.exe`) mit fest registrierten Feature-Modulen. Kein Plugin-System, kein dynamisches Laden, kein `IBpmModule` Interface. Module sind separate C#-Projekte (DLLs), werden aber direkt im DI-Container als konkrete Typen registriert. (ADR-001)
 
 ```csharp
 // DI-Registrierung: direkt, kein Interface
@@ -28,26 +39,33 @@ services.AddTransient<SettingsViewModel>();
 
 ```
 BauProjektManager.exe
-├── 📁 PlanManager        ← V1 KERN
-├── ⚙️ Einstellungen      ← V1 KERN
-├── 📊 Dashboard          ← nach V1 (eigenes Dokument)
-├── 📓 Bautagebuch        ← nach V1 (eigenes Dokument)
-├── 📧 Outlook-Modul      ← später (eigenes Dokument)
-├── 🌤 Wetter-Modul       ← später (eigenes Dokument)
-└── 📷 Foto-Modul         ← später (eigenes Dokument)
+├── ⚙️ Einstellungen      ← V1 KERN (✅ implementiert)
+├── 📁 PlanManager        ← V1 KERN (⬜ in Arbeit)
+├── 📷 Foto-Modul         ← nach V1, Prio 1 (Konzept)
+├── ⏱️ Zeiterfassung      ← nach V1, Prio 2 (Konzept)
+├── 📓 Bautagebuch        ← nach V1, Prio 3 (Konzept)
+├── 📊 Dashboard          ← nach V1, Prio 4 (Konzept)
+├── 📧 Outlook-Modul      ← nach V1 (Konzept)
+├── 🌤 Wetter-Modul       ← nach V1 (Konzept)
+└── 📄 Vorlagen           ← nach V1 (Konzept)
 ```
 
 ### 1.3 Module und Prioritäten
 
-| Modul | Funktion | Phase | Dokumentation |
-|-------|----------|-------|---------------|
-| **Einstellungen** | Projekte, Registry, Pfade | V1 Pflicht | Dieses Dokument |
+| Modul | Funktion | Phase | Konzept-Dok |
+|-------|----------|-------|-------------|
+| **Einstellungen** | Projekte, Registry, Pfade, Ordnerstruktur | V1 Pflicht | Dieses Dokument |
 | **PlanManager** | Pläne sortieren, versionieren | V1 Pflicht | Dieses Dokument |
-| **Dashboard** | Übersicht + Widgets | Nach V1 | Eigenes Dokument |
-| **Bautagebuch** | Tägliches Protokoll, Auto-Befüllung, Export | Nach V1 | Eigenes Dokument |
-| **Outlook** | COM Interop, Anhänge extrahieren | Später | Eigenes Dokument |
-| **Wetter** | API-Anbindung pro Baustelle | Später | Eigenes Dokument |
-| **Foto** | OneDrive-Fotos nach Projekt/Datum | Später | Eigenes Dokument |
+| **Foto-Management** | WPF-Viewer, Tags, Geodaten, Bautagebuch-Integration | Nach V1, Prio 1 | [Konzepte/ModuleFoto.md](Konzepte/ModuleFoto.md) |
+| **Zeiterfassung** | WPF-Maske → Excel via ClosedXML | Nach V1, Prio 2 | [Konzepte/ModuleZeiterfassung.md](Konzepte/ModuleZeiterfassung.md) |
+| **Bautagebuch** | Tägliches Protokoll, Auto-Befüllung, Export | Nach V1, Prio 3 | [Konzepte/ModuleBautagebuch.md](Konzepte/ModuleBautagebuch.md) |
+| **Dashboard** | Übersicht + Widgets | Nach V1, Prio 4 | [Konzepte/ModuleDashboard.md](Konzepte/ModuleDashboard.md) |
+| **Outlook** | COM Interop, Anhänge extrahieren | Nach V1 | [Konzepte/ModuleOutlook.md](Konzepte/ModuleOutlook.md) |
+| **Wetter** | API-Anbindung pro Baustelle | Nach V1 | [Konzepte/ModuleWetter.md](Konzepte/ModuleWetter.md) |
+| **Vorlagen** | Excel/Word mit Projektdaten befüllen | Nach V1 | [Konzepte/ModuleVorlagen.md](Konzepte/ModuleVorlagen.md) |
+| **Plankopf-Extraktion** | Revisionstabelle aus PDF lesen (PdfPig) | Nach V1 | [Konzepte/Moduleplanheader.md](Konzepte/Moduleplanheader.md) |
+| **GIS-Integration** | Katasterdaten, Koordinaten automatisch befüllen | Nach V1 | [Konzepte/ModuleGIS.md](Konzepte/ModuleGIS.md) |
+| **Mobile PWA** | Bautagebuch + Plan-Viewer am Handy | Nach V1 | BPM-Mobile-Konzept.md |
 
 ### 1.4 Externe Anbindungen
 
@@ -62,6 +80,8 @@ Bestehende VBA-Makros lesen die automatisch generierte `registry.json`:
   Excel VBA  ←─────────────────┘
   PowerShell (PhotoFolder) ←───┘
 ```
+
+Detailliertes Ökosystem-Diagramm mit Datenflüssen: siehe [DEPENDENCY-MAP.md](DEPENDENCY-MAP.md).
 
 ### 1.5 Multi-Device & OneDrive-Sync
 
@@ -81,13 +101,15 @@ Beispiele:
   202201_Sanierung-Leoben
 ```
 
+Projektnummer wird automatisch aus dem Projektstart-Datum generiert (YYYYMM).
+
 ---
 
 ## 2. Speicherstrategie
 
 ### 2.1 System of Record: SQLite
 
-SQLite ist die **einzige Wahrheitsquelle** für ALLE Daten. JSON-Dateien sind generierte Exporte oder selten geänderte Konfiguration. Wenn JSON korrupt wird → aus SQLite neu generiert.
+SQLite ist die **einzige Wahrheitsquelle** für ALLE Daten. JSON-Dateien sind generierte Exporte oder selten geänderte Konfiguration. Wenn JSON korrupt wird → aus SQLite neu generiert. (ADR-002, ADR-004)
 
 ### 2.2 Dreistufige Speicherung
 
@@ -146,27 +168,22 @@ OneDrive/02Arbeit/
 │
 ├── 202512_ÖWG-Dobl-Zwaring/                  ← Projektordner (SAUBER!)
 │   ├── .bpm-manifest                          ← Versteckt
-│   ├── Pläne/
+│   ├── 01 Planunterlagen/                     ← Nummerierte Ordner
 │   │   ├── _Eingang/                          ← Sammelordner
 │   │   ├── Polierplan/
 │   │   │   ├── TG/
 │   │   │   │   ├── S-101-A_TG Bodenplatte.pdf
-│   │   │   │   ├── S-101-A_TG Bodenplatte.dwg
 │   │   │   │   └── _Archiv/
-│   │   │   │       ├── S-103-B_TG Wämde-Stützen.pdf
-│   │   │   │       └── S-103-C_TG Wämde-Stützen.pdf
 │   │   │   ├── EG/
-│   │   │   │   ├── S-106-B_EG Wämde-Stützen.pdf
-│   │   │   │   └── _Archiv/
 │   │   │   └── 1OG/
 │   │   ├── Schalungsplan/
-│   │   │   ├── KG/
-│   │   │   └── EG/
 │   │   └── Bewehrungsplan/
-│   ├── Fotos/
-│   ├── Dokumente/
-│   ├── Protokolle/
-│   └── Rechnungen/
+│   ├── 02 Fotos/
+│   ├── 03 Dokumente/
+│   ├── 04 Protokolle/
+│   ├── 05 Rechnungen/
+│   ├── 06 Korrespondenz/
+│   └── 07 Sonstiges/
 │
 ├── 202302_Reihenhäuser-Kapfenberg/
 │   ├── .bpm-manifest
@@ -175,6 +192,8 @@ OneDrive/02Arbeit/
 └── BauProjektManager/                         ← Die App
     └── BauProjektManager.exe
 ```
+
+**Ordner-Namenskonvention:** Nummerierte Präfixe mit Leerzeichen (z.B. "01 Planunterlagen"), konfigurierbar über Einstellungen. Analyse bestehender Projektordner ergab dieses Muster. Präfix-Schalter (an/aus) in den Einstellungen. (ADR-011)
 
 ### 2.5 Ordnerstruktur (Lokal)
 
@@ -189,6 +208,8 @@ OneDrive/02Arbeit/
 ├── Logs/
 │   ├── BPM_2026-03-26.log
 │   └── BPM_2026-03-27.log
+├── Thumbnails/                                ← Foto-Modul Cache
+├── Tools/                                     ← FFmpeg etc.
 ├── Backups/
 │   └── pre-import/
 │       └── 2026-03-27_1432/
@@ -212,15 +233,15 @@ OneDrive/02Arbeit/
 
 ### 3.1 SQLite als System of Record
 
-Alle Projektdaten in SQLite (`bpm.db`). Bei jeder Änderung wird `registry.json` automatisch als flacher Export generiert. VBA liest NUR den Export.
+Alle Projektdaten in SQLite (`bpm.db`). Bei jeder Änderung wird `registry.json` automatisch als flacher Export generiert. VBA liest NUR den Export. (ADR-002, ADR-004, ADR-017)
 
 ### 3.2 Internes Domänenmodell (C#)
 
 ```csharp
 public class Project
 {
-    public string Id { get; set; }                    // "proj_202512_dobl"
-    public string ProjectNumber { get; set; }         // "202512"
+    public string Id { get; set; }                    // "proj_001" (auto-increment)
+    public string ProjectNumber { get; set; }         // "202512" (aus Startdatum)
     public string Name { get; set; }                  // "ÖWG-Dobl-Zwaring"
     public string FullName { get; set; }              // "Gartensiedlung Dobl-Zwaring"
     public ProjectStatus Status { get; set; }         // Active, Completed, Archived
@@ -231,11 +252,19 @@ public class Project
     public ProjectPaths Paths { get; set; }
     public string Tags { get; set; }
     public string Notes { get; set; }
+    
+    public string FolderName => $"{ProjectNumber}_{Name}";
+    
+    public void UpdateProjectNumberFromStart()
+    {
+        if (Timeline.ProjectStart.HasValue)
+            ProjectNumber = Timeline.ProjectStart.Value.ToString("yyyyMM");
+    }
 }
 
 public class ProjectLocation
 {
-    // Adresse (aufgeteilt für spätere Google Maps API)
+    // Adresse (aufgeteilt für Google Maps API — ADR-003)
     public string Street { get; set; }                // "Hauptstraße"
     public string HouseNumber { get; set; }           // "15"
     public string PostalCode { get; set; }            // "8143"
@@ -244,14 +273,14 @@ public class ProjectLocation
     public string Municipality { get; set; }          // "Dobl-Zwaring"
     public string District { get; set; }              // "Graz-Umgebung"
     public string State { get; set; }                 // "Steiermark"
+    // Koordinaten (für GIS-Integration vorbereitet)
     public string CoordinateSystem { get; set; }      // "EPSG:31258"
     public double CoordinateEast { get; set; }
     public double CoordinateNorth { get; set; }
+    // Grundstück/Kataster
     public string CadastralKg { get; set; }           // "63201"
     public string CadastralKgName { get; set; }       // "Dobl"
     public string CadastralGst { get; set; }          // "123/1, 123/2, 124"
-    // Computed
-    public string FormattedAddress { get; }           // "Hauptstraße 15, 8143 Dobl"
 }
 
 public class ProjectTimeline
@@ -264,7 +293,7 @@ public class ProjectTimeline
 
 public class Building
 {
-    public string Id { get; set; }                    // "bldg_64"
+    public string Id { get; set; }                    // "bldg_001" (auto-increment)
     public string Name { get; set; }                  // "Haus Nr. 64"
     public string ShortName { get; set; }             // "H64"
     public string Type { get; set; }                  // "Reihenhaus"
@@ -275,7 +304,7 @@ public class ProjectPaths
 {
     public string Root { get; set; }                  // Absoluter Pfad
     public string Plans { get; set; }                 // "Pläne" (relativ zu Root)
-    public string Inbox { get; set; }                 // "Pläne\\_Eingang"
+    public string Inbox { get; set; }                 // "Pläne\_Eingang"
     public string Photos { get; set; }                // "Fotos"
     public string Documents { get; set; }             // "Dokumente"
     public string Protocols { get; set; }             // "Protokolle"
@@ -284,6 +313,7 @@ public class ProjectPaths
 
 public class Client
 {
+    public string Id { get; set; }                    // "client_001" (auto-increment)
     public string Company { get; set; }               // "ÖWG Wohnbau"
     public string ContactPerson { get; set; }         // "Ing. Müller"
     public string Phone { get; set; }                 // "0316/12345"
@@ -293,6 +323,10 @@ public class Client
 
 public enum ProjectStatus { Active, Completed, Archived }
 ```
+
+**ID-Schema:** Auto-Increment aus SQLite mit Präfix: `proj_001`, `client_001`, `bldg_001`. IDs werden nie wiederverwendet. (ADR-006)
+
+**Building-Modell:** Aktuell minimal (Name, ShortName, Type, Levels). Wird später erweitert für Ziegelberechnung/Bauphysik (Geschoßhöhe, Wandstärke etc.) — Design dafür basierend auf realen Excel-Berechnungsblättern.
 
 ### 3.3 registry.json (Generierter Export — flach für VBA)
 
@@ -314,7 +348,7 @@ public enum ProjectStatus { Active, Completed, Archived }
   "customPlanTypes": [],
   "projects": [
     {
-      "id": "proj_202512_dobl",
+      "id": "proj_001",
       "projectNumber": "202512",
       "name": "ÖWG-Dobl-Zwaring",
       "fullName": "Gartensiedlung Dobl-Zwaring",
@@ -340,7 +374,7 @@ public enum ProjectStatus { Active, Completed, Archived }
       "documentsPath": "Dokumente",
       "protocolsPath": "Protokolle",
       "invoicesPath": "Rechnungen",
-      "buildings": "H64:Haus Nr. 64:Reihenhaus:KG,EG,1.OG,2.OG,Dach|H66:Haus Nr. 66:Reihenhaus:EG,OG,Dach|H68:Haus Nr. 68:Reihenhaus:EG,1.OG,2.OG,Dach",
+      "buildings": "H64:Haus Nr. 64:Reihenhaus:KG,EG,1.OG,2.OG,Dach|H66:Haus Nr. 66:Reihenhaus:EG,OG,Dach",
       "tags": "Wohnbau, Reihenhäuser, ÖWGES",
       "notes": "Bauteil B-13, 3 Häuser"
     }
@@ -348,35 +382,7 @@ public enum ProjectStatus { Active, Completed, Archived }
 }
 ```
 
-### 3.4 VBA liest Registry (Pseudo-Code)
-
-```vba
-Function GetRegistryPath() As String
-    GetRegistryPath = Environ("OneDrive") & _
-        "\02Arbeit\.AppData\BauProjektManager\registry.json"
-End Function
-
-Sub SyncOutlookFolders()
-    Dim json As String
-    json = ReadTextFile(GetRegistryPath())
-
-    For Each project In ParseJSON(json)("projects")
-        If project("status") = "active" Then
-            ' Outlook-Ordner erstellen
-            Dim folderName As String
-            folderName = project("projectNumber") & "_" & project("name")
-            CreateOutlookFolder folderName
-
-            ' Eingangsordner sicherstellen
-            Dim inboxPath As String
-            inboxPath = project("rootPath") & "\" & project("inboxPath")
-            If Not FolderExists(inboxPath) Then MkDir inboxPath
-        End If
-    Next
-End Sub
-```
-
-### 3.5 VBA-Kompatibilitäts-Regeln
+### 3.4 VBA-Kompatibilitäts-Regeln
 
 | Regel | Grund |
 |-------|-------|
@@ -386,18 +392,33 @@ End Sub
 | Buildings als Pipe-String | VBA `Split(buildings, "|")` → Array |
 | Tags als Komma-String | VBA `Split(tags, ", ")` → Array |
 | Datum als `YYYY-MM-DD` | VBA `CDate("2024-01-15")` |
-| VBA liest NUR, schreibt NIE | C#-App ist einziger Writer |
+| VBA liest NUR, schreibt NIE | C#-App ist einziger Writer (ADR-017) |
 
-### 3.6 .bpm-manifest
+### 3.5 .bpm-manifest
+
+Versteckte Datei in jedem Projektordner als "Ausweis":
 
 ```json
 {
-  "registryId": "proj_202512_dobl",
+  "registryId": "proj_001",
   "projectNumber": "202512",
   "name": "ÖWG-Dobl-Zwaring",
-  "registryPath": "C:\\Users\\Herbert\\OneDrive\\02Arbeit\\.AppData\\BauProjektManager\\registry.json"
+  "registryPath": "...\\BauProjektManager\\registry.json"
 }
 ```
+
+Bei Ordner-Umbenennung: BPM sucht über Manifest automatisch den neuen Pfad und aktualisiert die DB. (ADR-012)
+
+### 3.6 Automatische Projektordner-Erstellung
+
+Beim Anlegen eines neuen Projekts erstellt BPM automatisch die Ordnerstruktur:
+
+- **FolderTemplateEntry-Modell:** Nummern aus Listenposition, nicht gespeichert
+- **Nummerierte Ordner:** z.B. "01 Planunterlagen", "02 Fotos" (Leerzeichen, keine Unterstriche — ADR-011)
+- **Optionale Unterordner:** z.B. `_Eingang` unter Planunterlagen
+- **Präfix-Schalter:** An/Aus in den Einstellungen
+- **Standard-Template:** In den Einstellungen konfigurierbar (Tab "Standard-Ordnerstruktur")
+- **Live-Vorschau:** TreeView im ProjectEditDialog zeigt die geplante Struktur
 
 ---
 
@@ -415,26 +436,13 @@ End Sub
 
 ### 4.2 Plan-Dateien: Flexibles Modell
 
-Ein Plan (Revision) besteht aus **1 bis n Dateien**. Kein festes PDF/DWG-Paar.
+Ein Plan (Revision) besteht aus **1 bis n Dateien**. Kein festes PDF/DWG-Paar. (ADR-007)
 
 ```
 PlanRevision (z.B. "S-103, Index D")
 ├── PlanFile: S-103-D_TG Wämde.pdf         (Typ: PDF)
 ├── PlanFile: S-103-D_TG Wämde.dwg         (Typ: DWG)
 └── (optional weitere)
-
-Oder nur PDF:
-PlanRevision (z.B. "S-103, Index D")
-└── PlanFile: S-103-D_TG Wämde.pdf
-
-Oder mehrere PDFs:
-PlanRevision (z.B. "B-221, Index B")
-├── PlanFile: B-221-B_1OG Decke Teil 1.pdf
-└── PlanFile: B-221-B_1OG Decke Teil 2.pdf
-
-Oder nur DWG:
-PlanRevision (z.B. "5998-003")
-└── PlanFile: 5998-003_Wände_KG.dwg
 ```
 
 Dateien werden über den gemeinsamen Dateinamen-Stamm (ohne Extension) zusammengeführt. Fehlende PDF oder DWG ist KEIN Fehler.
@@ -469,7 +477,7 @@ Dateien werden über den gemeinsamen Dateinamen-Stamm (ohne Extension) zusammeng
 
 ### 5.1 Hybrid-Mechanismus
 
-1. **Segmente:** Dateiname an Trennzeichen splitten → klickbare Blöcke in der GUI
+1. **Segmente:** Dateiname an Trennzeichen splitten → klickbare Blöcke in der GUI (ADR-022)
 2. **Zeichen-Level:** Fallback per Toggle-Button für Feinauswahl innerhalb eines Segments
 
 ### 5.2 Praxis-Beispiele
@@ -489,11 +497,6 @@ Screen 3 (Architekturplan):
   "21005_104_AP_H1_GR_E2_05_Grundriss E+2.pdf"
   Split [_]:  [21005] [104] [AP] [H1] [GR] [E2] [05] [Grundriss E+2]
   Zuweisung:  ProjNr   Nr   Typ  Haus Plan Gesch Idx  Bezeichnung
-
-Screen 4 (Schalungsplan):
-  "21-2094_404_A_Wände 20G_Haus 2_-_Schalung.pdf"
-  Split [_]:  [21-2094] [404] [A] [Wände 20G] [Haus 2] [-] [Schalung]
-  Zuweisung:  ProjNr     Nr   Idx  Objekt      Haus     ign  Plantyp
 ```
 
 ### 5.3 Verfügbare Feld-Typen
@@ -526,22 +529,12 @@ Screen 4 (Schalungsplan):
 - Reihenfolge frei sortierbar (↑↓ Pfeile)
 - Wird beim Profil-Erstellen festgelegt, nur bei Neuerstellung änderbar
 
-**Beispiele:**
-
-```
-Wenig Pläne:   /Polierplan/datei.pdf
-Normal:        /Polierplan/EG/datei.pdf
-Mittel:        /Polierplan/H64/EG/datei.pdf
-Komplex:       /Architekturplan/Grundriss/H1/E+2/datei.pdf
-```
-
 ### 5.5 Plantyp-Erkennung
 
 - Automatisch per gespeichertem Muster
 - **Methoden:** `prefix` (beginnt mit), `contains` (enthält), `regex` (komplex)
 - **Mehrere Muster pro Profil** → Profil "lernt" mit der Zeit
 - **Konflikt:** Spezifischeres Muster gewinnt. Bei Gleichstand → User-Dialog
-- **Plantyp-Liste:** 10 vordefiniert + User kann dauerhaft erweitern
 
 ### 5.6 Vorschlags- und Profil-System
 
@@ -550,102 +543,7 @@ Komplex:       /Architekturplan/Grundriss/H1/E+2/datei.pdf
 | **RecognitionProfile** | Verbindlich pro Projekt/Plantyp | `profiles.json` (OneDrive, pro Projekt) | Beim Anlernen |
 | **PatternTemplate** | Vorschlag aus Musterbibliothek | `pattern-templates.json` (OneDrive, global) | Automatisch nach jedem Profil |
 
-**Workflow beim neuen Profil:**
-1. User wählt Beispieldateien aus dem `_Eingang`
-2. System vergleicht mit bestehenden PatternTemplates
-3. Match? → "Sieht aus wie Muster 'Statik_S-Prefix' — übernehmen?"
-4. User bestätigt → RecognitionProfile wird erstellt
-5. User lehnt ab → manuell definieren
-6. Neues Profil wird automatisch als PatternTemplate gespeichert
-
-**Regeln:**
-- Kein Machine Learning, keine Blackbox
-- Immer User-Bestätigung
-- PatternTemplates sind nur Vorschläge, nie automatische Wahrheit
-- RecognitionProfiles sind verbindlich pro Projekt
-
-### 5.7 profiles.json (pro Projekt)
-
-```json
-{
-  "schemaVersion": "1.0",
-  "projectId": "proj_202512_dobl",
-  "emptyIndexMeaning": "firstEdition",
-  "customFields": [
-    { "id": "stiege", "label": "Stiege" }
-  ],
-  "typeProfiles": [
-    {
-      "id": "prof_polier_001",
-      "planType": "Polierplan",
-      "recognition": [
-        { "method": "prefix", "value": "S-" },
-        { "method": "prefix", "value": "ST-" }
-      ],
-      "separators": ["-", "_"],
-      "segments": [
-        { "index": 0, "field": "prefix",      "example": "S" },
-        { "index": 1, "field": "planNumber",   "example": "101" },
-        { "index": 2, "field": "planIndex",    "example": "A" },
-        { "index": 3, "field": "description",  "example": "TG Bodenplatte Grundriss" }
-      ],
-      "folderHierarchy": [
-        { "field": "geschoss", "order": 1 }
-      ],
-      "exampleFile": "S-101-A_TG Bodenplatte Grundriss.pdf",
-      "createdAt": "2026-03-26T14:00:00"
-    },
-    {
-      "id": "prof_schal_001",
-      "planType": "Schalungsplan",
-      "recognition": [
-        { "method": "prefix", "value": "5998-" }
-      ],
-      "separators": ["_", "-"],
-      "segments": [
-        { "index": 0, "field": "projectNumber", "example": "5998" },
-        { "index": 1, "field": "planNumber",     "example": "003" },
-        { "index": 2, "field": "objekt",         "example": "Wände" },
-        { "index": 3, "field": "geschoss",       "example": "KG" },
-        { "index": 4, "field": "ignore",         "example": "Teil" },
-        { "index": 5, "field": "planIndex",      "example": "1" }
-      ],
-      "folderHierarchy": [
-        { "field": "geschoss", "order": 1 }
-      ],
-      "exampleFile": "5998-003_Wände_KG_Teil_1.pdf",
-      "createdAt": "2026-03-26T14:30:00"
-    }
-  ]
-}
-```
-
-### 5.8 pattern-templates.json (global)
-
-```json
-{
-  "schemaVersion": "1.0",
-  "templates": [
-    {
-      "id": "tpl_statik_s_prefix",
-      "name": "Statik S-Prefix",
-      "description": "Polierplan mit S-NNN-X Format",
-      "sourceProject": "202512_ÖWG-Dobl-Zwaring",
-      "separators": ["-", "_"],
-      "segments": [
-        { "index": 0, "field": "prefix",      "example": "S" },
-        { "index": 1, "field": "planNumber",   "example": "101" },
-        { "index": 2, "field": "planIndex",    "example": "A" },
-        { "index": 3, "field": "description",  "example": "..." }
-      ],
-      "recognitionHint": { "method": "prefix", "value": "S-" },
-      "createdAt": "2026-03-26T14:00:00",
-      "usedCount": 3
-    }
-  ]
-}
-```
-
+(ADR-010)
 
 ---
 
@@ -655,118 +553,22 @@ Komplex:       /Architekturplan/Grundriss/H1/E+2/datei.pdf
 
 | # | Schritt | Was passiert | User sieht |
 |---|---------|-------------|-----------|
-| 1 | **Scan** | `_Eingang` durchsuchen, alle Dateien auflisten | Nein |
-| 2 | **Parse** | Dateinamen in Segmente splitten, Felder extrahieren | Nein |
-| 3 | **Validate** | Profil vorhanden? Pflichtfelder erkannt? Dateityp ok? | Nein |
+| 1 | **Scan** | `_Eingang` durchsuchen | Nein |
+| 2 | **Parse** | Dateinamen in Segmente splitten | Nein |
+| 3 | **Validate** | Profil vorhanden? Pflichtfelder? | Nein |
 | 4 | **Classify** | Plantyp erkennen, Status bestimmen | Nein |
-| 5 | **Plan** | Zielpfad berechnen, Dateien zu Revisionen gruppieren (1..n) | Nein |
+| 5 | **Plan** | Zielpfad berechnen, Dateien gruppieren (1..n) | Nein |
 | 6 | **Preview** | Ergebnis anzeigen, User kann korrigieren | **JA** |
-| 7 | **Execute** | Journal schreiben (pending) → Dateien verschieben → Cache updaten | Fortschritt |
-| 8 | **Finalize** | Journal-Status "completed", Eingang aufräumen | Nein |
-| 9 | **Recover** | Beim App-Start: pending-Einträge → Reparatur anbieten | Nur bei Bedarf |
-| 10 | **Undo** | Journal rückwärts, Dateien zurück, Status "undone" | Auf Knopfdruck |
+| 7 | **Execute** | Journal → Dateien verschieben → Cache | Fortschritt |
+| 8 | **Finalize** | Journal "completed", Eingang aufräumen | Nein |
+| 9 | **Recover** | Beim App-Start: pending → Reparatur anbieten | Nur bei Bedarf |
+| 10 | **Undo** | Journal rückwärts, Dateien zurück | Auf Knopfdruck |
 
-### 6.2 Detail pro Schritt
-
-**Schritt 1 — Scan:**
-- Input: Pfad zu `_Eingang/`
-- Output: Liste aller Dateien (Name, Extension, Größe, Datum)
-- Fehler: Ordner existiert nicht → Fehlermeldung
-
-**Schritt 2 — Parse:**
-- Input: Dateiliste + aktive Profile des Projekts
-- Output: Geparste Dateien mit extrahierten Segmenten
-- Fehler: Unbekanntes Muster → markiert als "Unknown"
-
-**Schritt 3 — Validate:**
-- Input: Geparste Dateien
-- Output: Validierte Dateien (Pflichtfelder vorhanden?)
-- Prüft: planNumber erkannt? planIndex erkannt? Dateityp (pdf/dwg/other)?
-- Fehler: Pflichtfeld fehlt → markiert als "Invalid"
-
-**Schritt 4 — Classify:**
-- Input: Validierte Dateien + Plan-Cache (SQLite)
-- Output: Klassifizierte Dateien mit Status
-- Status: `New` (nicht im Bestand), `IndexUpdate` (neuer Index), `Overwrite` (gleicher Index, andere MD5), `Skip` (gleicher Index, gleiche MD5), `Unknown` (nicht erkannt), `Conflict` (Mehrdeutigkeit)
-
-**Schritt 5 — Plan:**
-- Input: Klassifizierte Dateien + Ordner-Hierarchie aus Profil
-- Output: Geplante Aktionen mit Zielpfaden
-- Gruppiert Dateien mit gleichem Stamm zu einer Revision (1..n)
-- Berechnet: Zielordner (z.B. `Polierplan/TG/`), Archiv-Pfad (bei IndexUpdate)
-
-**Schritt 6 — Preview:**
-- Input: Geplante Aktionen
-- Output: User-Bestätigung oder -Korrektur
-- **GUI-Dialog** (siehe Kapitel 8)
-- Rechtsklick: Plantyp ändern, Ordner ändern, Überspringen
-
-**Schritt 7 — Execute:**
-- Input: Bestätigte Aktionen
-- Ablauf:
-  1. Backup der SQLite-DB erstellen
-  2. Journal-Eintrag schreiben (Status "pending")
-  3. Pro Aktion (in Reihenfolge):
-     a. Journal-Action schreiben (Status "pending")
-     b. Bei IndexUpdate: Alte Dateien → `_Archiv/` verschieben
-     c. Neue Dateien → Zielordner verschieben
-     d. Journal-Action Status → "completed"
-  4. Cache aktualisieren (MD5, Pfade)
-- Fehler: Bei Fehler in einer Aktion → Status "failed", restliche Aktionen abbrechen
-
-**Schritt 8 — Finalize:**
-- Journal-Status → "completed"
-- Prüfe ob `_Eingang` leer ist (sollte er nach erfolgreichem Import)
-- Log-Eintrag: "Import completed: X actions"
-
-**Schritt 9 — Recover (beim App-Start):**
-- Prüfe: Gibt es Journal-Einträge mit Status "pending"?
-- Ja → Dialog: "Letzter Import wurde unterbrochen. Reparieren?"
-  - Reparieren: Ausstehende Aktionen rückgängig machen
-  - Ignorieren: Journal bleibt (User kann manuell aufräumen)
-
-**Schritt 10 — Undo:**
-- Input: Import-ID
-- Ablauf:
-  1. Journal-Actions rückwärts lesen (höchster `action_order` zuerst)
-  2. Pro Aktion:
-     a. Dateien zurück an Quellpfad verschieben
-     b. Bei IndexUpdate: Archivierte Dateien zurück an Originalplatz
-  3. Cache aktualisieren
-  4. Journal-Status → "undone"
+(ADR-008, ADR-009)
 
 ---
 
-## 7. PlanManager — Fehlerbehandlung (3 Stufen)
-
-| Stufe | Wann | Was |
-|-------|------|-----|
-| **Vorschau** | VOR Import | Rechtsklick → Plantyp ändern, Ordner ändern, Überspringen |
-| **Rückgängig** | NACH Import | Gesamter Import oder einzelne Aktionen zurücknehmen |
-| **Muster lernen** | Bei Korrektur | Erkennungsmuster verfeinern, neues Template speichern |
-
-### Unbekannte Dateien
-
-Dialog: Profil erweitern / Neues Profil / Überspringen / Manuell verschieben
-
-### Plan korrigieren
-
-Rechtsklick auf eine Zeile in der Vorschau:
-- Plantyp ändern (Dropdown)
-- Zielordner ändern (Durchsuchen)
-- Index manuell setzen
-- Überspringen
-
-### Erkennungs-Konflikt
-
-Wenn eine Datei zu mehreren Profilen passt:
-- Dialog zeigt alle Treffer
-- User wählt das richtige Profil
-- Optional: Muster des verlierer-Profils anpassen
-
----
-
-## 8. PlanManager — Undo-Journal (SQLite)
+## 7. PlanManager — Undo-Journal (SQLite)
 
 ### 3 Tabellen
 
@@ -786,7 +588,7 @@ CREATE TABLE import_journal (
 CREATE TABLE import_actions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     import_id TEXT NOT NULL,
-    action_order INTEGER NOT NULL,      -- Reihenfolge für Undo
+    action_order INTEGER NOT NULL,
     action_type TEXT NOT NULL,          -- "new", "indexUpdate", "overwrite", "skip"
     action_status TEXT NOT NULL,        -- "pending", "completed", "failed"
     started_at TEXT,
@@ -813,15 +615,17 @@ CREATE TABLE import_action_files (
 );
 ```
 
+(ADR-009)
+
 ---
 
-## 9. Planlisten (V1.1)
+## 8. Planlisten (V1.1)
 
-### 9.1 Import
+### 8.1 Import
 
 **Formate:** Excel (.xlsx), CSV. PDF (Best Effort mit PdfPig) → nach V1.
 
-**Spalten-Zuordnung:** Angelernt pro Plantyp. User weist Spalten den Feldern zu (Plan-Nr, Index, Bezeichnung, Datum). Zuordnung wird im Profil gespeichert.
+**Spalten-Zuordnung:** Angelernt pro Plantyp. User weist Spalten den Feldern zu.
 
 **Abgleich-Ergebnis:**
 
@@ -832,434 +636,29 @@ CREATE TABLE import_action_files (
 | Fehlend | ❌ | In Planliste aber nicht im Bestand |
 | Extra | ℹ️ | Im Bestand aber nicht in Planliste |
 
-### 9.2 Export
+### 8.2 Export
 
 - Plantypen wählen (Checkboxen)
 - Spalten wählen (Checkboxen)
-- Archiv-Pläne: Nein / Separates Blatt / Mit Markierung
-- Sortierung: Mehrstufig, frei wählbar
 - Format: Excel (.xlsx via ClosedXML) oder PDF (via QuestPDF)
 
 ---
 
-## 10. GUI-Mockups (Kernprogramm)
+## 9. GUI-Mockups
 
-### 10.1 Shell (Hauptfenster)
+Umfangreiche GUI-Mockups für alle Dialoge sind in der Architektur v1.4 enthalten und bleiben gültig. Zusammenfassung der wichtigsten Screens:
 
-```
-╔══════════════════════════════════════════════════════════════════╗
-║  BauProjektManager                                      _ □ X  ║
-╠══════════════════════════════════════════════════════════════════╣
-║  ┌──────────┐                                                    ║
-║  │📁 Pläne   │  Inhalt des gewählten Moduls wird hier           ║
-║  │⚙ Settings│  angezeigt (ContentFrame)                         ║
-║  │          │                                                    ║
-║  │          │                                                    ║
-║  │          │                                                    ║
-║  └──────────┘                                                    ║
-║  ── Statusleiste ───────────────────────────────────────────── ║
-║  Projekt: 202512_ÖWG-Dobl-Zwaring | Registry OK | 3 Projekte  ║
-╚══════════════════════════════════════════════════════════════════╝
-```
-
-### 10.2 Einstellungen — Projektliste
-
-```
-╔══════════════════════════════════════════════════════════════════╗
-║  Einstellungen — Projekte                                      ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  ╔══════════════════╦════════╦══════════════╦═════════════════╗  ║
-║  ║ Projekt           ║ Nr.    ║ Status       ║ Pläne-Pfad     ║  ║
-║  ╠══════════════════╬════════╬══════════════╬═════════════════╣  ║
-║  ║ ÖWG-Dobl-Zwaring ║ 202512 ║ 🟢 Aktiv    ║ ...\Pläne      ║  ║
-║  ║ Kapfenberg        ║ 202302 ║ 🟢 Aktiv    ║ ...\Pläne      ║  ║
-║  ║ Sanierung Leoben  ║ 202201 ║ 🔴 Fertig   ║ ...\Pläne      ║  ║
-║  ╚══════════════════╩════════╩══════════════╩═════════════════╝  ║
-║                                                                  ║
-║  [ + Neues Projekt ]  [ Bearbeiten ]  [ Archivieren ]           ║
-║                                                                  ║
-║  ── Pfade ─────────────────────────────────────────────────     ║
-║  Basis:     [ C:\Users\Herbert\OneDrive\02Arbeit     ] [📁]    ║
-║  AppData:   [ ...\.AppData\BauProjektManager         ] [📁]    ║
-║  Vorlagen:  [ ...\Vorlagen                           ] [📁]    ║
-╚══════════════════════════════════════════════════════════════════╝
-```
-
-### 10.3 Einstellungen — Projekt-Detail
-
-```
-╔══════════════════════════════════════════════════════════════════╗
-║  Projekt bearbeiten — 202512_ÖWG-Dobl-Zwaring                 ║
-╠══════════════════════════════════════════════════════════════════╣
-║  ── Stammdaten ─────────────────────────────────────────────   ║
-║  Projektname:   [ ÖWG-Dobl-Zwaring                         ]  ║
-║  Voller Name:   [ Gartensiedlung Dobl-Zwaring               ]  ║
-║  Nummer:        [ 202512     ]   Status: [ 🟢 Aktiv ▼ ]       ║
-║                                                                  ║
-║  ── Adresse ────────────────────────────────────────────────   ║
-║  Adresse:       [ Hauptstraße 15, 8143 Dobl-Zwaring         ]  ║
-║  Gemeinde:      [ Dobl-Zwaring    ]  Bezirk: [ Graz-Umgeb. ]  ║
-║  Bundesland:    [ Steiermark      ]                             ║
-║                                                                  ║
-║  ── Koordinaten ────────────────────────────────────────────   ║
-║  System: [ EPSG:31258 ▼ ]                                       ║
-║  Ost:    [ 450123.45     ]   Nord:  [ 5210678.90    ]          ║
-║                                                                  ║
-║  ── Grundstück ─────────────────────────────────────────────   ║
-║  KG:     [ 63201   ]  KG-Name: [ Dobl         ]               ║
-║  GST:    [ 123/1, 123/2, 124                   ]               ║
-║                                                                  ║
-║  ── Gebäude ────────────────────────────────────────────────   ║
-║  ╔══════╦════════════╦═══════════╦═══════════════════════════╗  ║
-║  ║ Kurz ║ Name       ║ Typ       ║ Geschoße                 ║  ║
-║  ║ H64  ║ Haus Nr.64 ║ Reihenhaus║ KG, EG, 1.OG, 2.OG, Dach║  ║
-║  ║ H66  ║ Haus Nr.66 ║ Reihenhaus║ EG, OG, Dach             ║  ║
-║  ║ H68  ║ Haus Nr.68 ║ Reihenhaus║ EG, 1.OG, 2.OG, Dach    ║  ║
-║  ╚══════╩════════════╩═══════════╩═══════════════════════════╝  ║
-║  [ + Gebäude ]  [ Bearbeiten ]  [ Entfernen ]                  ║
-║                                                                  ║
-║  ── Laufzeit ───────────────────────────────────────────────   ║
-║  Projektstart:  [ 15.01.2024 ]   Baustart:  [ 01.06.2024 ]    ║
-║  Geplantes Ende:[ 31.12.2026 ]   Tats. Ende:[ __________ ]    ║
-║                                                                  ║
-║  ── Pfade ──────────────────────────────────────────────────   ║
-║  Root:   [ C:\Users\Herbert\OneDrive\02Arbeit\202512_ÖWG-.. ]  ║
-║  Pläne:  [ Pläne            ]  Eingang:  [ Pläne\_Eingang  ]   ║
-║  Fotos:  [ Fotos            ]  Dokumente:[ Dokumente       ]   ║
-║                                                                  ║
-║  Tags:   [ Wohnbau, Reihenhäuser, ÖWGES                    ]   ║
-║  Notizen:[ Bauteil B-13, 3 Häuser                          ]   ║
-║                                                                  ║
-║             [ Speichern ]                [ Abbrechen ]          ║
-╚══════════════════════════════════════════════════════════════════╝
-```
-
-### 10.4 PlanManager — Projekt-Detailansicht
-
-```
-╔══════════════════════════════════════════════════════════════════╗
-║  ← Zurück    202512_ÖWG-Dobl-Zwaring                          ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  📁 Pläne:   ...\Pläne                                          ║
-║  📥 Eingang: ...\Pläne\_Eingang (5 Dateien)                     ║
-║                                                                  ║
-║  ╔══════════════════╦═══════╦════════════════╦═════════════════╗ ║
-║  ║ Plantyp          ║ Pläne ║ Letzter Import ║ Status          ║ ║
-║  ╠══════════════════╬═══════╬════════════════╬═════════════════╣ ║
-║  ║ Polierplan       ║  28   ║ 24.03.2026     ║ ✅ Aktuell     ║ ║
-║  ║ Schalungsplan    ║  14   ║ 20.03.2026     ║ ⚠️ 2 veraltet ║ ║
-║  ║ Bewehrungsplan   ║  22   ║ 22.03.2026     ║ ✅ Aktuell     ║ ║
-║  ╚══════════════════╩═══════╩════════════════╩═════════════════╝ ║
-║                                                                  ║
-║  [ + Plantyp ]  [ 📥 Import ]  [ 📋 Planliste ]  [ 🔍 Suche ] ║
-╚══════════════════════════════════════════════════════════════════╝
-```
-
-### 10.5 Plantyp hinzufügen — Schritt 1/3: Typ wählen
-
-```
-╔══════════════════════════════════════════════════════════════════╗
-║  Plantyp hinzufügen — Schritt 1 von 3                         ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  Plantyp: [ Polierplan                    ▼ ]                   ║
-║           [ Benutzerdefiniert: __________ ]                      ║
-║                                                                  ║
-║  💡 Vorschlag aus Musterbibliothek:                              ║
-║  ┌──────────────────────────────────────────────────────────┐   ║
-║  │ "Statik S-Prefix" (aus Projekt Dobl-Zwaring)            │   ║
-║  │ Muster: S-NNN-X_Bezeichnung                              │   ║
-║  │                              [ Übernehmen ] [ Nein ]     │   ║
-║  └──────────────────────────────────────────────────────────┘   ║
-║                                                                  ║
-║  Beispieldateien laden aus:                                     ║
-║  [ ...\Pläne\_Eingang                    ] [ Durchsuchen ]      ║
-║  47 Dateien gefunden (24 PDF, 23 DWG)                           ║
-║                                                                  ║
-║                              [ Weiter → ]    [ Abbrechen ]     ║
-╚══════════════════════════════════════════════════════════════════╝
-```
-
-### 10.6 Plantyp hinzufügen — Schritt 2/3: Muster definieren
-
-```
-╔══════════════════════════════════════════════════════════════════╗
-║  Muster definieren — Schritt 2 von 3                           ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  Trennzeichen: [ - ☑ ] [ _ ☑ ] [ . ☐ ] [ + Eigenes ]          ║
-║                                                                  ║
-║  Segmente — klicke zum Zuweisen:                                ║
-║  ╭───────╮  ╭───────╮  ╭───────╮  ╭──────────────────────╮     ║
-║  │   S   │  │  103  │  │   C   │  │ TG Wämde-Stützen... │     ║
-║  │ Prefix│  │ Nr.   │  │ Index │  │ Bezeichnung          │     ║
-║  ╰───────╯  ╰───────╯  ╰───────╯  ╰──────────────────────╯     ║
-║                                                                  ║
-║  Zuweisen als: [ Plan-Nummer ▼ ] [ + Neues Feld ]              ║
-║  ☐ Zeichen-Level anzeigen (Feinauswahl innerhalb Segment)       ║
-║                                                                  ║
-║  Erkennungsmuster: Segment 0 = [ S ] → "ist Polierplan"        ║
-║  Methode: [ Prefix ▼ ]  Wert: [ S- ]                           ║
-║  [ + Weiteres Muster ]                                           ║
-║                                                                  ║
-║  Live-Vorschau (alle Dateien im Eingang):                       ║
-║  ╔════════════════════════════════╦═══════╦═══════╦══════╗      ║
-║  ║ Dateiname                      ║  Nr.  ║ Index ║ OK?  ║      ║
-║  ╠════════════════════════════════╬═══════╬═══════╬══════╣      ║
-║  ║ S-101-A_TG Bodenplatte.pdf    ║  101  ║   A   ║  ✅  ║      ║
-║  ║ S-103-C_TG Wämde-Stützen...   ║  103  ║   C   ║  ✅  ║      ║
-║  ║ S-106-B_EG Wämde-Stützen...   ║  106  ║   B   ║  ✅  ║      ║
-║  ║ 5998-003_Wände_KG.pdf         ║  ---  ║  ---  ║  ❌  ║      ║
-║  ╚════════════════════════════════╩═══════╩═══════╩══════╝      ║
-║  ✅ 28/47 geparst (19 anderen Typs)                             ║
-║                                                                  ║
-║           [ ← Zurück ]    [ Weiter → ]       [ Abbrechen ]     ║
-╚══════════════════════════════════════════════════════════════════╝
-```
-
-### 10.7 Plantyp hinzufügen — Schritt 3/3: Ordnerstruktur
-
-```
-╔══════════════════════════════════════════════════════════════════╗
-║  Ordnerstruktur — Schritt 3 von 3                              ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  Nicht als Ordner:       Ordner-Hierarchie:                     ║
-║  ╔══════════════════╗    ╔═══════════════════════════════╗      ║
-║  ║ Projekt-Nr       ║    ║ Ebene 1: Geschoß       [↑][↓]║      ║
-║  ║ Plan-Nr          ║    ║ Ebene 2: Haus          [↑][↓]║      ║
-║  ║ Index            ║ →→ ║ [ + Ebene hinzufügen ]       ║      ║
-║  ║ Bezeichnung      ║    ╚═══════════════════════════════╝      ║
-║  ╚══════════════════╝                                            ║
-║                                                                  ║
-║  Leerer Index bedeutet:                                         ║
-║  ○ Erstausgabe (häufigster Fall)                                ║
-║  ○ Nachfragen bei jedem Import                                  ║
-║  ○ Eigene Bedeutung: [ ________________ ]                       ║
-║                                                                  ║
-║  Vorschau:                                                       ║
-║  📁 Polierplan/                                                  ║
-║  ├── 📁 TG/                                                     ║
-║  │   ├── S-101-A_TG Bodenplatte.pdf                            ║
-║  │   ├── S-101-A_TG Bodenplatte.dwg                            ║
-║  │   ├── S-103-C_TG Wämde-Stützen.pdf                         ║
-║  │   └── 📁 _Archiv/                                            ║
-║  ├── 📁 EG/                                                     ║
-║  │   ├── S-106-B_EG Wämde-Stützen.pdf                         ║
-║  │   └── ...                                                    ║
-║  └── 📁 1OG/                                                    ║
-║                                                                  ║
-║           [ ← Zurück ]    [ Übernehmen ]     [ Abbrechen ]     ║
-╚══════════════════════════════════════════════════════════════════╝
-```
-
-### 10.8 Import — Vorschau (Hauptdialog)
-
-```
-╔══════════════════════════════════════════════════════════════════╗
-║  Import — Vorschau                                             ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  Projekt: 202512_ÖWG-Dobl-Zwaring | Quelle: _Eingang (12)     ║
-║                                                                  ║
-║  ╔════════╦════════════════════════════╦══════════╦═════╦══════╗║
-║  ║ Status ║ Dateiname                  ║ Plantyp  ║ Idx ║ Ziel ║║
-║  ╠════════╬════════════════════════════╬══════════╬═════╬══════╣║
-║  ║  🆕    ║ S-113-A_2OG Decke.pdf     ║ Polier   ║  A  ║ /2OG ║║
-║  ║  🆕    ║ S-113-A_2OG Decke.dwg     ║ Polier   ║  A  ║ /2OG ║║
-║  ║  📈    ║ S-103-D_TG Wämde...pdf    ║ Polier   ║ C→D ║ /TG  ║║
-║  ║  📈    ║ S-103-D_TG Wämde...dwg    ║ Polier   ║ C→D ║ /TG  ║║
-║  ║  ✅    ║ S-101-A_TG Boden...pdf    ║ Polier   ║  =  ║ skip ║║
-║  ║  ✅    ║ S-101-A_TG Boden...dwg    ║ Polier   ║  =  ║ skip ║║
-║  ║  ❓    ║ Zeichnung1.dwl            ║ ???      ║  ?  ║  ?   ║║
-║  ╚════════╩════════════════════════════╩══════════╩═════╩══════╝║
-║                                                                  ║
-║  Zusammenfassung:                                                ║
-║  🆕 Neu: 2 Revisionen (4 Dateien)                               ║
-║  📈 Index-Update: 1 Revision (2 Dateien) → alte in _Archiv     ║
-║  ✅ Unverändert: 1 Revision (2 Dateien) → übersprungen          ║
-║  ❓ Unbekannt: 1 Datei                                          ║
-║                                                                  ║
-║  Rechtsklick → Plantyp ändern / Ordner ändern / Überspringen   ║
-║                                                                  ║
-║     [ Details ]    [ 📥 Importieren ]    [ Abbrechen ]          ║
-╚══════════════════════════════════════════════════════════════════╝
-```
-
-### 10.9 Import — Abgeschlossen
-
-```
-╔══════════════════════════════════════════════════════════════════╗
-║  Import abgeschlossen — 27.03.2026, 14:32                     ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  Import-ID: imp_20260327_143200                                  ║
-║                                                                  ║
-║  • 2 Revisionen neu einsortiert (4 Dateien)                     ║
-║  • 1 Revision aktualisiert — C→D (2 Dateien)                   ║
-║    Alter Index C → _Archiv/ verschoben                          ║
-║  • 1 Revision übersprungen — identisch (2 Dateien)             ║
-║  • 1 Datei unbekannt — im _Eingang belassen                    ║
-║                                                                  ║
-║  [ Rückgängig ]  [ Einzelne korrigieren ]  [ Schließen ]       ║
-╚══════════════════════════════════════════════════════════════════╝
-```
-
-### 10.10 Unbekannte Dateien
-
-```
-╔══════════════════════════════════════════════════════════════════╗
-║  Unbekannte Datei: Zeichnung1.dwl                              ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  Diese Datei konnte keinem Plantyp zugeordnet werden.           ║
-║                                                                  ║
-║  ○ Bestehendes Profil erweitern: [ Polierplan ▼ ]              ║
-║  ○ Neues Profil erstellen (Wizard)                              ║
-║  ○ Manuell verschieben nach: [ _________ ] [📁]                ║
-║  ○ Überspringen (im Eingang belassen)                           ║
-║                                                                  ║
-║              [ Übernehmen ]        [ Abbrechen ]                ║
-╚══════════════════════════════════════════════════════════════════╝
-```
-
-### 10.11 Plan korrigieren (Rechtsklick in Vorschau)
-
-```
-╔══════════════════════════════════════════════════════════════════╗
-║  Plan korrigieren: S-103-D_TG Wämde.pdf                       ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  Erkannter Plantyp: Polierplan      [ Ändern ▼ ]               ║
-║  Erkannte Nummer:   103              [ Ändern   ]               ║
-║  Erkannter Index:   D                [ Ändern   ]               ║
-║  Erkanntes Geschoß: TG              [ Ändern   ]               ║
-║  Zielordner:        Polierplan/TG/   [ 📁 Ändern]              ║
-║                                                                  ║
-║  ☐ Erkennungsmuster für diesen Typ verbessern                  ║
-║                                                                  ║
-║              [ Übernehmen ]        [ Abbrechen ]                ║
-╚══════════════════════════════════════════════════════════════════╝
-```
-
-### 10.12 Erkennungs-Konflikt
-
-```
-╔══════════════════════════════════════════════════════════════════╗
-║  Erkennungs-Konflikt: 21-2094_404_A_Wände.pdf                 ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  Diese Datei passt zu mehreren Plantypen:                       ║
-║                                                                  ║
-║  ○ Schalungsplan  (Muster: "21-" prefix)                       ║
-║  ○ Polierplan     (Muster: enthält "Wände")                    ║
-║                                                                  ║
-║  Bitte wähle den richtigen Typ.                                 ║
-║  ☐ Muster des anderen Typs einschränken                        ║
-║                                                                  ║
-║              [ Übernehmen ]        [ Abbrechen ]                ║
-╚══════════════════════════════════════════════════════════════════╝
-```
-
-### 10.13 Planliste importieren + Abgleich (V1.1)
-
-```
-╔══════════════════════════════════════════════════════════════════╗
-║  Planliste importieren                                         ║
-╠══════════════════════════════════════════════════════════════════╣
-║  Datei: [ Planliste_Statik.xlsx         ] [Durchsuchen]        ║
-║  Plantyp: [ Polierplan ▼ ]                                      ║
-║                                                                  ║
-║  Spalten zuweisen:                                              ║
-║  Spalte A → [ Plan-Nummer ▼ ]  Spalte C → [ Plan-Index ▼ ]    ║
-║  Spalte B → [ Bezeichnung ▼ ]  Spalte D → [ Datum      ▼ ]    ║
-║  ☑ Zuordnung merken (im Profil speichern)                      ║
-║                                                                  ║
-║  ── Abgleich-Ergebnis ─────────────────────────────────────     ║
-║  ╔════════╦═══════════════╦══════╦══════╦══════════════════╗    ║
-║  ║ Status ║ Plannummer    ║ Soll ║ Ist  ║ Planinhalt       ║    ║
-║  ╠════════╬═══════════════╬══════╬══════╬══════════════════╣    ║
-║  ║  ✅    ║ P-010         ║  B   ║  B   ║ Grundriß Keller ║    ║
-║  ║  ⚠️   ║ P-011         ║  C   ║  B   ║ Grundriß EG 64  ║    ║
-║  ║  ❌    ║ P-029         ║  A   ║  —   ║ Ansichten H68   ║    ║
-║  ║  ℹ️   ║ P-030         ║  —   ║  A   ║ Sonderteil       ║    ║
-║  ╚════════╩═══════════════╩══════╩══════╩══════════════════╝    ║
-║                                                                  ║
-║  ✅ 20 Aktuell | ⚠️ 3 Veraltet | ❌ 4 Fehlend | ℹ️ 1 Extra    ║
-║  [ Export Excel ]  [ Drucken ]  [ Schließen ]                   ║
-╚══════════════════════════════════════════════════════════════════╝
-```
-
-### 10.14 Planliste exportieren (V1.1)
-
-```
-╔══════════════════════════════════════════════════════════════════╗
-║  Planliste erstellen                                           ║
-╠══════════════════════════════════════════════════════════════════╣
-║  Plantypen:                  Spalten:                           ║
-║  ☑ Polierplan       (28)    ☑ Plan-Nummer  ☑ Geschoß          ║
-║  ☑ Bewehrungsplan   (22)    ☑ Bezeichnung  ☑ Haus             ║
-║  ☐ Schalungsplan    (14)    ☑ Index        ☑ Plantyp          ║
-║                              ☑ Datum        ☐ Dateipfad        ║
-║                                                                  ║
-║  Archiv: ○ Nein  ○ Separates Blatt  ○ Mit Markierung          ║
-║  Sortierung: 1. Plantyp ↑↓  2. Geschoß ↑↓  3. Nr ↑↓          ║
-║  Format: ○ Excel  ○ PDF                                        ║
-║                                                                  ║
-║      [ Vorschau ]    [ Exportieren ]    [ Abbrechen ]           ║
-╚══════════════════════════════════════════════════════════════════╝
-```
-
-### 10.15 Schnellsuche (V1.1)
-
-```
-╔══════════════════════════════════════════════════════════════════╗
-║  Plan suchen                                                   ║
-╠══════════════════════════════════════════════════════════════════╣
-║  🔍 [ P-013                                         ]           ║
-║                                                                  ║
-║  📄 202512 — P-013 — Grundriß 2.OG, Haus Nr. 64              ║
-║     Index: B | Polierplan/2OG/ | [ Im Explorer ] [ Details ]   ║
-║  📄 202512 — P-013 — Index A (archiviert)                      ║
-║     Polierplan/2OG/_Archiv/ | [ Im Explorer ]                  ║
-║  📄 202302 — P-013 — Grundriß EG                              ║
-║     Index: C | Schalungsplan/EG/ | [ Im Explorer ]             ║
-╚══════════════════════════════════════════════════════════════════╝
-```
+- **Shell** — Sidebar-Navigation + ContentFrame + Statusleiste
+- **Einstellungen** — 2-Tab-Seite (Projekte+Pfade, Standard-Ordnerstruktur) mit Status-Farbpunkten
+- **ProjectEditDialog** — 2-Spalten Layout (1050×780): links Projektdaten, rechts Ordner-TreeView
+- **PlanManager Projektdetail** — Plantyp-Übersicht mit Status und Import-Button
+- **Plantyp-Wizard** — 3-Schritt-Wizard (Typ wählen, Muster, Ordner)
+- **Import-Vorschau** — Tabelle mit Status-Icons, Rechtsklick-Korrektur
+- **Planlisten Import/Export** — Spalten-Zuordnung, Soll/Ist-Abgleich, Druckoptionen
 
 ---
 
-## 11. Zukünftige Module (Kurzübersicht — eigene Dokumente)
-
-### 11.1 Dashboard
-
-Startseite mit Widgets: Projekt-Übersicht, Wetter, neue Pläne im Eingang, Outlook-Status, Bautagebuch-Status. Wird nach V1 als eigenes Modul entwickelt. **Details: siehe `Docs/Module_Dashboard.md`**
-
-### 11.2 Bautagebuch
-
-Tägliches Bauprotokoll mit Auto-Befüllung aus: Registry (Projektdaten), Wetter-API, Stundenzettel (Excel), PlanManager (neue Pläne), OneDrive-Fotos. Export als Word (COM), Excel (ClosedXML), PDF (QuestPDF). **Details: siehe `Docs/Module_Bautagebuch.md`**
-
-### 11.3 Outlook-Integration
-
-COM Interop (`Microsoft.Office.Interop.Outlook`). Projekt-Ordner in Outlook erstellen, Anhänge extrahieren → `_Eingang`. VBA-Makros laufen parallel weiter. **Details: siehe `Docs/Module_Outlook.md`**
-
-### 11.4 Wetter-Modul
-
-API-Anbindung (OpenMeteo o.ä.) pro Baustelle. Aktuelle Daten + Vorhersage. Betonierfreigabe (Temperatur-Check). **Details: siehe `Docs/Module_Wetter.md`**
-
-### 11.5 Foto-Modul
-
-OneDrive-Baustellenfotos nach Projekt/Datum anzeigen. Thumbnail-Vorschau. **Details: siehe `Docs/Module_Foto.md`**
-
-### 11.6 Vorlagen-System
-
-Excel/Word Vorlagen mit Projektdaten befüllen (COM Interop). templates.json verwaltet das Verzeichnis. **Details: siehe `Docs/Module_Vorlagen.md`**
-
----
-
-## 12. Solution-Struktur
+## 10. Solution-Struktur (implementiert)
 
 ```
 BauProjektManager.sln
@@ -1270,77 +669,63 @@ BauProjektManager.sln
 │   │   ├── MainWindow.xaml                    ← Shell + Navigation
 │   │   └── BauProjektManager.App.csproj
 │   │
-│   ├── BauProjektManager.Domain/             ← Modelle, Interfaces, Enums
-│   │   ├── Models/                            ← Project, Plan, Building...
-│   │   ├── Enums/                             ← PlanStatus, ProjectStatus...
-│   │   ├── Interfaces/                        ← IRegistryService, IImportService...
+│   ├── BauProjektManager.Domain/             ← Modelle, Enums
+│   │   ├── Models/
+│   │   │   ├── Project.cs                     ← ✅ Implementiert
+│   │   │   ├── ProjectLocation.cs             ← ✅ Implementiert
+│   │   │   ├── ProjectTimeline.cs             ← ✅ Implementiert
+│   │   │   ├── ProjectPaths.cs                ← ✅ Implementiert
+│   │   │   ├── Building.cs                    ← ✅ Implementiert
+│   │   │   ├── Client.cs                      ← ✅ Implementiert
+│   │   │   └── AppSettings.cs                 ← ✅ Implementiert
+│   │   ├── Enums/
+│   │   │   └── ProjectStatus.cs               ← ✅ Implementiert
 │   │   └── BauProjektManager.Domain.csproj    ← KEINE Abhängigkeiten
 │   │
 │   ├── BauProjektManager.Infrastructure/     ← Technische Umsetzung
 │   │   ├── Persistence/
-│   │   │   ├── SqliteConnectionFactory.cs
-│   │   │   ├── ProjectRepository.cs
-│   │   │   ├── PlanCacheRepository.cs
-│   │   │   ├── ImportJournalRepository.cs
-│   │   │   ├── RegistryJsonExporter.cs        ← SQLite → JSON Export
-│   │   │   └── RegistryJsonMapper.cs          ← Verschachtelt → Flach
-│   │   ├── FileSystem/
-│   │   │   ├── FileOperationService.cs
-│   │   │   ├── Md5HashService.cs
-│   │   │   ├── DirectoryScanner.cs
-│   │   │   └── BackupService.cs
-│   │   ├── Logging/
-│   │   │   └── SerilogSetup.cs
+│   │   │   ├── ProjectDatabase.cs             ← ✅ SQLite CRUD (Projekte, Clients, Buildings)
+│   │   │   ├── AppSettingsService.cs           ← ✅ settings.json laden/speichern
+│   │   │   ├── RegistryJsonExporter.cs        ← ✅ SQLite → JSON Export
+│   │   │   └── ProjectFolderService.cs        ← ✅ Ordner erstellen
 │   │   └── BauProjektManager.Infrastructure.csproj
 │   │
-│   ├── BauProjektManager.PlanManager/        ← PlanManager Feature
+│   ├── BauProjektManager.Settings/           ← ✅ Einstellungen Feature
 │   │   ├── ViewModels/
-│   │   │   ├── PlanManagerViewModel.cs
-│   │   │   ├── ProjectDetailViewModel.cs
-│   │   │   ├── SegmentAssignerViewModel.cs
-│   │   │   ├── ImportPreviewViewModel.cs
-│   │   │   └── PlanListViewModel.cs
+│   │   │   ├── SettingsViewModel.cs           ← ✅ 2-Tab-Seite
+│   │   │   └── ProjectEditViewModel.cs        ← ✅ 2-Spalten-Dialog
 │   │   ├── Views/
-│   │   │   ├── PlanManagerView.xaml
-│   │   │   ├── ProjectDetailView.xaml
-│   │   │   ├── SegmentAssignerDialog.xaml
-│   │   │   ├── ImportPreviewDialog.xaml
-│   │   │   └── PlanListDialog.xaml
-│   │   ├── Services/
-│   │   │   ├── FileParserService.cs
-│   │   │   ├── PlanCompareService.cs
-│   │   │   ├── ImportService.cs               ← 10-Schritte Workflow
-│   │   │   ├── PlanTypeRecognitionService.cs
-│   │   │   └── PatternTemplateService.cs      ← Vorschlagslogik
-│   │   ├── Converters/
-│   │   │   ├── StatusToColorConverter.cs
-│   │   │   └── BoolToVisibilityConverter.cs
-│   │   ├── PlanManagerModule.cs               ← Modul-Registrierung
-│   │   └── BauProjektManager.PlanManager.csproj
+│   │   │   ├── SettingsView.xaml              ← ✅ Projektliste + Pfade + Ordnerstruktur
+│   │   │   └── ProjectEditDialog.xaml         ← ✅ Alle Felder + TreeView
+│   │   └── BauProjektManager.Settings.csproj
 │   │
-│   └── BauProjektManager.Settings/           ← Einstellungen Feature
+│   └── BauProjektManager.PlanManager/        ← ⬜ PlanManager Feature (nächste Phase)
 │       ├── ViewModels/
-│       │   ├── SettingsViewModel.cs
-│       │   └── ProjectEditViewModel.cs
 │       ├── Views/
-│       │   ├── SettingsView.xaml
-│       │   └── ProjectEditDialog.xaml
-│       ├── SettingsModule.cs
-│       └── BauProjektManager.Settings.csproj
+│       ├── Services/
+│       └── BauProjektManager.PlanManager.csproj
 │
-├── tests/
-│   ├── BauProjektManager.Domain.Tests/
-│   ├── BauProjektManager.Infrastructure.Tests/
-│   └── BauProjektManager.PlanManager.Tests/
-│       ├── FileParserServiceTests.cs
-│       ├── PlanCompareServiceTests.cs
-│       └── ImportServiceTests.cs
+├── Tools/
+│   └── Get-ProjektOrdner.ps1                  ← ✅ PowerShell Analyse-Tool
 │
-└── docs/
+└── Docs/
     ├── BauProjektManager_Architektur.md       ← DIESES DOKUMENT
-    ├── Architekturentscheidungen_v1.4.md
-    ├── CODING_STANDARDS.md
-    └── Module_*.md                            ← Eigene Docs pro Modul
+    ├── ADR.md                                 ← ✅ 23 Entscheidungen
+    ├── VISION.md                              ← ✅ Nordstern
+    ├── DEPENDENCY-MAP.md                      ← ✅ Ökosystem
+    ├── CHANGELOG.md                           ← ✅ Versionshistorie
+    ├── BACKLOG.md                             ← ✅ Feature-Liste
+    ├── CODING_STANDARDS.md                    ← ✅ Code-Richtlinien
+    └── Konzepte/                              ← Modul-Konzeptdokumente
+        ├── ModuleBautagebuch.md
+        ├── ModuleDashboard.md
+        ├── ModuleFoto.md
+        ├── ModuleGIS.md
+        ├── ModuleOutlook.md
+        ├── Moduleplanheader.md
+        ├── ModuleVorlagen.md
+        ├── ModuleWetter.md
+        └── ModuleZeiterfassung.md
 ```
 
 **Dependency-Regel (eisern):**
@@ -1352,85 +737,88 @@ Settings        → Domain + Infrastructure
 App             → alles (DI verdrahtet hier)
 ```
 
----
-
-## 13. Technische Entscheidungen (komplett)
-
-| Thema | Entscheidung |
-|-------|-------------|
-| **Sprache** | C# (.NET 10 LTS) |
-| **GUI** | WPF (XAML) |
-| **Architektur** | Modularer Monolith (feste Registrierung, kein Plugin) |
-| **MVVM** | CommunityToolkit.Mvvm |
-| **DI** | Microsoft.Extensions.DependencyInjection |
-| **Logging** | Serilog (File + Console, Structured Logging) |
-| **System of Record** | SQLite |
-| **VBA-Export** | registry.json (automatisch generiert, read-only) |
-| **Konfiguration** | JSON-Dateien auf OneDrive (settings, profiles, templates) |
-| **Operativer State** | Lokal (%LocalAppData%) — SQLite, Logs, Cache |
-| **Excel (neu)** | ClosedXML (kein Excel nötig) |
-| **Excel (bestehend)** | COM Interop (Excel nötig) — nach V1 |
-| **Outlook** | COM Interop (Outlook nötig) — nach V1 |
-| **Word** | COM Interop (Word nötig) — nach V1 |
-| **PDF-Export** | QuestPDF |
-| **PDF-Parsing** | PdfPig |
-| **Testing** | xUnit |
-| **Git** | GitHub (herbertschrotter-blip/BauProjektManager) |
-| **Dateivergleich** | MD5-Hash |
-| **Plan-Dateien** | 1..n Dateien pro Revision (kein festes PDF/DWG-Paar) |
-| **Import** | 10-Schritte-Workflow mit SQLite-Journal |
-| **Undo** | 3 SQLite-Tabellen (Journal, Actions, ActionFiles) |
-| **Deployment** | Single-file .exe (self-contained) |
-| **Multi-Device** | OneDrive für Nutzdaten+Config, lokal für State |
-| **Nullable** | Aktiviert in allen Projekten |
-| **Single-Writer** | Mutex beim App-Start |
-| **Backup** | Vor jedem Import (SQLite + JSON als .bak) |
-| **Atomische Writes** | Write-to-temp-then-rename für JSON |
-| **Schema-Version** | In jeder DB und JSON |
-| **Profil-System** | RecognitionProfiles (verbindlich) + PatternTemplates (Vorschläge) |
+Detailliertes Dependency-Diagramm: siehe [DEPENDENCY-MAP.md](DEPENDENCY-MAP.md).
 
 ---
 
-## 14. V1-Scope & Roadmap
+## 11. Technische Entscheidungen
 
-### V1 PFLICHT
-- [ ] App-Shell + Navigation
-- [ ] Einstellungen (Projekte anlegen/laden/bearbeiten)
-- [ ] SQLite Setup + Haupt-DB
-- [ ] Automatischer registry.json Export
-- [ ] Serilog Logging (File + Console)
-- [ ] Dateinamen-Parser + Segment-Zuweiser GUI (3-Schritt-Wizard)
-- [ ] Plantyp-Erkennung (Muster)
-- [ ] PatternTemplates (Vorschlagslogik beim Profil-Anlegen)
-- [ ] Import-Workflow (alle 10 Schritte)
-- [ ] Index-Archivierung
-- [ ] Undo (Journal-basiert in SQLite)
-- [ ] Recovery bei Abbruch (beim App-Start)
-- [ ] Backup vor Import
-- [ ] Single-Writer Mutex
+Vollständige Liste aller 23 Architekturentscheidungen mit Kontext, Alternativen und Konsequenzen: siehe [ADR.md](ADR.md).
 
-### V1.1
-- [ ] Planlisten-Import (Excel) + Soll/Ist-Abgleich
-- [ ] Planlisten-Export (Excel + PDF)
-- [ ] Schnellsuche (Plan finden über alle Projekte)
-- [ ] CSV-Import für Planlisten
+Zusammenfassung der wichtigsten Entscheidungen:
 
-### Nach V1
-- [ ] Dashboard mit Widgets (Phase 3)
-- [ ] Bautagebuch Eingabe + Export (Phase 3-4)
-- [ ] Profil-Lernen (Muster automatisch erweitern bei Korrektur)
-- [ ] PDF-Planlisten-Import (Phase 3)
-- [ ] Outlook COM (Phase 4+)
-- [ ] Wetter-API (Phase 4+)
-- [ ] Foto-Modul (Phase 4+)
-- [ ] Excel/Word COM Vorlagen (Phase 4+)
-- [ ] PDF-Vorschau (Phase 4+)
-- [ ] VERALTET-Stempel (Phase 4+)
-- [ ] Auto-Update (weit nach V1)
+| Thema | Entscheidung | ADR |
+|-------|-------------|-----|
+| **Sprache** | C# (.NET 10 LTS) | ADR-003 |
+| **GUI** | WPF (XAML) | ADR-001 |
+| **Architektur** | Modularer Monolith (feste Registrierung) | ADR-001 |
+| **MVVM** | CommunityToolkit.Mvvm | ADR-015 |
+| **Logging** | Serilog (File + Console) | ADR-015 |
+| **System of Record** | SQLite (`bpm.db`) | ADR-002 |
+| **VBA-Export** | registry.json (automatisch, read-only) | ADR-004, ADR-017 |
+| **ID-Schema** | Auto-Increment mit Präfix (proj_001) | ADR-006 |
+| **Plan-Dateien** | 1..n pro Revision | ADR-007 |
+| **Import** | 10-Schritte-Workflow | ADR-008 |
+| **Undo** | 3 SQLite-Tabellen (Journal) | ADR-009 |
+| **Profile** | RecognitionProfiles + PatternTemplates | ADR-010 |
+| **Ordner-Naming** | Nummerierte Präfixe mit Leerzeichen | ADR-011 |
+| **Manifest** | .bpm-manifest als versteckter Ausweis | ADR-012 |
+| **C# statt PowerShell** | Für Hauptapp | ADR-014 |
+| **Zeiterfassung** | WPF + ClosedXML → Excel | ADR-018 |
+| **Mobile** | PWA, deferred | ADR-019 |
+| **Multi-User** | Write-Lock mit Heartbeat | ADR-020 |
+| **Client** | Eigene Entität (nicht nur String) | ADR-021 |
+| **Segment-Parsing** | Trennzeichen-basiert | ADR-022 |
 
 ---
 
-## 15. Coding Standards + Definition of Done
+## 12. V1-Scope & Roadmap
+
+### V1 Phase 1 — Einstellungen (✅ größtenteils erledigt)
+
+| # | Feature | Status |
+|---|---------|--------|
+| 1 | App-Shell + Navigation | ✅ |
+| 2 | Serilog Logging | ✅ |
+| 3 | Domain-Modelle | ✅ |
+| 4 | Projektliste + Dialog | ✅ |
+| 5 | SQLite-Datenbank | ✅ |
+| 6 | Auto-Increment IDs | ✅ |
+| 7 | registry.json Export | ✅ |
+| 8 | Git-Aufräumung | ✅ |
+| 9 | Ersteinrichtung | ✅ |
+| 10 | Projektordner erstellen | ✅ |
+| 11 | .bpm-manifest | ⬜ |
+| 12 | Projekt archivieren | ⬜ |
+| 13 | Pfade änderbar | ✅ |
+| 14 | Single-Writer Mutex | ⬜ |
+
+### V1 Phase 2 — PlanManager (⬜ nächste Phase)
+
+Features #18–#34, Details siehe [BACKLOG.md](BACKLOG.md).
+
+### V1.1 — Planlisten
+
+Planlisten Import/Export, Adressbuch, Schnellsuche. Details siehe [BACKLOG.md](BACKLOG.md).
+
+### Nach V1 — Module (Prio-Reihenfolge)
+
+1. Foto-Management (PhotoFolder PS-Code existiert)
+2. Zeiterfassung (Konzept steht)
+3. Bautagebuch
+4. Dashboard
+5. Outlook COM
+6. Plankopf-Extraktion
+7. GIS-Integration
+8. Wetter API
+9. Mobile PWA
+10. Vorlagen
+
+Detaillierte Feature-Liste mit Status: siehe [BACKLOG.md](BACKLOG.md).
+
+---
+
+## 13. Coding Standards + Definition of Done
 
 ### V1-Pflicht Standards
 
@@ -1447,6 +835,8 @@ App             → alles (DI verdrahtet hier)
 | Backup vor Import | SQLite-DB + JSON als .bak kopieren |
 | Atomische JSON-Writes | Write-to-temp-then-rename |
 
+Detaillierte Coding Standards: siehe [CODING_STANDARDS.md](CODING_STANDARDS.md).
+
 ### Definition of Done (V1)
 
 ```
@@ -1459,11 +849,9 @@ Bevor ein Feature als "fertig" gilt:
 ☐ Git Commit mit korrektem Format ([vX.Y.Z] Modul, Typ: Titel)
 ```
 
-Detaillierte Coding Standards: siehe `CODING_STANDARDS.md`
-
 ---
 
-## 16. Alle Config-Dateien — Übersicht
+## 14. Alle Config-Dateien — Übersicht
 
 | Datei | Ort | Format | Zweck | Erstellt von |
 |-------|-----|--------|-------|-------------|
@@ -1478,40 +866,18 @@ Detaillierte Coding Standards: siehe `CODING_STANDARDS.md`
 
 ---
 
-## 17. Offene Punkte
-
-- [ ] Domänenmodell im Detail (alle Klassen, Felder, Beziehungen)
-- [ ] Import-Workflow Detail (Input/Output pro Schritt mit Datentypen)
-- [ ] SQLite-Tabellen komplett (Plan-Cache, Projekt-Tabellen)
-- [ ] OneDrive-Strategie Detail (Offline, Rebuild, Konflikte)
-- [ ] Coding Standards Dokument aktualisieren (Nullable, .editorconfig)
-- [ ] `.editorconfig` erstellen
-- [ ] Modul-Dokumente (Dashboard, Bautagebuch, Outlook, Wetter, Foto)
-- [ ] Phase 0 starten: C#-Solution aufsetzen
-
----
-
-*Dokument Version 1.5.0 — 27.03.2026*
-
-*Basis: v1.3 + 2 Review-Runden (ChatGPT) + Gegen-Review (Claude) + 13 verbindliche Entscheidungen*
-
-*Kernänderungen gegenüber v1.3:*
-- *Modularer Monolith statt Plugin-System (kein IBpmModule)*
-- *SQLite als System of Record, registry.json nur als generierter VBA-Export*
-- *Internes Modell sauber verschachtelt, VBA bekommt flachen Export*
-- *OneDrive nur für Nutzdaten + Config, operativer State lokal*
-- *.NET 8 LTS statt .NET 9*
-- *Plan-Dateien: 1..n pro Revision statt festes PDF/DWG-Paar*
-- *10-Schritte Import-Workflow (inkl. Validate, Plan, Finalize, Recover)*
-- *Undo-Journal mit 3 SQLite-Tabellen (1..n Dateien pro Aktion)*
-- *PatternTemplates getrennt von RecognitionProfiles*
-- *V1-Scope radikal reduziert (nur PlanManager + Shell + Einstellungen)*
-- *Coding Standards ergänzt + Mini Definition of Done*
-- *Module (Dashboard, Bautagebuch etc.) nur angerissen → eigene Dokumente*
+*Dokument Version 1.5.0 — 29.03.2026*
 
 *Kernänderungen gegenüber v1.4:*
-- *.NET 10 LTS statt .NET 8 LTS*
-- *ProjectLocation aufgeteilt: Street, HouseNumber, PostalCode, City*
-- *Neues Client-Modell (Auftraggeber: Company, ContactPerson, Phone, Email)*
-- *Projektnummer automatisch aus Projektstart-Datum (YYYYMM)*
-- *Baustart als separates Feld entfernt (Projektstart reicht)*
+- *Header: Verwandte Dokumente (ADR, Vision, Dependency Map, Changelog, BACKLOG) verlinkt*
+- *Kapitel 1.3: Modul-Tabelle aktualisiert — Prio-Reihenfolge, Konzept-Dok-Verweise auf Docs/Konzepte/*
+- *Kapitel 2.4: Ordnerstruktur mit nummerierten Präfixen ("01 Planunterlagen") statt unnummeriert*
+- *Kapitel 2.5: Thumbnails/ und Tools/ Ordner in lokaler Struktur ergänzt*
+- *Kapitel 3.2: ID-Schema auf auto-increment (proj_001) aktualisiert, Building-Erweiterung notiert*
+- *Kapitel 3.6: Neuer Abschnitt — Automatische Projektordner-Erstellung (FolderTemplateEntry, TreeView)*
+- *Kapitel 9: GUI-Mockups zusammengefasst statt wiederholt (v1.4 Mockups bleiben gültig)*
+- *Kapitel 10: Solution-Struktur mit ✅/⬜ Status pro Datei, Docs-Ordner mit neuen Docs*
+- *Kapitel 11: Technische Entscheidungen verweisen auf ADR.md statt alles zu wiederholen*
+- *Kapitel 12: Roadmap mit ✅ Status für erledigte Features, Nach-V1 Prio-Liste*
+- *Kapitel 17: Offene Punkte entfernt (teilweise erledigt, Rest in BACKLOG)*
+- *Fußtext: .NET 10 LTS (nicht mehr .NET 8), korrekte Änderungsliste*

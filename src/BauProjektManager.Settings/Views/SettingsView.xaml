@@ -235,57 +235,64 @@
                             </TreeView.ItemTemplate>
                         </TreeView>
 
-                        <!-- Buttons -->
-                        <StackPanel Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Top">
-                            <Button Content="▲" Click="OnTemplateMoveUp" Width="32" Height="28"
-                                    Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
-                                    Margin="0,0,0,3" Cursor="Hand" ToolTip="Nach oben"/>
-                            <Button Content="▼" Click="OnTemplateMoveDown" Width="32" Height="28"
-                                    Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
-                                    Margin="0,0,0,10" Cursor="Hand" ToolTip="Nach unten"/>
-                            <Button Content="＋" Click="OnTemplateAddMain" Width="32" Height="28"
-                                    Background="#007ACC" Foreground="White" BorderThickness="0"
-                                    Margin="0,0,0,3" Cursor="Hand" ToolTip="Hauptordner hinzufügen"/>
-                            <Button Content="＋└" Click="OnTemplateAddSub" Width="32" Height="28"
-                                    Background="#085041" Foreground="#5DCAA5" BorderThickness="0"
-                                    Margin="0,0,0,3" Cursor="Hand" ToolTip="Unterordner hinzufügen"
-                                    FontSize="10"/>
-                            <Button Content="✕" Click="OnTemplateRemove" Width="32" Height="28"
-                                    Background="#C62828" Foreground="White" BorderThickness="0"
-                                    Margin="0,0,0,10" Cursor="Hand" ToolTip="Entfernen"/>
-                            <Button Content="📥" Click="OnTemplateToggleInbox" Width="32" Height="28"
-                                    Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
-                                    Margin="0,0,0,3" Cursor="Hand" ToolTip="_Eingang ein/aus"/>
-                            <Button Content="##" Click="OnTemplateTogglePrefix" Width="32" Height="28"
-                                    Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
-                                    Cursor="Hand" ToolTip="Präfix ein/aus (nur Unterordner)"
-                                    FontSize="10" FontWeight="Bold"/>
-                        </StackPanel>
+                        <!-- Buttons + Beschreibungen in einem Grid -->
+                        <Grid Grid.Column="1" Grid.ColumnSpan="2" Margin="8,0,0,0" VerticalAlignment="Top">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="36"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="31"/>
+                                <RowDefinition Height="38"/>
+                                <RowDefinition Height="31"/>
+                                <RowDefinition Height="31"/>
+                                <RowDefinition Height="38"/>
+                                <RowDefinition Height="31"/>
+                                <RowDefinition Height="31"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
 
-                        <!-- Hinweise -->
-                        <StackPanel Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Top">
-                            <TextBlock Foreground="#666666" FontSize="11" TextWrapping="Wrap">
-                                📥 = _Eingang Unterordner
-                            </TextBlock>
-                            <TextBlock Foreground="#666666" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0">
-                                ＋ = Hauptordner (immer nummeriert)
-                            </TextBlock>
-                            <TextBlock Foreground="#5DCAA5" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0">
-                                ＋└ = Unterordner zum gewählten Hauptordner
-                            </TextBlock>
-                            <TextBlock Foreground="#666666" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0">
-                                ## = Präfix ein/aus (nur für Unterordner)
-                            </TextBlock>
-                            <TextBlock Foreground="#666666" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0">
-                                Präfix an: 00 Polierpläne
-                            </TextBlock>
-                            <TextBlock Foreground="#666666" FontSize="11" TextWrapping="Wrap" Margin="0,2,0,0">
-                                Präfix aus: Baustelleneinrichtung
-                            </TextBlock>
-                            <TextBlock Foreground="#666666" FontSize="11" TextWrapping="Wrap" Margin="0,16,0,0">
-                                Änderungen werden sofort in settings.json gespeichert.
-                            </TextBlock>
-                        </StackPanel>
+                            <Button Grid.Row="0" Grid.Column="0" Content="▲" Click="OnTemplateMoveUp" Width="32" Height="28"
+                                    Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0" Cursor="Hand" VerticalAlignment="Top"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="Nach oben verschieben"
+                                       Foreground="#666666" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
+
+                            <Button Grid.Row="1" Grid.Column="0" Content="▼" Click="OnTemplateMoveDown" Width="32" Height="28"
+                                    Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0" Cursor="Hand" VerticalAlignment="Top"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="Nach unten verschieben"
+                                       Foreground="#666666" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
+
+                            <Button Grid.Row="2" Grid.Column="0" Content="＋" Click="OnTemplateAddMain" Width="32" Height="28"
+                                    Background="#007ACC" Foreground="White" BorderThickness="0" Cursor="Hand" VerticalAlignment="Top"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="Hauptordner (immer nummeriert)"
+                                       Foreground="#666666" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
+
+                            <Button Grid.Row="3" Grid.Column="0" Content="＋└" Click="OnTemplateAddSub" Width="32" Height="28"
+                                    Background="#085041" Foreground="#5DCAA5" BorderThickness="0" Cursor="Hand" FontSize="10" VerticalAlignment="Top"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="Unterordner zum gewählten Hauptordner"
+                                       Foreground="#5DCAA5" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
+
+                            <Button Grid.Row="4" Grid.Column="0" Content="✕" Click="OnTemplateRemove" Width="32" Height="28"
+                                    Background="#C62828" Foreground="White" BorderThickness="0" Cursor="Hand" VerticalAlignment="Top"/>
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="Entfernen"
+                                       Foreground="#666666" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
+
+                            <Button Grid.Row="5" Grid.Column="0" Content="📥" Click="OnTemplateToggleInbox" Width="32" Height="28"
+                                    Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0" Cursor="Hand" VerticalAlignment="Top"/>
+                            <TextBlock Grid.Row="5" Grid.Column="1" Text="_Eingang ein/aus"
+                                       Foreground="#666666" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
+
+                            <Button Grid.Row="6" Grid.Column="0" Content="##" Click="OnTemplateTogglePrefix" Width="32" Height="28"
+                                    Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0" Cursor="Hand" FontSize="10" FontWeight="Bold" VerticalAlignment="Top"/>
+                            <TextBlock Grid.Row="6" Grid.Column="1" Text="Präfix ein/aus (nur Unterordner)"
+                                       Foreground="#666666" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
+
+                            <StackPanel Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,12,0,0">
+                                <TextBlock Foreground="#555555" FontSize="11">Präfix an: 00 Polierpläne</TextBlock>
+                                <TextBlock Foreground="#555555" FontSize="11" Margin="0,2,0,0">Präfix aus: Baustelleneinrichtung</TextBlock>
+                                <TextBlock Foreground="#555555" FontSize="11" Margin="0,10,0,0">Änderungen werden sofort gespeichert.</TextBlock>
+                            </StackPanel>
+                        </Grid>
                     </Grid>
                 </StackPanel>
             </TabItem>

@@ -12,6 +12,13 @@ public class Project
     public string Name { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
     public ProjectStatus Status { get; set; } = ProjectStatus.Active;
+
+    /// <summary>
+    /// Projektart (z.B. "Neubau", "Sanierung", "Umbau").
+    /// Kein Enum — die Liste ist vom User editierbar (settings.json).
+    /// </summary>
+    public string ProjectType { get; set; } = string.Empty;
+
     public ProjectLocation Location { get; set; } = new();
     public ProjectTimeline Timeline { get; set; } = new();
     public Client Client { get; set; } = new();

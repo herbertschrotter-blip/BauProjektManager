@@ -23,7 +23,7 @@ public class StatusConverter : IValueConverter
             {
                 ProjectStatus.Active => "● Aktiv",
                 ProjectStatus.Completed => "● Abgeschlossen",
-                ProjectStatus.Archived => "● Archiviert",
+                
                 _ => status.ToString()
             };
         }
@@ -42,7 +42,7 @@ public class StatusColorConverter : IValueConverter
 {
     private static readonly SolidColorBrush Green = new(Color.FromRgb(0x4C, 0xAF, 0x50));
     private static readonly SolidColorBrush Red = new(Color.FromRgb(0xE2, 0x4B, 0x4A));
-    private static readonly SolidColorBrush Gray = new(Color.FromRgb(0x99, 0x99, 0x99));
+    
 
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
@@ -52,11 +52,11 @@ public class StatusColorConverter : IValueConverter
             {
                 ProjectStatus.Active => Green,
                 ProjectStatus.Completed => Red,
-                ProjectStatus.Archived => Gray,
-                _ => Gray
+                
+                _ => Red
             };
         }
-        return Gray;
+        return Red;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

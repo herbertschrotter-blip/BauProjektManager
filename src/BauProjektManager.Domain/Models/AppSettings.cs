@@ -22,6 +22,40 @@ public class AppSettings
     public List<FolderTemplateEntry> FolderTemplate { get; set; } = GetDefaultFolderTemplate();
 
     /// <summary>
+    /// Editierbare Liste der Projektarten (Dropdown im Projekt-Dialog).
+    /// Vom User über ✎-Button anpassbar.
+    /// </summary>
+    public List<string> ProjectTypes { get; set; } = GetDefaultProjectTypes();
+
+    /// <summary>
+    /// Editierbare Liste der Geschoss-Bezeichnungen (Dropdown im Bauwerk-Tab).
+    /// Vom User über Klick auf Spaltenkopf anpassbar.
+    /// </summary>
+    public List<string> LevelNames { get; set; } = GetDefaultLevelNames();
+
+    /// <summary>
+    /// Standard-Projektarten.
+    /// </summary>
+    public static List<string> GetDefaultProjectTypes() =>
+    [
+        "Neubau",
+        "Sanierung",
+        "Umbau",
+        "Zubau",
+        "Abbruch",
+        "Sonstiges"
+    ];
+
+    /// <summary>
+    /// Standard-Geschossbezeichnungen für das Dropdown.
+    /// </summary>
+    public static List<string> GetDefaultLevelNames() =>
+    [
+        "UG3", "UG2", "UG", "EG", "OG1", "OG2", "OG3", "OG4", "OG5",
+        "DG", "Attika", "Staffel"
+    ];
+
+    /// <summary>
     /// Standard-Ordnerstruktur für neue Bauprojekte.
     /// Namen OHNE Nummer — die Nummerierung entsteht automatisch aus der Reihenfolge.
     /// </summary>
@@ -56,19 +90,8 @@ public class AppSettings
 /// </summary>
 public class FolderTemplateEntry
 {
-    /// <summary>
-    /// Ordnername OHNE Nummer (z.B. "Planunterlagen", "Fotos").
-    /// </summary>
     public string Name { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Ob ein _Eingang Unterordner erstellt werden soll (für PlanManager-Import).
-    /// </summary>
     public bool HasInbox { get; set; }
-
-    /// <summary>
-    /// Unterordner dieses Hauptordners.
-    /// </summary>
     public List<SubFolderEntry> SubFolders { get; set; } = [];
 
     public FolderTemplateEntry() { }
@@ -86,10 +109,6 @@ public class FolderTemplateEntry
         SubFolders = subFolders;
     }
 
-    /// <summary>
-    /// Generiert den nummerierten Ordnernamen aus der Position.
-    /// z.B. Position 2 + Name "Fotos" → "02 Fotos"
-    /// </summary>
     public string GetNumberedName(int position) => $"{position:D2} {Name}";
 }
 
@@ -99,16 +118,7 @@ public class FolderTemplateEntry
 /// </summary>
 public class SubFolderEntry
 {
-    /// <summary>
-    /// Unterordner-Name (z.B. "Polierpläne", "Absteckpläne").
-    /// </summary>
     public string Name { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Ob der Unterordner eine Nummer bekommt (00, 01, 02...).
-    /// true  → "01 Polierpläne"
-    /// false → "Baustelleneinrichtung" (ohne Nummer)
-    /// </summary>
     public bool HasPrefix { get; set; } = true;
 
     public SubFolderEntry() { }
@@ -119,9 +129,6 @@ public class SubFolderEntry
         HasPrefix = hasPrefix;
     }
 
-    /// <summary>
-    /// Generiert den Ordnernamen — mit oder ohne Nummer.
-    /// </summary>
     public string GetDisplayName(int position) =>
         HasPrefix ? $"{position:D2} {Name}" : Name;
 }

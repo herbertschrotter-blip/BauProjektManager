@@ -30,11 +30,11 @@ public class ProjectDatabase : IDisposable
         {
             _connection = new SqliteConnection($"Data Source={_dbPath}");
             _connection.Open();
-            // Enable WAL mode for better concurrency
             using var walCmd = _connection.CreateCommand();
             walCmd.CommandText = "PRAGMA journal_mode=WAL;";
             walCmd.ExecuteNonQuery();
             EnsureTables();
+            MigrateSchema();
         }
         return _connection;
     }
@@ -62,6 +62,7 @@ public class ProjectDatabase : IDisposable
                 name TEXT NOT NULL DEFAULT '',
                 full_name TEXT NOT NULL DEFAULT '',
                 status TEXT NOT NULL DEFAULT 'Active',
+                project_type TEXT NOT NULL DEFAULT '',
                 client_id TEXT,
                 -- Location
                 street TEXT NOT NULL DEFAULT '',
@@ -84,12 +85,12 @@ public class ProjectDatabase : IDisposable
                 actual_end TEXT,
                 -- Paths
                 root_path TEXT NOT NULL DEFAULT '',
-                plans_path TEXT NOT NULL DEFAULT 'Pläne',
-                inbox_path TEXT NOT NULL DEFAULT 'Pläne\_Eingang',
-                photos_path TEXT NOT NULL DEFAULT 'Fotos',
-                documents_path TEXT NOT NULL DEFAULT 'Dokumente',
-                protocols_path TEXT NOT NULL DEFAULT 'Protokolle',
-                invoices_path TEXT NOT NULL DEFAULT 'Rechnungen',
+                plans_path TEXT NOT NULL DEFAULT '',
+                inbox_path TEXT NOT NULL DEFAULT '',
+                photos_path TEXT NOT NULL DEFAULT '',
+                documents_path TEXT NOT NULL DEFAULT '',
+                protocols_path TEXT NOT NULL DEFAULT '',
+                invoices_path TEXT NOT NULL DEFAULT '',
                 -- Meta
                 tags TEXT NOT NULL DEFAULT '',
                 notes TEXT NOT NULL DEFAULT '',
@@ -114,11 +115,42 @@ public class ProjectDatabase : IDisposable
             );
             """;
         cmd.ExecuteNonQuery();
+    }
 
-        // Set or update schema version
-        cmd = conn.CreateCommand();
-        cmd.CommandText = "DELETE FROM schema_version; INSERT INTO schema_version (version) VALUES ('1.1');";
-        cmd.ExecuteNonQuery();
+    /// <summary>
+    /// Migrates existing databases to the current schema version.
+    /// Adds new columns if they don't exist yet.
+    /// </summary>
+    private void MigrateSchema()
+    {
+        var conn = _connection!;
+
+        // Add project_type column if missing (v1.1 → v1.2)
+        if (!ColumnExists("projects", "project_type"))
+        {
+            var cmd = conn.CreateCommand();
+            cmd.CommandText = "ALTER TABLE projects ADD COLUMN project_type TEXT NOT NULL DEFAULT ''";
+            cmd.ExecuteNonQuery();
+        }
+
+        // Update schema version
+        var verCmd = conn.CreateCommand();
+        verCmd.CommandText = "DELETE FROM schema_version; INSERT INTO schema_version (version) VALUES ('1.2');";
+        verCmd.ExecuteNonQuery();
+    }
+
+    private bool ColumnExists(string table, string column)
+    {
+        var conn = _connection!;
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = $"PRAGMA table_info({table})";
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            if (reader.GetString(1) == column)
+                return true;
+        }
+        return false;
     }
 
     // === ID GENERATION ===
@@ -163,14 +195,12 @@ public class ProjectDatabase : IDisposable
     {
         var conn = GetConnection();
 
-        // Generate new ID if needed
         bool isNew = string.IsNullOrEmpty(project.Id) || !ProjectExists(project.Id);
         if (isNew)
         {
             project.Id = GenerateNextId("proj", "projects");
         }
 
-        // Save client first if has data
         string? clientId = null;
         if (!string.IsNullOrEmpty(project.Client.Company) ||
             !string.IsNullOrEmpty(project.Client.ContactPerson))
@@ -181,7 +211,7 @@ public class ProjectDatabase : IDisposable
         var cmd = conn.CreateCommand();
         cmd.CommandText = """
             INSERT INTO projects (
-                id, project_number, name, full_name, status, client_id,
+                id, project_number, name, full_name, status, project_type, client_id,
                 street, house_number, postal_code, city,
                 municipality, district, state,
                 coordinate_system, coordinate_east, coordinate_north,
@@ -191,7 +221,7 @@ public class ProjectDatabase : IDisposable
                 documents_path, protocols_path, invoices_path,
                 tags, notes, updated_at
             ) VALUES (
-                @id, @project_number, @name, @full_name, @status, @client_id,
+                @id, @project_number, @name, @full_name, @status, @project_type, @client_id,
                 @street, @house_number, @postal_code, @city,
                 @municipality, @district, @state,
                 @coordinate_system, @coordinate_east, @coordinate_north,
@@ -203,7 +233,7 @@ public class ProjectDatabase : IDisposable
             )
             ON CONFLICT(id) DO UPDATE SET
                 project_number = @project_number, name = @name, full_name = @full_name,
-                status = @status, client_id = @client_id,
+                status = @status, project_type = @project_type, client_id = @client_id,
                 street = @street, house_number = @house_number,
                 postal_code = @postal_code, city = @city,
                 municipality = @municipality, district = @district, state = @state,
@@ -225,6 +255,7 @@ public class ProjectDatabase : IDisposable
         cmd.Parameters.AddWithValue("@name", project.Name);
         cmd.Parameters.AddWithValue("@full_name", project.FullName);
         cmd.Parameters.AddWithValue("@status", project.Status.ToString());
+        cmd.Parameters.AddWithValue("@project_type", project.ProjectType);
         cmd.Parameters.AddWithValue("@client_id", (object?)clientId ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@street", project.Location.Street);
         cmd.Parameters.AddWithValue("@house_number", project.Location.HouseNumber);
@@ -255,7 +286,6 @@ public class ProjectDatabase : IDisposable
 
         cmd.ExecuteNonQuery();
 
-        // Save buildings
         SaveBuildings(project.Id, project.Buildings);
     }
 
@@ -289,7 +319,6 @@ public class ProjectDatabase : IDisposable
     {
         var conn = GetConnection();
 
-        // Check if project already has a client
         var checkCmd = conn.CreateCommand();
         checkCmd.CommandText = "SELECT client_id FROM projects WHERE id = @id";
         checkCmd.Parameters.AddWithValue("@id", projectId);
@@ -358,13 +387,11 @@ public class ProjectDatabase : IDisposable
     {
         var conn = GetConnection();
 
-        // Delete existing
         var delCmd = conn.CreateCommand();
         delCmd.CommandText = "DELETE FROM buildings WHERE project_id = @project_id";
         delCmd.Parameters.AddWithValue("@project_id", projectId);
         delCmd.ExecuteNonQuery();
 
-        // Insert new
         foreach (var building in buildings)
         {
             var id = string.IsNullOrEmpty(building.Id)
@@ -400,6 +427,7 @@ public class ProjectDatabase : IDisposable
             Name = reader.GetString(reader.GetOrdinal("name")),
             FullName = reader.GetString(reader.GetOrdinal("full_name")),
             Status = status,
+            ProjectType = ReadStringOrDefault(reader, "project_type"),
             Location = new ProjectLocation
             {
                 Street = reader.GetString(reader.GetOrdinal("street")),

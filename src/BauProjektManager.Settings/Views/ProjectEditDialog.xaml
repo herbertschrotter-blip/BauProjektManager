@@ -34,7 +34,6 @@
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderBrush" Value="#3E3E42"/>
             <Setter Property="Padding" Value="5,3"/>
-            <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBox">
@@ -96,6 +95,38 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+        <!-- Dark Tab Styles -->
+        <Style TargetType="TabControl" x:Key="DialogTabs">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style TargetType="TabItem" x:Key="DialogTabItem">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#666666"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="TabBorder" Padding="{TemplateBinding Padding}"
+                                Background="Transparent"
+                                BorderBrush="Transparent" BorderThickness="0,0,0,2">
+                            <ContentPresenter ContentSource="Header"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="#007ACC"/>
+                                <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="#CCCCCC"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style x:Key="FTB" TargetType="TextBox">
             <Setter Property="Background" Value="#1E1E1E"/>
             <Setter Property="Foreground" Value="#CCCCCC"/>
@@ -113,6 +144,16 @@
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Margin" Value="0,12,0,6"/>
         </Style>
+        <Style x:Key="IconBtn" TargetType="Button">
+            <Setter Property="Width" Value="26"/>
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="Background" Value="#3E3E42"/>
+            <Setter Property="Foreground" Value="#999999"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
     </Window.Resources>
 
     <Grid Margin="20">
@@ -125,285 +166,336 @@
         <TextBlock Grid.Row="0" x:Name="TxtDialogTitle" Text="Projekt bearbeiten"
                    FontSize="18" Foreground="#CCCCCC" Margin="0,0,0,10"/>
 
-        <!-- 2-Spalten -->
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="20"/>
-                <ColumnDefinition Width="400"/>
-            </Grid.ColumnDefinitions>
+        <!-- TabControl -->
+        <TabControl Grid.Row="1" Style="{StaticResource DialogTabs}">
 
-            <!-- LINKE SPALTE -->
-            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Padding="0,0,12,0">
-                <StackPanel Margin="0,0,4,0">
-
-                    <TextBlock Text="── Stammdaten ──" Style="{StaticResource SH}" Margin="0,0,0,6"/>
+            <!-- ═══ TAB 1: STAMMDATEN ═══ -->
+            <TabItem Header="Stammdaten" Style="{StaticResource DialogTabItem}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,10,0,0">
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="110"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="20"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Projektstart:" Style="{StaticResource FL}"/>
-                        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Margin="0,3">
-                            <DatePicker x:Name="DpProjectStart" Width="140" SelectedDateChanged="OnProjectStartChanged"/>
-                            <TextBlock Text="  →  Nr:" Foreground="#999999" VerticalAlignment="Center"/>
-                            <TextBlock x:Name="TxtNumberPreview" Text="" Foreground="#007ACC" FontWeight="Bold" VerticalAlignment="Center" Margin="5,0,0,0"/>
-                        </StackPanel>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Projektname:" Style="{StaticResource FL}"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtName" Style="{StaticResource FTB}"/>
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Voller Name:" Style="{StaticResource FL}"/>
-                        <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtFullName" Style="{StaticResource FTB}"/>
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Status:" Style="{StaticResource FL}"/>
-                        <ComboBox Grid.Row="3" Grid.Column="1" x:Name="CmbStatus" Margin="0,3"/>
-                    </Grid>
 
-                    <TextBlock Text="── Auftraggeber ──" Style="{StaticResource SH}"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="110"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Firma:" Style="{StaticResource FL}"/>
-                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtClientCompany" Style="{StaticResource FTB}"/>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Kontaktperson:" Style="{StaticResource FL}"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtClientContact" Style="{StaticResource FTB}"/>
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Telefon:" Style="{StaticResource FL}"/>
-                        <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtClientPhone" Style="{StaticResource FTB}"/>
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Email:" Style="{StaticResource FL}"/>
-                        <TextBox Grid.Row="3" Grid.Column="1" x:Name="TxtClientEmail" Style="{StaticResource FTB}"/>
-                    </Grid>
+                        <!-- LINKE SPALTE -->
+                        <StackPanel Grid.Column="0" Margin="0,0,4,0">
 
-                    <TextBlock Text="── Adresse ──" Style="{StaticResource SH}"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="110"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="70"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Straße / Nr:" Style="{StaticResource FL}"/>
-                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtStreet" Style="{StaticResource FTB}"/>
-                        <TextBox Grid.Row="0" Grid.Column="2" x:Name="TxtHouseNumber" Style="{StaticResource FTB}" Margin="5,3,0,3"/>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="PLZ / Ort:" Style="{StaticResource FL}"/>
-                        <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="70"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBox Grid.Column="0" x:Name="TxtPostalCode" Style="{StaticResource FTB}"/>
-                            <TextBox Grid.Column="1" x:Name="TxtCity" Style="{StaticResource FTB}" Margin="5,3,0,3"/>
-                        </Grid>
-                    </Grid>
-
-                    <TextBlock Text="── Verwaltung ──" Style="{StaticResource SH}"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="110"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Gemeinde:" Style="{StaticResource FL}"/>
-                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtMunicipality" Style="{StaticResource FTB}"/>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Bezirk:" Style="{StaticResource FL}"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtDistrict" Style="{StaticResource FTB}"/>
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Bundesland:" Style="{StaticResource FL}"/>
-                        <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtState" Style="{StaticResource FTB}"/>
-                    </Grid>
-
-                    <TextBlock Text="── Koordinaten ──" Style="{StaticResource SH}"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="110"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="System:" Style="{StaticResource FL}"/>
-                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtCoordSystem" Style="{StaticResource FTB}"/>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Ost / Nord:" Style="{StaticResource FL}"/>
-                        <Grid Grid.Row="1" Grid.Column="1">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBox Grid.Column="0" x:Name="TxtCoordEast" Style="{StaticResource FTB}"/>
-                            <TextBox Grid.Column="1" x:Name="TxtCoordNorth" Style="{StaticResource FTB}" Margin="5,3,0,3"/>
-                        </Grid>
-                    </Grid>
-
-                    <TextBlock Text="── Grundstück ──" Style="{StaticResource SH}"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="110"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="KG / Name:" Style="{StaticResource FL}"/>
-                        <Grid Grid.Row="0" Grid.Column="1">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="80"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBox Grid.Column="0" x:Name="TxtCadastralKg" Style="{StaticResource FTB}"/>
-                            <TextBox Grid.Column="1" x:Name="TxtCadastralKgName" Style="{StaticResource FTB}" Margin="5,3,0,3"/>
-                        </Grid>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="GST-Nr:" Style="{StaticResource FL}"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtCadastralGst" Style="{StaticResource FTB}"/>
-                    </Grid>
-
-                    <TextBlock Text="── Laufzeit ──" Style="{StaticResource SH}"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="110"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="100"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Baustart:" Style="{StaticResource FL}"/>
-                        <DatePicker Grid.Row="0" Grid.Column="1" x:Name="DpConstructionStart" Margin="0,3"/>
-                        <TextBlock Grid.Row="0" Grid.Column="2" Text="Geplant Ende:" Style="{StaticResource FL}" Margin="10,3,0,3"/>
-                        <DatePicker Grid.Row="0" Grid.Column="3" x:Name="DpPlannedEnd" Margin="0,3"/>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Tats. Ende:" Style="{StaticResource FL}"/>
-                        <DatePicker Grid.Row="1" Grid.Column="1" x:Name="DpActualEnd" Margin="0,3"/>
-                    </Grid>
-
-                    <TextBlock Text="── Sonstiges ──" Style="{StaticResource SH}"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="110"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Tags:" Style="{StaticResource FL}"/>
-                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtTags" Style="{StaticResource FTB}"/>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Notizen:" Style="{StaticResource FL}"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtNotes" Style="{StaticResource FTB}"
-                                 Height="50" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
-                    </Grid>
-
-                </StackPanel>
-            </ScrollViewer>
-
-            <!-- Trennlinie -->
-            <Rectangle Grid.Column="1" Width="1" Fill="#3E3E42" Margin="9,0"/>
-
-            <!-- RECHTE SPALTE — Ordnerstruktur mit TreeView -->
-            <StackPanel Grid.Column="2">
-                <TextBlock Text="── Ordnerstruktur ──" Style="{StaticResource SH}" Margin="0,0,0,6"/>
-                <TextBlock Text="Reihenfolge = Nummerierung (00, 01, 02...)"
-                           Foreground="#999999" FontSize="11" Margin="0,0,0,8"/>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- TreeView statt ListBox -->
-                    <TreeView x:Name="TvFolders" Grid.Column="0"
-                              Background="#1E1E1E" Foreground="#CCCCCC"
-                              BorderBrush="#3E3E42" Height="300"
-                              SelectedItemChanged="OnTreeSelectionChanged">
-                        <TreeView.Resources>
-                            <Style TargetType="TreeViewItem">
-                                <Setter Property="Foreground" Value="#CCCCCC"/>
-                                <Setter Property="IsExpanded" Value="True"/>
-                                <Setter Property="Padding" Value="2"/>
-                            </Style>
-                        </TreeView.Resources>
-                        <TreeView.ItemTemplate>
-                            <HierarchicalDataTemplate ItemsSource="{Binding Children}">
-                                <StackPanel Orientation="Horizontal" Margin="2">
-                                    <TextBlock Text="{Binding DisplayName}" Foreground="#CCCCCC"
-                                               VerticalAlignment="Center" FontSize="13"/>
-                                    <TextBlock Text="  📥" Foreground="#007ACC" FontSize="12"
-                                               Visibility="{Binding InboxVisibility}"
-                                               VerticalAlignment="Center" Margin="4,0,0,0"/>
-                                    <TextBlock Text="{Binding PrefixLabel}" Foreground="#555555"
-                                               FontSize="10" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            <!-- Projekt -->
+                            <TextBlock Text="Projekt" Style="{StaticResource SH}" Margin="0,0,0,6"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Projektstart:" Style="{StaticResource FL}"/>
+                                <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Margin="0,3">
+                                    <DatePicker x:Name="DpProjectStart" Width="140" SelectedDateChanged="OnProjectStartChanged"/>
+                                    <TextBlock Text="  →  Nr:" Foreground="#999999" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtNumberPreview" Text="" Foreground="#007ACC" FontWeight="Bold" VerticalAlignment="Center" Margin="5,0,0,0"/>
                                 </StackPanel>
-                            </HierarchicalDataTemplate>
-                        </TreeView.ItemTemplate>
-                    </TreeView>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Projektname:" Style="{StaticResource FL}"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtName" Style="{StaticResource FTB}"/>
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Voller Name:" Style="{StaticResource FL}"/>
+                                <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtFullName" Style="{StaticResource FTB}"/>
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Projektart:" Style="{StaticResource FL}"/>
+                                <DockPanel Grid.Row="3" Grid.Column="1" Margin="0,3">
+                                    <Button DockPanel.Dock="Right" Content="✎" Style="{StaticResource IconBtn}"
+                                            Click="OnEditProjectTypes" ToolTip="Liste bearbeiten" Margin="4,0,0,0"/>
+                                    <ComboBox x:Name="CmbProjectType"/>
+                                </DockPanel>
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Status:" Style="{StaticResource FL}"/>
+                                <ComboBox Grid.Row="4" Grid.Column="1" x:Name="CmbStatus" Margin="0,3"/>
+                            </Grid>
 
-                    <!-- Buttons -->
-                    <StackPanel Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Top">
-                        <Button Content="▲" Click="OnFolderMoveUp" Width="32" Height="28"
-                                Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
-                                Margin="0,0,0,3" Cursor="Hand" ToolTip="Nach oben"/>
-                        <Button Content="▼" Click="OnFolderMoveDown" Width="32" Height="28"
-                                Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
-                                Margin="0,0,0,10" Cursor="Hand" ToolTip="Nach unten"/>
-                        <Button Content="＋" Click="OnFolderAddMain" Width="32" Height="28"
-                                Background="#007ACC" Foreground="White" BorderThickness="0"
-                                Margin="0,0,0,3" Cursor="Hand" ToolTip="Hauptordner hinzufügen"/>
-                        <Button Content="＋└" Click="OnFolderAddSub" Width="32" Height="28"
-                                Background="#085041" Foreground="#5DCAA5" BorderThickness="0"
-                                Margin="0,0,0,3" Cursor="Hand" ToolTip="Unterordner hinzufügen"
-                                FontSize="10"/>
-                        <Button Content="✕" Click="OnFolderRemove" Width="32" Height="28"
-                                Background="#C62828" Foreground="White" BorderThickness="0"
-                                Margin="0,0,0,10" Cursor="Hand" ToolTip="Entfernen"/>
-                        <Button Content="📥" Click="OnFolderToggleInbox" Width="32" Height="28"
-                                Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
-                                Margin="0,0,0,3" Cursor="Hand" ToolTip="_Eingang ein/aus"/>
-                        <Button Content="##" Click="OnFolderTogglePrefix" Width="32" Height="28"
-                                Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
-                                Cursor="Hand" ToolTip="Präfix ein/aus (nur Unterordner)"
-                                FontSize="10" FontWeight="Bold"/>
-                    </StackPanel>
-                </Grid>
+                            <!-- Auftraggeber -->
+                            <TextBlock Text="Auftraggeber" Style="{StaticResource SH}"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="30"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Firma:" Style="{StaticResource FL}"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtClientCompany" Style="{StaticResource FTB}"/>
+                                <Button Grid.Row="0" Grid.Column="2" Content="📋" Style="{StaticResource IconBtn}"
+                                        IsEnabled="False" ToolTip="Firmenverzeichnis (kommt später)" Opacity="0.4" Margin="4,3,0,3"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Kontakt:" Style="{StaticResource FL}"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtClientContact" Style="{StaticResource FTB}"/>
+                                <Button Grid.Row="1" Grid.Column="2" Content="👤" Style="{StaticResource IconBtn}"
+                                        IsEnabled="False" ToolTip="Kontaktverzeichnis (kommt später)" Opacity="0.4" Margin="4,3,0,3"/>
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Telefon:" Style="{StaticResource FL}"/>
+                                <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtClientPhone" Style="{StaticResource FTB}"/>
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Email:" Style="{StaticResource FL}"/>
+                                <TextBox Grid.Row="3" Grid.Column="1" x:Name="TxtClientEmail" Style="{StaticResource FTB}"/>
+                            </Grid>
 
-                <!-- Vorschau Ordnerbaum -->
-                <TextBlock Text="── Vorschau ──" Style="{StaticResource SH}"/>
-                <TextBox x:Name="TxtFolderPreview"
-                         Background="#1E1E1E" Foreground="#999999"
-                         BorderBrush="#3E3E42" FontFamily="Consolas"
-                         FontSize="12" IsReadOnly="True"
-                         TextWrapping="NoWrap" AcceptsReturn="True"
-                         VerticalScrollBarVisibility="Auto"
-                         Height="120" Padding="8"/>
-            </StackPanel>
-        </Grid>
+                            <!-- Sonstiges -->
+                            <TextBlock Text="Sonstiges" Style="{StaticResource SH}"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Tags:" Style="{StaticResource FL}"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtTags" Style="{StaticResource FTB}"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Notizen:" Style="{StaticResource FL}"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtNotes" Style="{StaticResource FTB}"
+                                         Height="60" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Trennlinie -->
+                        <Rectangle Grid.Column="1" Width="1" Fill="#3E3E42" Margin="9,0"/>
+
+                        <!-- RECHTE SPALTE -->
+                        <StackPanel Grid.Column="2" Margin="4,0,0,0">
+
+                            <!-- Adresse -->
+                            <TextBlock Text="Adresse" Style="{StaticResource SH}" Margin="0,0,0,6"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="70"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Straße / Nr:" Style="{StaticResource FL}"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtStreet" Style="{StaticResource FTB}"/>
+                                <TextBox Grid.Row="0" Grid.Column="2" x:Name="TxtHouseNumber" Style="{StaticResource FTB}" Margin="5,3,0,3"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="PLZ / Ort:" Style="{StaticResource FL}"/>
+                                <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="70"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" x:Name="TxtPostalCode" Style="{StaticResource FTB}"/>
+                                    <TextBox Grid.Column="1" x:Name="TxtCity" Style="{StaticResource FTB}" Margin="5,3,0,3"/>
+                                </Grid>
+                            </Grid>
+
+                            <!-- Verwaltung -->
+                            <DockPanel Margin="0,12,0,6">
+                                <TextBlock Text="Verwaltung" Foreground="#007ACC" FontWeight="Bold" VerticalAlignment="Center"/>
+                                <Button Content="GIS" Style="{StaticResource IconBtn}" FontSize="10"
+                                        IsEnabled="False" ToolTip="GIS Steiermark laden (kommt später)" Opacity="0.4" Margin="8,0,0,0"/>
+                            </DockPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Gemeinde:" Style="{StaticResource FL}"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtMunicipality" Style="{StaticResource FTB}"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Bezirk:" Style="{StaticResource FL}"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtDistrict" Style="{StaticResource FTB}"/>
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Bundesland:" Style="{StaticResource FL}"/>
+                                <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtState" Style="{StaticResource FTB}"/>
+                            </Grid>
+
+                            <!-- Grundstück + Koordinaten -->
+                            <DockPanel Margin="0,12,0,6">
+                                <TextBlock Text="Grundstück + Koordinaten" Foreground="#007ACC" FontWeight="Bold" VerticalAlignment="Center"/>
+                                <Button Content="GIS" Style="{StaticResource IconBtn}" FontSize="10"
+                                        IsEnabled="False" ToolTip="GIS Steiermark laden (kommt später)" Opacity="0.4" Margin="8,0,0,0"/>
+                            </DockPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="KG / Name:" Style="{StaticResource FL}"/>
+                                <Grid Grid.Row="0" Grid.Column="1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" x:Name="TxtCadastralKg" Style="{StaticResource FTB}"/>
+                                    <TextBox Grid.Column="1" x:Name="TxtCadastralKgName" Style="{StaticResource FTB}" Margin="5,3,0,3"/>
+                                </Grid>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="GST-Nr:" Style="{StaticResource FL}"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtCadastralGst" Style="{StaticResource FTB}"/>
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Koord.System:" Style="{StaticResource FL}"/>
+                                <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtCoordSystem" Style="{StaticResource FTB}"/>
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Ost / Nord:" Style="{StaticResource FL}"/>
+                                <Grid Grid.Row="3" Grid.Column="1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" x:Name="TxtCoordEast" Style="{StaticResource FTB}"/>
+                                    <TextBox Grid.Column="1" x:Name="TxtCoordNorth" Style="{StaticResource FTB}" Margin="5,3,0,3"/>
+                                </Grid>
+                            </Grid>
+
+                            <!-- Laufzeit -->
+                            <TextBlock Text="Laufzeit" Style="{StaticResource SH}"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Baustart:" Style="{StaticResource FL}"/>
+                                <DatePicker Grid.Row="0" Grid.Column="1" x:Name="DpConstructionStart" Margin="0,3"/>
+                                <TextBlock Grid.Row="0" Grid.Column="2" Text="Gepl. Ende:" Style="{StaticResource FL}" Margin="10,3,0,3"/>
+                                <DatePicker Grid.Row="0" Grid.Column="3" x:Name="DpPlannedEnd" Margin="0,3"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Tats. Ende:" Style="{StaticResource FL}"/>
+                                <DatePicker Grid.Row="1" Grid.Column="1" x:Name="DpActualEnd" Margin="0,3"/>
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ═══ TAB 2: BAUWERK (Platzhalter) ═══ -->
+            <TabItem Header="Bauwerk" Style="{StaticResource DialogTabItem}">
+                <StackPanel Margin="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="Bauwerk — kommt als nächstes" Foreground="#666666" FontSize="16"/>
+                    <TextBlock Text="Bauteile, Geschosse, Höhenberechnung" Foreground="#555555" FontSize="12" Margin="0,8,0,0"/>
+                </StackPanel>
+            </TabItem>
+
+            <!-- ═══ TAB 3: BETEILIGTE (Platzhalter) ═══ -->
+            <TabItem Header="Beteiligte" Style="{StaticResource DialogTabItem}">
+                <StackPanel Margin="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="Beteiligte — kommt später" Foreground="#666666" FontSize="16"/>
+                    <TextBlock Text="Firmenliste, PDF-Import, Kontaktverzeichnis" Foreground="#555555" FontSize="12" Margin="0,8,0,0"/>
+                </StackPanel>
+            </TabItem>
+
+            <!-- ═══ TAB 4: PORTALE + LINKS (Platzhalter) ═══ -->
+            <TabItem Header="Portale + Links" Style="{StaticResource DialogTabItem}">
+                <StackPanel Margin="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="Portale + Links — kommt später" Foreground="#666666" FontSize="16"/>
+                    <TextBlock Text="InfoRaum, PlanRadar, eigene Links" Foreground="#555555" FontSize="12" Margin="0,8,0,0"/>
+                </StackPanel>
+            </TabItem>
+
+            <!-- ═══ TAB 5: ORDNERSTRUKTUR ═══ -->
+            <TabItem Header="Ordnerstruktur" Style="{StaticResource DialogTabItem}" x:Name="TabFolders">
+                <StackPanel Margin="0,10,0,0">
+                    <TextBlock Text="Reihenfolge = Nummerierung (00, 01, 02...)"
+                               Foreground="#999999" FontSize="11" Margin="0,0,0,8"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="400"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TreeView x:Name="TvFolders" Grid.Column="0"
+                                  Background="#1E1E1E" Foreground="#CCCCCC"
+                                  BorderBrush="#3E3E42" Height="400"
+                                  SelectedItemChanged="OnTreeSelectionChanged">
+                            <TreeView.Resources>
+                                <Style TargetType="TreeViewItem">
+                                    <Setter Property="Foreground" Value="#CCCCCC"/>
+                                    <Setter Property="IsExpanded" Value="True"/>
+                                    <Setter Property="Padding" Value="2"/>
+                                </Style>
+                            </TreeView.Resources>
+                            <TreeView.ItemTemplate>
+                                <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                                    <StackPanel Orientation="Horizontal" Margin="2">
+                                        <TextBlock Text="{Binding DisplayName}" Foreground="#CCCCCC"
+                                                   VerticalAlignment="Center" FontSize="13"/>
+                                        <TextBlock Text="  📥" Foreground="#007ACC" FontSize="12"
+                                                   Visibility="{Binding InboxVisibility}"
+                                                   VerticalAlignment="Center" Margin="4,0,0,0"/>
+                                        <TextBlock Text="{Binding PrefixLabel}" Foreground="#555555"
+                                                   FontSize="10" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                    </StackPanel>
+                                </HierarchicalDataTemplate>
+                            </TreeView.ItemTemplate>
+                        </TreeView>
+
+                        <!-- Buttons -->
+                        <StackPanel Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Top">
+                            <Button Content="▲" Click="OnFolderMoveUp" Width="32" Height="28"
+                                    Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
+                                    Margin="0,0,0,3" Cursor="Hand" ToolTip="Nach oben"/>
+                            <Button Content="▼" Click="OnFolderMoveDown" Width="32" Height="28"
+                                    Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
+                                    Margin="0,0,0,10" Cursor="Hand" ToolTip="Nach unten"/>
+                            <Button Content="＋" Click="OnFolderAddMain" Width="32" Height="28"
+                                    Background="#007ACC" Foreground="White" BorderThickness="0"
+                                    Margin="0,0,0,3" Cursor="Hand" ToolTip="Hauptordner hinzufügen"/>
+                            <Button Content="＋└" Click="OnFolderAddSub" Width="32" Height="28"
+                                    Background="#085041" Foreground="#5DCAA5" BorderThickness="0"
+                                    Margin="0,0,0,3" Cursor="Hand" ToolTip="Unterordner hinzufügen" FontSize="10"/>
+                            <Button Content="✕" Click="OnFolderRemove" Width="32" Height="28"
+                                    Background="#C62828" Foreground="White" BorderThickness="0"
+                                    Margin="0,0,0,10" Cursor="Hand" ToolTip="Entfernen"/>
+                            <Button Content="📥" Click="OnFolderToggleInbox" Width="32" Height="28"
+                                    Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
+                                    Margin="0,0,0,3" Cursor="Hand" ToolTip="_Eingang ein/aus"/>
+                            <Button Content="##" Click="OnFolderTogglePrefix" Width="32" Height="28"
+                                    Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
+                                    Cursor="Hand" ToolTip="Präfix ein/aus (nur Unterordner)" FontSize="10" FontWeight="Bold"/>
+                        </StackPanel>
+
+                        <!-- Vorschau -->
+                        <StackPanel Grid.Column="2" Margin="12,0,0,0">
+                            <TextBlock Text="Vorschau" Foreground="#007ACC" FontWeight="Bold" Margin="0,0,0,6"/>
+                            <TextBox x:Name="TxtFolderPreview"
+                                     Background="#1E1E1E" Foreground="#999999"
+                                     BorderBrush="#3E3E42" FontFamily="Consolas"
+                                     FontSize="12" IsReadOnly="True"
+                                     TextWrapping="NoWrap" AcceptsReturn="True"
+                                     VerticalScrollBarVisibility="Auto"
+                                     Height="360" Padding="8"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
 
         <!-- Buttons -->
         <StackPanel Grid.Row="2" Orientation="Horizontal"
                     HorizontalAlignment="Right" Margin="0,15,0,0">
-            <Button Content="Speichern" x:Name="BtnSave" Click="OnSave"
+            <Button Content="Speichern" Click="OnSave"
                     Background="#007ACC" Foreground="White"
                     Padding="20,8" Margin="0,0,10,0"
                     BorderThickness="0" Cursor="Hand"/>
-            <Button Content="Abbrechen" x:Name="BtnCancel" Click="OnCancel"
+            <Button Content="Abbrechen" Click="OnCancel"
                     Background="#3E3E42" Foreground="#CCCCCC"
                     Padding="20,8" BorderThickness="0" Cursor="Hand"/>
         </StackPanel>

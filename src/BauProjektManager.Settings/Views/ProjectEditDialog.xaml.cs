@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using BauProjektManager.Domain.Enums;
 using BauProjektManager.Domain.Models;
+using BauProjektManager.Infrastructure.Persistence;
 using BauProjektManager.Settings.ViewModels;
 
 namespace BauProjektManager.Settings.Views;
@@ -18,6 +19,7 @@ public partial class ProjectEditDialog : Window
     private ObservableCollection<FolderTreeItem> _folderTreeItems = [];
     private FolderTreeItem? _selectedTreeItem;
     private readonly bool _isNewProject;
+    private readonly AppSettingsService _settingsService = new();
 
     public ProjectEditDialog(Project project) : this(project, null) { }
 
@@ -39,108 +41,138 @@ public partial class ProjectEditDialog : Window
         }
 
         TvFolders.ItemsSource = _folderTreeItems;
-        UpdateFolderPreview();
+        LoadDropdowns();
         LoadProjectData();
+        UpdateFolderPreview();
     }
 
-    /// <summary>
-    /// Builds FolderTreeItems from a FolderTemplateEntry list (for new projects).
-    /// </summary>
-    private static ObservableCollection<FolderTreeItem> BuildTreeFromTemplate(List<FolderTemplateEntry> template)
+    private void LoadDropdowns()
     {
-        var items = new ObservableCollection<FolderTreeItem>();
-        for (int i = 0; i < template.Count; i++)
-        {
-            var entry = template[i];
-            var mainItem = new FolderTreeItem
-            {
-                Name = entry.Name,
-                Position = i,
-                IsMainFolder = true,
-                HasInbox = entry.HasInbox
-            };
+        var settings = _settingsService.Load();
 
-            int subPos = 0;
-            foreach (var sub in entry.SubFolders)
-            {
-                mainItem.Children.Add(new FolderTreeItem
-                {
-                    Name = sub.Name,
-                    Position = sub.HasPrefix ? subPos : -1,
-                    IsMainFolder = false,
-                    HasPrefix = sub.HasPrefix
-                });
-                if (sub.HasPrefix) subPos++;
-            }
-            items.Add(mainItem);
-        }
-        return items;
+        // Projektart-Dropdown (editierbare Liste aus settings.json)
+        CmbProjectType.ItemsSource = settings.ProjectTypes;
+        if (!string.IsNullOrEmpty(Project.ProjectType))
+            CmbProjectType.SelectedItem = Project.ProjectType;
+        else if (settings.ProjectTypes.Count > 0)
+            CmbProjectType.SelectedIndex = 0;
+
+        // Status-Dropdown (nur Aktiv + Abgeschlossen)
+        CmbStatus.ItemsSource = Enum.GetValues<ProjectStatus>();
+        CmbStatus.SelectedItem = Project.Status;
     }
 
-    /// <summary>
-    /// Reads existing subfolders from the project root path (for editing).
-    /// Detects numbered folders and _Eingang subfolders.
-    /// Also reads second-level subfolders with prefix detection.
-    /// </summary>
-    private static ObservableCollection<FolderTreeItem> LoadFoldersFromDisk(string rootPath)
+    // === ✎ Button: Projektart-Liste bearbeiten ===
+
+    private void OnEditProjectTypes(object sender, RoutedEventArgs e)
     {
-        var items = new ObservableCollection<FolderTreeItem>();
-        if (string.IsNullOrEmpty(rootPath) || !Directory.Exists(rootPath))
-            return items;
-
-        var subDirs = Directory.GetDirectories(rootPath)
-            .Select(d => new DirectoryInfo(d))
-            .OrderBy(d => d.Name)
-            .ToList();
-
-        int position = 0;
-        foreach (var dir in subDirs)
+        var settings = _settingsService.Load();
+        var editWindow = new Window
         {
-            if (dir.Attributes.HasFlag(FileAttributes.Hidden)) continue;
+            Title = "Projektarten bearbeiten",
+            Width = 350,
+            Height = 400,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Owner = this,
+            ResizeMode = ResizeMode.NoResize,
+            Background = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#2D2D30"))
+        };
 
-            var name = dir.Name;
-            if (name.Length > 3 && char.IsDigit(name[0]) && char.IsDigit(name[1]) && name[2] == ' ')
-                name = name[3..];
+        var items = new ObservableCollection<string>(settings.ProjectTypes);
+        var stack = new StackPanel { Margin = new Thickness(15) };
 
-            var hasInbox = Directory.Exists(Path.Combine(dir.FullName, "_Eingang"));
+        var label = new TextBlock
+        {
+            Text = "Projektarten (eine pro Zeile):",
+            Foreground = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#CCCCCC")),
+            Margin = new Thickness(0, 0, 0, 5)
+        };
 
-            var mainItem = new FolderTreeItem
-            {
-                Name = name,
-                HasInbox = hasInbox,
-                Position = position++,
-                IsMainFolder = true
-            };
+        var listBox = new ListBox
+        {
+            ItemsSource = items,
+            Background = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#1E1E1E")),
+            Foreground = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#CCCCCC")),
+            BorderBrush = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#3E3E42")),
+            Height = 200,
+            Margin = new Thickness(0, 0, 0, 8)
+        };
 
-            // Read second-level subfolders
-            var subSubDirs = Directory.GetDirectories(dir.FullName)
-                .Select(d => new DirectoryInfo(d))
-                .Where(d => !d.Attributes.HasFlag(FileAttributes.Hidden) && d.Name != "_Eingang")
-                .OrderBy(d => d.Name)
-                .ToList();
+        var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 8) };
 
-            int subPos = 0;
-            foreach (var subDir in subSubDirs)
-            {
-                var subName = subDir.Name;
-                bool hasPrefix = subName.Length > 3 && char.IsDigit(subName[0]) && char.IsDigit(subName[1]) && subName[2] == ' ';
-                if (hasPrefix)
-                    subName = subName[3..];
+        var btnAdd = new Button
+        {
+            Content = "Hinzufügen",
+            Padding = new Thickness(10, 4, 10, 4),
+            Margin = new Thickness(0, 0, 5, 0),
+            Background = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#007ACC")),
+            Foreground = System.Windows.Media.Brushes.White,
+            BorderThickness = new Thickness(0),
+            Cursor = System.Windows.Input.Cursors.Hand
+        };
+        btnAdd.Click += (_, _) =>
+        {
+            var name = ShowSmallInputDialog("Projektart hinzufügen", "Name:", editWindow);
+            if (!string.IsNullOrEmpty(name)) items.Add(name);
+        };
 
-                mainItem.Children.Add(new FolderTreeItem
-                {
-                    Name = subName,
-                    Position = hasPrefix ? subPos : -1,
-                    IsMainFolder = false,
-                    HasPrefix = hasPrefix
-                });
-                if (hasPrefix) subPos++;
-            }
+        var btnRemove = new Button
+        {
+            Content = "Entfernen",
+            Padding = new Thickness(10, 4, 10, 4),
+            Background = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#C62828")),
+            Foreground = System.Windows.Media.Brushes.White,
+            BorderThickness = new Thickness(0),
+            Cursor = System.Windows.Input.Cursors.Hand
+        };
+        btnRemove.Click += (_, _) =>
+        {
+            if (listBox.SelectedIndex >= 0) items.RemoveAt(listBox.SelectedIndex);
+        };
 
-            items.Add(mainItem);
+        btnPanel.Children.Add(btnAdd);
+        btnPanel.Children.Add(btnRemove);
+
+        var btnOk = new Button
+        {
+            Content = "Übernehmen",
+            Padding = new Thickness(15, 5, 15, 5),
+            Background = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#007ACC")),
+            Foreground = System.Windows.Media.Brushes.White,
+            BorderThickness = new Thickness(0),
+            Cursor = System.Windows.Input.Cursors.Hand,
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Right
+        };
+        btnOk.Click += (_, _) => { editWindow.DialogResult = true; editWindow.Close(); };
+
+        stack.Children.Add(label);
+        stack.Children.Add(listBox);
+        stack.Children.Add(btnPanel);
+        stack.Children.Add(btnOk);
+        editWindow.Content = stack;
+
+        if (editWindow.ShowDialog() == true)
+        {
+            var selected = CmbProjectType.SelectedItem as string;
+            settings.ProjectTypes = items.ToList();
+            _settingsService.Save(settings);
+            CmbProjectType.ItemsSource = settings.ProjectTypes;
+            if (selected is not null && settings.ProjectTypes.Contains(selected))
+                CmbProjectType.SelectedItem = selected;
+            else if (settings.ProjectTypes.Count > 0)
+                CmbProjectType.SelectedIndex = 0;
         }
-        return items;
     }
+
+    // === Load/Save Project Data ===
 
     private void LoadProjectData()
     {
@@ -148,8 +180,6 @@ public partial class ProjectEditDialog : Window
         TxtFullName.Text = Project.FullName;
         DpProjectStart.SelectedDate = Project.Timeline.ProjectStart;
         TxtNumberPreview.Text = Project.ProjectNumber;
-        CmbStatus.ItemsSource = Enum.GetValues<ProjectStatus>();
-        CmbStatus.SelectedItem = Project.Status;
 
         TxtClientCompany.Text = Project.Client.Company;
         TxtClientContact.Text = Project.Client.ContactPerson;
@@ -192,45 +222,113 @@ public partial class ProjectEditDialog : Window
         }
     }
 
-    // === TreeView selection ===
+    // === Folder TreeView ===
+
+    private static ObservableCollection<FolderTreeItem> BuildTreeFromTemplate(List<FolderTemplateEntry> template)
+    {
+        var items = new ObservableCollection<FolderTreeItem>();
+        for (int i = 0; i < template.Count; i++)
+        {
+            var entry = template[i];
+            var mainItem = new FolderTreeItem
+            {
+                Name = entry.Name,
+                Position = i,
+                IsMainFolder = true,
+                HasInbox = entry.HasInbox
+            };
+            int subPos = 0;
+            foreach (var sub in entry.SubFolders)
+            {
+                mainItem.Children.Add(new FolderTreeItem
+                {
+                    Name = sub.Name,
+                    Position = sub.HasPrefix ? subPos : -1,
+                    IsMainFolder = false,
+                    HasPrefix = sub.HasPrefix
+                });
+                if (sub.HasPrefix) subPos++;
+            }
+            items.Add(mainItem);
+        }
+        return items;
+    }
+
+    private static ObservableCollection<FolderTreeItem> LoadFoldersFromDisk(string rootPath)
+    {
+        var items = new ObservableCollection<FolderTreeItem>();
+        if (string.IsNullOrEmpty(rootPath) || !Directory.Exists(rootPath)) return items;
+
+        var subDirs = Directory.GetDirectories(rootPath)
+            .Select(d => new DirectoryInfo(d))
+            .OrderBy(d => d.Name).ToList();
+
+        int position = 0;
+        foreach (var dir in subDirs)
+        {
+            if (dir.Attributes.HasFlag(FileAttributes.Hidden)) continue;
+            var name = dir.Name;
+            if (name.Length > 3 && char.IsDigit(name[0]) && char.IsDigit(name[1]) && name[2] == ' ')
+                name = name[3..];
+
+            var mainItem = new FolderTreeItem
+            {
+                Name = name,
+                HasInbox = Directory.Exists(Path.Combine(dir.FullName, "_Eingang")),
+                Position = position++,
+                IsMainFolder = true
+            };
+
+            var subSubDirs = Directory.GetDirectories(dir.FullName)
+                .Select(d => new DirectoryInfo(d))
+                .Where(d => !d.Attributes.HasFlag(FileAttributes.Hidden) && d.Name != "_Eingang")
+                .OrderBy(d => d.Name).ToList();
+
+            int subPos = 0;
+            foreach (var subDir in subSubDirs)
+            {
+                var subName = subDir.Name;
+                bool hasPrefix = subName.Length > 3 && char.IsDigit(subName[0]) && char.IsDigit(subName[1]) && subName[2] == ' ';
+                if (hasPrefix) subName = subName[3..];
+                mainItem.Children.Add(new FolderTreeItem
+                {
+                    Name = subName,
+                    Position = hasPrefix ? subPos : -1,
+                    IsMainFolder = false,
+                    HasPrefix = hasPrefix
+                });
+                if (hasPrefix) subPos++;
+            }
+            items.Add(mainItem);
+        }
+        return items;
+    }
 
     private void OnTreeSelectionChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
     {
         _selectedTreeItem = e.NewValue as FolderTreeItem;
     }
 
-    // === Folder preview ===
-
     private void UpdateFolderPreview()
     {
         if (TxtFolderPreview is null) return;
-
-        var projectName = !string.IsNullOrEmpty(TxtName?.Text)
-            ? TxtName.Text : (Project?.Name ?? "Projektname");
-        var number = !string.IsNullOrEmpty(TxtNumberPreview?.Text)
-            ? TxtNumberPreview.Text : (Project?.ProjectNumber ?? "YYYYMM");
+        var projectName = !string.IsNullOrEmpty(TxtName?.Text) ? TxtName.Text : (Project?.Name ?? "Projektname");
+        var number = !string.IsNullOrEmpty(TxtNumberPreview?.Text) ? TxtNumberPreview.Text : (Project?.ProjectNumber ?? "YYYYMM");
 
         var sb = new StringBuilder();
         sb.AppendLine($"{number}_{projectName}/");
-
         for (int i = 0; i < _folderTreeItems.Count; i++)
         {
             var entry = _folderTreeItems[i];
             var mainPrefix = i == _folderTreeItems.Count - 1 ? "└── " : "├── ";
             var mainIndent = i == _folderTreeItems.Count - 1 ? "    " : "│   ";
             sb.AppendLine($"{mainPrefix}{entry.DisplayName}/");
-
-            if (entry.HasInbox)
-                sb.AppendLine($"{mainIndent}└── _Eingang/");
-
+            if (entry.HasInbox) sb.AppendLine($"{mainIndent}└── _Eingang/");
             foreach (var sub in entry.Children)
                 sb.AppendLine($"{mainIndent}└── {sub.DisplayName}/");
         }
-
         TxtFolderPreview.Text = sb.ToString().TrimEnd();
     }
-
-    // === Folder tree buttons ===
 
     private void RefreshTreePositions()
     {
@@ -244,17 +342,15 @@ public partial class ProjectEditDialog : Window
                 if (sub.HasPrefix) subPos++;
             }
         }
-
         var items = _folderTreeItems.ToList();
         _folderTreeItems.Clear();
-        foreach (var item in items)
-            _folderTreeItems.Add(item);
+        foreach (var item in items) _folderTreeItems.Add(item);
         UpdateFolderPreview();
     }
 
-    private static string ShowInputDialog(string title, string label, Window owner)
+    private static string ShowSmallInputDialog(string title, string label, Window owner)
     {
-        var inputWindow = new Window
+        var w = new Window
         {
             Title = title,
             Width = 350,
@@ -265,7 +361,6 @@ public partial class ProjectEditDialog : Window
             Background = new System.Windows.Media.SolidColorBrush(
                 (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#2D2D30"))
         };
-
         var stack = new StackPanel { Margin = new Thickness(15) };
         var lbl = new TextBlock
         {
@@ -274,7 +369,7 @@ public partial class ProjectEditDialog : Window
                 (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#CCCCCC")),
             Margin = new Thickness(0, 0, 0, 5)
         };
-        var textBox = new TextBox
+        var tb = new TextBox
         {
             Background = new System.Windows.Media.SolidColorBrush(
                 (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#1E1E1E")),
@@ -285,7 +380,7 @@ public partial class ProjectEditDialog : Window
             Padding = new Thickness(5, 3, 5, 3),
             Margin = new Thickness(0, 0, 0, 10)
         };
-        var btnOk = new Button
+        var btn = new Button
         {
             Content = "OK",
             Width = 80,
@@ -297,26 +392,22 @@ public partial class ProjectEditDialog : Window
             Cursor = System.Windows.Input.Cursors.Hand,
             HorizontalAlignment = System.Windows.HorizontalAlignment.Right
         };
-        btnOk.Click += (_, _) => { inputWindow.DialogResult = true; inputWindow.Close(); };
-
-        stack.Children.Add(lbl);
-        stack.Children.Add(textBox);
-        stack.Children.Add(btnOk);
-        inputWindow.Content = stack;
-        inputWindow.ContentRendered += (_, _) => textBox.Focus();
-
-        return inputWindow.ShowDialog() == true && !string.IsNullOrWhiteSpace(textBox.Text)
-            ? textBox.Text.Trim() : "";
+        btn.Click += (_, _) => { w.DialogResult = true; w.Close(); };
+        stack.Children.Add(lbl); stack.Children.Add(tb); stack.Children.Add(btn);
+        w.Content = stack;
+        w.ContentRendered += (_, _) => tb.Focus();
+        return w.ShowDialog() == true && !string.IsNullOrWhiteSpace(tb.Text) ? tb.Text.Trim() : "";
     }
+
+    // === Folder buttons ===
 
     private void OnFolderMoveUp(object sender, RoutedEventArgs e)
     {
         if (_selectedTreeItem is null || !_selectedTreeItem.IsMainFolder) return;
         var index = _folderTreeItems.IndexOf(_selectedTreeItem);
         if (index <= 0) return;
-        var item = _folderTreeItems[index];
         _folderTreeItems.RemoveAt(index);
-        _folderTreeItems.Insert(index - 1, item);
+        _folderTreeItems.Insert(index - 1, _selectedTreeItem);
         RefreshTreePositions();
     }
 
@@ -325,17 +416,15 @@ public partial class ProjectEditDialog : Window
         if (_selectedTreeItem is null || !_selectedTreeItem.IsMainFolder) return;
         var index = _folderTreeItems.IndexOf(_selectedTreeItem);
         if (index < 0 || index >= _folderTreeItems.Count - 1) return;
-        var item = _folderTreeItems[index];
         _folderTreeItems.RemoveAt(index);
-        _folderTreeItems.Insert(index + 1, item);
+        _folderTreeItems.Insert(index + 1, _selectedTreeItem);
         RefreshTreePositions();
     }
 
     private void OnFolderAddMain(object sender, RoutedEventArgs e)
     {
-        var name = ShowInputDialog("Hauptordner hinzufügen", "Ordnername (ohne Nummer):", this);
+        var name = ShowSmallInputDialog("Hauptordner hinzufügen", "Ordnername (ohne Nummer):", this);
         if (string.IsNullOrEmpty(name)) return;
-
         _folderTreeItems.Add(new FolderTreeItem
         {
             Name = name,
@@ -351,53 +440,24 @@ public partial class ProjectEditDialog : Window
         FolderTreeItem? parent = null;
         if (_selectedTreeItem is not null)
         {
-            if (_selectedTreeItem.IsMainFolder)
-                parent = _selectedTreeItem;
-            else
-            {
-                foreach (var main in _folderTreeItems)
-                    if (main.Children.Contains(_selectedTreeItem)) { parent = main; break; }
-            }
+            if (_selectedTreeItem.IsMainFolder) parent = _selectedTreeItem;
+            else foreach (var m in _folderTreeItems) if (m.Children.Contains(_selectedTreeItem)) { parent = m; break; }
         }
+        if (parent is null) { MessageBox.Show("Bitte zuerst einen Hauptordner auswählen.", "Unterordner", MessageBoxButton.OK, MessageBoxImage.Information); return; }
 
-        if (parent is null)
-        {
-            MessageBox.Show("Bitte zuerst einen Hauptordner auswählen.",
-                "Unterordner hinzufügen", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
-        var name = ShowInputDialog("Unterordner hinzufügen",
-            $"Unterordner-Name für \"{parent.Name}\":", this);
+        var name = ShowSmallInputDialog("Unterordner hinzufügen", $"Unterordner-Name für \"{parent.Name}\":", this);
         if (string.IsNullOrEmpty(name)) return;
-
-        parent.Children.Add(new FolderTreeItem
-        {
-            Name = name,
-            IsMainFolder = false,
-            HasPrefix = true,
-            Position = parent.Children.Count(c => c.HasPrefix)
-        });
+        parent.Children.Add(new FolderTreeItem { Name = name, IsMainFolder = false, HasPrefix = true, Position = parent.Children.Count(c => c.HasPrefix) });
         RefreshTreePositions();
     }
 
     private void OnFolderRemove(object sender, RoutedEventArgs e)
     {
         if (_selectedTreeItem is null) return;
-
-        var displayName = _selectedTreeItem.IsMainFolder
-            ? $"Hauptordner \"{_selectedTreeItem.Name}\""
-            : $"Unterordner \"{_selectedTreeItem.Name}\"";
-
-        if (MessageBox.Show($"{displayName} entfernen?", "Entfernen",
-                MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
-
-        if (_selectedTreeItem.IsMainFolder)
-            _folderTreeItems.Remove(_selectedTreeItem);
-        else
-            foreach (var main in _folderTreeItems)
-                if (main.Children.Remove(_selectedTreeItem)) break;
-
+        var dn = _selectedTreeItem.IsMainFolder ? $"Hauptordner \"{_selectedTreeItem.Name}\"" : $"Unterordner \"{_selectedTreeItem.Name}\"";
+        if (MessageBox.Show($"{dn} entfernen?", "Entfernen", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+        if (_selectedTreeItem.IsMainFolder) _folderTreeItems.Remove(_selectedTreeItem);
+        else foreach (var m in _folderTreeItems) if (m.Children.Remove(_selectedTreeItem)) break;
         RefreshTreePositions();
     }
 
@@ -411,11 +471,7 @@ public partial class ProjectEditDialog : Window
     private void OnFolderTogglePrefix(object sender, RoutedEventArgs e)
     {
         if (_selectedTreeItem is null || _selectedTreeItem.IsMainFolder)
-        {
-            MessageBox.Show("Präfix kann nur für Unterordner umgeschaltet werden.",
-                "Präfix", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
+        { MessageBox.Show("Präfix nur für Unterordner.", "Präfix", MessageBoxButton.OK, MessageBoxImage.Information); return; }
         _selectedTreeItem.HasPrefix = !_selectedTreeItem.HasPrefix;
         RefreshTreePositions();
     }
@@ -428,6 +484,7 @@ public partial class ProjectEditDialog : Window
         Project.FullName = TxtFullName.Text;
         Project.Timeline.ProjectStart = DpProjectStart.SelectedDate;
         Project.Status = (ProjectStatus)CmbStatus.SelectedItem;
+        Project.ProjectType = CmbProjectType.SelectedItem as string ?? "";
         Project.UpdateProjectNumberFromStart();
 
         Project.Client.Company = TxtClientCompany.Text;
@@ -461,7 +518,6 @@ public partial class ProjectEditDialog : Window
         Project.Tags = TxtTags.Text;
         Project.Notes = TxtNotes.Text;
 
-        // Build FolderTemplate from TreeView
         FolderTemplate = _folderTreeItems.Select(main => new FolderTemplateEntry
         {
             Name = main.Name,

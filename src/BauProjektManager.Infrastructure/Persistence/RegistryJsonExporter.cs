@@ -72,10 +72,10 @@ public class RegistryJsonExporter
     /// </summary>
     private static FlatProject MapToFlat(Project p)
     {
-        // Buildings als Pipe-String: "H64:Haus Nr. 64:Reihenhaus:KG,EG,1.OG|H66:..."
+        // BuildingParts als Pipe-String: "BT-A:Stiege 1+2:Wohnanlage|GEW:Gewerbe:Gewerbe"
         var buildingsStr = string.Join("|",
-            p.Buildings.Select(b =>
-                $"{b.ShortName}:{b.Name}:{b.Type}:{string.Join(",", b.Levels)}"));
+            p.BuildingParts.Select(bp =>
+                $"{bp.ShortName}:{bp.Description}:{bp.BuildingType}"));
 
         return new FlatProject
         {

@@ -22,7 +22,13 @@ public class Project
     public ProjectLocation Location { get; set; } = new();
     public ProjectTimeline Timeline { get; set; } = new();
     public Client Client { get; set; } = new();
-    public List<Building> Buildings { get; set; } = [];
+
+    /// <summary>
+    /// Bauteile/Bauabschnitte mit eigenen Geschossen und Höhen.
+    /// Ersetzt die alte Buildings-Liste.
+    /// </summary>
+    public List<BuildingPart> BuildingParts { get; set; } = [];
+
     public ProjectPaths Paths { get; set; } = new();
     public string Tags { get; set; } = string.Empty;
     public string Notes { get; set; } = string.Empty;

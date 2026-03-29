@@ -28,9 +28,21 @@ public class AppSettings
     public static List<FolderTemplateEntry> GetDefaultFolderTemplate() =>
     [
         new("Sonstiges",      hasInbox: false),
-        new("Planunterlagen", hasInbox: true),
+        new("Planunterlagen", hasInbox: true, subFolders:
+        [
+            new("Ausschreibungspläne", hasPrefix: true),
+            new("Polierpläne",         hasPrefix: true),
+            new("Statikpläne - Schalung",   hasPrefix: true),
+            new("Statikpläne - Bewehrung",  hasPrefix: true),
+            new("Fertigteilpläne",     hasPrefix: true),
+            new("Baustelleneinrichtung", hasPrefix: false),
+        ]),
         new("Fotos",          hasInbox: false),
-        new("Leica",          hasInbox: false),
+        new("Leica",          hasInbox: false, subFolders:
+        [
+            new("Absteckpläne", hasPrefix: false),
+            new("Aufmaß",      hasPrefix: false),
+        ]),
         new("DOKA",           hasInbox: false),
         new("LV",             hasInbox: false),
         new("Protokolle",     hasInbox: false),
@@ -38,9 +50,9 @@ public class AppSettings
 }
 
 /// <summary>
-/// Ein Eintrag im Ordner-Template.
+/// Ein Hauptordner im Ordner-Template.
 /// Die Nummer wird NICHT gespeichert — sie entsteht aus der Position in der Liste.
-/// Position 0 → "00_Name", Position 1 → "01_Name", etc.
+/// Kann Unterordner haben, die optional auch nummeriert werden (HasPrefix).
 /// </summary>
 public class FolderTemplateEntry
 {
@@ -54,6 +66,11 @@ public class FolderTemplateEntry
     /// </summary>
     public bool HasInbox { get; set; }
 
+    /// <summary>
+    /// Unterordner dieses Hauptordners.
+    /// </summary>
+    public List<SubFolderEntry> SubFolders { get; set; } = [];
+
     public FolderTemplateEntry() { }
 
     public FolderTemplateEntry(string name, bool hasInbox)
@@ -62,9 +79,49 @@ public class FolderTemplateEntry
         HasInbox = hasInbox;
     }
 
+    public FolderTemplateEntry(string name, bool hasInbox, List<SubFolderEntry> subFolders)
+    {
+        Name = name;
+        HasInbox = hasInbox;
+        SubFolders = subFolders;
+    }
+
     /// <summary>
     /// Generiert den nummerierten Ordnernamen aus der Position.
     /// z.B. Position 2 + Name "Fotos" → "02 Fotos"
     /// </summary>
     public string GetNumberedName(int position) => $"{position:D2} {Name}";
+}
+
+/// <summary>
+/// Ein Unterordner innerhalb eines Hauptordners.
+/// Kann optional nummeriert werden (HasPrefix = true → "00 Name", false → "Name").
+/// </summary>
+public class SubFolderEntry
+{
+    /// <summary>
+    /// Unterordner-Name (z.B. "Polierpläne", "Absteckpläne").
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Ob der Unterordner eine Nummer bekommt (00, 01, 02...).
+    /// true  → "01 Polierpläne"
+    /// false → "Baustelleneinrichtung" (ohne Nummer)
+    /// </summary>
+    public bool HasPrefix { get; set; } = true;
+
+    public SubFolderEntry() { }
+
+    public SubFolderEntry(string name, bool hasPrefix)
+    {
+        Name = name;
+        HasPrefix = hasPrefix;
+    }
+
+    /// <summary>
+    /// Generiert den Ordnernamen — mit oder ohne Nummer.
+    /// </summary>
+    public string GetDisplayName(int position) =>
+        HasPrefix ? $"{position:D2} {Name}" : Name;
 }

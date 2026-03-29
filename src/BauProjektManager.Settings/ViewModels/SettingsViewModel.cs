@@ -12,8 +12,36 @@ using Serilog;
 namespace BauProjektManager.Settings.ViewModels;
 
 /// <summary>
+/// Tree item for displaying folder template in TreeView.
+/// Represents either a main folder or a subfolder.
+/// </summary>
+public class FolderTreeItem
+{
+    public string Name { get; set; } = string.Empty;
+    public int Position { get; set; }
+    public bool IsMainFolder { get; set; }
+    public bool HasInbox { get; set; }
+    public bool HasPrefix { get; set; } = true;
+    public ObservableCollection<FolderTreeItem> Children { get; set; } = [];
+
+    /// <summary>
+    /// Display name with number prefix for main folders, optional prefix for subs.
+    /// </summary>
+    public string DisplayName => IsMainFolder
+        ? $"{Position:D2} {Name}"
+        : (HasPrefix ? $"{Position:D2} {Name}" : Name);
+
+    public Visibility InboxVisibility => HasInbox ? Visibility.Visible : Visibility.Collapsed;
+
+    /// <summary>
+    /// Shows "Präfix: an/aus" label for subfolders only.
+    /// </summary>
+    public string PrefixLabel => IsMainFolder ? "" : (HasPrefix ? "Präfix: an" : "Präfix: aus");
+}
+
+/// <summary>
 /// ViewModel for the Settings page — manages project list, paths display,
-/// and global default folder template configuration.
+/// and global default folder template with subfolders and prefix toggle.
 /// </summary>
 public partial class SettingsViewModel : ObservableObject
 {
@@ -31,7 +59,6 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private string _registryStatus = "";
 
-    // Paths display
     [ObservableProperty]
     private string _basePath = "";
 
@@ -41,9 +68,12 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private string _oneDrivePath = "";
 
-    // Default folder template
+    // Folder template tree
     [ObservableProperty]
-    private ObservableCollection<FolderDisplayItem> _defaultFolderItems = [];
+    private ObservableCollection<FolderTreeItem> _folderTreeItems = [];
+
+    // Selected item in TreeView (set from code-behind)
+    public FolderTreeItem? SelectedTreeItem { get; set; }
 
     public SettingsViewModel()
     {
@@ -69,9 +99,7 @@ public partial class SettingsViewModel : ObservableObject
         {
             if (current.GetFiles("*.slnx").Length > 0 ||
                 current.GetFiles("*.sln").Length > 0)
-            {
                 return current.FullName;
-            }
             current = current.Parent;
         }
         return dir;
@@ -100,86 +128,101 @@ public partial class SettingsViewModel : ObservableObject
         BasePath = settings.BasePath;
         ArchivePath = settings.ArchivePath;
         OneDrivePath = settings.OneDrivePath;
+        BuildFolderTree(settings.FolderTemplate);
+    }
 
-        // Load default folder template
-        DefaultFolderItems = new ObservableCollection<FolderDisplayItem>(
-            settings.FolderTemplate.Select((f, i) => new FolderDisplayItem
+    // === Folder Template Tree ===
+
+    private void BuildFolderTree(List<FolderTemplateEntry> template)
+    {
+        var items = new ObservableCollection<FolderTreeItem>();
+
+        for (int i = 0; i < template.Count; i++)
+        {
+            var entry = template[i];
+            var mainItem = new FolderTreeItem
             {
-                Name = f.Name,
-                HasInbox = f.HasInbox,
-                Position = i
-            }));
+                Name = entry.Name,
+                Position = i,
+                IsMainFolder = true,
+                HasInbox = entry.HasInbox,
+                HasPrefix = true
+            };
+
+            int subPos = 0;
+            foreach (var sub in entry.SubFolders)
+            {
+                mainItem.Children.Add(new FolderTreeItem
+                {
+                    Name = sub.Name,
+                    Position = sub.HasPrefix ? subPos : -1,
+                    IsMainFolder = false,
+                    HasPrefix = sub.HasPrefix
+                });
+                if (sub.HasPrefix) subPos++;
+            }
+
+            items.Add(mainItem);
+        }
+
+        FolderTreeItems = items;
     }
 
     private void SaveFolderTemplate()
     {
         var settings = _settingsService.Load();
-        settings.FolderTemplate = DefaultFolderItems
-            .Select(f => new FolderTemplateEntry(f.Name, f.HasInbox))
-            .ToList();
+        settings.FolderTemplate = FolderTreeItems.Select(main => new FolderTemplateEntry
+        {
+            Name = main.Name,
+            HasInbox = main.HasInbox,
+            SubFolders = main.Children.Select(sub => new SubFolderEntry
+            {
+                Name = sub.Name,
+                HasPrefix = sub.HasPrefix
+            }).ToList()
+        }).ToList();
         _settingsService.Save(settings);
-        Log.Information("Default folder template saved ({Count} entries)", settings.FolderTemplate.Count);
+        Log.Information("Folder template saved ({Count} main folders)", settings.FolderTemplate.Count);
     }
 
-    private void RefreshDefaultFolderNumbers()
+    private void RefreshTreePositions()
     {
-        for (int i = 0; i < DefaultFolderItems.Count; i++)
+        for (int i = 0; i < FolderTreeItems.Count; i++)
         {
-            DefaultFolderItems[i].Position = i;
+            FolderTreeItems[i].Position = i;
+            int subPos = 0;
+            foreach (var sub in FolderTreeItems[i].Children)
+            {
+                sub.Position = sub.HasPrefix ? subPos : -1;
+                if (sub.HasPrefix) subPos++;
+            }
         }
-        var items = DefaultFolderItems.ToList();
-        DefaultFolderItems.Clear();
+
+        // Force UI refresh
+        var items = FolderTreeItems.ToList();
+        FolderTreeItems.Clear();
         foreach (var item in items)
-        {
-            DefaultFolderItems.Add(item);
-        }
+            FolderTreeItems.Add(item);
     }
 
-    // === Default folder template commands ===
-
-    [RelayCommand]
-    private void DefaultFolderMoveUp(FolderDisplayItem? item)
-    {
-        if (item is null) return;
-        var index = DefaultFolderItems.IndexOf(item);
-        if (index <= 0) return;
-        DefaultFolderItems.RemoveAt(index);
-        DefaultFolderItems.Insert(index - 1, item);
-        RefreshDefaultFolderNumbers();
-        SaveFolderTemplate();
-    }
-
-    [RelayCommand]
-    private void DefaultFolderMoveDown(FolderDisplayItem? item)
-    {
-        if (item is null) return;
-        var index = DefaultFolderItems.IndexOf(item);
-        if (index < 0 || index >= DefaultFolderItems.Count - 1) return;
-        DefaultFolderItems.RemoveAt(index);
-        DefaultFolderItems.Insert(index + 1, item);
-        RefreshDefaultFolderNumbers();
-        SaveFolderTemplate();
-    }
-
-    [RelayCommand]
-    private void DefaultFolderAdd()
+    private static string ShowInputDialog(string title, string label, Window? owner)
     {
         var inputWindow = new Window
         {
-            Title = "Ordner hinzufügen",
+            Title = title,
             Width = 350,
             Height = 150,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Owner = Application.Current.MainWindow,
+            Owner = owner,
             ResizeMode = ResizeMode.NoResize,
             Background = new System.Windows.Media.SolidColorBrush(
                 (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#2D2D30"))
         };
 
         var stack = new System.Windows.Controls.StackPanel { Margin = new Thickness(15) };
-        var label = new System.Windows.Controls.TextBlock
+        var lbl = new System.Windows.Controls.TextBlock
         {
-            Text = "Ordnername (ohne Nummer):",
+            Text = label,
             Foreground = new System.Windows.Media.SolidColorBrush(
                 (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#CCCCCC")),
             Margin = new Thickness(0, 0, 0, 5)
@@ -209,44 +252,160 @@ public partial class SettingsViewModel : ObservableObject
         };
         btnOk.Click += (_, _) => { inputWindow.DialogResult = true; inputWindow.Close(); };
 
-        stack.Children.Add(label);
+        stack.Children.Add(lbl);
         stack.Children.Add(textBox);
         stack.Children.Add(btnOk);
         inputWindow.Content = stack;
         inputWindow.ContentRendered += (_, _) => textBox.Focus();
 
-        if (inputWindow.ShowDialog() == true && !string.IsNullOrWhiteSpace(textBox.Text))
+        return inputWindow.ShowDialog() == true && !string.IsNullOrWhiteSpace(textBox.Text)
+            ? textBox.Text.Trim()
+            : "";
+    }
+
+    // === Template Commands ===
+
+    [RelayCommand]
+    private void TemplateMoveUp()
+    {
+        if (SelectedTreeItem is null || !SelectedTreeItem.IsMainFolder) return;
+        var index = FolderTreeItems.IndexOf(SelectedTreeItem);
+        if (index <= 0) return;
+        var item = FolderTreeItems[index];
+        FolderTreeItems.RemoveAt(index);
+        FolderTreeItems.Insert(index - 1, item);
+        RefreshTreePositions();
+        SaveFolderTemplate();
+    }
+
+    [RelayCommand]
+    private void TemplateMoveDown()
+    {
+        if (SelectedTreeItem is null || !SelectedTreeItem.IsMainFolder) return;
+        var index = FolderTreeItems.IndexOf(SelectedTreeItem);
+        if (index < 0 || index >= FolderTreeItems.Count - 1) return;
+        var item = FolderTreeItems[index];
+        FolderTreeItems.RemoveAt(index);
+        FolderTreeItems.Insert(index + 1, item);
+        RefreshTreePositions();
+        SaveFolderTemplate();
+    }
+
+    [RelayCommand]
+    private void TemplateAddMain()
+    {
+        var name = ShowInputDialog("Hauptordner hinzufügen", "Ordnername (ohne Nummer):",
+            Application.Current.MainWindow);
+        if (string.IsNullOrEmpty(name)) return;
+
+        FolderTreeItems.Add(new FolderTreeItem
         {
-            DefaultFolderItems.Add(new FolderDisplayItem
+            Name = name,
+            Position = FolderTreeItems.Count,
+            IsMainFolder = true,
+            HasInbox = false
+        });
+        RefreshTreePositions();
+        SaveFolderTemplate();
+    }
+
+    [RelayCommand]
+    private void TemplateAddSub()
+    {
+        // Find the parent main folder
+        FolderTreeItem? parent = null;
+        if (SelectedTreeItem is not null)
+        {
+            if (SelectedTreeItem.IsMainFolder)
+                parent = SelectedTreeItem;
+            else
             {
-                Name = textBox.Text.Trim(),
-                HasInbox = false,
-                Position = DefaultFolderItems.Count
-            });
-            RefreshDefaultFolderNumbers();
-            SaveFolderTemplate();
+                // Selected item is a subfolder — find its parent
+                foreach (var main in FolderTreeItems)
+                {
+                    if (main.Children.Contains(SelectedTreeItem))
+                    {
+                        parent = main;
+                        break;
+                    }
+                }
+            }
         }
-    }
 
-    [RelayCommand]
-    private void DefaultFolderRemove(FolderDisplayItem? item)
-    {
-        if (item is null) return;
-        if (MessageBox.Show($"Ordner \"{item.Name}\" aus Standard-Template entfernen?",
-                "Ordner entfernen", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+        if (parent is null)
         {
-            DefaultFolderItems.Remove(item);
-            RefreshDefaultFolderNumbers();
-            SaveFolderTemplate();
+            MessageBox.Show("Bitte zuerst einen Hauptordner auswählen.",
+                "Unterordner hinzufügen", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
         }
+
+        var name = ShowInputDialog("Unterordner hinzufügen",
+            $"Unterordner-Name für \"{parent.Name}\":",
+            Application.Current.MainWindow);
+        if (string.IsNullOrEmpty(name)) return;
+
+        parent.Children.Add(new FolderTreeItem
+        {
+            Name = name,
+            IsMainFolder = false,
+            HasPrefix = true,
+            Position = parent.Children.Count(c => c.HasPrefix)
+        });
+        RefreshTreePositions();
+        SaveFolderTemplate();
     }
 
     [RelayCommand]
-    private void DefaultFolderToggleInbox(FolderDisplayItem? item)
+    private void TemplateRemove()
     {
-        if (item is null) return;
-        item.HasInbox = !item.HasInbox;
-        RefreshDefaultFolderNumbers();
+        if (SelectedTreeItem is null) return;
+
+        var displayName = SelectedTreeItem.IsMainFolder
+            ? $"Hauptordner \"{SelectedTreeItem.Name}\""
+            : $"Unterordner \"{SelectedTreeItem.Name}\"";
+
+        if (MessageBox.Show($"{displayName} aus dem Template entfernen?",
+                "Entfernen", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+            return;
+
+        if (SelectedTreeItem.IsMainFolder)
+        {
+            FolderTreeItems.Remove(SelectedTreeItem);
+        }
+        else
+        {
+            foreach (var main in FolderTreeItems)
+            {
+                if (main.Children.Remove(SelectedTreeItem))
+                    break;
+            }
+        }
+
+        RefreshTreePositions();
+        SaveFolderTemplate();
+    }
+
+    [RelayCommand]
+    private void TemplateToggleInbox()
+    {
+        if (SelectedTreeItem is null || !SelectedTreeItem.IsMainFolder) return;
+        SelectedTreeItem.HasInbox = !SelectedTreeItem.HasInbox;
+        RefreshTreePositions();
+        SaveFolderTemplate();
+    }
+
+    [RelayCommand]
+    private void TemplateTogglePrefix()
+    {
+        if (SelectedTreeItem is null || SelectedTreeItem.IsMainFolder)
+        {
+            MessageBox.Show("Präfix kann nur für Unterordner umgeschaltet werden.",
+                "Präfix", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        SelectedTreeItem.HasPrefix = !SelectedTreeItem.HasPrefix;
+        RefreshTreePositions();
         SaveFolderTemplate();
     }
 
@@ -290,7 +449,6 @@ public partial class SettingsViewModel : ObservableObject
             {
                 var projectRoot = _folderService.CreateProjectFolders(
                     dialog.Project, dialog.FolderTemplate);
-
                 dialog.Project.Paths.Root = projectRoot;
 
                 _db.SaveProject(dialog.Project);

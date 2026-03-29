@@ -129,25 +129,6 @@
 
 ---
 
-## Später — Nach V1
-
-| Feature | Beschreibung | Status |
-|---------|-------------|--------|
-| GIS Steiermark API | Grundstücksdaten + Koordinaten + Grenzen per API abfragen (KG, GST, Koordinaten automatisch befüllen) | ⬜ |
-| Google Maps API | Adresse → PLZ, Ort, Gemeinde, Bezirk, Koordinaten automatisch | ⬜ |
-| Outlook-Adressbuch | Kontakte aus Outlook importieren/übernehmen | ⬜ |
-| Adressbuch-Sync | Eigenes Adressbuch ↔ Outlook abgleichen | ⬜ |
-| Outlook COM Integration | Projekt-Ordner in Outlook, Anhänge extrahieren | ⬜ |
-| Dashboard | Startseite mit Widgets (Wetter, neue Pläne, Status) | ⬜ |
-| Bautagebuch | Tägliches Protokoll mit Auto-Befüllung + Export | ⬜ |
-| Wetter-API | Wetterdaten pro Baustelle | ⬜ |
-| Excel/Word Vorlagen | COM Interop, Projektdaten in Vorlagen befüllen | ⬜ |
-| PDF-Vorschau | Pläne in der App anzeigen | ⬜ |
-| VERALTET-Stempel | Auf alte Plan-PDFs stempeln | ⬜ |
-| Auto-Update | App-Update-Mechanismus | ⬜ |
-
----
-
 ## Modul: Arbeitszeiterfassung (Nach V1)
 
 **Konzept:** WPF-Eingabemaske schreibt direkt in Excel-Datei. Kein eigenes DB-Modul — Excel bleibt die Wahrheitsquelle für Zeitdaten.
@@ -185,6 +166,121 @@
 | ClosedXML liest/schreibt Excel | ⬜ |
 | Baustellen-Dropdown aus bpm.db | ⬜ |
 | Überstunden-Auswertung in Excel | ⬜ |
+
+---
+
+## Später — Nach V1
+
+| Feature | Beschreibung | Status |
+|---------|-------------|--------|
+| GIS Steiermark API | Grundstücksdaten + Koordinaten + Grenzen per API abfragen (KG, GST, Koordinaten automatisch befüllen) | ⬜ |
+| Google Maps API | Adresse → PLZ, Ort, Gemeinde, Bezirk, Koordinaten automatisch | ⬜ |
+| Outlook-Adressbuch | Kontakte aus Outlook importieren/übernehmen | ⬜ |
+| Adressbuch-Sync | Eigenes Adressbuch ↔ Outlook abgleichen | ⬜ |
+| Outlook COM Integration | Projekt-Ordner in Outlook, Anhänge extrahieren | ⬜ |
+| Bautagebuch | Tägliches Protokoll mit Auto-Befüllung + Export | ⬜ |
+| Wetter-API | Wetterdaten pro Baustelle | ⬜ |
+| Excel/Word Vorlagen | COM Interop, Projektdaten in Vorlagen befüllen | ⬜ |
+| PDF-Vorschau | Pläne in der App anzeigen | ⬜ |
+| VERALTET-Stempel | Auf alte Plan-PDFs stempeln | ⬜ |
+| Auto-Update | App-Update-Mechanismus | ⬜ |
+
+---
+
+## Vision — Zukunftsideen (eventuell geplant, nicht sicher)
+
+Diese Ideen beeinflussen Architektur-Entscheidungen beim aktuellen Coden. Noch nicht committed, aber im Hinterkopf behalten.
+
+### Projekt-Dashboard (zentrale Ansicht nach Projektauswahl)
+
+**Konzept:** Sidebar zeigt Projektliste, Klick auf Projekt öffnet ein Dashboard mit allen projektrelevanten Infos auf einen Blick.
+
+**Dashboard-Mockup (Layout v1):**
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│ Sidebar          │  OWG-Dobl-Zwaring                    [Aktiv] 202512 │
+│ ──────────       │─────────────────────────────────────────────────────│
+│ Alle Projekte    │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌────────┐│
+│ ───────────      │  │Pläne ges.│ │Neu/Woche │ │Fotos/Mon.│ │Fortschr││
+│ ► OWG Dobl       │  │   247    │ │    12    │ │    89    │ │  62%   ││
+│   EFH Schlogl    │  └──────────┘ └──────────┘ └──────────┘ └────────┘│
+│   Sanierung Lb   │                                                    │
+│ ───────────      │  ┌─ Letzte Planänderungen ─┐ ┌─ Schnellzugriff ──┐│
+│ Einstellungen    │  │ BWP-OG-001_Rev03  heute │ │ [01 Planunterlag] ││
+│                  │  │ STP-EG-004_Rev01  gest. │ │ [02 Fotos]        ││
+│                  │  │ ARP-KG-002_Rev05  27.03 │ │ [03 Leica]        ││
+│                  │  │ FTP-UG-003_Rev02  25.03 │ │ [04 DOKA] [05 LV] ││
+│                  │  └─────────────────────────┘ │ [06 Protokolle]   ││
+│                  │                               │ → öffnet Explorer ││
+│                  │                               └───────────────────┘│
+│                  │  ┌─ Externe Portale ────────┐ ┌─ Bestellungen ────┐│
+│                  │  │ [InfoRaum] [ClickUp]     │ │ Beton C25 bestellt││
+│                  │  │ [PlanRadar]              │ │ Ziegel    offen   ││
+│                  │  │ → je Auftraggeber/Firma  │ │ Stahl   geliefert ││
+│                  │  └─────────────────────────┘ └───────────────────┘│
+│                  │                                                    │
+│                  │  ┌─ Toolbar (konfigurierbar) ─────────────────────┐│
+│                  │  │ [AutoCAD] [Excel] [Outlook] [Leica] [+ Progr.]││
+│                  │  └────────────────────────────────────────────────┘│
+│                  │  Auftraggeber: ÖWG | Hauptstr. 12, 8143 Dobl      │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**Kennzahlen-Karten:**
+- Pläne gesamt, neue Pläne diese Woche, Fotos diesen Monat, Baufortschritt %
+
+**Letzte Planänderungen:**
+- Liste der zuletzt geänderten/hinzugefügten Pläne mit Datum
+
+**Schnellzugriff Ordner:**
+- Buttons pro Projektordner (01 Planunterlagen, 02 Fotos etc.) — Klick öffnet im Explorer
+- Beliebteste/häufigste Ordner nach oben sortieren
+
+**Externe Portale + Links:**
+- Konfigurierbare Link-Buttons je Auftraggeber/Firma
+- Beispiele: InfoRaum (ÖWG), PlanFred, PlanRadar, eigene Bauherren-Portale
+- Nur anzeigen wenn konfiguriert (dynamisch ein/ausblenden)
+- Portal-Info kommt aus Firmendaten (nicht Projektdaten!)
+
+**Bestellungen + Material:**
+- ClickUp-Bestellungen (firmeninterne Materialbestellungen)
+- Betonbestellung, Ziegelbestellung, Lieferlisten
+- Leistungsverzeichnisse einbinden
+- MS Project Anbindung (Baufortschritt, Terminplan)
+
+**Konfigurierbare Toolbar (Ribbon-ähnlich):**
+- Programme direkt starten: AutoCAD, Excel, Outlook, Leica Infinity, PDF Viewer etc.
+- Konfigurierbar in Einstellungen (welche Programme, Pfade)
+- "+ Programm" Button zum Hinzufügen
+
+**Ablagesystem:**
+- Möglichkeit Dateien pro Projekt abzulegen (nicht nur in Ordner, sondern auch in der App verwaltet)
+- Kategorien/Tags für Dokumente
+
+### Firmendaten-Verwaltung (Auftraggeberdaten)
+
+**Konzept:** Nicht nur Kontaktdaten pro Projekt, sondern eine zentrale Firma/Auftraggeber-Datenbank mit wiederkehrenden Infos.
+
+- Welches Portal benutzt die Firma (InfoRaum, PlanFred, PlanRadar, keines)
+- Portal-URLs/Login-Seiten
+- Bevorzugte Planformate, Lieferadressen
+- Alles änderbar, projektübergreifend nutzbar
+- Im Projekt-Dialog: "Auftraggeber wählen" → automatisch Portal-Links, Kontaktdaten etc. übernehmen
+
+### Kalender-Integration
+
+- Projekt-Termine, Liefertermine, Besprechungen
+- Sync mit Outlook-Kalender möglich
+- Im Dashboard als Widget anzeigen
+
+### Architektur-Implikationen für aktuelles Coden
+
+Diese Zukunftsideen bedeuten für die aktuelle Architektur:
+- **Client/Firma als eigene Entität** in der DB (nicht nur eingebettetes Objekt im Projekt) — vorbereiten für Firmendaten-Verwaltung
+- **Projekt-ID überall mitführen** — Dashboard, Fotos, Bestellungen referenzieren Projekte
+- **Plugin/Modul-Architektur** beibehalten — jedes Modul (Foto, Baubericht, Bestellung) ist ein eigenes WPF-Projekt
+- **Externe Links als konfigurierbare Datenstruktur** — nicht hardcoded, sondern in DB/settings.json pro Firma
+- **Toolbar-Konfiguration** als eigene Settings-Sektion planen
 
 ---
 

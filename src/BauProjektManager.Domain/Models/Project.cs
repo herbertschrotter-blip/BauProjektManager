@@ -29,6 +29,12 @@ public class Project
     /// </summary>
     public List<BuildingPart> BuildingParts { get; set; } = [];
 
+    /// <summary>
+    /// Beteiligte Firmen/Personen am Projekt (Architekt, Statiker, ÖBA etc.).
+    /// Projektbezogen gespeichert, später mit zentralem Adressbuch verknüpft.
+    /// </summary>
+    public List<ProjectParticipant> Participants { get; set; } = [];
+
     public ProjectPaths Paths { get; set; } = new();
     public string Tags { get; set; } = string.Empty;
     public string Notes { get; set; } = string.Empty;

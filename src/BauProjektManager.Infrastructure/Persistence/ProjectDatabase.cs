@@ -7,7 +7,8 @@ namespace BauProjektManager.Infrastructure.Persistence;
 
 /// <summary>
 /// SQLite database service — manages bpm.db in %LocalAppData%\BauProjektManager\.
-/// Schema v1.3: projects, clients, building_parts, building_levels.
+/// Schema v1.4: projects, clients, building_parts, building_levels, project_participants.
+/// IDs are auto-incremented with prefix: proj_001, client_001, bpart_001, blvl_001, ppart_001.
 /// </summary>
 public class ProjectDatabase : IDisposable
 {
@@ -29,6 +30,7 @@ public class ProjectDatabase : IDisposable
         {
             _connection = new SqliteConnection($"Data Source={_dbPath}");
             _connection.Open();
+            // Enable WAL mode for better concurrency
             using var walCmd = _connection.CreateCommand();
             walCmd.CommandText = "PRAGMA journal_mode=WAL;";
             walCmd.ExecuteNonQuery();
@@ -62,6 +64,7 @@ public class ProjectDatabase : IDisposable
                 status TEXT NOT NULL DEFAULT 'Active',
                 project_type TEXT NOT NULL DEFAULT '',
                 client_id TEXT,
+                -- Location
                 street TEXT NOT NULL DEFAULT '',
                 house_number TEXT NOT NULL DEFAULT '',
                 postal_code TEXT NOT NULL DEFAULT '',
@@ -75,10 +78,12 @@ public class ProjectDatabase : IDisposable
                 cadastral_kg TEXT NOT NULL DEFAULT '',
                 cadastral_kg_name TEXT NOT NULL DEFAULT '',
                 cadastral_gst TEXT NOT NULL DEFAULT '',
+                -- Timeline
                 project_start TEXT,
                 construction_start TEXT,
                 planned_end TEXT,
                 actual_end TEXT,
+                -- Paths
                 root_path TEXT NOT NULL DEFAULT '',
                 plans_path TEXT NOT NULL DEFAULT '',
                 inbox_path TEXT NOT NULL DEFAULT '',
@@ -86,6 +91,7 @@ public class ProjectDatabase : IDisposable
                 documents_path TEXT NOT NULL DEFAULT '',
                 protocols_path TEXT NOT NULL DEFAULT '',
                 invoices_path TEXT NOT NULL DEFAULT '',
+                -- Meta
                 tags TEXT NOT NULL DEFAULT '',
                 notes TEXT NOT NULL DEFAULT '',
                 created_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -130,6 +136,20 @@ public class ProjectDatabase : IDisposable
                 FOREIGN KEY (building_part_id) REFERENCES building_parts(id) ON DELETE CASCADE
             );
 
+            CREATE TABLE IF NOT EXISTS project_participants (
+                seq INTEGER PRIMARY KEY AUTOINCREMENT,
+                id TEXT UNIQUE NOT NULL,
+                project_id TEXT NOT NULL,
+                role TEXT NOT NULL DEFAULT '',
+                company TEXT NOT NULL DEFAULT '',
+                contact_person TEXT NOT NULL DEFAULT '',
+                phone TEXT NOT NULL DEFAULT '',
+                email TEXT NOT NULL DEFAULT '',
+                contact_id TEXT NOT NULL DEFAULT '',
+                sort_order INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+            );
+
             CREATE TABLE IF NOT EXISTS schema_version (
                 version TEXT NOT NULL
             );
@@ -137,10 +157,15 @@ public class ProjectDatabase : IDisposable
         cmd.ExecuteNonQuery();
     }
 
+    /// <summary>
+    /// Migrates existing databases to the current schema version.
+    /// Adds new columns if they don't exist yet.
+    /// </summary>
     private void MigrateSchema()
     {
         var conn = _connection!;
 
+        // Add project_type column if missing (v1.1 → v1.2)
         if (!ColumnExists("projects", "project_type"))
         {
             var cmd = conn.CreateCommand();
@@ -148,8 +173,9 @@ public class ProjectDatabase : IDisposable
             cmd.ExecuteNonQuery();
         }
 
+        // Update schema version
         var verCmd = conn.CreateCommand();
-        verCmd.CommandText = "DELETE FROM schema_version; INSERT INTO schema_version (version) VALUES ('1.3');";
+        verCmd.CommandText = "DELETE FROM schema_version; INSERT INTO schema_version (version) VALUES ('1.4');";
         verCmd.ExecuteNonQuery();
     }
 
@@ -199,6 +225,7 @@ public class ProjectDatabase : IDisposable
         {
             var project = ReadProject(reader);
             project.BuildingParts = LoadBuildingParts(project.Id);
+            project.Participants = LoadParticipants(project.Id);
             projects.Add(project);
         }
 
@@ -209,10 +236,12 @@ public class ProjectDatabase : IDisposable
     {
         var conn = GetConnection();
 
+        // Generate new ID if needed
         bool isNew = string.IsNullOrEmpty(project.Id) || !ProjectExists(project.Id);
         if (isNew)
             project.Id = GenerateNextId("proj", "projects");
 
+        // Save client first if has data
         string? clientId = null;
         if (!string.IsNullOrEmpty(project.Client.Company) ||
             !string.IsNullOrEmpty(project.Client.ContactPerson))
@@ -295,7 +324,9 @@ public class ProjectDatabase : IDisposable
         cmd.Parameters.AddWithValue("@notes", project.Notes);
         cmd.ExecuteNonQuery();
 
+        // Save related entities
         SaveBuildingParts(project.Id, project.BuildingParts);
+        SaveParticipants(project.Id, project.Participants);
     }
 
     private bool ProjectExists(string projectId)
@@ -311,6 +342,12 @@ public class ProjectDatabase : IDisposable
     {
         var conn = GetConnection();
 
+        // Delete participants
+        var ppartCmd = conn.CreateCommand();
+        ppartCmd.CommandText = "DELETE FROM project_participants WHERE project_id = @id";
+        ppartCmd.Parameters.AddWithValue("@id", projectId);
+        ppartCmd.ExecuteNonQuery();
+
         // Delete levels for all parts of this project
         var lvlCmd = conn.CreateCommand();
         lvlCmd.CommandText = """
@@ -320,6 +357,7 @@ public class ProjectDatabase : IDisposable
         lvlCmd.Parameters.AddWithValue("@id", projectId);
         lvlCmd.ExecuteNonQuery();
 
+        // Delete building parts
         var partCmd = conn.CreateCommand();
         partCmd.CommandText = "DELETE FROM building_parts WHERE project_id = @id";
         partCmd.Parameters.AddWithValue("@id", projectId);
@@ -331,6 +369,7 @@ public class ProjectDatabase : IDisposable
         bldgCmd.Parameters.AddWithValue("@id", projectId);
         bldgCmd.ExecuteNonQuery();
 
+        // Delete project
         var projCmd = conn.CreateCommand();
         projCmd.CommandText = "DELETE FROM projects WHERE id = @id";
         projCmd.Parameters.AddWithValue("@id", projectId);
@@ -343,6 +382,7 @@ public class ProjectDatabase : IDisposable
     {
         var conn = GetConnection();
 
+        // Check if project already has a client
         var checkCmd = conn.CreateCommand();
         checkCmd.CommandText = "SELECT client_id FROM projects WHERE id = @id";
         checkCmd.Parameters.AddWithValue("@id", projectId);
@@ -507,6 +547,72 @@ public class ProjectDatabase : IDisposable
         }
     }
 
+    // === PARTICIPANTS ===
+
+    private List<ProjectParticipant> LoadParticipants(string projectId)
+    {
+        var conn = GetConnection();
+        var list = new List<ProjectParticipant>();
+
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT * FROM project_participants WHERE project_id = @pid ORDER BY sort_order";
+        cmd.Parameters.AddWithValue("@pid", projectId);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            list.Add(new ProjectParticipant
+            {
+                Id = reader.GetString(reader.GetOrdinal("id")),
+                Role = reader.GetString(reader.GetOrdinal("role")),
+                Company = reader.GetString(reader.GetOrdinal("company")),
+                ContactPerson = reader.GetString(reader.GetOrdinal("contact_person")),
+                Phone = reader.GetString(reader.GetOrdinal("phone")),
+                Email = reader.GetString(reader.GetOrdinal("email")),
+                ContactId = reader.GetString(reader.GetOrdinal("contact_id")),
+                SortOrder = reader.GetInt32(reader.GetOrdinal("sort_order"))
+            });
+        }
+
+        return list;
+    }
+
+    private void SaveParticipants(string projectId, List<ProjectParticipant> participants)
+    {
+        var conn = GetConnection();
+
+        // Delete existing
+        var delCmd = conn.CreateCommand();
+        delCmd.CommandText = "DELETE FROM project_participants WHERE project_id = @pid";
+        delCmd.Parameters.AddWithValue("@pid", projectId);
+        delCmd.ExecuteNonQuery();
+
+        // Insert new
+        for (int i = 0; i < participants.Count; i++)
+        {
+            var p = participants[i];
+            var pId = string.IsNullOrEmpty(p.Id)
+                ? GenerateNextId("ppart", "project_participants")
+                : p.Id;
+
+            var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                INSERT INTO project_participants (id, project_id, role, company, contact_person, phone, email, contact_id, sort_order)
+                VALUES (@id, @pid, @role, @company, @cp, @phone, @email, @cid, @so)
+                """;
+            cmd.Parameters.AddWithValue("@id", pId);
+            cmd.Parameters.AddWithValue("@pid", projectId);
+            cmd.Parameters.AddWithValue("@role", p.Role);
+            cmd.Parameters.AddWithValue("@company", p.Company);
+            cmd.Parameters.AddWithValue("@cp", p.ContactPerson);
+            cmd.Parameters.AddWithValue("@phone", p.Phone);
+            cmd.Parameters.AddWithValue("@email", p.Email);
+            cmd.Parameters.AddWithValue("@cid", p.ContactId);
+            cmd.Parameters.AddWithValue("@so", i);
+            cmd.ExecuteNonQuery();
+        }
+    }
+
     // === HELPERS ===
 
     private static Project ReadProject(SqliteDataReader reader)
@@ -583,7 +689,10 @@ public class ProjectDatabase : IDisposable
             var ordinal = reader.GetOrdinal(column);
             return reader.IsDBNull(ordinal) ? string.Empty : reader.GetString(ordinal);
         }
-        catch { return string.Empty; }
+        catch
+        {
+            return string.Empty;
+        }
     }
 
     public string GetDatabasePath() => _dbPath;

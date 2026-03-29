@@ -143,6 +143,7 @@ Jedes Modul hat ein eigenes Konzeptdokument mit Details. Hier nur Kurzübersicht
 | **Wetter** | API pro Baustelle, Betonierfreigabe | [ModuleWetter.md](Konzepte/ModuleWetter.md) | ⬜ Konzept |
 | **Vorlagen** | Excel/Word mit Projektdaten befüllen (COM Interop) | [ModuleVorlagen.md](Konzepte/ModuleVorlagen.md) | ⬜ Konzept |
 | **Plankopf-Extraktion** | Revisionstabelle + Plannummer aus PDF lesen (PdfPig), Template pro Büro. Kann KI-API nutzen (siehe oben) | — (Dok wird erstellt) | ⬜ Idee |
+| **KI-Assistent** | Fach-Assistent für LV-Analyse, Dokumentensuche, Nachtragsbewertung. ChatGPT/Claude API. | [ModuleKiAssistent.md](Konzepte/ModuleKiAssistent.md) | ⬜ Konzept |
 | **Mobile PWA** | Bautagebuch + Plan-Viewer am Handy, offline-fähig (siehe ADR-019, ADR-020) | — (BPM-Mobile-Konzept.md) | ⬜ Konzept |
 
 ---

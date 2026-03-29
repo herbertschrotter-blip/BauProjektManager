@@ -5,6 +5,34 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.12.7] — 2026-03-29
+
+### Dokumentation
+- BACKLOG gestrafft — Konzepttexte in eigene Docs ausgelagert, Querverweise eingefügt (~400 → ~180 Zeilen)
+- Modul-Konzepte erstellt: ModuleZeiterfassung.md, ModuleGIS.md, ModulePlanHeader.md (von Herbert)
+- ModuleFoto.md aktualisiert mit PhotoFolder V2 Referenz (WPF statt Server, Lessons Learned)
+- Prio-Liste für Nach-V1-Module festgelegt (Foto → Zeiterfassung → Bautagebuch → Dashboard)
+
+---
+
+## [v0.12.6] — 2026-03-29
+
+### Geändert
+- Modul-Konzeptdokumente nach `Docs/Konzepte/` verschoben (neue Ordnerstruktur)
+- Betrifft: ModuleBautagebuch, ModuleDashboard, ModuleFoto, ModuleOutlook, ModuleVorlagen, ModuleWetter
+
+---
+
+## [v0.12.5] — 2026-03-29
+
+### Hinzugefügt
+- **ADR.md** — 23 Architecture Decision Records aus allen Projekt-Chats
+- **VISION.md** — Nordstern, Schmerzpunkte, Zielgruppe, Modulübersicht, Erfolgskriterien
+- **DEPENDENCY-MAP.md** — Interne Solution-Struktur + externes Ökosystem mit Datenflüssen
+- **CHANGELOG.md** — Komplette Versionshistorie rückwirkend ab v0.0.0
+
+---
+
 ## [v0.12.4] — 2026-03-29
 
 ### Geändert
@@ -19,7 +47,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 ## [v0.12.3] — 2026-03-29
 
 ### Hinzugefügt
-- **Settings:** Gelbe 📁 Folder-Browse-Buttons für BasePath und ArchivePath
+- **Settings:** Gelbe Folder-Browse-Buttons für BasePath und ArchivePath
 - `Microsoft.Win32.OpenFolderDialog` für Ordnerauswahl (Feature #13 teilweise)
 
 ---
@@ -43,7 +71,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 ### Hinzugefügt
 - **Settings:** 2-Tab-Einstellungsseite — Tab 1: Projekte + Pfade, Tab 2: Standard-Ordnerstruktur
 - Standard-Ordnerstruktur mit Unterordnern und Präfix ein/aus Schalter
-- Status-Anzeige mit Farbpunkten: ● Aktiv (grün), ● Abgeschlossen (rot), ● Archiviert (grau)
+- Status-Anzeige mit Farbpunkten: Aktiv (grün), Abgeschlossen (rot), Archiviert (grau)
 
 ---
 
@@ -64,7 +92,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 ## [v0.11.1] — 2026-03-29
 
 ### Geändert
-- **Settings:** 2-Spalten ProjectEditDialog (1050×780) — links Projektdaten, rechts Ordnerstruktur
+- **Settings:** 2-Spalten ProjectEditDialog (1050x780) — links Projektdaten, rechts Ordnerstruktur
 - Einstellungen-Seite Redesign mit klarerer Struktur
 
 ---
@@ -124,7 +152,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 ### Hinzugefügt
 - **Infrastructure + Settings:** Automatischer registry.json Export (Feature #7)
 - Flaches JSON-Format für VBA-Kompatibilität (Outlook/Excel-Makros)
-- `RegistryJsonExporter` + `RegistryJsonMapper` — verschachteltes Domänenmodell → flacher Export
+- `RegistryJsonExporter` + `RegistryJsonMapper`
 - Atomisches Schreiben (write-to-temp-then-rename)
 - Export wird bei jeder Projektänderung automatisch ausgelöst
 
@@ -158,7 +186,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 - **Infrastructure + Settings:** SQLite-Datenbank für persistente Projektspeicherung (Feature #5)
 - `bpm.db` in `%LocalAppData%\BauProjektManager\`
 - `SqliteConnectionFactory`, `ProjectRepository`
-- Projekte werden in SQLite gespeichert statt nur im Speicher
 - Auto-Increment IDs für Projekte, Clients, Buildings
 
 ---
@@ -175,8 +202,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 ### Hinzugefügt
 - **Domain + Settings:** Projekt-Bearbeitungsdialog mit allen Feldern (Feature #4)
 - Client-Modell (Auftraggeber: Company, ContactPerson, Phone, Email)
-- Aufgeteilte Adressfelder (Street, HouseNumber, PostalCode, City) für spätere Google Maps API
-- Koordinaten, Grundstücksdaten (KG, GST), Verwaltungsdaten (Gemeinde, Bezirk)
+- Aufgeteilte Adressfelder (Street, HouseNumber, PostalCode, City)
+- Koordinaten, Grundstücksdaten, Verwaltungsdaten
 - Gebäude-Verwaltung mit Geschoß-Listen
 - Timeline (Projektstart, Baustart, Geplantes Ende, Tatsächliches Ende)
 
@@ -193,8 +220,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ### Hinzugefügt
 - **Domain:** Kern-Domänenmodelle (Feature #3)
-- `Project`, `ProjectLocation`, `ProjectTimeline`, `ProjectPaths`
-- `Client`, `Building`
+- `Project`, `ProjectLocation`, `ProjectTimeline`, `ProjectPaths`, `Client`, `Building`
 - `ProjectStatus` Enum (Active, Completed, Archived)
 - Projektnummer automatisch aus Projektstart-Datum (YYYYMM)
 
@@ -205,8 +231,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 ### Hinzugefügt
 - **App:** Serilog Logging (Feature #2)
 - File + Console Sinks, tägliche Rotation, 30 Tage Aufbewahrung
-- Structured Logging mit `{PropertyName}` Platzhaltern
-- Log-Dateien in `%LocalAppData%\BauProjektManager\Logs\`
 
 ---
 
@@ -214,7 +238,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ### Hinzugefügt
 - **App + Settings + PlanManager:** Seitennavigation mit Content-Wechsel
-- Sidebar-Buttons wechseln zwischen Einstellungen und PlanManager
 
 ---
 
@@ -223,15 +246,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 ### Hinzugefügt
 - **App:** Hauptfenster (Shell) mit Sidebar-Navigation und Statusleiste (Feature #1)
 - Dark Theme Grundlage
-- MainWindow mit ContentFrame für Modul-Anzeige
 
 ---
 
 ## [v0.3.0] — 2026-03-27
 
 ### Hinzugefügt
-- **App:** NuGet-Pakete eingerichtet
-- CommunityToolkit.Mvvm, Microsoft.Extensions.DependencyInjection, Serilog
+- NuGet-Pakete: CommunityToolkit.Mvvm, Microsoft.Extensions.DI, Serilog
 
 ---
 
@@ -245,30 +266,29 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 ## [v0.2.1] — 2026-03-27
 
 ### Hinzugefügt
-- `Directory.Build.props` — zentrale Projektkonfiguration (.NET 10, Nullable, ImplicitUsings)
+- `Directory.Build.props` — zentrale Projektkonfiguration (.NET 10, Nullable)
 
 ---
 
 ## [v0.2.0] — 2026-03-27
 
 ### Hinzugefügt
-- **Settings + PlanManager:** Feature-Modul-Projekte als WPF Class Libraries erstellt
+- Feature-Modul-Projekte als WPF Class Libraries (Settings, PlanManager)
 
 ---
 
 ## [v0.1.1] — 2026-03-27
 
 ### Hinzugefügt
-- **Infrastructure:** Projekt erstellt (SQLite, JSON, FileSystem, Logging)
+- Infrastructure-Projekt erstellt
 
 ---
 
 ## [v0.1.0] — 2026-03-27
 
 ### Hinzugefügt
-- **App + Domain + Infrastructure:** Initiale Solution-Struktur mit .NET 10
-- 5 Projekte: App (EXE), Domain, Infrastructure, Settings, PlanManager
-- Dependency-Regel etabliert: Domain → nichts, Infrastructure → Domain, Module → Domain + Infrastructure
+- Initiale Solution-Struktur mit .NET 10 (5 Projekte)
+- Dependency-Regel etabliert
 
 ---
 
@@ -276,22 +296,26 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ### Hinzugefügt
 - Repository erstellt
-- Architektur-Dokument v1.2.0 (erster Entwurf)
+- Architektur-Dokument v1.2.0
 
 ---
 
-## Dokumentations-Versionen (separate Versionierung)
+## Dokumentations-Versionen
 
 | Version | Datum | Dokument | Änderung |
 |---------|-------|----------|----------|
 | v1.2.0 | 2026-03-26 | Architektur | Erster Entwurf |
-| v1.4.0 | 2026-03-27 | Architektur | Nach 2 Review-Runden (ChatGPT + Claude), 13 Entscheidungen |
-| v1.5.0 | 2026-03-27 | Architektur | .NET 10, Client-Modell, Adressfelder, Manifest |
+| v1.4.0 | 2026-03-27 | Architektur | Nach 2 Review-Runden, 13 Entscheidungen |
+| v1.5.0 | 2026-03-27 | Architektur | .NET 10, Client-Modell, Adressfelder |
 | v1.0.0 | 2026-03-27 | Coding Standards | Erstellt |
-| v1.0.0 | 2026-03-29 | ADR | 23 Entscheidungen dokumentiert |
+| v1.0.0 | 2026-03-29 | ADR | 23 Entscheidungen |
 | v1.0.0 | 2026-03-29 | Vision | Nordstern + Produktstrategie |
 | v1.0.0 | 2026-03-29 | Dependency Map | Solution + Ökosystem |
-| v1.0.0 | 2026-03-29 | Changelog | Rückwirkend ab v0.0.0 erstellt |
+| v1.0.0 | 2026-03-29 | Changelog | Rückwirkend ab v0.0.0 |
+| v0.2.0 | 2026-03-29 | ModuleFoto | Erweitert mit PhotoFolder V2 Referenz |
+| v0.1.0 | 2026-03-29 | ModuleZeiterfassung | Erstellt |
+| v0.1.0 | 2026-03-29 | ModuleGIS | Erstellt |
+| v0.1.0 | 2026-03-29 | ModulePlanHeader | Erstellt (von Herbert) |
 
 ---
 

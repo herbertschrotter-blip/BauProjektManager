@@ -1,6 +1,6 @@
 {
   "registryVersion": "1.0",
-  "generatedAt": "2026-03-29T10:56:13",
+  "generatedAt": "2026-03-29T11:05:06",
   "planTypes": [
     "Polierplan",
     "Schalungsplan",
@@ -14,5 +14,42 @@
     "Schnittplan"
   ],
   "customPlanTypes": [],
-  "projects": []
+  "projects": [
+    {
+      "id": "proj_001",
+      "projectNumber": "202603",
+      "name": "Test",
+      "fullName": "",
+      "status": "active",
+      "clientCompany": "",
+      "clientContact": "",
+      "clientPhone": "",
+      "clientEmail": "",
+      "address": "",
+      "street": "",
+      "houseNumber": "",
+      "postalCode": "",
+      "city": "",
+      "municipality": "",
+      "district": "",
+      "state": "Steiermark",
+      "coordinateSystem": "EPSG:31258",
+      "coordinateEast": 0,
+      "coordinateNorth": 0,
+      "cadastralKg": "",
+      "cadastralKgName": "",
+      "cadastralGst": "",
+      "projectStart": "2026-03-29",
+      "rootPath": "D:\\OneDrive\\Dokumente\\02 Arbeit\\16_Testl\u00E4ufe\\202603_Test",
+      "plansPath": "Pl\u00E4ne",
+      "inboxPath": "Pl\u00E4ne\\_Eingang",
+      "photosPath": "Fotos",
+      "documentsPath": "Dokumente",
+      "protocolsPath": "Protokolle",
+      "invoicesPath": "Rechnungen",
+      "buildings": "",
+      "tags": "",
+      "notes": ""
+    }
+  ]
 }

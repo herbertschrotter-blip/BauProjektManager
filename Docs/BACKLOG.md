@@ -1,11 +1,12 @@
 ﻿# BauProjektManager — Backlog & Ideen
 
-**Letzte Aktualisierung:** 27.03.2026  
+**Letzte Aktualisierung:** 29.03.2026  
+**Aktuelle Version:** v0.12.4  
 **Format:** Priorität → Feature → Beschreibung → Status
 
 ---
 
-## V1 — Phase 1: Einstellungen (fast fertig)
+## V1 — Phase 1: Einstellungen
 
 | # | Feature | Beschreibung | Status |
 |---|---------|-------------|--------|
@@ -18,14 +19,23 @@
 | 7 | registry.json Export | Flat JSON für VBA, atomisch geschrieben | ✅ Erledigt |
 | 8 | Git-Aufräumung | Hilfsmodule + Export aus Tracking entfernt | ✅ Erledigt |
 | 9 | Ersteinrichtung | OneDrive auto-erkennen, Arbeitsordner, Archivordner, settings.json | ✅ Erledigt (v0.10.0) |
-| 10 | **Projektordner erstellen** | **Beim Anlegen automatisch nummerierte Ordnerstruktur erstellen (01_Pläne, 02_Fotos etc.). Ordner-Template änderbar in settings.json. _Eingang Unterordner in 01_Pläne.** | ⬜ Nächster Schritt |
-| 11 | **.bpm-manifest** | Versteckte Datei in jedem Projektordner erstellen (Ausweis), bei Umbenennung → Auto-Suche + Pfad aktualisieren | ⬜ |
-| 12 | **Projekt archivieren** | Status → Completed → Ordner in Archiv verschieben, Pfad aktualisieren | ⬜ |
-| 13 | **Pfade änderbar** | Button in Einstellungen um Setup-Dialog erneut zu öffnen (OneDrive, Arbeitsordner, Archivordner) | ⬜ |
-| 14 | **Single-Writer Mutex** | Nur eine App-Instanz gleichzeitig (Architektur Kap. 15) | ⬜ |
-| 15 | Suchfeld Projekte | Schnellsuche/Filter in der Projektliste | ⬜ |
-| 16 | Versionsnummer im Log | Automatisch aus Assembly, nicht hardcoded | ⬜ |
-| 17 | Architektur v1.5 | Doku aktualisieren (.NET 10, Client, Adresse, Manifest, Ordnerstruktur) | ⬜ |
+| 10 | Projektordner erstellen | Nummerierte Ordnerstruktur mit Unterordnern, Präfix-Schalter, TreeView im Dialog + Einstellungen, _Eingang, Vorschau-Baum | ✅ Erledigt (v0.11.0–v0.12.4) |
+| 11 | **.bpm-manifest** | Versteckte Datei in jedem Projektordner (Ausweis), bei Umbenennung → Auto-Suche + Pfad aktualisieren | ⬜ Nächster Schritt |
+| 12 | **Projekt archivieren** | Status → Completed → Ordner in Archiv verschieben, Pfad aktualisieren | ⬜ (Button vorbereitet, disabled) |
+| 13 | Pfade änderbar | Gelbe 📁-Buttons mit OpenFolderDialog für Arbeitsordner + Archivordner | ✅ Erledigt (v0.12.3) |
+| 14 | **Single-Writer Mutex** | Nur eine App-Instanz gleichzeitig | ⬜ |
+| 15 | **Suchfeld Projekte** | Schnellsuche/Filter in der Projektliste | ⬜ |
+| 16 | **Versionsnummer im Log** | Automatisch aus Assembly, nicht hardcoded | ⬜ |
+| 17 | **Architektur v1.5** | Doku aktualisieren (.NET 10, Client, Adresse, Manifest, Ordnerstruktur, Unterordner, Tabs) | ⬜ |
+
+**Zusätzlich erledigt (nicht im ursprünglichen Backlog):**
+- Löschen-Button mit Bestätigungsdialog (v0.11.3)
+- 2-Tab-Einstellungsseite: Projekte + Standard-Ordnerstruktur (v0.12.0)
+- Status-Anzeige mit Farben: ● Aktiv (grün), ● Abgeschlossen (rot), ● Archiviert (grau) (v0.12.0)
+- Standard-Ordnerstruktur mit Unterordnern + Präfix an/aus (v0.12.0)
+- Projekt-Refresh nach Bearbeiten (v0.12.1)
+- 2-Spalten ProjectEditDialog (1050×780) mit allen Architektur-Feldern (v0.11.1)
+- Gleiches GUI für Neu + Bearbeiten — TreeView mit Unterordnern in rechter Spalte (v0.12.4)
 
 ---
 
@@ -70,8 +80,9 @@
 
 | Feature | Beschreibung | Status |
 |---------|-------------|--------|
-| Outlook-Adressbuch | Kontakte aus Outlook importieren/übernehmen | ⬜ |
+| GIS Steiermark API | Grundstücksdaten + Koordinaten + Grenzen per API abfragen (KG, GST, Koordinaten automatisch befüllen) | ⬜ |
 | Google Maps API | Adresse → PLZ, Ort, Gemeinde, Bezirk, Koordinaten automatisch | ⬜ |
+| Outlook-Adressbuch | Kontakte aus Outlook importieren/übernehmen | ⬜ |
 | Adressbuch-Sync | Eigenes Adressbuch ↔ Outlook abgleichen | ⬜ |
 | Outlook COM Integration | Projekt-Ordner in Outlook, Anhänge extrahieren | ⬜ |
 | Dashboard | Startseite mit Widgets (Wetter, neue Pläne, Status) | ⬜ |
@@ -131,8 +142,6 @@
 - Rainbow Braces Extension für VS Studio
 - DB Browser for SQLite installieren (zum Nachschauen der DB)
 - Projekt-Ordner aus App heraus im Explorer öffnen (Button)
-- Ordner-Template: User soll Ordner hinzufügen/umbenennen/Reihenfolge ändern können
-- Ordner nummeriert: 01_Pläne, 02_Fotos, 03_Dokumente etc.
 - Pfade-Erkennung via .bpm-manifest bei Ordner-Umbenennung
 
 ---

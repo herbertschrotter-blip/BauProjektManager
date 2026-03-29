@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using BauProjektManager.Domain.Enums;
@@ -14,33 +15,20 @@ public class FolderDisplayItem
     public string Name { get; set; } = string.Empty;
     public bool HasInbox { get; set; }
     public int Position { get; set; }
-
-    /// <summary>
-    /// Shows "02 Fotos" style display in the list.
-    /// </summary>
     public string NumberedDisplay => $"{Position:D2} {Name}";
-
-    /// <summary>
-    /// Controls visibility of the inbox icon in the template.
-    /// </summary>
     public Visibility InboxVisibility => HasInbox ? Visibility.Visible : Visibility.Collapsed;
 }
 
 public partial class ProjectEditDialog : Window
 {
     public Project Project { get; private set; }
-
-    /// <summary>
-    /// The folder template as configured by the user in this dialog.
-    /// Null when editing an existing project (no folder changes).
-    /// </summary>
     public List<FolderTemplateEntry>? FolderTemplate { get; private set; }
 
     private ObservableCollection<FolderDisplayItem> _folderItems = [];
     private readonly bool _isNewProject;
 
     /// <summary>
-    /// Constructor for editing an existing project (no folder section).
+    /// Constructor for editing an existing project (no folder section, shows paths).
     /// </summary>
     public ProjectEditDialog(Project project) : this(project, null) { }
 
@@ -55,7 +43,6 @@ public partial class ProjectEditDialog : Window
 
         if (_isNewProject && folderTemplate is not null)
         {
-            // Deep copy so we don't modify the original settings
             _folderItems = new ObservableCollection<FolderDisplayItem>(
                 folderTemplate.Select((f, i) => new FolderDisplayItem
                 {
@@ -66,6 +53,11 @@ public partial class ProjectEditDialog : Window
 
             PanelFolders.Visibility = Visibility.Visible;
             LstFolders.ItemsSource = _folderItems;
+        }
+        else
+        {
+            // Existing project: show paths
+            PanelPaths.Visibility = Visibility.Visible;
         }
 
         LoadProjectData();
@@ -78,7 +70,6 @@ public partial class ProjectEditDialog : Window
         TxtFullName.Text = Project.FullName;
         DpProjectStart.SelectedDate = Project.Timeline.ProjectStart;
         TxtNumberPreview.Text = Project.ProjectNumber;
-
         CmbStatus.ItemsSource = Enum.GetValues<ProjectStatus>();
         CmbStatus.SelectedItem = Project.Status;
 
@@ -99,9 +90,37 @@ public partial class ProjectEditDialog : Window
         TxtDistrict.Text = Project.Location.District;
         TxtState.Text = Project.Location.State;
 
+        // Koordinaten
+        TxtCoordSystem.Text = Project.Location.CoordinateSystem;
+        TxtCoordEast.Text = Project.Location.CoordinateEast != 0
+            ? Project.Location.CoordinateEast.ToString(CultureInfo.InvariantCulture) : "";
+        TxtCoordNorth.Text = Project.Location.CoordinateNorth != 0
+            ? Project.Location.CoordinateNorth.ToString(CultureInfo.InvariantCulture) : "";
+
+        // Grundstück
+        TxtCadastralKg.Text = Project.Location.CadastralKg;
+        TxtCadastralKgName.Text = Project.Location.CadastralKgName;
+        TxtCadastralGst.Text = Project.Location.CadastralGst;
+
+        // Laufzeit
+        DpConstructionStart.SelectedDate = Project.Timeline.ConstructionStart;
+        DpPlannedEnd.SelectedDate = Project.Timeline.PlannedEnd;
+        DpActualEnd.SelectedDate = Project.Timeline.ActualEnd;
+
         // Sonstiges
         TxtTags.Text = Project.Tags;
         TxtNotes.Text = Project.Notes;
+
+        // Pfade (nur bei bestehendem Projekt)
+        if (!_isNewProject)
+        {
+            TxtPathRoot.Text = Project.Paths.Root;
+            TxtPathPlans.Text = Project.Paths.Plans;
+            TxtPathInbox.Text = Project.Paths.Inbox;
+            TxtPathPhotos.Text = Project.Paths.Photos;
+            TxtPathDocs.Text = Project.Paths.Documents;
+            TxtPathProtocols.Text = Project.Paths.Protocols;
+        }
     }
 
     private void OnProjectStartChanged(object? sender, SelectionChangedEventArgs e)
@@ -120,7 +139,6 @@ public partial class ProjectEditDialog : Window
         {
             _folderItems[i].Position = i;
         }
-        // Force refresh of the ListBox display
         var items = _folderItems.ToList();
         _folderItems.Clear();
         foreach (var item in items)
@@ -135,7 +153,6 @@ public partial class ProjectEditDialog : Window
     {
         var index = LstFolders.SelectedIndex;
         if (index <= 0) return;
-
         var item = _folderItems[index];
         _folderItems.RemoveAt(index);
         _folderItems.Insert(index - 1, item);
@@ -147,7 +164,6 @@ public partial class ProjectEditDialog : Window
     {
         var index = LstFolders.SelectedIndex;
         if (index < 0 || index >= _folderItems.Count - 1) return;
-
         var item = _folderItems[index];
         _folderItems.RemoveAt(index);
         _folderItems.Insert(index + 1, item);
@@ -157,7 +173,6 @@ public partial class ProjectEditDialog : Window
 
     private void OnFolderAdd(object sender, RoutedEventArgs e)
     {
-        // Simple input dialog using an InputBox-style approach
         var inputWindow = new Window
         {
             Title = "Ordner hinzufügen",
@@ -207,8 +222,6 @@ public partial class ProjectEditDialog : Window
         stack.Children.Add(textBox);
         stack.Children.Add(btnOk);
         inputWindow.Content = stack;
-
-        // Focus the textbox when window opens
         inputWindow.ContentRendered += (_, _) => textBox.Focus();
 
         if (inputWindow.ShowDialog() == true && !string.IsNullOrWhiteSpace(textBox.Text))
@@ -228,22 +241,16 @@ public partial class ProjectEditDialog : Window
     {
         var index = LstFolders.SelectedIndex;
         if (index < 0) return;
-
         var item = _folderItems[index];
         var result = MessageBox.Show(
-            $"Ordner \"{item.Name}\" entfernen?",
-            "Ordner entfernen",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
-
+            $"Ordner \"{item.Name}\" entfernen?", "Ordner entfernen",
+            MessageBoxButton.YesNo, MessageBoxImage.Question);
         if (result == MessageBoxResult.Yes)
         {
             _folderItems.RemoveAt(index);
             RefreshFolderNumbers();
             if (_folderItems.Count > 0)
-            {
                 LstFolders.SelectedIndex = Math.Min(index, _folderItems.Count - 1);
-            }
         }
     }
 
@@ -251,9 +258,8 @@ public partial class ProjectEditDialog : Window
     {
         var index = LstFolders.SelectedIndex;
         if (index < 0) return;
-
         _folderItems[index].HasInbox = !_folderItems[index].HasInbox;
-        RefreshFolderNumbers(); // Force refresh to update inbox icon
+        RefreshFolderNumbers();
         LstFolders.SelectedIndex = index;
     }
 
@@ -266,8 +272,6 @@ public partial class ProjectEditDialog : Window
         Project.FullName = TxtFullName.Text;
         Project.Timeline.ProjectStart = DpProjectStart.SelectedDate;
         Project.Status = (ProjectStatus)CmbStatus.SelectedItem;
-
-        // Nummer aus Startdatum
         Project.UpdateProjectNumberFromStart();
 
         // Auftraggeber
@@ -286,6 +290,23 @@ public partial class ProjectEditDialog : Window
         Project.Location.Municipality = TxtMunicipality.Text;
         Project.Location.District = TxtDistrict.Text;
         Project.Location.State = TxtState.Text;
+
+        // Koordinaten
+        Project.Location.CoordinateSystem = TxtCoordSystem.Text;
+        if (double.TryParse(TxtCoordEast.Text, CultureInfo.InvariantCulture, out var east))
+            Project.Location.CoordinateEast = east;
+        if (double.TryParse(TxtCoordNorth.Text, CultureInfo.InvariantCulture, out var north))
+            Project.Location.CoordinateNorth = north;
+
+        // Grundstück
+        Project.Location.CadastralKg = TxtCadastralKg.Text;
+        Project.Location.CadastralKgName = TxtCadastralKgName.Text;
+        Project.Location.CadastralGst = TxtCadastralGst.Text;
+
+        // Laufzeit
+        Project.Timeline.ConstructionStart = DpConstructionStart.SelectedDate;
+        Project.Timeline.PlannedEnd = DpPlannedEnd.SelectedDate;
+        Project.Timeline.ActualEnd = DpActualEnd.SelectedDate;
 
         // Sonstiges
         Project.Tags = TxtTags.Text;

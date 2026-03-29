@@ -161,10 +161,11 @@
                                      BorderBrush="#3E3E42" Padding="5,3" Margin="0,4"
                                      IsReadOnly="True" FontSize="12"/>
                             <Button Grid.Row="0" Grid.Column="2" Content="📁"
-                                    Background="#3E3E42" Foreground="#CCCCCC"
+                                    Click="OnBrowseBasePath"
+                                    Background="#3E3E42" Foreground="#FFD700"
                                     Padding="8,4" Margin="5,4,0,4"
                                     BorderThickness="0" Cursor="Hand"
-                                    IsEnabled="False" ToolTip="Kommt in Feature #13"/>
+                                    ToolTip="Arbeitsordner wählen"/>
 
                             <TextBlock Grid.Row="1" Grid.Column="0" Text="Archivordner:"
                                        Foreground="#CCCCCC" VerticalAlignment="Center" Margin="0,4"/>
@@ -174,10 +175,11 @@
                                      BorderBrush="#3E3E42" Padding="5,3" Margin="0,4"
                                      IsReadOnly="True" FontSize="12"/>
                             <Button Grid.Row="1" Grid.Column="2" Content="📁"
-                                    Background="#3E3E42" Foreground="#CCCCCC"
+                                    Click="OnBrowseArchivePath"
+                                    Background="#3E3E42" Foreground="#FFD700"
                                     Padding="8,4" Margin="5,4,0,4"
                                     BorderThickness="0" Cursor="Hand"
-                                    IsEnabled="False" ToolTip="Kommt in Feature #13"/>
+                                    ToolTip="Archivordner wählen"/>
 
                             <TextBlock Grid.Row="2" Grid.Column="0" Text="OneDrive:"
                                        Foreground="#CCCCCC" VerticalAlignment="Center" Margin="0,4"/>

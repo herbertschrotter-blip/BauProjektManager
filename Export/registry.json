@@ -1,6 +1,6 @@
 {
   "registryVersion": "1.0",
-  "generatedAt": "2026-03-29T06:14:11",
+  "generatedAt": "2026-03-29T10:56:13",
   "planTypes": [
     "Polierplan",
     "Schalungsplan",
@@ -14,42 +14,5 @@
     "Schnittplan"
   ],
   "customPlanTypes": [],
-  "projects": [
-    {
-      "id": "proj_001",
-      "projectNumber": "202512",
-      "name": "\u00D6WG Dobl-Zwaring",
-      "fullName": "gro\u00DF klein",
-      "status": "active",
-      "clientCompany": "",
-      "clientContact": "",
-      "clientPhone": "",
-      "clientEmail": "",
-      "address": "",
-      "street": "",
-      "houseNumber": "",
-      "postalCode": "",
-      "city": "",
-      "municipality": "",
-      "district": "",
-      "state": "Steiermark",
-      "coordinateSystem": "EPSG:31258",
-      "coordinateEast": 0,
-      "coordinateNorth": 0,
-      "cadastralKg": "",
-      "cadastralKgName": "",
-      "cadastralGst": "",
-      "projectStart": "2025-12-04",
-      "rootPath": "",
-      "plansPath": "Pl\u00E4ne",
-      "inboxPath": "Pl\u00E4ne\\_Eingang",
-      "photosPath": "Fotos",
-      "documentsPath": "Dokumente",
-      "protocolsPath": "Protokolle",
-      "invoicesPath": "Rechnungen",
-      "buildings": "",
-      "tags": "",
-      "notes": ""
-    }
-  ]
+  "projects": []
 }

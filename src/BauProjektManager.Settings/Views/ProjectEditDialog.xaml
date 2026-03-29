@@ -582,10 +582,104 @@
                     </Border>
                 </StackPanel>
             </TabItem>
+            <!-- ═══ TAB 4: PORTALE + LINKS ═══ -->
             <TabItem Header="Portale + Links" Style="{StaticResource DialogTabItem}">
-                <StackPanel Margin="20" VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <TextBlock Text="Portale + Links — kommt später" Foreground="#666666" FontSize="16"/>
-                </StackPanel>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,10,0,0">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <!-- Linke Spalte: Bauherren-Portale -->
+                            <StackPanel Grid.Column="0">
+                                <DockPanel Margin="0,0,0,4">
+                                    <TextBlock Text="Bauherren-Portale" Style="{StaticResource SH}" Margin="0"/>
+                                    <Button Content="✎" Style="{StaticResource IconBtn}" Click="OnEditPortalTypes" ToolTip="Portal-Typen bearbeiten" Margin="8,12,0,6"/>
+                                </DockPanel>
+                                <TextBlock Text="Externe Plattformen des Auftraggebers. Portal-Typen konfigurierbar." Foreground="#555555" FontSize="11" Margin="0,0,0,8"/>
+                                <DataGrid x:Name="DgPortals" AutoGenerateColumns="False" IsReadOnly="True"
+                                          SelectionMode="Single" CanUserResizeRows="False"
+                                          Background="#1E1E1E" Foreground="#CCCCCC" BorderBrush="#3E3E42"
+                                          RowBackground="#1E1E1E" AlternatingRowBackground="#1E1E1E"
+                                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#3E3E42"
+                                          HeadersVisibility="Column" Height="260"
+                                          CellStyle="{StaticResource DarkDgCell}">
+                                    <DataGrid.ColumnHeaderStyle>
+                                        <Style TargetType="DataGridColumnHeader">
+                                            <Setter Property="Background" Value="#007ACC"/><Setter Property="Foreground" Value="White"/>
+                                            <Setter Property="Padding" Value="6,4"/><Setter Property="BorderBrush" Value="#005A9E"/><Setter Property="BorderThickness" Value="0,0,1,0"/>
+                                        </Style>
+                                    </DataGrid.ColumnHeaderStyle>
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Portal" Binding="{Binding Name}" Width="100"/>
+                                        <DataGridTextColumn Header="URL" Binding="{Binding Url}" Width="*">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#85B7EB"/>
+                                                    <Setter Property="FontSize" Value="11"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                    <Button Content="+ Portal" Click="OnAddPortal" Background="#007ACC" Foreground="White" Padding="8,4" BorderThickness="0" Cursor="Hand" Margin="0,0,4,0" FontSize="11"/>
+                                    <Button Content="Bearbeiten" Click="OnEditPortal" Background="#3E3E42" Foreground="#CCCCCC" Padding="8,4" BorderThickness="0" Cursor="Hand" Margin="0,0,4,0" FontSize="11"/>
+                                    <Button Content="Entfernen" Click="OnRemovePortal" Background="#C62828" Foreground="White" Padding="8,4" BorderThickness="0" Cursor="Hand" Margin="0,0,4,0" FontSize="11"/>
+                                    <Button Content="Öffnen" Click="OnOpenPortal" Background="#3E3E42" Foreground="#85B7EB" Padding="8,4" BorderThickness="0" Cursor="Hand" FontSize="11"/>
+                                </StackPanel>
+                            </StackPanel>
+                            <!-- Trennlinie -->
+                            <Rectangle Grid.Column="1" Width="1" Fill="#3E3E42" Margin="9,0"/>
+                            <!-- Rechte Spalte: Eigene Links -->
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Eigene Links" Style="{StaticResource SH}" Margin="0,0,0,4"/>
+                                <TextBlock Text="Projekt-spezifische Links zu SharePoint, LV, Ablagesystemen etc." Foreground="#555555" FontSize="11" Margin="0,0,0,8"/>
+                                <DataGrid x:Name="DgCustomLinks" AutoGenerateColumns="False" IsReadOnly="True"
+                                          SelectionMode="Single" CanUserResizeRows="False"
+                                          Background="#1E1E1E" Foreground="#CCCCCC" BorderBrush="#3E3E42"
+                                          RowBackground="#1E1E1E" AlternatingRowBackground="#1E1E1E"
+                                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#3E3E42"
+                                          HeadersVisibility="Column" Height="260"
+                                          CellStyle="{StaticResource DarkDgCell}">
+                                    <DataGrid.ColumnHeaderStyle>
+                                        <Style TargetType="DataGridColumnHeader">
+                                            <Setter Property="Background" Value="#3E3E42"/><Setter Property="Foreground" Value="#CCCCCC"/>
+                                            <Setter Property="Padding" Value="6,4"/><Setter Property="BorderBrush" Value="#555555"/><Setter Property="BorderThickness" Value="0,0,1,0"/>
+                                        </Style>
+                                    </DataGrid.ColumnHeaderStyle>
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Bezeichnung" Binding="{Binding Name}" Width="100"/>
+                                        <DataGridTextColumn Header="URL" Binding="{Binding Url}" Width="*">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#85B7EB"/>
+                                                    <Setter Property="FontSize" Value="11"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                    <Button Content="+ Link" Click="OnAddCustomLink" Background="#007ACC" Foreground="White" Padding="8,4" BorderThickness="0" Cursor="Hand" Margin="0,0,4,0" FontSize="11"/>
+                                    <Button Content="Bearbeiten" Click="OnEditCustomLink" Background="#3E3E42" Foreground="#CCCCCC" Padding="8,4" BorderThickness="0" Cursor="Hand" Margin="0,0,4,0" FontSize="11"/>
+                                    <Button Content="Entfernen" Click="OnRemoveCustomLink" Background="#C62828" Foreground="White" Padding="8,4" BorderThickness="0" Cursor="Hand" Margin="0,0,4,0" FontSize="11"/>
+                                    <Button Content="Öffnen" Click="OnOpenCustomLink" Background="#3E3E42" Foreground="#85B7EB" Padding="8,4" BorderThickness="0" Cursor="Hand" FontSize="11"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                        <!-- Dashboard-Vorschau -->
+                        <Border BorderBrush="#3E3E42" BorderThickness="0,1,0,0" Padding="0,12,0,0" Margin="0,16,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Vorschau im Dashboard" Foreground="#007ACC" FontWeight="Bold" Margin="0,0,0,4"/>
+                                <TextBlock Text="So werden die Links im Projekt-Dashboard angezeigt:" Foreground="#555555" FontSize="11" Margin="0,0,0,8"/>
+                                <WrapPanel x:Name="WpLinkPreview"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
             </TabItem>
 
             <!-- ═══ TAB 5: ORDNERSTRUKTUR ═══ -->

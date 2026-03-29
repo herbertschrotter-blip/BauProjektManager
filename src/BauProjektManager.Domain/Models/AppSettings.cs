@@ -46,6 +46,12 @@ public class AppSettings
     public List<string> ParticipantRoles { get; set; } = GetDefaultParticipantRoles();
 
     /// <summary>
+    /// Editierbare Liste der Bauherren-Portal-Typen (Tab 4).
+    /// Vom User über ✎-Button anpassbar.
+    /// </summary>
+    public List<string> PortalTypes { get; set; } = GetDefaultPortalTypes();
+
+    /// <summary>
     /// Standard-Projektarten.
     /// </summary>
     public static List<string> GetDefaultProjectTypes() =>
@@ -69,6 +75,14 @@ public class AppSettings
         "Bauherr", "Architekt", "Statiker", "Haustechnik", "Bauphysik",
         "ÖBA", "Vermessung", "Elektro", "HKLS", "Bodengutachter",
         "Brandschutz", "Geotechnik", "Sonstiges"
+    ];
+
+    /// <summary>
+    /// Standard-Bauherren-Portal-Typen.
+    /// </summary>
+    public static List<string> GetDefaultPortalTypes() =>
+    [
+        "InfoRaum", "PlanRadar", "PlanFred", "Bau-Master", "Dalux"
     ];
 
     /// <summary>

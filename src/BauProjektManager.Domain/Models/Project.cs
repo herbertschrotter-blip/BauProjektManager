@@ -25,7 +25,6 @@ public class Project
 
     /// <summary>
     /// Bauteile/Bauabschnitte mit eigenen Geschossen und Höhen.
-    /// Ersetzt die alte Buildings-Liste.
     /// </summary>
     public List<BuildingPart> BuildingParts { get; set; } = [];
 
@@ -34,6 +33,12 @@ public class Project
     /// Projektbezogen gespeichert, später mit zentralem Adressbuch verknüpft.
     /// </summary>
     public List<ProjectParticipant> Participants { get; set; } = [];
+
+    /// <summary>
+    /// Externe Links und Bauherren-Portale für dieses Projekt.
+    /// Werden im Dashboard als klickbare Buttons angezeigt.
+    /// </summary>
+    public List<ProjectLink> Links { get; set; } = [];
 
     public ProjectPaths Paths { get; set; } = new();
     public string Tags { get; set; } = string.Empty;

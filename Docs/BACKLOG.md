@@ -39,6 +39,16 @@
 
 ---
 
+## V1 — Phase 1.5: Bestehende Projekte importieren
+
+| Feature | Beschreibung | Status |
+|---------|-------------|--------|
+| Bestehende Ordner zuweisen | Projekt erstellen und existierenden Ordner zuweisen statt neue Ordner anzulegen. Bestehende Unterordner werden in TreeView übernommen. | ⬜ |
+| Nachträgliche Sortierung | Bei zugewiesenen Ordnern nachträglich Präfix (Nummerierung) auf Hauptordner anwenden und Sortierung ändern — gleiche UI wie bei Neues Projekt | ⬜ |
+| Ordner umbenennen auf Disk | Wenn Präfix/Sortierung geändert wird, bestehende Ordner auf der Festplatte entsprechend umbenennen | ⬜ |
+
+---
+
 ## V1 — Phase 2: PlanManager (der große Brocken)
 
 | # | Feature | Beschreibung | Status |
@@ -59,6 +69,7 @@
 | 31 | Backup vor Import | SQLite + JSON als .bak kopieren | ⬜ |
 | 32 | Unbekannte Dateien Dialog | Profil erweitern / Neues Profil / Skip | ⬜ |
 | 33 | Erkennungs-Konflikt Dialog | Mehrere Profile passen → User wählt | ⬜ |
+| 34 | **Plan-Sammler** | Pläne aus bestimmten Ordnern per Checkbox-Auswahl sammeln und nach bekanntem Schema sortieren (z.B. alle Bewehrungspläne aus mehreren Quellen zusammenführen) | ⬜ |
 
 ---
 
@@ -76,6 +87,48 @@
 
 ---
 
+## Modul: Foto-Management (Nach V1)
+
+**Konzept:** Professionelles Foto-Management für Baustellenfotos mit Viewer, Tags, Bewertung und Geodaten-Analyse.
+
+**Fotoviewer:**
+- Professioneller Viewer mit Vollbild, Zoom, Navigation
+- Tag-System: Schlagwörter pro Foto (z.B. "Schalung", "Bewehrung", "Mangel")
+- Bewertungssystem: Sterne oder Farbmarkierung
+- Filterung und Suche nach Tags, Datum, Bewertung
+- Sortierung nach Aufnahmedatum, Name, Bewertung
+
+**Geodaten-Analyse:**
+- GPS-Koordinaten aus EXIF-Daten lesen
+- Fotos automatisch dem richtigen Projekt zuordnen anhand Geodaten
+- Falsch zugeordnete Fotos erkennen (Foto auf Baustelle A aber im Ordner von Baustelle B)
+- Fotos anderen Projekten zuweisen oder entfernen per Vorschlag
+
+**Baubericht-Integration:**
+- Alle Fotos eines Tages einem Baubericht zuweisen
+- Im Baubericht bei einzelnen Punkten Fotos zuordnen
+- Auswahl welche Fotos in den Druck kommen (Checkbox pro Foto)
+- Restliche Fotos bleiben zugewiesen aber nicht im Druck-PDF
+- PDF-Export: zuklappbare Sektionen prüfen (ob PDF das unterstützt oder ob besser fixe Auswahl)
+
+**Auto-Tagging (später):**
+- Tags automatisch aus Baubericht-Text vorschlagen
+- Wenn Baubericht "Schalung OG" enthält → Fotos vom gleichen Tag mit Tag "Schalung" vorschlagen
+
+| Feature | Status |
+|---------|--------|
+| Fotoviewer (Vollbild, Zoom, Navigation) | ⬜ |
+| Tag-System + Bewertung | ⬜ |
+| Filter + Suche nach Tags/Datum | ⬜ |
+| Geodaten aus EXIF lesen | ⬜ |
+| Falsche Fotos per Geodaten erkennen | ⬜ |
+| Fotos anderen Projekten zuweisen | ⬜ |
+| Baubericht-Fotozuordnung | ⬜ |
+| Druckauswahl (welche Fotos ins PDF) | ⬜ |
+| Auto-Tagging aus Baubericht | ⬜ |
+
+---
+
 ## Später — Nach V1
 
 | Feature | Beschreibung | Status |
@@ -88,7 +141,6 @@
 | Dashboard | Startseite mit Widgets (Wetter, neue Pläne, Status) | ⬜ |
 | Bautagebuch | Tägliches Protokoll mit Auto-Befüllung + Export | ⬜ |
 | Wetter-API | Wetterdaten pro Baustelle | ⬜ |
-| Foto-Modul | OneDrive-Baustellenfotos nach Projekt/Datum | ⬜ |
 | Excel/Word Vorlagen | COM Interop, Projektdaten in Vorlagen befüllen | ⬜ |
 | PDF-Vorschau | Pläne in der App anzeigen | ⬜ |
 | VERALTET-Stempel | Auf alte Plan-PDFs stempeln | ⬜ |

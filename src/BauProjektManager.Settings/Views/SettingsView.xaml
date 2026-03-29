@@ -6,65 +6,192 @@
         <vm:SettingsViewModel/>
     </UserControl.DataContext>
 
-    <Grid Margin="10">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="10">
 
-        <!-- Header -->
-        <TextBlock Grid.Row="0" Text="⚙ Einstellungen — Projekte"
-                   FontSize="22" Foreground="#CCCCCC"
-                   Margin="0,0,0,15"/>
+            <!-- Header -->
+            <TextBlock Text="⚙ Einstellungen"
+                       FontSize="22" Foreground="#CCCCCC"
+                       Margin="0,0,0,15"/>
 
-        <!-- Projektliste -->
-        <DataGrid Grid.Row="1"
-                  ItemsSource="{Binding Projects}"
-                  SelectedItem="{Binding SelectedProject}"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  SelectionMode="Single"
-                  Background="#252526"
-                  Foreground="#CCCCCC"
-                  BorderBrush="#3E3E42"
-                  RowBackground="#2D2D30"
-                  AlternatingRowBackground="#333337"
-                  GridLinesVisibility="Horizontal"
-                  HorizontalGridLinesBrush="#3E3E42"
-                  HeadersVisibility="Column"
-                  CanUserResizeRows="False"
-                  MouseDoubleClick="OnRowDoubleClick">
-            <DataGrid.ColumnHeaderStyle>
-                <Style TargetType="DataGridColumnHeader">
-                    <Setter Property="Background" Value="#007ACC"/>
-                    <Setter Property="Foreground" Value="White"/>
-                    <Setter Property="Padding" Value="8,5"/>
-                    <Setter Property="BorderBrush" Value="#005A9E"/>
-                    <Setter Property="BorderThickness" Value="0,0,1,0"/>
-                </Style>
-            </DataGrid.ColumnHeaderStyle>
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Nr." Binding="{Binding ProjectNumber}" Width="80"/>
-                <DataGridTextColumn Header="Projekt" Binding="{Binding Name}" Width="*"/>
-                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90"/>
-                <DataGridTextColumn Header="Auftraggeber" Binding="{Binding Client.Company}" Width="140"/>
-                <DataGridTextColumn Header="Ort" Binding="{Binding Location.FormattedAddress}" Width="*"/>
-            </DataGrid.Columns>
-        </DataGrid>
+            <!-- ── Projekte ── -->
+            <TextBlock Text="── Projekte ──" Foreground="#007ACC" FontWeight="Bold" Margin="0,0,0,8"/>
 
-        <!-- Buttons -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
-            <Button Content="+ Neues Projekt"
-                    Command="{Binding AddProjectCommand}"
-                    Background="#007ACC" Foreground="White"
-                    Padding="15,8" Margin="0,0,10,0"
-                    BorderThickness="0" Cursor="Hand"/>
-            <Button Content="Bearbeiten"
-                    Command="{Binding EditProjectCommand}"
-                    Background="#3E3E42" Foreground="#CCCCCC"
-                    Padding="15,8" Margin="0,0,10,0"
-                    BorderThickness="0" Cursor="Hand"/>
+            <DataGrid ItemsSource="{Binding Projects}"
+                      SelectedItem="{Binding SelectedProject}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      SelectionMode="Single"
+                      Background="#252526"
+                      Foreground="#CCCCCC"
+                      BorderBrush="#3E3E42"
+                      RowBackground="#2D2D30"
+                      AlternatingRowBackground="#333337"
+                      GridLinesVisibility="Horizontal"
+                      HorizontalGridLinesBrush="#3E3E42"
+                      HeadersVisibility="Column"
+                      CanUserResizeRows="False"
+                      Height="200"
+                      MouseDoubleClick="OnRowDoubleClick">
+                <DataGrid.ColumnHeaderStyle>
+                    <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="Background" Value="#007ACC"/>
+                        <Setter Property="Foreground" Value="White"/>
+                        <Setter Property="Padding" Value="8,5"/>
+                        <Setter Property="BorderBrush" Value="#005A9E"/>
+                        <Setter Property="BorderThickness" Value="0,0,1,0"/>
+                    </Style>
+                </DataGrid.ColumnHeaderStyle>
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Nr." Binding="{Binding ProjectNumber}" Width="80"/>
+                    <DataGridTextColumn Header="Projekt" Binding="{Binding Name}" Width="*"/>
+                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90"/>
+                    <DataGridTextColumn Header="Auftraggeber" Binding="{Binding Client.Company}" Width="140"/>
+                    <DataGridTextColumn Header="Ort" Binding="{Binding Location.FormattedAddress}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                <Button Content="+ Neues Projekt"
+                        Command="{Binding AddProjectCommand}"
+                        Background="#007ACC" Foreground="White"
+                        Padding="15,8" Margin="0,0,10,0"
+                        BorderThickness="0" Cursor="Hand"/>
+                <Button Content="Bearbeiten"
+                        Command="{Binding EditProjectCommand}"
+                        Background="#3E3E42" Foreground="#CCCCCC"
+                        Padding="15,8" Margin="0,0,10,0"
+                        BorderThickness="0" Cursor="Hand"/>
+                <Button Content="Archivieren"
+                        Background="#3E3E42" Foreground="#CCCCCC"
+                        Padding="15,8"
+                        BorderThickness="0" Cursor="Hand"
+                        IsEnabled="False" ToolTip="Kommt in Feature #12"/>
+            </StackPanel>
+
+            <!-- ── Pfade ── -->
+            <TextBlock Text="── Pfade ──" Foreground="#007ACC" FontWeight="Bold" Margin="0,20,0,8"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="110"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Arbeitsordner:"
+                           Foreground="#CCCCCC" VerticalAlignment="Center" Margin="0,4"/>
+                <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtBasePath"
+                         Text="{Binding BasePath, Mode=OneWay}"
+                         Background="#1E1E1E" Foreground="#CCCCCC"
+                         BorderBrush="#3E3E42" Padding="5,3" Margin="0,4"
+                         IsReadOnly="True" FontSize="12"/>
+                <Button Grid.Row="0" Grid.Column="2" Content="📁"
+                        Background="#3E3E42" Foreground="#CCCCCC"
+                        Padding="8,4" Margin="5,4,0,4"
+                        BorderThickness="0" Cursor="Hand"
+                        IsEnabled="False" ToolTip="Kommt in Feature #13"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Archivordner:"
+                           Foreground="#CCCCCC" VerticalAlignment="Center" Margin="0,4"/>
+                <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtArchivePath"
+                         Text="{Binding ArchivePath, Mode=OneWay}"
+                         Background="#1E1E1E" Foreground="#CCCCCC"
+                         BorderBrush="#3E3E42" Padding="5,3" Margin="0,4"
+                         IsReadOnly="True" FontSize="12"/>
+                <Button Grid.Row="1" Grid.Column="2" Content="📁"
+                        Background="#3E3E42" Foreground="#CCCCCC"
+                        Padding="8,4" Margin="5,4,0,4"
+                        BorderThickness="0" Cursor="Hand"
+                        IsEnabled="False" ToolTip="Kommt in Feature #13"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="OneDrive:"
+                           Foreground="#CCCCCC" VerticalAlignment="Center" Margin="0,4"/>
+                <TextBox Grid.Row="2" Grid.Column="1"
+                         Text="{Binding OneDrivePath, Mode=OneWay}"
+                         Background="#1E1E1E" Foreground="#666666"
+                         BorderBrush="#3E3E42" Padding="5,3" Margin="0,4"
+                         IsReadOnly="True" FontSize="12"/>
+                <TextBlock Grid.Row="2" Grid.Column="2"
+                           Text="(auto)" Foreground="#666666"
+                           VerticalAlignment="Center" Margin="5,4,0,4"/>
+            </Grid>
+
+            <!-- ── Standard-Ordnerstruktur ── -->
+            <TextBlock Text="── Standard-Ordnerstruktur ──" Foreground="#007ACC" FontWeight="Bold" Margin="0,20,0,4"/>
+            <TextBlock Text="Wird als Vorlage bei jedem neuen Projekt verwendet. Beim Anlegen pro Projekt anpassbar."
+                       Foreground="#666666" FontSize="11" Margin="0,0,0,8"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="320"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Ordner-Liste -->
+                <ListBox x:Name="LstDefaultFolders" Grid.Column="0"
+                         ItemsSource="{Binding DefaultFolderItems}"
+                         Background="#1E1E1E" Foreground="#CCCCCC"
+                         BorderBrush="#3E3E42" Height="220">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding NumberedDisplay}" Foreground="#CCCCCC"
+                                           VerticalAlignment="Center" FontSize="13"/>
+                                <TextBlock Text="  📥" Foreground="#007ACC" FontSize="12"
+                                           Visibility="{Binding InboxVisibility}"
+                                           VerticalAlignment="Center" ToolTip="_Eingang Unterordner"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <!-- Buttons -->
+                <StackPanel Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Top">
+                    <Button Content="▲" Command="{Binding DefaultFolderMoveUpCommand}"
+                            CommandParameter="{Binding SelectedItem, ElementName=LstDefaultFolders}"
+                            Width="30" Height="26"
+                            Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
+                            Margin="0,0,0,3" Cursor="Hand" ToolTip="Nach oben"/>
+                    <Button Content="▼" Command="{Binding DefaultFolderMoveDownCommand}"
+                            CommandParameter="{Binding SelectedItem, ElementName=LstDefaultFolders}"
+                            Width="30" Height="26"
+                            Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
+                            Margin="0,0,0,8" Cursor="Hand" ToolTip="Nach unten"/>
+                    <Button Content="＋" Command="{Binding DefaultFolderAddCommand}"
+                            Width="30" Height="26"
+                            Background="#007ACC" Foreground="White" BorderThickness="0"
+                            Margin="0,0,0,3" Cursor="Hand" ToolTip="Ordner hinzufügen"/>
+                    <Button Content="✕" Command="{Binding DefaultFolderRemoveCommand}"
+                            CommandParameter="{Binding SelectedItem, ElementName=LstDefaultFolders}"
+                            Width="30" Height="26"
+                            Background="#C62828" Foreground="White" BorderThickness="0"
+                            Margin="0,0,0,8" Cursor="Hand" ToolTip="Ordner entfernen"/>
+                    <Button Content="📥" Command="{Binding DefaultFolderToggleInboxCommand}"
+                            CommandParameter="{Binding SelectedItem, ElementName=LstDefaultFolders}"
+                            Width="30" Height="26"
+                            Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
+                            Cursor="Hand" ToolTip="_Eingang ein/aus"/>
+                </StackPanel>
+
+                <!-- Hinweis -->
+                <StackPanel Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Top">
+                    <TextBlock Text="📥 = _Eingang" Foreground="#666666" FontSize="11" Margin="0,0,0,8"/>
+                    <TextBlock Text="Änderungen werden sofort in settings.json gespeichert."
+                               Foreground="#666666" FontSize="11" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Statusleiste -->
+            <TextBlock Text="{Binding RegistryStatus}"
+                       Foreground="#999999" FontSize="11" Margin="0,15,0,0"/>
+
         </StackPanel>
-    </Grid>
+    </ScrollViewer>
 </UserControl>

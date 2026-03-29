@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using BauProjektManager.Domain.Enums;
@@ -27,14 +28,8 @@ public partial class ProjectEditDialog : Window
     private ObservableCollection<FolderDisplayItem> _folderItems = [];
     private readonly bool _isNewProject;
 
-    /// <summary>
-    /// Constructor for editing an existing project (no folder section, shows paths).
-    /// </summary>
     public ProjectEditDialog(Project project) : this(project, null) { }
 
-    /// <summary>
-    /// Constructor for creating a new project (with folder template).
-    /// </summary>
     public ProjectEditDialog(Project project, List<FolderTemplateEntry>? folderTemplate)
     {
         InitializeComponent();
@@ -43,6 +38,8 @@ public partial class ProjectEditDialog : Window
 
         if (_isNewProject && folderTemplate is not null)
         {
+            TxtDialogTitle.Text = "Neues Projekt anlegen";
+
             _folderItems = new ObservableCollection<FolderDisplayItem>(
                 folderTemplate.Select((f, i) => new FolderDisplayItem
                 {
@@ -53,10 +50,10 @@ public partial class ProjectEditDialog : Window
 
             PanelFolders.Visibility = Visibility.Visible;
             LstFolders.ItemsSource = _folderItems;
+            UpdateFolderPreview();
         }
         else
         {
-            // Existing project: show paths
             PanelPaths.Visibility = Visibility.Visible;
         }
 
@@ -128,7 +125,40 @@ public partial class ProjectEditDialog : Window
         if (DpProjectStart.SelectedDate.HasValue)
         {
             TxtNumberPreview.Text = DpProjectStart.SelectedDate.Value.ToString("yyyyMM");
+            UpdateFolderPreview();
         }
+    }
+
+    // === Folder preview tree ===
+
+    private void UpdateFolderPreview()
+    {
+        if (!_isNewProject || TxtFolderPreview is null) return;
+
+        var projectName = !string.IsNullOrEmpty(TxtName.Text)
+            ? TxtName.Text
+            : "Projektname";
+        var number = !string.IsNullOrEmpty(TxtNumberPreview.Text)
+            ? TxtNumberPreview.Text
+            : "YYYYMM";
+
+        var sb = new StringBuilder();
+        sb.AppendLine($"{number}_{projectName}/");
+
+        for (int i = 0; i < _folderItems.Count; i++)
+        {
+            var entry = _folderItems[i];
+            var prefix = i == _folderItems.Count - 1 ? "└── " : "├── ";
+            sb.AppendLine($"{prefix}{entry.Position:D2} {entry.Name}/");
+
+            if (entry.HasInbox)
+            {
+                var innerPrefix = i == _folderItems.Count - 1 ? "    " : "│   ";
+                sb.AppendLine($"{innerPrefix}└── _Eingang/");
+            }
+        }
+
+        TxtFolderPreview.Text = sb.ToString().TrimEnd();
     }
 
     // === Folder template buttons ===
@@ -145,6 +175,7 @@ public partial class ProjectEditDialog : Window
         {
             _folderItems.Add(item);
         }
+        UpdateFolderPreview();
     }
 
     private void OnFolderSelectionChanged(object sender, SelectionChangedEventArgs e) { }
@@ -242,10 +273,8 @@ public partial class ProjectEditDialog : Window
         var index = LstFolders.SelectedIndex;
         if (index < 0) return;
         var item = _folderItems[index];
-        var result = MessageBox.Show(
-            $"Ordner \"{item.Name}\" entfernen?", "Ordner entfernen",
-            MessageBoxButton.YesNo, MessageBoxImage.Question);
-        if (result == MessageBoxResult.Yes)
+        if (MessageBox.Show($"Ordner \"{item.Name}\" entfernen?", "Ordner entfernen",
+                MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
         {
             _folderItems.RemoveAt(index);
             RefreshFolderNumbers();

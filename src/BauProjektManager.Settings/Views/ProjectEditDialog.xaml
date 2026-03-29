@@ -64,10 +64,8 @@
                             <ContentPresenter x:Name="ContentSite"
                                               Content="{TemplateBinding SelectionBoxItem}"
                                               ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                              Margin="8,3,25,3"
-                                              VerticalAlignment="Center"
-                                              HorizontalAlignment="Left"
-                                              IsHitTestVisible="False"/>
+                                              Margin="8,3,25,3" VerticalAlignment="Center"
+                                              HorizontalAlignment="Left" IsHitTestVisible="False"/>
                             <Popup x:Name="Popup" Placement="Bottom"
                                    IsOpen="{TemplateBinding IsDropDownOpen}"
                                    AllowsTransparency="True" PopupAnimation="Slide">
@@ -98,19 +96,19 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
-        <Style x:Key="FormTextBox" TargetType="TextBox">
+        <Style x:Key="FTB" TargetType="TextBox">
             <Setter Property="Background" Value="#1E1E1E"/>
             <Setter Property="Foreground" Value="#CCCCCC"/>
             <Setter Property="BorderBrush" Value="#3E3E42"/>
             <Setter Property="Padding" Value="5,3"/>
             <Setter Property="Margin" Value="0,3"/>
         </Style>
-        <Style x:Key="FormLabel" TargetType="TextBlock">
+        <Style x:Key="FL" TargetType="TextBlock">
             <Setter Property="Foreground" Value="#CCCCCC"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="0,3"/>
         </Style>
-        <Style x:Key="SectionHeader" TargetType="TextBlock">
+        <Style x:Key="SH" TargetType="TextBlock">
             <Setter Property="Foreground" Value="#007ACC"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Margin" Value="0,12,0,6"/>
@@ -124,23 +122,23 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Projekt bearbeiten"
+        <TextBlock Grid.Row="0" x:Name="TxtDialogTitle" Text="Projekt bearbeiten"
                    FontSize="18" Foreground="#CCCCCC" Margin="0,0,0,10"/>
 
-        <!-- 2-Spalten Layout -->
+        <!-- 2-Spalten -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="20"/>
-                <ColumnDefinition Width="360"/>
+                <ColumnDefinition Width="400"/>
             </Grid.ColumnDefinitions>
 
-            <!-- LINKE SPALTE -->
-            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
-                <StackPanel>
+            <!-- LINKE SPALTE (scrollbar, mit Abstand rechts) -->
+            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Padding="0,0,12,0">
+                <StackPanel Margin="0,0,4,0">
 
                     <!-- Stammdaten -->
-                    <TextBlock Text="── Stammdaten ──" Style="{StaticResource SectionHeader}" Margin="0,0,0,6"/>
+                    <TextBlock Text="── Stammdaten ──" Style="{StaticResource SH}" Margin="0,0,0,6"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="110"/>
@@ -152,22 +150,22 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Projektstart:" Style="{StaticResource FormLabel}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Projektstart:" Style="{StaticResource FL}"/>
                         <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Margin="0,3">
                             <DatePicker x:Name="DpProjectStart" Width="140" SelectedDateChanged="OnProjectStartChanged"/>
                             <TextBlock Text="  →  Nr:" Foreground="#999999" VerticalAlignment="Center"/>
                             <TextBlock x:Name="TxtNumberPreview" Text="" Foreground="#007ACC" FontWeight="Bold" VerticalAlignment="Center" Margin="5,0,0,0"/>
                         </StackPanel>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Projektname:" Style="{StaticResource FormLabel}"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtName" Style="{StaticResource FormTextBox}"/>
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Voller Name:" Style="{StaticResource FormLabel}"/>
-                        <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtFullName" Style="{StaticResource FormTextBox}"/>
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Status:" Style="{StaticResource FormLabel}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Projektname:" Style="{StaticResource FL}"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtName" Style="{StaticResource FTB}"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Voller Name:" Style="{StaticResource FL}"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtFullName" Style="{StaticResource FTB}"/>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Status:" Style="{StaticResource FL}"/>
                         <ComboBox Grid.Row="3" Grid.Column="1" x:Name="CmbStatus" Margin="0,3"/>
                     </Grid>
 
                     <!-- Auftraggeber -->
-                    <TextBlock Text="── Auftraggeber ──" Style="{StaticResource SectionHeader}"/>
+                    <TextBlock Text="── Auftraggeber ──" Style="{StaticResource SH}"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="110"/>
@@ -179,18 +177,18 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Firma:" Style="{StaticResource FormLabel}"/>
-                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtClientCompany" Style="{StaticResource FormTextBox}"/>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Kontaktperson:" Style="{StaticResource FormLabel}"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtClientContact" Style="{StaticResource FormTextBox}"/>
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Telefon:" Style="{StaticResource FormLabel}"/>
-                        <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtClientPhone" Style="{StaticResource FormTextBox}"/>
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Email:" Style="{StaticResource FormLabel}"/>
-                        <TextBox Grid.Row="3" Grid.Column="1" x:Name="TxtClientEmail" Style="{StaticResource FormTextBox}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Firma:" Style="{StaticResource FL}"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtClientCompany" Style="{StaticResource FTB}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Kontaktperson:" Style="{StaticResource FL}"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtClientContact" Style="{StaticResource FTB}"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Telefon:" Style="{StaticResource FL}"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtClientPhone" Style="{StaticResource FTB}"/>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Email:" Style="{StaticResource FL}"/>
+                        <TextBox Grid.Row="3" Grid.Column="1" x:Name="TxtClientEmail" Style="{StaticResource FTB}"/>
                     </Grid>
 
                     <!-- Adresse -->
-                    <TextBlock Text="── Adresse ──" Style="{StaticResource SectionHeader}"/>
+                    <TextBlock Text="── Adresse ──" Style="{StaticResource SH}"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="110"/>
@@ -201,22 +199,22 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Straße / Nr:" Style="{StaticResource FormLabel}"/>
-                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtStreet" Style="{StaticResource FormTextBox}"/>
-                        <TextBox Grid.Row="0" Grid.Column="2" x:Name="TxtHouseNumber" Style="{StaticResource FormTextBox}" Margin="5,3,0,3"/>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="PLZ / Ort:" Style="{StaticResource FormLabel}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Straße / Nr:" Style="{StaticResource FL}"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtStreet" Style="{StaticResource FTB}"/>
+                        <TextBox Grid.Row="0" Grid.Column="2" x:Name="TxtHouseNumber" Style="{StaticResource FTB}" Margin="5,3,0,3"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="PLZ / Ort:" Style="{StaticResource FL}"/>
                         <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="70"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox Grid.Column="0" x:Name="TxtPostalCode" Style="{StaticResource FormTextBox}"/>
-                            <TextBox Grid.Column="1" x:Name="TxtCity" Style="{StaticResource FormTextBox}" Margin="5,3,0,3"/>
+                            <TextBox Grid.Column="0" x:Name="TxtPostalCode" Style="{StaticResource FTB}"/>
+                            <TextBox Grid.Column="1" x:Name="TxtCity" Style="{StaticResource FTB}" Margin="5,3,0,3"/>
                         </Grid>
                     </Grid>
 
                     <!-- Verwaltung -->
-                    <TextBlock Text="── Verwaltung ──" Style="{StaticResource SectionHeader}"/>
+                    <TextBlock Text="── Verwaltung ──" Style="{StaticResource SH}"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="110"/>
@@ -227,16 +225,16 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Gemeinde:" Style="{StaticResource FormLabel}"/>
-                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtMunicipality" Style="{StaticResource FormTextBox}"/>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Bezirk:" Style="{StaticResource FormLabel}"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtDistrict" Style="{StaticResource FormTextBox}"/>
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Bundesland:" Style="{StaticResource FormLabel}"/>
-                        <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtState" Style="{StaticResource FormTextBox}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Gemeinde:" Style="{StaticResource FL}"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtMunicipality" Style="{StaticResource FTB}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Bezirk:" Style="{StaticResource FL}"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtDistrict" Style="{StaticResource FTB}"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Bundesland:" Style="{StaticResource FL}"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtState" Style="{StaticResource FTB}"/>
                     </Grid>
 
                     <!-- Koordinaten -->
-                    <TextBlock Text="── Koordinaten ──" Style="{StaticResource SectionHeader}"/>
+                    <TextBlock Text="── Koordinaten ──" Style="{StaticResource SH}"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="110"/>
@@ -246,21 +244,21 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="System:" Style="{StaticResource FormLabel}"/>
-                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtCoordSystem" Style="{StaticResource FormTextBox}"/>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Ost / Nord:" Style="{StaticResource FormLabel}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="System:" Style="{StaticResource FL}"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtCoordSystem" Style="{StaticResource FTB}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Ost / Nord:" Style="{StaticResource FL}"/>
                         <Grid Grid.Row="1" Grid.Column="1">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox Grid.Column="0" x:Name="TxtCoordEast" Style="{StaticResource FormTextBox}"/>
-                            <TextBox Grid.Column="1" x:Name="TxtCoordNorth" Style="{StaticResource FormTextBox}" Margin="5,3,0,3"/>
+                            <TextBox Grid.Column="0" x:Name="TxtCoordEast" Style="{StaticResource FTB}"/>
+                            <TextBox Grid.Column="1" x:Name="TxtCoordNorth" Style="{StaticResource FTB}" Margin="5,3,0,3"/>
                         </Grid>
                     </Grid>
 
                     <!-- Grundstück -->
-                    <TextBlock Text="── Grundstück ──" Style="{StaticResource SectionHeader}"/>
+                    <TextBlock Text="── Grundstück ──" Style="{StaticResource SH}"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="110"/>
@@ -270,21 +268,21 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="KG / Name:" Style="{StaticResource FormLabel}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="KG / Name:" Style="{StaticResource FL}"/>
                         <Grid Grid.Row="0" Grid.Column="1">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="80"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox Grid.Column="0" x:Name="TxtCadastralKg" Style="{StaticResource FormTextBox}"/>
-                            <TextBox Grid.Column="1" x:Name="TxtCadastralKgName" Style="{StaticResource FormTextBox}" Margin="5,3,0,3"/>
+                            <TextBox Grid.Column="0" x:Name="TxtCadastralKg" Style="{StaticResource FTB}"/>
+                            <TextBox Grid.Column="1" x:Name="TxtCadastralKgName" Style="{StaticResource FTB}" Margin="5,3,0,3"/>
                         </Grid>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="GST-Nr:" Style="{StaticResource FormLabel}"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtCadastralGst" Style="{StaticResource FormTextBox}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="GST-Nr:" Style="{StaticResource FL}"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtCadastralGst" Style="{StaticResource FTB}"/>
                     </Grid>
 
                     <!-- Laufzeit -->
-                    <TextBlock Text="── Laufzeit ──" Style="{StaticResource SectionHeader}"/>
+                    <TextBlock Text="── Laufzeit ──" Style="{StaticResource SH}"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="110"/>
@@ -296,16 +294,16 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Baustart:" Style="{StaticResource FormLabel}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Baustart:" Style="{StaticResource FL}"/>
                         <DatePicker Grid.Row="0" Grid.Column="1" x:Name="DpConstructionStart" Margin="0,3"/>
-                        <TextBlock Grid.Row="0" Grid.Column="2" Text="Geplant Ende:" Style="{StaticResource FormLabel}" Margin="10,3,0,3"/>
+                        <TextBlock Grid.Row="0" Grid.Column="2" Text="Geplant Ende:" Style="{StaticResource FL}" Margin="10,3,0,3"/>
                         <DatePicker Grid.Row="0" Grid.Column="3" x:Name="DpPlannedEnd" Margin="0,3"/>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Tats. Ende:" Style="{StaticResource FormLabel}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Tats. Ende:" Style="{StaticResource FL}"/>
                         <DatePicker Grid.Row="1" Grid.Column="1" x:Name="DpActualEnd" Margin="0,3"/>
                     </Grid>
 
                     <!-- Sonstiges -->
-                    <TextBlock Text="── Sonstiges ──" Style="{StaticResource SectionHeader}"/>
+                    <TextBlock Text="── Sonstiges ──" Style="{StaticResource SH}"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="110"/>
@@ -315,10 +313,10 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Tags:" Style="{StaticResource FormLabel}"/>
-                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtTags" Style="{StaticResource FormTextBox}"/>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Notizen:" Style="{StaticResource FormLabel}"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtNotes" Style="{StaticResource FormTextBox}"
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Tags:" Style="{StaticResource FL}"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtTags" Style="{StaticResource FTB}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Notizen:" Style="{StaticResource FL}"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtNotes" Style="{StaticResource FTB}"
                                  Height="50" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
                     </Grid>
 
@@ -333,7 +331,7 @@
 
                 <!-- Ordnerstruktur (neues Projekt) -->
                 <StackPanel x:Name="PanelFolders" Visibility="Collapsed">
-                    <TextBlock Text="── Ordnerstruktur ──" Style="{StaticResource SectionHeader}" Margin="0,0,0,6"/>
+                    <TextBlock Text="── Ordnerstruktur ──" Style="{StaticResource SH}" Margin="0,0,0,6"/>
                     <TextBlock Text="Reihenfolge = Nummerierung (00, 01, 02...)"
                                Foreground="#999999" FontSize="11" Margin="0,0,0,8"/>
                     <Grid>
@@ -343,7 +341,7 @@
                         </Grid.ColumnDefinitions>
                         <ListBox x:Name="LstFolders" Grid.Column="0"
                                  Background="#1E1E1E" Foreground="#CCCCCC"
-                                 BorderBrush="#3E3E42" Height="280"
+                                 BorderBrush="#3E3E42" Height="250"
                                  SelectionChanged="OnFolderSelectionChanged">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
@@ -377,11 +375,21 @@
                     </Grid>
                     <TextBlock Text="📥 = _Eingang Unterordner wird erstellt"
                                Foreground="#666666" FontSize="11" Margin="0,8,0,0"/>
+
+                    <!-- Vorschau Ordnerbaum -->
+                    <TextBlock Text="── Vorschau Ordnername ──" Style="{StaticResource SH}"/>
+                    <TextBox x:Name="TxtFolderPreview"
+                             Background="#1E1E1E" Foreground="#999999"
+                             BorderBrush="#3E3E42" FontFamily="Consolas"
+                             FontSize="12" IsReadOnly="True"
+                             TextWrapping="NoWrap" AcceptsReturn="True"
+                             VerticalScrollBarVisibility="Auto"
+                             Height="140" Padding="8"/>
                 </StackPanel>
 
                 <!-- Pfade (bestehendes Projekt) -->
                 <StackPanel x:Name="PanelPaths" Visibility="Collapsed">
-                    <TextBlock Text="── Pfade ──" Style="{StaticResource SectionHeader}" Margin="0,0,0,6"/>
+                    <TextBlock Text="── Pfade ──" Style="{StaticResource SH}" Margin="0,0,0,6"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="80"/>
@@ -395,21 +403,20 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Root:" Style="{StaticResource FormLabel}"/>
-                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtPathRoot" Style="{StaticResource FormTextBox}" IsReadOnly="True" FontSize="11"/>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Pläne:" Style="{StaticResource FormLabel}"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtPathPlans" Style="{StaticResource FormTextBox}" IsReadOnly="True" FontSize="11"/>
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Eingang:" Style="{StaticResource FormLabel}"/>
-                        <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtPathInbox" Style="{StaticResource FormTextBox}" IsReadOnly="True" FontSize="11"/>
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Fotos:" Style="{StaticResource FormLabel}"/>
-                        <TextBox Grid.Row="3" Grid.Column="1" x:Name="TxtPathPhotos" Style="{StaticResource FormTextBox}" IsReadOnly="True" FontSize="11"/>
-                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Dokumente:" Style="{StaticResource FormLabel}"/>
-                        <TextBox Grid.Row="4" Grid.Column="1" x:Name="TxtPathDocs" Style="{StaticResource FormTextBox}" IsReadOnly="True" FontSize="11"/>
-                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Protokolle:" Style="{StaticResource FormLabel}"/>
-                        <TextBox Grid.Row="5" Grid.Column="1" x:Name="TxtPathProtocols" Style="{StaticResource FormTextBox}" IsReadOnly="True" FontSize="11"/>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Root:" Style="{StaticResource FL}"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtPathRoot" Style="{StaticResource FTB}" IsReadOnly="True" FontSize="11"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Pläne:" Style="{StaticResource FL}"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtPathPlans" Style="{StaticResource FTB}" IsReadOnly="True" FontSize="11"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Eingang:" Style="{StaticResource FL}"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtPathInbox" Style="{StaticResource FTB}" IsReadOnly="True" FontSize="11"/>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Fotos:" Style="{StaticResource FL}"/>
+                        <TextBox Grid.Row="3" Grid.Column="1" x:Name="TxtPathPhotos" Style="{StaticResource FTB}" IsReadOnly="True" FontSize="11"/>
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Dokumente:" Style="{StaticResource FL}"/>
+                        <TextBox Grid.Row="4" Grid.Column="1" x:Name="TxtPathDocs" Style="{StaticResource FTB}" IsReadOnly="True" FontSize="11"/>
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Protokolle:" Style="{StaticResource FL}"/>
+                        <TextBox Grid.Row="5" Grid.Column="1" x:Name="TxtPathProtocols" Style="{StaticResource FTB}" IsReadOnly="True" FontSize="11"/>
                     </Grid>
                 </StackPanel>
-
             </StackPanel>
         </Grid>
 

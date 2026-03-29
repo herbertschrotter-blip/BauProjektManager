@@ -1,6 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using System.IO;
-using System.Reflection;
 using System.Windows;
 using BauProjektManager.Domain.Enums;
 using BauProjektManager.Domain.Models;
@@ -13,9 +12,8 @@ using Serilog;
 namespace BauProjektManager.Settings.ViewModels;
 
 /// <summary>
-/// ViewModel for the Settings page — manages project list via SQLite.
-/// Automatically exports registry.json after every change.
-/// Creates project folders on disk when adding new projects.
+/// ViewModel for the Settings page — manages project list, paths display,
+/// and global default folder template configuration.
 /// </summary>
 public partial class SettingsViewModel : ObservableObject
 {
@@ -33,9 +31,22 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private string _registryStatus = "";
 
+    // Paths display
+    [ObservableProperty]
+    private string _basePath = "";
+
+    [ObservableProperty]
+    private string _archivePath = "";
+
+    [ObservableProperty]
+    private string _oneDrivePath = "";
+
+    // Default folder template
+    [ObservableProperty]
+    private ObservableCollection<FolderDisplayItem> _defaultFolderItems = [];
+
     public SettingsViewModel()
     {
-        // Export folder next to the app root
         var appRoot = FindAppRoot();
         var exportDir = Path.Combine(appRoot, "Export");
         var registryPath = Path.Combine(exportDir, "registry.json");
@@ -47,18 +58,12 @@ public partial class SettingsViewModel : ObservableObject
         Log.Information("Registry export path: {Path}", registryPath);
 
         LoadProjects();
+        LoadSettings();
     }
 
-    /// <summary>
-    /// Finds the app root folder (where the .slnx or .sln file is).
-    /// Works both in Debug (bin/Debug/...) and deployed scenarios.
-    /// </summary>
     private static string FindAppRoot()
     {
-        // Start from the exe location
         var dir = AppDomain.CurrentDomain.BaseDirectory;
-
-        // Walk up until we find the solution file or run out of parents
         var current = new DirectoryInfo(dir);
         while (current is not null)
         {
@@ -69,8 +74,6 @@ public partial class SettingsViewModel : ObservableObject
             }
             current = current.Parent;
         }
-
-        // Fallback: use exe directory
         return dir;
     }
 
@@ -90,6 +93,164 @@ public partial class SettingsViewModel : ObservableObject
             RegistryStatus = "Fehler beim Laden!";
         }
     }
+
+    private void LoadSettings()
+    {
+        var settings = _settingsService.Load();
+        BasePath = settings.BasePath;
+        ArchivePath = settings.ArchivePath;
+        OneDrivePath = settings.OneDrivePath;
+
+        // Load default folder template
+        DefaultFolderItems = new ObservableCollection<FolderDisplayItem>(
+            settings.FolderTemplate.Select((f, i) => new FolderDisplayItem
+            {
+                Name = f.Name,
+                HasInbox = f.HasInbox,
+                Position = i
+            }));
+    }
+
+    private void SaveFolderTemplate()
+    {
+        var settings = _settingsService.Load();
+        settings.FolderTemplate = DefaultFolderItems
+            .Select(f => new FolderTemplateEntry(f.Name, f.HasInbox))
+            .ToList();
+        _settingsService.Save(settings);
+        Log.Information("Default folder template saved ({Count} entries)", settings.FolderTemplate.Count);
+    }
+
+    private void RefreshDefaultFolderNumbers()
+    {
+        for (int i = 0; i < DefaultFolderItems.Count; i++)
+        {
+            DefaultFolderItems[i].Position = i;
+        }
+        var items = DefaultFolderItems.ToList();
+        DefaultFolderItems.Clear();
+        foreach (var item in items)
+        {
+            DefaultFolderItems.Add(item);
+        }
+    }
+
+    // === Default folder template commands ===
+
+    [RelayCommand]
+    private void DefaultFolderMoveUp(FolderDisplayItem? item)
+    {
+        if (item is null) return;
+        var index = DefaultFolderItems.IndexOf(item);
+        if (index <= 0) return;
+        DefaultFolderItems.RemoveAt(index);
+        DefaultFolderItems.Insert(index - 1, item);
+        RefreshDefaultFolderNumbers();
+        SaveFolderTemplate();
+    }
+
+    [RelayCommand]
+    private void DefaultFolderMoveDown(FolderDisplayItem? item)
+    {
+        if (item is null) return;
+        var index = DefaultFolderItems.IndexOf(item);
+        if (index < 0 || index >= DefaultFolderItems.Count - 1) return;
+        DefaultFolderItems.RemoveAt(index);
+        DefaultFolderItems.Insert(index + 1, item);
+        RefreshDefaultFolderNumbers();
+        SaveFolderTemplate();
+    }
+
+    [RelayCommand]
+    private void DefaultFolderAdd()
+    {
+        var inputWindow = new Window
+        {
+            Title = "Ordner hinzufügen",
+            Width = 350,
+            Height = 150,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Owner = Application.Current.MainWindow,
+            ResizeMode = ResizeMode.NoResize,
+            Background = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#2D2D30"))
+        };
+
+        var stack = new System.Windows.Controls.StackPanel { Margin = new Thickness(15) };
+        var label = new System.Windows.Controls.TextBlock
+        {
+            Text = "Ordnername (ohne Nummer):",
+            Foreground = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#CCCCCC")),
+            Margin = new Thickness(0, 0, 0, 5)
+        };
+        var textBox = new System.Windows.Controls.TextBox
+        {
+            Background = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#1E1E1E")),
+            Foreground = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#CCCCCC")),
+            BorderBrush = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#3E3E42")),
+            Padding = new Thickness(5, 3, 5, 3),
+            Margin = new Thickness(0, 0, 0, 10)
+        };
+        var btnOk = new System.Windows.Controls.Button
+        {
+            Content = "OK",
+            Width = 80,
+            Padding = new Thickness(0, 5, 0, 5),
+            Background = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#007ACC")),
+            Foreground = System.Windows.Media.Brushes.White,
+            BorderThickness = new Thickness(0),
+            Cursor = System.Windows.Input.Cursors.Hand,
+            HorizontalAlignment = HorizontalAlignment.Right
+        };
+        btnOk.Click += (_, _) => { inputWindow.DialogResult = true; inputWindow.Close(); };
+
+        stack.Children.Add(label);
+        stack.Children.Add(textBox);
+        stack.Children.Add(btnOk);
+        inputWindow.Content = stack;
+        inputWindow.ContentRendered += (_, _) => textBox.Focus();
+
+        if (inputWindow.ShowDialog() == true && !string.IsNullOrWhiteSpace(textBox.Text))
+        {
+            DefaultFolderItems.Add(new FolderDisplayItem
+            {
+                Name = textBox.Text.Trim(),
+                HasInbox = false,
+                Position = DefaultFolderItems.Count
+            });
+            RefreshDefaultFolderNumbers();
+            SaveFolderTemplate();
+        }
+    }
+
+    [RelayCommand]
+    private void DefaultFolderRemove(FolderDisplayItem? item)
+    {
+        if (item is null) return;
+        if (MessageBox.Show($"Ordner \"{item.Name}\" aus Standard-Template entfernen?",
+                "Ordner entfernen", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+        {
+            DefaultFolderItems.Remove(item);
+            RefreshDefaultFolderNumbers();
+            SaveFolderTemplate();
+        }
+    }
+
+    [RelayCommand]
+    private void DefaultFolderToggleInbox(FolderDisplayItem? item)
+    {
+        if (item is null) return;
+        item.HasInbox = !item.HasInbox;
+        RefreshDefaultFolderNumbers();
+        SaveFolderTemplate();
+    }
+
+    // === Project CRUD ===
 
     private void ExportRegistry()
     {
@@ -112,7 +273,7 @@ public partial class SettingsViewModel : ObservableObject
 
         var newProject = new Project
         {
-            Id = "",  // Will be auto-generated by DB
+            Id = "",
             Status = ProjectStatus.Active,
             Timeline = new ProjectTimeline
             {
@@ -121,18 +282,15 @@ public partial class SettingsViewModel : ObservableObject
         };
         newProject.UpdateProjectNumberFromStart();
 
-        // Pass default folder template to the dialog for customization
         var dialog = new ProjectEditDialog(newProject, settings.FolderTemplate);
         dialog.Owner = Application.Current.MainWindow;
         if (dialog.ShowDialog() == true)
         {
             try
             {
-                // Create folder structure on disk BEFORE saving to DB
                 var projectRoot = _folderService.CreateProjectFolders(
                     dialog.Project, dialog.FolderTemplate);
 
-                // Set root path in project
                 dialog.Project.Paths.Root = projectRoot;
 
                 _db.SaveProject(dialog.Project);
@@ -156,7 +314,6 @@ public partial class SettingsViewModel : ObservableObject
     {
         if (SelectedProject is null) return;
 
-        // Edit mode: no folder template (folders already exist)
         var dialog = new ProjectEditDialog(SelectedProject);
         dialog.Owner = Application.Current.MainWindow;
         if (dialog.ShowDialog() == true)
@@ -164,7 +321,6 @@ public partial class SettingsViewModel : ObservableObject
             try
             {
                 _db.SaveProject(dialog.Project);
-                // ObservableCollection refreshen
                 int index = Projects.IndexOf(SelectedProject);
                 if (index >= 0)
                 {
@@ -172,7 +328,8 @@ public partial class SettingsViewModel : ObservableObject
                     SelectedProject = dialog.Project;
                 }
                 ExportRegistry();
-                Log.Information("Project updated: {Name} ({Number})", dialog.Project.Name, dialog.Project.ProjectNumber);
+                Log.Information("Project updated: {Name} ({Number})",
+                    dialog.Project.Name, dialog.Project.ProjectNumber);
             }
             catch (Exception ex)
             {

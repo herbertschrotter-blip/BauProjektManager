@@ -133,11 +133,10 @@
                 <ColumnDefinition Width="400"/>
             </Grid.ColumnDefinitions>
 
-            <!-- LINKE SPALTE (scrollbar, mit Abstand rechts) -->
+            <!-- LINKE SPALTE -->
             <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Padding="0,0,12,0">
                 <StackPanel Margin="0,0,4,0">
 
-                    <!-- Stammdaten -->
                     <TextBlock Text="── Stammdaten ──" Style="{StaticResource SH}" Margin="0,0,0,6"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -164,7 +163,6 @@
                         <ComboBox Grid.Row="3" Grid.Column="1" x:Name="CmbStatus" Margin="0,3"/>
                     </Grid>
 
-                    <!-- Auftraggeber -->
                     <TextBlock Text="── Auftraggeber ──" Style="{StaticResource SH}"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -187,7 +185,6 @@
                         <TextBox Grid.Row="3" Grid.Column="1" x:Name="TxtClientEmail" Style="{StaticResource FTB}"/>
                     </Grid>
 
-                    <!-- Adresse -->
                     <TextBlock Text="── Adresse ──" Style="{StaticResource SH}"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -213,7 +210,6 @@
                         </Grid>
                     </Grid>
 
-                    <!-- Verwaltung -->
                     <TextBlock Text="── Verwaltung ──" Style="{StaticResource SH}"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -233,7 +229,6 @@
                         <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtState" Style="{StaticResource FTB}"/>
                     </Grid>
 
-                    <!-- Koordinaten -->
                     <TextBlock Text="── Koordinaten ──" Style="{StaticResource SH}"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -257,7 +252,6 @@
                         </Grid>
                     </Grid>
 
-                    <!-- Grundstück -->
                     <TextBlock Text="── Grundstück ──" Style="{StaticResource SH}"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -281,7 +275,6 @@
                         <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtCadastralGst" Style="{StaticResource FTB}"/>
                     </Grid>
 
-                    <!-- Laufzeit -->
                     <TextBlock Text="── Laufzeit ──" Style="{StaticResource SH}"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -302,7 +295,6 @@
                         <DatePicker Grid.Row="1" Grid.Column="1" x:Name="DpActualEnd" Margin="0,3"/>
                     </Grid>
 
-                    <!-- Sonstiges -->
                     <TextBlock Text="── Sonstiges ──" Style="{StaticResource SH}"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -326,97 +318,62 @@
             <!-- Trennlinie -->
             <Rectangle Grid.Column="1" Width="1" Fill="#3E3E42" Margin="9,0"/>
 
-            <!-- RECHTE SPALTE -->
+            <!-- RECHTE SPALTE — Ordnerstruktur (immer sichtbar) -->
             <StackPanel Grid.Column="2">
+                <TextBlock Text="── Ordnerstruktur ──" Style="{StaticResource SH}" Margin="0,0,0,6"/>
+                <TextBlock Text="Reihenfolge = Nummerierung (00, 01, 02...)"
+                           Foreground="#999999" FontSize="11" Margin="0,0,0,8"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <ListBox x:Name="LstFolders" Grid.Column="0"
+                             Background="#1E1E1E" Foreground="#CCCCCC"
+                             BorderBrush="#3E3E42" Height="250"
+                             SelectionChanged="OnFolderSelectionChanged">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding NumberedDisplay}" Foreground="#CCCCCC"
+                                               VerticalAlignment="Center" FontSize="13"/>
+                                    <TextBlock Text="  📥" Foreground="#007ACC" FontSize="12"
+                                               Visibility="{Binding InboxVisibility}"
+                                               VerticalAlignment="Center" ToolTip="_Eingang Unterordner"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <StackPanel Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Top">
+                        <Button Content="▲" Click="OnFolderMoveUp" Width="32" Height="28"
+                                Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
+                                Margin="0,0,0,3" Cursor="Hand" ToolTip="Nach oben"/>
+                        <Button Content="▼" Click="OnFolderMoveDown" Width="32" Height="28"
+                                Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
+                                Margin="0,0,0,10" Cursor="Hand" ToolTip="Nach unten"/>
+                        <Button Content="＋" Click="OnFolderAdd" Width="32" Height="28"
+                                Background="#007ACC" Foreground="White" BorderThickness="0"
+                                Margin="0,0,0,3" Cursor="Hand" ToolTip="Ordner hinzufügen"/>
+                        <Button Content="✕" Click="OnFolderRemove" Width="32" Height="28"
+                                Background="#C62828" Foreground="White" BorderThickness="0"
+                                Margin="0,0,0,10" Cursor="Hand" ToolTip="Ordner entfernen"/>
+                        <Button Content="📥" Click="OnFolderToggleInbox" Width="32" Height="28"
+                                Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
+                                Cursor="Hand" ToolTip="_Eingang ein/aus"/>
+                    </StackPanel>
+                </Grid>
+                <TextBlock Text="📥 = _Eingang Unterordner wird erstellt"
+                           Foreground="#666666" FontSize="11" Margin="0,8,0,0"/>
 
-                <!-- Ordnerstruktur (neues Projekt) -->
-                <StackPanel x:Name="PanelFolders" Visibility="Collapsed">
-                    <TextBlock Text="── Ordnerstruktur ──" Style="{StaticResource SH}" Margin="0,0,0,6"/>
-                    <TextBlock Text="Reihenfolge = Nummerierung (00, 01, 02...)"
-                               Foreground="#999999" FontSize="11" Margin="0,0,0,8"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <ListBox x:Name="LstFolders" Grid.Column="0"
-                                 Background="#1E1E1E" Foreground="#CCCCCC"
-                                 BorderBrush="#3E3E42" Height="250"
-                                 SelectionChanged="OnFolderSelectionChanged">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding NumberedDisplay}" Foreground="#CCCCCC"
-                                                   VerticalAlignment="Center" FontSize="13"/>
-                                        <TextBlock Text="  📥" Foreground="#007ACC" FontSize="12"
-                                                   Visibility="{Binding InboxVisibility}"
-                                                   VerticalAlignment="Center" ToolTip="_Eingang Unterordner"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                        <StackPanel Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Top">
-                            <Button Content="▲" Click="OnFolderMoveUp" Width="32" Height="28"
-                                    Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
-                                    Margin="0,0,0,3" Cursor="Hand" ToolTip="Nach oben"/>
-                            <Button Content="▼" Click="OnFolderMoveDown" Width="32" Height="28"
-                                    Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
-                                    Margin="0,0,0,10" Cursor="Hand" ToolTip="Nach unten"/>
-                            <Button Content="＋" Click="OnFolderAdd" Width="32" Height="28"
-                                    Background="#007ACC" Foreground="White" BorderThickness="0"
-                                    Margin="0,0,0,3" Cursor="Hand" ToolTip="Ordner hinzufügen"/>
-                            <Button Content="✕" Click="OnFolderRemove" Width="32" Height="28"
-                                    Background="#C62828" Foreground="White" BorderThickness="0"
-                                    Margin="0,0,0,10" Cursor="Hand" ToolTip="Ordner entfernen"/>
-                            <Button Content="📥" Click="OnFolderToggleInbox" Width="32" Height="28"
-                                    Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
-                                    Cursor="Hand" ToolTip="_Eingang ein/aus"/>
-                        </StackPanel>
-                    </Grid>
-                    <TextBlock Text="📥 = _Eingang Unterordner wird erstellt"
-                               Foreground="#666666" FontSize="11" Margin="0,8,0,0"/>
-
-                    <!-- Vorschau Ordnerbaum -->
-                    <TextBlock Text="── Vorschau Ordnername ──" Style="{StaticResource SH}"/>
-                    <TextBox x:Name="TxtFolderPreview"
-                             Background="#1E1E1E" Foreground="#999999"
-                             BorderBrush="#3E3E42" FontFamily="Consolas"
-                             FontSize="12" IsReadOnly="True"
-                             TextWrapping="NoWrap" AcceptsReturn="True"
-                             VerticalScrollBarVisibility="Auto"
-                             Height="140" Padding="8"/>
-                </StackPanel>
-
-                <!-- Pfade (bestehendes Projekt) -->
-                <StackPanel x:Name="PanelPaths" Visibility="Collapsed">
-                    <TextBlock Text="── Pfade ──" Style="{StaticResource SH}" Margin="0,0,0,6"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="80"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Root:" Style="{StaticResource FL}"/>
-                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtPathRoot" Style="{StaticResource FTB}" IsReadOnly="True" FontSize="11"/>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Pläne:" Style="{StaticResource FL}"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtPathPlans" Style="{StaticResource FTB}" IsReadOnly="True" FontSize="11"/>
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Eingang:" Style="{StaticResource FL}"/>
-                        <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtPathInbox" Style="{StaticResource FTB}" IsReadOnly="True" FontSize="11"/>
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Fotos:" Style="{StaticResource FL}"/>
-                        <TextBox Grid.Row="3" Grid.Column="1" x:Name="TxtPathPhotos" Style="{StaticResource FTB}" IsReadOnly="True" FontSize="11"/>
-                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Dokumente:" Style="{StaticResource FL}"/>
-                        <TextBox Grid.Row="4" Grid.Column="1" x:Name="TxtPathDocs" Style="{StaticResource FTB}" IsReadOnly="True" FontSize="11"/>
-                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Protokolle:" Style="{StaticResource FL}"/>
-                        <TextBox Grid.Row="5" Grid.Column="1" x:Name="TxtPathProtocols" Style="{StaticResource FTB}" IsReadOnly="True" FontSize="11"/>
-                    </Grid>
-                </StackPanel>
+                <!-- Vorschau Ordnerbaum -->
+                <TextBlock Text="── Vorschau ──" Style="{StaticResource SH}"/>
+                <TextBox x:Name="TxtFolderPreview"
+                         Background="#1E1E1E" Foreground="#999999"
+                         BorderBrush="#3E3E42" FontFamily="Consolas"
+                         FontSize="12" IsReadOnly="True"
+                         TextWrapping="NoWrap" AcceptsReturn="True"
+                         VerticalScrollBarVisibility="Auto"
+                         Height="140" Padding="8"/>
             </StackPanel>
         </Grid>
 

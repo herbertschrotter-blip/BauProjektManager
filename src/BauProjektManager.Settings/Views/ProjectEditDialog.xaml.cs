@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
+using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -38,8 +39,8 @@ public partial class ProjectEditDialog : Window
 
         if (_isNewProject && folderTemplate is not null)
         {
+            // New project: use template from settings
             TxtDialogTitle.Text = "Neues Projekt anlegen";
-
             _folderItems = new ObservableCollection<FolderDisplayItem>(
                 folderTemplate.Select((f, i) => new FolderDisplayItem
                 {
@@ -47,17 +48,62 @@ public partial class ProjectEditDialog : Window
                     HasInbox = f.HasInbox,
                     Position = i
                 }));
-
-            PanelFolders.Visibility = Visibility.Visible;
-            LstFolders.ItemsSource = _folderItems;
-            UpdateFolderPreview();
         }
         else
         {
-            PanelPaths.Visibility = Visibility.Visible;
+            // Existing project: read folders from disk
+            TxtDialogTitle.Text = "Projekt bearbeiten";
+            _folderItems = LoadFoldersFromDisk(project.Paths.Root);
         }
 
+        LstFolders.ItemsSource = _folderItems;
+        UpdateFolderPreview();
         LoadProjectData();
+    }
+
+    /// <summary>
+    /// Reads existing subfolders from the project root path.
+    /// Detects numbered folders (e.g. "01 Planunterlagen") and strips the prefix.
+    /// Detects _Eingang subfolders automatically.
+    /// </summary>
+    private static ObservableCollection<FolderDisplayItem> LoadFoldersFromDisk(string rootPath)
+    {
+        var items = new ObservableCollection<FolderDisplayItem>();
+
+        if (string.IsNullOrEmpty(rootPath) || !Directory.Exists(rootPath))
+            return items;
+
+        var subDirs = Directory.GetDirectories(rootPath)
+            .Select(d => new DirectoryInfo(d))
+            .OrderBy(d => d.Name)
+            .ToList();
+
+        int position = 0;
+        foreach (var dir in subDirs)
+        {
+            // Skip hidden folders
+            if (dir.Attributes.HasFlag(FileAttributes.Hidden))
+                continue;
+
+            // Strip number prefix: "01 Planunterlagen" → "Planunterlagen"
+            var name = dir.Name;
+            if (name.Length > 3 && char.IsDigit(name[0]) && char.IsDigit(name[1]) && name[2] == ' ')
+            {
+                name = name[3..];
+            }
+
+            // Check if _Eingang subfolder exists
+            var hasInbox = Directory.Exists(Path.Combine(dir.FullName, "_Eingang"));
+
+            items.Add(new FolderDisplayItem
+            {
+                Name = name,
+                HasInbox = hasInbox,
+                Position = position++
+            });
+        }
+
+        return items;
     }
 
     private void LoadProjectData()
@@ -107,17 +153,6 @@ public partial class ProjectEditDialog : Window
         // Sonstiges
         TxtTags.Text = Project.Tags;
         TxtNotes.Text = Project.Notes;
-
-        // Pfade (nur bei bestehendem Projekt)
-        if (!_isNewProject)
-        {
-            TxtPathRoot.Text = Project.Paths.Root;
-            TxtPathPlans.Text = Project.Paths.Plans;
-            TxtPathInbox.Text = Project.Paths.Inbox;
-            TxtPathPhotos.Text = Project.Paths.Photos;
-            TxtPathDocs.Text = Project.Paths.Documents;
-            TxtPathProtocols.Text = Project.Paths.Protocols;
-        }
     }
 
     private void OnProjectStartChanged(object? sender, SelectionChangedEventArgs e)
@@ -133,14 +168,14 @@ public partial class ProjectEditDialog : Window
 
     private void UpdateFolderPreview()
     {
-        if (!_isNewProject || TxtFolderPreview is null) return;
+        if (TxtFolderPreview is null) return;
 
-        var projectName = !string.IsNullOrEmpty(TxtName.Text)
+        var projectName = !string.IsNullOrEmpty(TxtName?.Text)
             ? TxtName.Text
-            : "Projektname";
-        var number = !string.IsNullOrEmpty(TxtNumberPreview.Text)
+            : (Project?.Name ?? "Projektname");
+        var number = !string.IsNullOrEmpty(TxtNumberPreview?.Text)
             ? TxtNumberPreview.Text
-            : "YYYYMM";
+            : (Project?.ProjectNumber ?? "YYYYMM");
 
         var sb = new StringBuilder();
         sb.AppendLine($"{number}_{projectName}/");
@@ -341,11 +376,8 @@ public partial class ProjectEditDialog : Window
         Project.Tags = TxtTags.Text;
         Project.Notes = TxtNotes.Text;
 
-        // Folder template (only for new projects)
-        if (_isNewProject)
-        {
-            FolderTemplate = _folderItems.Select(f => new FolderTemplateEntry(f.Name, f.HasInbox)).ToList();
-        }
+        // Folder template — always provide it (for both new and edit)
+        FolderTemplate = _folderItems.Select(f => new FolderTemplateEntry(f.Name, f.HasInbox)).ToList();
 
         DialogResult = true;
         Close();

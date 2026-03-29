@@ -1,13 +1,14 @@
-﻿using System.Collections.ObjectModel;
+﻿using BauProjektManager.Domain.Enums;
+using BauProjektManager.Domain.Models;
+using BauProjektManager.Infrastructure.Persistence;
+using BauProjektManager.Settings.ViewModels;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using BauProjektManager.Domain.Enums;
-using BauProjektManager.Domain.Models;
-using BauProjektManager.Infrastructure.Persistence;
-using BauProjektManager.Settings.ViewModels;
+using System.Windows.Controls.Primitives;
 
 namespace BauProjektManager.Settings.Views;
 
@@ -20,6 +21,7 @@ public partial class ProjectEditDialog : Window
     private FolderTreeItem? _selectedTreeItem;
     private readonly bool _isNewProject;
     private readonly AppSettingsService _settingsService = new();
+    private ObservableCollection<BuildingPart> _buildingParts = [];
 
     public ProjectEditDialog(Project project) : this(project, null) { }
 
@@ -41,6 +43,12 @@ public partial class ProjectEditDialog : Window
         }
 
         TvFolders.ItemsSource = _folderTreeItems;
+        _buildingParts = new ObservableCollection<BuildingPart>(project.BuildingParts);
+        DgParts.ItemsSource = _buildingParts;
+
+        var settings = _settingsService.Load();
+        ColLevelName.ItemsSource = settings.LevelNames.Select(l => l.ShortName).ToList();
+
         LoadDropdowns();
         LoadProjectData();
         UpdateFolderPreview();
@@ -49,117 +57,20 @@ public partial class ProjectEditDialog : Window
     private void LoadDropdowns()
     {
         var settings = _settingsService.Load();
-
-        // Projektart-Dropdown (editierbare Liste aus settings.json)
         CmbProjectType.ItemsSource = settings.ProjectTypes;
         if (!string.IsNullOrEmpty(Project.ProjectType))
             CmbProjectType.SelectedItem = Project.ProjectType;
         else if (settings.ProjectTypes.Count > 0)
             CmbProjectType.SelectedIndex = 0;
-
-        // Status-Dropdown (nur Aktiv + Abgeschlossen)
         CmbStatus.ItemsSource = Enum.GetValues<ProjectStatus>();
         CmbStatus.SelectedItem = Project.Status;
     }
 
-    // === ✎ Button: Projektart-Liste bearbeiten ===
-
     private void OnEditProjectTypes(object sender, RoutedEventArgs e)
     {
         var settings = _settingsService.Load();
-        var editWindow = new Window
-        {
-            Title = "Projektarten bearbeiten",
-            Width = 350,
-            Height = 400,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Owner = this,
-            ResizeMode = ResizeMode.NoResize,
-            Background = new System.Windows.Media.SolidColorBrush(
-                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#2D2D30"))
-        };
-
         var items = new ObservableCollection<string>(settings.ProjectTypes);
-        var stack = new StackPanel { Margin = new Thickness(15) };
-
-        var label = new TextBlock
-        {
-            Text = "Projektarten (eine pro Zeile):",
-            Foreground = new System.Windows.Media.SolidColorBrush(
-                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#CCCCCC")),
-            Margin = new Thickness(0, 0, 0, 5)
-        };
-
-        var listBox = new ListBox
-        {
-            ItemsSource = items,
-            Background = new System.Windows.Media.SolidColorBrush(
-                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#1E1E1E")),
-            Foreground = new System.Windows.Media.SolidColorBrush(
-                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#CCCCCC")),
-            BorderBrush = new System.Windows.Media.SolidColorBrush(
-                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#3E3E42")),
-            Height = 200,
-            Margin = new Thickness(0, 0, 0, 8)
-        };
-
-        var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 8) };
-
-        var btnAdd = new Button
-        {
-            Content = "Hinzufügen",
-            Padding = new Thickness(10, 4, 10, 4),
-            Margin = new Thickness(0, 0, 5, 0),
-            Background = new System.Windows.Media.SolidColorBrush(
-                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#007ACC")),
-            Foreground = System.Windows.Media.Brushes.White,
-            BorderThickness = new Thickness(0),
-            Cursor = System.Windows.Input.Cursors.Hand
-        };
-        btnAdd.Click += (_, _) =>
-        {
-            var name = ShowSmallInputDialog("Projektart hinzufügen", "Name:", editWindow);
-            if (!string.IsNullOrEmpty(name)) items.Add(name);
-        };
-
-        var btnRemove = new Button
-        {
-            Content = "Entfernen",
-            Padding = new Thickness(10, 4, 10, 4),
-            Background = new System.Windows.Media.SolidColorBrush(
-                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#C62828")),
-            Foreground = System.Windows.Media.Brushes.White,
-            BorderThickness = new Thickness(0),
-            Cursor = System.Windows.Input.Cursors.Hand
-        };
-        btnRemove.Click += (_, _) =>
-        {
-            if (listBox.SelectedIndex >= 0) items.RemoveAt(listBox.SelectedIndex);
-        };
-
-        btnPanel.Children.Add(btnAdd);
-        btnPanel.Children.Add(btnRemove);
-
-        var btnOk = new Button
-        {
-            Content = "Übernehmen",
-            Padding = new Thickness(15, 5, 15, 5),
-            Background = new System.Windows.Media.SolidColorBrush(
-                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#007ACC")),
-            Foreground = System.Windows.Media.Brushes.White,
-            BorderThickness = new Thickness(0),
-            Cursor = System.Windows.Input.Cursors.Hand,
-            HorizontalAlignment = System.Windows.HorizontalAlignment.Right
-        };
-        btnOk.Click += (_, _) => { editWindow.DialogResult = true; editWindow.Close(); };
-
-        stack.Children.Add(label);
-        stack.Children.Add(listBox);
-        stack.Children.Add(btnPanel);
-        stack.Children.Add(btnOk);
-        editWindow.Content = stack;
-
-        if (editWindow.ShowDialog() == true)
+        if (ShowSimpleListEditDialog("Projektarten bearbeiten", items))
         {
             var selected = CmbProjectType.SelectedItem as string;
             settings.ProjectTypes = items.ToList();
@@ -172,43 +83,32 @@ public partial class ProjectEditDialog : Window
         }
     }
 
-    // === Load/Save Project Data ===
-
     private void LoadProjectData()
     {
         TxtName.Text = Project.Name;
         TxtFullName.Text = Project.FullName;
         DpProjectStart.SelectedDate = Project.Timeline.ProjectStart;
         TxtNumberPreview.Text = Project.ProjectNumber;
-
         TxtClientCompany.Text = Project.Client.Company;
         TxtClientContact.Text = Project.Client.ContactPerson;
         TxtClientPhone.Text = Project.Client.Phone;
         TxtClientEmail.Text = Project.Client.Email;
-
         TxtStreet.Text = Project.Location.Street;
         TxtHouseNumber.Text = Project.Location.HouseNumber;
         TxtPostalCode.Text = Project.Location.PostalCode;
         TxtCity.Text = Project.Location.City;
-
         TxtMunicipality.Text = Project.Location.Municipality;
         TxtDistrict.Text = Project.Location.District;
         TxtState.Text = Project.Location.State;
-
         TxtCoordSystem.Text = Project.Location.CoordinateSystem;
-        TxtCoordEast.Text = Project.Location.CoordinateEast != 0
-            ? Project.Location.CoordinateEast.ToString(CultureInfo.InvariantCulture) : "";
-        TxtCoordNorth.Text = Project.Location.CoordinateNorth != 0
-            ? Project.Location.CoordinateNorth.ToString(CultureInfo.InvariantCulture) : "";
-
+        TxtCoordEast.Text = Project.Location.CoordinateEast != 0 ? Project.Location.CoordinateEast.ToString(CultureInfo.InvariantCulture) : "";
+        TxtCoordNorth.Text = Project.Location.CoordinateNorth != 0 ? Project.Location.CoordinateNorth.ToString(CultureInfo.InvariantCulture) : "";
         TxtCadastralKg.Text = Project.Location.CadastralKg;
         TxtCadastralKgName.Text = Project.Location.CadastralKgName;
         TxtCadastralGst.Text = Project.Location.CadastralGst;
-
         DpConstructionStart.SelectedDate = Project.Timeline.ConstructionStart;
         DpPlannedEnd.SelectedDate = Project.Timeline.PlannedEnd;
         DpActualEnd.SelectedDate = Project.Timeline.ActualEnd;
-
         TxtTags.Text = Project.Tags;
         TxtNotes.Text = Project.Notes;
     }
@@ -222,7 +122,451 @@ public partial class ProjectEditDialog : Window
         }
     }
 
-    // === Folder TreeView ===
+    // ═══════════════════════════════════════════
+    // TAB 2: BAUWERK
+    // ═══════════════════════════════════════════
+
+    private void OnPartSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (DgParts.SelectedItem is BuildingPart part)
+        {
+            RecalculateLevels(part);
+            DgLevels.ItemsSource = part.Levels;
+            TxtLevelsHeader.Text = $"Geschosse: {part.ShortName} ({part.Description})";
+            TxtZeroInfo.Text = $"± 0,00 = {part.ZeroLevelAbsolute:F2} m ü.A.";
+        }
+        else
+        {
+            DgLevels.ItemsSource = null;
+            TxtLevelsHeader.Text = "Geschosse";
+            TxtZeroInfo.Text = "";
+        }
+    }
+
+    private void RecalculateLevels(BuildingPart part)
+    {
+        var settings = _settingsService.Load();
+        var levels = part.Levels;
+
+        int egIndex = levels.FindIndex(l => l.Name.Equals("EG", StringComparison.OrdinalIgnoreCase));
+        for (int i = 0; i < levels.Count; i++)
+        {
+            levels[i].Prefix = egIndex >= 0 ? i - egIndex : i;
+            levels[i].Description = BuildingLevel.GetAutoDescription(levels[i].Name, settings.LevelNames);
+        }
+
+        for (int i = 0; i < levels.Count; i++)
+        {
+            if (i < levels.Count - 1)
+            {
+                levels[i].StoryHeight = Math.Round(levels[i + 1].Fbok - levels[i].Fbok, 3);
+                levels[i].RawHeight = Math.Round(levels[i + 1].Rdok - levels[i].Rdok, 3);
+            }
+            else
+            {
+                levels[i].StoryHeight = null;
+                levels[i].RawHeight = null;
+            }
+        }
+    }
+
+    private void RefreshLevelsGrid()
+    {
+        if (DgParts.SelectedItem is BuildingPart part)
+        {
+            RecalculateLevels(part);
+            DgLevels.ItemsSource = null;
+            DgLevels.ItemsSource = part.Levels;
+        }
+    }
+
+    private void OnLevelCellEditEnding(object? sender, DataGridCellEditEndingEventArgs e)
+    {
+        if (e.EditAction != DataGridEditAction.Commit) return;
+        if (e.Row.Item is not BuildingLevel level) return;
+
+        var colHeader = (e.Column.Header as string) ?? "";
+
+        if (e.EditingElement is TextBox tb && colHeader is "RDOK" or "FBOK" or "RDUK")
+        {
+            var text = tb.Text.Replace(',', '.');
+            if (double.TryParse(text, CultureInfo.InvariantCulture, out var val))
+            {
+                switch (colHeader)
+                {
+                    case "RDOK": level.Rdok = val; break;
+                    case "FBOK": level.Fbok = val; break;
+                    case "RDUK": level.Rduk = val; break;
+                }
+                tb.Text = val.ToString("F2");
+            }
+            else if (colHeader == "RDUK" && string.IsNullOrWhiteSpace(tb.Text))
+            {
+                level.Rduk = null;
+            }
+        }
+
+        Dispatcher.BeginInvoke(new Action(() => RefreshLevelsGrid()));
+    }
+
+    // --- Bauteil CRUD ---
+
+    private void OnAddPart(object sender, RoutedEventArgs e)
+    {
+        var settings = _settingsService.Load();
+        var part = new BuildingPart();
+        if (ShowPartEditDialog(part, settings, "Bauteil hinzufügen"))
+        {
+            part.SortOrder = _buildingParts.Count;
+            _buildingParts.Add(part);
+            DgParts.SelectedItem = part;
+        }
+    }
+
+    private void OnEditPart(object sender, RoutedEventArgs e)
+    {
+        if (DgParts.SelectedItem is not BuildingPart part) return;
+        var settings = _settingsService.Load();
+        ShowPartEditDialog(part, settings, "Bauteil bearbeiten");
+        DgParts.Items.Refresh();
+        OnPartSelectionChanged(sender, null!);
+    }
+
+    private void OnRemovePart(object sender, RoutedEventArgs e)
+    {
+        if (DgParts.SelectedItem is not BuildingPart part) return;
+        if (MessageBox.Show($"Bauteil \"{part.ShortName}\" entfernen?", "Entfernen",
+                MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+        {
+            _buildingParts.Remove(part);
+            DgLevels.ItemsSource = null;
+            TxtLevelsHeader.Text = "Geschosse";
+            TxtZeroInfo.Text = "";
+        }
+    }
+
+    private bool ShowPartEditDialog(BuildingPart part, AppSettings settings, string title)
+    {
+        var w = new Window
+        {
+            Title = title,
+            Width = 420,
+            Height = 280,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Owner = this,
+            ResizeMode = ResizeMode.NoResize,
+            Background = BrushFromHex("#2D2D30")
+        };
+        var grid = new Grid { Margin = new Thickness(15) };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(100) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        for (int i = 0; i < 5; i++) grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+        var txtShort = MakeTextBox(part.ShortName, 0, 1);
+        var txtDesc = MakeTextBox(part.Description, 1, 1);
+        var cmbType = new ComboBox { ItemsSource = settings.BuildingTypes, Margin = new Thickness(0, 3, 0, 3) };
+        Grid.SetRow(cmbType, 2); Grid.SetColumn(cmbType, 1);
+        if (!string.IsNullOrEmpty(part.BuildingType)) cmbType.SelectedItem = part.BuildingType;
+        else if (settings.BuildingTypes.Count > 0) cmbType.SelectedIndex = 0;
+        var txtZero = MakeTextBox(part.ZeroLevelAbsolute != 0 ? part.ZeroLevelAbsolute.ToString("F2", CultureInfo.InvariantCulture) : "", 3, 1);
+
+        var btnOk = new Button
+        {
+            Content = "OK",
+            Width = 80,
+            Padding = new Thickness(0, 5, 0, 5),
+            Margin = new Thickness(0, 10, 0, 0),
+            Background = BrushFromHex("#007ACC"),
+            Foreground = System.Windows.Media.Brushes.White,
+            BorderThickness = new Thickness(0),
+            Cursor = System.Windows.Input.Cursors.Hand,
+            HorizontalAlignment = HorizontalAlignment.Right
+        };
+        Grid.SetRow(btnOk, 4); Grid.SetColumn(btnOk, 1);
+        btnOk.Click += (_, _) => { w.DialogResult = true; w.Close(); };
+
+        grid.Children.Add(MakeLabel("Kürzel:", 0, 0)); grid.Children.Add(txtShort);
+        grid.Children.Add(MakeLabel("Beschreibung:", 1, 0)); grid.Children.Add(txtDesc);
+        grid.Children.Add(MakeLabel("Bauwerkstyp:", 2, 0)); grid.Children.Add(cmbType);
+        grid.Children.Add(MakeLabel("± 0,00 abs.:", 3, 0)); grid.Children.Add(txtZero);
+        grid.Children.Add(btnOk);
+        w.Content = grid;
+
+        if (w.ShowDialog() == true)
+        {
+            part.ShortName = txtShort.Text.Trim();
+            part.Description = txtDesc.Text.Trim();
+            part.BuildingType = cmbType.SelectedItem as string ?? "";
+            var zeroText = txtZero.Text.Replace(',', '.');
+            if (double.TryParse(zeroText, CultureInfo.InvariantCulture, out var z)) part.ZeroLevelAbsolute = z;
+            return true;
+        }
+        return false;
+    }
+
+    // --- Geschoss CRUD ---
+
+    /// <summary>
+    /// + Geschoss: Öffnet Dialog mit intelligentem Vorschlag für das nächste Geschoss.
+    /// </summary>
+    private void OnAddLevel(object sender, RoutedEventArgs e)
+    {
+        if (DgParts.SelectedItem is not BuildingPart part)
+        {
+            MessageBox.Show("Bitte zuerst ein Bauteil auswählen.", "Geschoss", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var settings = _settingsService.Load();
+
+        // Nächstes logisches Geschoss vorschlagen
+        string suggestedName;
+        if (part.Levels.Count == 0)
+            suggestedName = settings.LevelNames.Count > 0 ? settings.LevelNames[0].ShortName : "EG";
+        else
+            suggestedName = BuildingLevel.GetNextLevelName(part.Levels[^1].Name, settings.LevelNames);
+
+        var suggestedDesc = BuildingLevel.GetAutoDescription(suggestedName, settings.LevelNames);
+        var level = new BuildingLevel { Name = suggestedName, Description = suggestedDesc };
+
+        if (ShowLevelEditDialog(level, settings, "Geschoss hinzufügen"))
+        {
+            level.SortOrder = part.Levels.Count;
+            part.Levels.Add(level);
+            RefreshLevelsGrid();
+        }
+    }
+
+    private void OnEditLevel(object sender, RoutedEventArgs e)
+    {
+        if (DgParts.SelectedItem is not BuildingPart) return;
+        if (DgLevels.SelectedItem is not BuildingLevel level) return;
+        var settings = _settingsService.Load();
+        ShowLevelEditDialog(level, settings, "Geschoss bearbeiten");
+        RefreshLevelsGrid();
+    }
+
+    private void OnRemoveLevel(object sender, RoutedEventArgs e)
+    {
+        if (DgParts.SelectedItem is not BuildingPart part) return;
+        if (DgLevels.SelectedItem is not BuildingLevel level) return;
+        if (MessageBox.Show($"Geschoss \"{level.Name}\" entfernen?", "Entfernen",
+                MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+        {
+            part.Levels.Remove(level);
+            RefreshLevelsGrid();
+        }
+    }
+
+    private void OnMoveLevelUp(object sender, RoutedEventArgs e)
+    {
+        if (DgParts.SelectedItem is not BuildingPart part) return;
+        if (DgLevels.SelectedItem is not BuildingLevel level) return;
+        var idx = part.Levels.IndexOf(level);
+        if (idx <= 0) return;
+        part.Levels.RemoveAt(idx);
+        part.Levels.Insert(idx - 1, level);
+        RefreshLevelsGrid();
+        DgLevels.SelectedItem = level;
+    }
+
+    private void OnMoveLevelDown(object sender, RoutedEventArgs e)
+    {
+        if (DgParts.SelectedItem is not BuildingPart part) return;
+        if (DgLevels.SelectedItem is not BuildingLevel level) return;
+        var idx = part.Levels.IndexOf(level);
+        if (idx < 0 || idx >= part.Levels.Count - 1) return;
+        part.Levels.RemoveAt(idx);
+        part.Levels.Insert(idx + 1, level);
+        RefreshLevelsGrid();
+        DgLevels.SelectedItem = level;
+    }
+
+    /// <summary>
+    /// Dialog für Geschoss anlegen/bearbeiten — editierbares Dropdown + Höhenwerte.
+    /// </summary>
+    private bool ShowLevelEditDialog(BuildingLevel level, AppSettings settings, string title)
+    {
+        var w = new Window
+        {
+            Title = title,
+            Width = 400,
+            Height = 310,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Owner = this,
+            ResizeMode = ResizeMode.NoResize,
+            Background = BrushFromHex("#2D2D30")
+        };
+
+        var grid = new Grid { Margin = new Thickness(15) };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(100) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        for (int i = 0; i < 6; i++) grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+        // Geschoss-Dropdown (editierbar, ShortNames)
+        var shortNames = settings.LevelNames.Select(l => l.ShortName).ToList();
+        var cmbName = new ComboBox
+        {
+            IsEditable = true,
+            ItemsSource = shortNames,
+            Text = level.Name,
+            Margin = new Thickness(0, 3, 0, 3)
+        };
+        Grid.SetRow(cmbName, 0); Grid.SetColumn(cmbName, 1);
+
+        // Beschreibung (auto-filled, aber editierbar)
+        var txtDesc = MakeTextBox(level.Description, 1, 1);
+
+        // Beschreibung automatisch aktualisieren bei Geschoss-Änderung
+        cmbName.SelectionChanged += (_, _) =>
+        {
+            var selectedName = cmbName.SelectedItem as string ?? cmbName.Text;
+            var autoDesc = BuildingLevel.GetAutoDescription(selectedName, settings.LevelNames);
+            if (!string.IsNullOrEmpty(autoDesc)) txtDesc.Text = autoDesc;
+        };
+
+        var txtRdok = MakeTextBox(level.Rdok != 0 ? level.Rdok.ToString("F2") : "", 2, 1);
+        var txtFbok = MakeTextBox(level.Fbok != 0 ? level.Fbok.ToString("F2") : "", 3, 1);
+        var txtRduk = MakeTextBox(level.Rduk.HasValue ? level.Rduk.Value.ToString("F2") : "", 4, 1);
+
+        var btnOk = new Button
+        {
+            Content = "OK",
+            Width = 80,
+            Padding = new Thickness(0, 5, 0, 5),
+            Margin = new Thickness(0, 10, 0, 0),
+            Background = BrushFromHex("#007ACC"),
+            Foreground = System.Windows.Media.Brushes.White,
+            BorderThickness = new Thickness(0),
+            Cursor = System.Windows.Input.Cursors.Hand,
+            HorizontalAlignment = HorizontalAlignment.Right
+        };
+        Grid.SetRow(btnOk, 5); Grid.SetColumn(btnOk, 1);
+        btnOk.Click += (_, _) => { w.DialogResult = true; w.Close(); };
+
+        grid.Children.Add(MakeLabel("Geschoss:", 0, 0)); grid.Children.Add(cmbName);
+        grid.Children.Add(MakeLabel("Beschreibung:", 1, 0)); grid.Children.Add(txtDesc);
+        grid.Children.Add(MakeLabel("RDOK:", 2, 0)); grid.Children.Add(txtRdok);
+        grid.Children.Add(MakeLabel("FBOK:", 3, 0)); grid.Children.Add(txtFbok);
+        grid.Children.Add(MakeLabel("RDUK:", 4, 0)); grid.Children.Add(txtRduk);
+        grid.Children.Add(btnOk);
+        w.Content = grid;
+
+        if (w.ShowDialog() == true)
+        {
+            level.Name = (cmbName.SelectedItem as string ?? cmbName.Text).Trim();
+            level.Description = string.IsNullOrWhiteSpace(txtDesc.Text)
+                ? BuildingLevel.GetAutoDescription(level.Name, settings.LevelNames)
+                : txtDesc.Text.Trim();
+            if (double.TryParse(txtRdok.Text.Replace(',', '.'), CultureInfo.InvariantCulture, out var rdok)) level.Rdok = rdok;
+            if (double.TryParse(txtFbok.Text.Replace(',', '.'), CultureInfo.InvariantCulture, out var fbok)) level.Fbok = fbok;
+            level.Rduk = double.TryParse(txtRduk.Text.Replace(',', '.'), CultureInfo.InvariantCulture, out var rduk) ? rduk : null;
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// ✎ Button: Geschoss-Namensliste bearbeiten (2-spaltig: Kurz + Lang).
+    /// </summary>
+    private void OnEditLevelNames(object sender, RoutedEventArgs e)
+    {
+        var settings = _settingsService.Load();
+        var items = new ObservableCollection<LevelNameEntry>(
+            settings.LevelNames.Select(l => new LevelNameEntry(l.ShortName, l.LongName)));
+
+        var w = new Window
+        {
+            Title = "Geschoss-Bezeichnungen bearbeiten",
+            Width = 450,
+            Height = 420,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Owner = this,
+            ResizeMode = ResizeMode.NoResize,
+            Background = BrushFromHex("#2D2D30")
+        };
+
+        var stack = new StackPanel { Margin = new Thickness(15) };
+
+        var dg = new DataGrid
+        {
+            ItemsSource = items,
+            AutoGenerateColumns = false,
+            CanUserAddRows = false,
+            CanUserResizeRows = false,
+            Height = 260,
+            Background = BrushFromHex("#1E1E1E"),
+            Foreground = BrushFromHex("#CCCCCC"),
+            BorderBrush = BrushFromHex("#3E3E42"),
+            RowBackground = BrushFromHex("#1E1E1E"),
+            AlternatingRowBackground = BrushFromHex("#1E1E1E"),
+            GridLinesVisibility = DataGridGridLinesVisibility.Horizontal,
+            HorizontalGridLinesBrush = BrushFromHex("#3E3E42"),
+            HeadersVisibility = DataGridHeadersVisibility.Column
+        };
+        dg.ColumnHeaderStyle = new Style(typeof(DataGridColumnHeader));
+        dg.ColumnHeaderStyle.Setters.Add(new Setter(DataGridColumnHeader.BackgroundProperty, BrushFromHex("#007ACC")));
+        dg.ColumnHeaderStyle.Setters.Add(new Setter(DataGridColumnHeader.ForegroundProperty, System.Windows.Media.Brushes.White));
+        dg.ColumnHeaderStyle.Setters.Add(new Setter(DataGridColumnHeader.PaddingProperty, new Thickness(6, 4, 6, 4)));
+        dg.Columns.Add(new DataGridTextColumn { Header = "Kurzbezeichnung", Binding = new System.Windows.Data.Binding("ShortName"), Width = new DataGridLength(120) });
+        dg.Columns.Add(new DataGridTextColumn { Header = "Langbezeichnung", Binding = new System.Windows.Data.Binding("LongName"), Width = new DataGridLength(1, DataGridLengthUnitType.Star) });
+
+        var bp = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 8, 0, 8) };
+        var btnAdd = new Button
+        {
+            Content = "Hinzufügen",
+            Padding = new Thickness(10, 4, 10, 4),
+            Margin = new Thickness(0, 0, 5, 0),
+            Background = BrushFromHex("#007ACC"),
+            Foreground = System.Windows.Media.Brushes.White,
+            BorderThickness = new Thickness(0),
+            Cursor = System.Windows.Input.Cursors.Hand
+        };
+        btnAdd.Click += (_, _) =>
+        {
+            items.Add(new LevelNameEntry("NEU", "Neues Geschoss"));
+            dg.ScrollIntoView(items[^1]);
+        };
+        var btnRem = new Button
+        {
+            Content = "Entfernen",
+            Padding = new Thickness(10, 4, 10, 4),
+            Background = BrushFromHex("#C62828"),
+            Foreground = System.Windows.Media.Brushes.White,
+            BorderThickness = new Thickness(0),
+            Cursor = System.Windows.Input.Cursors.Hand
+        };
+        btnRem.Click += (_, _) => { if (dg.SelectedIndex >= 0) items.RemoveAt(dg.SelectedIndex); };
+        bp.Children.Add(btnAdd); bp.Children.Add(btnRem);
+
+        var btnOk = new Button
+        {
+            Content = "Übernehmen",
+            Padding = new Thickness(15, 5, 15, 5),
+            Background = BrushFromHex("#007ACC"),
+            Foreground = System.Windows.Media.Brushes.White,
+            BorderThickness = new Thickness(0),
+            Cursor = System.Windows.Input.Cursors.Hand,
+            HorizontalAlignment = HorizontalAlignment.Right
+        };
+        btnOk.Click += (_, _) => { w.DialogResult = true; w.Close(); };
+
+        stack.Children.Add(dg);
+        stack.Children.Add(bp);
+        stack.Children.Add(btnOk);
+        w.Content = stack;
+
+        if (w.ShowDialog() == true)
+        {
+            settings.LevelNames = items.ToList();
+            _settingsService.Save(settings);
+            ColLevelName.ItemsSource = settings.LevelNames.Select(l => l.ShortName).ToList();
+        }
+    }
+
+    // ═══════════════════════════════════════════
+    // TAB 5: ORDNERSTRUKTUR
+    // ═══════════════════════════════════════════
 
     private static ObservableCollection<FolderTreeItem> BuildTreeFromTemplate(List<FolderTemplateEntry> template)
     {
@@ -230,23 +574,11 @@ public partial class ProjectEditDialog : Window
         for (int i = 0; i < template.Count; i++)
         {
             var entry = template[i];
-            var mainItem = new FolderTreeItem
-            {
-                Name = entry.Name,
-                Position = i,
-                IsMainFolder = true,
-                HasInbox = entry.HasInbox
-            };
+            var mainItem = new FolderTreeItem { Name = entry.Name, Position = i, IsMainFolder = true, HasInbox = entry.HasInbox };
             int subPos = 0;
             foreach (var sub in entry.SubFolders)
             {
-                mainItem.Children.Add(new FolderTreeItem
-                {
-                    Name = sub.Name,
-                    Position = sub.HasPrefix ? subPos : -1,
-                    IsMainFolder = false,
-                    HasPrefix = sub.HasPrefix
-                });
+                mainItem.Children.Add(new FolderTreeItem { Name = sub.Name, Position = sub.HasPrefix ? subPos : -1, IsMainFolder = false, HasPrefix = sub.HasPrefix });
                 if (sub.HasPrefix) subPos++;
             }
             items.Add(mainItem);
@@ -258,45 +590,22 @@ public partial class ProjectEditDialog : Window
     {
         var items = new ObservableCollection<FolderTreeItem>();
         if (string.IsNullOrEmpty(rootPath) || !Directory.Exists(rootPath)) return items;
-
-        var subDirs = Directory.GetDirectories(rootPath)
-            .Select(d => new DirectoryInfo(d))
-            .OrderBy(d => d.Name).ToList();
-
+        var subDirs = Directory.GetDirectories(rootPath).Select(d => new DirectoryInfo(d)).OrderBy(d => d.Name).ToList();
         int position = 0;
         foreach (var dir in subDirs)
         {
             if (dir.Attributes.HasFlag(FileAttributes.Hidden)) continue;
             var name = dir.Name;
-            if (name.Length > 3 && char.IsDigit(name[0]) && char.IsDigit(name[1]) && name[2] == ' ')
-                name = name[3..];
-
-            var mainItem = new FolderTreeItem
-            {
-                Name = name,
-                HasInbox = Directory.Exists(Path.Combine(dir.FullName, "_Eingang")),
-                Position = position++,
-                IsMainFolder = true
-            };
-
-            var subSubDirs = Directory.GetDirectories(dir.FullName)
-                .Select(d => new DirectoryInfo(d))
-                .Where(d => !d.Attributes.HasFlag(FileAttributes.Hidden) && d.Name != "_Eingang")
-                .OrderBy(d => d.Name).ToList();
-
+            if (name.Length > 3 && char.IsDigit(name[0]) && char.IsDigit(name[1]) && name[2] == ' ') name = name[3..];
+            var mainItem = new FolderTreeItem { Name = name, HasInbox = Directory.Exists(Path.Combine(dir.FullName, "_Eingang")), Position = position++, IsMainFolder = true };
+            var subSubDirs = Directory.GetDirectories(dir.FullName).Select(d => new DirectoryInfo(d)).Where(d => !d.Attributes.HasFlag(FileAttributes.Hidden) && d.Name != "_Eingang").OrderBy(d => d.Name).ToList();
             int subPos = 0;
             foreach (var subDir in subSubDirs)
             {
                 var subName = subDir.Name;
                 bool hasPrefix = subName.Length > 3 && char.IsDigit(subName[0]) && char.IsDigit(subName[1]) && subName[2] == ' ';
                 if (hasPrefix) subName = subName[3..];
-                mainItem.Children.Add(new FolderTreeItem
-                {
-                    Name = subName,
-                    Position = hasPrefix ? subPos : -1,
-                    IsMainFolder = false,
-                    HasPrefix = hasPrefix
-                });
+                mainItem.Children.Add(new FolderTreeItem { Name = subName, Position = hasPrefix ? subPos : -1, IsMainFolder = false, HasPrefix = hasPrefix });
                 if (hasPrefix) subPos++;
             }
             items.Add(mainItem);
@@ -304,28 +613,22 @@ public partial class ProjectEditDialog : Window
         return items;
     }
 
-    private void OnTreeSelectionChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
-    {
-        _selectedTreeItem = e.NewValue as FolderTreeItem;
-    }
+    private void OnTreeSelectionChanged(object sender, RoutedPropertyChangedEventArgs<object> e) => _selectedTreeItem = e.NewValue as FolderTreeItem;
 
     private void UpdateFolderPreview()
     {
         if (TxtFolderPreview is null) return;
         var projectName = !string.IsNullOrEmpty(TxtName?.Text) ? TxtName.Text : (Project?.Name ?? "Projektname");
         var number = !string.IsNullOrEmpty(TxtNumberPreview?.Text) ? TxtNumberPreview.Text : (Project?.ProjectNumber ?? "YYYYMM");
-
         var sb = new StringBuilder();
         sb.AppendLine($"{number}_{projectName}/");
         for (int i = 0; i < _folderTreeItems.Count; i++)
         {
             var entry = _folderTreeItems[i];
-            var mainPrefix = i == _folderTreeItems.Count - 1 ? "└── " : "├── ";
-            var mainIndent = i == _folderTreeItems.Count - 1 ? "    " : "│   ";
-            sb.AppendLine($"{mainPrefix}{entry.DisplayName}/");
-            if (entry.HasInbox) sb.AppendLine($"{mainIndent}└── _Eingang/");
-            foreach (var sub in entry.Children)
-                sb.AppendLine($"{mainIndent}└── {sub.DisplayName}/");
+            sb.AppendLine($"{(i == _folderTreeItems.Count - 1 ? "└── " : "├── ")}{entry.DisplayName}/");
+            var indent = i == _folderTreeItems.Count - 1 ? "    " : "│   ";
+            if (entry.HasInbox) sb.AppendLine($"{indent}└── _Eingang/");
+            foreach (var sub in entry.Children) sb.AppendLine($"{indent}└── {sub.DisplayName}/");
         }
         TxtFolderPreview.Text = sb.ToString().TrimEnd();
     }
@@ -336,147 +639,52 @@ public partial class ProjectEditDialog : Window
         {
             _folderTreeItems[i].Position = i;
             int subPos = 0;
-            foreach (var sub in _folderTreeItems[i].Children)
-            {
-                sub.Position = sub.HasPrefix ? subPos : -1;
-                if (sub.HasPrefix) subPos++;
-            }
+            foreach (var sub in _folderTreeItems[i].Children) { sub.Position = sub.HasPrefix ? subPos : -1; if (sub.HasPrefix) subPos++; }
         }
-        var items = _folderTreeItems.ToList();
-        _folderTreeItems.Clear();
+        var items = _folderTreeItems.ToList(); _folderTreeItems.Clear();
         foreach (var item in items) _folderTreeItems.Add(item);
         UpdateFolderPreview();
     }
 
-    private static string ShowSmallInputDialog(string title, string label, Window owner)
-    {
-        var w = new Window
-        {
-            Title = title,
-            Width = 350,
-            Height = 150,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Owner = owner,
-            ResizeMode = ResizeMode.NoResize,
-            Background = new System.Windows.Media.SolidColorBrush(
-                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#2D2D30"))
-        };
-        var stack = new StackPanel { Margin = new Thickness(15) };
-        var lbl = new TextBlock
-        {
-            Text = label,
-            Foreground = new System.Windows.Media.SolidColorBrush(
-                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#CCCCCC")),
-            Margin = new Thickness(0, 0, 0, 5)
-        };
-        var tb = new TextBox
-        {
-            Background = new System.Windows.Media.SolidColorBrush(
-                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#1E1E1E")),
-            Foreground = new System.Windows.Media.SolidColorBrush(
-                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#CCCCCC")),
-            BorderBrush = new System.Windows.Media.SolidColorBrush(
-                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#3E3E42")),
-            Padding = new Thickness(5, 3, 5, 3),
-            Margin = new Thickness(0, 0, 0, 10)
-        };
-        var btn = new Button
-        {
-            Content = "OK",
-            Width = 80,
-            Padding = new Thickness(0, 5, 0, 5),
-            Background = new System.Windows.Media.SolidColorBrush(
-                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#007ACC")),
-            Foreground = System.Windows.Media.Brushes.White,
-            BorderThickness = new Thickness(0),
-            Cursor = System.Windows.Input.Cursors.Hand,
-            HorizontalAlignment = System.Windows.HorizontalAlignment.Right
-        };
-        btn.Click += (_, _) => { w.DialogResult = true; w.Close(); };
-        stack.Children.Add(lbl); stack.Children.Add(tb); stack.Children.Add(btn);
-        w.Content = stack;
-        w.ContentRendered += (_, _) => tb.Focus();
-        return w.ShowDialog() == true && !string.IsNullOrWhiteSpace(tb.Text) ? tb.Text.Trim() : "";
-    }
-
-    // === Folder buttons ===
-
-    private void OnFolderMoveUp(object sender, RoutedEventArgs e)
-    {
-        if (_selectedTreeItem is null || !_selectedTreeItem.IsMainFolder) return;
-        var index = _folderTreeItems.IndexOf(_selectedTreeItem);
-        if (index <= 0) return;
-        _folderTreeItems.RemoveAt(index);
-        _folderTreeItems.Insert(index - 1, _selectedTreeItem);
-        RefreshTreePositions();
-    }
-
-    private void OnFolderMoveDown(object sender, RoutedEventArgs e)
-    {
-        if (_selectedTreeItem is null || !_selectedTreeItem.IsMainFolder) return;
-        var index = _folderTreeItems.IndexOf(_selectedTreeItem);
-        if (index < 0 || index >= _folderTreeItems.Count - 1) return;
-        _folderTreeItems.RemoveAt(index);
-        _folderTreeItems.Insert(index + 1, _selectedTreeItem);
-        RefreshTreePositions();
-    }
+    private void OnFolderMoveUp(object sender, RoutedEventArgs e) { if (_selectedTreeItem is null || !_selectedTreeItem.IsMainFolder) return; var i = _folderTreeItems.IndexOf(_selectedTreeItem); if (i <= 0) return; _folderTreeItems.RemoveAt(i); _folderTreeItems.Insert(i - 1, _selectedTreeItem); RefreshTreePositions(); }
+    private void OnFolderMoveDown(object sender, RoutedEventArgs e) { if (_selectedTreeItem is null || !_selectedTreeItem.IsMainFolder) return; var i = _folderTreeItems.IndexOf(_selectedTreeItem); if (i < 0 || i >= _folderTreeItems.Count - 1) return; _folderTreeItems.RemoveAt(i); _folderTreeItems.Insert(i + 1, _selectedTreeItem); RefreshTreePositions(); }
 
     private void OnFolderAddMain(object sender, RoutedEventArgs e)
     {
-        var name = ShowSmallInputDialog("Hauptordner hinzufügen", "Ordnername (ohne Nummer):", this);
+        var name = ShowSmallInputDialog("Hauptordner hinzufügen", "Ordnername (ohne Nummer):");
         if (string.IsNullOrEmpty(name)) return;
-        _folderTreeItems.Add(new FolderTreeItem
-        {
-            Name = name,
-            Position = _folderTreeItems.Count,
-            IsMainFolder = true,
-            HasInbox = false
-        });
-        RefreshTreePositions();
+        _folderTreeItems.Add(new FolderTreeItem { Name = name, Position = _folderTreeItems.Count, IsMainFolder = true }); RefreshTreePositions();
     }
 
     private void OnFolderAddSub(object sender, RoutedEventArgs e)
     {
         FolderTreeItem? parent = null;
-        if (_selectedTreeItem is not null)
-        {
-            if (_selectedTreeItem.IsMainFolder) parent = _selectedTreeItem;
-            else foreach (var m in _folderTreeItems) if (m.Children.Contains(_selectedTreeItem)) { parent = m; break; }
-        }
-        if (parent is null) { MessageBox.Show("Bitte zuerst einen Hauptordner auswählen.", "Unterordner", MessageBoxButton.OK, MessageBoxImage.Information); return; }
-
-        var name = ShowSmallInputDialog("Unterordner hinzufügen", $"Unterordner-Name für \"{parent.Name}\":", this);
+        if (_selectedTreeItem is not null) { if (_selectedTreeItem.IsMainFolder) parent = _selectedTreeItem; else foreach (var m in _folderTreeItems) if (m.Children.Contains(_selectedTreeItem)) { parent = m; break; } }
+        if (parent is null) { MessageBox.Show("Bitte Hauptordner auswählen.", "Unterordner", MessageBoxButton.OK, MessageBoxImage.Information); return; }
+        var name = ShowSmallInputDialog("Unterordner hinzufügen", $"Name für \"{parent.Name}\":");
         if (string.IsNullOrEmpty(name)) return;
-        parent.Children.Add(new FolderTreeItem { Name = name, IsMainFolder = false, HasPrefix = true, Position = parent.Children.Count(c => c.HasPrefix) });
-        RefreshTreePositions();
+        parent.Children.Add(new FolderTreeItem { Name = name, IsMainFolder = false, HasPrefix = true, Position = parent.Children.Count(c => c.HasPrefix) }); RefreshTreePositions();
     }
 
     private void OnFolderRemove(object sender, RoutedEventArgs e)
     {
         if (_selectedTreeItem is null) return;
-        var dn = _selectedTreeItem.IsMainFolder ? $"Hauptordner \"{_selectedTreeItem.Name}\"" : $"Unterordner \"{_selectedTreeItem.Name}\"";
-        if (MessageBox.Show($"{dn} entfernen?", "Entfernen", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+        if (MessageBox.Show($"\"{_selectedTreeItem.Name}\" entfernen?", "Entfernen", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
         if (_selectedTreeItem.IsMainFolder) _folderTreeItems.Remove(_selectedTreeItem);
         else foreach (var m in _folderTreeItems) if (m.Children.Remove(_selectedTreeItem)) break;
         RefreshTreePositions();
     }
 
-    private void OnFolderToggleInbox(object sender, RoutedEventArgs e)
-    {
-        if (_selectedTreeItem is null || !_selectedTreeItem.IsMainFolder) return;
-        _selectedTreeItem.HasInbox = !_selectedTreeItem.HasInbox;
-        RefreshTreePositions();
-    }
-
+    private void OnFolderToggleInbox(object sender, RoutedEventArgs e) { if (_selectedTreeItem is null || !_selectedTreeItem.IsMainFolder) return; _selectedTreeItem.HasInbox = !_selectedTreeItem.HasInbox; RefreshTreePositions(); }
     private void OnFolderTogglePrefix(object sender, RoutedEventArgs e)
     {
-        if (_selectedTreeItem is null || _selectedTreeItem.IsMainFolder)
-        { MessageBox.Show("Präfix nur für Unterordner.", "Präfix", MessageBoxButton.OK, MessageBoxImage.Information); return; }
-        _selectedTreeItem.HasPrefix = !_selectedTreeItem.HasPrefix;
-        RefreshTreePositions();
+        if (_selectedTreeItem is null || _selectedTreeItem.IsMainFolder) { MessageBox.Show("Nur für Unterordner.", "Präfix", MessageBoxButton.OK, MessageBoxImage.Information); return; }
+        _selectedTreeItem.HasPrefix = !_selectedTreeItem.HasPrefix; RefreshTreePositions();
     }
 
-    // === Save / Cancel ===
+    // ═══════════════════════════════════════════
+    // SAVE / CANCEL
+    // ═══════════════════════════════════════════
 
     private void OnSave(object sender, RoutedEventArgs e)
     {
@@ -486,56 +694,95 @@ public partial class ProjectEditDialog : Window
         Project.Status = (ProjectStatus)CmbStatus.SelectedItem;
         Project.ProjectType = CmbProjectType.SelectedItem as string ?? "";
         Project.UpdateProjectNumberFromStart();
-
         Project.Client.Company = TxtClientCompany.Text;
         Project.Client.ContactPerson = TxtClientContact.Text;
         Project.Client.Phone = TxtClientPhone.Text;
         Project.Client.Email = TxtClientEmail.Text;
-
         Project.Location.Street = TxtStreet.Text;
         Project.Location.HouseNumber = TxtHouseNumber.Text;
         Project.Location.PostalCode = TxtPostalCode.Text;
         Project.Location.City = TxtCity.Text;
-
         Project.Location.Municipality = TxtMunicipality.Text;
         Project.Location.District = TxtDistrict.Text;
         Project.Location.State = TxtState.Text;
-
         Project.Location.CoordinateSystem = TxtCoordSystem.Text;
-        if (double.TryParse(TxtCoordEast.Text, CultureInfo.InvariantCulture, out var east))
-            Project.Location.CoordinateEast = east;
-        if (double.TryParse(TxtCoordNorth.Text, CultureInfo.InvariantCulture, out var north))
-            Project.Location.CoordinateNorth = north;
-
+        if (double.TryParse(TxtCoordEast.Text.Replace(',', '.'), CultureInfo.InvariantCulture, out var east)) Project.Location.CoordinateEast = east;
+        if (double.TryParse(TxtCoordNorth.Text.Replace(',', '.'), CultureInfo.InvariantCulture, out var north)) Project.Location.CoordinateNorth = north;
         Project.Location.CadastralKg = TxtCadastralKg.Text;
         Project.Location.CadastralKgName = TxtCadastralKgName.Text;
         Project.Location.CadastralGst = TxtCadastralGst.Text;
-
         Project.Timeline.ConstructionStart = DpConstructionStart.SelectedDate;
         Project.Timeline.PlannedEnd = DpPlannedEnd.SelectedDate;
         Project.Timeline.ActualEnd = DpActualEnd.SelectedDate;
-
         Project.Tags = TxtTags.Text;
         Project.Notes = TxtNotes.Text;
+        Project.BuildingParts = _buildingParts.ToList();
 
         FolderTemplate = _folderTreeItems.Select(main => new FolderTemplateEntry
         {
             Name = main.Name,
             HasInbox = main.HasInbox,
-            SubFolders = main.Children.Select(sub => new SubFolderEntry
-            {
-                Name = sub.Name,
-                HasPrefix = sub.HasPrefix
-            }).ToList()
+            SubFolders = main.Children.Select(sub => new SubFolderEntry { Name = sub.Name, HasPrefix = sub.HasPrefix }).ToList()
         }).ToList();
 
         DialogResult = true;
         Close();
     }
 
-    private void OnCancel(object sender, RoutedEventArgs e)
+    private void OnCancel(object sender, RoutedEventArgs e) { DialogResult = false; Close(); }
+
+    // ═══════════════════════════════════════════
+    // HELPERS
+    // ═══════════════════════════════════════════
+
+    private string ShowSmallInputDialog(string title, string label)
     {
-        DialogResult = false;
-        Close();
+        var w = new Window { Title = title, Width = 350, Height = 150, WindowStartupLocation = WindowStartupLocation.CenterOwner, Owner = this, ResizeMode = ResizeMode.NoResize, Background = BrushFromHex("#2D2D30") };
+        var stack = new StackPanel { Margin = new Thickness(15) };
+        var lbl = new TextBlock { Text = label, Foreground = BrushFromHex("#CCCCCC"), Margin = new Thickness(0, 0, 0, 5) };
+        var tb = new TextBox { Background = BrushFromHex("#1E1E1E"), Foreground = BrushFromHex("#CCCCCC"), BorderBrush = BrushFromHex("#3E3E42"), Padding = new Thickness(5, 3, 5, 3), Margin = new Thickness(0, 0, 0, 10) };
+        var btn = new Button { Content = "OK", Width = 80, Padding = new Thickness(0, 5, 0, 5), Background = BrushFromHex("#007ACC"), Foreground = System.Windows.Media.Brushes.White, BorderThickness = new Thickness(0), Cursor = System.Windows.Input.Cursors.Hand, HorizontalAlignment = HorizontalAlignment.Right };
+        btn.Click += (_, _) => { w.DialogResult = true; w.Close(); };
+        stack.Children.Add(lbl); stack.Children.Add(tb); stack.Children.Add(btn);
+        w.Content = stack; w.ContentRendered += (_, _) => tb.Focus();
+        return w.ShowDialog() == true && !string.IsNullOrWhiteSpace(tb.Text) ? tb.Text.Trim() : "";
+    }
+
+    /// <summary>
+    /// Einfache String-Liste bearbeiten (für Projektarten etc.).
+    /// </summary>
+    private bool ShowSimpleListEditDialog(string title, ObservableCollection<string> items)
+    {
+        var w = new Window { Title = title, Width = 350, Height = 380, WindowStartupLocation = WindowStartupLocation.CenterOwner, Owner = this, ResizeMode = ResizeMode.NoResize, Background = BrushFromHex("#2D2D30"), SizeToContent = SizeToContent.Height };
+        var stack = new StackPanel { Margin = new Thickness(15) };
+        var lb = new ListBox { ItemsSource = items, Background = BrushFromHex("#1E1E1E"), Foreground = BrushFromHex("#CCCCCC"), BorderBrush = BrushFromHex("#3E3E42"), Height = 200, Margin = new Thickness(0, 0, 0, 8) };
+        var bp = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 8) };
+        var btnAdd = new Button { Content = "Hinzufügen", Padding = new Thickness(10, 4, 10, 4), Margin = new Thickness(0, 0, 5, 0), Background = BrushFromHex("#007ACC"), Foreground = System.Windows.Media.Brushes.White, BorderThickness = new Thickness(0), Cursor = System.Windows.Input.Cursors.Hand };
+        btnAdd.Click += (_, _) => { var n = ShowSmallInputDialog("Hinzufügen", "Name:"); if (!string.IsNullOrEmpty(n)) items.Add(n); };
+        var btnRem = new Button { Content = "Entfernen", Padding = new Thickness(10, 4, 10, 4), Background = BrushFromHex("#C62828"), Foreground = System.Windows.Media.Brushes.White, BorderThickness = new Thickness(0), Cursor = System.Windows.Input.Cursors.Hand };
+        btnRem.Click += (_, _) => { if (lb.SelectedIndex >= 0) items.RemoveAt(lb.SelectedIndex); };
+        bp.Children.Add(btnAdd); bp.Children.Add(btnRem);
+        var btnOk = new Button { Content = "Übernehmen", Padding = new Thickness(15, 5, 15, 5), Background = BrushFromHex("#007ACC"), Foreground = System.Windows.Media.Brushes.White, BorderThickness = new Thickness(0), Cursor = System.Windows.Input.Cursors.Hand, HorizontalAlignment = HorizontalAlignment.Right };
+        btnOk.Click += (_, _) => { w.DialogResult = true; w.Close(); };
+        stack.Children.Add(lb); stack.Children.Add(bp); stack.Children.Add(btnOk);
+        w.Content = stack;
+        return w.ShowDialog() == true;
+    }
+
+    private static System.Windows.Media.SolidColorBrush BrushFromHex(string hex)
+        => new((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hex));
+
+    private static TextBlock MakeLabel(string text, int row, int col)
+    {
+        var tb = new TextBlock { Text = text, Foreground = BrushFromHex("#CCCCCC"), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 3, 0, 3) };
+        Grid.SetRow(tb, row); Grid.SetColumn(tb, col);
+        return tb;
+    }
+
+    private static TextBox MakeTextBox(string text, int row, int col)
+    {
+        var tb = new TextBox { Text = text, Background = BrushFromHex("#1E1E1E"), Foreground = BrushFromHex("#CCCCCC"), BorderBrush = BrushFromHex("#3E3E42"), Padding = new Thickness(5, 3, 5, 3), Margin = new Thickness(0, 3, 0, 3) };
+        Grid.SetRow(tb, row); Grid.SetColumn(tb, col);
+        return tb;
     }
 }

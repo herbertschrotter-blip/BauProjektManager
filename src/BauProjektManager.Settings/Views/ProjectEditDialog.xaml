@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Projekt bearbeiten"
-        Height="780" Width="1050"
+        Height="900" Width="1100"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Background="#2D2D30">
@@ -23,8 +23,7 @@
                         <TextBox x:Name="PART_TextBox"
                                  Text="{Binding Path=SelectedDate, RelativeSource={RelativeSource AncestorType=DatePicker}, StringFormat=dd.MM.yyyy}"
                                  Background="#1E1E1E" Foreground="#CCCCCC"
-                                 BorderThickness="0" Padding="2"
-                                 IsReadOnly="True"/>
+                                 BorderThickness="0" Padding="2" IsReadOnly="True"/>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -38,11 +37,8 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBox">
                         <Grid>
-                            <ToggleButton x:Name="ToggleButton"
-                                          Background="#1E1E1E" BorderBrush="#3E3E42"
-                                          BorderThickness="1" Padding="5,3"
-                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
-                                          ClickMode="Press">
+                            <ToggleButton x:Name="ToggleButton" Background="#1E1E1E" BorderBrush="#3E3E42" BorderThickness="1" Padding="5,3"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" ClickMode="Press">
                                 <ToggleButton.Template>
                                     <ControlTemplate TargetType="ToggleButton">
                                         <Border Background="#1E1E1E" BorderBrush="#3E3E42" BorderThickness="1" Padding="5,3">
@@ -52,24 +48,16 @@
                                                     <ColumnDefinition Width="20"/>
                                                 </Grid.ColumnDefinitions>
                                                 <ContentPresenter Grid.Column="0"/>
-                                                <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="#CCCCCC"
-                                                      StrokeThickness="1.5" HorizontalAlignment="Center"
-                                                      VerticalAlignment="Center"/>
+                                                <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="#CCCCCC" StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             </Grid>
                                         </Border>
                                     </ControlTemplate>
                                 </ToggleButton.Template>
                             </ToggleButton>
-                            <ContentPresenter x:Name="ContentSite"
-                                              Content="{TemplateBinding SelectionBoxItem}"
-                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                              Margin="8,3,25,3" VerticalAlignment="Center"
-                                              HorizontalAlignment="Left" IsHitTestVisible="False"/>
-                            <Popup x:Name="Popup" Placement="Bottom"
-                                   IsOpen="{TemplateBinding IsDropDownOpen}"
-                                   AllowsTransparency="True" PopupAnimation="Slide">
-                                <Border Background="#1E1E1E" BorderBrush="#3E3E42"
-                                        BorderThickness="1" MinWidth="{TemplateBinding ActualWidth}">
+                            <ContentPresenter x:Name="ContentSite" Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              Margin="8,3,25,3" VerticalAlignment="Center" HorizontalAlignment="Left" IsHitTestVisible="False"/>
+                            <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" PopupAnimation="Slide">
+                                <Border Background="#1E1E1E" BorderBrush="#3E3E42" BorderThickness="1" MinWidth="{TemplateBinding ActualWidth}">
                                     <ScrollViewer MaxHeight="200">
                                         <StackPanel IsItemsHost="True"/>
                                     </ScrollViewer>
@@ -95,7 +83,6 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
-        <!-- Dark Tab Styles -->
         <Style TargetType="TabControl" x:Key="DialogTabs">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -108,9 +95,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TabItem">
-                        <Border x:Name="TabBorder" Padding="{TemplateBinding Padding}"
-                                Background="Transparent"
-                                BorderBrush="Transparent" BorderThickness="0,0,0,2">
+                        <Border x:Name="TabBorder" Padding="{TemplateBinding Padding}" Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2">
                             <ContentPresenter ContentSource="Header"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -154,6 +139,19 @@
             <Setter Property="Padding" Value="0"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
+        <!-- Dark DataGrid cell editing style -->
+        <Style x:Key="DarkDgCell" TargetType="DataGridCell">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#CCCCCC"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="4,2"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#264F78"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
 
     <Grid Margin="20">
@@ -163,10 +161,8 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" x:Name="TxtDialogTitle" Text="Projekt bearbeiten"
-                   FontSize="18" Foreground="#CCCCCC" Margin="0,0,0,10"/>
+        <TextBlock Grid.Row="0" x:Name="TxtDialogTitle" Text="Projekt bearbeiten" FontSize="18" Foreground="#CCCCCC" Margin="0,0,0,10"/>
 
-        <!-- TabControl -->
         <TabControl Grid.Row="1" Style="{StaticResource DialogTabs}">
 
             <!-- ═══ TAB 1: STAMMDATEN ═══ -->
@@ -178,11 +174,7 @@
                             <ColumnDefinition Width="20"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-
-                        <!-- LINKE SPALTE -->
                         <StackPanel Grid.Column="0" Margin="0,0,4,0">
-
-                            <!-- Projekt -->
                             <TextBlock Text="Projekt" Style="{StaticResource SH}" Margin="0,0,0,6"/>
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -208,15 +200,12 @@
                                 <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtFullName" Style="{StaticResource FTB}"/>
                                 <TextBlock Grid.Row="3" Grid.Column="0" Text="Projektart:" Style="{StaticResource FL}"/>
                                 <DockPanel Grid.Row="3" Grid.Column="1" Margin="0,3">
-                                    <Button DockPanel.Dock="Right" Content="✎" Style="{StaticResource IconBtn}"
-                                            Click="OnEditProjectTypes" ToolTip="Liste bearbeiten" Margin="4,0,0,0"/>
+                                    <Button DockPanel.Dock="Right" Content="✎" Style="{StaticResource IconBtn}" Click="OnEditProjectTypes" ToolTip="Liste bearbeiten" Margin="4,0,0,0"/>
                                     <ComboBox x:Name="CmbProjectType"/>
                                 </DockPanel>
                                 <TextBlock Grid.Row="4" Grid.Column="0" Text="Status:" Style="{StaticResource FL}"/>
                                 <ComboBox Grid.Row="4" Grid.Column="1" x:Name="CmbStatus" Margin="0,3"/>
                             </Grid>
-
-                            <!-- Auftraggeber -->
                             <TextBlock Text="Auftraggeber" Style="{StaticResource SH}"/>
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -232,19 +221,15 @@
                                 </Grid.RowDefinitions>
                                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Firma:" Style="{StaticResource FL}"/>
                                 <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtClientCompany" Style="{StaticResource FTB}"/>
-                                <Button Grid.Row="0" Grid.Column="2" Content="📋" Style="{StaticResource IconBtn}"
-                                        IsEnabled="False" ToolTip="Firmenverzeichnis (kommt später)" Opacity="0.4" Margin="4,3,0,3"/>
+                                <Button Grid.Row="0" Grid.Column="2" Content="📋" Style="{StaticResource IconBtn}" IsEnabled="False" Opacity="0.4" Margin="4,3,0,3"/>
                                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Kontakt:" Style="{StaticResource FL}"/>
                                 <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtClientContact" Style="{StaticResource FTB}"/>
-                                <Button Grid.Row="1" Grid.Column="2" Content="👤" Style="{StaticResource IconBtn}"
-                                        IsEnabled="False" ToolTip="Kontaktverzeichnis (kommt später)" Opacity="0.4" Margin="4,3,0,3"/>
+                                <Button Grid.Row="1" Grid.Column="2" Content="👤" Style="{StaticResource IconBtn}" IsEnabled="False" Opacity="0.4" Margin="4,3,0,3"/>
                                 <TextBlock Grid.Row="2" Grid.Column="0" Text="Telefon:" Style="{StaticResource FL}"/>
                                 <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtClientPhone" Style="{StaticResource FTB}"/>
                                 <TextBlock Grid.Row="3" Grid.Column="0" Text="Email:" Style="{StaticResource FL}"/>
                                 <TextBox Grid.Row="3" Grid.Column="1" x:Name="TxtClientEmail" Style="{StaticResource FTB}"/>
                             </Grid>
-
-                            <!-- Sonstiges -->
                             <TextBlock Text="Sonstiges" Style="{StaticResource SH}"/>
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -258,18 +243,11 @@
                                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Tags:" Style="{StaticResource FL}"/>
                                 <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtTags" Style="{StaticResource FTB}"/>
                                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Notizen:" Style="{StaticResource FL}"/>
-                                <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtNotes" Style="{StaticResource FTB}"
-                                         Height="60" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtNotes" Style="{StaticResource FTB}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
                             </Grid>
                         </StackPanel>
-
-                        <!-- Trennlinie -->
                         <Rectangle Grid.Column="1" Width="1" Fill="#3E3E42" Margin="9,0"/>
-
-                        <!-- RECHTE SPALTE -->
                         <StackPanel Grid.Column="2" Margin="4,0,0,0">
-
-                            <!-- Adresse -->
                             <TextBlock Text="Adresse" Style="{StaticResource SH}" Margin="0,0,0,6"/>
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -294,12 +272,9 @@
                                     <TextBox Grid.Column="1" x:Name="TxtCity" Style="{StaticResource FTB}" Margin="5,3,0,3"/>
                                 </Grid>
                             </Grid>
-
-                            <!-- Verwaltung -->
                             <DockPanel Margin="0,12,0,6">
                                 <TextBlock Text="Verwaltung" Foreground="#007ACC" FontWeight="Bold" VerticalAlignment="Center"/>
-                                <Button Content="GIS" Style="{StaticResource IconBtn}" FontSize="10"
-                                        IsEnabled="False" ToolTip="GIS Steiermark laden (kommt später)" Opacity="0.4" Margin="8,0,0,0"/>
+                                <Button Content="GIS" Style="{StaticResource IconBtn}" FontSize="10" IsEnabled="False" Opacity="0.4" Margin="8,0,0,0"/>
                             </DockPanel>
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -318,12 +293,9 @@
                                 <TextBlock Grid.Row="2" Grid.Column="0" Text="Bundesland:" Style="{StaticResource FL}"/>
                                 <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtState" Style="{StaticResource FTB}"/>
                             </Grid>
-
-                            <!-- Grundstück + Koordinaten -->
                             <DockPanel Margin="0,12,0,6">
                                 <TextBlock Text="Grundstück + Koordinaten" Foreground="#007ACC" FontWeight="Bold" VerticalAlignment="Center"/>
-                                <Button Content="GIS" Style="{StaticResource IconBtn}" FontSize="10"
-                                        IsEnabled="False" ToolTip="GIS Steiermark laden (kommt später)" Opacity="0.4" Margin="8,0,0,0"/>
+                                <Button Content="GIS" Style="{StaticResource IconBtn}" FontSize="10" IsEnabled="False" Opacity="0.4" Margin="8,0,0,0"/>
                             </DockPanel>
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -359,8 +331,6 @@
                                     <TextBox Grid.Column="1" x:Name="TxtCoordNorth" Style="{StaticResource FTB}" Margin="5,3,0,3"/>
                                 </Grid>
                             </Grid>
-
-                            <!-- Laufzeit -->
                             <TextBlock Text="Laufzeit" Style="{StaticResource SH}"/>
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -385,46 +355,206 @@
                 </ScrollViewer>
             </TabItem>
 
-            <!-- ═══ TAB 2: BAUWERK (Platzhalter) ═══ -->
+            <!-- ═══ TAB 2: BAUWERK ═══ -->
             <TabItem Header="Bauwerk" Style="{StaticResource DialogTabItem}">
-                <StackPanel Margin="20" VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <TextBlock Text="Bauwerk — kommt als nächstes" Foreground="#666666" FontSize="16"/>
-                    <TextBlock Text="Bauteile, Geschosse, Höhenberechnung" Foreground="#555555" FontSize="12" Margin="0,8,0,0"/>
-                </StackPanel>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,10,0,0">
+                    <StackPanel>
+                        <TextBlock Text="Bauteile" Style="{StaticResource SH}" Margin="0,0,0,6"/>
+                        <TextBlock Text="Jedes Bauteil hat eigene Geschosse und ein eigenes ± 0,00 Niveau." Foreground="#555555" FontSize="11" Margin="0,0,0,8"/>
+                        <DataGrid x:Name="DgParts" AutoGenerateColumns="False" IsReadOnly="True"
+                                  SelectionMode="Single" CanUserResizeRows="False"
+                                  Background="#1E1E1E" Foreground="#CCCCCC" BorderBrush="#3E3E42"
+                                  RowBackground="#1E1E1E" AlternatingRowBackground="#1E1E1E"
+                                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#3E3E42"
+                                  HeadersVisibility="Column" Height="110"
+                                  CellStyle="{StaticResource DarkDgCell}"
+                                  SelectionChanged="OnPartSelectionChanged">
+                            <DataGrid.ColumnHeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="Background" Value="#007ACC"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                    <Setter Property="Padding" Value="8,4"/>
+                                    <Setter Property="BorderBrush" Value="#005A9E"/>
+                                    <Setter Property="BorderThickness" Value="0,0,1,0"/>
+                                </Style>
+                            </DataGrid.ColumnHeaderStyle>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Kürzel" Binding="{Binding ShortName}" Width="80"/>
+                                <DataGridTextColumn Header="Beschreibung" Binding="{Binding Description}" Width="*"/>
+                                <DataGridTextColumn Header="Bauwerkstyp" Binding="{Binding BuildingType}" Width="120"/>
+                                <DataGridTextColumn Header="± 0,00 abs." Binding="{Binding ZeroLevelAbsolute, StringFormat=F2}" Width="100"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <Button Content="+ Bauteil" Click="OnAddPart" Background="#007ACC" Foreground="White" Padding="10,5" BorderThickness="0" Cursor="Hand" Margin="0,0,6,0"/>
+                            <Button Content="Bearbeiten" Click="OnEditPart" Background="#3E3E42" Foreground="#CCCCCC" Padding="10,5" BorderThickness="0" Cursor="Hand" Margin="0,0,6,0"/>
+                            <Button Content="Entfernen" Click="OnRemovePart" Background="#C62828" Foreground="White" Padding="10,5" BorderThickness="0" Cursor="Hand"/>
+                        </StackPanel>
+
+                        <DockPanel Margin="0,16,0,4">
+                            <TextBlock x:Name="TxtLevelsHeader" Text="Geschosse" Style="{StaticResource SH}" Margin="0"/>
+                            <Button Content="✎" Style="{StaticResource IconBtn}" Click="OnEditLevelNames" ToolTip="Geschoss-Liste bearbeiten" Margin="8,12,0,6"/>
+                        </DockPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Foreground="#555555" FontSize="11" Text="Direkt editierbar · Komma als Dezimalzeichen · Prefix + Beschreibung automatisch · "/>
+                            <TextBlock x:Name="TxtZeroInfo" Foreground="#5DCAA5" FontSize="11"/>
+                        </StackPanel>
+
+                        <DataGrid x:Name="DgLevels" AutoGenerateColumns="False"
+                                  SelectionMode="Single" CanUserResizeRows="False" CanUserAddRows="False"
+                                  Background="#1E1E1E" Foreground="#CCCCCC" BorderBrush="#3E3E42"
+                                  RowBackground="#1E1E1E" AlternatingRowBackground="#1E1E1E"
+                                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#3E3E42"
+                                  HeadersVisibility="Column" Height="260"
+                                  CellStyle="{StaticResource DarkDgCell}"
+                                  CellEditEnding="OnLevelCellEditEnding">
+                            <DataGrid.ColumnHeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="Background" Value="#3E3E42"/>
+                                    <Setter Property="Foreground" Value="#CCCCCC"/>
+                                    <Setter Property="Padding" Value="6,4"/>
+                                    <Setter Property="BorderBrush" Value="#555555"/>
+                                    <Setter Property="BorderThickness" Value="0,0,1,0"/>
+                                </Style>
+                            </DataGrid.ColumnHeaderStyle>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Prefix" Binding="{Binding PrefixString}" Width="55" IsReadOnly="True">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#999999"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridComboBoxColumn Header="GS" Width="70" x:Name="ColLevelName"
+                                                        SelectedItemBinding="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTextColumn Header="Beschreib." Binding="{Binding Description}" Width="90" IsReadOnly="True">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#999999"/>
+                                            <Setter Property="FontSize" Value="11"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="RDOK" Binding="{Binding Rdok, StringFormat=F2}" Width="70">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#EF9F27"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                    <DataGridTextColumn.EditingElementStyle>
+                                        <Style TargetType="TextBox">
+                                            <Setter Property="Background" Value="#252526"/>
+                                            <Setter Property="Foreground" Value="#EF9F27"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                        </Style>
+                                    </DataGridTextColumn.EditingElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="FBOK" Binding="{Binding Fbok, StringFormat=F2}" Width="70">
+                                    <DataGridTextColumn.EditingElementStyle>
+                                        <Style TargetType="TextBox">
+                                            <Setter Property="Background" Value="#252526"/>
+                                            <Setter Property="Foreground" Value="#CCCCCC"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                        </Style>
+                                    </DataGridTextColumn.EditingElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="RDUK" Binding="{Binding RdukDisplay}" Width="70">
+                                    <DataGridTextColumn.EditingElementStyle>
+                                        <Style TargetType="TextBox">
+                                            <Setter Property="Background" Value="#252526"/>
+                                            <Setter Property="Foreground" Value="#CCCCCC"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                        </Style>
+                                    </DataGridTextColumn.EditingElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="Gesch.h." Binding="{Binding StoryHeight, StringFormat=F2}" Width="70" IsReadOnly="True">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#888888"/>
+                                            <Setter Property="FontStyle" Value="Italic"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="Rohb.h." Binding="{Binding RawHeight, StringFormat=F2}" Width="70" IsReadOnly="True">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#888888"/>
+                                            <Setter Property="FontStyle" Value="Italic"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="Deck.st." Binding="{Binding DeckThickness, StringFormat=F2}" Width="65" IsReadOnly="True">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#888888"/>
+                                            <Setter Property="FontStyle" Value="Italic"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="FB-Aufb." Binding="{Binding FloorBuildup, StringFormat=F2}" Width="65" IsReadOnly="True">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#888888"/>
+                                            <Setter Property="FontStyle" Value="Italic"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <Button Content="+ Geschoss" Click="OnAddLevel" Background="#007ACC" Foreground="White" Padding="10,5" BorderThickness="0" Cursor="Hand" Margin="0,0,6,0"/>
+                            <Button Content="Bearbeiten" Click="OnEditLevel" Background="#3E3E42" Foreground="#CCCCCC" Padding="10,5" BorderThickness="0" Cursor="Hand" Margin="0,0,6,0"/>
+                            <Button Content="Entfernen" Click="OnRemoveLevel" Background="#C62828" Foreground="White" Padding="10,5" BorderThickness="0" Cursor="Hand" Margin="0,0,6,0"/>
+                            <Button Content="▲" Click="OnMoveLevelUp" Background="#3E3E42" Foreground="#CCCCCC" Padding="8,5" BorderThickness="0" Cursor="Hand" Margin="0,0,3,0"/>
+                            <Button Content="▼" Click="OnMoveLevelDown" Background="#3E3E42" Foreground="#CCCCCC" Padding="8,5" BorderThickness="0" Cursor="Hand"/>
+                        </StackPanel>
+
+                        <Grid Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Eingabe (3 Werte)" Foreground="#007ACC" FontWeight="Bold" FontSize="11" Margin="0,0,0,4"/>
+                                <TextBlock Foreground="#999999" FontSize="11" Text="RDOK: Rohdecken-OK (unterstes = Bodenplatten-OK)"/>
+                                <TextBlock Foreground="#999999" FontSize="11" Text="FBOK: Fertigfußboden-OK"/>
+                                <TextBlock Foreground="#999999" FontSize="11" Text="RDUK: Rohdecken-UK (unterstes: leer lassen)"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="Live errechnet" Foreground="#007ACC" FontWeight="Bold" FontSize="11" Margin="0,0,0,4"/>
+                                <TextBlock Foreground="#999999" FontSize="11" FontStyle="Italic" Text="Gesch.h. = FBOK(n+1) − FBOK(n)"/>
+                                <TextBlock Foreground="#999999" FontSize="11" FontStyle="Italic" Text="Rohb.h. = RDOK(n+1) − RDOK(n)"/>
+                                <TextBlock Foreground="#999999" FontSize="11" FontStyle="Italic" Text="Deck.st. = RDOK − RDUK"/>
+                                <TextBlock Foreground="#999999" FontSize="11" FontStyle="Italic" Text="FB-Aufb. = FBOK − RDOK"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
             </TabItem>
 
-            <!-- ═══ TAB 3: BETEILIGTE (Platzhalter) ═══ -->
+            <!-- ═══ TAB 3-4: Platzhalter ═══ -->
             <TabItem Header="Beteiligte" Style="{StaticResource DialogTabItem}">
                 <StackPanel Margin="20" VerticalAlignment="Center" HorizontalAlignment="Center">
                     <TextBlock Text="Beteiligte — kommt später" Foreground="#666666" FontSize="16"/>
-                    <TextBlock Text="Firmenliste, PDF-Import, Kontaktverzeichnis" Foreground="#555555" FontSize="12" Margin="0,8,0,0"/>
                 </StackPanel>
             </TabItem>
-
-            <!-- ═══ TAB 4: PORTALE + LINKS (Platzhalter) ═══ -->
             <TabItem Header="Portale + Links" Style="{StaticResource DialogTabItem}">
                 <StackPanel Margin="20" VerticalAlignment="Center" HorizontalAlignment="Center">
                     <TextBlock Text="Portale + Links — kommt später" Foreground="#666666" FontSize="16"/>
-                    <TextBlock Text="InfoRaum, PlanRadar, eigene Links" Foreground="#555555" FontSize="12" Margin="0,8,0,0"/>
                 </StackPanel>
             </TabItem>
 
             <!-- ═══ TAB 5: ORDNERSTRUKTUR ═══ -->
-            <TabItem Header="Ordnerstruktur" Style="{StaticResource DialogTabItem}" x:Name="TabFolders">
+            <TabItem Header="Ordnerstruktur" Style="{StaticResource DialogTabItem}">
                 <StackPanel Margin="0,10,0,0">
-                    <TextBlock Text="Reihenfolge = Nummerierung (00, 01, 02...)"
-                               Foreground="#999999" FontSize="11" Margin="0,0,0,8"/>
+                    <TextBlock Text="Reihenfolge = Nummerierung (00, 01, 02...)" Foreground="#999999" FontSize="11" Margin="0,0,0,8"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="400"/>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-
-                        <TreeView x:Name="TvFolders" Grid.Column="0"
-                                  Background="#1E1E1E" Foreground="#CCCCCC"
-                                  BorderBrush="#3E3E42" Height="400"
-                                  SelectedItemChanged="OnTreeSelectionChanged">
+                        <TreeView x:Name="TvFolders" Grid.Column="0" Background="#1E1E1E" Foreground="#CCCCCC" BorderBrush="#3E3E42" Height="400" SelectedItemChanged="OnTreeSelectionChanged">
                             <TreeView.Resources>
                                 <Style TargetType="TreeViewItem">
                                     <Setter Property="Foreground" Value="#CCCCCC"/>
@@ -435,69 +565,34 @@
                             <TreeView.ItemTemplate>
                                 <HierarchicalDataTemplate ItemsSource="{Binding Children}">
                                     <StackPanel Orientation="Horizontal" Margin="2">
-                                        <TextBlock Text="{Binding DisplayName}" Foreground="#CCCCCC"
-                                                   VerticalAlignment="Center" FontSize="13"/>
-                                        <TextBlock Text="  📥" Foreground="#007ACC" FontSize="12"
-                                                   Visibility="{Binding InboxVisibility}"
-                                                   VerticalAlignment="Center" Margin="4,0,0,0"/>
-                                        <TextBlock Text="{Binding PrefixLabel}" Foreground="#555555"
-                                                   FontSize="10" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                        <TextBlock Text="{Binding DisplayName}" Foreground="#CCCCCC" VerticalAlignment="Center" FontSize="13"/>
+                                        <TextBlock Text="  📥" Foreground="#007ACC" FontSize="12" Visibility="{Binding InboxVisibility}" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                                        <TextBlock Text="{Binding PrefixLabel}" Foreground="#555555" FontSize="10" VerticalAlignment="Center" Margin="8,0,0,0"/>
                                     </StackPanel>
                                 </HierarchicalDataTemplate>
                             </TreeView.ItemTemplate>
                         </TreeView>
-
-                        <!-- Buttons -->
                         <StackPanel Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Top">
-                            <Button Content="▲" Click="OnFolderMoveUp" Width="32" Height="28"
-                                    Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
-                                    Margin="0,0,0,3" Cursor="Hand" ToolTip="Nach oben"/>
-                            <Button Content="▼" Click="OnFolderMoveDown" Width="32" Height="28"
-                                    Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
-                                    Margin="0,0,0,10" Cursor="Hand" ToolTip="Nach unten"/>
-                            <Button Content="＋" Click="OnFolderAddMain" Width="32" Height="28"
-                                    Background="#007ACC" Foreground="White" BorderThickness="0"
-                                    Margin="0,0,0,3" Cursor="Hand" ToolTip="Hauptordner hinzufügen"/>
-                            <Button Content="＋└" Click="OnFolderAddSub" Width="32" Height="28"
-                                    Background="#085041" Foreground="#5DCAA5" BorderThickness="0"
-                                    Margin="0,0,0,3" Cursor="Hand" ToolTip="Unterordner hinzufügen" FontSize="10"/>
-                            <Button Content="✕" Click="OnFolderRemove" Width="32" Height="28"
-                                    Background="#C62828" Foreground="White" BorderThickness="0"
-                                    Margin="0,0,0,10" Cursor="Hand" ToolTip="Entfernen"/>
-                            <Button Content="📥" Click="OnFolderToggleInbox" Width="32" Height="28"
-                                    Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
-                                    Margin="0,0,0,3" Cursor="Hand" ToolTip="_Eingang ein/aus"/>
-                            <Button Content="##" Click="OnFolderTogglePrefix" Width="32" Height="28"
-                                    Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0"
-                                    Cursor="Hand" ToolTip="Präfix ein/aus (nur Unterordner)" FontSize="10" FontWeight="Bold"/>
+                            <Button Content="▲" Click="OnFolderMoveUp" Width="32" Height="28" Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0" Margin="0,0,0,3" Cursor="Hand"/>
+                            <Button Content="▼" Click="OnFolderMoveDown" Width="32" Height="28" Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0" Margin="0,0,0,10" Cursor="Hand"/>
+                            <Button Content="＋" Click="OnFolderAddMain" Width="32" Height="28" Background="#007ACC" Foreground="White" BorderThickness="0" Margin="0,0,0,3" Cursor="Hand"/>
+                            <Button Content="＋└" Click="OnFolderAddSub" Width="32" Height="28" Background="#085041" Foreground="#5DCAA5" BorderThickness="0" Margin="0,0,0,3" Cursor="Hand" FontSize="10"/>
+                            <Button Content="✕" Click="OnFolderRemove" Width="32" Height="28" Background="#C62828" Foreground="White" BorderThickness="0" Margin="0,0,0,10" Cursor="Hand"/>
+                            <Button Content="📥" Click="OnFolderToggleInbox" Width="32" Height="28" Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0" Margin="0,0,0,3" Cursor="Hand"/>
+                            <Button Content="##" Click="OnFolderTogglePrefix" Width="32" Height="28" Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0" Cursor="Hand" FontSize="10" FontWeight="Bold"/>
                         </StackPanel>
-
-                        <!-- Vorschau -->
                         <StackPanel Grid.Column="2" Margin="12,0,0,0">
                             <TextBlock Text="Vorschau" Foreground="#007ACC" FontWeight="Bold" Margin="0,0,0,6"/>
-                            <TextBox x:Name="TxtFolderPreview"
-                                     Background="#1E1E1E" Foreground="#999999"
-                                     BorderBrush="#3E3E42" FontFamily="Consolas"
-                                     FontSize="12" IsReadOnly="True"
-                                     TextWrapping="NoWrap" AcceptsReturn="True"
-                                     VerticalScrollBarVisibility="Auto"
-                                     Height="360" Padding="8"/>
+                            <TextBox x:Name="TxtFolderPreview" Background="#1E1E1E" Foreground="#999999" BorderBrush="#3E3E42" FontFamily="Consolas" FontSize="12" IsReadOnly="True" TextWrapping="NoWrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Height="360" Padding="8"/>
                         </StackPanel>
                     </Grid>
                 </StackPanel>
             </TabItem>
         </TabControl>
 
-        <!-- Buttons -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal"
-                    HorizontalAlignment="Right" Margin="0,15,0,0">
-            <Button Content="Speichern" Click="OnSave"
-                    Background="#007ACC" Foreground="White"
-                    Padding="20,8" Margin="0,0,10,0"
-                    BorderThickness="0" Cursor="Hand"/>
-            <Button Content="Abbrechen" Click="OnCancel"
-                    Background="#3E3E42" Foreground="#CCCCCC"
-                    Padding="20,8" BorderThickness="0" Cursor="Hand"/>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <Button Content="Speichern" Click="OnSave" Background="#007ACC" Foreground="White" Padding="20,8" Margin="0,0,10,0" BorderThickness="0" Cursor="Hand"/>
+            <Button Content="Abbrechen" Click="OnCancel" Background="#3E3E42" Foreground="#CCCCCC" Padding="20,8" BorderThickness="0" Cursor="Hand"/>
         </StackPanel>
     </Grid>
 </Window>

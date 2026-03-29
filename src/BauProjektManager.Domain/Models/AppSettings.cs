@@ -14,40 +14,35 @@ public class AppSettings
     public bool IsFirstRun { get; set; } = true;
     public DateTime? SetupCompletedAt { get; set; }
 
-    /// <summary>
-    /// Ordner-Template für neue Projekte.
-    /// </summary>
     public List<FolderTemplateEntry> FolderTemplate { get; set; } = GetDefaultFolderTemplate();
-
-    /// <summary>
-    /// Editierbare Liste der Projektarten (Dropdown im Projekt-Dialog).
-    /// </summary>
     public List<string> ProjectTypes { get; set; } = GetDefaultProjectTypes();
-
-    /// <summary>
-    /// Editierbare Liste der Bauwerkstypen (Dropdown pro Bauteil).
-    /// </summary>
     public List<string> BuildingTypes { get; set; } = GetDefaultBuildingTypes();
 
     /// <summary>
-    /// Editierbare Liste der Geschoss-Bezeichnungen (Dropdown im Bauwerk-Tab).
+    /// Editierbare Geschoss-Bezeichnungen: Kurz (EG) + Lang (Erdgeschoss).
+    /// Reihenfolge = logische Bau-Reihenfolge von unten nach oben.
     /// </summary>
-    public List<string> LevelNames { get; set; } = GetDefaultLevelNames();
+    public List<LevelNameEntry> LevelNames { get; set; } = GetDefaultLevelNames();
 
     public static List<string> GetDefaultProjectTypes() =>
-    [
-        "Neubau", "Sanierung", "Umbau", "Zubau", "Abbruch", "Sonstiges"
-    ];
+        ["Neubau", "Sanierung", "Umbau", "Zubau", "Abbruch", "Sonstiges"];
 
     public static List<string> GetDefaultBuildingTypes() =>
-    [
-        "EFH", "MFH", "Wohnanlage", "Gewerbe", "Industrie", "Infrastruktur", "Sonstiges"
-    ];
+        ["EFH", "MFH", "Wohnanlage", "Gewerbe", "Industrie", "Infrastruktur", "Sonstiges"];
 
-    public static List<string> GetDefaultLevelNames() =>
+    public static List<LevelNameEntry> GetDefaultLevelNames() =>
     [
-        "UG3", "UG2", "UG", "EG", "OG1", "OG2", "OG3", "OG4", "OG5",
-        "DG", "Attika", "Staffel"
+        new("FU",  "Fundament"),
+        new("UG3", "3. Untergeschoss"),
+        new("UG2", "2. Untergeschoss"),
+        new("UG",  "Untergeschoss"),
+        new("EG",  "Erdgeschoss"),
+        new("OG1", "1. Obergeschoss"),
+        new("OG2", "2. Obergeschoss"),
+        new("OG3", "3. Obergeschoss"),
+        new("OG4", "4. Obergeschoss"),
+        new("OG5", "5. Obergeschoss"),
+        new("DG",  "Dachgeschoss"),
     ];
 
     public static List<FolderTemplateEntry> GetDefaultFolderTemplate() =>
@@ -75,8 +70,24 @@ public class AppSettings
 }
 
 /// <summary>
-/// Ein Hauptordner im Ordner-Template.
+/// Geschoss-Bezeichnung: Kurzname (z.B. "EG") + Langname (z.B. "Erdgeschoss").
+/// Beide vom User editierbar.
 /// </summary>
+public class LevelNameEntry
+{
+    public string ShortName { get; set; } = string.Empty;
+    public string LongName { get; set; } = string.Empty;
+
+    public LevelNameEntry() { }
+    public LevelNameEntry(string shortName, string longName)
+    {
+        ShortName = shortName;
+        LongName = longName;
+    }
+
+    public override string ToString() => ShortName;
+}
+
 public class FolderTemplateEntry
 {
     public string Name { get; set; } = string.Empty;
@@ -91,9 +102,6 @@ public class FolderTemplateEntry
     public string GetNumberedName(int position) => $"{position:D2} {Name}";
 }
 
-/// <summary>
-/// Ein Unterordner innerhalb eines Hauptordners.
-/// </summary>
 public class SubFolderEntry
 {
     public string Name { get; set; } = string.Empty;

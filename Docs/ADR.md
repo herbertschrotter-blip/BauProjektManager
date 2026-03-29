@@ -34,6 +34,10 @@
 | 021 | Client/Firma als eigene Entität (Vorbereitung) | 🟡 Konzept | 2026-03 |
 | 022 | Segment-basiertes Dateinamen-Parsing | ✅ Entschieden | 2026-03 |
 | 023 | Claude schreibt Code, Herbert committet | ✅ Entschieden | 2026-03 |
+| 024 | Adressbuch getrennt von Projekt-Beteiligten | ✅ Entschieden | 2026-03 |
+| 025 | Status vereinfacht: Active + Completed | ✅ Entschieden | 2026-03 |
+| 026 | Portal-Typen als editierbare Liste | ✅ Entschieden | 2026-03 |
+| 027 | KI-API-Import für Datenextraktion | 🟡 Konzept | 2026-03 |
 
 ---
 
@@ -643,6 +647,110 @@ Herbert hat keinen Programmier-Hintergrund. Claude schreibt allen Code. Herbert 
 - Herbert hat volle Kontrolle über den Git-Verlauf
 - Bei Build-Fehlern nach neuen Dateien: "Erstellen → Projektmappe bereinigen" (Clean Solution)
 - GitHub-State immer verifizieren (Diskrepanzen zwischen lokalem und Remote-State sind vorgekommen)
+
+---
+
+## ADR-024: Adressbuch getrennt von Projekt-Beteiligten
+
+**Datum:** 2026-03  
+**Status:** ✅ Entschieden  
+**Herkunft:** Tab 3 Beteiligte Implementierung
+
+**Kontext:**
+
+Im Tab 3 werden Projekt-Beteiligte erfasst (Architekt, Statiker, ÖBA etc.). Herbert möchte die Kontaktdaten auch projektübergreifend wiederverwenden und später mit Outlook-Kontakten synchronisieren.
+
+**Entscheidung:**
+
+Zwei getrennte Ebenen:
+- **project_participants** (projektbezogen): Rolle im Projekt + Kontaktdaten direkt gespeichert.
+- **contacts** (zentral, kommt später): Personen/Firmen projektübergreifend, Outlook-kompatibel.
+- Verknüpfung über `contact_id` FK in project_participants (Feld vorbereitet, aktuell leer).
+
+**Konsequenzen:**
+
+- Tab 3 funktioniert sofort ohne Adressbuch
+- Kontaktdaten zunächst pro Projekt dupliziert (akzeptabel für V1)
+- Späterer Umbau: Daten aus contacts-Tabelle lesen statt direkt
+- Outlook-Sync läuft über contacts-Tabelle
+
+---
+
+## ADR-025: Status vereinfacht — nur Active und Completed
+
+**Datum:** 2026-03  
+**Status:** ✅ Entschieden  
+**Herkunft:** Tab 1 Stammdaten Implementierung
+
+**Kontext:**
+
+Ursprünglich hatte ProjectStatus drei Werte: Active, Completed, Archived. Archived ist redundant — Archivierung ist eine Aktion (Ordner verschieben), kein Status.
+
+**Entscheidung:**
+
+Nur zwei Status: Active und Completed. Archivierung als Feature #12 separat.
+
+**Konsequenzen:**
+
+- StatusColorConverter: Grün = Active, Rot = Completed
+- Archiv-Button vorbereitet aber disabled
+- Einfacheres UI
+
+---
+
+## ADR-026: Portal-Typen als editierbare Liste
+
+**Datum:** 2026-03  
+**Status:** ✅ Entschieden  
+**Herkunft:** Tab 4 Portale + Links Implementierung
+
+**Kontext:**
+
+Bauherren nutzen verschiedene Portale (InfoRaum, PlanRadar, PlanFred, Bau-Master, Dalux). Hardcoded Enum oder editierbare Liste?
+
+**Entscheidung:**
+
+Editierbare Liste in settings.json (PortalTypes), änderbar über ✎-Button. Gleicher Ansatz wie ProjectTypes, BuildingTypes, ParticipantRoles, LevelNames.
+
+**Konsequenzen:**
+
+- Neue Portale ohne Code-Änderung hinzufügbar
+- Links mit LinkType "Portal" links, "Custom" rechts im 2-Spalten-Layout
+- Dashboard-Vorschau zeigt nur konfigurierte Links
+
+---
+
+## ADR-027: KI-API-Import für Datenextraktion
+
+**Datum:** 2026-03  
+**Status:** 🟡 Konzept  
+**Herkunft:** Tab 3 Firmenliste-Import, Plankopf-Konzept
+
+**Kontext:**
+
+Mehrere Features erfordern Extraktion strukturierter Daten aus unstrukturierten Quellen (Firmenlisten-PDF, Planköpfe, Planlisten). Manuelles Parsing per Regex/Heuristik zu fehleranfällig.
+
+**Entscheidung:**
+
+Zweistufiger Ansatz:
+- **Phase 1 (manuell):** App zeigt Prompt → User kopiert zu Claude/ChatGPT → fügt Antwort ein → App parst JSON
+- **Phase 2 (automatisch):** App ruft KI-API direkt auf (ChatGPT oder Claude API) → empfängt JSON
+- **Systemeinstellungen:** Auswahl zwischen ChatGPT API und Claude API (Anthropic API)
+- **Offline-Fallback:** Manueller Ablauf bleibt immer verfügbar
+
+**Anwendungsfälle:**
+
+- Firmenliste importieren (Tab 3)
+- Plankopf-Extraktion (Index, Revision, Plannummer)
+- Index-Import (Planlisten aus PDF)
+- Zukünftige Imports
+
+**Konsequenzen:**
+
+- JSON als Standard-Austauschformat
+- Service-Interface `IKiImportService` mit Implementierungen für Claude und ChatGPT
+- Prompt-Templates als versionierte Ressourcen in der App
+- API-Keys sicher speichern (Windows Credential Manager, nicht in settings.json)
 
 ---
 

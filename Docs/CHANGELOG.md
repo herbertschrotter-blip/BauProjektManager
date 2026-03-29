@@ -5,6 +5,85 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.15.0] — 2026-03-29
+
+### Hinzugefügt
+- **Tab 4 Portale + Links** — 2-Spalten-Layout: Bauherren-Portale (links) + Eigene Links (rechts)
+- `ProjectLink` Domain-Modell (Name, Url, LinkType Portal/Custom, IsConfigured)
+- `project_links` DB-Tabelle (Schema v1.5)
+- Portal-Typen editierbar (✎ Button, PortalTypes in settings.json: InfoRaum, PlanRadar, PlanFred, Bau-Master, Dalux)
+- Edit-Dialog: Portal mit Dropdown, eigene Links mit Freitext
+- "Öffnen" Button öffnet URL im Standard-Browser
+- Dashboard-Vorschau unten zeigt konfigurierte Links als klickbare Buttons
+
+---
+
+## [v0.14.0] — 2026-03-29
+
+### Hinzugefügt
+- **Tab 3 Beteiligte** — Projektbezogene Firmenliste mit CRUD
+- `ProjectParticipant` Domain-Modell (Role, Company, ContactPerson, Phone, Email, ContactId)
+- `project_participants` DB-Tabelle (Schema v1.4)
+- DataGrid mit 5 Spalten (Rolle, Firma, Kontaktperson, Telefon, Email)
+- Edit-Dialog mit Rolle als editierbares Dropdown (aus ParticipantRoles in settings.json)
+- Rollen-Liste editierbar (✎ Button)
+- ▲▼ Sortierung
+- Import-Buttons vorbereitet (ausgegraut): "Liste importieren" + "Aus Adressbuch"
+- `contact_id` Feld vorbereitet für späteres Adressbuch (FK auf zukünftige contacts-Tabelle)
+
+### Entscheidungen
+- Adressbuch als separate Entität (projektübergreifend, Outlook-kompatibel) — getrennt von Projekt-Beteiligten
+- Firmenliste-Import: geführter KI-Ablauf geplant (Prompt → Copy → Paste → Parse), später API-basiert
+
+---
+
+## [v0.13.2] — 2026-03-29
+
+### Hinzugefügt
+- **Tab 2 Bauwerk** — Bauteile + Geschosse mit Live-Berechnung
+- Bauteile-DataGrid mit Edit-Dialog (Kürzel, Beschreibung, Bauwerkstyp, ± 0,00 abs.)
+- Geschoss-DataGrid direkt editierbar (RDOK orange, FBOK, RDUK) mit Komma-Eingabe
+- + Geschoss öffnet Dialog mit intelligentem Vorschlag (UG→EG→OG1→OG2)
+- Prefix automatisch berechnet (EG=00, darunter negativ, darüber positiv)
+- Beschreibung automatisch aus 2-spaltiger Geschoss-Liste (ShortName+LongName)
+- ✎ Button für Geschoss-Bezeichnungen bearbeiten (2-spaltig: Kurzbezeichnung+Langbezeichnung)
+- LevelNames in settings.json als LevelNameEntry (ShortName+LongName)
+- BuildingTypes Liste in AppSettings für Bauwerkstyp-Dropdown
+- Live-Berechnung: Geschosshöhe, Rohbauhöhe, Deckenstärke, FB-Aufbau
+
+---
+
+## [v0.13.1] — 2026-03-29
+
+### Hinzugefügt
+- **Domain:** `BuildingPart` + `BuildingLevel` Modelle
+- BuildingPart: ShortName, Description, BuildingType, ZeroLevelAbsolute, SortOrder, Levels
+- BuildingLevel: Prefix, Name, Description, Rdok, Fbok, Rduk (nullable), berechnete Properties
+- `building_parts` + `building_levels` DB-Tabellen (Schema v1.3)
+- Project.BuildingParts ersetzt alte Buildings-Liste
+- `GetNextLevelName()` und `GetAutoDescription()` für intelligente Vorschläge
+
+---
+
+## [v0.13.0] — 2026-03-29
+
+### Hinzugefügt
+- **Tab 1 Stammdaten** — Komplett neu aufgebaut mit 5-Tab-Dialog
+- ProjectEditDialog mit TabControl: Stammdaten, Bauwerk, Beteiligte, Portale+Links, Ordnerstruktur
+- Tab 1: 2-Spalten-Layout (links: Projekt+Auftraggeber+Sonstiges, rechts: Adresse+Verwaltung+Grundstück+Laufzeit)
+- `ProjectType` als String (editierbare Dropdown-Liste aus settings.json, ✎ Button)
+- 📋 und 👤 Icon-Buttons für Firma/Kontakt vorbereitet (disabled)
+- GIS-Buttons neben Verwaltung und Grundstück vorbereitet (disabled)
+- DatePicker für Laufzeit-Felder (Baustart, Gepl. Ende, Tats. Ende)
+- DB-Migration v1.1→v1.2: `project_type` Spalte
+
+### Geändert
+- **Status vereinfacht:** Nur noch Active/Completed (Archived entfernt)
+- StatusColorConverter: Grau-Brush entfernt, Default-Fallback ist Rot
+- Window-Größe auf 900×1100
+
+---
+
 ## [v0.12.7] — 2026-03-29
 
 ### Dokumentation
@@ -71,7 +150,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 ### Hinzugefügt
 - **Settings:** 2-Tab-Einstellungsseite — Tab 1: Projekte + Pfade, Tab 2: Standard-Ordnerstruktur
 - Standard-Ordnerstruktur mit Unterordnern und Präfix ein/aus Schalter
-- Status-Anzeige mit Farbpunkten: Aktiv (grün), Abgeschlossen (rot), Archiviert (grau)
+- Status-Anzeige mit Farbpunkten: Aktiv (grün), Abgeschlossen (rot)
 
 ---
 
@@ -316,6 +395,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 | v0.1.0 | 2026-03-29 | ModuleZeiterfassung | Erstellt |
 | v0.1.0 | 2026-03-29 | ModuleGIS | Erstellt |
 | v0.1.0 | 2026-03-29 | ModulePlanHeader | Erstellt (von Herbert) |
+| v2.0.0 | 2026-03-29 | Changelog | v0.13.0–v0.15.0, Tab 1–4 |
+| v2.0.0 | 2026-03-29 | Backlog | v0.15.0, KI-API-Import, Adressbuch-Trennung |
 
 ---
 

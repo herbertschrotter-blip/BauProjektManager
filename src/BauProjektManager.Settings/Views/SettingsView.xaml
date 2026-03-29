@@ -64,9 +64,14 @@
                         BorderThickness="0" Cursor="Hand"/>
                 <Button Content="Archivieren"
                         Background="#3E3E42" Foreground="#CCCCCC"
-                        Padding="15,8"
+                        Padding="15,8" Margin="0,0,10,0"
                         BorderThickness="0" Cursor="Hand"
                         IsEnabled="False" ToolTip="Kommt in Feature #12"/>
+                <Button Content="Löschen"
+                        Command="{Binding DeleteProjectCommand}"
+                        Background="#C62828" Foreground="White"
+                        Padding="15,8"
+                        BorderThickness="0" Cursor="Hand"/>
             </StackPanel>
 
             <!-- ── Pfade ── -->

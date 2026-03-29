@@ -339,4 +339,40 @@ public partial class SettingsViewModel : ObservableObject
             }
         }
     }
+
+    [RelayCommand]
+    private void DeleteProject()
+    {
+        if (SelectedProject is null) return;
+
+        var result = MessageBox.Show(
+            $"Projekt \"{SelectedProject.Name}\" ({SelectedProject.ProjectNumber}) wirklich löschen?\n\n" +
+            "Das Projekt wird aus der Datenbank entfernt.\n" +
+            "Der Projektordner auf der Festplatte wird NICHT gelöscht.",
+            "Projekt löschen",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        if (result == MessageBoxResult.Yes)
+        {
+            try
+            {
+                var name = SelectedProject.Name;
+                var number = SelectedProject.ProjectNumber;
+
+                _db.DeleteProject(SelectedProject.Id);
+                Projects.Remove(SelectedProject);
+                SelectedProject = null;
+                ExportRegistry();
+                Log.Information("Project deleted: {Name} ({Number})", name, number);
+                RegistryStatus = $"Projekt {name} gelöscht";
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to delete project");
+                MessageBox.Show($"Fehler beim Löschen: {ex.Message}", "Fehler",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+    }
 }

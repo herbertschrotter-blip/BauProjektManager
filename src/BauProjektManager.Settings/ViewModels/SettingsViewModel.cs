@@ -482,7 +482,8 @@ public partial class SettingsViewModel : ObservableObject
                 int index = Projects.IndexOf(SelectedProject);
                 if (index >= 0)
                 {
-                    Projects[index] = dialog.Project;
+                    Projects.RemoveAt(index);
+                    Projects.Insert(index, dialog.Project);
                     SelectedProject = dialog.Project;
                 }
                 ExportRegistry();

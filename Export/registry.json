@@ -1,6 +1,6 @@
 {
   "registryVersion": "1.0",
-  "generatedAt": "2026-03-29T06:10:17",
+  "generatedAt": "2026-03-29T06:14:11",
   "planTypes": [
     "Polierplan",
     "Schalungsplan",
@@ -18,7 +18,7 @@
     {
       "id": "proj_001",
       "projectNumber": "202512",
-      "name": "\u00D6WG Dobl-Zwaring1",
+      "name": "\u00D6WG Dobl-Zwaring",
       "fullName": "gro\u00DF klein",
       "status": "active",
       "clientCompany": "",

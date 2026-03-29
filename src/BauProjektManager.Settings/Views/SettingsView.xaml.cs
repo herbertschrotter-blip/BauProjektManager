@@ -123,4 +123,30 @@ public partial class SettingsView : UserControl
     {
         if (DataContext is SettingsViewModel vm) vm.TemplateTogglePrefixCommand.Execute(null);
     }
+
+    private void OnBrowseBasePath(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFolderDialog
+        {
+            Title = "Arbeitsordner wählen"
+        };
+
+        if (dialog.ShowDialog() == true && DataContext is SettingsViewModel vm)
+        {
+            vm.UpdateBasePath(dialog.FolderName);
+        }
+    }
+
+    private void OnBrowseArchivePath(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFolderDialog
+        {
+            Title = "Archivordner wählen"
+        };
+
+        if (dialog.ShowDialog() == true && DataContext is SettingsViewModel vm)
+        {
+            vm.UpdateArchivePath(dialog.FolderName);
+        }
+    }
 }

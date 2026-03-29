@@ -499,6 +499,24 @@ public partial class SettingsViewModel : ObservableObject
         }
     }
 
+    public void UpdateBasePath(string path)
+    {
+        var settings = _settingsService.Load();
+        settings.BasePath = path;
+        _settingsService.Save(settings);
+        BasePath = path;
+        Log.Information("BasePath changed to {Path}", path);
+    }
+
+    public void UpdateArchivePath(string path)
+    {
+        var settings = _settingsService.Load();
+        settings.ArchivePath = path;
+        _settingsService.Save(settings);
+        ArchivePath = path;
+        Log.Information("ArchivePath changed to {Path}", path);
+    }
+
     [RelayCommand]
     private void DeleteProject()
     {

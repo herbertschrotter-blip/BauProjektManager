@@ -1,8 +1,8 @@
 ﻿# BauProjektManager — Dependency Map
 
 **Erstellt:** 29.03.2026  
-**Version:** 1.0  
-**Basis:** Solution v0.12.4, Architektur v1.4
+**Version:** 2.0  
+**Basis:** Solution v0.15.0, DB-Schema v1.5
 
 ---
 
@@ -51,8 +51,8 @@ App             → referenziert alles (DI verdrahtet hier)
 | Projekt | Typ | NuGet-Pakete | Verantwortung |
 |---------|-----|-------------|---------------|
 | **App** | WPF EXE | Microsoft.Extensions.DI | Shell, MainWindow, DI-Container, App.xaml |
-| **Domain** | Class Library | *keine* | Project, Client, Building, Location, Timeline, AppSettings, FolderTemplateEntry, Enums, Interfaces |
-| **Infrastructure** | Class Library | Microsoft.Data.Sqlite, Serilog, System.Text.Json | SqliteConnectionFactory, ProjectRepository, RegistryJsonExporter, SettingsService, ProjectFolderService, SerilogSetup |
+| **Domain** | Class Library | *keine* | Project, Client, BuildingPart, BuildingLevel, ProjectParticipant, ProjectLink, Location, Timeline, AppSettings (ProjectTypes, BuildingTypes, LevelNames, ParticipantRoles, PortalTypes, FolderTemplate), Enums, Interfaces |
+| **Infrastructure** | Class Library | Microsoft.Data.Sqlite, Serilog, System.Text.Json | ProjectDatabase (Schema v1.5: projects, clients, building_parts, building_levels, project_participants, project_links), RegistryJsonExporter, AppSettingsService, ProjectFolderService, SerilogSetup |
 | **Settings** | WPF Class Library | CommunityToolkit.Mvvm | SettingsViewModel, ProjectEditViewModel, SettingsView.xaml, ProjectEditDialog.xaml |
 | **PlanManager** | WPF Class Library | CommunityToolkit.Mvvm | (V1 Kern — noch in Entwicklung) FileParser, ImportService, Profile, Wizard |
 
@@ -66,6 +66,7 @@ Jedes wird ein eigenes WPF Class Library Projekt, referenziert Domain + Infrastr
 - `BauProjektManager.Foto` — Viewer, Tags, Geodaten
 - `BauProjektManager.Outlook` — COM Interop, Anhänge
 - `BauProjektManager.Wetter` — API pro Baustelle
+- `BauProjektManager.KiAssistent` — LV-Analyse, Dokumentensuche, ChatGPT/Claude API
 
 ---
 
@@ -113,11 +114,11 @@ Jedes wird ein eigenes WPF Class Library Projekt, referenziert Domain + Infrastr
 │                                                                 │
 │    - - - - - - - - GEPLANT - - - - - - - -                     │
 │                                                                 │
-│    ┌──────────────┐   ┌──────────────┐                          │
-│    │ Outlook COM  │   │ Mobile PWA   │                          │
-│    │ (Anhänge →   │   │ (Graph API   │                          │
-│    │  _Eingang)   │   │  oder LAN)   │                          │
-│    └──────────────┘   └──────────────┘                          │
+│    ┌──────────────┐   ┌──────────────┐   ┌──────────────┐      │
+│    │ Outlook COM  │   │ Mobile PWA   │   │ KI-API       │      │
+│    │ (Anhänge →   │   │ (Graph API   │   │ (ChatGPT /   │      │
+│    │  _Eingang)   │   │  oder LAN)   │   │  Claude)     │      │
+│    └──────────────┘   └──────────────┘   └──────────────┘      │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -174,7 +175,7 @@ Jedes wird ein eigenes WPF Class Library Projekt, referenziert Domain + Infrastr
 | Microsoft Excel | Optional | Nur für Zeiterfassung (ClosedXML braucht kein Excel) |
 | Microsoft Outlook | Optional | Nur für Outlook-COM-Modul (nach V1) |
 | Microsoft Word | Optional | Nur für Vorlagen-Modul (nach V1) |
-| Internet | Optional | Nur für Wetter-API und Mobile PWA |
+| Internet | Optional | Für Wetter-API, Mobile PWA und KI-API (ChatGPT/Claude) |
 
 ---
 

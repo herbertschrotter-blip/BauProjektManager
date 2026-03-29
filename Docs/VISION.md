@@ -146,9 +146,13 @@ Kollegen in der Firma sollen BPM selbst öffnen und nutzen können — nicht nur
 │  │  Anhänge)   │ │  Baustelle) │ │  Projektdaten)       │  │
 │  └─────────────┘ └─────────────┘ └──────────────────────┘  │
 │                                                             │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │ Mobile PWA (Bautagebuch + Plan-Viewer, offline)     │   │
-│  └──────────────────────────────────────────────────────┘   │
+│  ┌─────────────┐ ┌──────────────────────────────────────┐   │
+│  │ KI-Assistent│ │ Mobile PWA                           │   │
+│  │ (LV-Analyse,│ │ (Bautagebuch + Plan-Viewer,          │   │
+│  │  Dokumente, │ │  offline)                            │   │
+│  │  ChatGPT/   │ └──────────────────────────────────────┘   │
+│  │  Claude API)│                                            │
+│  └─────────────┘                                            │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -175,6 +179,7 @@ Kollegen in der Firma sollen BPM selbst öffnen und nutzen können — nicht nur
 | **Outlook** | Anhänge manuell speichern | Automatisch in `_Eingang` extrahieren, Projektordner sync |
 | **Wetter** | Manuell nachschlagen | Automatisch pro Baustelle, Betonierfreigabe |
 | **Vorlagen** | Excel/Word manuell befüllen | Projektdaten automatisch in Vorlagen einfügen |
+| **KI-Assistent** | LV-Analyse und Dokumentensuche manuell und langsam | Fach-KI analysiert Projektdokumente, erkennt Risiken, findet Positionen (ChatGPT/Claude API) |
 | **Mobile** | Kein Zugriff auf der Baustelle | Bautagebuch + Pläne am Handy, offline-fähig |
 
 ---
@@ -218,6 +223,8 @@ Das Dashboard ist die zentrale Ansicht, in der alles zusammenläuft. Sidebar zei
 
 **Konfigurierbare Toolbar:** Programme direkt starten (AutoCAD, Excel, Outlook, Leica Infinity). Konfigurierbar in Einstellungen.
 
+**KI-Assistent:** Frage zu LV, Plänen oder Baubeschreibung stellen — KI durchsucht Projektdokumente und liefert strukturierte Antworten mit Quellenangaben. ChatGPT oder Claude API (konfigurierbar).
+
 **Wetter-Widget:** Aktuelles Wetter und Vorhersage für die Baustellenadresse.
 
 **Bautagebuch-Status:** Heutiger Eintrag begonnen? Letzte Einträge.
@@ -238,6 +245,7 @@ Diese Prinzipien gelten für alle zukünftigen Module und Entscheidungen:
 | **Stabilität vor Features** | Lieber weniger Module die funktionieren als viele halbfertige |
 | **GUI-only** | Kein Terminal, keine Kommandozeile. Alles über die Oberfläche |
 | **Schrittweise** | Ein Feature nach dem anderen. Testen nach jedem Schritt |
+| **KI-gestützt** | Datenextraktion aus Dokumenten per KI-API (ChatGPT/Claude), konfigurierbar in Einstellungen |
 
 ---
 

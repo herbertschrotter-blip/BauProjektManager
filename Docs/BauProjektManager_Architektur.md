@@ -1,6 +1,6 @@
 ﻿# BauProjektManager — Architektur & Spezifikation
 
-**Version:** 1.5.0  
+**Version:** 2.0.0  
 **Datum:** 29.03.2026  
 **Sprache:** C# (.NET 10 LTS), WPF (XAML), MVVM  
 **Frameworks:** CommunityToolkit.Mvvm, Serilog, ClosedXML, PdfPig, QuestPDF  
@@ -63,8 +63,9 @@ BauProjektManager.exe
 | **Outlook** | COM Interop, Anhänge extrahieren | Nach V1 | [Konzepte/ModuleOutlook.md](Konzepte/ModuleOutlook.md) |
 | **Wetter** | API-Anbindung pro Baustelle | Nach V1 | [Konzepte/ModuleWetter.md](Konzepte/ModuleWetter.md) |
 | **Vorlagen** | Excel/Word mit Projektdaten befüllen | Nach V1 | [Konzepte/ModuleVorlagen.md](Konzepte/ModuleVorlagen.md) |
-| **Plankopf-Extraktion** | Revisionstabelle aus PDF lesen (PdfPig) | Nach V1 | [Konzepte/Moduleplanheader.md](Konzepte/Moduleplanheader.md) |
+| **Plankopf-Extraktion** | Revisionstabelle aus PDF lesen (PdfPig), KI-API | Nach V1 | [Konzepte/Moduleplanheader.md](Konzepte/Moduleplanheader.md) |
 | **GIS-Integration** | Katasterdaten, Koordinaten automatisch befüllen | Nach V1 | [Konzepte/ModuleGIS.md](Konzepte/ModuleGIS.md) |
+| **KI-Assistent** | LV-Analyse, Dokumentensuche, ChatGPT/Claude API | Nach V1 | [Konzepte/ModuleKiAssistent.md](Konzepte/ModuleKiAssistent.md) |
 | **Mobile PWA** | Bautagebuch + Plan-Viewer am Handy | Nach V1 | BPM-Mobile-Konzept.md |
 
 ### 1.4 Externe Anbindungen
@@ -321,7 +322,7 @@ public class Client
     public string Notes { get; set; }
 }
 
-public enum ProjectStatus { Active, Completed, Archived }
+public enum ProjectStatus { Active, Completed }
 ```
 
 **ID-Schema:** Auto-Increment aus SQLite mit Präfix: `proj_001`, `client_001`, `bldg_001`. IDs werden nie wiederverwendet. (ADR-006)
@@ -675,16 +676,20 @@ BauProjektManager.sln
 │   │   │   ├── ProjectLocation.cs             ← ✅ Implementiert
 │   │   │   ├── ProjectTimeline.cs             ← ✅ Implementiert
 │   │   │   ├── ProjectPaths.cs                ← ✅ Implementiert
-│   │   │   ├── Building.cs                    ← ✅ Implementiert
+│   │   │   ├── Building.cs                    ← ✅ (Legacy, noch vorhanden)
+│   │   │   ├── BuildingPart.cs                ← ✅ Implementiert (v0.13.1)
+│   │   │   ├── BuildingLevel.cs               ← ✅ Implementiert (v0.13.1)
+│   │   │   ├── ProjectParticipant.cs          ← ✅ Implementiert (v0.14.0)
+│   │   │   ├── ProjectLink.cs                 ← ✅ Implementiert (v0.15.0)
 │   │   │   ├── Client.cs                      ← ✅ Implementiert
-│   │   │   └── AppSettings.cs                 ← ✅ Implementiert
+│   │   │   └── AppSettings.cs                 ← ✅ (ProjectTypes, BuildingTypes, LevelNames, ParticipantRoles, PortalTypes, FolderTemplate)
 │   │   ├── Enums/
 │   │   │   └── ProjectStatus.cs               ← ✅ Implementiert
 │   │   └── BauProjektManager.Domain.csproj    ← KEINE Abhängigkeiten
 │   │
 │   ├── BauProjektManager.Infrastructure/     ← Technische Umsetzung
 │   │   ├── Persistence/
-│   │   │   ├── ProjectDatabase.cs             ← ✅ SQLite CRUD (Projekte, Clients, Buildings)
+│   │   │   ├── ProjectDatabase.cs             ← ✅ SQLite CRUD Schema v1.5 (projects, clients, building_parts, building_levels, project_participants, project_links)
 │   │   │   ├── AppSettingsService.cs           ← ✅ settings.json laden/speichern
 │   │   │   ├── RegistryJsonExporter.cs        ← ✅ SQLite → JSON Export
 │   │   │   └── ProjectFolderService.cs        ← ✅ Ordner erstellen
@@ -725,7 +730,8 @@ BauProjektManager.sln
         ├── Moduleplanheader.md
         ├── ModuleVorlagen.md
         ├── ModuleWetter.md
-        └── ModuleZeiterfassung.md
+        ├── ModuleZeiterfassung.md
+        └── ModuleKiAssistent.md
 ```
 
 **Dependency-Regel (eisern):**
@@ -769,6 +775,10 @@ Zusammenfassung der wichtigsten Entscheidungen:
 | **Multi-User** | Write-Lock mit Heartbeat | ADR-020 |
 | **Client** | Eigene Entität (nicht nur String) | ADR-021 |
 | **Segment-Parsing** | Trennzeichen-basiert | ADR-022 |
+| **Adressbuch** | Getrennt von Projekt-Beteiligten | ADR-024 |
+| **Status** | Nur Active + Completed | ADR-025 |
+| **Portal-Typen** | Editierbare Liste | ADR-026 |
+| **KI-API-Import** | ChatGPT/Claude für Datenextraktion | ADR-027 |
 
 ---
 
@@ -813,6 +823,7 @@ Planlisten Import/Export, Adressbuch, Schnellsuche. Details siehe [BACKLOG.md](B
 8. Wetter API
 9. Mobile PWA
 10. Vorlagen
+11. KI-Assistent (LV-Analyse, Dokumentensuche)
 
 Detaillierte Feature-Liste mit Status: siehe [BACKLOG.md](BACKLOG.md).
 
@@ -866,7 +877,7 @@ Bevor ein Feature als "fertig" gilt:
 
 ---
 
-*Dokument Version 1.5.0 — 29.03.2026*
+*Dokument Version 2.0.0 — 29.03.2026*
 
 *Kernänderungen gegenüber v1.4:*
 - *Header: Verwandte Dokumente (ADR, Vision, Dependency Map, Changelog, BACKLOG) verlinkt*
@@ -881,3 +892,11 @@ Bevor ein Feature als "fertig" gilt:
 - *Kapitel 12: Roadmap mit ✅ Status für erledigte Features, Nach-V1 Prio-Liste*
 - *Kapitel 17: Offene Punkte entfernt (teilweise erledigt, Rest in BACKLOG)*
 - *Fußtext: .NET 10 LTS (nicht mehr .NET 8), korrekte Änderungsliste*
+
+*Kernänderungen v1.5.0 → v2.0.0:*
+- *Kapitel 1.3: KI-Assistent Modul hinzugefügt*
+- *Kapitel 3.2: ProjectStatus vereinfacht (Active + Completed, kein Archived)*
+- *Kapitel 10: Neue Domain-Models (BuildingPart, BuildingLevel, ProjectParticipant, ProjectLink), DB Schema v1.5*
+- *Kapitel 10: Konzepte/ModuleKiAssistent.md hinzugefügt*
+- *Kapitel 11: ADR-024 bis ADR-027 verlinkt*
+- *Kapitel 12: KI-Assistent in Nach-V1 Prio-Liste*

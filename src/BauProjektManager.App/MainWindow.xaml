@@ -7,7 +7,7 @@
         WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="220"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
@@ -16,26 +16,26 @@
         </Grid.RowDefinitions>
 
         <!-- Sidebar -->
-        <Border Grid.Column="0" Grid.Row="0" Background="#2D2D30">
+        <Border Grid.Column="0" Grid.Row="0" Background="{StaticResource BpmBgElevated}">
             <StackPanel Margin="0,10,0,0">
                 <TextBlock Text="BauProjektManager"
                            FontSize="14" FontWeight="Bold"
-                           Foreground="White"
+                           Foreground="{StaticResource BpmTextBright}"
                            Margin="15,5,15,15"/>
                 <Button x:Name="BtnPlans" Content="📁 Pläne"
                         Click="OnNavigate" Tag="Plans"
-                        Style="{StaticResource NavButtonStyle}"/>
+                        Style="{StaticResource BpmButtonNav}"/>
                 <Button x:Name="BtnSettings" Content="⚙ Einstellungen"
                         Click="OnNavigate" Tag="Settings"
-                        Style="{StaticResource NavButtonStyle}"/>
+                        Style="{StaticResource BpmButtonNav}"/>
             </StackPanel>
         </Border>
 
         <!-- Content Area -->
-        <Border Grid.Column="1" Grid.Row="0" Background="#1E1E1E">
+        <Border Grid.Column="1" Grid.Row="0" Background="{StaticResource BpmBgBase}">
             <ContentControl x:Name="ContentArea" Margin="20">
                 <TextBlock Text="Willkommen im BauProjektManager"
-                           FontSize="20" Foreground="#CCCCCC"
+                           Style="{StaticResource BpmHeading1}"
                            VerticalAlignment="Center"
                            HorizontalAlignment="Center"/>
             </ContentControl>
@@ -43,10 +43,11 @@
 
         <!-- Statusleiste -->
         <Border Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1"
-                Background="#007ACC">
+                Background="{StaticResource BpmAccentPrimary}">
             <TextBlock x:Name="StatusText"
                        Text="Bereit | Kein Projekt geladen"
-                       Foreground="White"
+                       Foreground="{StaticResource BpmTextOnAccent}"
+                       Style="{StaticResource BpmSmallText}"
                        VerticalAlignment="Center" Margin="10,0"/>
         </Border>
     </Grid>

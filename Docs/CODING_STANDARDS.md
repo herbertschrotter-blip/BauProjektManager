@@ -1119,7 +1119,20 @@ DeletePlan(plan);  // Kommentar passt nicht zum Code!
 <TextBlock Text="{Binding ProjectName}"/>
 ```
 
-### 10.3 Styles & Resources
+### 10.3 UI-Naming-Konventionen
+
+| Element | Konvention | Beispiel |
+|---------|-----------|---------|
+| View (XAML) | `<Modul><Funktion>View.xaml` | `SettingsView.xaml`, `PlanManagerView.xaml` |
+| Dialog (XAML) | `<Funktion>Dialog.xaml` | `ProjectEditDialog.xaml`, `ImportPreviewDialog.xaml` |
+| ViewModel | `<Funktion>ViewModel.cs` | `SettingsViewModel.cs`, `ProjectEditViewModel.cs` |
+| UserControl | `<Funktion>Control.xaml` | `ProjectListControl.xaml`, `RibbonControl.xaml` |
+| Style-Key | `Bpm<Typ><Variante>` | `BpmButtonPrimary`, `BpmTextBoxDefault` |
+| Color-Key | `Bpm<Zweck>` | `BpmAccentPrimary`, `BpmBgSurface`, `BpmTextSecondary` |
+
+### 10.4 Resource Dictionary Struktur
+
+Alle Farben, Styles und Templates in zentralen Resource Dictionaries:
 
 ```xml
 <!-- Resources/Styles.xaml -->
@@ -1440,4 +1453,5 @@ var result = heavyOperation.Result;          // NIEMALS!
 ---
 
 *Diese Standards gelten für alle C#/WPF-Dateien im BauProjektManager-Projekt.*  
-*Claude verwendet diese Standards automatisch beim Code-Generieren.*
+*Claude verwendet diese Standards automatisch beim Code-Generieren.*  
+*Für UI-Design-Regeln (Farben, Spacing, Komponenten-Verhalten) siehe `Docs/UI_UX_Guidelines.md`.*

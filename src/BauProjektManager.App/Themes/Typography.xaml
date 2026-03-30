@@ -1,0 +1,91 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!-- ═══════════════════════════════════════════════════════════
+         BauProjektManager — Typography.xaml
+         Version: 1.0 | Datum: 30.03.2026
+         Referenz: Docs/UI_UX_Guidelines.md Kapitel 4
+         Schriftart: Segoe UI (Windows Standard)
+         ═══════════════════════════════════════════════════════════ -->
+
+    <!-- ── Schriftart ──────────────────────────────────────────── -->
+    <FontFamily x:Key="BpmFontFamily">Segoe UI</FontFamily>
+
+    <!-- ── Heading 1: Seitenüberschriften ──────────────────────── -->
+    <Style x:Key="BpmHeading1" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource BpmFontFamily}"/>
+        <Setter Property="FontSize" Value="24"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource BpmTextBright}"/>
+        <Setter Property="Margin" Value="0,0,0,16"/>
+    </Style>
+
+    <!-- ── Heading 2: Abschnittsüberschriften ──────────────────── -->
+    <Style x:Key="BpmHeading2" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource BpmFontFamily}"/>
+        <Setter Property="FontSize" Value="18"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource BpmTextBright}"/>
+        <Setter Property="Margin" Value="0,0,0,12"/>
+    </Style>
+
+    <!-- ── Heading 3: Gruppenüberschriften, Dialog-Titel ───────── -->
+    <Style x:Key="BpmHeading3" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource BpmFontFamily}"/>
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Foreground" Value="{StaticResource BpmTextBright}"/>
+        <Setter Property="Margin" Value="0,0,0,8"/>
+    </Style>
+
+    <!-- ── Body: Standard-Text ─────────────────────────────────── -->
+    <Style x:Key="BpmBodyText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource BpmFontFamily}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Foreground" Value="{StaticResource BpmTextPrimary}"/>
+    </Style>
+
+    <!-- ── Body Bold: Hervorgehobene Werte ─────────────────────── -->
+    <Style x:Key="BpmBodyBold" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource BpmFontFamily}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource BpmTextPrimary}"/>
+    </Style>
+
+    <!-- ── Label: Feld-Labels, Tabs, Sidebar ───────────────────── -->
+    <Style x:Key="BpmLabel" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource BpmFontFamily}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Foreground" Value="{StaticResource BpmTextSecondary}"/>
+    </Style>
+
+    <!-- ── Small: Statusleiste, Tooltips ───────────────────────── -->
+    <Style x:Key="BpmSmallText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource BpmFontFamily}"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Foreground" Value="{StaticResource BpmTextSecondary}"/>
+    </Style>
+
+    <!-- ── Caption: Fußnoten, Version ──────────────────────────── -->
+    <Style x:Key="BpmCaption" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource BpmFontFamily}"/>
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Foreground" Value="{StaticResource BpmTextSecondary}"/>
+    </Style>
+
+    <!-- ── Error-Text: Validierungsfehler ──────────────────────── -->
+    <Style x:Key="BpmErrorText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource BpmFontFamily}"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Foreground" Value="{StaticResource BpmError}"/>
+        <Setter Property="Margin" Value="0,2,0,0"/>
+    </Style>
+
+</ResourceDictionary>

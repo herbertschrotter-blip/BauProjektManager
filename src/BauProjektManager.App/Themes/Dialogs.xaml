@@ -1,0 +1,141 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ═══════════════════════════════════════════════════════════
+         BauProjektManager — Dialogs.xaml
+         Version: 1.0 | Datum: 30.03.2026
+         Referenz: Docs/UI_UX_Guidelines.md Kapitel 8.4, 8.6
+         ═══════════════════════════════════════════════════════════ -->
+
+    <!-- ── Dialog Window Style ─────────────────────────────────── -->
+    <Style x:Key="BpmDialogWindow" TargetType="Window">
+        <Setter Property="Background" Value="{StaticResource BpmBgBase}"/>
+        <Setter Property="Foreground" Value="{StaticResource BpmTextPrimary}"/>
+        <Setter Property="FontFamily" Value="{StaticResource BpmFontFamily}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="WindowStartupLocation" Value="CenterOwner"/>
+        <Setter Property="ShowInTaskbar" Value="False"/>
+        <Setter Property="ResizeMode" Value="CanResizeWithGrip"/>
+    </Style>
+
+    <!-- ── Dialog Header (Titelzeile) ──────────────────────────── -->
+    <Style x:Key="BpmDialogHeader" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource BpmBgElevated}"/>
+        <Setter Property="Padding" Value="16,12"/>
+    </Style>
+
+    <!-- ── Dialog Footer (Button-Zeile) ────────────────────────── -->
+    <Style x:Key="BpmDialogFooter" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource BpmBgSurface}"/>
+        <Setter Property="Padding" Value="16,10"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BpmBorderSubtle}"/>
+        <Setter Property="BorderThickness" Value="0,1,0,0"/>
+    </Style>
+
+    <!-- ── Dialog Schließen-Button (✕ oben rechts) ─────────────── -->
+    <Style x:Key="BpmDialogCloseButton" TargetType="Button"
+           BasedOn="{StaticResource BpmButtonGhost}">
+        <Setter Property="Content" Value="✕"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="MinWidth" Value="0"/>
+        <Setter Property="MinHeight" Value="0"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+    </Style>
+
+    <!-- ── TabControl Style ────────────────────────────────────── -->
+    <Style x:Key="BpmTabControl" TargetType="TabControl">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+    </Style>
+
+    <!-- ── TabItem Style (Unterstrich-Tabs) ────────────────────── -->
+    <Style x:Key="BpmTabItem" TargetType="TabItem">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource BpmTextSecondary}"/>
+        <Setter Property="FontFamily" Value="{StaticResource BpmFontFamily}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Padding" Value="16,8"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TabItem">
+                    <Border x:Name="TabBorder"
+                            Padding="{TemplateBinding Padding}"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            BorderThickness="0,0,0,2">
+                        <ContentPresenter ContentSource="Header"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="TabBorder" Property="BorderBrush"
+                                    Value="{StaticResource BpmAccentPrimary}"/>
+                            <Setter Property="Foreground"
+                                    Value="{StaticResource BpmTextBright}"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground"
+                                    Value="{StaticResource BpmTextPrimary}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ── Separator (vertikale Trennlinie, z.B. in Toolbar) ──── -->
+    <Style x:Key="BpmSeparatorVertical" TargetType="Separator">
+        <Setter Property="Width" Value="1"/>
+        <Setter Property="Margin" Value="8,4"/>
+        <Setter Property="Background" Value="{StaticResource BpmBorderDefault}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Separator">
+                    <Border Background="{TemplateBinding Background}"
+                            Width="{TemplateBinding Width}"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ── Separator (horizontale Trennlinie) ──────────────────── -->
+    <Style x:Key="BpmSeparatorHorizontal" TargetType="Separator">
+        <Setter Property="Height" Value="1"/>
+        <Setter Property="Margin" Value="0,8"/>
+        <Setter Property="Background" Value="{StaticResource BpmBorderSubtle}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Separator">
+                    <Border Background="{TemplateBinding Background}"
+                            Height="{TemplateBinding Height}"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ── Card/Panel Style ────────────────────────────────────── -->
+    <Style x:Key="BpmCard" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource BpmBgSurface}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BpmBorderDefault}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="3"/>
+        <Setter Property="Padding" Value="16"/>
+    </Style>
+
+    <!-- ── ToolTip Style ───────────────────────────────────────── -->
+    <Style x:Key="BpmToolTip" TargetType="ToolTip">
+        <Setter Property="Background" Value="{StaticResource BpmBgElevated}"/>
+        <Setter Property="Foreground" Value="{StaticResource BpmTextPrimary}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BpmBorderDefault}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="FontFamily" Value="{StaticResource BpmFontFamily}"/>
+        <Setter Property="FontSize" Value="11"/>
+    </Style>
+
+</ResourceDictionary>

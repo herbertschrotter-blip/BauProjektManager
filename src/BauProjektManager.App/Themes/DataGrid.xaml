@@ -1,0 +1,96 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ═══════════════════════════════════════════════════════════
+         BauProjektManager — DataGrid.xaml
+         Version: 1.0 | Datum: 30.03.2026
+         Referenz: Docs/UI_UX_Guidelines.md Kapitel 8.3
+         ═══════════════════════════════════════════════════════════ -->
+
+    <!-- ── DataGrid Default Style ──────────────────────────────── -->
+    <Style x:Key="BpmDataGrid" TargetType="DataGrid">
+        <Setter Property="Background" Value="{StaticResource BpmBgBase}"/>
+        <Setter Property="Foreground" Value="{StaticResource BpmTextPrimary}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BpmBorderDefault}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="RowBackground" Value="{StaticResource BpmBgBase}"/>
+        <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+        <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource BpmBorderSubtle}"/>
+        <Setter Property="HeadersVisibility" Value="Column"/>
+        <Setter Property="AutoGenerateColumns" Value="False"/>
+        <Setter Property="IsReadOnly" Value="True"/>
+        <Setter Property="SelectionMode" Value="Single"/>
+        <Setter Property="CanUserResizeRows" Value="False"/>
+        <Setter Property="CanUserReorderColumns" Value="False"/>
+        <Setter Property="FontFamily" Value="{StaticResource BpmFontFamily}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="RowHeight" Value="36"/>
+    </Style>
+
+    <!-- ── DataGrid mit Zebrastreifen (Alternative) ────────────── -->
+    <Style x:Key="BpmDataGridZebra" TargetType="DataGrid"
+           BasedOn="{StaticResource BpmDataGrid}">
+        <Setter Property="AlternatingRowBackground" Value="{StaticResource BpmBgElevated}"/>
+    </Style>
+
+    <!-- ── Column Header ───────────────────────────────────────── -->
+    <Style x:Key="BpmDataGridColumnHeader" TargetType="DataGridColumnHeader">
+        <Setter Property="Background" Value="{StaticResource BpmBgSurface}"/>
+        <Setter Property="Foreground" Value="{StaticResource BpmTextBright}"/>
+        <Setter Property="FontFamily" Value="{StaticResource BpmFontFamily}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BpmBorderSubtle}"/>
+        <Setter Property="BorderThickness" Value="0,0,1,1"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+    </Style>
+
+    <!-- ── Row Style (Hover + Selection) ───────────────────────── -->
+    <Style x:Key="BpmDataGridRow" TargetType="DataGridRow">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource BpmTextPrimary}"/>
+        <Setter Property="FontFamily" Value="{StaticResource BpmFontFamily}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{StaticResource BpmBgHover}"/>
+            </Trigger>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="{StaticResource BpmBgActive}"/>
+                <Setter Property="Foreground" Value="{StaticResource BpmTextBright}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- ── Cell Style ──────────────────────────────────────────── -->
+    <Style x:Key="BpmDataGridCell" TargetType="DataGridCell">
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Foreground" Value="{StaticResource BpmTextPrimary}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DataGridCell">
+                    <Border Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}">
+                        <ContentPresenter VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="{StaticResource BpmTextBright}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- ── Sekundärer Text in Zellen (z.B. Pfade, Hinweise) ───── -->
+    <Style x:Key="BpmDataGridCellSecondary" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource BpmTextSecondary}"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+</ResourceDictionary>

@@ -110,7 +110,70 @@ Statt 40 Spalten pro Messung → **5 Felder im Bautagebuch:**
 | **Bautagebuch** | Tätigkeit + Menge pro Tag | Bautagebuch-Modul |
 | **Zeiterfassung** | Wer war da, wie viele Stunden | Zeiterfassungs-Modul |
 | **Leistungskatalog** | Erfahrungswerte (h/Einheit pro Tätigkeit) | Kalkulation (NEU) |
-| **LV der neuen Baustelle** | Positionen + Massen | KI-Import oder Excel |
+| **LV der neuen Baustelle** | Positionen + Massen | LV-Import (siehe 3.6) |
+
+### 3.2a LV-Verknüpfung im Bautagebuch
+
+Professionelle Bautagebuch-Software (bau-mobil, 123erfasst, BauSU) verknüpft die tägliche Leistungserfassung direkt mit LV-Positionen. Der Polier wählt am Handy die LV-Position aus einem Dropdown und gibt die heutige Menge ein — kein Freitext, sondern Zuordnung zur konkreten Position.
+
+**Vorteile der LV-Verknüpfung:**
+- Automatischer Soll-Ist-Vergleich pro Position (LV sagt 850 m², bisher erfasst 620 m², noch 230 m² offen)
+- Nachkalkulation auf Positionsebene (kalkuliert 0,65 h/m², tatsächlich 0,72 h/m²)
+- Nachträge sofort dokumentierbar (Mehrmengen, zusätzliche Leistungen)
+- Baufortschritt in Prozent pro Position automatisch berechenbar
+
+**Praxis-Vereinfachung:** Man muss nicht jede Stunde auf eine LV-Position verteilen — das ist unrealistisch. Stattdessen werden nur die "tragenden Positionen" (die großen Brocken wie Mauerwerk, Schalung, Betonieren) genau erfasst. Kleinpositionen können ignoriert oder pauschal gebucht werden.
+
+**BPM-Umsetzung:**
+1. LV wird importiert (siehe 3.6)
+2. Im Bautagebuch erscheint ein Dropdown mit den LV-Positionen
+3. Polier wählt Position, gibt Menge ein → fertig
+4. BPM rechnet automatisch: erfasste Menge vs. LV-Menge → Fortschritt + Soll-Ist
+
+### 3.6 LV-Import (Leistungsverzeichnis)
+
+Das LV der neuen Baustelle liefert die Positionen und Massen für Bauzeitprognose und Soll-Ist-Vergleich.
+
+**ÖNORM A 2063 (österreichischer Standard):**
+In Österreich regelt die ÖNORM A 2063 den Datenaustausch im AVA-Prozess (Ausschreibung, Vergabe, Abrechnung). Das Format ist XML mit definiertem Schema. Dateierweiterungen: `.ONLV` (Leistungsverzeichnis), `.ONLB` (Leistungsbeschreibung). Die Struktur gliedert sich in: Hauptgruppe (HG) → Obergruppe (OG) → Leistungsgruppe (LG) → Position mit Nummer, Kurztext, Langtext, Menge, Einheit, Einheitspreis. Standardisierte Leistungsbücher: LB-HB (Hochbau), LB-HT (Haustechnik).
+
+**GAEB (deutscher Standard):**
+Das deutsche Pendant zur ÖNORM. Ebenfalls XML-basiert, weit verbreitet im DACH-Raum.
+
+**Drei Import-Wege für BPM (nach Aufwand geordnet):**
+
+| Weg | Aufwand | Beschreibung |
+|-----|---------|-------------|
+| **Excel-Import** | Gering | LV als Excel (.xlsx) importieren — Spalten zuordnen (Position, Text, Menge, Einheit). Poliere bekommen LVs oft als Excel oder Ausdruck. |
+| **KI-Import** | Mittel | PDF des LV an KI-API senden → strukturierte JSON-Antwort mit Positionen und Massen (ADR-027) |
+| **ÖNORM/GAEB-Parser** | Hoch | XML-Schema parsen, nur die Positionsebene (Nummer, Kurztext, Menge, Einheit). Kein voller AVA-Prozess nötig. |
+
+**Empfehlung:** Excel + KI-API zuerst. ÖNORM-Parser als optionale Erweiterung. Die meisten Poliere bekommen das LV sowieso als Ausdruck oder PDF, nicht als ÖNORM-Datenträger. Der volle AVA-Prozess (Angebotskalkulation, Preisspiegel, Rechnungslegung) bleibt bei spezialisierten Tools wie ABK, AUER Success oder BauSU.
+
+**Was BPM vom LV braucht (Minimalset):**
+- Positionsnummer (z.B. "02.03.01")
+- Kurztext (z.B. "Mauerwerk 38er Plan")
+- Menge (z.B. 850)
+- Einheit (z.B. "m²")
+- Optional: Einheitspreis (für Kostenvergleich)
+
+**DB-Tabelle:**
+```sql
+CREATE TABLE lv_positions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id TEXT NOT NULL,
+    position_number TEXT NOT NULL,   -- "02.03.01"
+    short_text TEXT NOT NULL,        -- "Mauerwerk 38er Plan"
+    quantity REAL,                   -- 850
+    unit TEXT,                       -- "m²"
+    unit_price REAL,                 -- optional
+    activity_mapping TEXT,           -- Zuordnung zum Leistungskatalog
+    completed_quantity REAL DEFAULT 0, -- bisher erfasst (aus Bautagebuch)
+    FOREIGN KEY (project_id) REFERENCES projects(id)
+);
+```
+
+---
 
 ### 3.3 Leistungskatalog (automatisch befüllt)
 

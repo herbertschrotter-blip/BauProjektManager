@@ -191,7 +191,7 @@ Kollegen in der Firma sollen BPM selbst öffnen und nutzen können — nicht nur
 | Eigenschaft | PlanRadar / Dalux / BauMaster | BPM |
 |-------------|-------------------------------|-----|
 | Betrieb | Cloud, Abo, Internet nötig | Lokal, offline, kostenlos |
-| Daten | Auf fremden Servern | Eigene Ordner auf eigenem OneDrive |
+| Daten | Auf fremden Servern | Eigene Ordner auf eigenem Cloud-Speicher |
 | Ordnerstruktur | Vorgegeben | Frei konfigurierbar |
 | Plantyp-Muster | Fest oder KI-basiert | Vom User angelernt, transparent |
 | Zielgruppe | Große Firmen, Teams | Polier/Bauleiter, kleine Firmen |
@@ -272,7 +272,7 @@ Diese Prinzipien gelten für alle zukünftigen Module und Entscheidungen:
 | Risiko | Wahrscheinlichkeit | Gegenmaßnahme |
 |--------|-------------------|---------------|
 | Projekt wird zu groß, Motivation sinkt | Mittel | Schrittweise Entwicklung, V1 radikal fokussiert. Jedes Modul bringt sofort Nutzen |
-| OneDrive-Sync verursacht Konflikte | Niedrig | Dreistufige Strategie (ADR-004), SQLite lokal, atomische JSON-Writes |
+| Cloud-Speicher-Sync verursacht Konflikte | Niedrig | Dreistufige Strategie (ADR-004), SQLite lokal, atomische JSON-Writes |
 | .NET 10 hat Kinderkrankheiten | Niedrig | WPF ist seit .NET 5 stabil, LTS-Support bis 2028 |
 | Kollegen nehmen BPM nicht an | Mittel | Einfache GUI, kein Konfigurationsaufwand, sofortiger Nutzen sichtbar |
 | VBA-Makros werden langfristig nicht mehr gebraucht | Niedrig | registry.json ist ein einfacher Export — kann jederzeit entfernt werden |

@@ -1,10 +1,10 @@
 ﻿# BauProjektManager
 
-Modulare Desktop-App für Baustellen-Management in Österreich (Steiermark). Offline-fähig, lokal auf OneDrive, kein Cloud-Abo.
+Modulare Desktop-App für Baustellen-Management in Österreich (Steiermark). Offline-fähig, lokal, Sync über beliebigen Cloud-Speicher (OneDrive, Google Drive, Dropbox etc.), kein Cloud-Abo.
 
 ## Vision
 
-Eine einzige App für den gesamten Arbeitsalltag auf der Baustelle: Pläne sortieren, Fotos verwalten, Bautagebuch führen, Stunden erfassen. Bestehende VBA-Makros lesen eine automatisch generierte Registry.
+Eine einzige App für den gesamten Arbeitsalltag auf der Baustelle: Pläne sortieren, Fotos verwalten, Bautagebuch führen, Stunden erfassen. Sync über beliebigen Cloud-Speicher. Bestehende VBA-Makros lesen eine automatisch generierte Registry.
 
 ```
   BauProjektManager.exe ──→ SQLite (bpm.db)
@@ -20,7 +20,7 @@ Ausführliche Vision: [Docs/VISION.md](Docs/VISION.md)
 
 ## Aktueller Stand
 
-**Version:** v0.12.7 (29.03.2026)
+**Version:** v0.16.0 (30.03.2026)
 
 | Komponente | Status |
 |-----------|--------|
@@ -29,7 +29,9 @@ Ausführliche Vision: [Docs/VISION.md](Docs/VISION.md)
 | SQLite-Datenbank + Auto-IDs | ✅ Erledigt |
 | registry.json Export (VBA-kompatibel) | ✅ Erledigt |
 | Automatische Projektordner-Erstellung | ✅ Erledigt |
-| PlanManager (Pläne sortieren) | ⬜ In Arbeit |
+| ProjectEditDialog (5 Tabs: Stammdaten, Bauwerk, Beteiligte, Portale, Ordner) | ✅ Erledigt |
+| Theme-System (Resource Dictionaries, Dark Theme) | ✅ Erledigt |
+| PlanManager (Pläne sortieren) | ⬜ Nächste Phase |
 
 ## Techstack
 
@@ -64,8 +66,10 @@ BauProjektManager.sln
 
 | Dokument | Inhalt |
 |----------|--------|
-| [Architektur v1.5](Docs/BauProjektManager_Architektur.md) | Technische Spezifikation, Datenmodell, Import-Workflow, GUI-Mockups |
-| [ADR](Docs/ADR.md) | 23 Architekturentscheidungen mit Kontext und Alternativen |
+| [Architektur v2.0](Docs/BauProjektManager_Architektur.md) | Technische Spezifikation, Datenmodell, Import-Workflow, GUI-Mockups |
+| [ADR](Docs/ADR.md) | 34 Architekturentscheidungen mit Kontext und Alternativen |
+| [DB-Schema](Docs/DB-SCHEMA.md) | Zentrales DB-Leitdokument (Ist + geplant, 18 Tabellen) |
+| [UI/UX Guidelines](Docs/UI_UX_Guidelines.md) | Komplettes Design-System (Dark Theme, Token, Komponenten) |
 | [Vision](Docs/VISION.md) | Produktvision, Schmerzpunkte, Zielgruppe, Erfolgskriterien |
 | [Dependency Map](Docs/DEPENDENCY-MAP.md) | Solution-Struktur + externes Ökosystem mit Datenflüssen |
 | [Changelog](Docs/CHANGELOG.md) | Versionshistorie ab v0.0.0 |
@@ -85,6 +89,11 @@ BauProjektManager.sln
 | GIS-Integration | 7 | [ModuleGIS.md](Docs/Konzepte/ModuleGIS.md) |
 | Wetter | 8 | [ModuleWetter.md](Docs/Konzepte/ModuleWetter.md) |
 | Vorlagen | 9 | [ModuleVorlagen.md](Docs/Konzepte/ModuleVorlagen.md) |
+| KI-Assistent | — | [ModuleKiAssistent.md](Docs/Konzepte/ModuleKiAssistent.md) |
+| Task-Management | — | [ModuleTaskManagement.md](Docs/Konzepte/ModuleTaskManagement.md) |
+| Kalkulation | — | [ModuleKalkulation.md](Docs/Konzepte/ModuleKalkulation.md) |
+| Multi-User | — | [MultiUserKonzept.md](Docs/Konzepte/MultiUserKonzept.md) |
+| Lizenzierung | — | [ModuleAktivierungLizenzierung.md](Docs/Konzepte/ModuleAktivierungLizenzierung.md) |
 
 ## Voraussetzungen
 

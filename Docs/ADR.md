@@ -1,8 +1,8 @@
 ﻿# BauProjektManager — Architecture Decision Records (ADR)
 
 **Erstellt:** 29.03.2026  
-**Aktualisiert:** 29.03.2026  
-**Version:** 1.0  
+**Aktualisiert:** 30.03.2026  
+**Version:** 1.1  
 **Kontext:** Alle Entscheidungen aus Architektur-Sessions, Review-Runden (ChatGPT + Claude), und Implementierungs-Chats.
 
 ---
@@ -14,7 +14,7 @@
 | 001 | Modularer Monolith statt Plugin-System | ✅ Entschieden | 2026-03 |
 | 002 | SQLite als System of Record | ✅ Entschieden | 2026-03 |
 | 003 | Internes Domänenmodell vs. flacher VBA-Export | ✅ Entschieden | 2026-03 |
-| 004 | Dreistufige OneDrive-Strategie | ✅ Entschieden | 2026-03 |
+| 004 | Dreistufige Cloud-Sync-Strategie | ✅ Entschieden | 2026-03 |
 | 005 | .NET Version: 8 → 10 LTS | ✅ Entschieden (geändert) | 2026-03 |
 | 006 | Solution-Struktur: 5 Projekte | ✅ Entschieden | 2026-03 |
 | 007 | Plan-Dateien: 1..n pro Revision | ✅ Entschieden | 2026-03 |
@@ -38,6 +38,13 @@
 | 025 | Status vereinfacht: Active + Completed | ✅ Entschieden | 2026-03 |
 | 026 | Portal-Typen als editierbare Liste | ✅ Entschieden | 2026-03 |
 | 027 | KI-API-Import für Datenextraktion | 🟡 Konzept | 2026-03 |
+| 028 | Theme-System mit Resource Dictionaries | ✅ Entschieden | 2026-03 |
+| 029 | Arbeitspaket als zentrales Verbindungskonzept | ✅ Entschieden | 2026-03 |
+| 030 | Abschluss-Erfassung statt Tages-Aufmaß | ✅ Entschieden | 2026-03 |
+| 031 | DB-SCHEMA.md als zentrales Leitdokument | ✅ Entschieden | 2026-03 |
+| 032 | ITaskManagementService — nicht an ClickUp gebunden | 🟡 Konzept | 2026-03 |
+| 033 | Multi-User: 3 Modi (eigene DB, geteilte DB, Server) | 🟡 Konzept | 2026-03 |
+| 034 | Modul-Aktivierung + Offline-Lizenzierung | 🟡 Konzept | 2026-03 |
 
 ---
 
@@ -128,7 +135,7 @@ Das interne C#-Modell ist sauber verschachtelt und stark typisiert (`Project.Loc
 
 ---
 
-## ADR-004: Dreistufige OneDrive-Strategie
+## ADR-004: Dreistufige Cloud-Sync-Strategie
 
 **Datum:** 2026-03  
 **Status:** ✅ Entschieden  
@@ -136,7 +143,7 @@ Das interne C#-Modell ist sauber verschachtelt und stark typisiert (`Project.Loc
 
 **Kontext:**
 
-Herbert arbeitet auf zwei Geräten (PC zuhause, Laptop auf Baustelle), synchronisiert über OneDrive. Die externe Review warnte, dass OneDrive als State-Store riskant sei (Sync-Konflikte, File-Locking, halbfertige Schreibvorgänge). Herbert bestätigte, dass er auf beiden Geräten Pläne sortiert — Profile müssen also synchronisieren.
+Herbert arbeitet auf zwei Geräten (PC zuhause, Laptop auf Baustelle), synchronisiert über Cloud-Speicher. Die externe Review warnte, dass Cloud-Sync als State-Store riskant sei (Sync-Konflikte, File-Locking, halbfertige Schreibvorgänge). Herbert bestätigte, dass er auf beiden Geräten Pläne sortiert — Profile müssen also synchronisieren.
 
 **Entscheidung:**
 
@@ -144,13 +151,15 @@ Dreistufige Trennung:
 
 | Kategorie | Speicherort | Inhalt | Synct? |
 |-----------|-------------|--------|--------|
-| Nutzdaten | OneDrive (Projektordner) | Pläne, Fotos, Dokumente | Ja |
-| Konfiguration | OneDrive (`.AppData/`) | registry.json, settings.json, profiles.json | Ja |
+| Nutzdaten | Cloud-Speicher (Projektordner) | Pläne, Fotos, Dokumente | Ja |
+| Konfiguration | Cloud-Speicher (`.AppData/`) | registry.json, settings.json, profiles.json | Ja |
 | Operativer State | Lokal (`%LocalAppData%`) | SQLite-DBs, Logs, Cache, Undo | Nein |
+
+BPM funktioniert mit jedem Cloud-Speicher der sich als Ordner im Explorer einblendet: OneDrive, Google Drive, Dropbox, Synology Drive, Nextcloud etc. BPM ist **nicht** an OneDrive gebunden.
 
 **Alternativen:**
 
-- *Alles auf OneDrive:* SQLite + OneDrive = Sync-Konflikte. File-Locking-Probleme.
+- *Alles auf Cloud-Speicher:* SQLite + Cloud-Sync = Sync-Konflikte. File-Locking-Probleme.
 - *Alles lokal:* Dann keine Synchronisation zwischen Geräten.
 - *Cloud-DB (z.B. Azure):* Herbert will keine Cloud-Services oder Abos.
 
@@ -158,7 +167,7 @@ Dreistufige Trennung:
 
 - Import-History und Undo-Journal sind geräte-spezifisch (akzeptabel — ein Import läuft auf einem Gerät)
 - Auf dem zweiten Gerät wird der SQLite-Cache beim ersten Scan aus dem Dateisystem neu aufgebaut
-- Atomische JSON-Writes (write-to-temp-then-rename) verhindern halbfertige Dateien auf OneDrive
+- Atomische JSON-Writes (write-to-temp-then-rename) verhindern halbfertige Dateien
 - `.AppData/` Ordner ist Hidden+System, für User unsichtbar
 
 ---
@@ -307,15 +316,15 @@ Beim Anlernen von Plantyp-Mustern gibt es zwei Konzepte: Das verbindliche Profil
 
 **Entscheidung:**
 
-- **RecognitionProfile** = verbindlich pro Projekt/Plantyp, gespeichert in `profiles.json` (OneDrive, pro Projekt)
-- **PatternTemplate** = Vorschlag aus Musterbibliothek, gespeichert in `pattern-templates.json` (OneDrive, global)
+- **RecognitionProfile** = verbindlich pro Projekt/Plantyp, gespeichert in `profiles.json` (Cloud-Speicher, pro Projekt)
+- **PatternTemplate** = Vorschlag aus Musterbibliothek, gespeichert in `pattern-templates.json` (Cloud-Speicher, global)
 
 Beim Anlegen eines neuen Profils vergleicht das System mit bestehenden Templates und schlägt Übernahme vor. Neues Profil wird automatisch als Template gespeichert.
 
 **Konsequenzen:**
 
 - Kein Machine Learning, keine Blackbox — immer User-Bestätigung
-- Templates synchen über OneDrive (auf beiden Geräten gleiche Vorschläge)
+- Templates synchen über Cloud-Speicher (auf beiden Geräten gleiche Vorschläge)
 - Sync-Konfliktrisiko gering (Templates werden selten bearbeitet)
 
 ---
@@ -386,7 +395,7 @@ Jeder Projektordner enthält eine versteckte `.bpm-manifest`-Datei (JSON) mit de
 
 - Robuste Pfad-Erkennung auch nach Umbenennung
 - `.bpm-manifest` hat Hidden-Attribut (nicht für Kollegen sichtbar)
-- Syncht über OneDrive (liegt im Projektordner)
+- Syncht über Cloud-Speicher (liegt im Projektordner)
 - Feature #11 im Backlog (noch nicht implementiert)
 
 ---
@@ -539,8 +548,8 @@ PWA (Progressive Web App) im Browser. Kein App Store nötig, funktioniert auf je
 **Konsequenzen:**
 
 - ASP.NET Minimal API als Backend (oder Microsoft Graph API für OneDrive-Variante)
-- Zwei Sync-Optionen offen gehalten: Option A (OneDrive/Graph API), Option B (lokaler Server im LAN)
-- Desktop-Core muss erst stabil sein (Feature #10, #13, Bautagebuch)
+- Zwei Sync-Optionen offen gehalten: Option A (Cloud/Graph API), Option B (lokaler Server im LAN)
+- Desktop-Core muss erst stabil sein
 - Konzeptdokument: `BPM-Mobile-Konzept.md` v0.3
 
 ---
@@ -751,6 +760,246 @@ Zweistufiger Ansatz:
 - Service-Interface `IKiImportService` mit Implementierungen für Claude und ChatGPT
 - Prompt-Templates als versionierte Ressourcen in der App
 - API-Keys sicher speichern (Windows Credential Manager, nicht in settings.json)
+
+---
+
+## ADR-028: Theme-System mit Resource Dictionaries
+
+**Datum:** 2026-03  
+**Status:** ✅ Entschieden  
+**Herkunft:** Phase 1 Teil 2, UI/UX Review Session
+
+**Kontext:**
+
+Die ersten Views (MainWindow, SettingsView, ProjectEditDialog) hatten alle Farben, Schriftgrößen und Styles direkt in den XAML-Dateien als hardcoded Werte (`#007ACC`, `#2D2D30`, `FontSize="14"`). Bei 5+ Views wurde das unübersichtlich — eine Farbänderung erforderte Suchen/Ersetzen in jeder Datei. Die UI/UX Guidelines v2.0 definierten ein Design-System mit Token, aber die Umsetzung fehlte.
+
+**Entscheidung:**
+
+Zentrales Theme-System mit 5 Resource Dictionaries im Ordner `Themes/` des App-Projekts:
+
+- **Colors.xaml** — Alle Farb-Token als SolidColorBrush (Background, Surface, Text, Accent, Status-Farben)
+- **Typography.xaml** — Schriftgrößen-Stufen (XS bis XXL, Segoe UI)
+- **Buttons.xaml** — Button-Varianten (Primary, Secondary, Danger, Ghost, Nav)
+- **DataGrid.xaml** — Header, Row, Cell, Zebra-Variante
+- **Dialogs.xaml** — Dialog-Basis, Tabs, Cards, Tooltips, Separatoren
+
+Alle Dictionaries werden in `App.xaml` per `MergedDictionaries` geladen. Views verwenden ausschließlich `{StaticResource TokenName}` statt hardcoded Werte.
+
+**Alternativen:**
+
+- *Third-Party Theme (MahApps, Material Design):* Mächtiger, aber externe Abhängigkeit, schwer anzupassen, Overkill für BPM.
+- *Weiter hardcoded:* Funktioniert, aber wird bei wachsender Codebasis unwartbar.
+- *Ein einzelnes großes Styles.xaml:* Weniger Dateien, aber unübersichtlich bei 50+ Styles.
+
+**Konsequenzen:**
+
+- Farbänderungen nur an einer Stelle (Colors.xaml)
+- Konsistentes Aussehen über alle Views
+- Light Theme später einfach als zweites Color-Set möglich
+- Migration der bestehenden Views (SettingsView, ProjectEditDialog) auf Token steht noch aus — erst nach PlanManager
+- CODING_STANDARDS.md um UI-Naming-Konventionen erweitert
+
+---
+
+## ADR-029: Arbeitspaket als zentrales Verbindungskonzept
+
+**Datum:** 2026-03  
+**Status:** ✅ Entschieden  
+**Herkunft:** Phase 1 Teil 2, Kalkulations-Modul Konzept
+
+**Kontext:**
+
+BPM hat mehrere Module die inhaltlich zusammenhängen: Kalkulation (Soll-Mengen), Arbeitseinteilung (wer arbeitet wo), Zeiterfassung (Stunden), Bautagebuch (tägliches Protokoll), Nachkalkulation (Soll/Ist). Die Frage war: Wie verbinden diese Module ihre Daten?
+
+Verglichen wurde mit professionellen Kalkulations-Tools die mit "Vorgängen" oder "Arbeitspaketen" arbeiten. Herbert hat bestehende Excel-Tabellen (Kalkulation_v2.xlsx, 44 Blätter nach LB-H Leistungsgruppen) die als Referenz dienten.
+
+**Entscheidung:**
+
+Das **Arbeitspaket** (`work_packages` Tabelle) ist die zentrale Entität. Ein Arbeitspaket = Bauteil + Geschoß + Tätigkeit + Soll-Menge. Beispiel: "H5 / EG / Mauerwerk 38er / 198 m²".
+
+Alle Module buchen auf Arbeitspakete:
+- Arbeitseinteilung: wer → welches Paket (täglich)
+- Zeiterfassung: Stunden fließen über Zuordnung in Pakete
+- Bautagebuch: Auto-Vorschlag aus zugewiesenen Paketen
+- Nachkalkulation: Soll-Stunden vs. Ist-Stunden pro Paket
+
+Arbeitspaket referenziert bestehende Tabellen `building_parts` und `building_levels` per FK — keine Änderung an bestehender Architektur nötig, nur neue Tabellen.
+
+**Konsequenzen:**
+
+- 7 neue Tabellen geplant (work_packages, work_assignments, employees, time_entries, lv_positions, performance_catalog, project_difficulty)
+- Bestehende Tabellen bleiben unverändert — nur neue FKs zeigen auf sie
+- DB-SCHEMA.md als zentrales Leitdokument (ADR-031)
+- Konzeptdokument: `ModuleKalkulation.md`
+
+---
+
+## ADR-030: Abschluss-Erfassung statt Tages-Aufmaß
+
+**Datum:** 2026-03  
+**Status:** ✅ Entschieden  
+**Herkunft:** Phase 1 Teil 2, Kalkulations-Modul Konzept
+
+**Kontext:**
+
+Professionelle Nachkalkulations-Tools erwarten tägliche Mengenerfassung pro LV-Position (z.B. "heute 12 m² Mauerwerk gemauert"). Herbert hat Erfahrung mit solchen Excel-Tabellen — sie scheitern in der Praxis, weil der Polier auf der Baustelle nicht jeden Abend 40 Spalten befüllen kann. Die Folge: leere Tabellen, geschätzte Werte, wertlose Daten.
+
+**Entscheidung:**
+
+Abschluss-Erfassung statt täglicher Mengenerfassung. Der Polier muss täglich nur eine einfache Sache tun: die Arbeitseinteilung (wer arbeitet an welchem Paket). Die Stunden werden automatisch aus der Zeiterfassung berechnet. Erst wenn ein Arbeitspaket fertig ist ("Mauerwerk H5/EG abgeschlossen"), bestätigt der Polier die tatsächliche Menge. Dann berechnet das System die Leistungswerte (m²/Ah, h/m²) und speichert sie im Erfahrungskatalog.
+
+**Alternativen:**
+
+- *Tägliches Aufmaß:* Theoretisch genauer, in der Praxis undurchführbar. Leere Tabellen nach 2 Wochen.
+- *Gar keine Mengen:* Dann keine Nachkalkulation möglich.
+- *KI-basierte Schätzung:* Zu ungenau, kein Vertrauen in die Daten.
+
+**Konsequenzen:**
+
+- Täglicher Aufwand für Polier: 2 Minuten (Arbeitseinteilung), nicht 20 Minuten (Aufmaß)
+- Genauigkeit auf Arbeitspaket-Ebene (nicht Tagesebene) — reicht für Praxis
+- Erfahrungskatalog wächst automatisch mit jedem abgeschlossenen Paket
+- Konzeptdokument: `ModuleKalkulation.md` Kapitel 6
+
+---
+
+## ADR-031: DB-SCHEMA.md als zentrales Leitdokument
+
+**Datum:** 2026-03  
+**Status:** ✅ Entschieden  
+**Herkunft:** Phase 1 Teil 2
+
+**Kontext:**
+
+Mit wachsender Anzahl an Modulen (Kalkulation, Zeiterfassung, Bautagebuch, Task-Management) und geplanten Tabellen entstand das Risiko, dass DB-Schema-Entwürfe über viele Dokumente verstreut und inkonsistent werden. Jedes Modul-Konzept hatte eigene Tabellen-Entwürfe.
+
+**Entscheidung:**
+
+Ein zentrales Dokument `Docs/DB-SCHEMA.md` ist die **einzige Quelle der Wahrheit** für die gesamte Datenbankstruktur. Modul-Konzepte referenzieren hierher statt eigene Schemas zu definieren. Das Dokument enthält:
+
+1. Implementierte Tabellen mit exaktem SQL
+2. Geplante Tabellen mit SQL-Entwürfen
+3. Beziehungsdiagramm (FK-Übersicht)
+4. Modul-Zuordnung (wer besitzt/schreibt, wer liest)
+5. Schema-Migrationshistorie
+6. Naming-Konventionen
+
+**Konsequenzen:**
+
+- Jede Schema-Änderung wird zuerst in DB-SCHEMA.md geplant
+- Modul-Konzepte verweisen auf DB-SCHEMA.md statt SQL zu wiederholen
+- Keine Inkonsistenzen zwischen Modulen
+- Implementiert als `Docs/DB-SCHEMA.md` (v1.5)
+
+---
+
+## ADR-032: ITaskManagementService — nicht an ClickUp gebunden
+
+**Datum:** 2026-03  
+**Status:** 🟡 Konzept  
+**Herkunft:** Phase 1 Teil 2, ClickUp-Integration Diskussion
+
+**Kontext:**
+
+Herbert nutzt ClickUp für die Materialbestellung auf Baustellen (Bauleiter, Dispo, Lager, Einkauf). Die Frage war: Soll BPM direkt gegen die ClickUp-API bauen, oder eine Abstraktionsschicht verwenden?
+
+**Entscheidung:**
+
+Interface-basierte Architektur. BPM spricht nicht direkt mit ClickUp, sondern mit einem `ITaskManagementService`. Dahinter steckt die konkrete Implementierung. ClickUp ist die erste, aber nicht die einzige.
+
+Geplante Implementierungen:
+- `ClickUpTaskService` — Herberts Setup (erste Implementierung)
+- `AsanaTaskService`, `TrelloTaskService`, `MondayTaskService`, `MicrosoftPlannerTaskService` — Zukunft
+- `LocalTaskService` — Offline-Fallback (nur SQLite, kein externes Tool)
+
+**Alternativen:**
+
+- *Direkt gegen ClickUp-API:* Schneller zu bauen, aber Vendor Lock-in. Andere Firmen nutzen andere Tools.
+- *Kein Task-Integration:* Materialbestellung bleibt komplett im externen Tool. BPM hat keine Übersicht.
+
+**Konsequenzen:**
+
+- In Systemeinstellungen: Dropdown "Welches Projektmanagement-Tool?"
+- API-Keys in Windows Credential Manager
+- `material_orders` Tabelle in bpm.db mit `external_task_id` + `external_system` Spalten
+- Verkaufsargument: "Funktioniert mit deinem bestehenden Tool"
+- Konzeptdokument: `ModuleTaskManagement.md`
+
+---
+
+## ADR-033: Multi-User — 3 Modi (eigene DB, geteilte DB, Server)
+
+**Datum:** 2026-03  
+**Status:** 🟡 Konzept  
+**Herkunft:** Phase 1 Teil 2
+
+**Kontext:**
+
+BPM ist aktuell Single-User. Wenn mehrere Poliere/Bauleiter die gleiche App nutzen sollen, braucht es Multi-User-Support. Die Frage war: Wie aufwendig und welche Optionen?
+
+**Entscheidung:**
+
+Drei Modi, schrittweise aktivierbar:
+
+| Modus | Beschreibung | Komplexität |
+|-------|-------------|-------------|
+| **A: Eigene DB** | Jeder User hat sein eigenes bpm.db (so wie jetzt). Solo-Betrieb. | Null (ist schon so) |
+| **B: Geteilte DB** | bpm.db liegt auf einem Netzlaufwerk oder Cloud-Ordner. Write-Lock mit Heartbeat (ADR-020). Read-Only Fallback wenn Lock belegt. | Mittel |
+| **C: Server** | ASP.NET Minimal API auf einem Raspberry Pi (oder anderem Rechner) im LAN. Desktop + Mobile verbinden sich per REST API. Server besitzt die DB exklusiv — kein Sync-Konflikt. | Höher |
+
+Technisch wird ein `IDataService` Interface eingeführt mit 3 Implementierungen: `LocalDataService` (A), `SharedDbDataService` (B), `ServerDataService` (C). Umschaltung in den Systemeinstellungen.
+
+**Alternativen:**
+
+- *Cloud-DB (Azure/Firebase):* Internet-Pflicht, Abo — widerspricht Offline-Prinzip.
+- *CRDTs:* Automatische Merge-Konflikte — zu komplex für den Nutzen.
+
+**Konsequenzen:**
+
+- Modus A sofort verfügbar (ist der Status quo)
+- Modus B erfordert: IDataService Refactoring + Write-Lock + Read-Only Fallback
+- Modus C erfordert: ASP.NET Minimal API + REST-Endpoints + Server-Setup-Anleitung
+- Kein Berechtigungsmanagement geplant (Vertrauensbasis im kleinen Team)
+- Konzeptdokument: `MultiUserKonzept.md`
+
+---
+
+## ADR-034: Modul-Aktivierung + Offline-Lizenzierung
+
+**Datum:** 2026-03  
+**Status:** 🟡 Konzept  
+**Herkunft:** Phase 1 Teil 2
+
+**Kontext:**
+
+Herbert plant langfristig, BPM an andere Baufirmen zu verkaufen. Dafür braucht es zwei Dinge: Module müssen ein-/ausschaltbar sein (aufgeräumte Oberfläche), und es braucht ein Bezahlmodell pro Modul.
+
+**Entscheidung:**
+
+**Modul-Aktivierung:** In den Systemeinstellungen gibt es eine Seite "Module" mit Ein/Aus-Schalter pro Modul. Nur aktive Module erscheinen in der Sidebar. Einstellungen und PlanManager sind immer an (Basis). Abhängigkeiten werden geprüft (z.B. Bautagebuch braucht Kalkulation).
+
+**Lizenzierung:** Offline-fähige Lizenzdateien (`.bpm-license`) pro Modul. Keine Online-Aktivierung — passt zur Offline-Philosophie. Technisch: JSON-Payload mit HMAC-SHA256 Signatur (shared secret). Enthält Kundenname, freigeschaltete Module, Ablaufdatum.
+
+30-Tage-Testversion pro Modul: Erstaktivierung wird lokal gespeichert (verschlüsselt in `%LocalAppData%`). Nach 30 Tagen → Modul gesperrt bis Lizenz importiert wird.
+
+Verkaufsmodell:
+- **Basis (kostenlos):** Einstellungen + PlanManager + Dashboard
+- **Zusatzmodule (einzeln):** Bautagebuch, Zeiterfassung, Kalkulation, Foto, Outlook, Vorlagen, Wetter
+- **Premium:** KI-Assistent, Task-Management, Mobile PWA
+- **Keine Abos** — Einmalkauf pro Modul, Updates inklusive innerhalb der Major-Version
+
+**Alternativen:**
+
+- *Online-Aktivierung:* Piraterie-Schutz besser, aber Internet-Pflicht.
+- *Alles kostenlos:* Kein Geschäftsmodell.
+- *Abo-Modell:* Herbert will explizit keine Abos — "Ich will nicht der nächste PlanRadar sein."
+
+**Konsequenzen:**
+
+- Modulare Sidebar ist architektonisch bereits vorbereitet (ADR-001, separate DLL-Projekte)
+- `ModuleRegistry` als zentrale Klasse für Aktivierungsstatus
+- LicenseValidator als Service in Infrastructure
+- Konzeptdokument: `ModuleAktivierungLizenzierung.md`
 
 ---
 

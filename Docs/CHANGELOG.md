@@ -5,6 +5,32 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.16.0] — 2026-03-30
+
+### Hinzugefügt
+- **Theme-System** — Zentrales Design-System mit Resource Dictionaries (ADR-028)
+- `Themes/Colors.xaml` — Alle Farb-Token als SolidColorBrush (Dark Theme)
+- `Themes/Typography.xaml` — Segoe UI, 8 Schriftgrößen-Stufen (XS bis XXL)
+- `Themes/Buttons.xaml` — Button-Varianten: Primary, Secondary, Danger, Ghost, Nav
+- `Themes/DataGrid.xaml` — Header, Row, Cell Styles, Zebra-Variante
+- `Themes/Dialogs.xaml` — Dialog-Basis, TabControl, Cards, Tooltips, Separatoren
+- App.xaml merged alle ResourceDictionaries
+- MainWindow.xaml verwendet nur noch Token (keine hardcoded Farben)
+
+### Dokumentation
+- **UI_UX_Guidelines.md** v2.0 — Komplettes Design-System nach Review
+- **WPF_UI_Architecture.md** v1.0 — Technischer UI-Aufbau
+- **UX_Flows.md** v1.0 — Hauptworkflows
+- **GLOSSAR.md** — Begriffsdefinitionen
+- **CODING_STANDARDS.md** — UI-Naming-Konventionen + ResourceDictionary-Regeln ergänzt
+- **DB-SCHEMA.md** v1.5 — Zentrales DB-Leitdokument (Ist + geplant, 18 Tabellen)
+- 5 neue Konzeptdokumente: ModuleKalkulation, ModuleTaskManagement, MultiUserKonzept, ModuleAktivierungLizenzierung, ModuleKiAssistent
+- ADR.md erweitert: 27 → 34 Entscheidungen (ADR-024 bis ADR-034)
+- BauProjektManager_Architektur.md v1.5 → v2.0.0
+- BACKLOG.md v2.0 mit MoSCoW + MVP-Struktur
+
+---
+
 ## [v0.15.0] — 2026-03-29
 
 ### Hinzugefügt
@@ -397,6 +423,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 | v0.1.0 | 2026-03-29 | ModulePlanHeader | Erstellt (von Herbert) |
 | v2.0.0 | 2026-03-29 | Changelog | v0.13.0–v0.15.0, Tab 1–4 |
 | v2.0.0 | 2026-03-29 | Backlog | v0.15.0, KI-API-Import, Adressbuch-Trennung |
+| v2.0.0 | 2026-03-30 | UI_UX_Guidelines | Komplettes Design-System nach Review |
+| v1.0.0 | 2026-03-30 | WPF_UI_Architecture | Technischer UI-Aufbau |
+| v1.0.0 | 2026-03-30 | UX_Flows | Hauptworkflows |
+| v1.0.0 | 2026-03-30 | Glossar | Begriffsdefinitionen |
+| v1.5.0 | 2026-03-30 | DB-Schema | Zentrales Leitdokument (Ist + geplant) |
+| v1.1.0 | 2026-03-30 | ADR | 7 neue ADRs (028–034) |
+| v1.0.0 | 2026-03-30 | CODING_STANDARDS | UI-Ergänzung |
+| v2.0.0 | 2026-03-30 | Architektur | v1.5→v2.0.0 |
 
 ---
 

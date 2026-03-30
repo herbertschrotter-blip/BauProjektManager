@@ -2,7 +2,7 @@
 
 **Erstellt:** 29.03.2026  
 **Version:** 2.0  
-**Basis:** Solution v0.15.0, DB-Schema v1.5
+**Basis:** Solution v0.16.0, DB-Schema v1.5
 
 ---
 
@@ -50,7 +50,7 @@ App             → referenziert alles (DI verdrahtet hier)
 
 | Projekt | Typ | NuGet-Pakete | Verantwortung |
 |---------|-----|-------------|---------------|
-| **App** | WPF EXE | Microsoft.Extensions.DI | Shell, MainWindow, DI-Container, App.xaml |
+| **App** | WPF EXE | Microsoft.Extensions.DI | Shell, MainWindow, DI-Container, App.xaml, Themes/ (Resource Dictionaries) |
 | **Domain** | Class Library | *keine* | Project, Client, BuildingPart, BuildingLevel, ProjectParticipant, ProjectLink, Location, Timeline, AppSettings (ProjectTypes, BuildingTypes, LevelNames, ParticipantRoles, PortalTypes, FolderTemplate), Enums, Interfaces |
 | **Infrastructure** | Class Library | Microsoft.Data.Sqlite, Serilog, System.Text.Json | ProjectDatabase (Schema v1.5: projects, clients, building_parts, building_levels, project_participants, project_links), RegistryJsonExporter, AppSettingsService, ProjectFolderService, SerilogSetup |
 | **Settings** | WPF Class Library | CommunityToolkit.Mvvm | SettingsViewModel, ProjectEditViewModel, SettingsView.xaml, ProjectEditDialog.xaml |
@@ -141,8 +141,8 @@ Jedes wird ein eigenes WPF Class Library Projekt, referenziert Domain + Infrastr
 
 ### 2.3 Sync-Übersicht: Was syncht, was nicht
 
-| Kategorie | Speicherort | Syncht über OneDrive? |
-|-----------|-------------|----------------------|
+| Kategorie | Speicherort | Syncht über Cloud-Speicher? |
+|-----------|-------------|----------------------------|
 | Nutzdaten (Pläne, Fotos) | Cloud-Speicher Projektordner | ✅ Ja |
 | Konfiguration (JSON) | Cloud-Speicher .AppData/ | ✅ Ja |
 | Operativer State (SQLite) | %LocalAppData% | ❌ Nein |

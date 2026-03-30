@@ -1,7 +1,7 @@
 ﻿# BauProjektManager — Backlog
 
-**Letzte Aktualisierung:** 29.03.2026  
-**Aktuelle Version:** v0.15.0
+**Letzte Aktualisierung:** 30.03.2026  
+**Aktuelle Version:** v0.16.0
 
 **Verwandte Dokumente:**
 - [VISION.md](VISION.md) — Nordstern, Schmerzpunkte, Zielgruppe

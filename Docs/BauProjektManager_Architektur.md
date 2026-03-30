@@ -22,7 +22,7 @@
 
 ### 1.1 Was ist der BauProjektManager?
 
-Ein modulares Desktop-Tool für Baustellen-Management in Österreich (Steiermark). Eine einzige Anwendung mit internen Feature-Modulen. Offline-fähig, lokal auf OneDrive, kein Cloud-Abo.
+Ein modulares Desktop-Tool für Baustellen-Management in Österreich (Steiermark). Eine einzige Anwendung mit internen Feature-Modulen. Offline-fähig, lokal im Dateisystem, synchronisiert über beliebigen Cloud-Speicher (OneDrive, Google Drive, Dropbox etc.), kein Cloud-Abo.
 
 Ausführliche Vision, Schmerzpunkte und Zielgruppe: siehe [VISION.md](VISION.md).
 
@@ -84,13 +84,13 @@ Bestehende VBA-Makros lesen die automatisch generierte `registry.json`:
 
 Detailliertes Ökosystem-Diagramm mit Datenflüssen: siehe [DEPENDENCY-MAP.md](DEPENDENCY-MAP.md).
 
-### 1.5 Multi-Device & OneDrive-Sync
+### 1.5 Multi-Device & Cloud-Sync
 
 - **Zwei Geräte:** PC zuhause + Laptop auf der Baustelle
-- **Sync:** OneDrive synchronisiert Nutzdaten + Konfiguration
+- **Sync:** Cloud-Speicher (OneDrive, Google Drive, Dropbox etc.) synchronisiert Nutzdaten + Konfiguration
 - **Operativer State:** Lokal (`%LocalAppData%`), synct NICHT
-- **Sortiert auf beiden Geräten:** Ja — Profile synchen über OneDrive
-- **Cache-Rebuild:** Wenn auf dem zweiten Gerät gearbeitet wird, baut sich der SQLite-Cache beim ersten Scan automatisch aus dem Dateisystem (OneDrive) neu auf
+- **Sortiert auf beiden Geräten:** Ja — Profile synchen über den Cloud-Speicher
+- **Cache-Rebuild:** Wenn auf dem zweiten Gerät gearbeitet wird, baut sich der SQLite-Cache beim ersten Scan automatisch aus dem Dateisystem (Cloud-Ordner) neu auf
 
 ### 1.6 Projektname-Format
 

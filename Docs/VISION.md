@@ -59,7 +59,7 @@ Es gibt Bau-Management-Software (PlanRadar, Dalux, BauMaster etc.). Aber:
 - **Kein Offline:** Auf der Baustelle gibt es oft kein WLAN
 - **Kosten:** Monatliche Abos, pro Nutzer, pro Projekt
 
-BPM ist das Gegenteil: lokal, offline, anpassbar, keine laufenden Kosten, eigene Daten auf eigenem OneDrive.
+BPM ist das Gegenteil: lokal, offline, anpassbar, keine laufenden Kosten, eigene Daten auf dem eigenen Cloud-Speicher (OneDrive, Google Drive, Dropbox etc.) oder komplett ohne Cloud.
 
 ---
 
@@ -67,12 +67,12 @@ BPM ist das Gegenteil: lokal, offline, anpassbar, keine laufenden Kosten, eigene
 
 ### 3.1 Was BPM ist
 
-Ein modulares Desktop-Werkzeug (Windows, WPF) das schrittweise den gesamten Arbeitsalltag eines Poliers/Bauleiters digitalisiert. Eine einzige `.exe`, alle Module integriert, Daten lokal auf OneDrive.
+Ein modulares Desktop-Werkzeug (Windows, WPF) das schrittweise den gesamten Arbeitsalltag eines Poliers/Bauleiters digitalisiert. Eine einzige `.exe`, alle Module integriert, Daten lokal im Dateisystem. Synchronisation über jeden Cloud-Speicher der sich als Ordner im Explorer einblendet (OneDrive, Google Drive, Dropbox, Synology Drive, Nextcloud etc.).
 
 ### 3.2 Kern-Prinzipien
 
 **Offline-first.**  
-BPM funktioniert komplett ohne Internet. Alle Daten liegen lokal. OneDrive synchronisiert im Hintergrund wenn verfügbar — aber die App braucht es nicht zum Arbeiten.
+BPM funktioniert komplett ohne Internet. Alle Daten liegen lokal. Cloud-Speicher (OneDrive, Google Drive, Dropbox etc.) synchronisieren im Hintergrund wenn verfügbar — aber die App braucht keinen Cloud-Dienst zum Arbeiten.
 
 **Eigene Daten, eigene Kontrolle.**  
 Kein Cloud-Dienst, kein Abo, keine Daten bei Dritten. Projektordner sind saubere Windows-Ordner die jeder Kollege im Explorer öffnen kann. Nichts ist in einer proprietären Datenbank versteckt.
@@ -98,7 +98,7 @@ Kollegen in der Firma sollen BPM selbst öffnen und nutzen können — nicht nur
 
 - **Rolle:** Polier und Bauleiter, Steiermark, Österreich
 - **Geräte:** PC zuhause (Hauptarbeitsplatz), Laptop auf der Baustelle, Smartphone (später)
-- **Sync:** OneDrive, zwei Geräte
+- **Sync:** Cloud-Speicher (z.B. OneDrive), zwei Geräte
 - **Technisch:** Kein Programmierer, aber digital versiert. Baut eigene VBA-Makros, PowerShell-Tools, AutoLISP-Skripte
 - **Projekte:** 2–5 aktive Baustellen gleichzeitig (Wohnbau, Reihenhäuser, Sanierungen)
 - **Arbeitsweise:** Strukturiert, liebt Ordnung, nummerierte Ordner, klare Systeme
@@ -238,7 +238,7 @@ Diese Prinzipien gelten für alle zukünftigen Module und Entscheidungen:
 | Prinzip | Bedeutung |
 |---------|-----------|
 | **Offline-first** | Jede Funktion muss ohne Internet funktionieren |
-| **Lokal vor Cloud** | Daten auf eigenem OneDrive, kein externer Dienst |
+| **Lokal vor Cloud** | Daten im eigenen Dateisystem, sync über beliebigen Cloud-Speicher (OneDrive, Google Drive, Dropbox etc.) |
 | **Saubere Ordner** | Projektordner müssen im Explorer für Kollegen lesbar bleiben — keine proprietären Dateien sichtbar |
 | **VBA-kompatibel** | registry.json als Brücke zu bestehenden Makros, bis diese abgelöst werden |
 | **Modular** | Jedes Modul ist ein eigenes C#-Projekt, unabhängig entwickelbar |

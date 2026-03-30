@@ -88,7 +88,7 @@ Jedes wird ein eigenes WPF Class Library Projekt, referenziert Domain + Infrastr
 │              ▼                 │  │  │                  ▼        │
 │    ┌──────────────┐           │  │  │        ┌──────────────┐   │
 │    │ registry.json │           │  │  │        │ Projektordner│   │
-│    │ (generiert)   │           │  │  │        │ auf OneDrive │   │
+│    │ (generiert)   │           │  │  │        │ Cloud-Ordner │   │
 │    └──────┬───────┘           │  │  │        └──────┬───────┘   │
 │           │                   │  │  │               │           │
 │     ┌─────▼─────┐            │  │  │        ┌──────▼──────┐    │
@@ -101,7 +101,7 @@ Jedes wird ein eigenes WPF Class Library Projekt, referenziert Domain + Infrastr
 │              ┌────────────────┘  │  └───────────────┐           │
 │              ▼                   ▼                   ▼           │
 │    ┌──────────────┐   ┌──────────────┐   ┌──────────────┐      │
-│    │ OneDrive     │   │ Excel        │   │ settings.json│      │
+│    │ Cloud-Sync    │   │ Excel        │   │ settings.json│      │
 │    │ .AppData/    │   │ (Zeiten)     │   │ profiles.json│      │
 │    │ Sync PC↔Lap.│   │ via ClosedXML│   │ templates.json│     │
 │    └──────────────┘   └──────┬───────┘   └──────────────┘      │
@@ -143,8 +143,8 @@ Jedes wird ein eigenes WPF Class Library Projekt, referenziert Domain + Infrastr
 
 | Kategorie | Speicherort | Syncht über OneDrive? |
 |-----------|-------------|----------------------|
-| Nutzdaten (Pläne, Fotos) | OneDrive Projektordner | ✅ Ja |
-| Konfiguration (JSON) | OneDrive .AppData/ | ✅ Ja |
+| Nutzdaten (Pläne, Fotos) | Cloud-Speicher Projektordner | ✅ Ja |
+| Konfiguration (JSON) | Cloud-Speicher .AppData/ | ✅ Ja |
 | Operativer State (SQLite) | %LocalAppData% | ❌ Nein |
 | Logs | %LocalAppData%/Logs | ❌ Nein |
 | Backups | %LocalAppData%/Backups | ❌ Nein |
@@ -171,7 +171,7 @@ Jedes wird ein eigenes WPF Class Library Projekt, referenziert Domain + Infrastr
 | System | Abhängigkeit | Wann nötig |
 |--------|-------------|-----------|
 | .NET 10 Runtime | Pflicht | Immer (oder self-contained .exe) |
-| OneDrive | Empfohlen | Für Multi-Device-Sync |
+| Cloud-Speicher | Empfohlen | Für Multi-Device-Sync (OneDrive, Google Drive, Dropbox, Synology Drive, Nextcloud etc.) |
 | Microsoft Excel | Optional | Nur für Zeiterfassung (ClosedXML braucht kein Excel) |
 | Microsoft Outlook | Optional | Nur für Outlook-COM-Modul (nach V1) |
 | Microsoft Word | Optional | Nur für Vorlagen-Modul (nach V1) |

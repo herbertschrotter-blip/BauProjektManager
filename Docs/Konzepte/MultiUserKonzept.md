@@ -1,472 +1,601 @@
-# BauProjektManager — Konzept: Multi-User Support
+﻿# BauProjektManager — Konzept: Multi-User Support
 
 **Erstellt:** 30.03.2026  
+**Aktualisiert:** 03.04.2026  
+**Version:** 2.0  
 **Status:** Konzept (Won't have V1)  
 **Abhängigkeiten:** Keine (kann unabhängig von anderen Modulen implementiert werden)  
-**Relevante ADRs:** ADR-016 (Single-Writer Mutex), ADR-020 (Write-Lock mit Heartbeat)
+**Relevante ADRs:** ADR-016 (Single-Writer Mutex), ADR-020 (Write-Lock mit Heartbeat), ADR-033 (3 Modi), ADR-035 (IExternalCommunicationService), ADR-036 (IPrivacyPolicy), ADR-037 (ISyncTransport — geplant), ADR-038 (IAccessControlService — geplant)  
+**Verwandte Dokumente:**
+- [DSVGO-Architektur.md](../Kern/DSVGO-Architektur.md) — Rollenmatrix, Datenschutz-Klassifizierung
+- [BPM-Mobile-Konzept.md](BPM-Mobile-Konzept.md) — PWA nutzt Server-Modus
+- [ModuleAktivierungLizenzierung.md](ModuleAktivierungLizenzierung.md) — Lizenz steuert IPrivacyPolicy
+
+---
+
+## Änderungshistorie
+
+| Version | Datum | Änderung |
+|---------|-------|----------|
+| 1.0 | 30.03.2026 | Erstversion: 3 Modi (Solo, Geteilte DB, Server) |
+| 2.0 | 03.04.2026 | Komplett überarbeitet: Reale Baustellen-Szenarien, Phase 2 JSON Event-Sync, Phase 3 REST Server mit Offline-Cache, rollenbasierte Projektfreigabe, ISyncTransport/IAccessControlService Interfaces, Erkenntnisse aus ChatGPT-Analyse professioneller Bau-Software |
 
 ---
 
 ## 1. Ziel
 
-Mehrere Poliere / Bauleiter sollen BPM auf derselben Baustelle nutzen können — mit gemeinsamen Projektdaten, ohne Konflikte, ohne Cloud-Server.
+Mehrere Personen mit verschiedenen Rollen (Bauleiter, Polier, Disponent, Einkäufer, Lohnbüro) sollen am selben Projekt arbeiten — jeder sieht und bearbeitet nur seinen Teil. Datenfreigabe passiert auf Projektebene, nicht global.
 
-**Drei Modi die BPM unterstützen soll:**
+### 1.1 Reale Szenarien auf der Baustelle
 
-| Modus | Für wen | Beschreibung |
-|-------|---------|-------------|
-| **Eigene DB** | Solo-Polier (Standard) | Jeder hat sein eigenes `bpm.db` lokal. So wie jetzt. |
-| **Geteilte DB** | Kleines Team (2-5 Leute) | `bpm.db` liegt auf einem gemeinsamen Netzlaufwerk oder Cloud-Ordner. |
-| **Server** | Team mit mobilem Zugriff | ASP.NET Minimal API auf einem Rechner/Raspi, alle Clients verbinden sich per HTTP. |
+| Rolle | Hat eigene Daten | Will freigeben an | Beispiel |
+|---|---|---|---|
+| **Bauleiter** | Projekte, Pläne, Kalkulationen, LV | Polier: Pläne + Bautagebuch-Zugriff | Polier soll Pläne sehen und Bautagebuch schreiben, aber keine LV-Positionen sehen |
+| **Polier** | Bautagebuch, Arbeitseinteilung, Fotos | Bauleiter: Alles | Bauleiter soll das Bautagebuch des Poliers live sehen |
+| **Disponent** | Geräteliste, Fahrzeugverfügbarkeit | Bauleiter + Polier: Geräte pro Projekt | Disponent hat zentrale Geräte-DB, gibt pro Projekt frei |
+| **Einkäufer** | Lieferantenliste, Bestellungen, Preise | Bauleiter: Bestellstatus. Polier: Liefertermine | Einkäufer hat eigene Daten (Preise) die der Polier nicht sehen soll |
+| **Lohnbüro** | Arbeitszeitmodelle, Lohnsätze | Bauleiter: Übersicht | Lohnbüro liest Zeiterfassung, niemand sieht Lohnsätze |
 
----
+### 1.2 Grundprinzipien (unverändert)
 
-## 2. Modus A: Eigene DB (Standard)
-
-### 2.1 So wie jetzt
-
-Jeder User hat sein eigenes `bpm.db` in `%LocalAppData%\BauProjektManager\`. Funktioniert sofort, offline, kein Setup. Das ist der Default für Solo-Poliere.
-
-```
-PC Herbert                    Laptop Herbert
-├── %LocalAppData%            ├── %LocalAppData%
-│   └── bpm.db (eigene)       │   └── bpm.db (eigene)
-│                              │
-├── Cloud-Speicher             ├── Cloud-Speicher (sync)
-│   ├── Projektordner          │   ├── Projektordner
-│   ├── .AppData/              │   ├── .AppData/
-│   │   ├── registry.json      │   │   ├── registry.json
-│   │   └── settings.json      │   │   └── settings.json
-```
-
-### 2.2 Synchronisation zwischen eigenen Geräten
-
-Herbert arbeitet auf PC und Laptop. Beide haben ein eigenes `bpm.db`. Die Projektdaten (Ordner, Pläne, Fotos) synchronisieren über den Cloud-Speicher. Die SQLite-DB synchronisiert NICHT — sie wird auf dem zweiten Gerät beim ersten Start aus dem Dateisystem (Cloud-Ordner + .bpm-manifest) rekonstruiert.
-
-### 2.3 Wann reicht Modus A?
-
-- Solo-Polier mit 1-2 Geräten
-- Keine Kollegen die gleichzeitig Daten ändern
-- Jeder Polier hat "seine" Projekte
+- **Offline-first:** Jede Funktion muss ohne Internet funktionieren
+- **Kein Cloud-Zwang:** Funktioniert auch mit lokalem Netzlaufwerk
+- **Kein Abo:** Kein externer Dienst, keine laufenden Kosten
+- **Einfach:** Ein Polier der kein IT-Experte ist muss es bedienen können
+- **Wartbar:** Solo-Entwickler muss den Code allein pflegen können
 
 ---
 
-## 3. Modus B: Geteilte DB (Netzlaufwerk / Cloud-Ordner)
+## 2. Wie machen es die Profis?
 
-### 3.1 Konzept
+Analyse professioneller Bau-Software (Quelle: ChatGPT-Recherche, April 2026):
 
-Das `bpm.db` liegt auf einem gemeinsamen Pfad den alle im Team sehen — z.B. ein Netzlaufwerk (`\\server\bpm\bpm.db`) oder ein Cloud-Ordner der auf allen Rechnern synchronisiert wird.
+| Produkt | Berechtigungsmodell | Offline-Lösung |
+|---|---|---|
+| **PlanRadar** | Nutzer erhalten Projekte/Pläne/Tickets nach Rolle | Projekte vorab synchronisieren, offline Tickets erstellen, bei Verbindung automatisch hochladen |
+| **Procore** | RBAC mit Permission Templates (None/Read-Only/Standard/Admin) pro Projekt + Modul | Mobile App cached Daten vorab, Änderungen bei Verbindung synchronisiert |
+| **Dalux** | Rollen × Module × Regionen (Gebäude/Lose) | „Prepare for offline", Outbox für Änderungen, Auto-Sync |
 
-```
-Netzlaufwerk / Cloud-Ordner (gemeinsam)
-├── bpm.db                    ← ALLE lesen und schreiben hier
-├── registry.json
-├── settings.json
-│
-PC Polier 1                   PC Polier 2
-├── BPM.exe                   ├── BPM.exe
-│   └── Verbindung zu         │   └── Verbindung zu
-│       \\server\bpm\bpm.db   │       \\server\bpm\bpm.db
-```
+**Gemeinsames Muster:** Zentraler Server als Single Source of Truth. Clients haben lokalen Cache. Offline-Arbeit über vorab geladene Daten + Outbox für Änderungen. Berechtigungen werden serverseitig erzwungen (projekt- und modulbasiert).
 
-### 3.2 Einstellung in BPM
+**Fazit für BPM:** Die Zielarchitektur ist klar — zentraler Server mit lokalen Caches. Aber der Weg dahin muss schrittweise sein.
 
-In den Systemeinstellungen: "Datenbank-Speicherort"
-- **Lokal** (Standard): `%LocalAppData%\BauProjektManager\bpm.db`
-- **Benutzerdefiniert**: Pfad zum gemeinsamen Ordner (z.B. `\\server\bpm\` oder `D:\Dropbox\BPM\`)
+---
 
-### 3.3 SQLite-Konkurrenz-Problem
+## 3. Phasenmodell — 3 Stufen
 
-SQLite kann von mehreren Prozessen gleichzeitig GELESEN werden, aber nur EIN Prozess darf gleichzeitig SCHREIBEN. Wenn zwei Poliere gleichzeitig ein Projekt bearbeiten und speichern, gibt es einen Lock-Fehler.
+### Übersicht
 
-**Lösung: Single-Primary-Writer mit Heartbeat (ADR-020)**
+| Phase | Für wen | Technologie | Nutzer | Wann |
+|---|---|---|---|---|
+| **Phase 1: Solo** | Herbert allein, 2 Geräte | Eigene bpm.db pro Gerät, Dateisystem-Sync über Cloud-Speicher | 1 | Jetzt (V1) |
+| **Phase 2: Event-Sync** | Polier + Bauleiter, asynchron | Eigene bpm.db pro User, JSON-Events über Cloud-Ordner | 2–3 | Nach V1 |
+| **Phase 3: Server** | Team mit Rollen, live | ASP.NET Minimal API, lokaler Offline-Cache pro Client | 5–10+ | Langfristig |
+
+### Entscheidungskriterium: Wann welche Phase?
 
 ```
-┌─────────────────────────────────────────────┐
-│              bpm.db (gemeinsam)              │
-│                                              │
-│  write_lock Tabelle:                         │
-│  ┌──────────┬──────────┬────────────────┐   │
-│  │ locked_by│ machine  │ last_heartbeat │   │
-│  ├──────────┼──────────┼────────────────┤   │
-│  │ Herbert  │ PC-BÜRO  │ 2025-11-05     │   │
-│  │          │          │ 14:32:15       │   │
-│  └──────────┴──────────┴────────────────┘   │
-│                                              │
-│  Regel:                                      │
-│  - Wer schreiben will, holt den Lock         │
-│  - Heartbeat alle 60 Sekunden                │
-│  - Lock verfällt nach ~3 verpassten          │
-│    Heartbeats (180 Sekunden)                 │
-│  - Andere können lesen, aber nicht schreiben  │
-│  - Bei Lock-Konflikt: Warnung anzeigen       │
-└─────────────────────────────────────────────┘
+1 Nutzer, 2 Geräte                    → Phase 1 (jetzt)
+2–3 Nutzer, asynchron, 1–2 Module     → Phase 2 (JSON Event-Sync)
+4+ Nutzer ODER 3+ schreibende Rollen  → Phase 3 (REST Server)
+Dispo/Einkauf/Lohnbüro beteiligt      → Phase 3 (REST Server)
 ```
 
-### 3.4 DB-Schema Erweiterung
+---
+
+## 4. Phase 1: Solo (Status Quo)
+
+Unverändert gegenüber v1.0 dieses Dokuments. Jeder User hat sein eigenes `bpm.db` in `%LocalAppData%`. Cloud-Speicher synct Projektordner + JSON-Konfiguration. SQLite synct NICHT.
+
+Für Details siehe ADR-004 (Dreistufige Cloud-Sync-Strategie).
+
+---
+
+## 5. Phase 2: JSON Event-Sync (NEU)
+
+### 5.1 Konzept
+
+Jeder User hat seine eigene lokale `bpm.db`. Der Datenaustausch passiert über **JSON-Event-Dateien** in einem geteilten Cloud-Ordner. Kein Server, kein direkter DB-Zugriff durch andere.
+
+**Kernprinzip: Nicht „JSON als Datenbank-Ersatz", sondern „JSON als Transportformat für Änderungen".**
+
+```
+Polier (Baustelle)                    Bauleiter (Büro)
+├── bpm.db (eigene)                   ├── bpm.db (eigene)
+│                                      │
+├── Cloud-Speicher/BPM-Sync/          ├── Cloud-Speicher/BPM-Sync/
+│   └── project-001/                   │   └── project-001/
+│       └── events/                    │       └── events/
+│           ├── ...herbert_001.json    │           ├── ...herbert_001.json
+│           └── ...polier_002.json     │           └── ...polier_002.json
+```
+
+### 5.2 Warum nicht SQLite direkt auf Cloud-Speicher?
+
+SQLite verwendet intern ein Write-Ahead Log (`bpm.db-wal`) und ein Shared-Memory File (`bpm.db-shm`). Wenn OneDrive/Dropbox während eines Schreibvorgangs die Datei synct:
+
+- OneDrive synct Hauptdatei aber nicht WAL → **DB korrupt**
+- Zwei Geräte schreiben gleichzeitig → Konflikt-Kopie → **Daten gesplittet**
+- Dropbox synct während Lock → **Sync-Fehler**
+
+SQLite warnt offiziell: „Do not use SQLite on a network filesystem." JSON-Dateien können Cloud-Dienste problemlos syncen (atomisches Schreiben: write-to-temp-then-rename).
+
+### 5.3 Event-Ordnerstruktur
+
+```
+Cloud-Speicher/BPM-Sync/
+└── project-<projectId>/
+    ├── manifest.json                    ← Projekt-Teilnehmer (selten geändert)
+    └── events/                          ← Append-only Event-Dateien
+        ├── 2026-04-03T14-32-00Z_herbert_evt001.json
+        ├── 2026-04-03T15-10-12Z_polier1_evt002.json
+        └── ...
+```
+
+**Warum append-only Events statt Outbox/Inbox:**
+
+- Kein Dateien-Verschieben nötig (wer verschiebt wann?)
+- Keine „verarbeitet"-Markierung in geteilten Dateien
+- Jeder Client tracked selbst was er schon importiert hat (in seiner lokalen SQLite)
+- Robuster bei Cloud-Sync-Verzögerungen
+
+### 5.4 Event-Format
+
+```json
+{
+  "eventId": "evt_20260403_143200_herbert_001",
+  "schemaVersion": 1,
+  "projectId": "proj_001",
+  "authorUserId": "herbert",
+  "deviceId": "herbert-laptop",
+  "createdAtUtc": "2026-04-03T14:32:00Z",
+  "entityType": "DiaryEntry",
+  "entityId": "diary_proj001_2026-04-03",
+  "eventType": "DiaryEntryUpdated",
+  "baseVersion": 3,
+  "newVersion": 4,
+  "permissionScope": "diary",
+  "payload": {
+    "date": "2026-04-03",
+    "weather": "bewölkt",
+    "notes": "Attika betoniert",
+    "workersPresent": 6
+  }
+}
+```
+
+**Pflichtfelder für Sync:**
+
+| Feld | Zweck |
+|---|---|
+| `eventId` | Eindeutige ID, verhindert doppelte Verarbeitung |
+| `entityId` + `entityType` | Was wurde geändert |
+| `baseVersion` + `newVersion` | Konflikterkennung |
+| `authorUserId` + `deviceId` | Wer hat wann von wo geändert |
+| `permissionScope` | Welche Rolle darf das Event sehen |
+| `createdAtUtc` | Zeitstempel für Sortierung |
+
+### 5.5 manifest.json (minimal)
+
+```json
+{
+  "projectId": "proj_001",
+  "schemaVersion": 1,
+  "participants": [
+    { "userId": "herbert", "role": "bauleiter" },
+    { "userId": "polier1", "role": "polier" }
+  ]
+}
+```
+
+Kein globaler Status, kein Zustand der ständig überschrieben wird. Nur Teilnehmer-Liste.
+
+### 5.6 Lokale Sync-Tabellen (in bpm.db)
 
 ```sql
-CREATE TABLE write_lock (
-    id INTEGER PRIMARY KEY CHECK (id = 1),  -- nur eine Zeile
-    locked_by TEXT,                           -- Username
-    machine_name TEXT,                        -- PC-Name
-    locked_at TEXT,                           -- Zeitstempel
-    last_heartbeat TEXT,                      -- letzter Heartbeat
-    app_version TEXT                          -- BPM-Version
+-- Welche Events wurden schon verarbeitet?
+CREATE TABLE sync_processed_events (
+    event_id TEXT PRIMARY KEY,
+    processed_at TEXT NOT NULL,
+    project_id TEXT NOT NULL
+);
+
+-- Konflikte die der User entscheiden muss
+CREATE TABLE sync_conflicts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_id TEXT NOT NULL,
+    entity_type TEXT NOT NULL,
+    entity_id TEXT NOT NULL,
+    local_version INTEGER,
+    remote_version INTEGER,
+    local_payload TEXT,        -- JSON
+    remote_payload TEXT,       -- JSON
+    resolved INTEGER DEFAULT 0,
+    resolved_at TEXT,
+    resolution TEXT            -- "keep_local" | "keep_remote" | "merged"
 );
 ```
 
-### 3.5 Ablauf
+### 5.7 Konflikbehandlung
 
-```
-Polier 1 öffnet BPM:
-  1. Prüfe write_lock → leer → Lock setzen ✅
-  2. Heartbeat-Timer starten (alle 60s)
-  3. Arbeiten, speichern, ändern → alles geht
+| Datentyp | Strategie |
+|---|---|
+| Append-only Daten (Fotos, neue Plan-Events, neue Protokolle) | Automatisch übernehmen |
+| Objekte mit getrennten Feldern (Bautagebuch: Wetter vs. Freitext) | Feldweises Merge versuchen |
+| Gleiches Feld von zwei Nutzern geändert | Konflikt erzeugen → User entscheidet |
 
-Polier 2 öffnet BPM (gleichzeitig):
-  1. Prüfe write_lock → gesperrt von Polier 1
-  2. Meldung: "Datenbank wird gerade von Herbert (PC-BÜRO) bearbeitet.
-     Du kannst Daten ansehen, aber nicht ändern."
-  3. Read-Only Modus → alles anzeigen, Buttons zum Speichern deaktiviert
-  4. Hintergrund-Check alle 30s: Lock noch aktiv?
-  5. Wenn Polier 1 BPM schließt → Lock wird freigegeben
-  6. Polier 2 bekommt Meldung: "Datenbank ist jetzt frei. Schreibzugriff aktiviert."
-
-Polier 1 stürzt ab (Lock bleibt stehen):
-  1. Heartbeat kommt nicht mehr
-  2. Nach 180 Sekunden: Lock gilt als verfallen
-  3. Polier 2 kann übernehmen
-```
-
-### 3.6 GUI — Lock-Anzeige
+**Beispiel Bautagebuch-Konflikt:**
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│ ⚠️ Datenbank gesperrt                               │
+│ ⚠️ Konflikt: Bautagebuch 03.04.2026                  │
 │                                                      │
-│ Bearbeitet von: Herbert Schrotter                    │
-│ Rechner: PC-BÜRO                                     │
-│ Seit: 14:32 (vor 12 Minuten)                         │
+│ Polier (15:10):           Bauleiter (15:32):         │
+│ Bemerkungen:              Wetter:                    │
+│ "Attika betoniert"        "sonnig → bewölkt"         │
 │                                                      │
-│ Du kannst alle Daten ansehen, aber nicht ändern.      │
-│ Sobald Herbert BPM schließt, wirst du benachrichtigt.│
-│                                                      │
-│ [OK — Read-Only weiterarbeiten]  [Lock übernehmen*]  │
-│                                                      │
-│ * Nur wenn du sicher bist, dass Herbert nicht         │
-│   mehr arbeitet (z.B. PC nicht mehr erreichbar)       │
+│ [Polier-Version]  [Bauleiter-Version]  [Zusammenführen] │
 └─────────────────────────────────────────────────────┘
 ```
 
-### 3.7 Wann reicht Modus B?
+### 5.8 Berechtigungen bei JSON-Sync
 
-- Kleines Team (2-5 Poliere/Bauleiter)
-- Gemeinsames Netzlaufwerk im Büro
-- Nicht gleichzeitiges Schreiben (einer arbeitet, andere schauen)
-- Kein mobiler Zugriff nötig
+Ohne Server können Berechtigungen **nicht erzwungen** werden — nur organisatorisch abgebildet.
 
-### 3.8 Grenzen von Modus B
+**Pragmatischer Ansatz: Empfängerspezifische Ordner**
 
-- Cloud-Sync (Dropbox, OneDrive) kann bei gleichzeitigem Zugriff Konflikte erzeugen
-- Netzlaufwerk muss erreichbar sein (kein Offline-Arbeiten auf der geteilten DB)
-- Nur ein Schreiber gleichzeitig (Single-Primary-Writer)
+```
+BPM-Sync/project-001/
+├── events/               ← Alle Events (Klasse A — Planfreigaben, Metadaten)
+├── to-polier1/           ← Nur für Polier bestimmte Events
+├── to-herbert/           ← Nur für Bauleiter bestimmte Events
+└── shared-read/          ← Lesbare Stammdaten-Ausschnitte
+```
+
+**Regel:** Keine sensiblen Daten (LV, Kalkulationen, Lohnsätze) über JSON-Sync. Diese Daten erst mit Phase 3 (REST Server) sauber freigeben.
+
+### 5.9 Sinnvolle Use-Cases für Phase 2
+
+| Use-Case | Richtung | Datenklasse |
+|---|---|---|
+| Bautagebuch-Einträge | Polier ↔ Bauleiter | B |
+| Fotos / Foto-Metadaten | Polier → Bauleiter | A |
+| Plan-Import-Ereignisse | Bauleiter → Polier | A |
+| Projektfreigaben | Bauleiter → Polier | A |
+| Lesbare Stammdaten-Ausschnitte | Bauleiter → Polier | A/B |
+
+### 5.10 Was Phase 2 NICHT kann
+
+- ❌ Gleichzeitiges Bearbeiten derselben Entität (nur asynchron)
+- ❌ Serverseitig erzwungene Berechtigungen
+- ❌ Live-Daten (nur bei nächstem Sync)
+- ❌ Sensible Daten sicher freigeben (LV, Lohnsätze)
+- ❌ 4+ gleichzeitig schreibende Nutzer
+
+### 5.11 Wann wird Phase 2 fragil?
+
+- 4+ aktive Nutzer schreiben regelmäßig
+- Mehrere Rollen brauchen verschiedene Sichten auf dieselben Daten
+- Dispo, Einkauf, Lohnbüro sind produktiv beteiligt
+- Konflikte werden häufiger
+- Du baust Sync-Ordner, Verschlüsselung, Conflict-UI und Zustell-Tracking aus → dann bist du faktisch schon beim Server
 
 ---
 
-## 4. Modus C: Server (ASP.NET Minimal API)
+## 6. Phase 3: REST Server (erweitert)
 
-### 4.1 Konzept
+### 6.1 Konzept
 
-Ein Rechner im Büro (oder Baucontainer) läuft als Server. Alle BPM-Clients verbinden sich per HTTP. Der Server ist der einzige der auf SQLite zugreift — keine Lock-Probleme mehr.
+Ein ASP.NET Minimal API Server besitzt die Datenbank exklusiv. Alle Clients verbinden per HTTP. Der Server erzwingt Berechtigungen. Offline-Cache auf jedem Client.
 
-```
-                    ┌──────────────┐
-                    │  BPM-Server  │
-                    │  (Raspi/PC)  │
-                    │              │
-                    │  bpm.db      │
-                    │  ASP.NET API │
-                    │  Port 5000   │
-                    └──────┬───────┘
-                           │ HTTP (LAN/WLAN)
-              ┌────────────┼────────────┐
-              │            │            │
-        ┌─────▼────┐ ┌────▼─────┐ ┌────▼─────┐
-        │ PC Büro  │ │ Laptop   │ │ Handy    │
-        │ BPM.exe  │ │ BPM.exe  │ │ PWA      │
-        │ (Client) │ │ (Client) │ │ (Client) │
-        └──────────┘ └──────────┘ └──────────┘
-```
-
-### 4.2 Was der Server macht
-
-Der Server ist ein minimaler HTTP-Dienst, KEIN vollständiger Web-Server:
-
-```csharp
-// Program.cs — ASP.NET Minimal API
-var builder = WebApplication.CreateBuilder(args);
-var app = builder.Build();
-
-// Projekte
-app.MapGet("/api/projects", () => db.LoadAllProjects());
-app.MapGet("/api/projects/{id}", (string id) => db.LoadProject(id));
-app.MapPost("/api/projects", (Project p) => db.SaveProject(p));
-
-// Arbeitspakete
-app.MapGet("/api/projects/{id}/work-packages", (string id) => db.LoadWorkPackages(id));
-app.MapPost("/api/work-packages", (WorkPackage wp) => db.SaveWorkPackage(wp));
-
-// Zeiterfassung
-app.MapPost("/api/time-entries", (TimeEntry te) => db.SaveTimeEntry(te));
-
-// Arbeitseinteilung
-app.MapPost("/api/work-assignments", (WorkAssignment wa) => db.SaveWorkAssignment(wa));
-
-app.Run("http://0.0.0.0:5000");
-```
-
-### 4.3 Was der Server NICHT macht
-
-- Keine Benutzerauthentifizierung (LAN-only, Vertrauensbasis)
-- Kein HTTPS (nur im lokalen Netzwerk)
-- Keine komplexe Geschäftslogik (die bleibt im Client)
-- Kein Web-Frontend (der Client ist die WPF-App oder PWA)
-
-### 4.4 Hardware-Optionen
-
-| Hardware | Kosten | Stromverbrauch | Für wen |
-|----------|--------|---------------|---------|
-| **Raspberry Pi 4/5** | ~50-80€ | ~5W | Baucontainer, kleines Büro |
-| **Alter Laptop** | 0€ (vorhanden) | ~30W | Büro |
-| **Büro-PC (nebenbei)** | 0€ | — | Wenn PC sowieso läuft |
-| **Mini-PC (NUC)** | ~150€ | ~10W | Dauerbetrieb im Büro |
-
-**Software-Kosten:** Null. .NET 10 und ASP.NET sind kostenlos. SQLite ist kostenlos. Keine Lizenzen.
-
-### 4.5 Raspberry Pi Setup
+**Das ist die Zielarchitektur — entspricht dem Ansatz von PlanRadar, Procore und Dalux.**
 
 ```
-1. SD-Karte mit Raspberry Pi OS beschreiben (Imager-Tool, 5 Min)
-2. Booten, WLAN konfigurieren
-3. .NET 10 installieren:
-   curl -sSL https://dot.net/v1/dotnet-install.sh | bash
-4. BPM-Server draufkopieren (USB oder SCP)
-5. Starten:
-   dotnet BpmServer.dll
-6. Fertig — API läuft auf http://raspi:5000
+                    ┌──────────────────┐
+                    │   BPM-Server     │
+                    │   (Firmen-PC,    │
+                    │    Raspi, NAS)   │
+                    │                  │
+                    │   bpm.db         │
+                    │   ASP.NET API    │
+                    │   Auth + RBAC    │
+                    └────────┬─────────┘
+                             │ HTTP (LAN/WLAN)
+                ┌────────────┼────────────┐
+                │            │            │
+          ┌─────▼────┐ ┌────▼─────┐ ┌────▼─────┐
+          │ PC Büro  │ │ Laptop   │ │ Handy    │
+          │ BPM.exe  │ │ BPM.exe  │ │ PWA      │
+          │ (Cache)  │ │ (Cache)  │ │ (Cache)  │
+          └──────────┘ └──────────┘ └──────────┘
 ```
 
-Aufwand: ~30 Minuten beim ersten Mal.
+### 6.2 Rollenbasierte Projektfreigabe
 
-### 4.6 Client-Umschaltung
+#### Berechtigungsmatrix
 
-In den BPM-Einstellungen: "Datenbankverbindung"
-- **Lokal** (Standard): `bpm.db` in %LocalAppData%
-- **Netzwerk-DB**: Pfad zum gemeinsamen Ordner
-- **Server**: `http://192.168.1.100:5000` (IP oder Hostname)
+| Modul | Bauleiter | Polier | Disponent | Einkäufer | Lohnbüro |
+|---|---|---|---|---|---|
+| Projekte | Vollzugriff | Lesezugriff (zugewiesen) | Lesezugriff (Projektliste) | Lesezugriff (Bestellungen) | Lesezugriff |
+| Pläne | Vollzugriff | Lesen | — | — | — |
+| Bautagebuch | Lesen & Prüfen | Erstellen/Bearbeiten | — | — | Lesen (Zeitdaten) |
+| Geräteliste | Lesen | Lesen | Vollzugriff | — | — |
+| Einkauf | Lesen (Status) | Lesen (Liefertermine) | — | Vollzugriff | — |
+| Zeiterfassung | Lesen | Eingabe eigener Zeiten | — | — | Vollzugriff |
+| Kalkulation | Vollzugriff | — | — | — | — |
 
-```
-┌─────────────────────────────────────────────────────┐
-│ Einstellungen → Datenbankverbindung                  │
-│                                                      │
-│ Modus: (●) Lokal (eigene DB)                        │
-│        ( ) Netzwerk-DB (gemeinsamer Ordner)          │
-│        ( ) Server (HTTP-Verbindung)                  │
-│                                                      │
-│ ── Netzwerk-DB ──────────────────────────────────    │
-│ Pfad: [\\server\bpm\                    ] [📁]      │
-│                                                      │
-│ ── Server ───────────────────────────────────────    │
-│ Adresse: [http://192.168.1.100:5000     ] [Testen]  │
-│                                          ✅ Verbunden│
-│                                                      │
-│ [Speichern]                                          │
-└─────────────────────────────────────────────────────┘
-```
+#### DB-Schema für Berechtigungen
 
-### 4.7 Offline-Fallback
+**Einfaches Modell (Phase 2 — project_shares):**
 
-Was passiert wenn der Server nicht erreichbar ist (WLAN auf der Baustelle ausgefallen)?
-
-```
-1. Client merkt: Server nicht erreichbar
-2. Wechselt automatisch auf lokale Kopie (bpm_cache.db)
-3. Arbeitet offline weiter (Zeiterfassung, Arbeitseinteilung)
-4. Wenn Server wieder erreichbar → automatischer Sync
-5. Bei Konflikten: "Server-Version übernehmen" oder "Lokale Änderung behalten"
+```sql
+CREATE TABLE project_shares (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id TEXT NOT NULL,
+    shared_with_user TEXT NOT NULL,   -- Username oder Geräte-ID
+    permission TEXT NOT NULL,          -- "full" | "read" | "plans_only" | "diary_write"
+    shared_at TEXT NOT NULL DEFAULT (datetime('now')),
+    valid_until TEXT,                  -- NULL = unbefristet
+    FOREIGN KEY (project_id) REFERENCES projects(id)
+);
 ```
 
-### 4.8 Wann braucht man Modus C?
-
-- Team mit > 3 gleichzeitig schreibenden Usern
-- Mobile PWA soll Daten mit Desktop teilen
-- Baucontainer mit eigenem WLAN
-- Mehrere Baustellen die zentral ausgewertet werden sollen
-
-### 4.9 Grenzen von Modus C
-
-- Server muss laufen (Stromausfall → kein Zugriff, Fallback auf Cache)
-- WLAN muss im Baucontainer funktionieren
-- Kein Internet-Zugriff von außen (nur LAN) — für Remote-Zugriff wäre VPN oder Cloud-Hosting nötig
-
----
-
-## 5. Architektur — Interface für alle Modi
-
-### 5.1 IDataService Interface
-
-```csharp
-public interface IDataService
-{
-    // Projekte
-    Task<List<Project>> LoadAllProjectsAsync();
-    Task<Project> LoadProjectAsync(string id);
-    Task SaveProjectAsync(Project project);
-    Task DeleteProjectAsync(string id);
-
-    // Arbeitspakete
-    Task<List<WorkPackage>> LoadWorkPackagesAsync(string projectId);
-    Task SaveWorkPackageAsync(WorkPackage wp);
-
-    // Zeiterfassung
-    Task<List<TimeEntry>> LoadTimeEntriesAsync(string projectId, string date);
-    Task SaveTimeEntryAsync(TimeEntry entry);
-
-    // Arbeitseinteilung
-    Task<List<WorkAssignment>> LoadAssignmentsAsync(string projectId, string date);
-    Task SaveAssignmentAsync(WorkAssignment assignment);
-
-    // Connection Info
-    bool IsConnected { get; }
-    string ConnectionMode { get; }  // "Lokal" | "Netzwerk" | "Server"
-}
-```
-
-### 5.2 Drei Implementierungen
-
-```csharp
-// Modus A: Lokale DB (wie jetzt)
-public class LocalDataService : IDataService
-{
-    // Direkter SQLite-Zugriff auf lokales bpm.db
-    // Synchrone Aufrufe, kein Netzwerk
-}
-
-// Modus B: Geteilte DB (Netzwerk/Cloud-Ordner)
-public class SharedDbDataService : IDataService
-{
-    // SQLite-Zugriff auf gemeinsames bpm.db
-    // Write-Lock mit Heartbeat
-    // Read-Only Fallback wenn Lock aktiv
-}
-
-// Modus C: Server
-public class ServerDataService : IDataService
-{
-    // HTTP-Client → ASP.NET Minimal API
-    // Offline-Cache (bpm_cache.db)
-    // Auto-Sync wenn Server wieder erreichbar
-}
-```
-
-### 5.3 Bestehender Code — was sich ändert
-
-Die bestehende `ProjectDatabase` Klasse (direkter SQLite-Zugriff) wird zur Implementierung von `LocalDataService`. Die ViewModels sprechen nicht mehr direkt mit `ProjectDatabase`, sondern mit `IDataService`. Der DI-Container wählt die Implementierung basierend auf der Einstellung.
-
-```csharp
-// App.xaml.cs — DI Registrierung
-var settings = LoadSettings();
-switch (settings.ConnectionMode)
-{
-    case "Lokal":
-        services.AddSingleton<IDataService, LocalDataService>();
-        break;
-    case "Netzwerk":
-        services.AddSingleton<IDataService, SharedDbDataService>();
-        break;
-    case "Server":
-        services.AddSingleton<IDataService, ServerDataService>();
-        break;
-}
-```
-
-**Wichtig:** Das ist ein Refactoring das erst kommt wenn Multi-User tatsächlich implementiert wird. Für V1 bleibt alles wie es ist (direkte `ProjectDatabase`-Nutzung).
-
----
-
-## 6. Benutzer-Verwaltung
-
-### 6.1 V1: Kein User-Management
-
-BPM kennt keine User. Jeder der die App öffnet, hat vollen Zugriff. Für einen Solo-Polier oder ein kleines Team reicht das.
-
-### 6.2 Später: Einfaches User-Profil
+**Erweitertes Modell (Phase 3 — RBAC):**
 
 ```sql
 CREATE TABLE users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,              -- "Herbert Schrotter"
-    short_name TEXT,                 -- "Herbert"
-    role TEXT DEFAULT 'Polier',      -- "Polier" | "Bauleiter" | "Admin"
-    employee_id INTEGER,             -- FK → employees (Verknüpfung zur Zeiterfassung)
-    settings_json TEXT,              -- Persönliche Einstellungen (letzte Baustelle, Fensterposition)
+    name TEXT NOT NULL,
+    short_name TEXT,
+    windows_username TEXT,            -- Auto-Erkennung
+    role TEXT DEFAULT 'Polier',       -- Default-Rolle
+    employee_id INTEGER,
+    settings_json TEXT,
     FOREIGN KEY (employee_id) REFERENCES employees(id)
+);
+
+CREATE TABLE roles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,        -- "Bauleiter", "Polier", "Disponent", "Einkäufer", "Lohnbüro", "Admin", "Viewer"
+    description TEXT
+);
+
+CREATE TABLE project_user_role (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id TEXT NOT NULL,
+    user_id INTEGER NOT NULL,
+    role_id INTEGER NOT NULL,
+    module_flags TEXT,                -- JSON: {"plans": "read", "diary": "write", "timesheet": "none"}
+    valid_from TEXT,
+    valid_to TEXT,
+    FOREIGN KEY (project_id) REFERENCES projects(id),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (role_id) REFERENCES roles(id)
 );
 ```
 
-**Kein Passwort.** Die App läuft im LAN auf Vertrauensbasis. User wird beim Start aus dem Windows-Benutzernamen erkannt oder aus einer Dropdown-Liste gewählt. Das ist kein Sicherheitssystem, sondern eine Personalisierung (meine letzte Baustelle, meine Einstellungen).
+### 6.3 Offline-Cache mit Sync
 
-### 6.3 Berechtigungen (optional, später)
-
-| Rolle | Darf | Darf nicht |
-|-------|------|-----------|
-| **Admin** | Alles | — |
-| **Bauleiter** | Projekte anlegen/bearbeiten, Einstellungen ändern | — |
-| **Polier** | Bautagebuch, Zeiterfassung, Arbeitseinteilung, PlanManager | Projekte anlegen, Systemeinstellungen |
-| **Viewer** | Alles ansehen | Nichts ändern |
-
----
-
-## 7. Mobile PWA — Verbindung zum Server
-
-Der Server-Modus (Modus C) ist die Grundlage für die Mobile PWA (BPM-Mobile-Konzept.md). Die PWA verbindet sich per HTTP auf dieselbe API wie der Desktop-Client.
+Wie bei PlanRadar/Dalux: Client lädt freigegebene Projekte vorab. Arbeitet offline. Synchronisiert bei Verbindung.
 
 ```
-Desktop (WPF) ──→ IDataService ──→ ServerDataService ──→ HTTP ──→ Server
-Mobile (PWA)  ──→ fetch()       ──→ HTTP                ──→ Server
+Polier geht auf Baustelle:
+  1. BPM zeigt: "Projekte für Offline vorbereiten?"
+  2. Polier wählt Projekte → Cache wird gefüllt
+  3. Auf Baustelle: Arbeitet offline (Bautagebuch, Fotos, Arbeitseinteilung)
+  4. Unsynchronisierte Änderungen werden markiert (⚠️ Symbol)
+  5. Zurück im Büro/WLAN: "Synchronisieren" Button
+  6. Client schickt Änderungen → Server prüft Konflikte
+  7. Bei Konflikt: User entscheidet
+  8. Server schickt Änderungen anderer Nutzer zurück
 ```
 
-Beide Clients sprechen dieselbe API. Der Server kümmert sich um SQLite. Kein Conflict, kein Lock-Problem.
+#### Sync-Felder pro Tabelle
+
+Jede Tabelle die synchronisiert werden soll bekommt:
+
+```sql
+-- Bestehende Spalten +
+version INTEGER NOT NULL DEFAULT 1,
+last_modified TEXT NOT NULL DEFAULT (datetime('now')),
+modified_by TEXT                    -- User-ID
+```
+
+### 6.4 REST API (minimal)
+
+```csharp
+// Authentifizierung (JWT oder einfacher API-Key pro User)
+app.MapPost("/api/auth/login", (LoginRequest r) => AuthService.Login(r));
+
+// Projekte (gefiltert nach Berechtigung)
+app.MapGet("/api/projects", (HttpContext ctx) =>
+    db.GetProjectsForUser(ctx.User.Id));
+
+// Sync-Endpunkt
+app.MapPost("/api/sync", (SyncRequest r, HttpContext ctx) =>
+    syncService.ProcessSync(r, ctx.User));
+```
+
+### 6.5 Server-Hardware (unverändert)
+
+| Hardware | Kosten | Für wen |
+|---|---|---|
+| Raspberry Pi 4/5 | ~50-80€ | Baucontainer, kleines Büro |
+| Alter Laptop | 0€ | Büro |
+| Mini-PC (NUC) | ~150€ | Dauerbetrieb |
+| NAS mit Docker | vorhanden | Synology, QNAP |
 
 ---
 
-## 8. Implementierungsreihenfolge
+## 7. Interfaces — Architektur-Vorbereitung
 
-| Phase | Was | Wann |
-|-------|-----|------|
-| 1 | **IDataService Interface** definieren | Vor Multi-User |
-| 2 | **LocalDataService** (Refactoring von ProjectDatabase) | Vor Multi-User |
-| 3 | **SharedDbDataService** + Write-Lock | Wenn Team-Nutzung gewünscht |
-| 4 | **ServerDataService** + ASP.NET Minimal API | Wenn Mobile PWA kommt |
-| 5 | **Einstellungs-GUI** für Verbindungsmodus | Mit Phase 3 oder 4 |
-| 6 | **User-Profil** (optional) | Wenn Berechtigungen nötig |
+### 7.1 IDataAccessService (pro Aggregat)
+
+```csharp
+// In BauProjektManager.Domain/Services/
+public interface IProjectDataService
+{
+    Task<List<Project>> GetAllAsync(CancellationToken ct = default);
+    Task<Project?> GetByIdAsync(string id, CancellationToken ct = default);
+    Task SaveAsync(Project project, CancellationToken ct = default);
+    Task DeleteAsync(string id, CancellationToken ct = default);
+}
+
+public interface IPlanDataService { /* ... */ }
+public interface IDiaryDataService { /* ... */ }
+```
+
+**Zwei Implementierungen (später):**
+
+```csharp
+// Lokal — direkter SQLite-Zugriff (wie jetzt)
+public class LocalProjectDataService : IProjectDataService { }
+
+// Remote — HTTP-Client zum Server
+public class RemoteProjectDataService : IProjectDataService { }
+```
+
+### 7.2 ISyncTransport (austauschbar)
+
+```csharp
+// In BauProjektManager.Domain/Sync/
+public interface ISyncTransport
+{
+    Task SendAsync(SyncEnvelope envelope, CancellationToken ct = default);
+    Task<IReadOnlyList<SyncEnvelope>> ReceiveAsync(string projectId, CancellationToken ct = default);
+}
+
+public class SyncEnvelope
+{
+    public string EventId { get; init; } = string.Empty;
+    public string ProjectId { get; init; } = string.Empty;
+    public string AuthorUserId { get; init; } = string.Empty;
+    public string EntityType { get; init; } = string.Empty;
+    public string EntityId { get; init; } = string.Empty;
+    public string EventType { get; init; } = string.Empty;
+    public int BaseVersion { get; init; }
+    public int NewVersion { get; init; }
+    public string PermissionScope { get; init; } = string.Empty;
+    public DateTime CreatedAtUtc { get; init; }
+    public string PayloadJson { get; init; } = string.Empty;
+}
+```
+
+**Zwei Implementierungen:**
+
+```csharp
+// Phase 2 — JSON-Dateien im Cloud-Ordner
+public class FolderSyncTransport : ISyncTransport { }
+
+// Phase 3 — HTTP POST/GET zum Server
+public class HttpSyncTransport : ISyncTransport { }
+```
+
+**Der Sync-Kern bleibt gleich — nur der Transport wechselt.**
+
+### 7.3 IAccessControlService
+
+```csharp
+// In BauProjektManager.Domain/Security/
+public interface IAccessControlService
+{
+    bool CanAccess(string userId, string projectId, string module, AccessLevel level);
+    Task<List<Project>> GetAccessibleProjectsAsync(string userId, CancellationToken ct = default);
+    Task ShareProjectAsync(string projectId, string userId, string permission, CancellationToken ct = default);
+}
+
+public enum AccessLevel
+{
+    None,
+    Read,
+    Write,
+    Admin
+}
+```
+
+**Implementierung in Infrastructure** (wie IPrivacyPolicy):
+
+```csharp
+// Phase 1 — alles erlaubt (Solo)
+public class NoOpAccessControlService : IAccessControlService
+{
+    public bool CanAccess(...) => true;
+}
+
+// Phase 2/3 — echte Prüfung
+public class RbacAccessControlService : IAccessControlService { }
+```
 
 ---
 
-## 9. Abgrenzung
+## 8. Was JETZT in den Code muss (bei PlanManager)
+
+| Vorbereitung | Aufwand | Warum jetzt |
+|---|---|---|
+| `IProjectDataService` Interface statt direkt `ProjectDatabase.cs` aufrufen | Dünne Abstraktionsschicht | Später austauschbar gegen Remote-Implementierung |
+| `version`, `last_modified`, `modified_by` Felder in neuen Tabellen | 3 Spalten pro Tabelle | Vermeidet späteres ALTER TABLE auf gefüllten Tabellen |
+| CRUD-Methoden mit „Änderungen seit Timestamp" Parameter vorbereiten | Parameter hinzufügen | Sync braucht Delta-Abfragen, später schwer nachzurüsten |
+| Dieses Konzeptdokument | — | Architektur-Entscheidungen dokumentiert |
+
+### Was WARTEN kann
+
+- ISyncTransport Implementierung → erst wenn Phase 2 gebraucht wird
+- IAccessControlService Implementierung → erst wenn zweiter User kommt
+- REST API Server → erst wenn Phase 3 nötig ist
+- project_shares Tabelle → kann leer existieren, UI erst später
+- Offline-Cache-Logik → erst mit Server-Modus
+
+---
+
+## 9. Phase 1: Solo (Details — unverändert)
+
+*(Kapitel 2–4 aus v1.0 bleiben gültig und werden hier nicht wiederholt. Siehe Git-History für v1.0.)*
+
+### 9.1 Kurzzusammenfassung
+
+- Jeder User hat eigene `bpm.db` in `%LocalAppData%`
+- Cloud-Speicher synct Projektordner + JSON-Konfiguration
+- SQLite synct NICHT — wird auf zweitem Gerät rekonstruiert
+- Write-Lock mit Heartbeat bei geteilter DB (ADR-020)
+- Kein User-Management, kein Login
+
+---
+
+## 10. Integration mit DSGVO-Architektur
+
+Die bestehende DSGVO-Architektur (Kapitel 10.2) definiert bereits eine Rollenmatrix:
+
+| Rolle | Sieht Projektdaten | Sieht Zeiterfassung | Sieht KI-History | Ändert Einstellungen |
+|---|---|---|---|---|
+| Admin | ✅ | ✅ | ✅ | ✅ |
+| Bauleiter | ✅ | ✅ (eigenes Team) | ✅ | ❌ |
+| Polier | ✅ (eigene Projekte) | ❌ | ❌ | ❌ |
+| Viewer | ✅ (nur lesen) | ❌ | ❌ | ❌ |
+
+Diese Matrix wird in `IAccessControlService` umgesetzt. Die `IPrivacyPolicy` filtert zusätzlich nach Datenklasse (A/B/C) — zwei unabhängige Schichten:
+
+```
+Request → IAccessControlService (Darf User X Modul Y in Projekt Z?)
+       → IPrivacyPolicy (Darf diese Datenklasse extern übertragen werden?)
+       → IExternalCommunicationService (HTTP-Call mit Audit-Log)
+```
+
+---
+
+## 11. Abgrenzung
 
 **Dieses Konzept ist NICHT:**
-- Ein Cloud-Dienst (kein Internet nötig, alles im LAN)
-- Ein Multi-Mandanten-System (eine Firma, nicht mehrere)
-- Ein Rechtemanagement (Vertrauensbasis im kleinen Team)
+- Ein Cloud-Dienst
+- Ein Multi-Mandanten-System
+- Ein vollständiges Rechtemanagement mit Passwörtern und Verschlüsselung (Phase 2)
 
 **Dieses Konzept IST:**
-- Drei Stufen die schrittweise aktiviert werden können
-- Offline-fähig auf jeder Stufe (Modus A sofort, Modus B/C mit Fallback)
-- Kostenlos (keine Server-Software, keine Lizenzen)
+- Ein evolutionärer Weg von Solo → Event-Sync → Server
+- Offline-fähig auf jeder Stufe
+- Kompatibel mit der bestehenden DSGVO-Architektur
+- Vorbereitet auf Mobile PWA (Phase 3 Server = gleiche API)
 
 ---
 
-*Kernfrage: "Brauche ich das um Pläne zu sortieren?" — Nein. Deshalb Won't have V1.*  
-*Aber: Sobald ein zweiter Polier BPM nutzen soll, wird Multi-User nötig.*
+*Kernfrage: „Brauche ich das um Pläne zu sortieren?" — Nein. Deshalb Won't have V1.*  
+*Aber: Die Interface-Vorbereitung (IDataAccessService, Sync-Felder) kommt schon beim PlanManager-Bauen rein.*

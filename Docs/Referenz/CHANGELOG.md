@@ -5,6 +5,24 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.16.1] — 2026-04-03
+
+### Dokumentation
+- **DSGVO-Architektur** v1.3 — Privacy Engineering, Datenklassifizierung A/B/C, IExternalCommunicationService, IPrivacyPolicy (Strategy Pattern)
+- **ADR-035** IExternalCommunicationService — zentrales Privacy Gate
+- **ADR-036** IPrivacyPolicy — austauschbare Policy für Internal/Commercial (Lizenz-gesteuert)
+- Docs-Ordnerstruktur reorganisiert: `Kern/` + `Referenz/` + `Konzepte/`
+- CODING_STANDARDS: .NET 9 → .NET 10 LTS, neues Kapitel 17 „Datenschutz im Code"
+- Architektur.md: DSGVO-Verweise, ADR-035/036, Docs-Struktur aktualisiert
+- README: Links auf Kern/Referenz, DSGVO-Architektur ergänzt
+- VISION: Datenschutz by Design in Leitplanken
+- DEPENDENCY-MAP: Privacy Layer im Schichtdiagramm
+- BACKLOG: DSGVO-Features + Datenschutz-Regeln in „Beim Coden beachten"
+- DB-SCHEMA: external_call_log Tabelle geplant
+- GLOSSAR: Datenschutz-Begriffe ergänzt
+
+---
+
 ## [v0.16.0] — 2026-03-30
 
 ### Hinzugefügt
@@ -431,6 +449,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 | v1.1.0 | 2026-03-30 | ADR | 7 neue ADRs (028–034) |
 | v1.0.0 | 2026-03-30 | CODING_STANDARDS | UI-Ergänzung |
 | v2.0.0 | 2026-03-30 | Architektur | v1.5→v2.0.0 |
+| v1.3.0 | 2026-04-03 | DSGVO-Architektur | Erstversion + 2 Reviews + IPrivacyPolicy |
+| v1.2.0 | 2026-04-03 | ADR | ADR-035 + ADR-036 (36 Entscheidungen) |
+| v1.1.0 | 2026-04-03 | CODING_STANDARDS | .NET 10 + Kapitel 17 Datenschutz |
 
 ---
 

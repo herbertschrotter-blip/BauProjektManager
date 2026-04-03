@@ -39,7 +39,7 @@ Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheid
 | 017 | VBA liest nur, schreibt nie | ✅ Entschieden | 2026-03 |
 | 018 | Arbeitszeiterfassung: WPF + ClosedXML → Excel | ✅ Entschieden | 2026-03 |
 | 019 | Mobile PWA statt Native App | ✅ Accepted / Not Started | 2026-03 |
-| 020 | Write-Lock mit Heartbeat für Multi-Device-Sync | 🟡 Konzept, aufgeschoben | 2026-03 |
+| 020 | Write-Lock mit Heartbeat für Shared SQLite im LAN | ✅ Accepted / Not Started | 2026-03 |
 | 021 | Client/Firma als eigene Entität (Vorbereitung) | 🟡 Konzept | 2026-03 |
 | 022 | Segment-basiertes Dateinamen-Parsing | ✅ Entschieden | 2026-03 |
 | 023 | Claude schreibt Code, Herbert committet | ✅ Entschieden | 2026-03 |
@@ -555,10 +555,10 @@ Nein. Excel bleibt die Single Source of Truth für Roh-Zeitbuchungen. WPF liefer
 
 ---
 
-## ADR-019: Mobile PWA statt Native App (aufgeschoben)
+## ADR-019: Mobile PWA statt Native App
 
 **Datum:** 2026-03  
-**Status:** 🟡 Konzept, Umsetzung aufgeschoben  
+**Status:** ✅ Accepted / Not Started  
 **Herkunft:** Smartphone-App Chat
 
 **Kontext:**
@@ -583,10 +583,10 @@ PWA (Progressive Web App) im Browser. Kein App Store nötig, funktioniert auf je
 
 ---
 
-## ADR-020: Write-Lock mit Heartbeat für Multi-Device-Sync (aufgeschoben)
+## ADR-020: Write-Lock mit Heartbeat für Shared SQLite im LAN
 
 **Datum:** 2026-03  
-**Status:** 🟡 Konzept, Umsetzung aufgeschoben  
+**Status:** ✅ Accepted / Not Started  
 **Herkunft:** Smartphone-App Chat, Vergleich mit Notion/ClickUp/Excel
 
 **Kontext:**
@@ -934,7 +934,7 @@ Ein zentrales Dokument `Docs/DB-SCHEMA.md` ist die **einzige Quelle der Wahrheit
 ## ADR-032: ITaskManagementService — nicht an ClickUp gebunden
 
 **Datum:** 2026-03  
-**Status:** 🟡 Konzept  
+**Status:** ✅ Accepted / Not Started  
 **Herkunft:** Phase 1 Teil 2, ClickUp-Integration Diskussion
 
 **Kontext:**
@@ -1186,7 +1186,7 @@ else
 ## ADR-037: ISyncTransport — austauschbarer Sync-Transport (Folder/HTTP)
 
 **Datum:** 2026-04  
-**Status:** 🟡 Konzept  
+**Status:** ✅ Accepted / Not Started  
 **Herkunft:** Multi-User Architektur-Diskussion (Claude + ChatGPT), Analyse von PlanRadar/Procore/Dalux
 
 **Kontext:**
@@ -1426,7 +1426,10 @@ Alle Secrets werden über DPAPI (Windows Data Protection API) geschützt. Kein K
 - ❌ Secrets in Serilog-Logs (auch nicht maskiert)
 - ❌ Secrets in `external_call_log` (Audit-Log)
 - ❌ Secrets in Cloud-synced Ordnern
-- ❌ Hardcoded Secrets im Quellcode (außer embedded HMAC-Secret für Lizenzverifikation)
+- ❌ Hardcoded Secrets im Quellcode (einzige Ausnahme: embedded HMAC-Secret für Lizenzverifikation — siehe Sicherheitshinweis unten)
+
+**Sicherheitshinweis Lizenz-Secret:**
+Die Offline-Lizenzprüfung per eingebettetem HMAC-Secret ist **manipulationserschwerend, nicht manipulationssicher**. Jeder der die App ernsthaft analysiert kann ein embedded Secret prinzipiell extrahieren. Ziel ist eine einfache Offline-Freischaltung und Hürde gegen triviale Manipulation, kein kryptographisch starker Kopierschutz. Falls härterer Schutz nötig wird (z.B. bei hohem Piraterie-Risiko), braucht es ein anderes Modell (Online-Aktivierung, Hardware-Binding, Dongle).
 
 **Backup/Export:**
 

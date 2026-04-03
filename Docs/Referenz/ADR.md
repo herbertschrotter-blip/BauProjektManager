@@ -49,6 +49,7 @@
 | 036 | IPrivacyPolicy — austauschbare Policy für Internal/Commercial | ✅ Entschieden | 2026-04 |
 | 037 | ISyncTransport — austauschbarer Sync-Transport (Folder/HTTP) | 🟡 Konzept | 2026-04 |
 | 038 | IAccessControlService — rollenbasierte Projektfreigabe | 🟡 Konzept | 2026-04 |
+| 039 | Einheitliches ID-Schema — TEXT mit Präfix für alle Tabellen | ✅ Entschieden | 2026-04 |
 
 ---
 
@@ -1198,6 +1199,69 @@ Zweistufiger Ansatz:
 - Bei Phase 2 (JSON-Sync): Berechtigungen nicht erzwingbar, nur organisatorisch (empfängerspezifische Ordner)
 - Bei Phase 3 (Server): Server erzwingt Berechtigungen serverseitig
 - Konzeptdokument: [MultiUserKonzept.md](../Konzepte/MultiUserKonzept.md) Kapitel 6 + 7.3
+
+---
+
+## ADR-039: Einheitliches ID-Schema — TEXT mit Präfix für alle Tabellen
+
+**Datum:** 2026-04  
+**Status:** ✅ Entschieden  
+**Herkunft:** Kern-Dokumenten-Review (Claude + ChatGPT, 3 Runden)
+
+**Kontext:**
+
+Im DB-Schema v1.5 gibt es eine Inkonsistenz: Implementierte Tabellen verwenden `id TEXT UNIQUE NOT NULL` mit Präfix (`proj_001`, `bpart_042`), geplante Tabellen verwenden `id INTEGER PRIMARY KEY AUTOINCREMENT` ohne Präfix. Ohne einheitliche Entscheidung drohen Integrationsprobleme und ein verdecktes Mischmodell.
+
+**Entscheidung:**
+
+TEXT-IDs mit Präfix für alle Tabellen — bestehende und zukünftige. Jede Tabelle hat zwei Spalten:
+```sql
+seq INTEGER PRIMARY KEY AUTOINCREMENT,  -- interne SQLite-Reihenfolge
+id TEXT UNIQUE NOT NULL                  -- fachliche Kennung ("emp_001")
+```
+
+**Rollen:**
+- `seq` = rein interne Einfügereihenfolge, wird NIE als FK, in JSON, Logs oder Exports verwendet
+- `id` = fachlich stabile Kennung, wird für FKs, JSON-Export, Logging, VBA, Debugging verwendet
+- Alle FK-Spalten sind `TEXT` und referenzieren `id`, nie `seq`
+
+**Präfix-Tabelle:**
+
+| Tabelle | Präfix | Beispiel |
+|---------|--------|---------|
+| projects | `proj_` | `proj_001` |
+| clients | `client_` | `client_042` |
+| building_parts | `bpart_` | `bpart_003` |
+| building_levels | `blvl_` | `blvl_017` |
+| project_participants | `ppart_` | `ppart_005` |
+| project_links | `plink_` | `plink_002` |
+| employees | `emp_` | `emp_007` |
+| time_entries | `te_` | `te_1523` |
+| work_packages | `wp_` | `wp_042` |
+| work_assignments | `wa_` | `wa_305` |
+| lv_positions | `lv_` | `lv_089` |
+| performance_catalog | `perf_` | `perf_012` |
+| diary_entries | `diary_` | `diary_201` |
+| contacts | `contact_` | `contact_015` |
+| material_orders | `mo_` | `mo_034` |
+| external_call_log | `ecl_` | `ecl_4201` |
+| project_shares | `pshare_` | `pshare_002` |
+
+**ID-Generierung:** Zentral über `EntityIdGenerator` in Infrastructure. Kein Modul darf IDs selbst zusammenbauen.
+
+**Alternativen:**
+
+- *INTEGER-only:* Performanter, aber nicht lesbar in Logs/JSON/VBA, Mischmodell mit bestehenden TEXT-IDs.
+- *GUID/ULID:* Global eindeutig, aber 36 Zeichen, nicht lesbar, kein Vorteil bei BPMs Datenmengen.
+- *Mischmodell (TEXT bestehend + INTEGER neu):* Null Migration, aber zwei mentale Modelle, FK-Datentyp-Konflikte.
+
+**Konsequenzen:**
+
+- DB-SCHEMA.md: Alle geplanten Tabellen auf TEXT-IDs umschreiben, FK-Regel dokumentieren
+- Kapitel 9 in DB-SCHEMA.md: Abschnitt zu seq vs. id, Präfix-Tabelle aufnehmen
+- `EntityIdGenerator` als zentraler Service in Infrastructure
+- Kein Migrationsaufwand: Geplante Tabellen existieren noch nicht, nur Doku-Änderung
+- Detaillierte ADR als separate Datei: `ADR-039.md` (Download)
 
 ---
 

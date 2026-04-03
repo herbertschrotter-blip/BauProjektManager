@@ -5,21 +5,46 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
-## [v0.16.1] — 2026-04-03
+## [v0.16.1] — 2026-04-03 / 2026-04-04
 
-### Dokumentation
-- **DSGVO-Architektur** v1.3 — Privacy Engineering, Datenklassifizierung A/B/C, IExternalCommunicationService, IPrivacyPolicy (Strategy Pattern)
+### Dokumentation — DSGVO + Privacy (03.04.)
+- **DSGVO-Architektur** v1.3→v1.4 — Privacy Engineering, Datenklassifizierung A/B/C, IExternalCommunicationService, IPrivacyPolicy (Strategy Pattern), Dienststatus-Modell, Löschkonzept, Audit-Negativliste
 - **ADR-035** IExternalCommunicationService — zentrales Privacy Gate
-- **ADR-036** IPrivacyPolicy — austauschbare Policy für Internal/Commercial (Lizenz-gesteuert)
+- **ADR-036** IPrivacyPolicy — austauschbare Policy, `RequiresStrictCompliance` (nicht `IsCommercial`)
 - Docs-Ordnerstruktur reorganisiert: `Kern/` + `Referenz/` + `Konzepte/`
-- CODING_STANDARDS: .NET 9 → .NET 10 LTS, neues Kapitel 17 „Datenschutz im Code"
-- Architektur.md: DSGVO-Verweise, ADR-035/036, Docs-Struktur aktualisiert
-- README: Links auf Kern/Referenz, DSGVO-Architektur ergänzt
-- VISION: Datenschutz by Design in Leitplanken
-- DEPENDENCY-MAP: Privacy Layer im Schichtdiagramm
-- BACKLOG: DSGVO-Features + Datenschutz-Regeln in „Beim Coden beachten"
-- DB-SCHEMA: external_call_log Tabelle geplant
-- GLOSSAR: Datenschutz-Begriffe ergänzt
+- CODING_STANDARDS: .NET 9 → .NET 10 LTS, neues Kapitel 17 „Datenschutz im Code", 17.7 Datenschutz nie im ViewModel
+
+### Dokumentation — Cross-Review mit ChatGPT (03.–04.04.)
+
+**Kern-Docs Review (5 Docs, 3 Runden, 17 Änderungen):**
+- **DSGVO-Architektur** v1.4 — Dienststatus-Modell (Disabled→EnabledManual→EnabledAuto), Anonymisierung als eigener Service, Löschkonzept Stammdaten, Audit-Negativliste + decision_reason Katalog
+- **Architektur** v2.1.0 — registry.json als Exportvertrag (registryVersion), Betriebsmodi A/B/C, Privacy Control Layer in Solution-Struktur, OneDrive→Cloud-Speicher, SQLite-Scope (Excel-Ausnahme)
+- **CODING_STANDARDS** — Kap. 17.7 Datenschutz-Logik nie im ViewModel
+- **DB-SCHEMA** — FK-Regel (alle FKs auf `id` nie `seq`), seq vs. id Rollen, Präfix-Tabelle (17 Tabellen), geplante Tabellen auf TEXT-IDs
+- **BACKLOG** — Datenschutz-Infrastruktur "PFLICHT vor erstem Online-Modul", ADR-039 erledigt
+
+**ADR Review (39→42 ADRs, 4 Runden):**
+- **ADR-039** NEU — Einheitliches ID-Schema TEXT mit Präfix für alle Tabellen
+- **ADR-040** NEU — Migrations- und Versionierungsstrategie (Forward-Only, Backup)
+- **ADR-041** NEU — Recovery / Degraded Mode (Normal/Eingeschränkt/Blockiert)
+- **ADR-042** NEU — Secrets und Credentials (DPAPI/SecretStore, Lizenz-Ehrlichkeit)
+- Statusmodell eingeführt: Decision Status (Proposed→Accepted→Superseded) + Implementation Status (Not Started→Partial→Implemented)
+- ADR-002: Scope-Korrektur (SQLite SoR für Kerndaten, Ausnahme Excel ADR-018)
+- ADR-006: Modulinteraktionsregeln (keine gegenseitigen Referenzen, Verträge in Domain)
+- ADR-020: Titel + Scope auf LAN-Netzlaufwerk eingeschränkt, Ablösung durch ADR-037
+- ADR-028: 5→7 ResourceDictionaries (+Inputs.xaml, +Tabs.xaml)
+- ADR-033: Cloud-Ordner gestrichen, Event-Sync als Mechanismus eingeordnet
+- ADR-036: `IsCommercial` → `RequiresStrictCompliance`
+- ADR-042: Lizenz-Secret ehrlich als "manipulationserschwerend, nicht manipulationssicher"
+
+**DEPENDENCY-MAP Review (2 Runden):**
+- v2.0→v2.1 — Geplante Services (ISyncTransport, IAccessControlService, ITaskManagementService, EntityIdGenerator, SecretStore, StartupHealthCheck), Cloud-Speicher-neutral, Verweis auf DB-SCHEMA.md
+
+**UI_UX_Guidelines Review (3 Runden, 8 Änderungen):**
+- v2.0→v2.1 — Mindestauflösung entschärft (1920×1080 optimiert, 1366×768 unterstützt), Ist/Zielbild mit ✅/🎯/⬜, Overlay-Klick bei Formulardialogen entfernt, Primary-Action harmonisiert, 3 neue States (Dirty, Read-only, Partial Success), Validierungszusammenfassung für Mehrtab-Dialoge, Feedback-Matrix als Kap. 18
+
+**WPF_UI_Architecture Neufassung (2 Runden, 15 Punkte):**
+- v1.0→v2.0 — Controls/ als Shell-only, 7 Dictionaries offiziell, CommunityToolkit.Mvvm statt eigener MVVM-Basis, Token→WPF-Key Mapping-Tabelle, ViewState + Operation Flags getrennt, Feedback-Infrastruktur, kein ex.Message zum User, Mehrtab-Validierung, Responsive-Regeln, Navigation als V1-Übergang, Migration hardcoded→tokenisiert, SecretStore statt DPAPI direkt
 
 ---
 
@@ -452,6 +477,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 | v1.3.0 | 2026-04-03 | DSGVO-Architektur | Erstversion + 2 Reviews + IPrivacyPolicy |
 | v1.2.0 | 2026-04-03 | ADR | ADR-035 + ADR-036 (36 Entscheidungen) |
 | v1.1.0 | 2026-04-03 | CODING_STANDARDS | .NET 10 + Kapitel 17 Datenschutz |
+| v1.4.0 | 2026-04-04 | DSGVO-Architektur | Dienststatus, Löschkonzept, Audit-Negativliste |
+| v2.1.0 | 2026-04-04 | Architektur | Exportvertrag, Betriebsmodi, Privacy Layer, Cloud-neutral |
+| v1.2.0 | 2026-04-04 | ADR | 42 ADRs, Statusmodell, 3 neue (040-042) |
+| v2.1.0 | 2026-04-04 | DEPENDENCY-MAP | Geplante Services, Cloud-neutral |
+| v2.1.0 | 2026-04-04 | UI_UX_Guidelines | 8 Review-Punkte (Auflösung, States, Feedback) |
+| v2.0.0 | 2026-04-04 | WPF_UI_Architecture | Neufassung (15 Review-Punkte) |
+| v1.5.1 | 2026-04-04 | DB-SCHEMA | TEXT-IDs, FK-Regel, Präfix-Tabelle (ADR-039) |
 
 ---
 

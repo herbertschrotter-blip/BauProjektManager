@@ -8,13 +8,14 @@
 **Autor:** Herbert + Claude  
 
 **Verwandte Dokumente:**
-- [ADR.md](ADR.md) — 23 Architecture Decision Records
-- [VISION.md](VISION.md) — Nordstern, Schmerzpunkte, Zielgruppe
-- [DEPENDENCY-MAP.md](DEPENDENCY-MAP.md) — Solution-Struktur + Ökosystem
-- [CHANGELOG.md](CHANGELOG.md) — Versionshistorie ab v0.0.0
+- [ADR.md](../Referenz/ADR.md) — 36 Architecture Decision Records
+- [VISION.md](../Referenz/VISION.md) — Nordstern, Schmerzpunkte, Zielgruppe
+- [DEPENDENCY-MAP.md](../Referenz/DEPENDENCY-MAP.md) — Solution-Struktur + Ökosystem
+- [CHANGELOG.md](../Referenz/CHANGELOG.md) — Versionshistorie ab v0.0.0
 - [BACKLOG.md](BACKLOG.md) — Feature-Liste mit Status
 - [CODING_STANDARDS.md](CODING_STANDARDS.md) — Code-Richtlinien
-- Modul-Konzepte: [Docs/Konzepte/](Konzepte/) — Detaillierte Konzeptdokumente pro Modul
+- [DSVGO-Architektur.md](DSVGO-Architektur.md) — Datenschutz, Privacy Engineering, IPrivacyPolicy
+- Modul-Konzepte: [Docs/Konzepte/](../Konzepte/) — Detaillierte Konzeptdokumente pro Modul
 
 ---
 
@@ -714,24 +715,25 @@ BauProjektManager.sln
 │   └── Get-ProjektOrdner.ps1                  ← ✅ PowerShell Analyse-Tool
 │
 └── Docs/
-    ├── BauProjektManager_Architektur.md       ← DIESES DOKUMENT
-    ├── ADR.md                                 ← ✅ 23 Entscheidungen
-    ├── VISION.md                              ← ✅ Nordstern
-    ├── DEPENDENCY-MAP.md                      ← ✅ Ökosystem
-    ├── CHANGELOG.md                           ← ✅ Versionshistorie
-    ├── BACKLOG.md                             ← ✅ Feature-Liste
-    ├── CODING_STANDARDS.md                    ← ✅ Code-Richtlinien
-    └── Konzepte/                              ← Modul-Konzeptdokumente
-        ├── ModuleBautagebuch.md
-        ├── ModuleDashboard.md
-        ├── ModuleFoto.md
-        ├── ModuleGIS.md
-        ├── ModuleOutlook.md
-        ├── Moduleplanheader.md
-        ├── ModuleVorlagen.md
-        ├── ModuleWetter.md
+    ├── Kern/                                  ← Bei JEDER Code-Änderung relevant
+    │   ├── BauProjektManager_Architektur.md   ← DIESES DOKUMENT
+    │   ├── DB-SCHEMA.md                       ← ✅ Schema v1.5
+    │   ├── CODING_STANDARDS.md                ← ✅ Code-Richtlinien + Datenschutz (Kap. 17)
+    │   ├── DSVGO-Architektur.md               ← ✅ Privacy Engineering, IPrivacyPolicy
+    │   └── BACKLOG.md                         ← ✅ Feature-Liste
+    ├── Referenz/                              ← Lesen wenn Thema aufkommt
+    │   ├── ADR.md                             ← ✅ 36 Entscheidungen
+    │   ├── VISION.md                          ← ✅ Nordstern
+    │   ├── DEPENDENCY-MAP.md                  ← ✅ Ökosystem
+    │   ├── UI_UX_Guidelines.md                ← ✅ Design-System
+    │   ├── WPF_UI_Architecture.md             ← ✅ Theme, Tokens
+    │   ├── CHANGELOG.md                       ← ✅ Versionshistorie
+    │   ├── GLOSSAR.md                         ← ✅ Bau-Begriffe
+    │   └── UX_Flows.md                        ← ✅ User Workflows
+    └── Konzepte/                              ← Erst relevant wenn Modul gebaut wird
+        ├── ModuleKiAssistent.md
         ├── ModuleZeiterfassung.md
-        └── ModuleKiAssistent.md
+        └── ... (13 weitere)
 ```
 
 **Dependency-Regel (eisern):**
@@ -749,7 +751,7 @@ Detailliertes Dependency-Diagramm: siehe [DEPENDENCY-MAP.md](DEPENDENCY-MAP.md).
 
 ## 11. Technische Entscheidungen
 
-Vollständige Liste aller 23 Architekturentscheidungen mit Kontext, Alternativen und Konsequenzen: siehe [ADR.md](ADR.md).
+Vollständige Liste aller 36 Architekturentscheidungen mit Kontext, Alternativen und Konsequenzen: siehe [ADR.md](../Referenz/ADR.md).
 
 Zusammenfassung der wichtigsten Entscheidungen:
 
@@ -779,6 +781,8 @@ Zusammenfassung der wichtigsten Entscheidungen:
 | **Status** | Nur Active + Completed | ADR-025 |
 | **Portal-Typen** | Editierbare Liste | ADR-026 |
 | **KI-API-Import** | ChatGPT/Claude für Datenextraktion | ADR-027 |
+| **Datenschutz** | IExternalCommunicationService als zentrales Privacy Gate | ADR-035 |
+| **Privacy Policy** | IPrivacyPolicy austauschbar (Relaxed/Strict), Lizenz-gesteuert | ADR-036 |
 
 ---
 

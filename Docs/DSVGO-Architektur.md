@@ -1,6 +1,6 @@
 ﻿# BauProjektManager — DSGVO-Architektur & Privacy Engineering
 
-**Version:** 1.2  
+**Version:** 1.3  
 **Erstellt:** 03.04.2026  
 **Letzte Überarbeitung:** 03.04.2026  
 **Nächste Pflicht-Revision:** Spätestens 03.04.2027 oder bei Gesetzesänderung  
@@ -231,7 +231,105 @@ public interface IExternalCommunicationService
 > Alle externen Calls laufen über `IExternalCommunicationService`.
 > Der Service entscheidet — das Modul fragt an.
 
-### 4.3 External Gateway — Registrierte Dienste
+### 4.3 Privacy Policy — Austauschbare Komponente (PFLICHT)
+
+Die Datenschutz-Entscheidungslogik ist als eigene Komponente vom Service getrennt. Das ermöglicht zwei Betriebsmodi ohne doppelten Code: **Internal** (Herbert allein) und **Commercial** (Verkauf an Dritte).
+
+**Pattern:** Strategy Pattern via DI — die Architektur bleibt identisch, nur die Policy wird ausgetauscht.
+```csharp
+// In BauProjektManager.Domain/Privacy/
+public interface IPrivacyPolicy
+{
+    PolicyDecision Evaluate(
+        string module,
+        DataClassification classification,
+        string purpose);
+}
+
+public class PolicyDecision
+{
+    public bool IsAllowed { get; init; }
+    public string Reason { get; init; } = string.Empty;
+    public bool RequiresUserConfirmation { get; init; }
+}
+```
+
+**Zwei Implementierungen in Infrastructure:**
+```csharp
+// Für Herbert / interne Nutzung — alles erlaubt, nur Logging
+public class RelaxedPrivacyPolicy : IPrivacyPolicy
+{
+    public PolicyDecision Evaluate(string module, DataClassification classification, string purpose)
+        => new() { IsAllowed = true, Reason = "internal_mode", RequiresUserConfirmation = false };
+}
+
+// Für Verkaufsversion — volle DSGVO-Logik
+public class StrictPrivacyPolicy : IPrivacyPolicy
+{
+    public PolicyDecision Evaluate(string module, DataClassification classification, string purpose)
+    {
+        // Modul erlaubt? DPA bestätigt? Klasse C ohne Anonymisierung?
+        // → Volle Policy-Logik aus Kapitel 4.2
+    }
+}
+```
+
+**DI-Registrierung (in App.xaml.cs):**
+```csharp
+// Entscheidung über Lizenz, NICHT über settings.json
+if (license.IsCommercial)
+    services.AddSingleton<IPrivacyPolicy, StrictPrivacyPolicy>();
+else
+    services.AddSingleton<IPrivacyPolicy, RelaxedPrivacyPolicy>();
+```
+
+**Der `ExternalCommunicationService` nutzt die Policy per Injection:**
+```csharp
+public class ExternalCommunicationService : IExternalCommunicationService
+{
+    private readonly IPrivacyPolicy _policy;
+    private readonly HttpClient _httpClient;
+
+    public async Task<HttpResponseMessage> SendAsync(
+        string module, HttpRequestMessage request,
+        DataClassification classification, string purpose,
+        CancellationToken ct = default)
+    {
+        var decision = _policy.Evaluate(module, classification, purpose);
+        LogDecision(module, classification, purpose, decision);
+
+        if (!decision.IsAllowed)
+            throw new ExternalCommunicationBlockedException(module, decision.Reason);
+
+        if (decision.RequiresUserConfirmation)
+            // → UI fragt User (über Event/Callback)
+
+        return await _httpClient.SendAsync(request, ct);
+    }
+}
+```
+
+**Wichtige Regeln:**
+
+- Der aktive Modus wird NIEMALS über `settings.json` gesteuert — sonst kann jeder User die DSGVO umgehen
+- Die Entscheidung kommt aus der Lizenz (ADR-034: `.bpm-license`) oder aus einem Build-Flag
+- `RelaxedPrivacyPolicy` loggt trotzdem ins Audit-Log (mit `decision_reason: "internal_mode"`) — damit ist auch im internen Betrieb nachvollziehbar was nach außen ging
+- Beide Policies nutzen denselben `ExternalCommunicationService` — kein doppelter Code
+
+**Session-Override (OPTIONAL — für Commercial-Modus):**
+
+Für Nutzer der Verkaufsversion die temporär schneller arbeiten wollen:
+```csharp
+// Checkbox: "Für diese Sitzung Klasse-B-Warnungen automatisch bestätigen"
+public interface IPrivacyContext
+{
+    bool IsTrustedSession { get; set; }
+}
+```
+
+Die `StrictPrivacyPolicy` prüft den Context: Bei `IsTrustedSession = true` werden Klasse-B-Calls ohne Dialog durchgelassen (aber weiterhin geloggt). Klasse C bleibt IMMER blockiert — Session-Override gilt nicht für Klasse C.
+
+### 4.4 External Gateway — Registrierte Dienste
 
 | Modul-ID | Externer Dienst | Datenklasse | Auto-Call? |
 |---|---|---|---|
@@ -912,6 +1010,7 @@ Vor Implementierung jedes Moduls mit externem Kontakt oder Klasse-B/C-Daten dies
 | 1.0 | 03.04.2026 | Erstversion |
 | 1.1 | 03.04.2026 | Ergänzt: Revisionspflicht (Kap. 2.6), Informationspflichten Art. 13/14 (Kap. 3 Klasse B), Rollenbasierte Zugriffskontrolle (Kap. 10.2), Verschlüsselung/SQLCipher (Kap. 9.4), KI-Anbieter-Prüfung inkl. Training/Datenverwendung (Kap. 12.4), DSFA-Checkliste (Kap. 16), Organisatorische Maßnahmen inkl. Kosten-Nutzen (Kap. 17), Dokumentklassifizierung (PFLICHT/EMPFOHLEN/OPTIONAL), Änderungshistorie |
 | 1.2 | 03.04.2026 | Überarbeitung auf Basis externer Review: `DataClassification` Enum statt bool (Kap. 4.2), Policy Enforcement im Service (Kap. 4.2), `decision_reason` im Audit-Log (Kap. 11.3), KI Klasse C Default-Block statt Warnung (Kap. 7.3), registry.json Klasse-B-Whitelist (Kap. 9.3), Multi-User Betriebsmodi-Matrix (Kap. 10.2), Verarbeitungsverzeichnis defensiver formuliert (Kap. 15), Modul-Implementierungs-Checkliste (Kap. 18) |
+| 1.3 | 03.04.2026 | IPrivacyPolicy als austauschbare Komponente (Kap. 4.3): Strategy Pattern für Internal/Commercial-Modus, RelaxedPrivacyPolicy + StrictPrivacyPolicy, Lizenz-gesteuerte DI-Registrierung, Session-Override für Klasse B |
 
 ---
 

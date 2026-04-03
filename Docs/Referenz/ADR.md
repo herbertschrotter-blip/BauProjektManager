@@ -999,6 +999,7 @@ Technisch wird ein `IDataService` Interface eingeführt mit 3 Implementierungen:
 - Modus C erfordert: ASP.NET Minimal API + REST-Endpoints + Server-Setup-Anleitung
 - Kein Berechtigungsmanagement in Modus A/B (Vertrauensbasis). RBAC ab Modus C — siehe ADR-038.
 - Shared SQLite ist ein optionaler LAN-Sondermodus, nicht der Standard-Evolutionspfad. Standard-Evolution: Modus A → Event-Sync (ADR-037) → Server (Modus C).
+- **Einordnung Event-Sync:** ADR-037 ist kein eigener Betriebsmodus, sondern ein Synchronisationsmechanismus zwischen lokalen Instanzen auf dem Evolutionspfad von Modus A zu Modus C. Jede Instanz behält ihre eigene lokale bpm.db — es gibt keine geteilte Datenbank im Cloud-Szenario.
 - Konzeptdokument: `MultiUserKonzept.md`
 
 **Betrifft:** ADR-004, ADR-020, ADR-037, ADR-038

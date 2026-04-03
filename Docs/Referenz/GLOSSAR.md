@@ -267,4 +267,24 @@ Im Code: `PortalTypes` in `settings.json`, editierbar. Tab 4 im ProjectEditDialo
 
 ---
 
+## 14. Datenschutz (DSGVO)
+
+| Begriff | Erklärung |
+|---------|-----------|
+| **DSGVO** | Datenschutz-Grundverordnung. EU-Verordnung für den Schutz personenbezogener Daten. Gilt in Österreich seit 25.05.2018. |
+| **DSG** | Österreichisches Datenschutzgesetz. Nationale Ergänzung zur DSGVO. |
+| **ArbVG** | Arbeitsverfassungsgesetz. § 96 verlangt Betriebsvereinbarung für automatisierte Personalverarbeitung (z.B. Zeiterfassung). |
+| **AVV / DPA** | Auftragsverarbeitungs-Vereinbarung / Data Processing Agreement. Vertrag zwischen BPM-Nutzer und externem API-Anbieter (z.B. OpenAI). Pflicht vor KI-Modul. |
+| **DSFA** | Datenschutz-Folgenabschätzung (Art. 35 DSGVO). Pflicht bei hohem Risiko — z.B. KI-Modul mit Klasse-C-Daten. |
+| **Datenklasse A** | Kein Personenbezug. Koordinaten, Hashes, Wetterdaten, Ordnerstruktur. Kann frei verarbeitet werden. |
+| **Datenklasse B** | Personenbezogene Daten eigener Mitarbeiter/Geschäftskontakte. Clients, Participants, Employees. Bei externem API-Transfer: Warnung + Opt-in. |
+| **Datenklasse C** | Sensible Drittdaten in Dokumenten: LVs, Baubescheide, Baubeschreibungen. Default: blockiert. Nur mit Anonymisierung oder expliziter User-Freigabe. |
+| **IExternalCommunicationService** | Zentrales Privacy Gate (ADR-035). Einziger erlaubter Weg für HTTP-Calls an externe APIs. Entscheidet, loggt, blockiert. |
+| **IPrivacyPolicy** | Austauschbare Policy-Komponente (ADR-036). `RelaxedPrivacyPolicy` für intern, `StrictPrivacyPolicy` für Verkaufsversion. Steuerung über Lizenz. |
+| **Privacy by Design** | Art. 25 DSGVO: Datenschutz von Anfang an in die Architektur einbauen, nicht nachträglich. |
+| **DPAPI** | Windows Data Protection API. Verschlüsselt API-Keys lokal, gebunden an den Windows-User. |
+| **SQLCipher** | Verschlüsseltes SQLite. Empfohlen ab Verkauf oder Mobile (Geräteverlust-Risiko). |
+
+---
+
 *Dieses Glossar wird erweitert wenn neue Module oder Fachbegriffe hinzukommen.*

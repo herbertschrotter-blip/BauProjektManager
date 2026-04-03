@@ -181,7 +181,7 @@
                                     BorderThickness="0" Cursor="Hand"
                                     ToolTip="Archivordner wählen"/>
 
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="OneDrive:"
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Cloud-Speicher:"
                                        Foreground="#CCCCCC" VerticalAlignment="Center" Margin="0,4"/>
                             <TextBox Grid.Row="2" Grid.Column="1"
                                      Text="{Binding OneDrivePath, Mode=OneWay}"

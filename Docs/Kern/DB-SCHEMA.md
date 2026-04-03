@@ -92,6 +92,9 @@ clients ◄──────────── projects
 | material_orders | work_packages | work_package_id | — | ⬜ Geplant |
 | project_participants | contacts | contact_id | — | ⬜ Vorbereitet (FK leer) |
 
+**FK-Regel (verbindlich, ADR-039):**
+Alle Fremdschlüssel referenzieren die fachliche `id`-Spalte der Zieltabelle (`TEXT`). Die `seq`-Spalte darf niemals in Fremdschlüsseln, JSON-Dateien, Logs oder externen Schnittstellen verwendet werden.
+
 ---
 
 ## 3. Modul-Zuordnung
@@ -745,6 +748,45 @@ EINSTELLUNGEN (Stammdaten)
 | Enums | TEXT mit definierten Werten | `status`: "Active" \| "Completed" |
 | NULL | Nur wenn Wert optional ist | `actual_end`, `rduk`, `absence_type` |
 | DEFAULT '' | Für Pflicht-Textfelder die leer sein dürfen | `company`, `notes` |
+
+### 9.1 seq vs. id — Rollen (ADR-039)
+
+Jede Tabelle hat zwei Spalten für Identifikation:
+
+| Spalte | Typ | Rolle | Verwendet in |
+|--------|-----|-------|-------------|
+| `seq` | INTEGER PRIMARY KEY AUTOINCREMENT | Rein interne SQLite-Einfügereihenfolge. ROWID-Alias. | NUR intern für Sortierung ("zeige die letzten 10 Einträge") |
+| `id` | TEXT UNIQUE NOT NULL | Fachlich stabile, präfixierte Kennung. | FKs, JSON-Export, Logging, VBA, Debugging, UI |
+
+**Verbindliche Regeln:**
+- Alle Fremdschlüssel referenzieren die `id`-Spalte der Zieltabelle, **NIEMALS** `seq`
+- `seq` darf in keinem JSON, keinem Log, keinem Export, keiner externen Schnittstelle erscheinen
+- FK-Spalten sind immer `TEXT` (nicht `INTEGER`)
+
+### 9.2 Präfix-Tabelle (ADR-039)
+
+| Tabelle | Präfix | Beispiel |
+|---------|--------|---------|
+| projects | `proj_` | `proj_001` |
+| clients | `client_` | `client_042` |
+| building_parts | `bpart_` | `bpart_003` |
+| building_levels | `blvl_` | `blvl_017` |
+| project_participants | `ppart_` | `ppart_005` |
+| project_links | `plink_` | `plink_002` |
+| employees | `emp_` | `emp_007` |
+| time_entries | `te_` | `te_1523` |
+| work_packages | `wp_` | `wp_042` |
+| work_assignments | `wa_` | `wa_305` |
+| lv_positions | `lv_` | `lv_089` |
+| performance_catalog | `perf_` | `perf_012` |
+| project_difficulty | `pdiff_` | `pdiff_003` |
+| diary_entries | `diary_` | `diary_201` |
+| contacts | `contact_` | `contact_015` |
+| material_orders | `mo_` | `mo_034` |
+| external_call_log | `ecl_` | `ecl_4201` |
+| project_shares | `pshare_` | `pshare_002` |
+
+ID-Generierung zentral über `EntityIdGenerator` in Infrastructure. Kein Modul darf IDs selbst zusammenbauen.
 
 ---
 

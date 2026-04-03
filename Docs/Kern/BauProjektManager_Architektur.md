@@ -1,14 +1,14 @@
 ﻿# BauProjektManager — Architektur & Spezifikation
 
-**Version:** 2.0.0  
-**Datum:** 29.03.2026  
+**Version:** 2.1.0  
+**Datum:** 03.04.2026  
 **Sprache:** C# (.NET 10 LTS), WPF (XAML), MVVM  
 **Frameworks:** CommunityToolkit.Mvvm, Serilog, ClosedXML, PdfPig, QuestPDF  
 **Basis:** v1.4 + Phase 0/1 Implementierung + Herberts Feedback + Docs-Reorganisation  
 **Autor:** Herbert + Claude  
 
 **Verwandte Dokumente:**
-- [ADR.md](../Referenz/ADR.md) — 36 Architecture Decision Records
+- [ADR.md](../Referenz/ADR.md) — 39 Architecture Decision Records
 - [VISION.md](../Referenz/VISION.md) — Nordstern, Schmerzpunkte, Zielgruppe
 - [DEPENDENCY-MAP.md](../Referenz/DEPENDENCY-MAP.md) — Solution-Struktur + Ökosystem
 - [CHANGELOG.md](../Referenz/CHANGELOG.md) — Versionshistorie ab v0.0.0
@@ -396,7 +396,19 @@ public enum ProjectStatus { Active, Completed }
 | Datum als `YYYY-MM-DD` | VBA `CDate("2024-01-15")` |
 | VBA liest NUR, schreibt NIE | C#-App ist einziger Writer (ADR-017) |
 
-### 3.5 .bpm-manifest
+### 3.5 registry.json — Versionierter Exportvertrag
+
+`registry.json` ist ein **versionierter Exportvertrag**, nicht nur ein Nebenprodukt. VBA-Makros in Outlook und Excel hängen von der Struktur ab.
+
+**Regeln:**
+- `registryVersion` Feld definiert das Exportschema (aktuell `"1.0"`)
+- Neue Felder hinzufügen: erlaubt (Minor-Version, z.B. 1.0 → 1.1)
+- Felder umbenennen/entfernen: **BREAKING CHANGE** (Major-Version, z.B. 1.0 → 2.0)
+- Bei Major-Version: VBA-Makros müssen vor Rollout angepasst werden
+- `registryVersion` und `schema_version` (DB) sind **unabhängig** — nicht jede DB-Schema-Änderung ändert den VBA-Exportvertrag
+- Whitelist für Klasse-B-Felder: siehe [DSGVO-Architektur Kap. 9.3](DSVGO-Architektur.md)
+
+### 3.6 .bpm-manifest
 
 Versteckte Datei in jedem Projektordner als "Ausweis":
 
@@ -685,7 +697,10 @@ BauProjektManager.sln
 │   │   │   ├── Client.cs                      ← ✅ Implementiert
 │   │   │   └── AppSettings.cs                 ← ✅ (ProjectTypes, BuildingTypes, LevelNames, ParticipantRoles, PortalTypes, FolderTemplate)
 │   │   ├── Enums/
-│   │   │   └── ProjectStatus.cs               ← ✅ Implementiert
+│   │   │   ├── ProjectStatus.cs               ← ✅ Implementiert
+│   │   │   └── DataClassification.cs          ← ⬜ Geplant (ClassA/B/C, ADR-035)
+│   │   ├── Privacy/
+│   │   │   └── IPrivacyPolicy.cs              ← ⬜ Geplant (ADR-036)
 │   │   └── BauProjektManager.Domain.csproj    ← KEINE Abhängigkeiten
 │   │
 │   ├── BauProjektManager.Infrastructure/     ← Technische Umsetzung
@@ -694,6 +709,10 @@ BauProjektManager.sln
 │   │   │   ├── AppSettingsService.cs           ← ✅ settings.json laden/speichern
 │   │   │   ├── RegistryJsonExporter.cs        ← ✅ SQLite → JSON Export
 │   │   │   └── ProjectFolderService.cs        ← ✅ Ordner erstellen
+│   │   ├── Communication/                      ← ⬜ Geplant (vor erstem Online-Modul)
+│   │   │   ├── ExternalCommunicationService.cs ← ⬜ IExternalCommunicationService (ADR-035)
+│   │   │   ├── RelaxedPrivacyPolicy.cs        ← ⬜ Interner Modus (ADR-036)
+│   │   │   └── StrictPrivacyPolicy.cs         ← ⬜ Kommerzieller Modus (ADR-036)
 │   │   └── BauProjektManager.Infrastructure.csproj
 │   │
 │   ├── BauProjektManager.Settings/           ← ✅ Einstellungen Feature
@@ -783,10 +802,23 @@ Zusammenfassung der wichtigsten Entscheidungen:
 | **KI-API-Import** | ChatGPT/Claude für Datenextraktion | ADR-027 |
 | **Datenschutz** | IExternalCommunicationService als zentrales Privacy Gate | ADR-035 |
 | **Privacy Policy** | IPrivacyPolicy austauschbar (Relaxed/Strict), Lizenz-gesteuert | ADR-036 |
+| **ID-Schema** | TEXT mit Präfix für alle Tabellen, seq/id Rollen definiert | ADR-039 |
 
 ---
 
-## 12. V1-Scope & Roadmap
+## 12. Betriebsmodi
+
+| Modus | Beschreibung | RBAC | Datenschutz-Besonderheiten |
+|-------|-------------|------|---------------------------|
+| **A — Solo/Cloud-Sync** | Ein User, Files über Cloud-Speicher | Nein | Standard-Regeln |
+| **B — Team (Vertrauensbasis)** | Write-Lock, JSON-Event-Sync | Nein | project_shares, Sync-Whitelist (DSGVO-Architektur Kap. 9.3) |
+| **C — Server/API** | REST-API, mehrere Clients | Ja (PFLICHT) | Rollenbasierte Datenfilterung, Klasse-C nie über API |
+
+**Aktuell:** Modus A. Details: siehe [MultiUserKonzept.md](../Konzepte/MultiUserKonzept.md) und ADR-033.
+
+---
+
+## 13. V1-Scope & Roadmap
 
 ### V1 Phase 1 — Einstellungen (✅ größtenteils erledigt)
 
@@ -881,7 +913,15 @@ Bevor ein Feature als "fertig" gilt:
 
 ---
 
-*Dokument Version 2.0.0 — 29.03.2026*
+*Dokument Version 2.1.0 — 03.04.2026*
+
+*Kernänderungen v2.0.0 → v2.1.0:*
+- *Kapitel 3.5 NEU: registry.json als versionierter Exportvertrag (registryVersion unabhängig von schema_version, Whitelist-Verweis auf DSGVO-Architektur)*
+- *Kapitel 3.6: .bpm-manifest (umbenannt von 3.5)*
+- *Kapitel 10: Privacy Control Layer in Solution-Struktur (Domain/Enums/DataClassification, Domain/Privacy/IPrivacyPolicy, Infrastructure/Communication/)*
+- *Kapitel 11: ADR-039 (ID-Schema) ergänzt*
+- *Kapitel 12 NEU: Betriebsmodi A/B/C (Solo, Team, Server)*
+- *Kapitel 13: V1-Scope & Roadmap (umbenannt von 12)*
 
 *Kernänderungen gegenüber v1.4:*
 - *Header: Verwandte Dokumente (ADR, Vision, Dependency Map, Changelog, BACKLOG) verlinkt*

@@ -214,6 +214,9 @@ schema_version (version)
 - **Datenschutz:** IPrivacyPolicy per DI, gesteuert über Lizenz — nicht settings.json (ADR-036)
 - **Datenschutz:** API-Keys in DPAPI, NIEMALS in settings.json/registry.json/Git/Logs
 - **Datenschutz:** registry.json Whitelist beachten bei neuen Feldern (DSVGO-Architektur Kap. 9.3)
+- **Multi-User-Vorbereitung:** `IProjectDataService` Interface statt direkt ProjectDatabase.cs (MultiUserKonzept Kap. 8)
+- **Multi-User-Vorbereitung:** `version` + `last_modified` + `modified_by` Felder in neuen Tabellen
+- **Multi-User-Vorbereitung:** CRUD-Methoden mit „Änderungen seit Timestamp" Parameter
 
 ---
 

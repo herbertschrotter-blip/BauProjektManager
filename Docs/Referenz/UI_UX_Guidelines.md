@@ -1,10 +1,18 @@
 # BauProjektManager — UI/UX Guidelines
 
-**Version:** 2.0  
-**Datum:** 30.03.2026  
+**Version:** 2.1  
+**Datum:** 04.04.2026  
 **Gültig für:** Alle Module, alle Screens, alle zukünftigen Features  
 **Design-Vorbild:** VS Code (Dark Theme, Sidebar, sauber, professionell)  
 **Governance:** Dieses Dokument wird bei jeder UI-relevanten Änderung aktualisiert. Abweichungen sind erlaubt, müssen aber dokumentiert und begründet werden.
+
+**Verwandte Dokumente:**
+- [WPF_UI_Architecture.md](WPF_UI_Architecture.md) — Technische Umsetzung: Token → WPF Resource Keys, ResourceDictionary-Aufbau
+- [CODING_STANDARDS.md](../Kern/CODING_STANDARDS.md) — Kap. 10 XAML-Konventionen, Kap. 17.7 Datenschutz-Logik nie im ViewModel
+- [UX_Flows.md](UX_Flows.md) — User Workflows für Einstellungen und PlanManager
+- [DSVGO-Architektur.md](../Kern/DSVGO-Architektur.md) — Kap. 13 Datenschutz-GUI, Kap. 4.5 Dienststatus-Modell
+
+**Sprachregelung:** Interne Doku-/Pattern-Begriffe (Loading, Empty, Toast, Breadcrumb etc.) dürfen Englisch sein. Alle sichtbaren UI-Texte in der App  sind Deutsch (siehe Kap. 13).
 
 ---
 
@@ -103,7 +111,7 @@
 ### 1.2 Nutzungskontext
 
 - **Geräte:** PC (Büro, Hauptarbeitsplatz) + Laptop (Baustelle)
-- **Bildschirme:** Full HD (1920×1080) bis 4K — **Minimum-Auflösung: 1920×1080**
+- **Bildschirme:** Full HD (1920×1080) bis 4K — **Optimiert ab 1920×1080, unterstützt ab 1366×768**
 - **Eingabe:** Maus + Tastatur (kein Touch für Desktop-App)
 - **Umgebung:** Büro (ruhig, großer Monitor) und Baucontainer (Laptop)
 - **Offline:** App muss komplett ohne Internet funktionieren
@@ -128,8 +136,8 @@ Diese 9 Regeln gelten für ALLE Module, ALLE Screens, ALLE Entscheidungen:
 ### P1: Consistency First
 Gleiche Aktionen sehen überall gleich aus. Ein "Speichern"-Button ist in jedem Dialog an derselben Stelle, in derselben Farbe, mit demselben Text.
 
-### P2: One Primary Action Per Screen
-Jeder Screen hat EINE Hauptaktion die sofort erkennbar ist. Alles andere ist sekundär.
+### P2: One Primary Action Per Context
+Pro sichtbarem Kontext genau EINE Hauptaktion die sofort erkennbar ist. Alles andere ist sekundär. Konkret: 1 Primary pro Seite (Hauptansicht), 1 pro Dialog, 1 pro Wizard-Schritt.
 
 ### P3: Progressive Disclosure
 Zeige nur was jetzt relevant ist. Erweiterte Optionen verstecken sich hinter "Erweitert" oder in Tabs.
@@ -354,6 +362,11 @@ Inverse Variante. Farb-Token bleiben gleich, nur Werte ändern sich.
 | **Empty** | Keine Daten vorhanden | Hinweis + Handlungsaufforderung |
 | **Error** | Laden/Speichern fehlgeschlagen | Fehlermeldung + "Erneut versuchen" |
 | **Offline** | Internet nötig, keines vorhanden | Hinweis + was stattdessen möglich ist |
+| **Dirty** 🎯 | Ungespeicherte Änderungen | Visueller Marker (z.B. `*` im Titel), Abbrechen-Dialog bei Escape/Schließen: "Änderungen verwerfen?" |
+| **Read-only** 🎯 | Bearbeitung nicht möglich (Lock, Modul deaktiviert, Rolle) | Dezent abgedunkelt, Felder disabled, Hinweisleiste "Nur-Lesen-Modus" |
+| **Partial Success** 🎯 | Aktion teilweise erfolgreich | Ergebnisliste mit Status pro Eintrag (✅/⚠️/❌), Zusammenfassungszeile: "7 von 10 importiert" |
+
+🎯 = Zielstandard, kommt mit UI-Refresh oder bei Bedarf im jeweiligen Modul.
 
 ### Regeln
 
@@ -376,7 +389,7 @@ Inverse Variante. Farb-Token bleiben gleich, nur Werte ändern sich.
 | **Ghost** | Transparent | Tertiäre/Inline-Aktionen |
 | **Link** | Transparent, `accent-primary` Text | Navigation |
 
-**Regeln:** Max. 1 Primary pro Dialogbereich. Primary rechts in Dialogen. Mindesthöhe 32px.
+**Regeln:** Max. 1 Primary pro sichtbarem Kontext (Seite, Dialog, Wizard-Schritt — siehe P2). Primary rechts in Dialogen. Mindesthöhe 32px.
 
 ### 8.2 Input-Felder
 
@@ -401,7 +414,8 @@ Inverse Variante. Farb-Token bleiben gleich, nur Werte ändern sich.
 - **Overlay:** 50% schwarz
 - **Animation:** Fade-In 200ms + Scale 0.95→1.0
 - **Buttons:** Unten rechts, Primary ganz rechts
-- **Schließen:** [✕] oder Escape oder Overlay-Klick
+- **Schließen:** [✕] oder Escape (mit Dirty-State-Check bei Formulardialogen)
+- **Overlay-Klick:** Nur bei Info-/Bestätigungsdialogen erlaubt. Bei Bearbeitungsdialogen mit Formularen: KEIN Overlay-Klick (Risiko Datenverlust)
 - **Keine verschachtelten Dialoge**
 
 ### 8.5 Toast-Benachrichtigungen
@@ -467,7 +481,8 @@ Inverse Variante. Farb-Token bleiben gleich, nur Werte ändern sich.
 - **2-Spalten-Layout** bei vielen Feldern
 - **Logische Gruppierung** mit Überschriften
 - **Pflichtfelder** mit `*`
-- **Validierung:** Live + Zusammenfassung beim Speichern
+- **Validierung:** Live beim Verlassen + Zusammenfassung beim Speichern
+- **Mehrtab-Validierung:** Bei Speichern-Versuch werden ALLE Tabs validiert, nicht nur der aktive. Fehlerhafte Tabs bekommen einen Fehler-Marker (⚠️) im Tab-Header. Fehlerzusammenfassung oben im Dialog: "2 Fehler: Tab Stammdaten — Projektname fehlt". Klick auf Fehler → wechselt zum betroffenen Tab und fokussiert das Feld. Speichern blockiert solange Pflichtfehler vorhanden.
 
 ---
 
@@ -546,10 +561,45 @@ Bei neuen Farbkombinationen: Kontrast prüfen bevor verwendet.
 
 ## 17. Responsive Verhalten
 
-- **Minimum:** 1920 × 1080
-- **Unterstützt:** Bis 4K (3840 × 2160)
+- **Optimiert ab:** 1920 × 1080 (volle Breite für 2-Spalten-Layouts)
+- **Unterstützt ab:** 1366 × 768 (Scrollbereiche erlaubt, 1-Spalten-Fallback bei engen Dialogen)
+- **Unterstützt bis:** 4K (3840 × 2160)
 - **DPI-Skalierung:** 100%–200%
+- **Regel:** Kein Feature darf bei 1366×768 unbenutzbar sein. Sidebar darf bei <1600px auf Icon-only wechseln (🎯 Zielstandard).
+
+---
+
+## 18. Feedback-Matrix (PFLICHTSTANDARD)
+
+Welches Feedback-Medium für welchen Anlass. Ersetzt pauschal `MessageBox.Show()`.
+
+| Feedback-Typ | Medium | Wann | Beispiel |
+|---|---|---|---|
+| **Feldvalidierung** | Inline (rote Border + Text unter Feld) | Sofort bei Verlassen des Feldes | "Projektname darf nicht leer sein" |
+| **Erfolgsmeldung** | Toast 🎯 (unten rechts, 3s) / Statusleiste (aktuell) | Nach erfolgreicher Aktion | "Projekt gespeichert ✅" |
+| **Destruktive Bestätigung** | Modal-Dialog (zentriert, nicht wegklickbar) | Vor Lösch-/Überschreib-Aktionen | "Projekt 'ÖWG-Dobl' wirklich löschen?" |
+| **Kritischer Fehler** | Error-Dialog (Modal, mit Details-Expander) | Bei unerwarteten Fehlern | "Datenbank konnte nicht geladen werden" |
+| **Passive Info** | Statusleiste (unten, persistent) | Hintergrundstatus | "3 Pläne im Eingang" |
+| **Modus-Hinweis** | Banner 🎯 (oben im Content, persistent) | Systemzustand | "Nur-Lesen-Modus" / "Offline" |
+
+**Verboten:**
+- `MessageBox.Show()` für alles
+- Technische Fehlermeldungen in User-sichtbaren Dialogen
+- Toasts für kritische/destruktive Aktionen
+- Inline-Meldungen für systemweite Zustände
+
+🎯 = Zielstandard nach UI-Refresh. Bis dahin: Statusleiste für Erfolg, MessageBox-Ersatz per Modal-Dialog.
 
 ---
 
 *Dieses Dokument ist der verbindliche Standard für alle UI-Entscheidungen in BPM. Abweichungen müssen dokumentiert und begründet werden.*
+
+*Änderungen v2.0 → v2.1 (04.04.2026):*
+- *Mindestauflösung entschärft: "optimiert 1920×1080, unterstützt 1366×768"*
+- *Primary-Action-Regel harmonisiert: "pro sichtbarem Kontext" statt "pro Screen"*
+- *3 neue Screen States: Dirty, Read-only, Partial Success (als 🎯 Zielstandard)*
+- *Overlay-Klick bei Formulardialogen entfernt*
+- *Validierungszusammenfassung für Mehrtab-Dialoge ergänzt (Kap. 12)*
+- *Feedback-Matrix als neues Kap. 18 (Ersatz für MessageBox.Show())*
+- *Sprache intern vs. App-UI klargestellt*
+- *Verwandte Dokumente + Querverweise ergänzt*

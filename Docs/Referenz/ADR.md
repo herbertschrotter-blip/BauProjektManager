@@ -808,13 +808,17 @@ Die ersten Views (MainWindow, SettingsView, ProjectEditDialog) hatten alle Farbe
 
 **Entscheidung:**
 
-Zentrales Theme-System mit 5 Resource Dictionaries im Ordner `Themes/` des App-Projekts:
+Zentrales Theme-System mit 7 Resource Dictionaries im Ordner `Themes/` des App-Projekts:
 
 - **Colors.xaml** — Alle Farb-Token als SolidColorBrush (Background, Surface, Text, Accent, Status-Farben)
 - **Typography.xaml** — Schriftgrößen-Stufen (XS bis XXL, Segoe UI)
 - **Buttons.xaml** — Button-Varianten (Primary, Secondary, Danger, Ghost, Nav)
+- **Inputs.xaml** — TextBox, ComboBox, DatePicker, CheckBox Styles
 - **DataGrid.xaml** — Header, Row, Cell, Zebra-Variante
-- **Dialogs.xaml** — Dialog-Basis, Tabs, Cards, Tooltips, Separatoren
+- **Tabs.xaml** — TabControl + TabItem mit Unterstrich-Style
+- **Dialogs.xaml** — Dialog-Basis, Cards, Tooltips, Separatoren
+
+Ursprünglich 5 Dictionaries. Erweitert um Inputs.xaml und Tabs.xaml für vollständige Formular- und Tab-Abdeckung — Styles lagen vorher verstreut in Dialogs.xaml und lokalen Views.
 
 Alle Dictionaries werden in `App.xaml` per `MergedDictionaries` geladen. Views verwenden ausschließlich `{StaticResource TokenName}` statt hardcoded Werte.
 

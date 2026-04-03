@@ -107,7 +107,7 @@ Diese Features verbessern V1, sind aber kein Blocker für den Release.
 | Ordner umbenennen auf Disk | Bei Sortierung/Präfix-Änderung Ordner auf Festplatte umbenennen | ⬜ |
 | Plan-Sammler (#34) | Pläne per Checkbox sammeln und nach Schema sortieren | ⬜ |
 
-### Datenschutz-Infrastruktur (vor erstem Online-Modul)
+### Datenschutz-Infrastruktur (PFLICHT vor erstem Online-Modul — DSGVO-Architektur Kap. 15)
 
 | Feature | Beschreibung | Status |
 |---------|-------------|--------|
@@ -117,6 +117,7 @@ Diese Features verbessern V1, sind aber kein Blocker für den Release.
 | external_call_log Tabelle | Audit-Log in bpm.db (DSVGO-Architektur Kap. 11.3) | ⬜ |
 | Einstellungen: Datenschutz-Tab | Toggle pro externem Dienst, Audit-Log-Anzeige, Kill-Switch | ⬜ |
 | Log-Rotation 30 Tage | Serilog retainedFileCountLimit (trivial) | ⬜ |
+| ADR-039 ID-Schema | Geplante Tabellen auf TEXT-IDs umschreiben (Voraussetzung vor employees, work_packages) | ✅ |
 
 ---
 

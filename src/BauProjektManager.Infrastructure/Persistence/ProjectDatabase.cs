@@ -2,6 +2,7 @@
 using Microsoft.Data.Sqlite;
 using BauProjektManager.Domain.Enums;
 using BauProjektManager.Domain.Models;
+using Serilog;
 
 namespace BauProjektManager.Infrastructure.Persistence;
 
@@ -669,7 +670,11 @@ public class ProjectDatabase : IDisposable
             var ordinal = reader.GetOrdinal(column);
             return reader.IsDBNull(ordinal) ? string.Empty : reader.GetString(ordinal);
         }
-        catch { return string.Empty; }
+        catch (Exception ex)
+        {
+            Log.Warning("Column {Column} not readable: {Error}", column, ex.Message);
+            return string.Empty;
+        }
     }
 
     public string GetDatabasePath() => _dbPath;

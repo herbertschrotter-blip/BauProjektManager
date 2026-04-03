@@ -20,7 +20,7 @@ Ausführliche Vision: [Docs/VISION.md](Docs/VISION.md)
 
 ## Aktueller Stand
 
-**Version:** v0.16.0 (30.03.2026)
+**Version:** v0.16.1 (03.04.2026)
 
 | Komponente | Status |
 |-----------|--------|
@@ -59,22 +59,33 @@ BauProjektManager.sln
 ├── Tools/
 │   └── Get-ProjektOrdner.ps1              ← PowerShell Analyse-Tool
 │
-└── Docs/                                  ← Dokumentation
+└── Docs/                                  ← Dokumentation (Kern/ + Referenz/ + Konzepte/)
 ```
 
 ## Dokumentation
 
+### Kern (bei jeder Code-Änderung relevant)
+
 | Dokument | Inhalt |
 |----------|--------|
-| [Architektur v2.0](Docs/BauProjektManager_Architektur.md) | Technische Spezifikation, Datenmodell, Import-Workflow, GUI-Mockups |
-| [ADR](Docs/ADR.md) | 34 Architekturentscheidungen mit Kontext und Alternativen |
-| [DB-Schema](Docs/DB-SCHEMA.md) | Zentrales DB-Leitdokument (Ist + geplant, 18 Tabellen) |
-| [UI/UX Guidelines](Docs/UI_UX_Guidelines.md) | Komplettes Design-System (Dark Theme, Token, Komponenten) |
-| [Vision](Docs/VISION.md) | Produktvision, Schmerzpunkte, Zielgruppe, Erfolgskriterien |
-| [Dependency Map](Docs/DEPENDENCY-MAP.md) | Solution-Struktur + externes Ökosystem mit Datenflüssen |
-| [Changelog](Docs/CHANGELOG.md) | Versionshistorie ab v0.0.0 |
-| [Backlog](Docs/BACKLOG.md) | Feature-Liste mit Status und Priorisierung |
-| [Coding Standards](Docs/CODING_STANDARDS.md) | Code-Richtlinien für C#/WPF |
+| [Architektur v2.0](Docs/Kern/BauProjektManager_Architektur.md) | Technische Spezifikation, Datenmodell, Import-Workflow, GUI-Mockups |
+| [DB-Schema](Docs/Kern/DB-SCHEMA.md) | Zentrales DB-Leitdokument (Ist + geplant, 18 Tabellen) |
+| [Coding Standards](Docs/Kern/CODING_STANDARDS.md) | Code-Richtlinien für C#/WPF + Datenschutz (Kap. 17) |
+| [DSGVO-Architektur](Docs/Kern/DSVGO-Architektur.md) | Privacy Engineering, IPrivacyPolicy, Datenklassifizierung A/B/C |
+| [Backlog](Docs/Kern/BACKLOG.md) | Feature-Liste mit Status und Priorisierung |
+
+### Referenz (lesen wenn Thema aufkommt)
+
+| Dokument | Inhalt |
+|----------|--------|
+| [ADR](Docs/Referenz/ADR.md) | 36 Architekturentscheidungen mit Kontext und Alternativen |
+| [Vision](Docs/Referenz/VISION.md) | Produktvision, Schmerzpunkte, Zielgruppe, Erfolgskriterien |
+| [Dependency Map](Docs/Referenz/DEPENDENCY-MAP.md) | Solution-Struktur + externes Ökosystem mit Datenflüssen |
+| [UI/UX Guidelines](Docs/Referenz/UI_UX_Guidelines.md) | Komplettes Design-System (Dark Theme, Token, Komponenten) |
+| [WPF UI Architecture](Docs/Referenz/WPF_UI_Architecture.md) | Theme-System, Resource Dictionaries, Shell-Layout |
+| [Changelog](Docs/Referenz/CHANGELOG.md) | Versionshistorie ab v0.0.0 |
+| [Glossar](Docs/Referenz/GLOSSAR.md) | Bau-Begriffe, Rollen, Abkürzungen |
+| [UX Flows](Docs/Referenz/UX_Flows.md) | Haupt-Workflows, Screen States |
 
 ### Modul-Konzepte (Docs/Konzepte/)
 

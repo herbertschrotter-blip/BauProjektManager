@@ -577,6 +577,25 @@ CREATE TABLE external_call_log (
 **Löschung:** Automatisch nach 90 Tagen  
 **Hinweis:** Keine Personendaten loggen — nur Modul, Domain, Klassifizierung und Entscheidungsgrund
 
+### 5.12 project_shares (Multi-User / Projektfreigabe)
+
+Einfache Projektfreigaben für Phase 2 (JSON Event-Sync). Wird in Phase 3 durch RBAC-Tabellen (users, roles, project_user_role) erweitert.
+```sql
+CREATE TABLE project_shares (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id TEXT NOT NULL,
+    shared_with_user TEXT NOT NULL,   -- Username oder Geräte-ID
+    permission TEXT NOT NULL,          -- "full" | "read" | "plans_only" | "diary_write"
+    shared_at TEXT NOT NULL DEFAULT (datetime('now')),
+    valid_until TEXT,                  -- NULL = unbefristet
+    FOREIGN KEY (project_id) REFERENCES projects(id)
+);
+```
+
+**Konzept:** MultiUserKonzept.md Kapitel 6  
+**Besitzer:** Settings (Projektfreigabe-Dialog)  
+**Migration:** Phase 3 ergänzt users, roles, project_user_role — project_shares bleibt als einfache Variante
+
 ---
 
 ## 6. PlanManager-Datenbank (separat)
@@ -658,6 +677,8 @@ CREATE TABLE import_action_files (
 | *1.9* | *geplant* | *diary_entries* |
 | *2.0* | *geplant* | *contacts, material_orders, buildings-Tabelle entfernen* |
 | *2.1* | *geplant* | *external_call_log (Audit-Log, ADR-035)* |
+| *2.2* | *geplant* | *project_shares (Multi-User Phase 2, ADR-038)* |
+| *3.0* | *geplant* | *users, roles, project_user_role (Multi-User Phase 3, ADR-038)* |
 
 ### 7.2 Migrationsregeln
 

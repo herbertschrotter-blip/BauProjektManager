@@ -45,6 +45,7 @@
 | 032 | ITaskManagementService — nicht an ClickUp gebunden | 🟡 Konzept | 2026-03 |
 | 033 | Multi-User: 3 Modi (eigene DB, geteilte DB, Server) | 🟡 Konzept | 2026-03 |
 | 034 | Modul-Aktivierung + Offline-Lizenzierung | 🟡 Konzept | 2026-03 |
+| 035 | IExternalCommunicationService — zentrales Privacy Gate | ✅ Entschieden | 2026-04 |
 
 ---
 
@@ -1000,6 +1001,73 @@ Verkaufsmodell:
 - `ModuleRegistry` als zentrale Klasse für Aktivierungsstatus
 - LicenseValidator als Service in Infrastructure
 - Konzeptdokument: `ModuleAktivierungLizenzierung.md`
+
+---
+
+## ADR-035: IExternalCommunicationService — zentrales Privacy Gate
+
+**Datum:** 2026-04  
+**Status:** ✅ Entschieden  
+**Herkunft:** DSGVO-Analyse + externe Reviews (Claude + ChatGPT)
+
+**Kontext:**
+
+BPM hat mehrere Module die externe HTTP-Calls machen werden: KI-Assistent (OpenAI/Anthropic), GIS (Google Maps, GIS Steiermark), Wetter (OpenMeteo), Task-Management (ClickUp/Asana). Ohne zentralen Kontrollpunkt gibt es keinen Überblick welche Daten nach außen gehen, keinen Kill-Switch und kein Audit-Log. DSGVO Art. 25 verlangt „Datenschutz durch Technikgestaltung" — das bedeutet: ein zentraler Enforcement Point, nicht verteilte HttpClient-Calls in jedem Modul.
+
+**Entscheidung:**
+
+Ein `IExternalCommunicationService` in `BauProjektManager.Infrastructure/Communication/` ist der einzige erlaubte Weg für HTTP-Calls an externe Dienste. Direkter `HttpClient`-Zugriff für externe APIs ist verboten.
+
+Der Service ist kein reiner Logger, sondern ein **Policy Gate** das aktiv entscheidet:
+```csharp
+public enum DataClassification
+{
+    ClassA,  // Keine Personendaten (Koordinaten, Hashes, Wetter)
+    ClassB,  // Personenbezogene Daten (Kontakte, Mitarbeiter)
+    ClassC   // Sensible Drittdaten (LVs, Bescheide)
+}
+
+public interface IExternalCommunicationService
+{
+    Task<HttpResponseMessage> SendAsync(
+        string module,
+        HttpRequestMessage request,
+        DataClassification classification,
+        string purpose,
+        CancellationToken ct = default);
+
+    bool IsModuleAllowed(string module);
+    List<ExternalCallLogEntry> GetRecentLog(int count = 50);
+}
+```
+
+**Policy-Regeln (zentral im Service, nicht im Modul):**
+
+| Prüfung | Konsequenz |
+|---|---|
+| Modul in Einstellungen deaktiviert | Blockiert |
+| Globaler Kill-Switch aktiv | Blockiert alles |
+| Klasse C ohne Anonymisierung | Default: Blockiert. Nur mit explizitem User-Override + Zweckangabe |
+| Auto-Calls für Modul nicht freigeschaltet | Blockiert Hintergrund-Sync |
+| KI-Modul ohne DPA-Bestätigung | Blockiert |
+
+**Audit-Log** in SQLite (`external_call_log`) mit `classification`, `purpose`, `decision_reason` (z.B. `allowed_class_a`, `blocked_module_disabled`, `allowed_user_confirmed`).
+
+**Alternativen:**
+
+- *Jedes Modul macht eigene HttpClient-Calls:* Einfacher zu implementieren, aber kein zentraler Kontrollpunkt. Datenschutz-Logik wäre über den gesamten Code verstreut. Audit unmöglich.
+- *Middleware/Proxy-Server:* Zu aufwändig für eine Desktop-App. Sinnvoll bei Web-Backend, nicht bei WPF.
+- *Nur Logging ohne Enforcement:* Audit möglich, aber kein aktiver Schutz. Policy-Verletzungen werden nur dokumentiert, nicht verhindert.
+
+**Konsequenzen:**
+
+- Alle Module mit externem Kontakt (KI, GIS, Wetter, Task-Management) müssen `IExternalCommunicationService` nutzen
+- Einstellungen → neuer Tab „Datenschutz & Externe Dienste" mit Toggle pro Modul und Audit-Log-Anzeige
+- `DataClassification` Enum in Domain-Projekt (keine externe Abhängigkeit)
+- `ExternalCommunicationService` in Infrastructure-Projekt
+- Kill-Switch sofort wirksam — ein Toggle sperrt alle externen Calls
+- Für V1 (Einstellungen + PlanManager) nicht nötig, da keine externen Calls. Implementierung vor dem ersten Online-Modul
+- Detailliertes Konzept: [DSGVO-Architektur.md](DSGVO-Architektur.md)
 
 ---
 

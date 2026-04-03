@@ -1,8 +1,9 @@
 ﻿# BauProjektManager — Dependency Map
 
 **Erstellt:** 29.03.2026  
-**Version:** 2.0  
-**Basis:** Solution v0.16.0, DB-Schema v1.5
+**Aktualisiert:** 04.04.2026  
+**Version:** 2.1  
+**Basis:** Solution v0.16.1, DB-Schema v1.5, ADR v1.2 (42 ADRs)
 
 ---
 
@@ -53,8 +54,8 @@ App             → referenziert alles (DI verdrahtet hier)
 | Projekt | Typ | NuGet-Pakete | Verantwortung |
 |---------|-----|-------------|---------------|
 | **App** | WPF EXE | Microsoft.Extensions.DI | Shell, MainWindow, DI-Container, App.xaml, Themes/ (Resource Dictionaries) |
-| **Domain** | Class Library | *keine* | Project, Client, BuildingPart, BuildingLevel, ProjectParticipant, ProjectLink, Location, Timeline, AppSettings (ProjectTypes, BuildingTypes, LevelNames, ParticipantRoles, PortalTypes, FolderTemplate), Enums (inkl. DataClassification, AccessLevel), Interfaces (inkl. IPrivacyPolicy, IAccessControlService, IProjectDataService, ISyncTransport, SyncEnvelope) |
-| **Infrastructure** | Class Library | Microsoft.Data.Sqlite, Serilog, System.Text.Json | ProjectDatabase (Schema v1.5: projects, clients, building_parts, building_levels, project_participants, project_links), RegistryJsonExporter, AppSettingsService, ProjectFolderService, SerilogSetup, ExternalCommunicationService (ADR-035), RelaxedPrivacyPolicy + StrictPrivacyPolicy (ADR-036) |
+| **Domain** | Class Library | *keine* | Project, Client, BuildingPart, BuildingLevel, ProjectParticipant, ProjectLink, Location, Timeline, AppSettings (ProjectTypes, BuildingTypes, LevelNames, ParticipantRoles, PortalTypes, FolderTemplate), Enums (inkl. DataClassification, AccessLevel), Interfaces (inkl. IPrivacyPolicy, IAccessControlService ⬜, IProjectDataService ⬜, ISyncTransport ⬜, ITaskManagementService ⬜, SyncEnvelope ⬜) — ⬜ = geplant, noch nicht implementiert |
+| **Infrastructure** | Class Library | Microsoft.Data.Sqlite, Serilog, System.Text.Json | ProjectDatabase (Schema v1.5: projects, clients, building_parts, building_levels, project_participants, project_links), RegistryJsonExporter, AppSettingsService, ProjectFolderService, SerilogSetup, ExternalCommunicationService (ADR-035), RelaxedPrivacyPolicy + StrictPrivacyPolicy (ADR-036). **Geplant:** EntityIdGenerator (ADR-039), SecretStore (ADR-042), StartupHealthCheck (ADR-041), Communication/ Ordner. Für vollständige Tabellenliste (implementiert + geplant) siehe [DB-SCHEMA.md](../Kern/DB-SCHEMA.md). |
 | **Settings** | WPF Class Library | CommunityToolkit.Mvvm | SettingsViewModel, ProjectEditViewModel, SettingsView.xaml, ProjectEditDialog.xaml |
 | **PlanManager** | WPF Class Library | CommunityToolkit.Mvvm | (V1 Kern — noch in Entwicklung) FileParser, ImportService, Profile, Wizard |
 
@@ -131,13 +132,13 @@ Jedes wird ein eigenes WPF Class Library Projekt, referenziert Domain + Infrastr
 |---------------|--------|-----------|-------|-------------|
 | `bpm.db` | SQLite | C#-App | C#-App | Lokal (%LocalAppData%) |
 | `planmanager.db` | SQLite | C#-App | C#-App | Lokal (pro Projekt) |
-| `registry.json` | JSON | C#-App (auto) | VBA, PhotoFolder | OneDrive .AppData/ |
-| `settings.json` | JSON | C#-App | C#-App | OneDrive .AppData/ |
-| `profiles.json` | JSON | C#-App | C#-App | OneDrive .AppData/Projects/ |
-| `pattern-templates.json` | JSON | C#-App | C#-App | OneDrive .AppData/ |
-| `.bpm-manifest` | JSON | C#-App | C#-App, Apps | OneDrive Projektordner |
-| Projektordner | Dateien | C#-App, User | Alle, Kollegen | OneDrive |
-| Excel (Zeiten) | .xlsx | C#-App (ClosedXML) | Lohnbüro, Excel | OneDrive |
+| `registry.json` | JSON | C#-App (auto) | VBA, PhotoFolder | Cloud-Speicher .AppData/ |
+| `settings.json` | JSON | C#-App | C#-App | Cloud-Speicher .AppData/ |
+| `profiles.json` | JSON | C#-App | C#-App | Cloud-Speicher .AppData/Projects/ |
+| `pattern-templates.json` | JSON | C#-App | C#-App | Cloud-Speicher .AppData/ |
+| `.bpm-manifest` | JSON | C#-App | C#-App, Apps | Cloud-Speicher Projektordner |
+| Projektordner | Dateien | C#-App, User | Alle, Kollegen | Cloud-Speicher |
+| Excel (Zeiten) | .xlsx | C#-App (ClosedXML) | Lohnbüro, Excel | Cloud-Speicher |
 | Outlook-Ordner | — | VBA (aktuell) | User | Outlook |
 | Logs | .log | Serilog | Entwickler | Lokal Logs/ |
 

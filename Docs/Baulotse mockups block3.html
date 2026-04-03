@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>baulotse — UI Mockups Block 3 (Ausbau Online Teil 1)</title>
+<link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base: #1E1E1E; --bg-surface: #252526; --bg-elevated: #2D2D30;
+    --bg-hover: #37373D; --bg-active: #04395E; --bg-input: #3C3C3C;
+    --text-primary: #CCCCCC; --text-secondary: #858585; --text-bright: #FFFFFF;
+    --accent: #0078D4; --accent-hover: #1A8AD4;
+    --success: #4EC94E; --warning: #F0AD4E; --error: #F44747; --info: #3794FF;
+    --purple: #8b5cf6;
+    --border: #3C3C3C; --border-focus: #0078D4; --border-subtle: #2D2D30;
+    --sidebar-w: 220px; --radius: 6px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: var(--text-primary); line-height: 1.5; }
+  .page { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+  .page-title { font-size: 28px; color: var(--text-bright); font-weight: 700; margin-bottom: 8px; }
+  .page-title span { color: #E8712A; }
+  .page-sub { color: var(--text-secondary); font-size: 14px; margin-bottom: 48px; }
+  .mockup-section { margin-bottom: 64px; }
+  .mockup-label { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+  .mockup-title { font-size: 22px; color: var(--text-bright); font-weight: 700; margin-bottom: 4px; }
+  .mockup-desc { color: var(--text-secondary); font-size: 13px; margin-bottom: 20px; }
+  .app-shell {
+    width: 100%; max-width: 1100px; height: 700px;
+    background: var(--bg-base); border: 1px solid var(--border); border-radius: 8px;
+    overflow: hidden; display: grid;
+    grid-template-columns: var(--sidebar-w) 1fr; grid-template-rows: 1fr 28px; font-size: 13px;
+  }
+  .sidebar { background: var(--bg-elevated); grid-row: 1; padding: 12px 0; display: flex; flex-direction: column; border-right: 1px solid var(--border-subtle); }
+  .sidebar-logo { font-size: 14px; font-weight: 700; color: var(--text-bright); padding: 4px 15px 16px; }
+  .sidebar-logo span { color: #E8712A; }
+  .nav-btn { display: block; width: 100%; padding: 10px 15px; background: transparent; border: none; color: var(--text-primary); font-size: 13px; text-align: left; cursor: pointer; font-family: inherit; }
+  .nav-btn:hover { background: var(--bg-hover); }
+  .nav-btn.active { background: var(--bg-active); color: var(--text-bright); border-left: 3px solid var(--accent); padding-left: 12px; }
+  .content { grid-row: 1; grid-column: 2; background: var(--bg-base); padding: 20px; overflow-y: auto; }
+  .statusbar { grid-column: 1 / -1; grid-row: 2; background: var(--accent); color: var(--text-bright); font-size: 12px; padding: 0 12px; display: flex; align-items: center; }
+  .heading1 { font-size: 20px; font-weight: 700; color: var(--text-bright); margin-bottom: 16px; }
+  .card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--text-bright); margin-bottom: 8px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border: none; border-radius: 4px; font-size: 12px; font-family: inherit; cursor: pointer; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-secondary { background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); }
+  .btn-ghost { background: transparent; color: var(--text-secondary); }
+  .btn-success { background: var(--success); color: #fff; }
+  .input, .select { background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); border-radius: 4px; padding: 5px 8px; font-size: 12px; font-family: inherit; outline: none; }
+  .label { font-size: 11px; color: var(--text-secondary); margin-bottom: 3px; display: block; }
+  .tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .tbl th { text-align: left; padding: 8px 10px; background: var(--bg-elevated); color: var(--text-secondary); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  .tbl td { padding: 7px 10px; border-bottom: 1px solid var(--border-subtle); }
+  .tbl tr:hover td { background: var(--bg-hover); }
+  .badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 3px; }
+  .badge-new { background: rgba(55,148,255,0.15); color: var(--info); }
+  .badge-update { background: rgba(240,173,78,0.15); color: var(--warning); }
+  .badge-ok { background: rgba(78,201,78,0.15); color: var(--success); }
+  .badge-error { background: rgba(244,71,71,0.15); color: var(--error); }
+  .badge-ident { background: rgba(133,133,133,0.12); color: var(--text-secondary); }
+  .badge-purple { background: rgba(139,92,246,0.15); color: var(--purple); }
+  .toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .toolbar-spacer { flex: 1; }
+  .online-tag { display: inline-block; background: rgba(139,92,246,0.15); color: var(--purple); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 3px; margin-left: 6px; }
+  /* Chat */
+  .chat-area { display: flex; flex-direction: column; gap: 12px; }
+  .chat-msg { max-width: 92%; }
+  .chat-msg.user { align-self: flex-end; }
+  .chat-msg.ki { align-self: flex-start; }
+  .chat-bubble { padding: 10px 14px; border-radius: var(--radius); font-size: 13px; line-height: 1.5; }
+  .chat-bubble.user-b { background: var(--bg-active); border: 1px solid var(--accent); color: var(--text-bright); }
+  .chat-bubble.ki-b { background: var(--bg-surface); border: 1px solid var(--border); }
+  .chat-who { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+  .chat-who.u { color: var(--accent); text-align: right; }
+  .chat-who.k { color: var(--purple); }
+  .chat-source { font-size: 11px; color: var(--text-secondary); margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border-subtle); }
+  .chat-source a { color: var(--accent); text-decoration: none; }
+  .chat-analysis { margin-top: 6px; font-size: 11px; padding: 4px 8px; border-radius: 3px; }
+  .chat-input-row { display: flex; gap: 8px; margin-top: 12px; }
+  .chat-input { flex: 1; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; font-size: 13px; font-family: inherit; outline: none; }
+  .docs-panel { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; }
+  .doc-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border-subtle); font-size: 12px; }
+  .doc-item:last-child { border-bottom: none; }
+  @media (max-width: 900px) {
+    .app-shell { height: auto; min-height: 500px; grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-title">bau<span>lotse</span> — UI Mockups</div>
+  <div class="page-sub">Block 3: Ausbau Online — KI-Assistent, Materialbestellung / ClickUp, Outlook-Integration</div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       MOCKUP 1: KI-ASSISTENT
+       ═══════════════════════════════════════════════════════ -->
+  <div class="mockup-section">
+    <div class="mockup-label">Mockup 1</div>
+    <div class="mockup-title">KI-Assistent — Dokumente durchsuchen <span class="online-tag">ONLINE</span></div>
+    <div class="mockup-desc">3-spaltig: Chat (Mitte), Dokumente (rechts), Verlauf (rechts unten). Frage in natürlicher Sprache → strukturierte Antwort mit Quellen + Analyse-Warnungen. Provider wählbar (ChatGPT/Claude).</div>
+
+    <div class="app-shell">
+      <div class="sidebar">
+        <div class="sidebar-logo">bau<span>lotse</span></div>
+        <button class="nav-btn">📁 Pläne</button>
+        <button class="nav-btn">📋 Bautagebuch</button>
+        <button class="nav-btn">⏱ Zeiterfassung</button>
+        <button class="nav-btn">📊 Nachkalkulation</button>
+        <button class="nav-btn active">🤖 KI-Assistent</button>
+        <button class="nav-btn">⚙ Einstellungen</button>
+      </div>
+      <div class="content" style="display:grid; grid-template-columns:1fr 230px; gap:16px;">
+        <!-- Chat Column -->
+        <div style="display:flex; flex-direction:column; height:100%;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div class="heading1" style="margin:0;">🤖 KI-Assistent</div>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <span class="label" style="display:inline; margin:0;">Provider:</span>
+              <select class="select" style="width:110px; font-size:11px;"><option selected>ChatGPT</option><option>Claude</option></select>
+            </div>
+          </div>
+
+          <div style="flex:1; overflow-y:auto; margin-bottom:8px;">
+            <div class="chat-area">
+              <div class="chat-msg user">
+                <div class="chat-who u">Du</div>
+                <div class="chat-bubble user-b">Welche Fenstertypen sind in Haus 5 vorgesehen und welche Farbe haben die Rahmen?</div>
+              </div>
+              <div class="chat-msg ki">
+                <div class="chat-who k">KI-Assistent</div>
+                <div class="chat-bubble ki-b">
+                  Laut Baubeschreibung (Abschnitt 4.2) sind in Haus 5 <strong>Kunststoff-Fenster Typ F1</strong> vorgesehen: Dreh-Kipp, 3-fach Verglasung. Rahmenfarbe außen: <strong>RAL 7016 Anthrazitgrau</strong>, innen: weiß.
+                  <div class="chat-source">📄 <a href="#">Baubeschreibung_v3.pdf</a> → Seite 34, Abschnitt 4.2</div>
+                </div>
+              </div>
+              <div class="chat-msg user">
+                <div class="chat-who u">Du</div>
+                <div class="chat-bubble user-b">Gibt es eine LV-Position für Kanalanschluss? Was ist kalkuliert?</div>
+              </div>
+              <div class="chat-msg ki">
+                <div class="chat-who k">KI-Assistent</div>
+                <div class="chat-bubble ki-b">
+                  Ja, <strong>Position 03.12.05</strong> „Kanalanschluss DN200 an Bestandskanal". Menge: 2 Stück, EP: € 1.850,–, Gesamt: € 3.700,–.
+                  <div class="chat-source">📄 <a href="#">LV_2026.xlsx</a> → LG 03 Kanal, Position 03.12.05</div>
+                  <div class="chat-analysis" style="background:rgba(240,173,78,0.1); color:var(--warning);">⚠ Hinweis: Keine Angabe zur Tiefe des Bestandskanals. Bei Tiefe &gt; 2m könnte ein Nachtrag entstehen.</div>
+                </div>
+              </div>
+              <div class="chat-msg user">
+                <div class="chat-who u">Du</div>
+                <div class="chat-bubble user-b">Wie dick ist die Außenwand und gibt es dafür eine WDVS-Position im LV?</div>
+              </div>
+              <div class="chat-msg ki">
+                <div class="chat-who k">KI-Assistent</div>
+                <div class="chat-bubble ki-b">
+                  Außenwand: <strong>25er Ziegel + 16 cm EPS-F WDVS</strong>, Gesamtstärke 43 cm. WDVS-Position im LV: <strong>06.04.02</strong> mit 1.240 m².
+                  <div class="chat-source">
+                    📄 <a href="#">Baubeschreibung_v3.pdf</a> → Abschnitt 3.2<br>
+                    📄 <a href="#">LV_2026.xlsx</a> → LG 06, Pos. 06.04.02
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-input-row">
+            <input type="text" class="chat-input" placeholder="Frage an den KI-Assistenten stellen...">
+            <button class="btn btn-primary">Senden →</button>
+          </div>
+          <div style="font-size:10px; color:var(--text-secondary); margin-top:4px;">Ohne Internet: baulotse erzeugt einen kopierbaren Prompt für ChatGPT/Claude.</div>
+        </div>
+
+        <!-- Docs + History Panel -->
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div class="docs-panel">
+            <div class="card-title">📂 Geladene Dokumente</div>
+            <div style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">ÖWG Dobl-Zwaring</div>
+            <div class="doc-item"><span>📄</span><span>Baubeschreibung_v3.pdf</span><span class="badge badge-ok" style="margin-left:auto; font-size:9px;">✓</span></div>
+            <div class="doc-item"><span>📊</span><span>LV_2026.xlsx</span><span class="badge badge-ok" style="margin-left:auto; font-size:9px;">✓</span></div>
+            <div class="doc-item" style="opacity:0.5;"><span>📄</span><span>Bauvertrag.pdf</span><span style="margin-left:auto; font-size:9px; color:var(--text-secondary);">—</span></div>
+            <div class="doc-item" style="opacity:0.5;"><span>📐</span><span>Statik_H5.pdf</span><span style="margin-left:auto; font-size:9px; color:var(--text-secondary);">—</span></div>
+            <button class="btn btn-secondary" style="width:100%; margin-top:6px; font-size:10px;">+ Dokument</button>
+          </div>
+          <div class="docs-panel">
+            <div class="card-title">📜 Verlauf</div>
+            <div style="font-size:11px;">
+              <div style="padding:3px 0; cursor:pointer; color:var(--text-secondary);">Fenstertypen Haus 5</div>
+              <div style="padding:3px 0; cursor:pointer; color:var(--text-secondary);">Kanalanschluss LV</div>
+              <div style="padding:3px 0; cursor:pointer; color:var(--accent);">Außenwand + WDVS ← aktuell</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="statusbar">KI-Assistent | ÖWG Dobl | ChatGPT | 2 Dokumente geladen | 3 Fragen</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       MOCKUP 2: MATERIALBESTELLUNG / CLICKUP
+       ═══════════════════════════════════════════════════════ -->
+  <div class="mockup-section">
+    <div class="mockup-label">Mockup 2</div>
+    <div class="mockup-title">Materialbestellung — ClickUp/Asana Integration <span class="online-tag">ONLINE</span></div>
+    <div class="mockup-desc">Bestellliste mit ClickUp-Status-Sync. Workflow-Visualisierung: Polier → ClickUp Task → Dispo → Unterwegs → Geliefert → Lieferschein.</div>
+
+    <div class="app-shell">
+      <div class="sidebar">
+        <div class="sidebar-logo">bau<span>lotse</span></div>
+        <button class="nav-btn">📁 Pläne</button>
+        <button class="nav-btn">📋 Bautagebuch</button>
+        <button class="nav-btn active">🚚 Material</button>
+        <button class="nav-btn">📊 Nachkalkulation</button>
+        <button class="nav-btn">⚙ Einstellungen</button>
+      </div>
+      <div class="content">
+        <div class="heading1">🚚 Materialbestellung — ÖWG Dobl</div>
+        <div class="toolbar">
+          <span class="badge badge-purple">ClickUp verbunden ✓</span>
+          <span class="toolbar-spacer"></span>
+          <button class="btn btn-primary">+ Neue Bestellung</button>
+          <button class="btn btn-secondary">🔄 Status aktualisieren</button>
+        </div>
+
+        <table class="tbl">
+          <thead>
+            <tr><th>Material</th><th>Menge</th><th>Bauteil</th><th>Termin</th><th>ClickUp-Status</th><th>Lieferschein</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="color:var(--text-bright); font-weight:600;">Ziegel Porotherm 38 Plan</td>
+              <td>59 Paletten</td><td>H5 / EG</td><td>10.03.</td>
+              <td><span class="badge badge-ok">✅ Geliefert</span></td>
+              <td><button class="btn btn-ghost" style="font-size:10px;">📄 LS-0847</button></td>
+            </tr>
+            <tr>
+              <td style="color:var(--text-bright);">Bewehrungsstahl BSt 550</td>
+              <td>6,4 to</td><td>H5 / EG Decke</td><td>22.03.</td>
+              <td><span class="badge badge-ok">✅ Geliefert</span></td>
+              <td><button class="btn btn-ghost" style="font-size:10px;">📄 LS-0901</button></td>
+            </tr>
+            <tr>
+              <td style="color:var(--text-bright);">Beton C25/30 XC2</td>
+              <td>34 m³</td><td>H5 / EG Decke</td><td>27.03.</td>
+              <td><span class="badge badge-new">📦 Bestellt</span></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td style="color:var(--text-bright);">Ziegel Porotherm 38 Plan</td>
+              <td>55 Paletten</td><td>H5 / 1.OG</td><td>24.03.</td>
+              <td><span class="badge badge-update">🚚 Unterwegs</span></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>Schalungsplatten Doka</td>
+              <td>170 m²</td><td>H5 / 1.OG Decke</td><td>07.04.</td>
+              <td><span class="badge badge-ident">⏳ Offen</span></td>
+              <td><button class="btn btn-ghost" style="font-size:10px;">→ ClickUp</button></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Workflow -->
+        <div class="card" style="margin-top:16px;">
+          <div class="card-title">Workflow</div>
+          <div style="display:flex; gap:4px; align-items:center; font-size:12px; flex-wrap:wrap;">
+            <span style="padding:4px 10px; background:var(--bg-active); border-radius:4px; color:var(--accent);">👷 Polier meldet</span>
+            <span style="color:var(--text-secondary);">→</span>
+            <span style="padding:4px 10px; background:rgba(139,92,246,0.1); border-radius:4px; color:var(--purple);">→ ClickUp Task</span>
+            <span style="color:var(--text-secondary);">→</span>
+            <span style="padding:4px 10px; background:rgba(240,173,78,0.1); border-radius:4px; color:var(--warning);">Dispo bestellt</span>
+            <span style="color:var(--text-secondary);">→</span>
+            <span style="padding:4px 10px; background:rgba(55,148,255,0.1); border-radius:4px; color:var(--info);">🚚 Unterwegs</span>
+            <span style="color:var(--text-secondary);">→</span>
+            <span style="padding:4px 10px; background:rgba(78,201,78,0.1); border-radius:4px; color:var(--success);">✅ Geliefert</span>
+            <span style="color:var(--text-secondary);">→</span>
+            <span style="padding:4px 10px; background:var(--bg-input); border-radius:4px; color:var(--text-primary);">📄 Lieferschein</span>
+          </div>
+          <div style="font-size:11px; color:var(--text-secondary); margin-top:8px;">Auch ohne ClickUp nutzbar — dann mit lokaler Bestellübersicht ohne Status-Sync.</div>
+        </div>
+      </div>
+      <div class="statusbar">Material | ÖWG Dobl | 5 Bestellungen | 2 geliefert, 1 bestellt, 1 unterwegs, 1 offen | ClickUp ✓</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       MOCKUP 3: OUTLOOK-INTEGRATION
+       ═══════════════════════════════════════════════════════ -->
+  <div class="mockup-section">
+    <div class="mockup-label">Mockup 3</div>
+    <div class="mockup-title">Outlook-Integration — Pläne, Kalender, Aufgaben <span class="online-tag">EXTERNE ANBINDUNG</span></div>
+    <div class="mockup-desc">Plan-Anhänge aus Mails automatisch in _Eingang extrahieren. Kalender-Sync für Bau-Termine. Aufgaben aus baulotse → Outlook.</div>
+
+    <div class="app-shell">
+      <div class="sidebar">
+        <div class="sidebar-logo">bau<span>lotse</span></div>
+        <button class="nav-btn">📁 Pläne</button>
+        <button class="nav-btn active">📧 Outlook</button>
+        <button class="nav-btn">📋 Bautagebuch</button>
+        <button class="nav-btn">⚙ Einstellungen</button>
+      </div>
+      <div class="content">
+        <div class="heading1">📧 Outlook-Integration</div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <!-- Anhänge -->
+          <div class="card">
+            <div class="card-title">📎 Plan-Anhänge aus E-Mails</div>
+            <div style="font-size:12px; color:var(--text-secondary); margin-bottom:8px;">3 E-Mails mit Plan-Anhängen erkannt</div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; background:var(--bg-elevated); border-radius:4px;">
+                <div><span style="font-size:12px;">📄 S-114_Polierplan_1OG_H66.pdf</span><br><span style="font-size:10px; color:var(--text-secondary);">Von: arch.tschom@tb-tschom.at</span></div>
+                <button class="btn btn-primary" style="font-size:10px;">→ _Eingang</button>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; background:var(--bg-elevated); border-radius:4px;">
+                <div><span style="font-size:12px;">📄 E-205_Elektro_1OG.pdf</span><br><span style="font-size:10px; color:var(--text-secondary);">Von: eplan@etech-graz.at</span></div>
+                <button class="btn btn-primary" style="font-size:10px;">→ _Eingang</button>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; background:var(--bg-elevated); border-radius:4px;">
+                <div><span style="font-size:12px;">📄 Statik_H5_Nachtrag.pdf</span><br><span style="font-size:10px; color:var(--text-secondary);">Von: statik@ziviltechniker.at</span></div>
+                <button class="btn btn-secondary" style="font-size:10px;">📂 Zuordnen</button>
+              </div>
+            </div>
+            <button class="btn btn-success" style="width:100%; margin-top:8px; font-size:11px;">📥 Alle erkannten Pläne → _Eingang</button>
+          </div>
+
+          <!-- Kalender -->
+          <div class="card">
+            <div class="card-title">📅 Kalender-Sync</div>
+            <div style="font-size:12px; color:var(--text-secondary); margin-bottom:8px;">Nächste Bau-Termine</div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <div style="padding:6px 8px; background:var(--bg-elevated); border-radius:4px; border-left:3px solid var(--accent);">
+                <div style="font-size:12px; color:var(--text-bright); font-weight:600;">Mo 31.03. 08:00</div>
+                <div style="font-size:11px;">Betonage Decke EG — H5</div>
+                <div style="font-size:10px; color:var(--text-secondary);">Betonpumpe Fa. Kern bestellt</div>
+              </div>
+              <div style="padding:6px 8px; background:var(--bg-elevated); border-radius:4px; border-left:3px solid var(--warning);">
+                <div style="font-size:12px; color:var(--text-bright); font-weight:600;">Mi 02.04. 10:00</div>
+                <div style="font-size:11px;">Baubesprechung ÖWG</div>
+                <div style="font-size:10px; color:var(--text-secondary);">Bauherr, Architekt, ÖBA</div>
+              </div>
+              <div style="padding:6px 8px; background:var(--bg-elevated); border-radius:4px; border-left:3px solid var(--success);">
+                <div style="font-size:12px; color:var(--text-bright); font-weight:600;">Do 03.04. 14:00</div>
+                <div style="font-size:11px;">Bewehrungsabnahme Decke EG</div>
+                <div style="font-size:10px; color:var(--text-secondary);">Statiker Ing. Tschom</div>
+              </div>
+            </div>
+            <button class="btn btn-secondary" style="width:100%; margin-top:8px; font-size:11px;">+ Termin in Outlook eintragen</button>
+          </div>
+        </div>
+
+        <!-- Aufgaben -->
+        <div class="card" style="margin-top:12px;">
+          <div class="card-title">✅ Offene Aufgaben → Outlook</div>
+          <div style="display:flex; flex-direction:column; gap:4px; font-size:12px;">
+            <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid var(--border-subtle);">
+              <span>Bewehrungsbestellung 1.OG H5 aufgeben</span>
+              <span style="color:var(--warning);">Fällig: 28.03.</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid var(--border-subtle);">
+              <span>Schalpläne 1.OG bei Doka anfordern</span>
+              <span style="color:var(--error);">Überfällig!</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:4px 0;">
+              <span>Bautagebuch KW 12 exportieren</span>
+              <span style="color:var(--text-secondary);">Fällig: 31.03.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="statusbar">Outlook | 3 Plan-Anhänge | 3 Termine | 3 offene Aufgaben | Sync OK</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

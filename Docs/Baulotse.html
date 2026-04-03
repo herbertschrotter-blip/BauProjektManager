@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>baulotse — Überblick</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222633;
+    --accent: #0078D4;
+    --accent-soft: rgba(0,120,212,0.12);
+    --green: #2ea043;
+    --green-soft: rgba(46,160,67,0.12);
+    --orange: #d29922;
+    --orange-soft: rgba(210,153,34,0.12);
+    --red: #c44;
+    --red-soft: rgba(204,68,68,0.12);
+    --purple: #8b5cf6;
+    --purple-soft: rgba(139,92,246,0.12);
+    --cyan: #22d3ee;
+    --cyan-soft: rgba(34,211,238,0.12);
+    --text: #e0e4ec;
+    --muted: #8b92a5;
+    --border: #2d3348;
+    --radius: 12px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+  .container { max-width: 920px; margin: 0 auto; padding: 0 24px; }
+  .hero { padding: 80px 0 60px; text-align: center; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; top: -120px; left: 50%; transform: translateX(-50%); width: 600px; height: 600px; background: radial-gradient(circle, rgba(0,120,212,0.15) 0%, transparent 70%); pointer-events: none; }
+  .hero-badge { display: inline-block; background: var(--accent-soft); color: var(--accent); font-size: 13px; font-weight: 600; padding: 6px 16px; border-radius: 20px; margin-bottom: 24px; letter-spacing: 0.5px; }
+  .hero h1 { font-family: 'DM Serif Display', serif; font-size: clamp(36px, 5vw, 56px); font-weight: 400; line-height: 1.15; margin-bottom: 20px; color: #fff; }
+  .hero h1 span { color: #E8712A; }
+  .hero p { font-size: 18px; color: var(--muted); max-width: 660px; margin: 0 auto; }
+  section { padding: 60px 0; }
+  section + section { border-top: 1px solid var(--border); }
+  .section-label { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+  .section-title { font-family: 'DM Serif Display', serif; font-size: 32px; font-weight: 400; color: #fff; margin-bottom: 16px; }
+  .section-intro { font-size: 16px; color: var(--muted); max-width: 720px; margin-bottom: 40px; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; transition: border-color 0.2s; }
+  .card:hover { border-color: var(--accent); }
+  .card-icon { font-size: 28px; margin-bottom: 12px; display: block; }
+  .card h3 { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+  .tbadge { display: inline-block; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 6px; margin-top: 10px; background: var(--red-soft); color: var(--red); }
+  .quote-block { background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: 0 var(--radius) var(--radius) 0; padding: 24px 28px; margin: 32px 0; font-size: 18px; font-style: italic; color: #fff; line-height: 1.6; }
+  .principles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  .principle { text-align: center; padding: 28px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+  .principle-icon { font-size: 32px; margin-bottom: 12px; display: block; }
+  .principle h4 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+  .principle p { font-size: 13px; color: var(--muted); }
+  /* ── Phase Divider ── */
+  .phase-divider { margin: 48px 0 32px; padding: 16px 24px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); }
+  .phase-divider h2 { font-family: 'DM Serif Display', serif; font-size: 24px; color: #fff; font-weight: 400; margin-bottom: 4px; }
+  .phase-divider p { font-size: 14px; color: var(--muted); margin: 0; }
+  /* ── Module Blocks ── */
+  .mb { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; margin-bottom: 24px; position: relative; overflow: hidden; }
+  .mb::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .mb.cb::before { background: var(--accent); }
+  .mb.cg::before { background: var(--green); }
+  .mb.co::before { background: var(--orange); }
+  .mb.cp::before { background: var(--purple); }
+  .mb.cc::before { background: var(--cyan); }
+  .mh { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; flex-wrap: wrap; }
+  .me { font-size: 32px; flex-shrink: 0; }
+  .mh h3 { font-family: 'DM Serif Display', serif; font-size: 22px; color: #fff; font-weight: 400; }
+  .st { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 3px 10px; border-radius: 6px; margin-left: auto; white-space: nowrap; }
+  .st-d { background: var(--green-soft); color: var(--green); }
+  .st-n { background: var(--accent-soft); color: var(--accent); }
+  .st-p { background: var(--orange-soft); color: var(--orange); }
+  .st-f { background: rgba(139,148,168,0.12); color: var(--muted); }
+  .mb p { color: var(--muted); font-size: 15px; margin-bottom: 12px; }
+  .mb p:last-child { margin-bottom: 0; }
+  .mb strong { color: var(--text); }
+  .msub { font-size: 14px; font-weight: 700; color: var(--accent); margin: 20px 0 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .online-hint { display: inline-block; background: var(--purple-soft); color: var(--purple); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; letter-spacing: 0.5px; }
+  .wf { display: flex; flex-direction: column; margin: 16px 0 8px; padding-left: 20px; border-left: 2px solid var(--border); }
+  .ws { position: relative; padding: 0 0 18px 20px; }
+  .ws:last-child { padding-bottom: 0; }
+  .ws::before { content: ''; position: absolute; left: -8px; top: 6px; width: 14px; height: 14px; border-radius: 50%; background: var(--surface2); border: 2px solid var(--accent); }
+  .ws.au::before { border-color: var(--green); background: var(--green); }
+  .ws .sl { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .ws .sl.m { color: var(--accent); }
+  .ws .sl.a { color: var(--green); }
+  .ws .stt { font-size: 15px; font-weight: 600; color: #fff; margin: 2px 0 4px; }
+  .ws .sd { font-size: 13px; color: var(--muted); }
+  .cx { background: var(--surface2); border-radius: var(--radius); padding: 20px; margin: 16px 0; font-size: 14px; }
+  .cm { margin-bottom: 12px; }
+  .cm:last-child { margin-bottom: 0; }
+  .cw { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .cw.u { color: var(--accent); }
+  .cw.k { color: var(--purple); }
+  .ct { color: var(--text); line-height: 1.5; }
+  .ct em { color: var(--muted); font-style: normal; }
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .pill { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 5px 14px; font-size: 13px; color: var(--text); }
+  .pill.hl { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .pill.online { border-color: var(--purple); color: var(--purple); }
+  .ctab { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 16px; }
+  .ctab th { text-align: left; padding: 12px 16px; font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); }
+  .ctab td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .ctab tr:last-child td { border-bottom: none; }
+  .ctab .lb { color: var(--muted); font-weight: 500; width: 180px; }
+  .ctab .th { color: var(--muted); }
+  .ctab .us { color: var(--green); font-weight: 500; }
+  .numbers { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 24px; }
+  .nc { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; text-align: center; }
+  .nb { font-family: 'DM Serif Display', serif; font-size: 40px; color: var(--accent); line-height: 1; margin-bottom: 4px; }
+  .nu { font-size: 16px; color: var(--accent); font-weight: 500; }
+  .nd { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .footer { padding: 40px 0; text-align: center; border-top: 1px solid var(--border); }
+  .footer p { font-size: 13px; color: var(--muted); }
+  .footer .logo { font-family: 'DM Serif Display', serif; font-size: 20px; color: #fff; margin-bottom: 8px; }
+  .footer .logo span { color: #E8712A; }
+  @media (max-width: 600px) {
+    .hero { padding: 50px 0 40px; }
+    section { padding: 40px 0; }
+    .card-grid { grid-template-columns: 1fr; }
+    .principles { grid-template-columns: 1fr 1fr; }
+    .numbers { grid-template-columns: 1fr 1fr; }
+    .mh { flex-direction: column; align-items: flex-start; }
+    .st { margin-left: 0; }
+  }
+  @media print {
+    body { background: #fff; color: #222; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .hero::before { display: none; }
+    .hero h1, .section-title, .mh h3, .ws .stt, .phase-divider h2 { color: #111; }
+    .hero h1 span { color: #E8712A; }
+    .section-label, .nb, .msub { color: #0078D4; }
+    .card, .mb, .principle, .nc, .cx, .phase-divider { border-color: #ddd; background: #f8f8f8; }
+    .ctab .us { color: #1a7f37; }
+    .quote-block { background: #e8f0fe; }
+    .wf { border-left-color: #ccc; }
+    .ws::before { background: #fff; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ══════════════════ HERO ══════════════════ -->
+  <div class="hero">
+    <div class="hero-badge">Offline-first — Lokal auf deinem PC — Kein Abo</div>
+    <h1>bau<span>lotse</span></h1>
+    <p>Dein digitaler Assistent auf der Baustelle. Pläne sortieren, Bautagebuch, Zeiterfassung, Nachkalkulation — alles an einem Ort, lokal auf deinem Rechner. Online-Funktionen wie KI, Wetter oder Cloud-Sync nur dort, wo sie Mehrwert bringen.</p>
+  </div>
+
+  <!-- ══════════════════ PROBLEM ══════════════════ -->
+  <section>
+    <div class="section-label">Das Problem</div>
+    <div class="section-title">Kennst du das?</div>
+    <p class="section-intro">Poliere und Bauleiter verbringen jeden Tag Zeit mit Aufgaben, die repetitiv, fehleranfällig und über zig Programme verstreut sind.</p>
+    <div class="card-grid">
+      <div class="card"><span class="card-icon">📁</span><h3>Pläne sortieren</h3><p>30 Dateien auf einmal, unsortiert. Manuell in den richtigen Ordner verschieben, Index prüfen, alte Version archivieren.</p><span class="tbadge">15–30 Min pro Lieferung</span></div>
+      <div class="card"><span class="card-icon">📋</span><h3>Bautagebuch</h3><p>Jeden Tag das gleiche Gerüst: Wetter nachschlagen, Personal aufzählen, Tätigkeiten beschreiben. Auf Papier, in Excel oder gar nicht.</p><span class="tbadge">20 Min pro Tag</span></div>
+      <div class="card"><span class="card-icon">🔍</span><h3>Infos überall verstreut</h3><p>Adresse im Vertrag, Kontakte in Outlook, Grundstücksnummer im Bescheid. Kein zentraler Ort.</p><span class="tbadge">ständiges Suchen</span></div>
+      <div class="card"><span class="card-icon">📂</span><h3>Ordner jedes Mal neu</h3><p>Für jedes Projekt die gleiche Ordnerstruktur im Explorer anlegen. Copy-Paste, Umbenennen.</p><span class="tbadge">10 Min pro Projekt</span></div>
+      <div class="card"><span class="card-icon">⏱</span><h3>Zeiterfassung</h3><p>Stunden handschriftlich oder in Excel-Chaos. Baustellen-Zuordnung fehlt, Überstunden sind Formel-Horror.</p><span class="tbadge">Fehler vorprogrammiert</span></div>
+      <div class="card"><span class="card-icon">📸</span><h3>Fotos zuordnen</h3><p>Hunderte Baustellenfotos im Explorer. Keine Tags, keine Baubericht-Zuordnung, keine Geodaten.</p><span class="tbadge">unübersichtlich</span></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ LÖSUNG ══════════════════ -->
+  <section>
+    <div class="section-label">Die Lösung</div>
+    <div class="section-title">Was ist baulotse?</div>
+    <p class="section-intro">Ein Windows-Programm, das schrittweise den gesamten Arbeitsalltag digitalisiert — Modul für Modul, im Kern lokal, ohne Abo. Wie ein digitaler Techniker, der für dich arbeitet.</p>
+    <div class="quote-block">„Ich öffne eine App, sehe alle meine Baustellen, klicke auf ein Projekt, und habe alles was ich brauche — Pläne, Bautagebuch, Fotos, Kontakte, Zeiterfassung — auf einen Blick."</div>
+    <div class="principles">
+      <div class="principle"><span class="principle-icon">📴</span><h4>Offline-first</h4><p>Der Kern läuft vollständig lokal. Internet nur für optionale Zusatzfunktionen.</p></div>
+      <div class="principle"><span class="principle-icon">💾</span><h4>Eigene Daten</h4><p>Alles auf deinem PC, in deinen Ordnern. Keine Cloud-Pflicht, kein Abo.</p></div>
+      <div class="principle"><span class="principle-icon">🔧</span><h4>Anpassbar</h4><p>Eigene Ordnerstrukturen, eigene Plantyp-Muster.</p></div>
+      <div class="principle"><span class="principle-icon">🧩</span><h4>Modular</h4><p>Nur die Module aktivieren die du brauchst. Kern zuerst, Ausbau später.</p></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ MODULE ══════════════════ -->
+  <section>
+    <div class="section-label">Die Module im Detail</div>
+    <div class="section-title">Was kann baulotse — und was kommt noch?</div>
+    <p class="section-intro">Baulotse wird in zwei Ebenen entwickelt: die <strong>Grundfunktionen des Kerns</strong> laufen lokal und offline. <strong>Ausbau-Module</strong> ergänzen den Kern um Online-Dienste und Integrationen — immer optional, nie Voraussetzung.</p>
+
+    <!-- ═══════ KERN ═══════ -->
+    <div class="phase-divider">
+      <h2>🏗 Kern — alle Grundfunktionen laufen lokal</h2>
+      <p>Projektverwaltung, Planablage, Bautagebuch, Zeiterfassung, Fotos und Dashboard funktionieren im Grundbetrieb ohne Internet.</p>
+    </div>
+
+    <!-- EINSTELLUNGEN -->
+    <div class="mb cg">
+      <div class="mh"><span class="me">⚙</span><h3>Projektverwaltung &amp; Einstellungen</h3><span class="st st-d">Fertig</span></div>
+      <p>Du legst ein neues Projekt an — Name, Adresse, Auftraggeber, Baustart. Baulotse erstellt automatisch die komplette Ordnerstruktur: <strong>01 Planunterlagen, 02 Fotos, 03 LV, 04 Protokolle</strong> — nummeriert, mit Unterordnern, nach deinem eigenen Schema.</p>
+      <p>Alle Projektdaten an einem Ort: <strong>5 Tabs</strong> mit Stammdaten, Bauwerk (Bauteile + Geschosse mit Höhenberechnung), Beteiligte (Architekt, Statiker, ÖBA...), Portal-Links (PlanRadar, InfoRaum) und Ordnerstruktur.</p>
+      <div class="pills"><span class="pill">Projektliste</span><span class="pill">Ordner per Klick</span><span class="pill">Bauteile + Geschosse</span><span class="pill">Beteiligte</span><span class="pill">Portal-Links</span></div>
+    </div>
+
+    <!-- PLANMANAGER -->
+    <div class="mb cb">
+      <div class="mh"><span class="me">📁</span><h3>PlanManager — das Kernfeature</h3><span class="st st-n">Als Nächstes</span></div>
+      <p><strong>Das ist der Grund, warum baulotse existiert.</strong> Neue Pläne kommen rein — du wirfst sie in den Eingangs-Ordner. Baulotse erkennt automatisch Plantyp, Nummer und Index aus dem Dateinamen. Es vergleicht mit dem Bestand und zeigt, was neu ist, was aktualisiert wurde, was identisch ist.</p>
+      <div class="msub">KI-gestützte Plankopf-Erkennung <span class="online-hint">Online optional</span></div>
+      <p>Zusätzlich zur lokalen Dateinamen-Analyse kann baulotse per <strong>KI den Plankopf auslesen</strong> — Index, Datum, Plannummer und Beschreibung direkt aus dem PDF extrahieren. Dadurch entsteht ein <strong>nachvollziehbarer Indexverlauf</strong> für jeden Plan: welcher Index kam wann, von wem. Dieser Planstand fließt direkt ins Bautagebuch. Die KI-Erkennung setzt eine Internetverbindung voraus — der Import selbst funktioniert auch ohne.</p>
+      <div class="msub">Der Import-Workflow</div>
+      <div class="wf">
+        <div class="ws"><span class="sl m">Du</span><div class="stt">Pläne in den Eingangs-Ordner legen</div><div class="sd">Per Mail, Portal oder USB — einfach alle Dateien in _Eingang werfen.</div></div>
+        <div class="ws au"><span class="sl a">Automatisch</span><div class="stt">Erkennen, Plankopf auslesen &amp; Vergleichen</div><div class="sd">Plantyp, Nummer, Index aus Dateinamen (lokal) + Plankopf (optional KI). Vergleich mit Bestand.</div></div>
+        <div class="ws"><span class="sl m">Du</span><div class="stt">Vorschau prüfen und bestätigen</div><div class="sd">Du siehst was wohin kommt. Korrigieren möglich. Erst nach Bestätigung wird verschoben.</div></div>
+        <div class="ws au"><span class="sl a">Automatisch</span><div class="stt">Einsortieren + Archivieren</div><div class="sd">Neue Pläne im richtigen Ordner. Alte Stände im Archiv. Indexverlauf wird aktualisiert. Undo jederzeit möglich.</div></div>
+      </div>
+      <p><strong>Ziel:</strong> Pläne sortieren in wenigen Minuten statt manuell in 15–30 Minuten. Kein Plan wird übersehen.</p>
+    </div>
+
+    <!-- ZEITERFASSUNG -->
+    <div class="mb cg">
+      <div class="mh"><span class="me">⏱</span><h3>Zeiterfassung</h3><span class="st st-p">Geplant 2026–2027</span></div>
+      <p>Schluss mit Stundenzetteln und Excel-Formelhölle. Baulotse bietet eine <strong>übersichtliche Eingabemaske</strong> für die tägliche Arbeitszeiterfassung.</p>
+      <p><strong>Arbeiter aus Dropdown wählen</strong> (mit Kolonnen-Vorauswahl), <strong>Baustelle zuordnen</strong>, Arbeitszeit eingeben — fertig. Abwesenheiten wie Urlaub, Krank, Feiertag oder Zeitausgleich werden genauso erfasst. Auf einen Blick sehen, wer wo war und wer fehlt.</p>
+      <p>Die Daten werden <strong>direkt in deine bestehende Excel-Tabelle geschrieben</strong>. Das Lohnbüro liest weiterhin Excel — baulotse ist die schnellere Eingabe. Langfristig fließen die Stunden direkt in die <strong>Nachkalkulation</strong>.</p>
+      <div class="pills"><span class="pill">Arbeiter-Dropdown</span><span class="pill">Kolonnen</span><span class="pill">Abwesenheiten</span><span class="pill">Baustellen-Zuordnung</span><span class="pill">Schreibt in Excel</span><span class="pill">→ Nachkalkulation</span></div>
+    </div>
+
+    <!-- BAUTAGEBUCH -->
+    <div class="mb co">
+      <div class="mh"><span class="me">📋</span><h3>Bautagebuch</h3><span class="st st-p">Geplant 2026–2027</span></div>
+      <p>Das tägliche Bauprotokoll — aber <strong>großteils vorausgefüllt</strong>. Der Bericht selbst funktioniert vollständig lokal: Baulotse weiß, wer heute da war (aus der Zeiterfassung), was gearbeitet wurde (aus der Arbeitseinteilung) und welcher Planstand gilt (aus dem PlanManager). Wetterdaten sind eine optionale Ergänzung — sie fließen automatisch ein, sofern Internet verfügbar ist, sonst manuelle Eingabe.</p>
+      <div class="msub">So sieht ein typischer Tag aus</div>
+      <div class="wf">
+        <div class="ws au"><span class="sl a">Morgens — automatisch</span><div class="stt">Wetter + Planstand holen</div><div class="sd">Wetter bei Internetverbindung automatisch, sonst manuell. Planstand immer lokal verfügbar.</div></div>
+        <div class="ws"><span class="sl m">Morgens — du</span><div class="stt">Arbeitseinteilung machen</div><div class="sd">Wer arbeitet heute an welchem Arbeitspaket? Einfache Matrix.</div></div>
+        <div class="ws au"><span class="sl a">Abends — automatisch</span><div class="stt">Bautagebuch wird vorgeschlagen</div><div class="sd">Personal, Tätigkeiten, Wetter, Planstand — alles schon drin. Textvorschlag aus der Arbeitseinteilung.</div></div>
+        <div class="ws"><span class="sl m">Abends — du</span><div class="stt">Prüfen, ergänzen, bestätigen</div><div class="sd">Vorkommnisse, Behinderungen, Besucher, Fotos ergänzen. Bestätigen — fertig.</div></div>
+        <div class="ws au"><span class="sl a">Automatisch</span><div class="stt">PDF-Export</div><div class="sd">Sauberes PDF mit Logo, Fotos, Wetterdaten, aktuellem Planstand.</div></div>
+      </div>
+      <p><strong>Ziel:</strong> Bautagebuch in ca. 5 Minuten statt 20. Kein Tag vergessen.</p>
+    </div>
+
+    <!-- FOTOMANAGEMENT -->
+    <div class="mb cb">
+      <div class="mh"><span class="me">📸</span><h3>Foto-Management</h3><span class="st st-p">Geplant 2026–2027</span></div>
+      <p>Baustellenfotos landen aktuell unsortiert in einem Ordner. Baulotse sortiert sie <strong>automatisch in die richtige Projektordner-Struktur</strong> — basierend auf Datum und, wenn vorhanden, GPS-Koordinaten. Sind Geodaten verfügbar, kann baulotse Fotos automatisch einer Baustelle zuordnen. Fehlen sie (z.B. bei WhatsApp-Fotos oder Screenshots), erfolgt die Zuordnung über Projekt, Datum oder manuelle Auswahl.</p>
+      <p><strong>Tags vergeben</strong> (Schalung, Bewehrung, Mangel), <strong>filtern nach Datum, Geschoß oder Bauteil</strong>. Für den Baubericht per Checkbox auswählen, welche Fotos gedruckt werden. Direkte <strong>Zuordnung zum Bautagebuch</strong> — die Fotos des Tages sind automatisch beim richtigen Eintrag.</p>
+      <div class="pills"><span class="pill hl">Auto-Einsortieren</span><span class="pill">GPS-Zuordnung</span><span class="pill">Tags</span><span class="pill">Geschoß/Bauteil-Filter</span><span class="pill">Baubericht</span><span class="pill">Bautagebuch-Verknüpfung</span></div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="mb cb">
+      <div class="mh"><span class="me">📊</span><h3>Dashboard — alles auf einen Blick</h3><span class="st st-p">Geplant</span></div>
+      <p>Die <strong>zentrale Anlaufstelle</strong> beim Öffnen. Sidebar mit Projektliste, Klick auf ein Projekt zeigt: Kennzahlen (Pläne, neue Indizes), Schnellzugriff auf Projektordner, letzte Planänderungen, Bautagebuch-Status, offene Aufgaben. Wenn Ausbau-Module aktiv sind, zeigt das Dashboard zusätzlich Daten wie Wetter-Widget, offene Bestellungen oder Lieferstatus.</p>
+    </div>
+
+    <!-- ═══════ AUSBAU ═══════ -->
+    <div class="phase-divider">
+      <h2>🔌 Ausbau — optionale Online-Dienste &amp; Integrationen</h2>
+      <p>Ergänzen den Kern um Nachkalkulation, Beton-/Ziegelbestellung, KI, Wetter, Outlook, Mobile und mehr. Setzen teilweise Internet, externe Tools oder andere Module voraus.</p>
+    </div>
+
+    <!-- KI-ASSISTENT -->
+    <div class="mb cp">
+      <div class="mh"><span class="me">🤖</span><h3>KI-Assistent <span class="online-hint">Online</span></h3><span class="st st-f">Langfristig</span></div>
+      <p>Deine <strong>Baubeschreibung, das LV oder technische Unterlagen</strong> in normaler Sprache durchsuchen — wie einen Kollegen fragen, nicht wie eine Stichwortsuche. Die Dokumentaufbereitung erfolgt lokal. Die KI-Antwort läuft über <strong>ChatGPT oder Claude</strong> (wählbar). Ohne Internet kann baulotse den Suchkontext vorbereiten und einen Prompt erzeugen, den du selbst in ChatGPT einfügst.</p>
+      <div class="msub">Beispiele</div>
+      <div class="cx">
+        <div class="cm"><div class="cw u">Du fragst:</div><div class="ct">„Welche Fenstertypen sind in Haus 5 vorgesehen?"</div></div>
+        <div class="cm"><div class="cw k">KI antwortet:</div><div class="ct">Kunststoff-Fenster Typ F1, Dreh-Kipp, 3-fach Verglasung. Rahmen außen RAL 7016, innen weiß. <em>→ Baubeschreibung, Abschnitt 4.2</em></div></div>
+      </div>
+      <div class="cx">
+        <div class="cm"><div class="cw u">Du fragst:</div><div class="ct">„Gibt es eine Position für Kanalanschluss im LV?"</div></div>
+        <div class="cm"><div class="cw k">KI antwortet:</div><div class="ct">Ja, Pos. 03.12.05 „Kanalanschluss DN200", 2 Stk, EP € 1.850,–. <em>→ LV, LG 03 Kanal</em></div></div>
+      </div>
+      <div class="cx">
+        <div class="cm"><div class="cw u">Du fragst:</div><div class="ct">„Wie dick ist die Außenwand und gibt es WDVS?"</div></div>
+        <div class="cm"><div class="cw k">KI antwortet:</div><div class="ct">25er Ziegel + 16 cm EPS-F WDVS = 43 cm. LV-Position 06.04.02 mit 1.240 m². <em>→ Baubeschreibung 3.2 + LV LG 06</em></div></div>
+      </div>
+    </div>
+
+    <!-- MATERIALBESTELLUNG -->
+    <div class="mb cc">
+      <div class="mh"><span class="me">🚚</span><h3>Materialbestellung &amp; Lieferscheine <span class="online-hint">Online</span></h3><span class="st st-f">Langfristig</span></div>
+      <p>Kompletter Bestellworkflow mit <strong>API-Integration in ClickUp, Asana, Trello</strong> oder andere Projektmanagement-Tools. Baulotse steuert nicht dein gesamtes Projektmanagement, sondern stößt materialbezogene Abläufe an und verbindet sie mit deinen bestehenden Tools. <strong>Bestellmengen können mit dem Leistungsverzeichnis abgeglichen werden</strong> — so siehst du sofort, ob die bestellte Menge zur kalkulierten LV-Position passt oder davon abweicht.</p>
+      <div class="wf">
+        <div class="ws"><span class="sl m">Polier</span><div class="stt">Bedarf melden</div><div class="sd">Direkt aus dem Arbeitspaket, Menge vorausgefüllt.</div></div>
+        <div class="ws au"><span class="sl a">Baulotse → ClickUp API</span><div class="stt">Task automatisch anlegen</div><div class="sd">Material, Menge, Bauteil, Termin. Bauleiter, Dispo, Einkauf sehen alles.</div></div>
+        <div class="ws"><span class="sl m">Dispo / Einkauf</span><div class="stt">Bestellen + Status setzen</div><div class="sd">Offen → Bestellt → Unterwegs → Geliefert.</div></div>
+        <div class="ws au"><span class="sl a">Automatisch</span><div class="stt">Lieferschein erstellen &amp; Material erfassen</div><div class="sd">Gelieferte Mengen gegen Bestellung prüfen, Differenzen markieren. Abgleich mit LV-Positionen möglich.</div></div>
+      </div>
+      <p>Funktioniert auch ohne Projektmanagement-Tool — dann mit lokaler Bestellübersicht.</p>
+    </div>
+
+    <!-- BETONBESTELLUNG -->
+    <div class="mb co">
+      <div class="mh"><span class="me">🏗</span><h3>Betonbestellung <span class="online-hint">Online</span></h3><span class="st st-f">Langfristig</span></div>
+      <p>Bestellung über Excel-Integration: <strong>Betonsorte, Menge, Liefertermin, Pumpe, Bauabschnitt</strong>. Die formatierte Bestellung wird per <strong>WhatsApp, Signal oder Messenger direkt ans Mischwerk verschickt</strong>.</p>
+      <p>Nach der Lieferung: komplette <strong>Lieferliste</strong> mit allen Bestellungen, Liefermengen und Lieferscheinnummern. <strong>Nachvollziehbar was wann wo eingebaut wurde</strong> — jede Lieferung ist einem Bauteil und Bauabschnitt zugeordnet. Mehr- und Mindermengen werden automatisch erkannt. Bestellte und gelieferte Mengen lassen sich <strong>mit den LV-Positionen abgleichen</strong> — so erkennst du Abweichungen zwischen Kalkulation und tatsächlichem Verbrauch.</p>
+      <div class="pills"><span class="pill">Excel-Integration</span><span class="pill online">Messenger-Versand</span><span class="pill">Lieferliste</span><span class="pill hl">Mehr-/Mindermengen</span><span class="pill">Einbauort nachvollziehbar</span><span class="pill">Lieferschein-Nummern</span></div>
+    </div>
+
+    <!-- ZIEGELBESTELLUNG -->
+    <div class="mb cb">
+      <div class="mh"><span class="me">🧱</span><h3>Ziegelberechnung &amp; -bestellung</h3><span class="st st-f">Langfristig</span></div>
+      <p>Mengenermittlung direkt mit der Bestellung verbunden.</p>
+      <div class="wf">
+        <div class="ws"><span class="sl m">In AutoCAD</span><div class="stt">Wände erfassen per Plugin</div><div class="sd">Pro Haus, Bauteil und Geschoß: Wände markieren, Ziegeltyp zuordnen.</div></div>
+        <div class="ws au"><span class="sl a">Automatisch</span><div class="stt">m² und Liefermengen berechnen</div><div class="sd">Wandfläche × Stk/m² → Palettenanzahl. Verschnitt eingerechnet.</div></div>
+        <div class="ws"><span class="sl m">Du</span><div class="stt">Liefertermine setzen + freigeben</div><div class="sd">Pro Geschoß einen Termin. Baulotse erstellt die Bestellliste.</div></div>
+      </div>
+      <p>Basiert auf eigenem <strong>Wandcode-System</strong> und Wienerberger-Produktdatenbank. Über Excel integriert. Berechnete Mengen lassen sich <strong>mit den LV-Positionen abgleichen</strong> — Soll aus dem LV vs. Bedarf aus der Wandberechnung.</p>
+    </div>
+
+    <!-- NACHKALKULATION -->
+    <div class="mb co">
+      <div class="mh"><span class="me">📊</span><h3>Nachkalkulation &amp; Erfahrungswerte</h3><span class="st st-p">Geplant 2027</span></div>
+      <p>Die große Frage am Ende jeder Baustelle: <strong>„Waren wir schneller oder langsamer als kalkuliert?"</strong> Und die noch wichtigere: <strong>„Was können wir fürs nächste Projekt daraus lernen?"</strong></p>
+      <p>Das Problem: Nachkalkulationen scheitern in der Praxis, weil niemand täglich 40 LV-Positionen befüllt. Baulotse macht es anders — mit dem <strong>Arbeitspaket</strong>.</p>
+      <div class="msub">Was ist ein Arbeitspaket?</div>
+      <p>Ganz einfach: <strong>Bauteil + Geschoß + Tätigkeit + Soll-Menge.</strong> Zum Beispiel: „Haus 5 / Erdgeschoß / Mauerwerk 38er / 198 m²". Du legst die Pakete einmal an — die Soll-Mengen kommen aus deiner Kalkulation oder Ziegelberechnung.</p>
+      <div class="msub">Der Clou: Du musst nichts täglich aufschreiben</div>
+      <p>Die Arbeitseinteilung sagt, wer an welchem Paket arbeitet. Die Zeiterfassung liefert die Stunden. Baulotse rechnet automatisch mit. <strong>Erst wenn ein Paket fertig ist</strong> — „Mauerwerk EG ist gemauert" — bestätigst du die tatsächliche Menge. Dann rechnet baulotse: 198 m² ÷ 320 Arbeitsstunden = <strong>0,61 m²/Ah</strong>.</p>
+      <div class="msub">Erfahrungskatalog — dein eigenes Wissen</div>
+      <p>Jedes fertige Arbeitspaket landet im <strong>Erfahrungskatalog</strong>. Nach ein paar Baustellen hast du harte Zahlen: „Mauerwerk 38er braucht bei uns 0,62 Ah/m²." Wenn du dann ein neues Projekt kalkulierst, schaust du nach — nicht im Kopf, sondern in deinen eigenen, gemessenen Daten. Das ist dein Wettbewerbsvorteil.</p>
+      <div class="msub">Bauzeitprognose — das System lernt mit</div>
+      <p>Langfristig kann baulotse aus den gesammelten Erfahrungswerten, dem Bautagebuch, der Zeiterfassung und dem Leistungsverzeichnis eine <strong>Zeitschätzung für die nächste Baustelle</strong> ableiten. Du lädst ein neues LV ein, und baulotse schlägt dir anhand deiner bisherigen Daten vor, wie viele Stunden pro Position realistisch sind. <strong>Je mehr Baustellen du erfasst, desto genauer werden die Prognosen</strong> — das System lernt mit deinen Projekten mit.</p>
+    </div>
+
+    <!-- OUTLOOK -->
+    <div class="mb cg">
+      <div class="mh"><span class="me">📧</span><h3>Outlook-Integration <span class="online-hint">Externe Anbindung</span></h3><span class="st st-f">Langfristig</span></div>
+      <p>Setzt eine vorhandene Outlook-/Microsoft-Umgebung voraus. <strong>Pläne aus E-Mail-Anhängen</strong> automatisch in den Eingangs-Ordner extrahieren. <strong>Kalender-Sync:</strong> Betonage-Termine, Besprechungen, Abnahmen in Outlook eintragen und umgekehrt. <strong>Aufgaben</strong> aus baulotse als Outlook-Aufgaben anlegen.</p>
+      <div class="pills"><span class="pill online">Plan-Anhänge extrahieren</span><span class="pill online">Kalender-Sync</span><span class="pill online">Aufgaben-Sync</span><span class="pill">API-Anbindung</span></div>
+    </div>
+
+    <!-- WETTER -->
+    <div class="mb co">
+      <div class="mh"><span class="me">🌤</span><h3>Wetter pro Baustelle <span class="online-hint">Online</span></h3><span class="st st-f">Langfristig</span></div>
+      <p>Bereits heute über ein <strong>Google Sheets realisiert</strong>: Für alle aktiven Baustellen werden <strong>stündlich</strong> die Wetterdaten automatisch abgefragt und gespeichert — basierend auf den GPS-Koordinaten der Baustelle. Gespeichert werden: <strong>Temperatur (min/max/mittel), Niederschlag (Regen/Schnee in mm), Wind und Bewölkung</strong>. Damit entsteht ein <strong>stündliches Wetterarchiv</strong> pro Baustelle — nicht nur Tagesdaten, sondern ein lückenloses Stundenprofil.</p>
+      <p>In baulotse wird diese Funktionalität direkt integriert. Die Wetterdaten fließen automatisch ins <strong>Bautagebuch</strong>. Ohne Internetverbindung: manuelle Eingabe. Das Archiv bleibt lokal gespeichert — wichtig für Nachweise bei Bauzeitverzögerungen oder Behinderungsanzeigen, wo oft stundengenau belegt werden muss.</p>
+      <div class="pills"><span class="pill">GPS-Koordinaten</span><span class="pill hl">Stündliche Abfrage</span><span class="pill">Temp/Regen/Wind</span><span class="pill">Auto → Bautagebuch</span><span class="pill">Stundenarchiv lokal</span></div>
+    </div>
+
+    <!-- MOBILE -->
+    <div class="mb cp">
+      <div class="mh"><span class="me">📱</span><h3>Mobile App</h3><span class="st st-f">Langfristig</span></div>
+      <p>Baulotse am Handy — <strong>zuerst für Android</strong>, später iOS. Als PWA im Browser, kein App Store nötig.</p>
+      <p><strong>Bautagebuch auf der Baustelle schreiben</strong> — Fotos, Bemerkungen, Arbeiter bestätigen. Pläne am Smartphone anschauen. Zeiterfassung vor Ort.</p>
+      <p><strong>Offline nutzbar:</strong> Morgens synchronisieren, tagsüber ohne Internet arbeiten. Synchronisiert wird später, sobald wieder Verbindung zum Cloud-Speicher oder lokalen Server besteht.</p>
+      <div class="pills"><span class="pill hl">Android zuerst</span><span class="pill">PWA</span><span class="pill">Offline nutzbar</span><span class="pill">Bautagebuch</span><span class="pill">Pläne</span><span class="pill">Zeiterfassung</span></div>
+    </div>
+
+    <!-- MULTI-USER -->
+    <div class="mb cg">
+      <div class="mh"><span class="me">👥</span><h3>Multi-User Support</h3><span class="st st-f">Langfristig</span></div>
+      <p>Drei Modi: <strong>1. Eigene DB</strong> (jeder hat seine eigene, einfachster Fall). <strong>2. Geteilte DB</strong> auf Netzlaufwerk oder Cloud-Ordner, Schreibzugriffe werden kontrolliert um Konflikte zu vermeiden. <strong>3. Lokaler Server</strong> (z.B. Raspberry Pi im Firmen-Netzwerk) — schneller als Cloud, kein Internet nötig.</p>
+    </div>
+
+    <!-- CLOUD SYNC -->
+    <div class="mb cb">
+      <div class="mh"><span class="me">☁</span><h3>Optionale Cloud-Synchronisation</h3><span class="st st-d">Funktioniert</span></div>
+      <p>Baulotse läuft lokal und speichert in <strong>sauberen Windows-Ordnern</strong>. Optional kann über bestehende Cloud-Ordner synchronisiert werden: <strong>OneDrive, Google Drive, Dropbox, Synology Drive, Nextcloud</strong>. Keine Cloud-Pflicht — wer lokal bleiben will, bleibt lokal.</p>
+    </div>
+
+    <!-- GIS -->
+    <div class="mb cp">
+      <div class="mh"><span class="me">🗺</span><h3>GIS-Integration <span class="online-hint">Online</span></h3><span class="st st-f">Langfristig</span></div>
+      <p>Baustellenbezogene Geodaten direkt aus baulotse abfragen — Grundstücksgrenzen, Flächenwidmung, Leitungskataster, Höhendaten. Per API-Anbindung an öffentliche GIS-Dienste (z.B. GIS Steiermark). Koordinatenverarbeitung und Projektbezug funktionieren lokal. <strong>GIS-Daten können bei Internetverbindung abgefragt und projektbezogen lokal gespeichert werden</strong> — bereits geladene Daten stehen danach offline zur Verfügung.</p>
+      <div class="pills"><span class="pill">Grundstücksgrenzen</span><span class="pill">Flächenwidmung</span><span class="pill">Leitungskataster</span><span class="pill">Lokal gespeichert</span><span class="pill online">API-Abfrage</span></div>
+    </div>
+
+  </section>
+
+  <!-- ══════════════════ VERGLEICH ══════════════════ -->
+  <section>
+    <div class="section-label">Vergleich</div>
+    <div class="section-title">baulotse vs. bestehende Bau-Software</div>
+    <p class="section-intro">Es gibt PlanRadar, Dalux, BauMaster, 123erfasst und viele mehr. Gute Tools — aber sie lösen ein anderes Problem oder sind für eine andere Zielgruppe gebaut.</p>
+    <table class="ctab">
+      <thead><tr><th></th><th>PlanRadar, BauMaster &amp; Co.</th><th>baulotse</th></tr></thead>
+      <tbody>
+        <tr><td class="lb">Internet</td><td class="th">Voraussetzung — Cloud-basiert</td><td class="us">Kern läuft lokal, Online-Dienste optional</td></tr>
+        <tr><td class="lb">Kosten</td><td class="th">€26–200 / Monat / Nutzer</td><td class="us">Kein laufendes SaaS-Abo</td></tr>
+        <tr><td class="lb">Deine Daten</td><td class="th">Auf Servern des Anbieters</td><td class="us">Auf deinem PC, in deinen Ordnern</td></tr>
+        <tr><td class="lb">Ordnerstruktur</td><td class="th">Vom Anbieter vorgegeben</td><td class="us">Frei konfigurierbar</td></tr>
+        <tr><td class="lb">Plantyp-Erkennung</td><td class="th">Fest oder KI (Blackbox)</td><td class="us">Selbst angelernte Muster — transparent</td></tr>
+        <tr><td class="lb">Plankopf auslesen</td><td class="th">Teilweise, eingeschränkt</td><td class="us">Optional: KI-gestütztes Auslesen von Index- und Planinfos</td></tr>
+        <tr><td class="lb">Zielgruppe</td><td class="th">Große Firmen, Teams</td><td class="us">Polier / Bauleiter, kleine Firmen</td></tr>
+        <tr><td class="lb">Offline-Fähigkeit</td><td class="th">Eingeschränkt (nur mit Vorsync)</td><td class="us">Kernfunktionen vollständig lokal</td></tr>
+        <tr><td class="lb">Cloud-Sync</td><td class="th">Nur Anbieter-Cloud</td><td class="us">Optional über OneDrive, Google Drive, Dropbox</td></tr>
+        <tr><td class="lb">Nachkalkulation</td><td class="th">Nicht Kernfokus</td><td class="us">Eigener Erfahrungskatalog aus gemessenen Daten</td></tr>
+        <tr><td class="lb">KI-Dokumentensuche</td><td class="th">Nicht Kernfokus</td><td class="us">Optional: Dokumente durchsuchen in natürlicher Sprache</td></tr>
+        <tr><td class="lb">Materialbestellung</td><td class="th">Meist nur über Zusatzlösungen</td><td class="us">API-Integration ClickUp/Asana + Lieferscheine</td></tr>
+        <tr><td class="lb">Betonbestellung</td><td class="th">Nicht Kernfokus</td><td class="us">Excel + Messenger-Versand ans Mischwerk</td></tr>
+        <tr><td class="lb">Excel-Integration</td><td class="th">Export/Import, nicht nahtlos</td><td class="us">Schreibt direkt in bestehende Excel-Tabellen</td></tr>
+        <tr><td class="lb">Anpassbarkeit</td><td class="th">Standard-Formulare</td><td class="us">Stark anpassbar — eigene Muster, Ordnerstrukturen und Regeln</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ══════════════════ NICHT ══════════════════ -->
+  <section>
+    <div class="section-label">Abgrenzung</div>
+    <div class="section-title">Was baulotse bewusst nicht ist</div>
+    <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+      <div class="card" style="text-align:center; padding:20px;"><span style="font-size:24px;">🚫</span><p style="margin-top:8px; font-size:13px;">Kein Projektmanagement <br><em style="color:var(--muted);">(dafür ClickUp, Asana)</em></p></div>
+      <div class="card" style="text-align:center; padding:20px;"><span style="font-size:24px;">🚫</span><p style="margin-top:8px; font-size:13px;">Kein CAD-Programm <br><em style="color:var(--muted);">(sortiert Pläne, zeichnet nicht)</em></p></div>
+      <div class="card" style="text-align:center; padding:20px;"><span style="font-size:24px;">🚫</span><p style="margin-top:8px; font-size:13px;">Keine Buchhaltung <br><em style="color:var(--muted);">(keine Rechnungen, kein ERP)</em></p></div>
+      <div class="card" style="text-align:center; padding:20px;"><span style="font-size:24px;">🚫</span><p style="margin-top:8px; font-size:13px;">Kein starres ERP-System <br><em style="color:var(--muted);">(Assistent, nicht Betriebssystem)</em></p></div>
+      <div class="card" style="text-align:center; padding:20px;"><span style="font-size:24px;">🚫</span><p style="margin-top:8px; font-size:13px;">Kein Cloud-Zwang <br><em style="color:var(--muted);">(Cloud optional, lokal bevorzugt)</em></p></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ ZAHLEN ══════════════════ -->
+  <section>
+    <div class="section-label">Ziel</div>
+    <div class="section-title">Was baulotse bringen soll</div>
+    <div class="numbers">
+      <div class="nc"><div class="nb">~2</div><div class="nu">Min</div><div class="nd">Pläne sortieren statt 15–30</div></div>
+      <div class="nc"><div class="nb">1</div><div class="nu">Klick</div><div class="nd">Projekt + Ordner anlegen</div></div>
+      <div class="nc"><div class="nb">~5</div><div class="nu">Min</div><div class="nd">Bautagebuch statt 20</div></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ FÜR WEN ══════════════════ -->
+  <section>
+    <div class="section-label">Für wen</div>
+    <div class="section-title">Wer nutzt baulotse?</div>
+    <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+      <div class="card"><span class="card-icon">👷</span><h3>Polier / Bauleiter</h3><p>Der Hauptnutzer. Konfiguriert die App, lernt Muster an, sortiert Pläne, schreibt Bautagebuch, erfasst Stunden, fragt die KI.</p></div>
+      <div class="card"><span class="card-icon">👥</span><h3>Kollegen in der Firma</h3><p>Installieren baulotse, öffnen Projekte, finden Pläne, schreiben Bautagebuch. Keine Konfiguration nötig.</p></div>
+      <div class="card"><span class="card-icon">🏗️</span><h3>Kleine Baufirmen</h3><p>2–10 Baustellen, Wohnbau, Reihenhäuser. Kein IT-Team, kein Budget für Cloud-Software. Baulotse passt genau.</p></div>
+    </div>
+  </section>
+
+  <div class="footer">
+    <div class="logo">bau<span>lotse</span></div>
+    <p>Dein digitaler Assistent auf der Baustelle.</p>
+    <p style="margin-top:4px;">Entwickelt von einem Polier — für Poliere und Bauleiter.</p>
+  </div>
+
+</div>
+</body>
+</html>

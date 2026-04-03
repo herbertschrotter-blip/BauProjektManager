@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>baulotse — UI Mockups Block 4 (Ausbau Online Teil 2)</title>
+<link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base: #1E1E1E; --bg-surface: #252526; --bg-elevated: #2D2D30;
+    --bg-hover: #37373D; --bg-active: #04395E; --bg-input: #3C3C3C;
+    --text-primary: #CCCCCC; --text-secondary: #858585; --text-bright: #FFFFFF;
+    --accent: #0078D4; --accent-hover: #1A8AD4;
+    --success: #4EC94E; --warning: #F0AD4E; --error: #F44747; --info: #3794FF;
+    --purple: #8b5cf6;
+    --border: #3C3C3C; --border-focus: #0078D4; --border-subtle: #2D2D30;
+    --sidebar-w: 220px; --radius: 6px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: var(--text-primary); line-height: 1.5; }
+  .page { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+  .page-title { font-size: 28px; color: var(--text-bright); font-weight: 700; margin-bottom: 8px; }
+  .page-title span { color: #E8712A; }
+  .page-sub { color: var(--text-secondary); font-size: 14px; margin-bottom: 48px; }
+  .mockup-section { margin-bottom: 64px; }
+  .mockup-label { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+  .mockup-title { font-size: 22px; color: var(--text-bright); font-weight: 700; margin-bottom: 4px; }
+  .mockup-desc { color: var(--text-secondary); font-size: 13px; margin-bottom: 20px; }
+  .app-shell {
+    width: 100%; max-width: 1100px; height: 700px;
+    background: var(--bg-base); border: 1px solid var(--border); border-radius: 8px;
+    overflow: hidden; display: grid;
+    grid-template-columns: var(--sidebar-w) 1fr; grid-template-rows: 1fr 28px; font-size: 13px;
+  }
+  .sidebar { background: var(--bg-elevated); grid-row: 1; padding: 12px 0; display: flex; flex-direction: column; border-right: 1px solid var(--border-subtle); }
+  .sidebar-logo { font-size: 14px; font-weight: 700; color: var(--text-bright); padding: 4px 15px 16px; }
+  .sidebar-logo span { color: #E8712A; }
+  .nav-btn { display: block; width: 100%; padding: 10px 15px; background: transparent; border: none; color: var(--text-primary); font-size: 13px; text-align: left; cursor: pointer; font-family: inherit; }
+  .nav-btn:hover { background: var(--bg-hover); }
+  .nav-btn.active { background: var(--bg-active); color: var(--text-bright); border-left: 3px solid var(--accent); padding-left: 12px; }
+  .content { grid-row: 1; grid-column: 2; background: var(--bg-base); padding: 20px; overflow-y: auto; }
+  .statusbar { grid-column: 1 / -1; grid-row: 2; background: var(--accent); color: var(--text-bright); font-size: 12px; padding: 0 12px; display: flex; align-items: center; }
+  .heading1 { font-size: 20px; font-weight: 700; color: var(--text-bright); margin-bottom: 16px; }
+  .heading2 { font-size: 15px; font-weight: 600; color: var(--text-bright); margin-bottom: 10px; margin-top: 20px; }
+  .card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--text-bright); margin-bottom: 8px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border: none; border-radius: 4px; font-size: 12px; font-family: inherit; cursor: pointer; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-secondary { background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); }
+  .btn-ghost { background: transparent; color: var(--text-secondary); }
+  .input, .select { background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); border-radius: 4px; padding: 5px 8px; font-size: 12px; font-family: inherit; outline: none; }
+  .label { font-size: 11px; color: var(--text-secondary); margin-bottom: 3px; display: block; }
+  .tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .tbl th { text-align: left; padding: 8px 10px; background: var(--bg-elevated); color: var(--text-secondary); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  .tbl td { padding: 7px 10px; border-bottom: 1px solid var(--border-subtle); }
+  .tbl tr:hover td { background: var(--bg-hover); }
+  .badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 3px; }
+  .badge-ok { background: rgba(78,201,78,0.15); color: var(--success); }
+  .badge-update { background: rgba(240,173,78,0.15); color: var(--warning); }
+  .badge-ident { background: rgba(133,133,133,0.12); color: var(--text-secondary); }
+  .toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .toolbar-spacer { flex: 1; }
+  .online-tag { display: inline-block; background: rgba(139,92,246,0.15); color: var(--purple); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 3px; margin-left: 6px; }
+  /* Wetter */
+  .wetter-hourly { display: flex; gap: 0; margin-top: 12px; overflow-x: auto; }
+  .wetter-h { text-align: center; min-width: 52px; padding: 8px 4px; border-right: 1px solid var(--border-subtle); font-size: 11px; }
+  .wetter-h:last-child { border-right: none; }
+  .wetter-h .wh-time { color: var(--text-secondary); font-size: 10px; }
+  .wetter-h .wh-icon { font-size: 18px; margin: 4px 0; }
+  .wetter-h .wh-temp { color: var(--text-bright); font-weight: 600; }
+  .wetter-h .wh-rain { color: var(--info); font-size: 10px; }
+  .wetter-h.now { background: var(--bg-active); border-radius: 4px; }
+  /* Mobile */
+  .mobile-frame {
+    width: 360px; height: 640px; margin: 0 auto;
+    background: var(--bg-base); border: 2px solid var(--border);
+    border-radius: 28px; overflow: hidden;
+    display: flex; flex-direction: column;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .mobile-status { background: var(--bg-elevated); padding: 6px 16px; font-size: 10px; color: var(--text-secondary); display: flex; justify-content: space-between; }
+  .mobile-header { background: var(--bg-elevated); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+  .mobile-header h3 { font-size: 16px; color: var(--text-bright); font-weight: 600; }
+  .mobile-content { flex: 1; padding: 12px 16px; overflow-y: auto; }
+  .mobile-nav { display: flex; background: var(--bg-elevated); border-top: 1px solid var(--border); }
+  .mobile-nav-btn { flex: 1; text-align: center; padding: 8px 0 6px; font-size: 9px; color: var(--text-secondary); border: none; background: transparent; font-family: inherit; }
+  .mobile-nav-btn.active { color: var(--accent); }
+  .mobile-nav-btn .ni { font-size: 18px; display: block; margin-bottom: 1px; }
+  .m-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin-bottom: 8px; }
+  .m-card-title { font-size: 12px; font-weight: 600; color: var(--text-bright); margin-bottom: 6px; }
+  /* GIS */
+  .gis-map {
+    background: linear-gradient(135deg, #1a2a1f 0%, #1a2332 50%, #1f2a1f 100%);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    height: 320px; position: relative; overflow: hidden;
+  }
+  .gis-map-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(78,201,78,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(78,201,78,0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .gis-parcel {
+    position: absolute; border: 2px solid var(--success); border-radius: 2px;
+    background: rgba(78,201,78,0.08);
+  }
+  .gis-parcel-label {
+    position: absolute; font-size: 10px; color: var(--success); font-weight: 600;
+    background: rgba(30,30,30,0.8); padding: 1px 5px; border-radius: 2px;
+  }
+  .gis-building { position: absolute; background: rgba(0,120,212,0.2); border: 1px solid var(--accent); border-radius: 2px; }
+  .gis-pipe { position: absolute; border-top: 2px dashed var(--warning); }
+  .gis-overlay { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 3px; }
+  .gis-layer { font-size: 10px; padding: 4px 10px; background: rgba(30,30,30,0.9); border: 1px solid var(--border); border-radius: 4px; color: var(--text-primary); cursor: pointer; }
+  .gis-layer.active { border-color: var(--accent); color: var(--accent); }
+  .gis-coords { position: absolute; bottom: 10px; left: 10px; font-size: 10px; color: var(--text-secondary); background: rgba(30,30,30,0.9); padding: 3px 8px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; }
+  @media (max-width: 900px) {
+    .app-shell { height: auto; min-height: 500px; grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-title">bau<span>lotse</span> — UI Mockups</div>
+  <div class="page-sub">Block 4: Ausbau Online — Wetter (stündliches Archiv), Mobile PWA, GIS-Integration</div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       MOCKUP 1: WETTER — Stündliches Archiv
+       ═══════════════════════════════════════════════════════ -->
+  <div class="mockup-section">
+    <div class="mockup-label">Mockup 1</div>
+    <div class="mockup-title">Wetter pro Baustelle — Stündliches Archiv <span class="online-tag">ONLINE</span></div>
+    <div class="mockup-desc">Stündliche Abfrage für alle aktiven Baustellen (bereits heute über Google Sheets realisiert). Stundenarchiv pro Baustelle, fließt ins Bautagebuch. Lokal gespeichert für Behinderungsnachweise.</div>
+
+    <div class="app-shell">
+      <div class="sidebar">
+        <div class="sidebar-logo">bau<span>lotse</span></div>
+        <button class="nav-btn">📁 Pläne</button>
+        <button class="nav-btn">📋 Bautagebuch</button>
+        <button class="nav-btn active">🌤 Wetter</button>
+        <button class="nav-btn">⚙ Einstellungen</button>
+      </div>
+      <div class="content">
+        <div class="heading1">🌤 Wetter — ÖWG Dobl-Zwaring</div>
+        <div class="toolbar">
+          <select class="select"><option selected>ÖWG Dobl-Zwaring</option><option>WBG Kapfenberg</option></select>
+          <span style="font-size:11px; color:var(--text-secondary);">GPS: 46.908°N, 15.483°E</span>
+          <span class="toolbar-spacer"></span>
+          <button class="btn btn-secondary">📅 Archiv</button>
+          <span style="font-size:10px; color:var(--success);">● Stündliche Abfrage aktiv</span>
+        </div>
+
+        <!-- Aktuell -->
+        <div class="card" style="border-left:3px solid var(--info);">
+          <div class="card-title">Aktuell — 27.03.2026, 14:00</div>
+          <div style="display:grid; grid-template-columns:auto 1fr; gap:20px; align-items:center;">
+            <div>
+              <div style="font-size:52px; font-weight:700; color:var(--text-bright); line-height:1;">14°</div>
+              <div style="font-size:28px; margin-top:4px;">☀</div>
+            </div>
+            <div style="font-size:13px;">
+              <div style="color:var(--text-primary);">Sonnig | Gefühlt: 12°C</div>
+              <div style="color:var(--text-secondary);">Wind: <span style="color:var(--text-primary);">12 km/h NW</span> | Böen: <span style="color:var(--text-primary);">22 km/h</span></div>
+              <div style="color:var(--text-secondary);">Niederschlag: <span style="color:var(--text-primary);">0 mm</span> | Luftfeuchte: <span style="color:var(--text-primary);">55%</span></div>
+              <div style="color:var(--text-secondary); margin-top:4px;">Tageswerte: Min <span style="color:var(--info);">5°C</span> | Max <span style="color:var(--error);">16°C</span> | Mittel <span style="color:var(--text-primary);">11°C</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stündlich heute -->
+        <div class="heading2">Stündlicher Verlauf — heute</div>
+        <div class="card" style="padding:8px;">
+          <div class="wetter-hourly">
+            <div class="wetter-h"><div class="wh-time">06:00</div><div class="wh-icon">🌫</div><div class="wh-temp">5°</div><div class="wh-rain">0mm</div></div>
+            <div class="wetter-h"><div class="wh-time">07:00</div><div class="wh-icon">🌫</div><div class="wh-temp">6°</div><div class="wh-rain">0mm</div></div>
+            <div class="wetter-h"><div class="wh-time">08:00</div><div class="wh-icon">⛅</div><div class="wh-temp">8°</div><div class="wh-rain">0mm</div></div>
+            <div class="wetter-h"><div class="wh-time">09:00</div><div class="wh-icon">⛅</div><div class="wh-temp">10°</div><div class="wh-rain">0mm</div></div>
+            <div class="wetter-h"><div class="wh-time">10:00</div><div class="wh-icon">☀</div><div class="wh-temp">12°</div><div class="wh-rain">0mm</div></div>
+            <div class="wetter-h"><div class="wh-time">11:00</div><div class="wh-icon">☀</div><div class="wh-temp">13°</div><div class="wh-rain">0mm</div></div>
+            <div class="wetter-h"><div class="wh-time">12:00</div><div class="wh-icon">☀</div><div class="wh-temp">14°</div><div class="wh-rain">0mm</div></div>
+            <div class="wetter-h"><div class="wh-time">13:00</div><div class="wh-icon">☀</div><div class="wh-temp">15°</div><div class="wh-rain">0mm</div></div>
+            <div class="wetter-h now"><div class="wh-time" style="color:var(--accent);">14:00</div><div class="wh-icon">☀</div><div class="wh-temp">14°</div><div class="wh-rain">0mm</div></div>
+            <div class="wetter-h"><div class="wh-time">15:00</div><div class="wh-icon">⛅</div><div class="wh-temp">14°</div><div class="wh-rain">0mm</div></div>
+            <div class="wetter-h"><div class="wh-time">16:00</div><div class="wh-icon">⛅</div><div class="wh-temp">12°</div><div class="wh-rain">0mm</div></div>
+            <div class="wetter-h"><div class="wh-time">17:00</div><div class="wh-icon">🌫</div><div class="wh-temp">9°</div><div class="wh-rain">0mm</div></div>
+          </div>
+        </div>
+
+        <!-- Archiv -->
+        <div class="heading2">Archiv — letzte 7 Tage</div>
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Datum</th>
+              <th style="text-align:center">Min</th>
+              <th style="text-align:center">Max</th>
+              <th style="text-align:center">Mittel</th>
+              <th style="text-align:center">Regen</th>
+              <th style="text-align:center">Wind</th>
+              <th>Bedingung</th>
+              <th style="text-align:center">Stunden</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="color:var(--text-bright);">27.03. (heute)</td>
+              <td style="text-align:center; color:var(--info);">5°</td>
+              <td style="text-align:center; color:var(--error);">16°</td>
+              <td style="text-align:center">11°</td>
+              <td style="text-align:center; color:var(--success);">0 mm</td>
+              <td style="text-align:center">12 km/h</td>
+              <td>☀ Sonnig</td>
+              <td style="text-align:center; color:var(--text-secondary);">9 von 24</td>
+            </tr>
+            <tr>
+              <td>26.03.</td>
+              <td style="text-align:center; color:var(--info);">3°</td>
+              <td style="text-align:center">12°</td>
+              <td style="text-align:center">8°</td>
+              <td style="text-align:center; color:var(--info);">2,4 mm</td>
+              <td style="text-align:center">18 km/h</td>
+              <td>🌧 Regen</td>
+              <td style="text-align:center">24</td>
+            </tr>
+            <tr>
+              <td>25.03.</td>
+              <td style="text-align:center; color:var(--info);">4°</td>
+              <td style="text-align:center">14°</td>
+              <td style="text-align:center">9°</td>
+              <td style="text-align:center; color:var(--success);">0 mm</td>
+              <td style="text-align:center">8 km/h</td>
+              <td>⛅ Bewölkt</td>
+              <td style="text-align:center">24</td>
+            </tr>
+            <tr>
+              <td>24.03.</td>
+              <td style="text-align:center; color:var(--info);">2°</td>
+              <td style="text-align:center">11°</td>
+              <td style="text-align:center">7°</td>
+              <td style="text-align:center; color:var(--success);">0 mm</td>
+              <td style="text-align:center">6 km/h</td>
+              <td>☀ Sonnig</td>
+              <td style="text-align:center">24</td>
+            </tr>
+            <tr>
+              <td style="color:var(--warning);">23.03.</td>
+              <td style="text-align:center; color:var(--info);">-1°</td>
+              <td style="text-align:center">6°</td>
+              <td style="text-align:center">3°</td>
+              <td style="text-align:center; color:var(--info);">8,2 mm</td>
+              <td style="text-align:center; color:var(--warning);">35 km/h</td>
+              <td>🌧❄ Schneeregen</td>
+              <td style="text-align:center">24</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top:8px; font-size:11px; color:var(--text-secondary);">
+          Stundendaten lokal gespeichert | Wichtig für Nachweise bei Bauzeitverzögerungen oder Behinderungsanzeigen (stundengenau belegbar)
+        </div>
+      </div>
+      <div class="statusbar">Wetter | ÖWG Dobl | Stündliche Abfrage ● | 14°C Sonnig | Archiv: 127 Tage gespeichert</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       MOCKUP 2: MOBILE PWA
+       ═══════════════════════════════════════════════════════ -->
+  <div class="mockup-section">
+    <div class="mockup-label">Mockup 2</div>
+    <div class="mockup-title">Mobile App (PWA) — Bautagebuch auf der Baustelle</div>
+    <div class="mockup-desc">Android-first, PWA im Browser. Bautagebuch-Punkt erfassen, Fotos aufnehmen, Pläne ansehen. Offline nutzbar, synchronisiert bei Verbindung.</div>
+
+    <div style="display:flex; justify-content:center;">
+      <div class="mobile-frame">
+        <div class="mobile-status">
+          <span>14:32</span>
+          <span>📶 LTE | 🔋 78%</span>
+        </div>
+        <div class="mobile-header">
+          <h3>bau<span style="color:#E8712A;">lotse</span></h3>
+          <span style="font-size:11px; color:var(--success);">● Online</span>
+        </div>
+        <div class="mobile-content">
+          <!-- Projekt -->
+          <div style="margin-bottom:12px;">
+            <select class="select" style="width:100%; font-size:13px; padding:8px;">
+              <option selected>ÖWG Dobl-Zwaring</option>
+              <option>WBG Kapfenberg</option>
+            </select>
+          </div>
+
+          <!-- Bautagebuch-Punkt -->
+          <div class="m-card" style="border-left:3px solid var(--accent);">
+            <div class="m-card-title">📋 Neuer Bautagebuch-Punkt</div>
+            <div style="display:flex; gap:6px; margin-bottom:8px;">
+              <span style="font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--accent); background:var(--bg-active); padding:3px 8px; border-radius:4px; font-weight:700;">001/005</span>
+              <select class="select" style="flex:1; font-size:11px;"><option>Haus 5</option></select>
+              <select class="select" style="width:60px; font-size:11px;"><option>EG</option></select>
+            </div>
+            <textarea class="input" style="width:100%; height:60px; resize:none; font-size:12px;" placeholder="Tätigkeit beschreiben...">Nachbestellung Abstandhalter für Decke EG. Lieferung morgen zugesagt.</textarea>
+            <div style="display:flex; gap:6px; margin-top:8px;">
+              <button class="btn btn-secondary" style="flex:1; font-size:11px;">📸 Foto</button>
+              <button class="btn btn-primary" style="flex:1; font-size:11px;">💾 Speichern</button>
+            </div>
+          </div>
+
+          <!-- Heutige Punkte -->
+          <div class="m-card">
+            <div class="m-card-title">Heute — 4 Punkte</div>
+            <div style="font-size:12px;">
+              <div style="padding:4px 0; border-bottom:1px solid var(--border-subtle); display:flex; gap:6px; align-items:center;">
+                <span style="color:var(--accent); font-family:monospace; font-size:10px;">001/001</span>
+                <span>Betonage Decke EG H5</span>
+                <span style="margin-left:auto; font-size:10px; color:var(--text-secondary);">3📷</span>
+              </div>
+              <div style="padding:4px 0; border-bottom:1px solid var(--border-subtle); display:flex; gap:6px; align-items:center;">
+                <span style="color:var(--accent); font-family:monospace; font-size:10px;">001/002</span>
+                <span>Elektro Rohre EG</span>
+                <span style="margin-left:auto; font-size:10px; color:var(--text-secondary);">1📷</span>
+              </div>
+              <div style="padding:4px 0; border-bottom:1px solid var(--border-subtle); display:flex; gap:6px; align-items:center;">
+                <span style="color:var(--warning); font-family:monospace; font-size:10px;">001/003</span>
+                <span style="color:var(--warning);">⚠ Lieferverzögerung BSt</span>
+              </div>
+              <div style="padding:4px 0; display:flex; gap:6px; align-items:center;">
+                <span style="color:var(--accent); font-family:monospace; font-size:10px;">001/004</span>
+                <span>Schalung KW H66</span>
+                <span style="margin-left:auto; font-size:10px; color:var(--text-secondary);">2📷</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Wetter kompakt -->
+          <div class="m-card" style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px;">
+            <span>🌤 14°C Sonnig</span>
+            <span style="font-size:11px; color:var(--text-secondary);">Wind 12 km/h | 0mm</span>
+          </div>
+
+          <!-- Pläne schnell -->
+          <div class="m-card">
+            <div class="m-card-title">📁 Aktuelle Pläne</div>
+            <div style="font-size:12px; color:var(--text-secondary);">
+              <div style="padding:3px 0;">S-103 Index D — Polierplan EG</div>
+              <div style="padding:3px 0;">S-113 Index A — Polierplan 2OG <span class="badge badge-ok" style="font-size:8px;">Neu!</span></div>
+              <div style="padding:3px 0;">E-201 Index C — E-Plan EG</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mobile-nav">
+          <div class="mobile-nav-btn active"><span class="ni">📋</span>Tagebuch</div>
+          <div class="mobile-nav-btn"><span class="ni">📁</span>Pläne</div>
+          <div class="mobile-nav-btn"><span class="ni">📸</span>Fotos</div>
+          <div class="mobile-nav-btn"><span class="ni">⏱</span>Stunden</div>
+          <div class="mobile-nav-btn"><span class="ni">⚙</span>Mehr</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       MOCKUP 3: GIS-INTEGRATION
+       ═══════════════════════════════════════════════════════ -->
+  <div class="mockup-section">
+    <div class="mockup-label">Mockup 3</div>
+    <div class="mockup-title">GIS-Integration — Grundstücksdaten pro Baustelle <span class="online-tag">ONLINE</span></div>
+    <div class="mockup-desc">Grundstücksgrenzen, Flächenwidmung, Leitungskataster aus GIS Steiermark. Bei Verbindung abgefragt, projektbezogen lokal gespeichert. Koordinaten-Umrechnung offline (ProjNet).</div>
+
+    <div class="app-shell">
+      <div class="sidebar">
+        <div class="sidebar-logo">bau<span>lotse</span></div>
+        <button class="nav-btn">📁 Pläne</button>
+        <button class="nav-btn">📋 Bautagebuch</button>
+        <button class="nav-btn active">🗺 GIS</button>
+        <button class="nav-btn">⚙ Einstellungen</button>
+      </div>
+      <div class="content">
+        <div class="heading1">🗺 GIS — ÖWG Dobl-Zwaring</div>
+        <div class="toolbar">
+          <select class="select"><option selected>ÖWG Dobl-Zwaring</option><option>WBG Kapfenberg</option></select>
+          <span class="toolbar-spacer"></span>
+          <button class="btn btn-primary">🔄 Daten aktualisieren</button>
+          <span style="font-size:10px; color:var(--success);">Lokal gespeichert: 24.03.2026</span>
+        </div>
+
+        <!-- Karten-Simulation -->
+        <div class="gis-map">
+          <div class="gis-map-grid"></div>
+          <!-- Grundstücke -->
+          <div class="gis-parcel" style="top:80px; left:120px; width:280px; height:180px;"></div>
+          <div class="gis-parcel-label" style="top:85px; left:125px;">GN 342/5</div>
+          <div class="gis-parcel" style="top:100px; left:420px; width:200px; height:140px; border-color:var(--text-secondary); background:rgba(133,133,133,0.05);"></div>
+          <div class="gis-parcel-label" style="top:105px; left:425px; color:var(--text-secondary);">GN 342/6</div>
+          <!-- Gebäude -->
+          <div class="gis-building" style="top:120px; left:160px; width:80px; height:60px;"></div>
+          <div style="position:absolute; top:143px; left:172px; font-size:9px; color:var(--accent); font-weight:700;">H5</div>
+          <div class="gis-building" style="top:120px; left:280px; width:80px; height:60px;"></div>
+          <div style="position:absolute; top:143px; left:292px; font-size:9px; color:var(--accent); font-weight:700;">H6</div>
+          <!-- Leitung -->
+          <div class="gis-pipe" style="top:200px; left:80px; width:500px;"></div>
+          <div style="position:absolute; top:205px; left:300px; font-size:9px; color:var(--warning); background:rgba(30,30,30,0.8); padding:0 4px; border-radius:2px;">Kanal DN300</div>
+          <!-- Layer-Auswahl -->
+          <div class="gis-overlay">
+            <div class="gis-layer active">☑ Grundstücke</div>
+            <div class="gis-layer active">☑ Gebäude</div>
+            <div class="gis-layer active">☑ Leitungen</div>
+            <div class="gis-layer">☐ Flächenwidmung</div>
+            <div class="gis-layer">☐ Höhenschichten</div>
+          </div>
+          <div class="gis-coords">EPSG:31258 → WGS84 | 46.9081°N 15.4832°E</div>
+        </div>
+
+        <!-- Info-Panel -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
+          <div class="card">
+            <div class="card-title">📐 Grundstück GN 342/5</div>
+            <div style="font-size:12px;">
+              <div style="display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid var(--border-subtle);">
+                <span style="color:var(--text-secondary);">KG:</span><span>Dobl (63111)</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid var(--border-subtle);">
+                <span style="color:var(--text-secondary);">Fläche:</span><span>2.847 m²</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid var(--border-subtle);">
+                <span style="color:var(--text-secondary);">Widmung:</span><span style="color:var(--success);">Bauland Wohnen</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; padding:3px 0;">
+                <span style="color:var(--text-secondary);">Eigentümer:</span><span>ÖWG Wohnbau GmbH</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">🔌 Leitungskataster</div>
+            <div style="font-size:12px;">
+              <div style="display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid var(--border-subtle);">
+                <span style="color:var(--warning);">Kanal:</span><span>DN300 Mischwasser, Tiefe ~2,1m</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid var(--border-subtle);">
+                <span style="color:var(--info);">Wasser:</span><span>DN100, Tiefe ~1,2m</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; padding:3px 0;">
+                <span style="color:var(--error);">Strom:</span><span>20kV Erdkabel, Tiefe ~0,8m</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:8px; font-size:11px; color:var(--text-secondary);">
+          Quelle: GIS Steiermark (öffentlicher ArcGIS REST, kein API-Key) | Koordinaten-Umrechnung lokal via ProjNet (EPSG:31258 ↔ WGS84) | Daten projektbezogen gespeichert — einmal geladen, dann offline verfügbar
+        </div>
+      </div>
+      <div class="statusbar">GIS | ÖWG Dobl | GN 342/5 | Bauland Wohnen | 2.847 m² | Lokal gespeichert ✓</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

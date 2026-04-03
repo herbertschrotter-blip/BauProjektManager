@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>baulotse — UI Mockups Block 1 (Kern-Module)</title>
+<link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  /* ═══ baulotse Token aus Colors.xaml ═══ */
+  :root {
+    --bg-base: #1E1E1E;
+    --bg-surface: #252526;
+    --bg-elevated: #2D2D30;
+    --bg-hover: #37373D;
+    --bg-active: #04395E;
+    --bg-input: #3C3C3C;
+    --text-primary: #CCCCCC;
+    --text-secondary: #858585;
+    --text-bright: #FFFFFF;
+    --accent: #0078D4;
+    --accent-hover: #1A8AD4;
+    --accent-pressed: #005A9E;
+    --success: #4EC94E;
+    --warning: #F0AD4E;
+    --error: #F44747;
+    --info: #3794FF;
+    --border: #3C3C3C;
+    --border-focus: #0078D4;
+    --border-subtle: #2D2D30;
+    --sidebar-w: 220px;
+    --statusbar-h: 28px;
+    --radius: 6px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: var(--text-primary); line-height: 1.5; }
+
+  /* ═══ Page Layout ═══ */
+  .page { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+  .page-title { font-size: 28px; color: var(--text-bright); font-weight: 700; margin-bottom: 8px; }
+  .page-title span { color: #E8712A; }
+  .page-sub { color: var(--text-secondary); font-size: 14px; margin-bottom: 48px; }
+
+  /* ═══ Mockup Container ═══ */
+  .mockup-section { margin-bottom: 64px; }
+  .mockup-label { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+  .mockup-title { font-size: 22px; color: var(--text-bright); font-weight: 700; margin-bottom: 4px; }
+  .mockup-desc { color: var(--text-secondary); font-size: 13px; margin-bottom: 20px; }
+
+  /* ═══ App Shell (1100×700 wie MainWindow.xaml) ═══ */
+  .app-shell {
+    width: 100%; max-width: 1100px;
+    height: 700px;
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: var(--sidebar-w) 1fr;
+    grid-template-rows: 1fr var(--statusbar-h);
+    font-size: 13px;
+  }
+
+  /* ─── Sidebar ─── */
+  .sidebar {
+    background: var(--bg-elevated);
+    grid-row: 1;
+    padding: 12px 0;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border-subtle);
+  }
+  .sidebar-logo {
+    font-size: 14px; font-weight: 700; color: var(--text-bright);
+    padding: 4px 15px 16px;
+  }
+  .sidebar-logo span { color: #E8712A; }
+  .nav-btn {
+    display: block; width: 100%;
+    padding: 10px 15px;
+    background: transparent; border: none;
+    color: var(--text-primary); font-size: 13px;
+    text-align: left; cursor: pointer;
+    font-family: inherit;
+  }
+  .nav-btn:hover { background: var(--bg-hover); }
+  .nav-btn.active { background: var(--bg-active); color: var(--text-bright); border-left: 3px solid var(--accent); padding-left: 12px; }
+
+  /* ─── Content ─── */
+  .content {
+    grid-row: 1; grid-column: 2;
+    background: var(--bg-base);
+    padding: 20px;
+    overflow-y: auto;
+  }
+
+  /* ─── Statusbar ─── */
+  .statusbar {
+    grid-column: 1 / -1; grid-row: 2;
+    background: var(--accent);
+    color: var(--text-bright);
+    font-size: 12px;
+    padding: 0 12px;
+    display: flex; align-items: center;
+  }
+
+  /* ═══ Common UI Components ═══ */
+  .heading1 { font-size: 20px; font-weight: 700; color: var(--text-bright); margin-bottom: 16px; }
+  .heading2 { font-size: 15px; font-weight: 600; color: var(--text-bright); margin-bottom: 10px; margin-top: 20px; }
+  .card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--text-bright); margin-bottom: 8px; }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border: none; border-radius: 4px;
+    font-size: 12px; font-family: inherit; cursor: pointer;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-secondary { background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); }
+  .btn-ghost { background: transparent; color: var(--text-secondary); }
+  .btn-danger { background: var(--error); color: #fff; }
+  .btn-success { background: var(--success); color: #fff; }
+
+  /* Input */
+  .input, .select {
+    background: var(--bg-input); color: var(--text-primary);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 5px 8px; font-size: 12px; font-family: inherit;
+    outline: none;
+  }
+  .input:focus, .select:focus { border-color: var(--border-focus); }
+  .label { font-size: 11px; color: var(--text-secondary); margin-bottom: 3px; display: block; }
+
+  /* Table */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .tbl th {
+    text-align: left; padding: 8px 10px;
+    background: var(--bg-elevated); color: var(--text-secondary);
+    font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tbl td {
+    padding: 7px 10px; border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+  }
+  .tbl tr:hover td { background: var(--bg-hover); }
+
+  /* Badge */
+  .badge {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 3px; letter-spacing: 0.3px;
+  }
+  .badge-new { background: rgba(55,148,255,0.15); color: var(--info); }
+  .badge-update { background: rgba(240,173,78,0.15); color: var(--warning); }
+  .badge-ok { background: rgba(78,201,78,0.15); color: var(--success); }
+  .badge-error { background: rgba(244,71,71,0.15); color: var(--error); }
+  .badge-ident { background: rgba(133,133,133,0.12); color: var(--text-secondary); }
+
+  /* Widget Grid */
+  .widget-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .widget-full { grid-column: 1 / -1; }
+
+  /* Foto Grid */
+  .foto-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
+  .foto-thumb {
+    aspect-ratio: 1; background: var(--bg-input); border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-secondary); font-size: 24px; border: 1px solid var(--border);
+    position: relative;
+  }
+  .foto-thumb .foto-time { position: absolute; bottom: 4px; right: 4px; font-size: 9px; color: var(--text-secondary); }
+  .foto-thumb .foto-tag { position: absolute; top: 4px; left: 4px; font-size: 9px; padding: 1px 5px; border-radius: 2px; background: var(--accent); color: #fff; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .tab {
+    padding: 8px 16px; font-size: 12px; color: var(--text-secondary);
+    background: transparent; border: none; border-bottom: 2px solid transparent;
+    cursor: pointer; font-family: inherit;
+  }
+  .tab.active { color: var(--text-bright); border-bottom-color: var(--accent); font-weight: 600; }
+
+  /* Toolbar */
+  .toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .toolbar-spacer { flex: 1; }
+
+  /* Segment Anlernen */
+  .segment-bar { display: flex; gap: 2px; margin: 12px 0; flex-wrap: wrap; }
+  .segment {
+    padding: 6px 12px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    cursor: pointer; border: 2px solid transparent;
+  }
+  .seg-plannr { background: rgba(0,120,212,0.2); color: var(--accent); border-color: var(--accent); }
+  .seg-index { background: rgba(78,201,78,0.2); color: var(--success); border-color: var(--success); }
+  .seg-type { background: rgba(240,173,78,0.2); color: var(--warning); border-color: var(--warning); }
+  .seg-sep { background: var(--bg-input); color: var(--text-secondary); }
+  .seg-unknown { background: var(--bg-input); color: var(--text-primary); border-color: var(--border); border-style: dashed; }
+
+  /* Chat */
+  .chat-area { max-height: 300px; overflow-y: auto; }
+  .chat-msg { margin-bottom: 12px; }
+  .chat-user { color: var(--accent); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+  .chat-ki { color: #8b5cf6; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+  .chat-bubble { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; font-size: 13px; line-height: 1.5; }
+  .chat-source { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+
+  /* Wetter Widget */
+  .wetter-row { display: flex; gap: 16px; align-items: center; }
+  .wetter-temp { font-size: 28px; font-weight: 700; color: var(--text-bright); }
+  .wetter-detail { font-size: 12px; color: var(--text-secondary); }
+  .wetter-detail span { color: var(--text-primary); }
+
+  /* Progress */
+  .progress-bar { height: 6px; background: var(--bg-input); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .app-shell { height: auto; min-height: 500px; grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .widget-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-title">bau<span>lotse</span> — UI Mockups</div>
+  <div class="page-sub">Block 1: Kern-Module | Dark Theme aus Colors.xaml | Shell-Layout aus MainWindow.xaml (1100×700, Sidebar 220px)</div>
+
+  <!-- ═════════════════════════════════════════════════════════════
+       MOCKUP 1: PLANMANAGER — Import Vorschau
+       ═════════════════════════════════════════════════════════════ -->
+  <div class="mockup-section">
+    <div class="mockup-label">Mockup 1</div>
+    <div class="mockup-title">PlanManager — Import-Vorschau</div>
+    <div class="mockup-desc">Pläne wurden in _Eingang gelegt. Baulotse hat sie gescannt und zeigt die Vorschau vor dem Einsortieren.</div>
+
+    <div class="app-shell">
+      <div class="sidebar">
+        <div class="sidebar-logo">bau<span>lotse</span></div>
+        <button class="nav-btn active">📁 Pläne</button>
+        <button class="nav-btn">📋 Bautagebuch</button>
+        <button class="nav-btn">⏱ Zeiterfassung</button>
+        <button class="nav-btn">📸 Fotos</button>
+        <button class="nav-btn">📊 Dashboard</button>
+        <button class="nav-btn">⚙ Einstellungen</button>
+      </div>
+      <div class="content">
+        <div class="heading1">📥 Import-Vorschau — ÖWG Dobl-Zwaring</div>
+        <div class="toolbar">
+          <span style="color:var(--text-secondary);">12 Dateien in _Eingang erkannt</span>
+          <span class="toolbar-spacer"></span>
+          <button class="btn btn-success">✅ Alle bestätigen &amp; einsortieren</button>
+          <button class="btn btn-secondary">↩ Abbrechen</button>
+        </div>
+
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Dateiname</th>
+              <th>Plantyp</th>
+              <th>Plannr.</th>
+              <th>Index</th>
+              <th>Zielordner</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-update">NEUER INDEX</span></td>
+              <td>S-103_Polierplan_EG_H64_D.pdf</td>
+              <td>Polierplan</td>
+              <td>S-103</td>
+              <td>C → <strong style="color:var(--success)">D</strong></td>
+              <td>01_Planunterlagen/Polierplan/</td>
+              <td><button class="btn btn-ghost">✏</button></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-new">NEU</span></td>
+              <td>S-113-A_Polierplan_2OG_H66.pdf</td>
+              <td>Polierplan</td>
+              <td>S-113</td>
+              <td><strong style="color:var(--info)">A</strong></td>
+              <td>01_Planunterlagen/Polierplan/</td>
+              <td><button class="btn btn-ghost">✏</button></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-update">NEUER INDEX</span></td>
+              <td>E-201_Elektroplan_EG_H64_C.pdf</td>
+              <td>E-Plan</td>
+              <td>E-201</td>
+              <td>B → <strong style="color:var(--success)">C</strong></td>
+              <td>01_Planunterlagen/E-Plan/</td>
+              <td><button class="btn btn-ghost">✏</button></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-ident">IDENTISCH</span></td>
+              <td>S-101_Polierplan_KG_H64_B.pdf</td>
+              <td>Polierplan</td>
+              <td>S-101</td>
+              <td>B = B</td>
+              <td><span style="color:var(--text-secondary)">— Übersprungen</span></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-error">UNBEKANNT</span></td>
+              <td>Lieferschein_Beton_27032026.pdf</td>
+              <td>—</td>
+              <td>—</td>
+              <td>—</td>
+              <td><span style="color:var(--error)">Muster nicht erkannt</span></td>
+              <td><button class="btn btn-ghost">🔧 Zuordnen</button></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-new">NEU</span></td>
+              <td>H-044_HKLS-Plan_KG_H66_A.pdf</td>
+              <td>HKLS-Plan</td>
+              <td>H-044</td>
+              <td><strong style="color:var(--info)">A</strong></td>
+              <td>01_Planunterlagen/HKLS/</td>
+              <td><button class="btn btn-ghost">✏</button></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="margin-top:16px; padding:12px; background:var(--bg-surface); border-radius:var(--radius); border:1px solid var(--border);">
+          <span style="font-size:12px; color:var(--text-secondary);">Zusammenfassung: </span>
+          <span class="badge badge-new" style="margin-right:4px;">3 NEU</span>
+          <span class="badge badge-update" style="margin-right:4px;">2 INDEX-UPDATE</span>
+          <span class="badge badge-ident" style="margin-right:4px;">1 IDENTISCH</span>
+          <span class="badge badge-error">1 UNBEKANNT</span>
+          <span style="float:right; font-size:11px; color:var(--text-secondary);">Alte Indizes werden automatisch archiviert</span>
+        </div>
+      </div>
+      <div class="statusbar">Pläne | ÖWG Dobl-Zwaring | 12 Dateien gescannt | Bereit zum Einsortieren</div>
+    </div>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════
+       MOCKUP 2: PLANMANAGER — Segment Anlernen
+       ═════════════════════════════════════════════════════════════ -->
+  <div class="mockup-section">
+    <div class="mockup-label">Mockup 2</div>
+    <div class="mockup-title">PlanManager — Plantyp-Muster anlernen</div>
+    <div class="mockup-desc">Der Dateiname wird in Segmente zerlegt. Du klickst auf jedes Segment und sagst was es ist.</div>
+
+    <div class="app-shell">
+      <div class="sidebar">
+        <div class="sidebar-logo">bau<span>lotse</span></div>
+        <button class="nav-btn active">📁 Pläne</button>
+        <button class="nav-btn">📋 Bautagebuch</button>
+        <button class="nav-btn">⏱ Zeiterfassung</button>
+        <button class="nav-btn">📸 Fotos</button>
+        <button class="nav-btn">📊 Dashboard</button>
+        <button class="nav-btn">⚙ Einstellungen</button>
+      </div>
+      <div class="content">
+        <div class="heading1">🔧 Plantyp-Muster anlernen</div>
+        <p style="color:var(--text-secondary); margin-bottom:16px;">Klicke auf jedes Segment und weise ihm eine Bedeutung zu. Baulotse merkt sich das Muster für alle zukünftigen Pläne dieses Typs.</p>
+
+        <div class="card">
+          <div class="card-title">Dateiname:</div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:15px; color:var(--text-bright); margin-bottom:12px;">
+            S-103_Polierplan_EG_H64_D.pdf
+          </div>
+
+          <div class="card-title" style="margin-top:12px;">Segmente (klicke zum Zuweisen):</div>
+          <div class="segment-bar">
+            <div class="segment seg-plannr">S-103</div>
+            <div class="segment seg-sep">_</div>
+            <div class="segment seg-type">Polierplan</div>
+            <div class="segment seg-sep">_</div>
+            <div class="segment seg-unknown">EG</div>
+            <div class="segment seg-sep">_</div>
+            <div class="segment seg-unknown">H64</div>
+            <div class="segment seg-sep">_</div>
+            <div class="segment seg-index">D</div>
+          </div>
+
+          <div style="margin-top:16px;">
+            <div class="heading2" style="margin-top:0;">Legende:</div>
+            <div style="display:flex; gap:16px; flex-wrap:wrap; font-size:12px;">
+              <span><span class="segment seg-plannr" style="font-size:11px; padding:2px 8px;">Plannummer</span></span>
+              <span><span class="segment seg-index" style="font-size:11px; padding:2px 8px;">Index</span></span>
+              <span><span class="segment seg-type" style="font-size:11px; padding:2px 8px;">Plantyp</span></span>
+              <span><span class="segment seg-sep" style="font-size:11px; padding:2px 8px;">Trennzeichen</span></span>
+              <span><span class="segment seg-unknown" style="font-size:11px; padding:2px 8px;">Noch nicht zugewiesen</span></span>
+            </div>
+          </div>
+
+          <div style="margin-top:16px;">
+            <div class="heading2" style="margin-top:0;">Noch zuzuweisen:</div>
+            <div class="card" style="background:var(--bg-elevated); padding:10px;">
+              <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+                <span class="segment seg-unknown" style="font-size:12px; padding:3px 8px;">EG</span>
+                <span style="color:var(--text-secondary);">→</span>
+                <select class="select" style="width:180px;">
+                  <option>— Bedeutung wählen —</option>
+                  <option>Geschoß</option>
+                  <option>Bauteil</option>
+                  <option>Beschreibung</option>
+                  <option>Ignorieren</option>
+                </select>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <span class="segment seg-unknown" style="font-size:12px; padding:3px 8px;">H64</span>
+                <span style="color:var(--text-secondary);">→</span>
+                <select class="select" style="width:180px;">
+                  <option>— Bedeutung wählen —</option>
+                  <option>Geschoß</option>
+                  <option selected>Bauteil</option>
+                  <option>Beschreibung</option>
+                  <option>Ignorieren</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="toolbar" style="margin-top:16px;">
+          <button class="btn btn-primary">💾 Muster speichern</button>
+          <button class="btn btn-secondary">Vorschau testen</button>
+          <span class="toolbar-spacer"></span>
+          <button class="btn btn-ghost">Abbrechen</button>
+        </div>
+      </div>
+      <div class="statusbar">Pläne | Muster anlernen | 2 Segmente offen</div>
+    </div>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════
+       MOCKUP 3: DASHBOARD
+       ═════════════════════════════════════════════════════════════ -->
+  <div class="mockup-section">
+    <div class="mockup-label">Mockup 3</div>
+    <div class="mockup-title">Dashboard — Projektübersicht</div>
+    <div class="mockup-desc">Startseite nach dem Öffnen. Widgets laden asynchron. Wetter nur bei Internetverbindung.</div>
+
+    <div class="app-shell">
+      <div class="sidebar">
+        <div class="sidebar-logo">bau<span>lotse</span></div>
+        <button class="nav-btn">📁 Pläne</button>
+        <button class="nav-btn">📋 Bautagebuch</button>
+        <button class="nav-btn">⏱ Zeiterfassung</button>
+        <button class="nav-btn">📸 Fotos</button>
+        <button class="nav-btn active">📊 Dashboard</button>
+        <button class="nav-btn">⚙ Einstellungen</button>
+      </div>
+      <div class="content">
+        <div class="heading1">📊 Dashboard</div>
+
+        <div class="widget-grid">
+          <!-- Projekte -->
+          <div class="card">
+            <div class="card-title">🏗 Aktive Projekte</div>
+            <div style="margin-bottom:10px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border-subtle);">
+                <span style="color:var(--text-bright);">ÖWG Dobl-Zwaring</span>
+                <span><span class="badge badge-update">5 neue Pläne</span></span>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border-subtle);">
+                <span style="color:var(--text-bright);">WBG Kapfenberg</span>
+                <span class="badge badge-ok">Aktuell</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0;">
+                <span style="color:var(--text-secondary);">Leoben Donawitz</span>
+                <span class="badge badge-ident">Abgeschlossen</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Wetter -->
+          <div class="card">
+            <div class="card-title">🌤 Wetter <span style="font-size:10px; color:var(--text-secondary); font-weight:400;">Online</span></div>
+            <div style="margin-bottom:12px;">
+              <div style="font-size:11px; color:var(--text-secondary); margin-bottom:4px;">Dobl-Zwaring</div>
+              <div class="wetter-row">
+                <span class="wetter-temp">14°</span>
+                <div>
+                  <div class="wetter-detail">☀ Sonnig | Wind <span>12 km/h</span></div>
+                  <div class="wetter-detail">Morgen: 🌧 8°C Regen</div>
+                  <div style="font-size:11px; color:var(--warning); margin-top:2px;">⚠ Kein Betonieren morgen!</div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px; color:var(--text-secondary); margin-bottom:4px;">Kapfenberg</div>
+              <div class="wetter-row">
+                <span style="font-size:20px; font-weight:700; color:var(--text-bright);">11°</span>
+                <div class="wetter-detail">⛅ Bewölkt | Wind <span>8 km/h</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pläne Eingang -->
+          <div class="card widget-full">
+            <div class="card-title">📥 Neue Pläne im Eingang</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border-subtle);">
+              <span>📥 ÖWG Dobl-Zwaring: <strong style="color:var(--text-bright);">5 Dateien</strong> (3 PDF, 2 DWG)</span>
+              <button class="btn btn-primary" style="font-size:11px;">Import starten →</button>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0;">
+              <span>📥 WBG Kapfenberg: <span style="color:var(--text-secondary);">0 Dateien</span></span>
+              <span style="color:var(--text-secondary); font-size:11px;">Alles sortiert</span>
+            </div>
+          </div>
+
+          <!-- Bautagebuch -->
+          <div class="card">
+            <div class="card-title">📋 Bautagebuch heute</div>
+            <div style="padding:4px 0; display:flex; justify-content:space-between; align-items:center;">
+              <span>Dobl-Zwaring</span>
+              <span class="badge badge-error">Noch offen</span>
+            </div>
+            <div style="padding:4px 0; display:flex; justify-content:space-between; align-items:center;">
+              <span>Kapfenberg</span>
+              <span class="badge badge-ok">✅ Fertig</span>
+            </div>
+          </div>
+
+          <!-- Schnellzugriff -->
+          <div class="card">
+            <div class="card-title">⚡ Schnellzugriff</div>
+            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+              <button class="btn btn-secondary" style="font-size:11px;">📂 01 Planunterlagen</button>
+              <button class="btn btn-secondary" style="font-size:11px;">📂 02 Fotos</button>
+              <button class="btn btn-secondary" style="font-size:11px;">📂 03 LV</button>
+              <button class="btn btn-secondary" style="font-size:11px;">📂 04 Protokolle</button>
+              <button class="btn btn-secondary" style="font-size:11px;">📂 05 Regiebericht</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="statusbar">Dashboard | 2 aktive Projekte | Letzte Aktualisierung: 14:32</div>
+    </div>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════
+       MOCKUP 4: ZEITERFASSUNG (Wochenblatt pro Baustelle)
+       ═════════════════════════════════════════════════════════════ -->
+  <div class="mockup-section">
+    <div class="mockup-label">Mockup 4</div>
+    <div class="mockup-title">Zeiterfassung — Wochenblatt pro Baustelle</div>
+    <div class="mockup-desc">Erfassung baustellenweise. Arbeiterliste aus Vorwoche übernommen. Mo–Sa als Spalten, Stunden direkt in Zellen eintragen. Sortiert nach Funktion (Polier → Vorarbeiter → Maurer → Hilfsarbeiter). Zeilen- und Spaltensummen.</div>
+
+    <div class="app-shell">
+      <div class="sidebar">
+        <div class="sidebar-logo">bau<span>lotse</span></div>
+        <button class="nav-btn">📁 Pläne</button>
+        <button class="nav-btn">📋 Bautagebuch</button>
+        <button class="nav-btn active">⏱ Zeiterfassung</button>
+        <button class="nav-btn">📸 Fotos</button>
+        <button class="nav-btn">📊 Dashboard</button>
+        <button class="nav-btn">⚙ Einstellungen</button>
+      </div>
+      <div class="content">
+        <div class="heading1">⏱ Zeiterfassung</div>
+
+        <div class="toolbar">
+          <span class="label" style="display:inline; margin:0;">Baustelle:</span>
+          <select class="select" style="width:220px; font-weight:600;">
+            <option selected>ÖWG Dobl-Zwaring</option>
+            <option>WBG Kapfenberg</option>
+            <option>Büro / Werkstatt</option>
+          </select>
+          <span style="color:var(--border);">│</span>
+          <span class="label" style="display:inline; margin:0;">KW:</span>
+          <button class="btn btn-secondary" style="font-size:11px;">◀</button>
+          <span style="color:var(--text-bright); font-weight:600; font-size:13px;">KW 13 / 2026</span>
+          <button class="btn btn-secondary" style="font-size:11px;">▶</button>
+          <span style="font-size:11px; color:var(--text-secondary);">(24.03. – 29.03.)</span>
+          <span class="toolbar-spacer"></span>
+          <button class="btn btn-secondary" style="font-size:11px;">📋 Vorwoche übernehmen</button>
+          <button class="btn btn-primary" style="font-size:11px;">+ Mitarbeiter</button>
+        </div>
+
+        <!-- Wochentabelle -->
+        <div style="overflow-x:auto;">
+          <table class="tbl" style="min-width:780px;">
+            <thead>
+              <tr>
+                <th style="width:30px;"></th>
+                <th style="width:160px;">Mitarbeiter</th>
+                <th style="width:90px;">Funktion</th>
+                <th style="text-align:center; width:60px;">Mo<br><span style="font-weight:400; font-size:9px; text-transform:none;">24.03.</span></th>
+                <th style="text-align:center; width:60px;">Di<br><span style="font-weight:400; font-size:9px; text-transform:none;">25.03.</span></th>
+                <th style="text-align:center; width:60px;">Mi<br><span style="font-weight:400; font-size:9px; text-transform:none;">26.03.</span></th>
+                <th style="text-align:center; width:60px;">Do<br><span style="font-weight:400; font-size:9px; text-transform:none;">27.03.</span></th>
+                <th style="text-align:center; width:60px;">Fr<br><span style="font-weight:400; font-size:9px; text-transform:none;">28.03.</span></th>
+                <th style="text-align:center; width:60px;">Sa<br><span style="font-weight:400; font-size:9px; text-transform:none;">29.03.</span></th>
+                <th style="text-align:center; width:60px; color:var(--accent);"><strong>Σ</strong></th>
+                <th style="width:30px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Polier -->
+              <tr style="background:rgba(0,120,212,0.05);">
+                <td style="color:var(--text-secondary); font-size:10px;">▸</td>
+                <td><strong style="color:var(--text-bright);">Schrotter Herbert</strong></td>
+                <td><span class="badge badge-new" style="font-size:9px;">POLIER</span></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="7.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="" style="width:44px; text-align:center; font-size:12px; padding:3px; color:var(--text-secondary);" placeholder="—"></td>
+                <td style="text-align:center; color:var(--accent); font-weight:700;">39.0</td>
+                <td></td>
+              </tr>
+              <!-- Vorarbeiter -->
+              <tr>
+                <td style="color:var(--text-secondary); font-size:10px;">▸</td>
+                <td><strong style="color:var(--text-bright);">Müller Josef</strong></td>
+                <td><span style="font-size:10px; color:var(--warning);">VORARBEITER</span></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="7.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="5.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center; color:var(--accent); font-weight:700;">44.0</td>
+                <td><button class="btn btn-ghost" style="font-size:10px; color:var(--error); padding:2px;">✕</button></td>
+              </tr>
+              <!-- Maurer 1 -->
+              <tr>
+                <td style="color:var(--text-secondary); font-size:10px;">▸</td>
+                <td>Steiner Thomas</td>
+                <td><span style="font-size:10px; color:var(--text-secondary);">MAURER</span></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="7.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="" style="width:44px; text-align:center; font-size:12px; padding:3px;" placeholder="—"></td>
+                <td style="text-align:center; color:var(--accent); font-weight:700;">39.0</td>
+                <td><button class="btn btn-ghost" style="font-size:10px; color:var(--error); padding:2px;">✕</button></td>
+              </tr>
+              <!-- Maurer 2 -->
+              <tr>
+                <td style="color:var(--text-secondary); font-size:10px;">▸</td>
+                <td>Berger Franz</td>
+                <td><span style="font-size:10px; color:var(--text-secondary);">MAURER</span></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="7.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="" style="width:44px; text-align:center; font-size:12px; padding:3px;" placeholder="—"></td>
+                <td style="text-align:center; color:var(--accent); font-weight:700;">39.0</td>
+                <td><button class="btn btn-ghost" style="font-size:10px; color:var(--error); padding:2px;">✕</button></td>
+              </tr>
+              <!-- Hilfsarbeiter -->
+              <tr>
+                <td style="color:var(--text-secondary); font-size:10px;">▸</td>
+                <td>Kovacs Andras</td>
+                <td><span style="font-size:10px; color:var(--text-secondary);">HILFSARB.</span></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="7.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="" style="width:44px; text-align:center; font-size:12px; padding:3px;" placeholder="—"></td>
+                <td style="text-align:center; color:var(--accent); font-weight:700;">39.0</td>
+                <td><button class="btn btn-ghost" style="font-size:10px; color:var(--error); padding:2px;">✕</button></td>
+              </tr>
+              <!-- Abwesend -->
+              <tr style="opacity:0.5;">
+                <td style="color:var(--text-secondary); font-size:10px;">▸</td>
+                <td>Hofer Martin</td>
+                <td><span style="font-size:10px; color:var(--text-secondary);">MAURER</span></td>
+                <td colspan="6" style="text-align:center; color:var(--warning); font-size:11px;">
+                  <span class="badge badge-update">URLAUB 24.03. – 28.03.</span>
+                </td>
+                <td style="text-align:center; color:var(--text-secondary);">0.0</td>
+                <td><button class="btn btn-ghost" style="font-size:10px; color:var(--error); padding:2px;">✕</button></td>
+              </tr>
+              <!-- Summenzeile -->
+              <tr style="background:var(--bg-elevated); font-weight:600;">
+                <td></td>
+                <td style="color:var(--accent);">Σ Tagessumme</td>
+                <td style="color:var(--text-secondary); font-size:10px;">5 Pers.</td>
+                <td style="text-align:center; color:var(--text-bright);">40.0</td>
+                <td style="text-align:center; color:var(--text-bright);">40.0</td>
+                <td style="text-align:center; color:var(--text-bright);">40.0</td>
+                <td style="text-align:center; color:var(--text-bright);">40.0</td>
+                <td style="text-align:center; color:var(--text-bright);">35.0</td>
+                <td style="text-align:center; color:var(--text-bright);">5.0</td>
+                <td style="text-align:center; color:var(--accent); font-weight:700; font-size:14px;">200.0</td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Info + Actions -->
+        <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div style="font-size:12px; color:var(--text-secondary);">
+            6 Mitarbeiter | 5 aktiv, 1 Urlaub | Sortiert nach: <span style="color:var(--accent);">Funktion</span>
+            <button class="btn btn-ghost" style="font-size:10px; margin-left:4px;">↕ Sortierung</button>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-primary">💾 Speichern → Excel</button>
+            <button class="btn btn-secondary">📋 Abwesenheiten</button>
+          </div>
+        </div>
+
+        <!-- Abwesenheits-Legende -->
+        <div style="margin-top:12px; padding:8px 12px; background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius); font-size:11px; color:var(--text-secondary);">
+          Zellen-Eingabe: <strong style="color:var(--text-primary);">Stunden</strong> (z.B. 8, 7.5) | <strong style="color:var(--warning);">U</strong> = Urlaub | <strong style="color:var(--error);">K</strong> = Krank | <strong style="color:var(--info);">F</strong> = Feiertag | <strong style="color:var(--text-primary);">ZA</strong> = Zeitausgleich | <strong style="color:var(--text-secondary);">SW</strong> = Schlechtwetter
+        </div>
+      </div>
+      <div class="statusbar">Zeiterfassung | ÖWG Dobl-Zwaring | KW 13/2026 | 6 Mitarbeiter | 200.0 Std | Excel: Zeiterfassung_2026.xlsx</div>
+    </div>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════
+       MOCKUP 5: BAUTAGEBUCH (Punkt-System mit Indexnummern)
+       ═════════════════════════════════════════════════════════════ -->
+  <div class="mockup-section">
+    <div class="mockup-label">Mockup 5</div>
+    <div class="mockup-title">Bautagebuch — Punkt-basierter Tagesbericht</div>
+    <div class="mockup-desc">Bericht 001 = erster Tag. Jeder Punkt bekommt eine Index-Nummer (001/001, 001/002...). Pro Punkt: Bauteil, Geschoß, Text, Fotos, automatischer Planstand zum Datum. Export in eigene Word-Vorlage.</div>
+
+    <div class="app-shell">
+      <div class="sidebar">
+        <div class="sidebar-logo">bau<span>lotse</span></div>
+        <button class="nav-btn">📁 Pläne</button>
+        <button class="nav-btn active">📋 Bautagebuch</button>
+        <button class="nav-btn">⏱ Zeiterfassung</button>
+        <button class="nav-btn">📸 Fotos</button>
+        <button class="nav-btn">📊 Dashboard</button>
+        <button class="nav-btn">⚙ Einstellungen</button>
+      </div>
+      <div class="content">
+        <!-- Header -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <div class="heading1" style="margin-bottom:0;">📋 Bautagebuch</div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-secondary">◀</button>
+            <button class="btn btn-secondary">▶</button>
+            <button class="btn btn-secondary">📅</button>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:12px; align-items:center; margin-bottom:16px; flex-wrap:wrap;">
+          <select class="select">
+            <option>ÖWG Dobl-Zwaring (202512)</option>
+            <option>WBG Kapfenberg (202601)</option>
+          </select>
+          <div style="background:var(--bg-surface); border:1px solid var(--border); border-radius:4px; padding:4px 12px; font-size:13px;">
+            <span style="color:var(--text-secondary);">Datum:</span> <strong style="color:var(--text-bright);">27.03.2026</strong>
+          </div>
+          <div style="background:var(--bg-surface); border:1px solid var(--accent); border-radius:4px; padding:4px 12px; font-size:13px;">
+            <span style="color:var(--accent);">Bericht Nr.</span> <strong style="color:var(--text-bright);">001</strong>
+          </div>
+          <span class="toolbar-spacer"></span>
+          <select class="select" style="width:220px;">
+            <option>📄 Vorlage: Standard Bautagebuch</option>
+            <option>📄 Vorlage: ÖWG Bautagesbericht</option>
+            <option>📄 Vorlage: Eigene v2</option>
+          </select>
+        </div>
+
+        <!-- Wetter (auto, kompakt) -->
+        <div class="card" style="border-left:3px solid var(--info); padding:10px 16px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <span style="font-size:12px; color:var(--text-secondary);">🌤 Wetter (auto):</span>
+            <span style="color:var(--text-bright);">☀ 14°C Sonnig | Wind 12 km/h | 0mm</span>
+          </div>
+          <button class="btn btn-ghost" style="font-size:11px;">✏</button>
+        </div>
+
+        <!-- Personal (auto, kompakt) -->
+        <div class="card" style="padding:10px 16px; margin-top:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:12px; color:var(--text-secondary);">👷 Personal (aus Zeiterfassung): <span style="color:var(--text-bright);">8 Personen, 3 Firmen, 62.5 Std</span></span>
+            <button class="btn btn-ghost" style="font-size:11px;">Details ▾</button>
+          </div>
+        </div>
+
+        <!-- ═══ PUNKTE ═══ -->
+        <div class="heading2" style="margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
+          <span>Berichtspunkte</span>
+          <button class="btn btn-primary" style="font-size:11px;">+ Neuer Punkt</button>
+        </div>
+
+        <!-- PUNKT 001/001 -->
+        <div class="card" style="border-left:3px solid var(--accent); margin-top:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700; color:var(--accent); background:var(--bg-active); padding:3px 10px; border-radius:4px;">001/001</span>
+              <select class="select" style="width:140px; font-size:11px;"><option>Haus 64</option><option>Haus 66</option></select>
+              <select class="select" style="width:100px; font-size:11px;"><option>KG</option><option selected>EG</option><option>OG1</option></select>
+            </div>
+            <div style="display:flex; gap:4px;">
+              <button class="btn btn-ghost" style="font-size:11px;">▲</button>
+              <button class="btn btn-ghost" style="font-size:11px;">▼</button>
+              <button class="btn btn-ghost" style="font-size:11px; color:var(--error);">✕</button>
+            </div>
+          </div>
+          <div style="background:var(--bg-input); padding:8px; border-radius:4px; font-size:13px; color:var(--text-primary); min-height:36px; margin-bottom:8px;">
+            Betonage Decke über EG Haus 64. Bewehrungsabnahme durch Statiker Ing. Tschom. C25/30 XC2, 18m³ Beton Graz.
+          </div>
+          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+            <div style="display:flex; gap:4px;">
+              <div class="foto-thumb" style="width:48px; height:48px; font-size:16px;">📷</div>
+              <div class="foto-thumb" style="width:48px; height:48px; font-size:16px;">📷</div>
+              <div class="foto-thumb" style="width:48px; height:48px; font-size:16px;">📷</div>
+              <div class="foto-thumb" style="width:48px; height:48px; font-size:12px; color:var(--accent); cursor:pointer;">+</div>
+            </div>
+            <div style="font-size:11px; color:var(--text-secondary); border-left:1px solid var(--border); padding-left:12px;">
+              📈 Planstand: <span style="color:var(--success);">S-103 Index D</span> <span style="color:var(--text-secondary);">(gültig ab 25.03.2026)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- PUNKT 001/002 -->
+        <div class="card" style="border-left:3px solid var(--accent); margin-top:4px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700; color:var(--accent); background:var(--bg-active); padding:3px 10px; border-radius:4px;">001/002</span>
+              <select class="select" style="width:140px; font-size:11px;"><option selected>Haus 64</option></select>
+              <select class="select" style="width:100px; font-size:11px;"><option>KG</option><option selected>EG</option></select>
+            </div>
+            <div style="display:flex; gap:4px;">
+              <button class="btn btn-ghost" style="font-size:11px;">▲</button>
+              <button class="btn btn-ghost" style="font-size:11px;">▼</button>
+              <button class="btn btn-ghost" style="font-size:11px; color:var(--error);">✕</button>
+            </div>
+          </div>
+          <div style="background:var(--bg-input); padding:8px; border-radius:4px; font-size:13px; color:var(--text-primary); min-height:36px; margin-bottom:8px;">
+            Elektroinstallation Rohre EG verlegt. Dosen gesetzt für Steckdosen und Schalter. Abstimmung mit E-Planer.
+          </div>
+          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+            <div style="display:flex; gap:4px;">
+              <div class="foto-thumb" style="width:48px; height:48px; font-size:16px;">📷</div>
+              <div class="foto-thumb" style="width:48px; height:48px; font-size:12px; color:var(--accent); cursor:pointer;">+</div>
+            </div>
+            <div style="font-size:11px; color:var(--text-secondary); border-left:1px solid var(--border); padding-left:12px;">
+              📈 Planstand: <span style="color:var(--success);">E-201 Index C</span> <span style="color:var(--text-secondary);">(gültig ab 22.03.2026)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- PUNKT 001/003 (Vorkommnis) -->
+        <div class="card" style="border-left:3px solid var(--warning); margin-top:4px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700; color:var(--warning); background:rgba(240,173,78,0.1); padding:3px 10px; border-radius:4px;">001/003</span>
+              <select class="select" style="width:140px; font-size:11px;"><option selected>Haus 64</option></select>
+              <select class="select" style="width:100px; font-size:11px;"><option selected>EG</option></select>
+              <span class="badge badge-update" style="font-size:10px;">⚠ VORKOMMNIS</span>
+            </div>
+            <div style="display:flex; gap:4px;">
+              <button class="btn btn-ghost" style="font-size:11px;">▲</button>
+              <button class="btn btn-ghost" style="font-size:11px;">▼</button>
+              <button class="btn btn-ghost" style="font-size:11px; color:var(--error);">✕</button>
+            </div>
+          </div>
+          <div style="background:var(--bg-input); padding:8px; border-radius:4px; font-size:13px; color:var(--text-primary); min-height:36px;">
+            Lieferverzögerung Bewehrungsstahl BSt 550 — 2 Stunden Wartezeit. Lieferwerk: Marienhütte Graz. Behinderungsanzeige dokumentiert.
+          </div>
+        </div>
+
+        <!-- PUNKT 001/004 -->
+        <div class="card" style="border-left:3px solid var(--accent); margin-top:4px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700; color:var(--accent); background:var(--bg-active); padding:3px 10px; border-radius:4px;">001/004</span>
+              <select class="select" style="width:140px; font-size:11px;"><option>Haus 64</option><option selected>Haus 66</option></select>
+              <select class="select" style="width:100px; font-size:11px;"><option>KG</option><option selected>EG</option></select>
+            </div>
+            <div style="display:flex; gap:4px;">
+              <button class="btn btn-ghost" style="font-size:11px;">▲</button>
+              <button class="btn btn-ghost" style="font-size:11px;">▼</button>
+              <button class="btn btn-ghost" style="font-size:11px; color:var(--error);">✕</button>
+            </div>
+          </div>
+          <div style="background:var(--bg-input); padding:8px; border-radius:4px; font-size:13px; color:var(--text-primary); min-height:36px; margin-bottom:8px;">
+            Schalung Kellerwand Achse A–C aufgestellt. Aussparungen laut Plan kontrolliert.
+          </div>
+          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+            <div style="display:flex; gap:4px;">
+              <div class="foto-thumb" style="width:48px; height:48px; font-size:16px;">📷</div>
+              <div class="foto-thumb" style="width:48px; height:48px; font-size:16px;">📷</div>
+              <div class="foto-thumb" style="width:48px; height:48px; font-size:12px; color:var(--accent); cursor:pointer;">+</div>
+            </div>
+            <div style="font-size:11px; color:var(--text-secondary); border-left:1px solid var(--border); padding-left:12px;">
+              📈 Planstand: <span style="color:var(--success);">S-113 Index A</span> <span style="color:var(--text-secondary);">(gültig ab 27.03.2026 — heute neu!)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Zusammenfassung -->
+        <div style="margin-top:16px; padding:10px 16px; background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius); font-size:12px; display:flex; justify-content:space-between; align-items:center;">
+          <span style="color:var(--text-secondary);">Bericht <strong style="color:var(--text-bright);">001</strong> | 4 Punkte | 6 Fotos | 2 Bauteile | 3 Planstände referenziert</span>
+          <span class="badge badge-error">Entwurf</span>
+        </div>
+
+        <!-- Actions -->
+        <div class="toolbar" style="margin-top:12px;">
+          <button class="btn btn-primary">💾 Speichern</button>
+          <button class="btn btn-success">✅ Abschließen</button>
+          <button class="btn btn-secondary">📄 Export → Vorlage</button>
+          <button class="btn btn-secondary">📄 Export → PDF</button>
+          <span class="toolbar-spacer"></span>
+          <button class="btn btn-ghost">Punkte aus Vortag übernehmen</button>
+        </div>
+      </div>
+      <div class="statusbar">Bautagebuch | ÖWG Dobl-Zwaring | Bericht 001 | 27.03.2026 | Entwurf</div>
+    </div>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════
+       MOCKUP 6: FOTO-MANAGEMENT
+       ═════════════════════════════════════════════════════════════ -->
+  <div class="mockup-section">
+    <div class="mockup-label">Mockup 6</div>
+    <div class="mockup-title">Foto-Management</div>
+    <div class="mockup-desc">Thumbnail-Raster mit Tags, Filtern, Baubericht-Checkbox. GPS-Zuordnung wenn vorhanden.</div>
+
+    <div class="app-shell">
+      <div class="sidebar">
+        <div class="sidebar-logo">bau<span>lotse</span></div>
+        <button class="nav-btn">📁 Pläne</button>
+        <button class="nav-btn">📋 Bautagebuch</button>
+        <button class="nav-btn">⏱ Zeiterfassung</button>
+        <button class="nav-btn active">📸 Fotos</button>
+        <button class="nav-btn">📊 Dashboard</button>
+        <button class="nav-btn">⚙ Einstellungen</button>
+      </div>
+      <div class="content">
+        <div class="heading1">📸 Fotos — ÖWG Dobl-Zwaring</div>
+
+        <div class="toolbar">
+          <span class="label" style="display:inline; margin:0;">Filter:</span>
+          <select class="select"><option>Alle Geschoße</option><option>KG</option><option selected>EG</option><option>OG1</option></select>
+          <select class="select"><option>Alle Tags</option><option>Schalung</option><option selected>Bewehrung</option><option>Betonage</option><option>Mangel</option></select>
+          <select class="select"><option>Alle Zeiträume</option><option>Heute</option><option selected>Diese Woche</option><option>Diesen Monat</option></select>
+          <span class="toolbar-spacer"></span>
+          <span style="font-size:12px; color:var(--text-secondary);">24 Fotos | 6 für Baubericht ausgewählt</span>
+        </div>
+
+        <div class="tabs">
+          <button class="tab active">🖼 Raster</button>
+          <button class="tab">📋 Liste</button>
+          <button class="tab">📄 Baubericht (6)</button>
+        </div>
+
+        <div class="foto-grid" style="grid-template-columns:repeat(auto-fill, minmax(120px, 1fr));">
+          <div class="foto-thumb" style="border-color:var(--accent);">📷<span class="foto-tag">Bewehrung</span><span class="foto-time">09:14</span><div style="position:absolute;top:4px;right:4px;width:14px;height:14px;background:var(--accent);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;">✓</div></div>
+          <div class="foto-thumb" style="border-color:var(--accent);">📷<span class="foto-tag">Bewehrung</span><span class="foto-time">09:22</span><div style="position:absolute;top:4px;right:4px;width:14px;height:14px;background:var(--accent);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;">✓</div></div>
+          <div class="foto-thumb">📷<span class="foto-tag">Bewehrung</span><span class="foto-time">10:05</span></div>
+          <div class="foto-thumb" style="border-color:var(--accent);">📷<span class="foto-tag">Bewehrung</span><span class="foto-time">10:42</span><div style="position:absolute;top:4px;right:4px;width:14px;height:14px;background:var(--accent);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;">✓</div></div>
+          <div class="foto-thumb">📷<span class="foto-time">11:15</span></div>
+          <div class="foto-thumb">📷<span class="foto-time">13:07</span></div>
+          <div class="foto-thumb" style="border-color:var(--accent);">📷<span class="foto-tag">Bewehrung</span><span class="foto-time">13:30</span><div style="position:absolute;top:4px;right:4px;width:14px;height:14px;background:var(--accent);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;">✓</div></div>
+          <div class="foto-thumb">📷<span class="foto-time">14:18</span></div>
+          <div class="foto-thumb" style="border-color:var(--accent);">📷<span class="foto-tag">Bewehrung</span><span class="foto-time">15:02</span><div style="position:absolute;top:4px;right:4px;width:14px;height:14px;background:var(--accent);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;">✓</div></div>
+          <div class="foto-thumb" style="border-color:var(--accent);">📷<span class="foto-tag">Bewehrung</span><span class="foto-time">15:31</span><div style="position:absolute;top:4px;right:4px;width:14px;height:14px;background:var(--accent);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;">✓</div></div>
+          <div class="foto-thumb">📷<span class="foto-time">16:05</span></div>
+          <div class="foto-thumb">📷<span class="foto-time">16:44</span></div>
+        </div>
+
+        <div class="toolbar" style="margin-top:16px;">
+          <button class="btn btn-primary">📸 Fotos importieren</button>
+          <button class="btn btn-secondary">🏷 Tags bearbeiten</button>
+          <span class="toolbar-spacer"></span>
+          <button class="btn btn-secondary">📄 Baubericht exportieren (6 Fotos)</button>
+        </div>
+      </div>
+      <div class="statusbar">Fotos | ÖWG Dobl-Zwaring | EG + Bewehrung | 24 Fotos, 6 für Bericht</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,2397 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>baulotse — Interaktive UI Mockups (Vollversion)</title>
+<style>
+
+
+  :root {
+    --bg-base: #1E1E1E; --bg-surface: #252526; --bg-elevated: #2D2D30;
+    --bg-hover: #37373D; --bg-active: #04395E; --bg-input: #3C3C3C;
+    --text-primary: #CCCCCC; --text-secondary: #858585; --text-bright: #FFFFFF;
+    --accent: #0078D4; --accent-hover: #1A8AD4;
+    --success: #4EC94E; --warning: #F0AD4E; --error: #F44747; --info: #3794FF;
+    --purple: #8b5cf6;
+    --border: #3C3C3C; --border-focus: #0078D4; --border-subtle: #2D2D30;
+    --radius: 6px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Segoe UI', -apple-system, sans-serif; background: var(--bg-base); color: var(--text-primary); line-height:1.5; overflow:hidden; height:100vh; }
+
+  /* ═══ App Shell ═══ */
+  .shell { display:grid; grid-template-columns:220px 1fr; grid-template-rows:1fr 28px; height:100vh; }
+
+  /* Sidebar */
+  .sidebar { background:var(--bg-elevated); border-right:1px solid var(--border-subtle); overflow-y:auto; padding:8px 0; }
+  .sidebar-logo { font-size:15px; font-weight:700; color:var(--text-bright); padding:8px 15px 12px; }
+  .sidebar-logo span { color:#E8712A; }
+  .sidebar-section { font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-secondary); padding:16px 15px 6px; }
+  .sidebar-section:first-of-type { padding-top:8px; }
+  .nav-btn {
+    display:flex; align-items:center; gap:8px; width:100%;
+    padding:8px 15px; background:transparent; border:none;
+    color:var(--text-primary); font-size:12px; text-align:left;
+    cursor:pointer; font-family:inherit; border-left:3px solid transparent;
+  }
+  .nav-btn:hover { background:var(--bg-hover); }
+  .nav-btn.active { background:var(--bg-active); color:var(--text-bright); border-left-color:var(--accent); }
+  .nav-btn .ico { font-size:14px; width:18px; text-align:center; flex-shrink:0; }
+  .nav-badge { margin-left:auto; font-size:9px; padding:1px 5px; border-radius:3px; font-weight:700; }
+  .nb-online { background:rgba(139,92,246,0.15); color:var(--purple); }
+
+  /* Content */
+  .content { background:var(--bg-base); overflow-y:auto; padding:20px; }
+
+  /* Statusbar */
+  .statusbar { grid-column:1/-1; background:var(--accent); color:#fff; font-size:11px; padding:0 12px; display:flex; align-items:center; }
+  #statusText { flex:1; }
+
+  /* ═══ Components ═══ */
+  .h1 { font-size:18px; font-weight:700; color:var(--text-bright); margin-bottom:14px; }
+  .h2 { font-size:14px; font-weight:600; color:var(--text-bright); margin:16px 0 8px; }
+  .card { background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px; margin-bottom:10px; }
+  .card-t { font-size:12px; font-weight:600; color:var(--text-bright); margin-bottom:6px; }
+  .btn { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:none; border-radius:4px; font-size:11px; font-family:inherit; cursor:pointer; }
+  .btn-p { background:var(--accent); color:#fff; }
+  .btn-s { background:var(--bg-input); color:var(--text-primary); border:1px solid var(--border); }
+  .btn-g { background:transparent; color:var(--text-secondary); }
+  .btn-ok { background:var(--success); color:#fff; }
+  .inp, .sel { background:var(--bg-input); color:var(--text-primary); border:1px solid var(--border); border-radius:4px; padding:4px 7px; font-size:11px; font-family:inherit; outline:none; }
+  .lbl { font-size:10px; color:var(--text-secondary); display:block; margin-bottom:2px; }
+  .tb { width:100%; border-collapse:collapse; font-size:11px; }
+  .tb th { text-align:left; padding:6px 8px; background:var(--bg-elevated); color:var(--text-secondary); font-weight:600; font-size:10px; text-transform:uppercase; letter-spacing:.4px; border-bottom:1px solid var(--border); }
+  .tb td { padding:5px 8px; border-bottom:1px solid var(--border-subtle); }
+  .tb tr:hover td { background:var(--bg-hover); }
+  .bg { display:inline-block; font-size:9px; font-weight:700; padding:2px 6px; border-radius:3px; }
+  .bg-n { background:rgba(55,148,255,.15); color:var(--info); }
+  .bg-u { background:rgba(240,173,78,.15); color:var(--warning); }
+  .bg-k { background:rgba(78,201,78,.15); color:var(--success); }
+  .bg-e { background:rgba(244,71,71,.15); color:var(--error); }
+  .bg-d { background:rgba(133,133,133,.12); color:var(--text-secondary); }
+  .bg-p { background:rgba(139,92,246,.15); color:var(--purple); }
+  .bar { display:flex; gap:6px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
+  .bar-s { flex:1; }
+  .wg { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .wg-f { grid-column:1/-1; }
+  .seg { padding:4px 10px; border-radius:4px; font-family:'Courier New',monospace; font-size:12px; border:2px solid transparent; display:inline-block; margin:2px; }
+  .seg-p { background:rgba(0,120,212,.2); color:var(--accent); border-color:var(--accent); }
+  .seg-i { background:rgba(78,201,78,.2); color:var(--success); border-color:var(--success); }
+  .seg-t { background:rgba(240,173,78,.2); color:var(--warning); border-color:var(--warning); }
+  .seg-s { background:var(--bg-input); color:var(--text-secondary); }
+  .seg-u { background:var(--bg-input); color:var(--text-primary); border-color:var(--border); border-style:dashed; }
+  .pbar { height:5px; background:var(--bg-input); border-radius:3px; overflow:hidden; display:inline-block; width:50px; vertical-align:middle; }
+  .pfill { height:100%; border-radius:3px; }
+  .pt { font-family:'Courier New',monospace; font-size:12px; font-weight:700; padding:2px 8px; border-radius:4px; }
+  .foto-g { display:grid; grid-template-columns:repeat(auto-fill,minmax(90px,1fr)); gap:6px; }
+  .foto-t { aspect-ratio:1; background:var(--bg-input); border-radius:4px; display:flex; align-items:center; justify-content:center; color:var(--text-secondary); font-size:20px; border:1px solid var(--border); position:relative; }
+  .foto-t .ft { position:absolute; bottom:3px; right:3px; font-size:8px; color:var(--text-secondary); }
+  .foto-t .ftag { position:absolute; top:3px; left:3px; font-size:8px; padding:1px 4px; border-radius:2px; background:var(--accent); color:#fff; }
+  .foto-t.sel { border-color:var(--accent); }
+  .foto-t.sel::after { content:'✓'; position:absolute; top:3px; right:3px; width:12px; height:12px; background:var(--accent); border-radius:2px; display:flex; align-items:center; justify-content:center; font-size:8px; color:#fff; }
+  .chat-b { padding:8px 12px; border-radius:var(--radius); font-size:12px; line-height:1.5; margin-bottom:4px; }
+  .chat-u { background:var(--bg-active); border:1px solid var(--accent); color:var(--text-bright); margin-left:20%; }
+  .chat-k { background:var(--bg-surface); border:1px solid var(--border); margin-right:10%; }
+  .chat-w { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; margin-bottom:2px; }
+  .chat-src { font-size:10px; color:var(--text-secondary); margin-top:4px; padding-top:4px; border-top:1px solid var(--border-subtle); }
+  .chat-src a { color:var(--accent); text-decoration:none; }
+  .chat-warn { margin-top:4px; font-size:10px; padding:3px 6px; border-radius:3px; background:rgba(240,173,78,.1); color:var(--warning); }
+  .wh { text-align:center; min-width:44px; padding:6px 3px; border-right:1px solid var(--border-subtle); font-size:10px; display:inline-block; }
+  .wh:last-child { border-right:none; }
+  .wh-t { color:var(--text-secondary); font-size:9px; }
+  .wh-i { font-size:16px; margin:2px 0; }
+  .wh-v { color:var(--text-bright); font-weight:600; }
+  .wh.now { background:var(--bg-active); border-radius:4px; }
+  .gis-map { background:linear-gradient(135deg,#1a2a1f,#1a2332,#1f2a1f); border:1px solid var(--border); border-radius:var(--radius); height:260px; position:relative; overflow:hidden; }
+  .gis-grid { position:absolute; inset:0; background-image:linear-gradient(rgba(78,201,78,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(78,201,78,.05) 1px,transparent 1px); background-size:35px 35px; }
+  .gis-p { position:absolute; border:2px solid var(--success); border-radius:2px; background:rgba(78,201,78,.08); }
+  .gis-b { position:absolute; background:rgba(0,120,212,.2); border:1px solid var(--accent); border-radius:2px; }
+  .gis-lbl { position:absolute; font-size:9px; font-weight:600; background:rgba(30,30,30,.8); padding:0 4px; border-radius:2px; }
+  .gis-ov { position:absolute; top:8px; right:8px; display:flex; flex-direction:column; gap:2px; }
+  .gis-ly { font-size:9px; padding:3px 8px; background:rgba(30,30,30,.9); border:1px solid var(--border); border-radius:3px; color:var(--text-primary); }
+  .gis-ly.on { border-color:var(--accent); color:var(--accent); }
+  .mob { width:320px; height:580px; margin:0 auto; background:var(--bg-base); border:2px solid var(--border); border-radius:24px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 8px 32px rgba(0,0,0,.5); }
+  .mob-h { background:var(--bg-elevated); padding:8px 14px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); }
+  .mob-c { flex:1; padding:10px 14px; overflow-y:auto; font-size:12px; }
+  .mob-n { display:flex; background:var(--bg-elevated); border-top:1px solid var(--border); }
+  .mob-nb { flex:1; text-align:center; padding:6px 0 4px; font-size:8px; color:var(--text-secondary); border:none; background:transparent; font-family:inherit; }
+  .mob-nb.act { color:var(--accent); }
+  .mob-nb .mi { font-size:16px; display:block; margin-bottom:1px; }
+  .mc { background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius); padding:10px; margin-bottom:6px; }
+  @media(max-width:800px) { .shell { grid-template-columns:1fr; } .sidebar { display:none; } }
+
+
+  /* ═══ Block content class aliases (long names from Block 1-4) ═══ */
+  .heading1 { font-size:18px; font-weight:700; color:var(--text-bright); margin-bottom:14px; }
+  .heading2 { font-size:14px; font-weight:600; color:var(--text-bright); margin:16px 0 8px; }
+  .card-title { font-size:12px; font-weight:600; color:var(--text-bright); margin-bottom:6px; }
+
+  /* Buttons - full definition for block content */
+  .btn-primary { background:var(--accent); color:#fff; display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:none; border-radius:4px; font-size:11px; font-family:inherit; cursor:pointer; }
+  .btn-secondary { background:var(--bg-input); color:var(--text-primary); border:1px solid var(--border); display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border-radius:4px; font-size:11px; font-family:inherit; cursor:pointer; }
+  .btn-ghost { background:transparent; color:var(--text-secondary); display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:none; border-radius:4px; font-size:11px; font-family:inherit; cursor:pointer; }
+  .btn-success { background:var(--success); color:#fff; display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:none; border-radius:4px; font-size:11px; font-family:inherit; cursor:pointer; }
+  .btn-danger { background:var(--error); color:#fff; display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:none; border-radius:4px; font-size:11px; font-family:inherit; cursor:pointer; }
+
+  /* Form elements */
+  input[type="text"].input, input.input, .input { background:var(--bg-input); color:var(--text-primary); border:1px solid var(--border); border-radius:4px; padding:4px 7px; font-size:11px; font-family:inherit; outline:none; }
+  .input:focus { border-color:var(--border-focus); }
+  select.select, .select { background:var(--bg-input); color:var(--text-primary); border:1px solid var(--border); border-radius:4px; padding:4px 7px; font-size:11px; font-family:inherit; outline:none; }
+  textarea.input { background:var(--bg-input); color:var(--text-primary); border:1px solid var(--border); border-radius:4px; padding:6px 8px; font-size:11px; font-family:inherit; outline:none; resize:none; }
+  .label { font-size:10px; color:var(--text-secondary); display:block; margin-bottom:2px; }
+
+  /* Table */
+  .tbl { width:100%; border-collapse:collapse; font-size:11px; }
+  .tbl th { text-align:left; padding:6px 8px; background:var(--bg-elevated); color:var(--text-secondary); font-weight:600; font-size:10px; text-transform:uppercase; letter-spacing:.4px; border-bottom:1px solid var(--border); }
+  .tbl td { padding:5px 8px; border-bottom:1px solid var(--border-subtle); }
+  .tbl tr:hover td { background:var(--bg-hover); }
+
+  /* Badges */
+  .badge { display:inline-block; font-size:9px; font-weight:700; padding:2px 6px; border-radius:3px; }
+  .badge-new { background:rgba(55,148,255,.15); color:var(--info); }
+  .badge-update { background:rgba(240,173,78,.15); color:var(--warning); }
+  .badge-ok { background:rgba(78,201,78,.15); color:var(--success); }
+  .badge-error { background:rgba(244,71,71,.15); color:var(--error); }
+  .badge-ident { background:rgba(133,133,133,.12); color:var(--text-secondary); }
+  .badge-purple { background:rgba(139,92,246,.15); color:var(--purple); }
+
+  /* Toolbar */
+  .toolbar { display:flex; gap:6px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
+  .toolbar-spacer { flex:1; }
+
+  /* Widgets */
+  .widget-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .widget-full { grid-column:1/-1; }
+
+  /* Segments */
+  .segment { padding:4px 10px; border-radius:4px; font-family:'Courier New',monospace; font-size:12px; border:2px solid transparent; display:inline-block; margin:2px; }
+  .segment-bar { display:flex; gap:2px; margin:12px 0; flex-wrap:wrap; }
+  .seg-plannr { background:rgba(0,120,212,.2); color:var(--accent); border-color:var(--accent); }
+  .seg-index { background:rgba(78,201,78,.2); color:var(--success); border-color:var(--success); }
+  .seg-type { background:rgba(240,173,78,.2); color:var(--warning); border-color:var(--warning); }
+  .seg-sep { background:var(--bg-input); color:var(--text-secondary); }
+  .seg-unknown { background:var(--bg-input); color:var(--text-primary); border-color:var(--border); border-style:dashed; }
+
+  /* Fotos */
+  .foto-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(90px,1fr)); gap:6px; }
+  .foto-thumb { aspect-ratio:1; background:var(--bg-input); border-radius:4px; display:flex; align-items:center; justify-content:center; color:var(--text-secondary); font-size:20px; border:1px solid var(--border); position:relative; }
+  .foto-thumb .foto-time { position:absolute; bottom:3px; right:3px; font-size:8px; color:var(--text-secondary); }
+  .foto-thumb .foto-tag { position:absolute; top:3px; left:3px; font-size:8px; padding:1px 4px; border-radius:2px; background:var(--accent); color:#fff; }
+
+  /* Tabs */
+  .tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:12px; }
+  .tab { padding:6px 14px; font-size:11px; color:var(--text-secondary); background:transparent; border:none; border-bottom:2px solid transparent; cursor:pointer; font-family:inherit; }
+  .tab.active { color:var(--text-bright); border-bottom-color:var(--accent); font-weight:600; }
+
+  /* Progress */
+  .progress-bar { height:5px; background:var(--bg-input); border-radius:3px; overflow:hidden; display:inline-block; width:50px; vertical-align:middle; }
+  .progress-fill { height:100%; border-radius:3px; }
+
+  /* Online tag */
+  .online-tag { display:inline-block; background:rgba(139,92,246,.15); color:var(--purple); font-size:10px; font-weight:700; padding:2px 6px; border-radius:3px; margin-left:6px; }
+
+  /* Chat */
+  .chat-input-row { display:flex; gap:8px; margin-top:12px; }
+  .chat-input { flex:1; background:var(--bg-input); color:var(--text-primary); border:1px solid var(--border); border-radius:var(--radius); padding:8px 12px; font-size:12px; font-family:inherit; outline:none; }
+  .chat-input:focus { border-color:var(--accent); }
+  .chat-area { display:flex; flex-direction:column; gap:10px; }
+  .chat-msg { max-width:92%; }
+  .chat-msg.user { align-self:flex-end; }
+  .chat-msg.ki { align-self:flex-start; }
+  .chat-bubble { padding:8px 12px; border-radius:var(--radius); font-size:12px; line-height:1.5; }
+  .chat-bubble.user-b { background:var(--bg-active); border:1px solid var(--accent); color:var(--text-bright); }
+  .chat-bubble.ki-b { background:var(--bg-surface); border:1px solid var(--border); }
+  .chat-who { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; margin-bottom:2px; }
+  .chat-who.u { color:var(--accent); text-align:right; }
+  .chat-who.k { color:var(--purple); }
+  .chat-source { font-size:10px; color:var(--text-secondary); margin-top:4px; padding-top:4px; border-top:1px solid var(--border-subtle); }
+  .chat-source a { color:var(--accent); text-decoration:none; }
+  .chat-analysis { margin-top:4px; font-size:10px; padding:3px 6px; border-radius:3px; }
+
+  /* Docs panel */
+  .docs-panel { background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px; }
+  .doc-item { display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid var(--border-subtle); font-size:12px; }
+  .doc-item:last-child { border-bottom:none; }
+
+  /* Assign grid */
+  .assign-grid { overflow-x:auto; }
+  .assign-grid table { border-collapse:collapse; font-size:11px; min-width:500px; width:100%; }
+  .assign-grid th, .assign-grid td { padding:4px 6px; border:1px solid var(--border-subtle); text-align:center; }
+  .assign-grid th { background:var(--bg-elevated); color:var(--text-secondary); font-weight:600; font-size:10px; text-transform:uppercase; }
+  .name-cell { text-align:left !important; min-width:100px; white-space:nowrap; }
+  .role-cell { text-align:left !important; font-size:9px; color:var(--text-secondary); }
+  .assign-x { background:var(--bg-active); color:var(--accent); font-weight:700; cursor:pointer; }
+  .assign-empty { cursor:pointer; }
+  .assign-empty:hover { background:var(--bg-hover); }
+  .assign-absent { background:rgba(244,71,71,.08); color:var(--error); font-size:10px; }
+  .col-activity { writing-mode:vertical-lr; text-orientation:mixed; min-width:44px; padding:6px 3px !important; font-size:10px; }
+  .col-activity-color { width:4px; height:100%; display:inline-block; border-radius:2px; margin-right:3px; }
+
+  /* Dialog */
+  .dialog-overlay { background:var(--bg-surface); border:2px solid var(--accent); border-radius:8px; padding:20px; max-width:460px; margin:40px auto; }
+  .dialog-title { font-size:16px; font-weight:700; color:var(--text-bright); margin-bottom:14px; }
+  .dialog-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid var(--border-subtle); font-size:12px; }
+  .dialog-result { margin-top:14px; padding:10px; background:var(--bg-elevated); border-radius:var(--radius); border:1px solid var(--accent); }
+
+  /* Wetter */
+  .wetter-row { display:flex; gap:14px; align-items:center; }
+  .wetter-temp { font-size:28px; font-weight:700; color:var(--text-bright); }
+  .wetter-detail { font-size:11px; color:var(--text-secondary); }
+  .wetter-detail span { color:var(--text-primary); }
+  .wetter-hourly { display:flex; gap:0; margin-top:10px; overflow-x:auto; }
+  .wetter-h { text-align:center; min-width:44px; padding:6px 3px; border-right:1px solid var(--border-subtle); font-size:10px; display:inline-block; }
+  .wetter-h:last-child { border-right:none; }
+  .wetter-h.now { background:var(--bg-active); border-radius:4px; }
+
+  /* Mobile */
+  .mobile-frame { width:320px; height:580px; margin:0 auto; background:var(--bg-base); border:2px solid var(--border); border-radius:24px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 8px 32px rgba(0,0,0,.5); }
+  .mobile-status { background:var(--bg-elevated); padding:6px 14px; font-size:10px; color:var(--text-secondary); display:flex; justify-content:space-between; }
+  .mobile-header { background:var(--bg-elevated); padding:8px 14px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); }
+  .mobile-header h3 { font-size:14px; color:var(--text-bright); font-weight:600; }
+  .mobile-content { flex:1; padding:10px 14px; overflow-y:auto; font-size:12px; }
+  .mobile-nav { display:flex; background:var(--bg-elevated); border-top:1px solid var(--border); }
+  .mobile-nav-btn { flex:1; text-align:center; padding:6px 0 4px; font-size:8px; color:var(--text-secondary); border:none; background:transparent; font-family:inherit; }
+  .mobile-nav-btn.active { color:var(--accent); }
+  .mobile-nav-btn .nav-icon, .mobile-nav-btn .ni { font-size:16px; display:block; margin-bottom:1px; }
+
+  /* GIS - both short and long class names */
+  .gis-map-grid { position:absolute; inset:0; background-image:linear-gradient(rgba(78,201,78,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(78,201,78,.05) 1px,transparent 1px); background-size:35px 35px; }
+  .gis-parcel { position:absolute; border:2px solid var(--success); border-radius:2px; background:rgba(78,201,78,.08); }
+  .gis-parcel-label { position:absolute; font-size:9px; color:var(--success); font-weight:600; background:rgba(30,30,30,.8); padding:1px 4px; border-radius:2px; }
+  .gis-building { position:absolute; background:rgba(0,120,212,.2); border:1px solid var(--accent); border-radius:2px; }
+  .gis-pipe { position:absolute; border-top:2px dashed var(--warning); }
+  .gis-overlay { position:absolute; top:8px; right:8px; display:flex; flex-direction:column; gap:2px; }
+  .gis-layer { font-size:9px; padding:3px 8px; background:rgba(30,30,30,.9); border:1px solid var(--border); border-radius:3px; color:var(--text-primary); cursor:pointer; }
+  .gis-layer.active { border-color:var(--accent); color:var(--accent); }
+  .gis-coords { position:absolute; bottom:8px; left:8px; font-size:9px; color:var(--text-secondary); background:rgba(30,30,30,.9); padding:2px 6px; border-radius:2px; font-family:'Courier New',monospace; }
+
+  .view { display:none; }
+  .view.active { display:block; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="sidebar">
+    <div class="sidebar-logo">bau<span>lotse</span></div>
+    <div class="sidebar-section">Kern</div>
+    <button class="nav-btn active" onclick="show('plan-import')"><span class="ico">📁</span>Plan Import<span class="nav-badge bg-u">5 neu</span></button>
+    <button class="nav-btn" onclick="show('plan-learn')"><span class="ico">🔧</span>Plan Anlernen</button>
+    <button class="nav-btn" onclick="show('dashboard')"><span class="ico">📊</span>Dashboard</button>
+    <button class="nav-btn" onclick="show('zeit')"><span class="ico">⏱</span>Zeiterfassung</button>
+    <button class="nav-btn" onclick="show('btb')"><span class="ico">📋</span>Bautagebuch</button>
+    <button class="nav-btn" onclick="show('foto')"><span class="ico">📸</span>Fotos</button>
+    <div class="sidebar-section">Ausbau Offline</div>
+    <button class="nav-btn" onclick="show('ap')"><span class="ico">📦</span>Arbeitspakete</button>
+    <button class="nav-btn" onclick="show('einteilung')"><span class="ico">👷</span>Arbeitseinteilung</button>
+    <button class="nav-btn" onclick="show('fertig')"><span class="ico">✅</span>Fertigmeldung</button>
+    <button class="nav-btn" onclick="show('katalog')"><span class="ico">📚</span>Erfahrungskatalog</button>
+    <button class="nav-btn" onclick="show('prognose')"><span class="ico">🔮</span>Bauzeitprognose</button>
+    <button class="nav-btn" onclick="show('beton')"><span class="ico">🏗</span>Betonbestellung</button>
+    <button class="nav-btn" onclick="show('ziegel')"><span class="ico">🧱</span>Ziegelberechnung</button>
+    <div class="sidebar-section">Ausbau Online</div>
+    <button class="nav-btn" onclick="show('ki')"><span class="ico">🤖</span>KI-Assistent<span class="nav-badge nb-online">Online</span></button>
+    <button class="nav-btn" onclick="show('material')"><span class="ico">🚚</span>Material/ClickUp<span class="nav-badge nb-online">Online</span></button>
+    <button class="nav-btn" onclick="show('outlook')"><span class="ico">📧</span>Outlook</button>
+    <button class="nav-btn" onclick="show('wetter')"><span class="ico">🌤</span>Wetter<span class="nav-badge nb-online">Online</span></button>
+    <button class="nav-btn" onclick="show('mobile')"><span class="ico">📱</span>Mobile App</button>
+    <button class="nav-btn" onclick="show('gis')"><span class="ico">🗺</span>GIS<span class="nav-badge nb-online">Online</span></button>
+    <button class="nav-btn" onclick="show('msproject')"><span class="ico">📅</span>Bauzeitplan</button>
+  </div>
+  <div class="content">
+    <div id="plan-import" class="view active">
+        <div class="heading1">📥 Import-Vorschau — ÖWG Dobl-Zwaring</div>
+        <div class="toolbar">
+          <span style="color:var(--text-secondary);">12 Dateien in _Eingang erkannt</span>
+          <span class="toolbar-spacer"></span>
+          <button class="btn btn-success">✅ Alle bestätigen &amp; einsortieren</button>
+          <button class="btn btn-secondary">↩ Abbrechen</button>
+        </div>
+
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Dateiname</th>
+              <th>Plantyp</th>
+              <th>Plannr.</th>
+              <th>Index</th>
+              <th>Zielordner</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-update">NEUER INDEX</span></td>
+              <td>S-103_Polierplan_EG_H64_D.pdf</td>
+              <td>Polierplan</td>
+              <td>S-103</td>
+              <td>C → <strong style="color:var(--success)">D</strong></td>
+              <td>01_Planunterlagen/Polierplan/</td>
+              <td><button class="btn btn-ghost">✏</button></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-new">NEU</span></td>
+              <td>S-113-A_Polierplan_2OG_H66.pdf</td>
+              <td>Polierplan</td>
+              <td>S-113</td>
+              <td><strong style="color:var(--info)">A</strong></td>
+              <td>01_Planunterlagen/Polierplan/</td>
+              <td><button class="btn btn-ghost">✏</button></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-update">NEUER INDEX</span></td>
+              <td>E-201_Elektroplan_EG_H64_C.pdf</td>
+              <td>E-Plan</td>
+              <td>E-201</td>
+              <td>B → <strong style="color:var(--success)">C</strong></td>
+              <td>01_Planunterlagen/E-Plan/</td>
+              <td><button class="btn btn-ghost">✏</button></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-ident">IDENTISCH</span></td>
+              <td>S-101_Polierplan_KG_H64_B.pdf</td>
+              <td>Polierplan</td>
+              <td>S-101</td>
+              <td>B = B</td>
+              <td><span style="color:var(--text-secondary)">— Übersprungen</span></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-error">UNBEKANNT</span></td>
+              <td>Lieferschein_Beton_27032026.pdf</td>
+              <td>—</td>
+              <td>—</td>
+              <td>—</td>
+              <td><span style="color:var(--error)">Muster nicht erkannt</span></td>
+              <td><button class="btn btn-ghost">🔧 Zuordnen</button></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-new">NEU</span></td>
+              <td>H-044_HKLS-Plan_KG_H66_A.pdf</td>
+              <td>HKLS-Plan</td>
+              <td>H-044</td>
+              <td><strong style="color:var(--info)">A</strong></td>
+              <td>01_Planunterlagen/HKLS/</td>
+              <td><button class="btn btn-ghost">✏</button></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="margin-top:16px; padding:12px; background:var(--bg-surface); border-radius:var(--radius); border:1px solid var(--border);">
+          <span style="font-size:12px; color:var(--text-secondary);">Zusammenfassung: </span>
+          <span class="badge badge-new" style="margin-right:4px;">3 NEU</span>
+          <span class="badge badge-update" style="margin-right:4px;">2 INDEX-UPDATE</span>
+          <span class="badge badge-ident" style="margin-right:4px;">1 IDENTISCH</span>
+          <span class="badge badge-error">1 UNBEKANNT</span>
+          <span style="float:right; font-size:11px; color:var(--text-secondary);">Alte Indizes werden automatisch archiviert</span>
+        </div>
+      
+    </div>
+
+    <div id="plan-learn" class="view">
+        <div class="heading1">🔧 Plantyp-Muster anlernen</div>
+        <p style="color:var(--text-secondary); margin-bottom:16px;">Klicke auf jedes Segment und weise ihm eine Bedeutung zu. Baulotse merkt sich das Muster für alle zukünftigen Pläne dieses Typs.</p>
+
+        <div class="card">
+          <div class="card-title">Dateiname:</div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:15px; color:var(--text-bright); margin-bottom:12px;">
+            S-103_Polierplan_EG_H64_D.pdf
+          </div>
+
+          <div class="card-title" style="margin-top:12px;">Segmente (klicke zum Zuweisen):</div>
+          <div class="segment-bar">
+            <div class="segment seg-plannr">S-103</div>
+            <div class="segment seg-sep">_</div>
+            <div class="segment seg-type">Polierplan</div>
+            <div class="segment seg-sep">_</div>
+            <div class="segment seg-unknown">EG</div>
+            <div class="segment seg-sep">_</div>
+            <div class="segment seg-unknown">H64</div>
+            <div class="segment seg-sep">_</div>
+            <div class="segment seg-index">D</div>
+          </div>
+
+          <div style="margin-top:16px;">
+            <div class="heading2" style="margin-top:0;">Legende:</div>
+            <div style="display:flex; gap:16px; flex-wrap:wrap; font-size:12px;">
+              <span><span class="segment seg-plannr" style="font-size:11px; padding:2px 8px;">Plannummer</span></span>
+              <span><span class="segment seg-index" style="font-size:11px; padding:2px 8px;">Index</span></span>
+              <span><span class="segment seg-type" style="font-size:11px; padding:2px 8px;">Plantyp</span></span>
+              <span><span class="segment seg-sep" style="font-size:11px; padding:2px 8px;">Trennzeichen</span></span>
+              <span><span class="segment seg-unknown" style="font-size:11px; padding:2px 8px;">Noch nicht zugewiesen</span></span>
+            </div>
+          </div>
+
+          <div style="margin-top:16px;">
+            <div class="heading2" style="margin-top:0;">Noch zuzuweisen:</div>
+            <div class="card" style="background:var(--bg-elevated); padding:10px;">
+              <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+                <span class="segment seg-unknown" style="font-size:12px; padding:3px 8px;">EG</span>
+                <span style="color:var(--text-secondary);">→</span>
+                <select class="select" style="width:180px;">
+                  <option>— Bedeutung wählen —</option>
+                  <option>Geschoß</option>
+                  <option>Bauteil</option>
+                  <option>Beschreibung</option>
+                  <option>Ignorieren</option>
+                </select>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <span class="segment seg-unknown" style="font-size:12px; padding:3px 8px;">H64</span>
+                <span style="color:var(--text-secondary);">→</span>
+                <select class="select" style="width:180px;">
+                  <option>— Bedeutung wählen —</option>
+                  <option>Geschoß</option>
+                  <option selected>Bauteil</option>
+                  <option>Beschreibung</option>
+                  <option>Ignorieren</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="toolbar" style="margin-top:16px;">
+          <button class="btn btn-primary">💾 Muster speichern</button>
+          <button class="btn btn-secondary">Vorschau testen</button>
+          <span class="toolbar-spacer"></span>
+          <button class="btn btn-ghost">Abbrechen</button>
+        </div>
+      
+    </div>
+
+    <div id="dashboard" class="view">
+        <div class="heading1">📊 Dashboard</div>
+
+        <div class="widget-grid">
+          <!-- Projekte -->
+          <div class="card">
+            <div class="card-title">🏗 Aktive Projekte</div>
+            <div style="margin-bottom:10px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border-subtle);">
+                <span style="color:var(--text-bright);">ÖWG Dobl-Zwaring</span>
+                <span><span class="badge badge-update">5 neue Pläne</span></span>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border-subtle);">
+                <span style="color:var(--text-bright);">WBG Kapfenberg</span>
+                <span class="badge badge-ok">Aktuell</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0;">
+                <span style="color:var(--text-secondary);">Leoben Donawitz</span>
+                <span class="badge badge-ident">Abgeschlossen</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Wetter -->
+          <div class="card">
+            <div class="card-title">🌤 Wetter <span style="font-size:10px; color:var(--text-secondary); font-weight:400;">Online</span></div>
+            <div style="margin-bottom:12px;">
+              <div style="font-size:11px; color:var(--text-secondary); margin-bottom:4px;">Dobl-Zwaring</div>
+              <div class="wetter-row">
+                <span class="wetter-temp">14°</span>
+                <div>
+                  <div class="wetter-detail">☀ Sonnig | Wind <span>12 km/h</span></div>
+                  <div class="wetter-detail">Morgen: 🌧 8°C Regen</div>
+                  <div style="font-size:11px; color:var(--warning); margin-top:2px;">⚠ Kein Betonieren morgen!</div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px; color:var(--text-secondary); margin-bottom:4px;">Kapfenberg</div>
+              <div class="wetter-row">
+                <span style="font-size:20px; font-weight:700; color:var(--text-bright);">11°</span>
+                <div class="wetter-detail">⛅ Bewölkt | Wind <span>8 km/h</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pläne Eingang -->
+          <div class="card widget-full">
+            <div class="card-title">📥 Neue Pläne im Eingang</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border-subtle);">
+              <span>📥 ÖWG Dobl-Zwaring: <strong style="color:var(--text-bright);">5 Dateien</strong> (3 PDF, 2 DWG)</span>
+              <button class="btn btn-primary" style="font-size:11px;">Import starten →</button>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0;">
+              <span>📥 WBG Kapfenberg: <span style="color:var(--text-secondary);">0 Dateien</span></span>
+              <span style="color:var(--text-secondary); font-size:11px;">Alles sortiert</span>
+            </div>
+          </div>
+
+          <!-- Bautagebuch -->
+          <div class="card">
+            <div class="card-title">📋 Bautagebuch heute</div>
+            <div style="padding:4px 0; display:flex; justify-content:space-between; align-items:center;">
+              <span>Dobl-Zwaring</span>
+              <span class="badge badge-error">Noch offen</span>
+            </div>
+            <div style="padding:4px 0; display:flex; justify-content:space-between; align-items:center;">
+              <span>Kapfenberg</span>
+              <span class="badge badge-ok">✅ Fertig</span>
+            </div>
+          </div>
+
+          <!-- Schnellzugriff -->
+          <div class="card">
+            <div class="card-title">⚡ Schnellzugriff</div>
+            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+              <button class="btn btn-secondary" style="font-size:11px;">📂 01 Planunterlagen</button>
+              <button class="btn btn-secondary" style="font-size:11px;">📂 02 Fotos</button>
+              <button class="btn btn-secondary" style="font-size:11px;">📂 03 LV</button>
+              <button class="btn btn-secondary" style="font-size:11px;">📂 04 Protokolle</button>
+              <button class="btn btn-secondary" style="font-size:11px;">📂 05 Regiebericht</button>
+            </div>
+          </div>
+        </div>
+      
+    </div>
+
+    <div id="zeit" class="view">
+        <div class="heading1">⏱ Zeiterfassung</div>
+
+        <div class="toolbar">
+          <span class="label" style="display:inline; margin:0;">Baustelle:</span>
+          <select class="select" style="width:220px; font-weight:600;">
+            <option selected>ÖWG Dobl-Zwaring</option>
+            <option>WBG Kapfenberg</option>
+            <option>Büro / Werkstatt</option>
+          </select>
+          <span style="color:var(--border);">│</span>
+          <span class="label" style="display:inline; margin:0;">KW:</span>
+          <button class="btn btn-secondary" style="font-size:11px;">◀</button>
+          <span style="color:var(--text-bright); font-weight:600; font-size:13px;">KW 13 / 2026</span>
+          <button class="btn btn-secondary" style="font-size:11px;">▶</button>
+          <span style="font-size:11px; color:var(--text-secondary);">(24.03. – 29.03.)</span>
+          <span class="toolbar-spacer"></span>
+          <button class="btn btn-secondary" style="font-size:11px;">📋 Vorwoche übernehmen</button>
+          <button class="btn btn-primary" style="font-size:11px;">+ Mitarbeiter</button>
+        </div>
+
+        <!-- Wochentabelle -->
+        <div style="overflow-x:auto;">
+          <table class="tbl" style="min-width:780px;">
+            <thead>
+              <tr>
+                <th style="width:30px;"></th>
+                <th style="width:160px;">Mitarbeiter</th>
+                <th style="width:90px;">Funktion</th>
+                <th style="text-align:center; width:60px;">Mo<br><span style="font-weight:400; font-size:9px; text-transform:none;">24.03.</span></th>
+                <th style="text-align:center; width:60px;">Di<br><span style="font-weight:400; font-size:9px; text-transform:none;">25.03.</span></th>
+                <th style="text-align:center; width:60px;">Mi<br><span style="font-weight:400; font-size:9px; text-transform:none;">26.03.</span></th>
+                <th style="text-align:center; width:60px;">Do<br><span style="font-weight:400; font-size:9px; text-transform:none;">27.03.</span></th>
+                <th style="text-align:center; width:60px;">Fr<br><span style="font-weight:400; font-size:9px; text-transform:none;">28.03.</span></th>
+                <th style="text-align:center; width:60px;">Sa<br><span style="font-weight:400; font-size:9px; text-transform:none;">29.03.</span></th>
+                <th style="text-align:center; width:60px; color:var(--accent);"><strong>Σ</strong></th>
+                <th style="width:30px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Polier -->
+              <tr style="background:rgba(0,120,212,0.05);">
+                <td style="color:var(--text-secondary); font-size:10px;">▸</td>
+                <td><strong style="color:var(--text-bright);">Schrotter Herbert</strong></td>
+                <td><span class="badge badge-new" style="font-size:9px;">POLIER</span></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="7.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="" style="width:44px; text-align:center; font-size:12px; padding:3px; color:var(--text-secondary);" placeholder="—"></td>
+                <td style="text-align:center; color:var(--accent); font-weight:700;">39.0</td>
+                <td></td>
+              </tr>
+              <!-- Vorarbeiter -->
+              <tr>
+                <td style="color:var(--text-secondary); font-size:10px;">▸</td>
+                <td><strong style="color:var(--text-bright);">Müller Josef</strong></td>
+                <td><span style="font-size:10px; color:var(--warning);">VORARBEITER</span></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="7.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="5.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center; color:var(--accent); font-weight:700;">44.0</td>
+                <td><button class="btn btn-ghost" style="font-size:10px; color:var(--error); padding:2px;">✕</button></td>
+              </tr>
+              <!-- Maurer 1 -->
+              <tr>
+                <td style="color:var(--text-secondary); font-size:10px;">▸</td>
+                <td>Steiner Thomas</td>
+                <td><span style="font-size:10px; color:var(--text-secondary);">MAURER</span></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="7.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="" style="width:44px; text-align:center; font-size:12px; padding:3px;" placeholder="—"></td>
+                <td style="text-align:center; color:var(--accent); font-weight:700;">39.0</td>
+                <td><button class="btn btn-ghost" style="font-size:10px; color:var(--error); padding:2px;">✕</button></td>
+              </tr>
+              <!-- Maurer 2 -->
+              <tr>
+                <td style="color:var(--text-secondary); font-size:10px;">▸</td>
+                <td>Berger Franz</td>
+                <td><span style="font-size:10px; color:var(--text-secondary);">MAURER</span></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="7.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="" style="width:44px; text-align:center; font-size:12px; padding:3px;" placeholder="—"></td>
+                <td style="text-align:center; color:var(--accent); font-weight:700;">39.0</td>
+                <td><button class="btn btn-ghost" style="font-size:10px; color:var(--error); padding:2px;">✕</button></td>
+              </tr>
+              <!-- Hilfsarbeiter -->
+              <tr>
+                <td style="color:var(--text-secondary); font-size:10px;">▸</td>
+                <td>Kovacs Andras</td>
+                <td><span style="font-size:10px; color:var(--text-secondary);">HILFSARB.</span></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="8.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="7.0" style="width:44px; text-align:center; font-size:12px; padding:3px;"></td>
+                <td style="text-align:center;"><input type="text" class="input" value="" style="width:44px; text-align:center; font-size:12px; padding:3px;" placeholder="—"></td>
+                <td style="text-align:center; color:var(--accent); font-weight:700;">39.0</td>
+                <td><button class="btn btn-ghost" style="font-size:10px; color:var(--error); padding:2px;">✕</button></td>
+              </tr>
+              <!-- Abwesend -->
+              <tr style="opacity:0.5;">
+                <td style="color:var(--text-secondary); font-size:10px;">▸</td>
+                <td>Hofer Martin</td>
+                <td><span style="font-size:10px; color:var(--text-secondary);">MAURER</span></td>
+                <td colspan="6" style="text-align:center; color:var(--warning); font-size:11px;">
+                  <span class="badge badge-update">URLAUB 24.03. – 28.03.</span>
+                </td>
+                <td style="text-align:center; color:var(--text-secondary);">0.0</td>
+                <td><button class="btn btn-ghost" style="font-size:10px; color:var(--error); padding:2px;">✕</button></td>
+              </tr>
+              <!-- Summenzeile -->
+              <tr style="background:var(--bg-elevated); font-weight:600;">
+                <td></td>
+                <td style="color:var(--accent);">Σ Tagessumme</td>
+                <td style="color:var(--text-secondary); font-size:10px;">5 Pers.</td>
+                <td style="text-align:center; color:var(--text-bright);">40.0</td>
+                <td style="text-align:center; color:var(--text-bright);">40.0</td>
+                <td style="text-align:center; color:var(--text-bright);">40.0</td>
+                <td style="text-align:center; color:var(--text-bright);">40.0</td>
+                <td style="text-align:center; color:var(--text-bright);">35.0</td>
+                <td style="text-align:center; color:var(--text-bright);">5.0</td>
+                <td style="text-align:center; color:var(--accent); font-weight:700; font-size:14px;">200.0</td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Info + Actions -->
+        <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div style="font-size:12px; color:var(--text-secondary);">
+            6 Mitarbeiter | 5 aktiv, 1 Urlaub | Sortiert nach: <span style="color:var(--accent);">Funktion</span>
+            <button class="btn btn-ghost" style="font-size:10px; margin-left:4px;">↕ Sortierung</button>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-primary">💾 Speichern → Excel</button>
+            <button class="btn btn-secondary">📋 Abwesenheiten</button>
+          </div>
+        </div>
+
+        <!-- Abwesenheits-Legende -->
+        <div style="margin-top:12px; padding:8px 12px; background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius); font-size:11px; color:var(--text-secondary);">
+          Zellen-Eingabe: <strong style="color:var(--text-primary);">Stunden</strong> (z.B. 8, 7.5) | <strong style="color:var(--warning);">U</strong> = Urlaub | <strong style="color:var(--error);">K</strong> = Krank | <strong style="color:var(--info);">F</strong> = Feiertag | <strong style="color:var(--text-primary);">ZA</strong> = Zeitausgleich | <strong style="color:var(--text-secondary);">SW</strong> = Schlechtwetter
+        </div>
+      
+    </div>
+
+    <div id="btb" class="view">
+        <!-- Header -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <div class="heading1" style="margin-bottom:0;">📋 Bautagebuch</div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-secondary">◀</button>
+            <button class="btn btn-secondary">▶</button>
+            <button class="btn btn-secondary">📅</button>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:12px; align-items:center; margin-bottom:16px; flex-wrap:wrap;">
+          <select class="select">
+            <option>ÖWG Dobl-Zwaring (202512)</option>
+            <option>WBG Kapfenberg (202601)</option>
+          </select>
+          <div style="background:var(--bg-surface); border:1px solid var(--border); border-radius:4px; padding:4px 12px; font-size:13px;">
+            <span style="color:var(--text-secondary);">Datum:</span> <strong style="color:var(--text-bright);">27.03.2026</strong>
+          </div>
+          <div style="background:var(--bg-surface); border:1px solid var(--accent); border-radius:4px; padding:4px 12px; font-size:13px;">
+            <span style="color:var(--accent);">Bericht Nr.</span> <strong style="color:var(--text-bright);">001</strong>
+          </div>
+          <span class="toolbar-spacer"></span>
+          <select class="select" style="width:220px;">
+            <option>📄 Vorlage: Standard Bautagebuch</option>
+            <option>📄 Vorlage: ÖWG Bautagesbericht</option>
+            <option>📄 Vorlage: Eigene v2</option>
+          </select>
+        </div>
+
+        <!-- Wetter (auto, kompakt) -->
+        <div class="card" style="border-left:3px solid var(--info); padding:10px 16px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <span style="font-size:12px; color:var(--text-secondary);">🌤 Wetter (auto):</span>
+            <span style="color:var(--text-bright);">☀ 14°C Sonnig | Wind 12 km/h | 0mm</span>
+          </div>
+          <button class="btn btn-ghost" style="font-size:11px;">✏</button>
+        </div>
+
+        <!-- Personal (auto, kompakt) -->
+        <div class="card" style="padding:10px 16px; margin-top:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:12px; color:var(--text-secondary);">👷 Personal (aus Zeiterfassung): <span style="color:var(--text-bright);">8 Personen, 3 Firmen, 62.5 Std</span></span>
+            <button class="btn btn-ghost" style="font-size:11px;">Details ▾</button>
+          </div>
+        </div>
+
+        <!-- ═══ PUNKTE ═══ -->
+        <div class="heading2" style="margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
+          <span>Berichtspunkte</span>
+          <button class="btn btn-primary" style="font-size:11px;">+ Neuer Punkt</button>
+        </div>
+
+        <!-- PUNKT 001/001 -->
+        <div class="card" style="border-left:3px solid var(--accent); margin-top:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700; color:var(--accent); background:var(--bg-active); padding:3px 10px; border-radius:4px;">001/001</span>
+              <select class="select" style="width:140px; font-size:11px;"><option>Haus 64</option><option>Haus 66</option></select>
+              <select class="select" style="width:100px; font-size:11px;"><option>KG</option><option selected>EG</option><option>OG1</option></select>
+            </div>
+            <div style="display:flex; gap:4px;">
+              <button class="btn btn-ghost" style="font-size:11px;">▲</button>
+              <button class="btn btn-ghost" style="font-size:11px;">▼</button>
+              <button class="btn btn-ghost" style="font-size:11px; color:var(--error);">✕</button>
+            </div>
+          </div>
+          <div style="background:var(--bg-input); padding:8px; border-radius:4px; font-size:13px; color:var(--text-primary); min-height:36px; margin-bottom:8px;">
+            Betonage Decke über EG Haus 64. Bewehrungsabnahme durch Statiker Ing. Tschom. C25/30 XC2, 18m³ Beton Graz.
+          </div>
+          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+            <div style="display:flex; gap:4px;">
+              <div class="foto-thumb" style="width:48px; height:48px; font-size:16px;">📷</div>
+              <div class="foto-thumb" style="width:48px; height:48px; font-size:16px;">📷</div>
+              <div class="foto-thumb" style="width:48px; height:48px; font-size:16px;">📷</div>
+              <div class="foto-thumb" style="width:48px; height:48px; font-size:12px; color:var(--accent); cursor:pointer;">+</div>
+            </div>
+            <div style="font-size:11px; color:var(--text-secondary); border-left:1px solid var(--border); padding-left:12px;">
+              📈 Planstand: <span style="color:var(--success);">S-103 Index D</span> <span style="color:var(--text-secondary);">(gültig ab 25.03.2026)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- PUNKT 001/002 -->
+        <div class="card" style="border-left:3px solid var(--accent); margin-top:4px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700; color:var(--accent); background:var(--bg-active); padding:3px 10px; border-radius:4px;">001/002</span>
+              <select class="select" style="width:140px; font-size:11px;"><option selected>Haus 64</option></select>
+              <select class="select" style="width:100px; font-size:11px;"><option>KG</option><option selected>EG</option></select>
+            </div>
+            <div style="display:flex; gap:4px;">
+              <button class="btn btn-ghost" style="font-size:11px;">▲</button>
+              <button class="btn btn-ghost" style="font-size:11px;">▼</button>
+              <button class="btn btn-ghost" style="font-size:11px; color:var(--error);">✕</button>
+            </div>
+          </div>
+          <div style="background:var(--bg-input); padding:8px; border-radius:4px; font-size:13px; color:var(--text-primary); min-height:36px; margin-bottom:8px;">
+            Elektroinstallation Rohre EG verlegt. Dosen gesetzt für Steckdosen und Schalter. Abstimmung mit E-Planer.
+          </div>
+          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+            <div style="display:flex; gap:4px;">
+              <div class="foto-thumb" style="width:48px; height:48px; font-size:16px;">📷</div>
+              <div class="foto-thumb" style="width:48px; height:48px; font-size:12px; color:var(--accent); cursor:pointer;">+</div>
+            </div>
+            <div style="font-size:11px; color:var(--text-secondary); border-left:1px solid var(--border); padding-left:12px;">
+              📈 Planstand: <span style="color:var(--success);">E-201 Index C</span> <span style="color:var(--text-secondary);">(gültig ab 22.03.2026)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- PUNKT 001/003 (Vorkommnis) -->
+        <div class="card" style="border-left:3px solid var(--warning); margin-top:4px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700; color:var(--warning); background:rgba(240,173,78,0.1); padding:3px 10px; border-radius:4px;">001/003</span>
+              <select class="select" style="width:140px; font-size:11px;"><option selected>Haus 64</option></select>
+              <select class="select" style="width:100px; font-size:11px;"><option selected>EG</option></select>
+              <span class="badge badge-update" style="font-size:10px;">⚠ VORKOMMNIS</span>
+            </div>
+            <div style="display:flex; gap:4px;">
+              <button class="btn btn-ghost" style="font-size:11px;">▲</button>
+              <button class="btn btn-ghost" style="font-size:11px;">▼</button>
+              <button class="btn btn-ghost" style="font-size:11px; color:var(--error);">✕</button>
+            </div>
+          </div>
+          <div style="background:var(--bg-input); padding:8px; border-radius:4px; font-size:13px; color:var(--text-primary); min-height:36px;">
+            Lieferverzögerung Bewehrungsstahl BSt 550 — 2 Stunden Wartezeit. Lieferwerk: Marienhütte Graz. Behinderungsanzeige dokumentiert.
+          </div>
+        </div>
+
+        <!-- PUNKT 001/004 -->
+        <div class="card" style="border-left:3px solid var(--accent); margin-top:4px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700; color:var(--accent); background:var(--bg-active); padding:3px 10px; border-radius:4px;">001/004</span>
+              <select class="select" style="width:140px; font-size:11px;"><option>Haus 64</option><option selected>Haus 66</option></select>
+              <select class="select" style="width:100px; font-size:11px;"><option>KG</option><option selected>EG</option></select>
+            </div>
+            <div style="display:flex; gap:4px;">
+              <button class="btn btn-ghost" style="font-size:11px;">▲</button>
+              <button class="btn btn-ghost" style="font-size:11px;">▼</button>
+              <button class="btn btn-ghost" style="font-size:11px; color:var(--error);">✕</button>
+            </div>
+          </div>
+          <div style="background:var(--bg-input); padding:8px; border-radius:4px; font-size:13px; color:var(--text-primary); min-height:36px; margin-bottom:8px;">
+            Schalung Kellerwand Achse A–C aufgestellt. Aussparungen laut Plan kontrolliert.
+          </div>
+          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+            <div style="display:flex; gap:4px;">
+              <div class="foto-thumb" style="width:48px; height:48px; font-size:16px;">📷</div>
+              <div class="foto-thumb" style="width:48px; height:48px; font-size:16px;">📷</div>
+              <div class="foto-thumb" style="width:48px; height:48px; font-size:12px; color:var(--accent); cursor:pointer;">+</div>
+            </div>
+            <div style="font-size:11px; color:var(--text-secondary); border-left:1px solid var(--border); padding-left:12px;">
+              📈 Planstand: <span style="color:var(--success);">S-113 Index A</span> <span style="color:var(--text-secondary);">(gültig ab 27.03.2026 — heute neu!)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Zusammenfassung -->
+        <div style="margin-top:16px; padding:10px 16px; background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius); font-size:12px; display:flex; justify-content:space-between; align-items:center;">
+          <span style="color:var(--text-secondary);">Bericht <strong style="color:var(--text-bright);">001</strong> | 4 Punkte | 6 Fotos | 2 Bauteile | 3 Planstände referenziert</span>
+          <span class="badge badge-error">Entwurf</span>
+        </div>
+
+        <!-- Actions -->
+        <div class="toolbar" style="margin-top:12px;">
+          <button class="btn btn-primary">💾 Speichern</button>
+          <button class="btn btn-success">✅ Abschließen</button>
+          <button class="btn btn-secondary">📄 Export → Vorlage</button>
+          <button class="btn btn-secondary">📄 Export → PDF</button>
+          <span class="toolbar-spacer"></span>
+          <button class="btn btn-ghost">Punkte aus Vortag übernehmen</button>
+        </div>
+      
+    </div>
+
+    <div id="foto" class="view">
+        <div class="heading1">📸 Fotos — ÖWG Dobl-Zwaring</div>
+
+        <div class="toolbar">
+          <span class="label" style="display:inline; margin:0;">Filter:</span>
+          <select class="select"><option>Alle Geschoße</option><option>KG</option><option selected>EG</option><option>OG1</option></select>
+          <select class="select"><option>Alle Tags</option><option>Schalung</option><option selected>Bewehrung</option><option>Betonage</option><option>Mangel</option></select>
+          <select class="select"><option>Alle Zeiträume</option><option>Heute</option><option selected>Diese Woche</option><option>Diesen Monat</option></select>
+          <span class="toolbar-spacer"></span>
+          <span style="font-size:12px; color:var(--text-secondary);">24 Fotos | 6 für Baubericht ausgewählt</span>
+        </div>
+
+        <div class="tabs">
+          <button class="tab active">🖼 Raster</button>
+          <button class="tab">📋 Liste</button>
+          <button class="tab">📄 Baubericht (6)</button>
+        </div>
+
+        <div class="foto-grid" style="grid-template-columns:repeat(auto-fill, minmax(120px, 1fr));">
+          <div class="foto-thumb" style="border-color:var(--accent);">📷<span class="foto-tag">Bewehrung</span><span class="foto-time">09:14</span><div style="position:absolute;top:4px;right:4px;width:14px;height:14px;background:var(--accent);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;">✓</div></div>
+          <div class="foto-thumb" style="border-color:var(--accent);">📷<span class="foto-tag">Bewehrung</span><span class="foto-time">09:22</span><div style="position:absolute;top:4px;right:4px;width:14px;height:14px;background:var(--accent);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;">✓</div></div>
+          <div class="foto-thumb">📷<span class="foto-tag">Bewehrung</span><span class="foto-time">10:05</span></div>
+          <div class="foto-thumb" style="border-color:var(--accent);">📷<span class="foto-tag">Bewehrung</span><span class="foto-time">10:42</span><div style="position:absolute;top:4px;right:4px;width:14px;height:14px;background:var(--accent);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;">✓</div></div>
+          <div class="foto-thumb">📷<span class="foto-time">11:15</span></div>
+          <div class="foto-thumb">📷<span class="foto-time">13:07</span></div>
+          <div class="foto-thumb" style="border-color:var(--accent);">📷<span class="foto-tag">Bewehrung</span><span class="foto-time">13:30</span><div style="position:absolute;top:4px;right:4px;width:14px;height:14px;background:var(--accent);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;">✓</div></div>
+          <div class="foto-thumb">📷<span class="foto-time">14:18</span></div>
+          <div class="foto-thumb" style="border-color:var(--accent);">📷<span class="foto-tag">Bewehrung</span><span class="foto-time">15:02</span><div style="position:absolute;top:4px;right:4px;width:14px;height:14px;background:var(--accent);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;">✓</div></div>
+          <div class="foto-thumb" style="border-color:var(--accent);">📷<span class="foto-tag">Bewehrung</span><span class="foto-time">15:31</span><div style="position:absolute;top:4px;right:4px;width:14px;height:14px;background:var(--accent);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;">✓</div></div>
+          <div class="foto-thumb">📷<span class="foto-time">16:05</span></div>
+          <div class="foto-thumb">📷<span class="foto-time">16:44</span></div>
+        </div>
+
+        <div class="toolbar" style="margin-top:16px;">
+          <button class="btn btn-primary">📸 Fotos importieren</button>
+          <button class="btn btn-secondary">🏷 Tags bearbeiten</button>
+          <span class="toolbar-spacer"></span>
+          <button class="btn btn-secondary">📄 Baubericht exportieren (6 Fotos)</button>
+        </div>
+      
+    </div>
+
+    <div id="ap" class="view">
+        <div class="heading1">📊 Arbeitspakete — ÖWG Dobl / Haus 5</div>
+        <div class="toolbar">
+          <select class="select"><option selected>Haus 5</option><option>Haus 6</option><option>Alle Bauteile</option></select>
+          <span class="toolbar-spacer"></span>
+          <button class="btn btn-secondary">📥 Import: Ziegel-Excel</button>
+          <button class="btn btn-secondary">📥 Import: LV</button>
+          <button class="btn btn-primary">+ Manuell hinzufügen</button>
+        </div>
+
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Geschoß</th>
+              <th>Tätigkeit</th>
+              <th style="text-align:right">Soll</th>
+              <th>EH</th>
+              <th>Quelle</th>
+              <th>Status</th>
+              <th style="text-align:right">Ist-Ah</th>
+              <th style="text-align:right">Leistung</th>
+              <th>Fortschritt</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>EG</td>
+              <td style="color:var(--text-bright);">Mauerwerk 38er</td>
+              <td style="text-align:right">198</td>
+              <td>m²</td>
+              <td style="font-size:10px; color:var(--text-secondary);">Ziegel-Excel</td>
+              <td><span class="badge badge-ok">✅ Fertig</span></td>
+              <td style="text-align:right; color:var(--text-bright);">123</td>
+              <td style="text-align:right; color:var(--success); font-weight:600;">1,61 m²/Ah</td>
+              <td><div class="progress-bar"><div class="progress-fill" style="width:100%; background:var(--success);"></div></div></td>
+            </tr>
+            <tr>
+              <td>EG</td>
+              <td style="color:var(--text-bright);">Betonwand komplett</td>
+              <td style="text-align:right">85</td>
+              <td>m² Sch</td>
+              <td style="font-size:10px; color:var(--text-secondary);">DokaCad</td>
+              <td><span class="badge badge-ok">✅ Fertig</span></td>
+              <td style="text-align:right; color:var(--text-bright);">128</td>
+              <td style="text-align:right; color:var(--success); font-weight:600;">0,66 m²/Ah</td>
+              <td><div class="progress-bar"><div class="progress-fill" style="width:100%; background:var(--success);"></div></div></td>
+            </tr>
+            <tr>
+              <td>EG</td>
+              <td style="color:var(--text-bright);">Decke Schalung</td>
+              <td style="text-align:right">170</td>
+              <td>m²</td>
+              <td style="font-size:10px; color:var(--text-secondary);">DokaCad</td>
+              <td><span class="badge badge-new">🔵 In Arbeit</span></td>
+              <td style="text-align:right; color:var(--text-bright);">64</td>
+              <td style="text-align:right; color:var(--text-secondary);">—</td>
+              <td><div class="progress-bar"><div class="progress-fill" style="width:55%; background:var(--info);"></div></div></td>
+            </tr>
+            <tr>
+              <td>EG</td>
+              <td>Decke Bewehrung</td>
+              <td style="text-align:right">6,4</td>
+              <td>to</td>
+              <td style="font-size:10px; color:var(--text-secondary);">Statiker</td>
+              <td><span class="badge badge-ident">⬜ Offen</span></td>
+              <td style="text-align:right; color:var(--text-secondary);">—</td>
+              <td style="text-align:right; color:var(--text-secondary);">—</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>EG</td>
+              <td>Decke Betonieren</td>
+              <td style="text-align:right">34</td>
+              <td>m³</td>
+              <td style="font-size:10px; color:var(--text-secondary);">Beton-Excel</td>
+              <td><span class="badge badge-ident">⬜ Offen</span></td>
+              <td style="text-align:right; color:var(--text-secondary);">—</td>
+              <td style="text-align:right; color:var(--text-secondary);">—</td>
+              <td></td>
+            </tr>
+            <tr style="border-top:2px solid var(--border);">
+              <td>1.OG</td>
+              <td>Mauerwerk 38er</td>
+              <td style="text-align:right">185</td>
+              <td>m²</td>
+              <td style="font-size:10px; color:var(--text-secondary);">Ziegel-Excel</td>
+              <td><span class="badge badge-ident">⬜ Offen</span></td>
+              <td style="text-align:right; color:var(--text-secondary);">—</td>
+              <td style="text-align:right; color:var(--text-secondary);">—</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>1.OG</td>
+              <td>Betonwand komplett</td>
+              <td style="text-align:right">72</td>
+              <td>m² Sch</td>
+              <td style="font-size:10px; color:var(--text-secondary);">DokaCad</td>
+              <td><span class="badge badge-ident">⬜ Offen</span></td>
+              <td style="text-align:right; color:var(--text-secondary);">—</td>
+              <td style="text-align:right; color:var(--text-secondary);">—</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="margin-top:12px; font-size:12px; color:var(--text-secondary); display:flex; justify-content:space-between;">
+          <span>7 Pakete | 2 fertig, 1 in Arbeit, 4 offen</span>
+          <span>Gesamt-Ah fertig: <strong style="color:var(--text-bright);">251 Ah</strong></span>
+        </div>
+      
+    </div>
+
+    <div id="einteilung" class="view">
+        <div class="heading1">📋 Arbeitseinteilung — Mi, 27.03.2026</div>
+        <div class="toolbar">
+          <select class="select"><option selected>ÖWG Dobl-Zwaring</option></select>
+          <span style="color:var(--border);">│</span>
+          <button class="btn btn-secondary" style="font-size:11px;">◀</button>
+          <span style="color:var(--text-bright); font-weight:600;">Mi 27.03.</span>
+          <button class="btn btn-secondary" style="font-size:11px;">▶</button>
+          <span class="toolbar-spacer"></span>
+          <button class="btn btn-secondary">📋 Vom Vortag</button>
+        </div>
+
+        <div class="assign-grid">
+          <table>
+            <thead>
+              <tr>
+                <th class="name-cell">Mitarbeiter</th>
+                <th class="role-cell">Funkt.</th>
+                <th class="col-activity"><span class="col-activity-color" style="background:var(--success);"></span>Mauerw. 38er EG</th>
+                <th class="col-activity"><span class="col-activity-color" style="background:var(--info);"></span>Decke Schalung EG</th>
+                <th class="col-activity"><span class="col-activity-color" style="background:var(--warning);"></span>Attika H5</th>
+                <th class="col-activity"><span class="col-activity-color" style="background:#22d3ee;"></span>SW Kanal</th>
+                <th style="text-align:center; min-width:40px;">Std</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="name-cell"><strong>Schrotter H.</strong></td>
+                <td class="role-cell" style="color:var(--accent);">POL</td>
+                <td class="assign-empty"></td>
+                <td class="assign-empty"></td>
+                <td class="assign-empty"></td>
+                <td class="assign-empty"></td>
+                <td style="text-align:center; color:var(--text-bright);">8</td>
+              </tr>
+              <tr>
+                <td class="name-cell"><strong>Müller J.</strong></td>
+                <td class="role-cell" style="color:var(--warning);">VA</td>
+                <td class="assign-x">×</td>
+                <td class="assign-empty"></td>
+                <td class="assign-empty"></td>
+                <td class="assign-empty"></td>
+                <td style="text-align:center; color:var(--text-bright);">8</td>
+              </tr>
+              <tr>
+                <td class="name-cell">Steiner T.</td>
+                <td class="role-cell">MA</td>
+                <td class="assign-x">×</td>
+                <td class="assign-empty"></td>
+                <td class="assign-empty"></td>
+                <td class="assign-empty"></td>
+                <td style="text-align:center; color:var(--text-bright);">8</td>
+              </tr>
+              <tr>
+                <td class="name-cell">Berger F.</td>
+                <td class="role-cell">MA</td>
+                <td class="assign-empty"></td>
+                <td class="assign-x">×</td>
+                <td class="assign-empty"></td>
+                <td class="assign-empty"></td>
+                <td style="text-align:center; color:var(--text-bright);">8</td>
+              </tr>
+              <tr>
+                <td class="name-cell">Kovacs A.</td>
+                <td class="role-cell">HA</td>
+                <td class="assign-empty"></td>
+                <td class="assign-x">×</td>
+                <td class="assign-empty"></td>
+                <td class="assign-empty"></td>
+                <td style="text-align:center; color:var(--text-bright);">8</td>
+              </tr>
+              <tr>
+                <td class="name-cell">Dula A.</td>
+                <td class="role-cell">MA</td>
+                <td class="assign-empty"></td>
+                <td class="assign-x">×</td>
+                <td class="assign-x">×</td>
+                <td class="assign-empty"></td>
+                <td style="text-align:center; color:var(--text-bright);">8</td>
+              </tr>
+              <tr>
+                <td class="name-cell">Sostaric M.</td>
+                <td class="role-cell">MA</td>
+                <td class="assign-empty"></td>
+                <td class="assign-empty"></td>
+                <td class="assign-empty"></td>
+                <td class="assign-x">×</td>
+                <td style="text-align:center; color:var(--text-bright);">8</td>
+              </tr>
+              <tr style="opacity:0.4;">
+                <td class="name-cell" style="text-decoration:line-through;">Hofer M.</td>
+                <td class="role-cell">MA</td>
+                <td class="assign-absent" colspan="4">U — Urlaub</td>
+                <td style="text-align:center; color:var(--text-secondary);">—</td>
+              </tr>
+              <!-- Summenzeile -->
+              <tr style="background:var(--bg-elevated); font-weight:600;">
+                <td class="name-cell" style="color:var(--accent);">Σ Leute / Ah</td>
+                <td></td>
+                <td style="text-align:center; color:var(--text-bright);">2 / 16</td>
+                <td style="text-align:center; color:var(--text-bright);">3 / 24</td>
+                <td style="text-align:center; color:var(--text-bright);">1 / 8</td>
+                <td style="text-align:center; color:var(--text-bright);">1 / 8</td>
+                <td style="text-align:center; color:var(--accent); font-weight:700;">56</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:12px; font-size:12px; color:var(--text-secondary);">
+          7 anwesend, 1 Urlaub | 4 Arbeitspakete aktiv | <span style="color:var(--success);">→ fließt automatisch in Nachkalkulation + Bautagebuch</span>
+        </div>
+      
+    </div>
+
+    <div id="fertig" class="view">
+      <div style="display:flex; align-items:center; justify-content:center;">
+        <div class="dialog-overlay">
+          <div class="dialog-title">✅ Arbeitspaket abschließen</div>
+
+          <div class="dialog-row">
+            <span style="color:var(--text-secondary);">Paket:</span>
+            <span style="color:var(--text-bright); font-weight:600;">Mauerwerk 38er — H5 / EG</span>
+          </div>
+          <div class="dialog-row">
+            <span style="color:var(--text-secondary);">Soll-Menge:</span>
+            <span>198 m² <span style="font-size:10px; color:var(--text-secondary);">(Ziegelberechnung)</span></span>
+          </div>
+          <div class="dialog-row">
+            <span style="color:var(--text-secondary);">Ist-Menge:</span>
+            <span><input type="text" class="input" value="198" style="width:60px; text-align:center;"> m² <span style="font-size:10px; color:var(--text-secondary);">← bestätigen oder korrigieren</span></span>
+          </div>
+          <div class="dialog-row">
+            <span style="color:var(--text-secondary);">Zeitraum:</span>
+            <span>11.03. — 14.03.2026 <span style="font-size:10px; color:var(--text-secondary);">(4 Tage)</span></span>
+          </div>
+          <div class="dialog-row">
+            <span style="color:var(--text-secondary);">Arbeitsstunden:</span>
+            <span style="color:var(--text-bright); font-weight:600;">123 Ah <span style="font-size:10px; color:var(--text-secondary);">automatisch aus Einteilung</span></span>
+          </div>
+
+          <div class="dialog-result">
+            <div style="font-size:14px; color:var(--text-bright); font-weight:600; margin-bottom:6px;">Ergebnis:</div>
+            <div style="display:flex; justify-content:space-between; font-size:16px;">
+              <span>198 m² ÷ 123 Ah =</span>
+              <span style="color:var(--success); font-weight:700; font-size:20px;">1,61 m²/Ah</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text-secondary); margin-top:4px;">
+              <span>123 Ah ÷ 198 m² =</span>
+              <span style="color:var(--text-primary);">0,62 h/m²</span>
+            </div>
+            <div style="margin-top:8px; font-size:11px; color:var(--text-secondary);">
+              Katalog-Durchschnitt: <span style="color:var(--accent);">0,62 h/m²</span> (12 Messungen) — <span style="color:var(--success);">✓ im Rahmen</span>
+            </div>
+          </div>
+
+          <div style="margin-top:12px;">
+            <span class="label">Bemerkungen:</span>
+            <input type="text" class="input" style="width:100%;" placeholder="z.B. Hanglage, Lehrling dabei, Sichtmauerwerk...">
+          </div>
+
+          <div style="margin-top:16px; display:flex; gap:8px; justify-content:flex-end;">
+            <button class="btn btn-ghost">Abbrechen</button>
+            <button class="btn btn-success">✅ Abschließen &amp; in Katalog übernehmen</button>
+          </div>
+        </div>
+      
+      </div>
+
+    </div>
+
+    <div id="katalog" class="view">
+        <div class="heading1">📚 Erfahrungskatalog</div>
+        <div class="toolbar">
+          <span style="font-size:12px; color:var(--text-secondary);">6 Tätigkeiten | 71 Messungen | 5 Projekte</span>
+          <span class="toolbar-spacer"></span>
+          <button class="btn btn-secondary">📥 Aus Excel importieren</button>
+        </div>
+
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Tätigkeit</th>
+              <th>Einheit</th>
+              <th style="text-align:right">Ø</th>
+              <th style="text-align:right">Min</th>
+              <th style="text-align:right">Max</th>
+              <th style="text-align:center">Messungen</th>
+              <th style="text-align:center">Projekte</th>
+              <th>Trend</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="color:var(--text-bright); font-weight:600;">Mauerwerk 38er</td>
+              <td>h/m²</td>
+              <td style="text-align:right; color:var(--success); font-weight:600;">0,62</td>
+              <td style="text-align:right">0,50</td>
+              <td style="text-align:right">0,80</td>
+              <td style="text-align:center">12</td>
+              <td style="text-align:center">3</td>
+              <td style="color:var(--success); font-size:11px;">↗ besser werdend</td>
+            </tr>
+            <tr>
+              <td style="color:var(--text-bright); font-weight:600;">Betonwand komplett</td>
+              <td>h/m² Sch</td>
+              <td style="text-align:right; color:var(--text-bright); font-weight:600;">1,51</td>
+              <td style="text-align:right">1,20</td>
+              <td style="text-align:right">1,80</td>
+              <td style="text-align:center">8</td>
+              <td style="text-align:center">2</td>
+              <td style="color:var(--text-secondary); font-size:11px;">→ stabil</td>
+            </tr>
+            <tr>
+              <td style="color:var(--text-bright);">Schalung Decke</td>
+              <td>h/m²</td>
+              <td style="text-align:right; color:var(--text-bright);">0,38</td>
+              <td style="text-align:right">0,30</td>
+              <td style="text-align:right">0,50</td>
+              <td style="text-align:center">8</td>
+              <td style="text-align:center">2</td>
+              <td style="color:var(--text-secondary); font-size:11px;">→ stabil</td>
+            </tr>
+            <tr>
+              <td style="color:var(--text-bright);">Bewehrung</td>
+              <td>h/to</td>
+              <td style="text-align:right; color:var(--text-bright);">11,5</td>
+              <td style="text-align:right">8,4</td>
+              <td style="text-align:right">15,0</td>
+              <td style="text-align:center">14</td>
+              <td style="text-align:center">4</td>
+              <td style="color:var(--success); font-size:11px;">↗ besser werdend</td>
+            </tr>
+            <tr>
+              <td style="color:var(--text-bright);">Betonieren (Pumpe)</td>
+              <td>h/m³</td>
+              <td style="text-align:right; color:var(--text-bright);">0,24</td>
+              <td style="text-align:right">0,14</td>
+              <td style="text-align:right">0,46</td>
+              <td style="text-align:center">18</td>
+              <td style="text-align:center">5</td>
+              <td style="color:var(--text-secondary); font-size:11px;">→ stabil</td>
+            </tr>
+            <tr>
+              <td>Kellerdeckendämmung</td>
+              <td>h/m²</td>
+              <td style="text-align:right">0,27</td>
+              <td style="text-align:right">0,19</td>
+              <td style="text-align:right">0,58</td>
+              <td style="text-align:center">11</td>
+              <td style="text-align:center">2</td>
+              <td style="color:var(--warning); font-size:11px;">↘ schwankt</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="margin-top:16px; padding:12px; background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius); font-size:12px; color:var(--text-secondary);">
+          💡 Je mehr Arbeitspakete abgeschlossen werden, desto genauer werden die Werte. Diese Daten bilden die Grundlage für die Bauzeitprognose bei neuen Projekten.
+        </div>
+      
+    </div>
+
+    <div id="prognose" class="view">
+        <div class="heading1">🔮 Bauzeitprognose — ÖWG Dobl-Zwaring</div>
+
+        <div class="toolbar">
+          <span class="label" style="display:inline; margin:0;">Kolonne:</span>
+          <input type="text" class="input" value="4" style="width:40px; text-align:center;"> <span style="font-size:12px; color:var(--text-secondary);">FA ×</span>
+          <input type="text" class="input" value="8" style="width:40px; text-align:center;"> <span style="font-size:12px; color:var(--text-secondary);">h/Tag</span>
+          <span style="color:var(--border); margin:0 8px;">│</span>
+          <span class="label" style="display:inline; margin:0;">Erschwernisse:</span>
+          <span style="font-size:12px; background:var(--bg-surface); border:1px solid var(--warning); padding:2px 8px; border-radius:4px; color:var(--warning);">Hanglage ×1,15</span>
+          <button class="btn btn-ghost" style="font-size:11px;">✏ Bearbeiten</button>
+          <span class="toolbar-spacer"></span>
+          <button class="btn btn-secondary">📥 LV importieren</button>
+        </div>
+
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Position</th>
+              <th style="text-align:right">Masse</th>
+              <th>EH</th>
+              <th style="text-align:right">h/EH <span style="font-size:9px; font-weight:400;">(Katalog)</span></th>
+              <th style="text-align:center">Faktor</th>
+              <th style="text-align:right">Ah</th>
+              <th style="text-align:right">Tage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="color:var(--text-bright);">Mauerwerk 38er</td>
+              <td style="text-align:right">850</td>
+              <td>m²</td>
+              <td style="text-align:right; color:var(--accent);">0,62</td>
+              <td style="text-align:center; color:var(--warning);">×1,15</td>
+              <td style="text-align:right; color:var(--text-bright); font-weight:600;">606</td>
+              <td style="text-align:right">19</td>
+            </tr>
+            <tr>
+              <td style="color:var(--text-bright);">Betonwand komplett</td>
+              <td style="text-align:right">420</td>
+              <td>m² Sch</td>
+              <td style="text-align:right; color:var(--accent);">1,51</td>
+              <td style="text-align:center; color:var(--warning);">×1,15</td>
+              <td style="text-align:right; color:var(--text-bright); font-weight:600;">729</td>
+              <td style="text-align:right">23</td>
+            </tr>
+            <tr>
+              <td style="color:var(--text-bright);">Schalung Decke</td>
+              <td style="text-align:right">680</td>
+              <td>m²</td>
+              <td style="text-align:right; color:var(--accent);">0,38</td>
+              <td style="text-align:center; color:var(--warning);">×1,15</td>
+              <td style="text-align:right; color:var(--text-bright); font-weight:600;">297</td>
+              <td style="text-align:right">9</td>
+            </tr>
+            <tr>
+              <td style="color:var(--text-bright);">Bewehrung</td>
+              <td style="text-align:right">45</td>
+              <td>to</td>
+              <td style="text-align:right; color:var(--accent);">11,5</td>
+              <td style="text-align:center; color:var(--text-secondary);">×1,00</td>
+              <td style="text-align:right; color:var(--text-bright); font-weight:600;">518</td>
+              <td style="text-align:right">16</td>
+            </tr>
+            <tr>
+              <td style="color:var(--text-bright);">Betonieren</td>
+              <td style="text-align:right">320</td>
+              <td>m³</td>
+              <td style="text-align:right; color:var(--accent);">0,24</td>
+              <td style="text-align:center; color:var(--text-secondary);">×1,00</td>
+              <td style="text-align:right; color:var(--text-bright); font-weight:600;">77</td>
+              <td style="text-align:right">2</td>
+            </tr>
+            <!-- Summe -->
+            <tr style="background:var(--bg-elevated); font-weight:700;">
+              <td style="color:var(--accent);">Gesamt</td>
+              <td></td><td></td><td></td><td></td>
+              <td style="text-align:right; color:var(--text-bright); font-size:14px;">2.227</td>
+              <td style="text-align:right; color:var(--text-bright); font-size:14px;">~70</td>
+            </tr>
+            <tr style="background:var(--bg-elevated);">
+              <td style="color:var(--text-secondary);">+ 10% Puffer</td>
+              <td></td><td></td><td></td><td></td>
+              <td></td>
+              <td style="text-align:right; color:var(--warning); font-weight:600;">~77 Tage</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="margin-top:16px; padding:16px; background:var(--bg-surface); border:1px solid var(--accent); border-radius:var(--radius); display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:16px; color:var(--text-bright); font-weight:700;">Geschätzte Rohbauzeit: ~15 Wochen</div>
+            <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">Bei 4 FA × 8h/Tag, Hanglage-Faktor 1,15, 10% Puffer</div>
+            <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">Basierend auf 71 Messungen aus 5 Projekten</div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-secondary">📄 PDF Export</button>
+            <button class="btn btn-primary">💾 Speichern</button>
+          </div>
+        </div>
+      
+    </div>
+
+    <div id="beton" class="view">
+        <div class="heading1">🏗 Betonbestellung — ÖWG Dobl</div>
+        <div class="toolbar">
+          <select class="select"><option selected>Alle Bauabschnitte</option><option>Haus 5</option><option>Haus 6</option></select>
+          <span class="toolbar-spacer"></span>
+          <button class="btn btn-primary">+ Neue Bestellung</button>
+          <button class="btn btn-secondary">📤 Per Messenger senden</button>
+        </div>
+
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Datum</th>
+              <th>Bauteil</th>
+              <th>Bauabschnitt</th>
+              <th>Sorte</th>
+              <th style="text-align:right">Bestellt</th>
+              <th style="text-align:right">Geliefert</th>
+              <th>Differenz</th>
+              <th>LS-Nr.</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>25.03.</td>
+              <td style="color:var(--text-bright);">Bodenplatte</td>
+              <td>H5 / KG</td>
+              <td>C25/30 XC2</td>
+              <td style="text-align:right">42 m³</td>
+              <td style="text-align:right; color:var(--text-bright);">42 m³</td>
+              <td><span class="badge badge-ok">±0</span></td>
+              <td style="font-size:11px;">LS-2026-0847</td>
+              <td><span class="badge badge-ok">✅ Geliefert</span></td>
+            </tr>
+            <tr>
+              <td>27.03.</td>
+              <td style="color:var(--text-bright);">Decke über EG</td>
+              <td>H5 / EG</td>
+              <td>C25/30 XC2</td>
+              <td style="text-align:right">34 m³</td>
+              <td style="text-align:right; color:var(--text-bright);">36 m³</td>
+              <td><span class="badge badge-update">+2 m³</span></td>
+              <td style="font-size:11px;">LS-2026-0912</td>
+              <td><span class="badge badge-ok">✅ Geliefert</span></td>
+            </tr>
+            <tr>
+              <td>02.04.</td>
+              <td style="color:var(--text-bright);">Wände 1.OG</td>
+              <td>H5 / 1.OG</td>
+              <td>C25/30 XC1</td>
+              <td style="text-align:right">28 m³</td>
+              <td style="text-align:right; color:var(--text-secondary);">—</td>
+              <td></td>
+              <td></td>
+              <td><span class="badge badge-new">📅 Bestellt</span></td>
+            </tr>
+            <tr>
+              <td>08.04.</td>
+              <td>Decke über 1.OG</td>
+              <td>H5 / 1.OG</td>
+              <td>C25/30 XC2</td>
+              <td style="text-align:right">32 m³</td>
+              <td style="text-align:right; color:var(--text-secondary);">—</td>
+              <td></td>
+              <td></td>
+              <td><span class="badge badge-ident">⏳ Geplant</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Zusammenfassung -->
+        <div style="margin-top:16px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+          <div class="card" style="text-align:center;">
+            <div style="font-size:11px; color:var(--text-secondary);">Bestellt gesamt</div>
+            <div style="font-size:24px; color:var(--text-bright); font-weight:700;">136 m³</div>
+          </div>
+          <div class="card" style="text-align:center;">
+            <div style="font-size:11px; color:var(--text-secondary);">Geliefert</div>
+            <div style="font-size:24px; color:var(--success); font-weight:700;">78 m³</div>
+          </div>
+          <div class="card" style="text-align:center;">
+            <div style="font-size:11px; color:var(--text-secondary);">Offen</div>
+            <div style="font-size:24px; color:var(--warning); font-weight:700;">58 m³</div>
+          </div>
+        </div>
+      
+    </div>
+
+    <div id="ziegel" class="view">
+        <div class="heading1">🧱 Ziegelberechnung — ÖWG Dobl / Haus 5</div>
+        <div class="toolbar">
+          <select class="select"><option selected>Haus 5</option><option>Haus 6</option></select>
+          <span style="color:var(--border);">│</span>
+          <span style="font-size:12px; color:var(--text-secondary);">Wandcode-System: <span style="color:var(--accent);">Wienerberger</span></span>
+          <span class="toolbar-spacer"></span>
+          <button class="btn btn-secondary">📥 Aus AutoCAD importieren</button>
+          <button class="btn btn-primary">+ Wand hinzufügen</button>
+        </div>
+
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Geschoß</th>
+              <th>Wandcode</th>
+              <th>Ziegeltyp</th>
+              <th style="text-align:right">Fläche</th>
+              <th style="text-align:right">Stk/m²</th>
+              <th style="text-align:right">Stk gesamt</th>
+              <th style="text-align:right">Stk/Pal</th>
+              <th style="text-align:right; color:var(--accent);">Paletten</th>
+              <th>Liefertermin</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="color:var(--text-bright); font-weight:600;">EG</td>
+              <td style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--warning);">5-0-0-1</td>
+              <td>Porotherm 38 Plan</td>
+              <td style="text-align:right">198</td>
+              <td style="text-align:right">16</td>
+              <td style="text-align:right">3.168</td>
+              <td style="text-align:right">54</td>
+              <td style="text-align:right; color:var(--accent); font-weight:700;">59</td>
+              <td><input type="text" class="input" value="10.03.2026" style="width:90px; font-size:11px;"></td>
+            </tr>
+            <tr>
+              <td></td>
+              <td style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-secondary);">3-0-0-1</td>
+              <td>Porotherm 25 Plan</td>
+              <td style="text-align:right">42</td>
+              <td style="text-align:right">16</td>
+              <td style="text-align:right">672</td>
+              <td style="text-align:right">72</td>
+              <td style="text-align:right; color:var(--accent); font-weight:700;">10</td>
+              <td><input type="text" class="input" value="10.03.2026" style="width:90px; font-size:11px;"></td>
+            </tr>
+            <tr style="border-top:2px solid var(--border);">
+              <td style="color:var(--text-bright); font-weight:600;">1.OG</td>
+              <td style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--warning);">5-0-0-1</td>
+              <td>Porotherm 38 Plan</td>
+              <td style="text-align:right">185</td>
+              <td style="text-align:right">16</td>
+              <td style="text-align:right">2.960</td>
+              <td style="text-align:right">54</td>
+              <td style="text-align:right; color:var(--accent); font-weight:700;">55</td>
+              <td><input type="text" class="input" value="24.03.2026" style="width:90px; font-size:11px;"></td>
+            </tr>
+            <tr>
+              <td></td>
+              <td style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-secondary);">3-0-0-1</td>
+              <td>Porotherm 25 Plan</td>
+              <td style="text-align:right">38</td>
+              <td style="text-align:right">16</td>
+              <td style="text-align:right">608</td>
+              <td style="text-align:right">72</td>
+              <td style="text-align:right; color:var(--accent); font-weight:700;">9</td>
+              <td><input type="text" class="input" value="24.03.2026" style="width:90px; font-size:11px;"></td>
+            </tr>
+            <!-- Summe -->
+            <tr style="background:var(--bg-elevated); font-weight:700;">
+              <td style="color:var(--accent);">Σ Haus 5</td>
+              <td></td><td></td>
+              <td style="text-align:right; color:var(--text-bright);">463 m²</td>
+              <td></td>
+              <td style="text-align:right; color:var(--text-bright);">7.408</td>
+              <td></td>
+              <td style="text-align:right; color:var(--accent); font-size:14px;">133</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="margin-top:12px; padding:10px 16px; background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius); font-size:11px; color:var(--text-secondary);">
+          Wandcode <span style="color:var(--warning); font-family:'JetBrains Mono',monospace;">5-0-0-1</span> = 50er Ziegel, ohne Dämmung, Normalputz, Sichtqualität Standard | 
+          <span style="color:var(--warning); font-family:'JetBrains Mono',monospace;">3-0-0-1</span> = 25er Ziegel, ohne Dämmung, Normalputz, Standard |
+          Verschnitt: 5% eingerechnet
+        </div>
+
+        <div class="toolbar" style="margin-top:12px;">
+          <button class="btn btn-primary">📋 Bestellliste erstellen</button>
+          <button class="btn btn-secondary">→ Arbeitspakete anlegen</button>
+          <span class="toolbar-spacer"></span>
+          <button class="btn btn-ghost">📄 PDF Export</button>
+        </div>
+      
+    </div>
+
+    <div id="ki" class="view">
+      <div style="display:grid; grid-template-columns:1fr 230px; gap:16px;">
+        <!-- Chat Column -->
+        <div style="display:flex; flex-direction:column; height:100%;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div class="heading1" style="margin:0;">🤖 KI-Assistent</div>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <span class="label" style="display:inline; margin:0;">Provider:</span>
+              <select class="select" style="width:110px; font-size:11px;"><option selected>ChatGPT</option><option>Claude</option></select>
+            </div>
+          </div>
+
+          <div style="flex:1; overflow-y:auto; margin-bottom:8px;">
+            <div class="chat-area">
+              <div class="chat-msg user">
+                <div class="chat-who u">Du</div>
+                <div class="chat-bubble user-b">Welche Fenstertypen sind in Haus 5 vorgesehen und welche Farbe haben die Rahmen?</div>
+              </div>
+              <div class="chat-msg ki">
+                <div class="chat-who k">KI-Assistent</div>
+                <div class="chat-bubble ki-b">
+                  Laut Baubeschreibung (Abschnitt 4.2) sind in Haus 5 <strong>Kunststoff-Fenster Typ F1</strong> vorgesehen: Dreh-Kipp, 3-fach Verglasung. Rahmenfarbe außen: <strong>RAL 7016 Anthrazitgrau</strong>, innen: weiß.
+                  <div class="chat-source">📄 <a href="#">Baubeschreibung_v3.pdf</a> → Seite 34, Abschnitt 4.2</div>
+                </div>
+              </div>
+              <div class="chat-msg user">
+                <div class="chat-who u">Du</div>
+                <div class="chat-bubble user-b">Gibt es eine LV-Position für Kanalanschluss? Was ist kalkuliert?</div>
+              </div>
+              <div class="chat-msg ki">
+                <div class="chat-who k">KI-Assistent</div>
+                <div class="chat-bubble ki-b">
+                  Ja, <strong>Position 03.12.05</strong> „Kanalanschluss DN200 an Bestandskanal". Menge: 2 Stück, EP: € 1.850,–, Gesamt: € 3.700,–.
+                  <div class="chat-source">📄 <a href="#">LV_2026.xlsx</a> → LG 03 Kanal, Position 03.12.05</div>
+                  <div class="chat-analysis" style="background:rgba(240,173,78,0.1); color:var(--warning);">⚠ Hinweis: Keine Angabe zur Tiefe des Bestandskanals. Bei Tiefe &gt; 2m könnte ein Nachtrag entstehen.</div>
+                </div>
+              </div>
+              <div class="chat-msg user">
+                <div class="chat-who u">Du</div>
+                <div class="chat-bubble user-b">Wie dick ist die Außenwand und gibt es dafür eine WDVS-Position im LV?</div>
+              </div>
+              <div class="chat-msg ki">
+                <div class="chat-who k">KI-Assistent</div>
+                <div class="chat-bubble ki-b">
+                  Außenwand: <strong>25er Ziegel + 16 cm EPS-F WDVS</strong>, Gesamtstärke 43 cm. WDVS-Position im LV: <strong>06.04.02</strong> mit 1.240 m².
+                  <div class="chat-source">
+                    📄 <a href="#">Baubeschreibung_v3.pdf</a> → Abschnitt 3.2<br>
+                    📄 <a href="#">LV_2026.xlsx</a> → LG 06, Pos. 06.04.02
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-input-row">
+            <input type="text" class="chat-input" placeholder="Frage an den KI-Assistenten stellen...">
+            <button class="btn btn-primary">Senden →</button>
+          </div>
+          <div style="font-size:10px; color:var(--text-secondary); margin-top:4px;">Ohne Internet: baulotse erzeugt einen kopierbaren Prompt für ChatGPT/Claude.</div>
+        </div>
+
+        <!-- Docs + History Panel -->
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div class="docs-panel">
+            <div class="card-title">📂 Geladene Dokumente</div>
+            <div style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">ÖWG Dobl-Zwaring</div>
+            <div class="doc-item"><span>📄</span><span>Baubeschreibung_v3.pdf</span><span class="badge badge-ok" style="margin-left:auto; font-size:9px;">✓</span></div>
+            <div class="doc-item"><span>📊</span><span>LV_2026.xlsx</span><span class="badge badge-ok" style="margin-left:auto; font-size:9px;">✓</span></div>
+            <div class="doc-item" style="opacity:0.5;"><span>📄</span><span>Bauvertrag.pdf</span><span style="margin-left:auto; font-size:9px; color:var(--text-secondary);">—</span></div>
+            <div class="doc-item" style="opacity:0.5;"><span>📐</span><span>Statik_H5.pdf</span><span style="margin-left:auto; font-size:9px; color:var(--text-secondary);">—</span></div>
+            <button class="btn btn-secondary" style="width:100%; margin-top:6px; font-size:10px;">+ Dokument</button>
+          </div>
+          <div class="docs-panel">
+            <div class="card-title">📜 Verlauf</div>
+            <div style="font-size:11px;">
+              <div style="padding:3px 0; cursor:pointer; color:var(--text-secondary);">Fenstertypen Haus 5</div>
+              <div style="padding:3px 0; cursor:pointer; color:var(--text-secondary);">Kanalanschluss LV</div>
+              <div style="padding:3px 0; cursor:pointer; color:var(--accent);">Außenwand + WDVS ← aktuell</div>
+            </div>
+          </div>
+        </div>
+      
+      </div>
+
+    </div>
+
+    <div id="material" class="view">
+        <div class="heading1">🚚 Materialbestellung — ÖWG Dobl</div>
+        <div class="toolbar">
+          <span class="badge badge-purple">ClickUp verbunden ✓</span>
+          <span class="toolbar-spacer"></span>
+          <button class="btn btn-primary">+ Neue Bestellung</button>
+          <button class="btn btn-secondary">🔄 Status aktualisieren</button>
+        </div>
+
+        <table class="tbl">
+          <thead>
+            <tr><th>Material</th><th>Menge</th><th>Bauteil</th><th>Termin</th><th>ClickUp-Status</th><th>Lieferschein</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="color:var(--text-bright); font-weight:600;">Ziegel Porotherm 38 Plan</td>
+              <td>59 Paletten</td><td>H5 / EG</td><td>10.03.</td>
+              <td><span class="badge badge-ok">✅ Geliefert</span></td>
+              <td><button class="btn btn-ghost" style="font-size:10px;">📄 LS-0847</button></td>
+            </tr>
+            <tr>
+              <td style="color:var(--text-bright);">Bewehrungsstahl BSt 550</td>
+              <td>6,4 to</td><td>H5 / EG Decke</td><td>22.03.</td>
+              <td><span class="badge badge-ok">✅ Geliefert</span></td>
+              <td><button class="btn btn-ghost" style="font-size:10px;">📄 LS-0901</button></td>
+            </tr>
+            <tr>
+              <td style="color:var(--text-bright);">Beton C25/30 XC2</td>
+              <td>34 m³</td><td>H5 / EG Decke</td><td>27.03.</td>
+              <td><span class="badge badge-new">📦 Bestellt</span></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td style="color:var(--text-bright);">Ziegel Porotherm 38 Plan</td>
+              <td>55 Paletten</td><td>H5 / 1.OG</td><td>24.03.</td>
+              <td><span class="badge badge-update">🚚 Unterwegs</span></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>Schalungsplatten Doka</td>
+              <td>170 m²</td><td>H5 / 1.OG Decke</td><td>07.04.</td>
+              <td><span class="badge badge-ident">⏳ Offen</span></td>
+              <td><button class="btn btn-ghost" style="font-size:10px;">→ ClickUp</button></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Workflow -->
+        <div class="card" style="margin-top:16px;">
+          <div class="card-title">Workflow</div>
+          <div style="display:flex; gap:4px; align-items:center; font-size:12px; flex-wrap:wrap;">
+            <span style="padding:4px 10px; background:var(--bg-active); border-radius:4px; color:var(--accent);">👷 Polier meldet</span>
+            <span style="color:var(--text-secondary);">→</span>
+            <span style="padding:4px 10px; background:rgba(139,92,246,0.1); border-radius:4px; color:var(--purple);">→ ClickUp Task</span>
+            <span style="color:var(--text-secondary);">→</span>
+            <span style="padding:4px 10px; background:rgba(240,173,78,0.1); border-radius:4px; color:var(--warning);">Dispo bestellt</span>
+            <span style="color:var(--text-secondary);">→</span>
+            <span style="padding:4px 10px; background:rgba(55,148,255,0.1); border-radius:4px; color:var(--info);">🚚 Unterwegs</span>
+            <span style="color:var(--text-secondary);">→</span>
+            <span style="padding:4px 10px; background:rgba(78,201,78,0.1); border-radius:4px; color:var(--success);">✅ Geliefert</span>
+            <span style="color:var(--text-secondary);">→</span>
+            <span style="padding:4px 10px; background:var(--bg-input); border-radius:4px; color:var(--text-primary);">📄 Lieferschein</span>
+          </div>
+          <div style="font-size:11px; color:var(--text-secondary); margin-top:8px;">Auch ohne ClickUp nutzbar — dann mit lokaler Bestellübersicht ohne Status-Sync.</div>
+        </div>
+      
+    </div>
+
+    <div id="outlook" class="view">
+        <div class="heading1">📧 Outlook-Integration</div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <!-- Anhänge -->
+          <div class="card">
+            <div class="card-title">📎 Plan-Anhänge aus E-Mails</div>
+            <div style="font-size:12px; color:var(--text-secondary); margin-bottom:8px;">3 E-Mails mit Plan-Anhängen erkannt</div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; background:var(--bg-elevated); border-radius:4px;">
+                <div><span style="font-size:12px;">📄 S-114_Polierplan_1OG_H66.pdf</span><br><span style="font-size:10px; color:var(--text-secondary);">Von: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="f29380919adc8681919a9d9fb28690df8681919a9d9fdc9386">[email&#160;protected]</a></span></div>
+                <button class="btn btn-primary" style="font-size:10px;">→ _Eingang</button>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; background:var(--bg-elevated); border-radius:4px;">
+                <div><span style="font-size:12px;">📄 E-205_Elektro_1OG.pdf</span><br><span style="font-size:10px; color:var(--text-secondary);">Von: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="86e3f6eae7e8c6e3f2e3e5eeabe1f4e7fca8e7f2">[email&#160;protected]</a></span></div>
+                <button class="btn btn-primary" style="font-size:10px;">→ _Eingang</button>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; background:var(--bg-elevated); border-radius:4px;">
+                <div><span style="font-size:12px;">📄 Statik_H5_Nachtrag.pdf</span><br><span style="font-size:10px; color:var(--text-secondary);">Von: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="aedddacfdac7c5eed4c7d8c7c2dacbcdc6c0c7c5cbdc80cfda">[email&#160;protected]</a></span></div>
+                <button class="btn btn-secondary" style="font-size:10px;">📂 Zuordnen</button>
+              </div>
+            </div>
+            <button class="btn btn-success" style="width:100%; margin-top:8px; font-size:11px;">📥 Alle erkannten Pläne → _Eingang</button>
+          </div>
+
+          <!-- Kalender -->
+          <div class="card">
+            <div class="card-title">📅 Kalender-Sync</div>
+            <div style="font-size:12px; color:var(--text-secondary); margin-bottom:8px;">Nächste Bau-Termine</div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <div style="padding:6px 8px; background:var(--bg-elevated); border-radius:4px; border-left:3px solid var(--accent);">
+                <div style="font-size:12px; color:var(--text-bright); font-weight:600;">Mo 31.03. 08:00</div>
+                <div style="font-size:11px;">Betonage Decke EG — H5</div>
+                <div style="font-size:10px; color:var(--text-secondary);">Betonpumpe Fa. Kern bestellt</div>
+              </div>
+              <div style="padding:6px 8px; background:var(--bg-elevated); border-radius:4px; border-left:3px solid var(--warning);">
+                <div style="font-size:12px; color:var(--text-bright); font-weight:600;">Mi 02.04. 10:00</div>
+                <div style="font-size:11px;">Baubesprechung ÖWG</div>
+                <div style="font-size:10px; color:var(--text-secondary);">Bauherr, Architekt, ÖBA</div>
+              </div>
+              <div style="padding:6px 8px; background:var(--bg-elevated); border-radius:4px; border-left:3px solid var(--success);">
+                <div style="font-size:12px; color:var(--text-bright); font-weight:600;">Do 03.04. 14:00</div>
+                <div style="font-size:11px;">Bewehrungsabnahme Decke EG</div>
+                <div style="font-size:10px; color:var(--text-secondary);">Statiker Ing. Tschom</div>
+              </div>
+            </div>
+            <button class="btn btn-secondary" style="width:100%; margin-top:8px; font-size:11px;">+ Termin in Outlook eintragen</button>
+          </div>
+        </div>
+
+        <!-- Aufgaben -->
+        <div class="card" style="margin-top:12px;">
+          <div class="card-title">✅ Offene Aufgaben → Outlook</div>
+          <div style="display:flex; flex-direction:column; gap:4px; font-size:12px;">
+            <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid var(--border-subtle);">
+              <span>Bewehrungsbestellung 1.OG H5 aufgeben</span>
+              <span style="color:var(--warning);">Fällig: 28.03.</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid var(--border-subtle);">
+              <span>Schalpläne 1.OG bei Doka anfordern</span>
+              <span style="color:var(--error);">Überfällig!</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:4px 0;">
+              <span>Bautagebuch KW 12 exportieren</span>
+              <span style="color:var(--text-secondary);">Fällig: 31.03.</span>
+            </div>
+          </div>
+        </div>
+      
+    </div>
+
+    <div id="wetter" class="view">
+        <div class="heading1">🌤 Wetter — ÖWG Dobl-Zwaring</div>
+        <div class="toolbar">
+          <select class="select"><option selected>ÖWG Dobl-Zwaring</option><option>WBG Kapfenberg</option></select>
+          <span style="font-size:11px; color:var(--text-secondary);">GPS: 46.908°N, 15.483°E</span>
+          <span class="toolbar-spacer"></span>
+          <button class="btn btn-secondary">📅 Archiv</button>
+          <span style="font-size:10px; color:var(--success);">● Stündliche Abfrage aktiv</span>
+        </div>
+
+        <!-- Aktuell -->
+        <div class="card" style="border-left:3px solid var(--info);">
+          <div class="card-title">Aktuell — 27.03.2026, 14:00</div>
+          <div style="display:grid; grid-template-columns:auto 1fr; gap:20px; align-items:center;">
+            <div>
+              <div style="font-size:52px; font-weight:700; color:var(--text-bright); line-height:1;">14°</div>
+              <div style="font-size:28px; margin-top:4px;">☀</div>
+            </div>
+            <div style="font-size:13px;">
+              <div style="color:var(--text-primary);">Sonnig | Gefühlt: 12°C</div>
+              <div style="color:var(--text-secondary);">Wind: <span style="color:var(--text-primary);">12 km/h NW</span> | Böen: <span style="color:var(--text-primary);">22 km/h</span></div>
+              <div style="color:var(--text-secondary);">Niederschlag: <span style="color:var(--text-primary);">0 mm</span> | Luftfeuchte: <span style="color:var(--text-primary);">55%</span></div>
+              <div style="color:var(--text-secondary); margin-top:4px;">Tageswerte: Min <span style="color:var(--info);">5°C</span> | Max <span style="color:var(--error);">16°C</span> | Mittel <span style="color:var(--text-primary);">11°C</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stündlich heute -->
+        <div class="heading2">Stündlicher Verlauf — heute</div>
+        <div class="card" style="padding:8px;">
+          <div class="wetter-hourly">
+            <div class="wetter-h"><div class="wh-time">06:00</div><div class="wh-icon">🌫</div><div class="wh-temp">5°</div><div class="wh-rain">0mm</div></div>
+            <div class="wetter-h"><div class="wh-time">07:00</div><div class="wh-icon">🌫</div><div class="wh-temp">6°</div><div class="wh-rain">0mm</div></div>
+            <div class="wetter-h"><div class="wh-time">08:00</div><div class="wh-icon">⛅</div><div class="wh-temp">8°</div><div class="wh-rain">0mm</div></div>
+            <div class="wetter-h"><div class="wh-time">09:00</div><div class="wh-icon">⛅</div><div class="wh-temp">10°</div><div class="wh-rain">0mm</div></div>
+            <div class="wetter-h"><div class="wh-time">10:00</div><div class="wh-icon">☀</div><div class="wh-temp">12°</div><div class="wh-rain">0mm</div></div>
+            <div class="wetter-h"><div class="wh-time">11:00</div><div class="wh-icon">☀</div><div class="wh-temp">13°</div><div class="wh-rain">0mm</div></div>
+            <div class="wetter-h"><div class="wh-time">12:00</div><div class="wh-icon">☀</div><div class="wh-temp">14°</div><div class="wh-rain">0mm</div></div>
+            <div class="wetter-h"><div class="wh-time">13:00</div><div class="wh-icon">☀</div><div class="wh-temp">15°</div><div class="wh-rain">0mm</div></div>
+            <div class="wetter-h now"><div class="wh-time" style="color:var(--accent);">14:00</div><div class="wh-icon">☀</div><div class="wh-temp">14°</div><div class="wh-rain">0mm</div></div>
+            <div class="wetter-h"><div class="wh-time">15:00</div><div class="wh-icon">⛅</div><div class="wh-temp">14°</div><div class="wh-rain">0mm</div></div>
+            <div class="wetter-h"><div class="wh-time">16:00</div><div class="wh-icon">⛅</div><div class="wh-temp">12°</div><div class="wh-rain">0mm</div></div>
+            <div class="wetter-h"><div class="wh-time">17:00</div><div class="wh-icon">🌫</div><div class="wh-temp">9°</div><div class="wh-rain">0mm</div></div>
+          </div>
+        </div>
+
+        <!-- Archiv -->
+        <div class="heading2">Archiv — letzte 7 Tage</div>
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Datum</th>
+              <th style="text-align:center">Min</th>
+              <th style="text-align:center">Max</th>
+              <th style="text-align:center">Mittel</th>
+              <th style="text-align:center">Regen</th>
+              <th style="text-align:center">Wind</th>
+              <th>Bedingung</th>
+              <th style="text-align:center">Stunden</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="color:var(--text-bright);">27.03. (heute)</td>
+              <td style="text-align:center; color:var(--info);">5°</td>
+              <td style="text-align:center; color:var(--error);">16°</td>
+              <td style="text-align:center">11°</td>
+              <td style="text-align:center; color:var(--success);">0 mm</td>
+              <td style="text-align:center">12 km/h</td>
+              <td>☀ Sonnig</td>
+              <td style="text-align:center; color:var(--text-secondary);">9 von 24</td>
+            </tr>
+            <tr>
+              <td>26.03.</td>
+              <td style="text-align:center; color:var(--info);">3°</td>
+              <td style="text-align:center">12°</td>
+              <td style="text-align:center">8°</td>
+              <td style="text-align:center; color:var(--info);">2,4 mm</td>
+              <td style="text-align:center">18 km/h</td>
+              <td>🌧 Regen</td>
+              <td style="text-align:center">24</td>
+            </tr>
+            <tr>
+              <td>25.03.</td>
+              <td style="text-align:center; color:var(--info);">4°</td>
+              <td style="text-align:center">14°</td>
+              <td style="text-align:center">9°</td>
+              <td style="text-align:center; color:var(--success);">0 mm</td>
+              <td style="text-align:center">8 km/h</td>
+              <td>⛅ Bewölkt</td>
+              <td style="text-align:center">24</td>
+            </tr>
+            <tr>
+              <td>24.03.</td>
+              <td style="text-align:center; color:var(--info);">2°</td>
+              <td style="text-align:center">11°</td>
+              <td style="text-align:center">7°</td>
+              <td style="text-align:center; color:var(--success);">0 mm</td>
+              <td style="text-align:center">6 km/h</td>
+              <td>☀ Sonnig</td>
+              <td style="text-align:center">24</td>
+            </tr>
+            <tr>
+              <td style="color:var(--warning);">23.03.</td>
+              <td style="text-align:center; color:var(--info);">-1°</td>
+              <td style="text-align:center">6°</td>
+              <td style="text-align:center">3°</td>
+              <td style="text-align:center; color:var(--info);">8,2 mm</td>
+              <td style="text-align:center; color:var(--warning);">35 km/h</td>
+              <td>🌧❄ Schneeregen</td>
+              <td style="text-align:center">24</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top:8px; font-size:11px; color:var(--text-secondary);">
+          Stundendaten lokal gespeichert | Wichtig für Nachweise bei Bauzeitverzögerungen oder Behinderungsanzeigen (stundengenau belegbar)
+        </div>
+      
+    </div>
+
+    <div id="mobile" class="view">
+<div style="display:flex; justify-content:center;">
+      <div class="mobile-frame">
+        <div class="mobile-status">
+          <span>14:32</span>
+          <span>📶 LTE | 🔋 78%</span>
+        </div>
+        <div class="mobile-header">
+          <h3>bau<span style="color:#E8712A;">lotse</span></h3>
+          <span style="font-size:11px; color:var(--success);">● Online</span>
+        </div>
+        <div class="mobile-content">
+          <!-- Projekt -->
+          <div style="margin-bottom:12px;">
+            <select class="select" style="width:100%; font-size:13px; padding:8px;">
+              <option selected>ÖWG Dobl-Zwaring</option>
+              <option>WBG Kapfenberg</option>
+            </select>
+          </div>
+
+          <!-- Bautagebuch-Punkt -->
+          <div class="m-card" style="border-left:3px solid var(--accent);">
+            <div class="m-card-title">📋 Neuer Bautagebuch-Punkt</div>
+            <div style="display:flex; gap:6px; margin-bottom:8px;">
+              <span style="font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--accent); background:var(--bg-active); padding:3px 8px; border-radius:4px; font-weight:700;">001/005</span>
+              <select class="select" style="flex:1; font-size:11px;"><option>Haus 5</option></select>
+              <select class="select" style="width:60px; font-size:11px;"><option>EG</option></select>
+            </div>
+            <textarea class="input" style="width:100%; height:60px; resize:none; font-size:12px;" placeholder="Tätigkeit beschreiben...">Nachbestellung Abstandhalter für Decke EG. Lieferung morgen zugesagt.</textarea>
+            <div style="display:flex; gap:6px; margin-top:8px;">
+              <button class="btn btn-secondary" style="flex:1; font-size:11px;">📸 Foto</button>
+              <button class="btn btn-primary" style="flex:1; font-size:11px;">💾 Speichern</button>
+            </div>
+          </div>
+
+          <!-- Heutige Punkte -->
+          <div class="m-card">
+            <div class="m-card-title">Heute — 4 Punkte</div>
+            <div style="font-size:12px;">
+              <div style="padding:4px 0; border-bottom:1px solid var(--border-subtle); display:flex; gap:6px; align-items:center;">
+                <span style="color:var(--accent); font-family:monospace; font-size:10px;">001/001</span>
+                <span>Betonage Decke EG H5</span>
+                <span style="margin-left:auto; font-size:10px; color:var(--text-secondary);">3📷</span>
+              </div>
+              <div style="padding:4px 0; border-bottom:1px solid var(--border-subtle); display:flex; gap:6px; align-items:center;">
+                <span style="color:var(--accent); font-family:monospace; font-size:10px;">001/002</span>
+                <span>Elektro Rohre EG</span>
+                <span style="margin-left:auto; font-size:10px; color:var(--text-secondary);">1📷</span>
+              </div>
+              <div style="padding:4px 0; border-bottom:1px solid var(--border-subtle); display:flex; gap:6px; align-items:center;">
+                <span style="color:var(--warning); font-family:monospace; font-size:10px;">001/003</span>
+                <span style="color:var(--warning);">⚠ Lieferverzögerung BSt</span>
+              </div>
+              <div style="padding:4px 0; display:flex; gap:6px; align-items:center;">
+                <span style="color:var(--accent); font-family:monospace; font-size:10px;">001/004</span>
+                <span>Schalung KW H66</span>
+                <span style="margin-left:auto; font-size:10px; color:var(--text-secondary);">2📷</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Wetter kompakt -->
+          <div class="m-card" style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px;">
+            <span>🌤 14°C Sonnig</span>
+            <span style="font-size:11px; color:var(--text-secondary);">Wind 12 km/h | 0mm</span>
+          </div>
+
+          <!-- Pläne schnell -->
+          <div class="m-card">
+            <div class="m-card-title">📁 Aktuelle Pläne</div>
+            <div style="font-size:12px; color:var(--text-secondary);">
+              <div style="padding:3px 0;">S-103 Index D — Polierplan EG</div>
+              <div style="padding:3px 0;">S-113 Index A — Polierplan 2OG <span class="badge badge-ok" style="font-size:8px;">Neu!</span></div>
+              <div style="padding:3px 0;">E-201 Index C — E-Plan EG</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mobile-nav">
+          <div class="mobile-nav-btn active"><span class="ni">📋</span>Tagebuch</div>
+          <div class="mobile-nav-btn"><span class="ni">📁</span>Pläne</div>
+          <div class="mobile-nav-btn"><span class="ni">📸</span>Fotos</div>
+          <div class="mobile-nav-btn"><span class="ni">⏱</span>Stunden</div>
+          <div class="mobile-nav-btn"><span class="ni">⚙</span>Mehr</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       MOCKUP 3: GIS-INTEGRATION
+       ═══════════════════════════════════════════════════════ -->
+
+    </div>
+
+    <div id="gis" class="view">
+        <div class="heading1">🗺 GIS — ÖWG Dobl-Zwaring</div>
+        <div class="toolbar">
+          <select class="select"><option selected>ÖWG Dobl-Zwaring</option><option>WBG Kapfenberg</option></select>
+          <span class="toolbar-spacer"></span>
+          <button class="btn btn-primary">🔄 Daten aktualisieren</button>
+          <span style="font-size:10px; color:var(--success);">Lokal gespeichert: 24.03.2026</span>
+        </div>
+
+        <!-- Karten-Simulation -->
+        <div class="gis-map">
+          <div class="gis-map-grid"></div>
+          <!-- Grundstücke -->
+          <div class="gis-parcel" style="top:80px; left:120px; width:280px; height:180px;"></div>
+          <div class="gis-parcel-label" style="top:85px; left:125px;">GN 342/5</div>
+          <div class="gis-parcel" style="top:100px; left:420px; width:200px; height:140px; border-color:var(--text-secondary); background:rgba(133,133,133,0.05);"></div>
+          <div class="gis-parcel-label" style="top:105px; left:425px; color:var(--text-secondary);">GN 342/6</div>
+          <!-- Gebäude -->
+          <div class="gis-building" style="top:120px; left:160px; width:80px; height:60px;"></div>
+          <div style="position:absolute; top:143px; left:172px; font-size:9px; color:var(--accent); font-weight:700;">H5</div>
+          <div class="gis-building" style="top:120px; left:280px; width:80px; height:60px;"></div>
+          <div style="position:absolute; top:143px; left:292px; font-size:9px; color:var(--accent); font-weight:700;">H6</div>
+          <!-- Leitung -->
+          <div class="gis-pipe" style="top:200px; left:80px; width:500px;"></div>
+          <div style="position:absolute; top:205px; left:300px; font-size:9px; color:var(--warning); background:rgba(30,30,30,0.8); padding:0 4px; border-radius:2px;">Kanal DN300</div>
+          <!-- Layer-Auswahl -->
+          <div class="gis-overlay">
+            <div class="gis-layer active">☑ Grundstücke</div>
+            <div class="gis-layer active">☑ Gebäude</div>
+            <div class="gis-layer active">☑ Leitungen</div>
+            <div class="gis-layer">☐ Flächenwidmung</div>
+            <div class="gis-layer">☐ Höhenschichten</div>
+          </div>
+          <div class="gis-coords">EPSG:31258 → WGS84 | 46.9081°N 15.4832°E</div>
+        </div>
+
+        <!-- Info-Panel -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
+          <div class="card">
+            <div class="card-title">📐 Grundstück GN 342/5</div>
+            <div style="font-size:12px;">
+              <div style="display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid var(--border-subtle);">
+                <span style="color:var(--text-secondary);">KG:</span><span>Dobl (63111)</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid var(--border-subtle);">
+                <span style="color:var(--text-secondary);">Fläche:</span><span>2.847 m²</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid var(--border-subtle);">
+                <span style="color:var(--text-secondary);">Widmung:</span><span style="color:var(--success);">Bauland Wohnen</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; padding:3px 0;">
+                <span style="color:var(--text-secondary);">Eigentümer:</span><span>ÖWG Wohnbau GmbH</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">🔌 Leitungskataster</div>
+            <div style="font-size:12px;">
+              <div style="display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid var(--border-subtle);">
+                <span style="color:var(--warning);">Kanal:</span><span>DN300 Mischwasser, Tiefe ~2,1m</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid var(--border-subtle);">
+                <span style="color:var(--info);">Wasser:</span><span>DN100, Tiefe ~1,2m</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; padding:3px 0;">
+                <span style="color:var(--error);">Strom:</span><span>20kV Erdkabel, Tiefe ~0,8m</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:8px; font-size:11px; color:var(--text-secondary);">
+          Quelle: GIS Steiermark (öffentlicher ArcGIS REST, kein API-Key) | Koordinaten-Umrechnung lokal via ProjNet (EPSG:31258 ↔ WGS84) | Daten projektbezogen gespeichert — einmal geladen, dann offline verfügbar
+        </div>
+      
+    </div>
+
+    <!-- MS PROJECT / BAUZEITPLAN -->
+    <div id="msproject" class="view">
+      <div class="heading1">📅 Bauzeitplan — ÖWG Dobl-Zwaring</div>
+      <div class="toolbar">
+        <select class="select"><option selected>ÖWG Dobl-Zwaring</option><option>WBG Kapfenberg</option></select>
+        <span style="color:var(--border);">│</span>
+        <span style="font-size:11px; color:var(--text-secondary);">Importiert aus:</span>
+        <span class="badge badge-purple">MS Project (.mpp)</span>
+        <span style="font-size:10px; color:var(--text-secondary);">Letzter Import: 25.03.2026</span>
+        <span class="toolbar-spacer"></span>
+        <button class="btn btn-primary">📥 MPP importieren</button>
+        <button class="btn btn-secondary">🔄 Aktualisieren</button>
+      </div>
+
+      <!-- Gantt-artige Übersicht -->
+      <div class="card">
+        <div class="card-title">📊 Baufortschritt — Übersicht</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; margin-bottom:14px;">
+          <div style="text-align:center; padding:10px; background:var(--bg-elevated); border-radius:var(--radius);">
+            <div style="font-size:22px; font-weight:700; color:var(--success);">38%</div>
+            <div style="font-size:10px; color:var(--text-secondary);">Gesamtfortschritt</div>
+          </div>
+          <div style="text-align:center; padding:10px; background:var(--bg-elevated); border-radius:var(--radius);">
+            <div style="font-size:22px; font-weight:700; color:var(--text-bright);">KW 13</div>
+            <div style="font-size:10px; color:var(--text-secondary);">Aktuelle Woche</div>
+          </div>
+          <div style="text-align:center; padding:10px; background:var(--bg-elevated); border-radius:var(--radius);">
+            <div style="font-size:22px; font-weight:700; color:var(--warning);">+3 Tage</div>
+            <div style="font-size:10px; color:var(--text-secondary);">Verzug gg. Plan</div>
+          </div>
+          <div style="text-align:center; padding:10px; background:var(--bg-elevated); border-radius:var(--radius);">
+            <div style="font-size:22px; font-weight:700; color:var(--info);">KW 32</div>
+            <div style="font-size:10px; color:var(--text-secondary);">Geplantes Ende</div>
+          </div>
+        </div>
+
+        <!-- Vereinfachte Gantt-Darstellung -->
+        <div style="overflow-x:auto;">
+          <table class="tbl" style="min-width:800px;">
+            <thead>
+              <tr>
+                <th style="width:200px;">Vorgang</th>
+                <th style="text-align:center; width:60px;">Start</th>
+                <th style="text-align:center; width:60px;">Ende</th>
+                <th style="text-align:center; width:50px;">Soll</th>
+                <th style="text-align:center; width:50px;">Ist</th>
+                <th>Fortschritt</th>
+                <th style="width:50px;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Abschnitt Erdarbeiten -->
+              <tr style="background:var(--bg-elevated);">
+                <td style="font-weight:600; color:var(--text-bright);">▾ Erdarbeiten</td>
+                <td style="text-align:center; font-size:10px;">KW 03</td>
+                <td style="text-align:center; font-size:10px;">KW 06</td>
+                <td style="text-align:center;">4 Wo</td>
+                <td style="text-align:center;">4 Wo</td>
+                <td><div class="progress-bar" style="width:100%;"><div class="progress-fill" style="width:100%; background:var(--success);"></div></div></td>
+                <td><span class="badge badge-ok">✅</span></td>
+              </tr>
+              <tr>
+                <td style="padding-left:24px;">Baugrubenaushub</td>
+                <td style="text-align:center; font-size:10px;">KW 03</td>
+                <td style="text-align:center; font-size:10px;">KW 04</td>
+                <td style="text-align:center;">2 Wo</td>
+                <td style="text-align:center;">2 Wo</td>
+                <td><div class="progress-bar" style="width:100%;"><div class="progress-fill" style="width:100%; background:var(--success);"></div></div></td>
+                <td><span class="badge badge-ok">✅</span></td>
+              </tr>
+              <tr>
+                <td style="padding-left:24px;">Fundamente + Bodenplatte</td>
+                <td style="text-align:center; font-size:10px;">KW 05</td>
+                <td style="text-align:center; font-size:10px;">KW 06</td>
+                <td style="text-align:center;">2 Wo</td>
+                <td style="text-align:center;">2 Wo</td>
+                <td><div class="progress-bar" style="width:100%;"><div class="progress-fill" style="width:100%; background:var(--success);"></div></div></td>
+                <td><span class="badge badge-ok">✅</span></td>
+              </tr>
+              <!-- Abschnitt Rohbau KG -->
+              <tr style="background:var(--bg-elevated);">
+                <td style="font-weight:600; color:var(--text-bright);">▾ Rohbau KG</td>
+                <td style="text-align:center; font-size:10px;">KW 07</td>
+                <td style="text-align:center; font-size:10px;">KW 10</td>
+                <td style="text-align:center;">4 Wo</td>
+                <td style="text-align:center;">5 Wo</td>
+                <td><div class="progress-bar" style="width:100%;"><div class="progress-fill" style="width:100%; background:var(--success);"></div></div></td>
+                <td><span class="badge badge-ok">✅</span></td>
+              </tr>
+              <tr>
+                <td style="padding-left:24px;">Wände KG schalen + betonieren</td>
+                <td style="text-align:center; font-size:10px;">KW 07</td>
+                <td style="text-align:center; font-size:10px;">KW 09</td>
+                <td style="text-align:center;">3 Wo</td>
+                <td style="text-align:center; color:var(--warning);">4 Wo</td>
+                <td><div class="progress-bar" style="width:100%;"><div class="progress-fill" style="width:100%; background:var(--success);"></div></div></td>
+                <td><span class="badge badge-update">⚠ +1W</span></td>
+              </tr>
+              <tr>
+                <td style="padding-left:24px;">Decke über KG</td>
+                <td style="text-align:center; font-size:10px;">KW 10</td>
+                <td style="text-align:center; font-size:10px;">KW 10</td>
+                <td style="text-align:center;">1 Wo</td>
+                <td style="text-align:center;">1 Wo</td>
+                <td><div class="progress-bar" style="width:100%;"><div class="progress-fill" style="width:100%; background:var(--success);"></div></div></td>
+                <td><span class="badge badge-ok">✅</span></td>
+              </tr>
+              <!-- Abschnitt Rohbau EG — AKTIV -->
+              <tr style="background:var(--bg-active);">
+                <td style="font-weight:700; color:var(--accent);">▾ Rohbau EG ← aktuell</td>
+                <td style="text-align:center; font-size:10px;">KW 11</td>
+                <td style="text-align:center; font-size:10px;">KW 15</td>
+                <td style="text-align:center;">5 Wo</td>
+                <td style="text-align:center;">3 Wo</td>
+                <td><div class="progress-bar" style="width:100%;"><div class="progress-fill" style="width:65%; background:var(--info);"></div></div></td>
+                <td><span class="badge badge-new">🔵 65%</span></td>
+              </tr>
+              <tr style="background:rgba(0,120,212,0.03);">
+                <td style="padding-left:24px; color:var(--text-bright);">Mauerwerk EG</td>
+                <td style="text-align:center; font-size:10px;">KW 11</td>
+                <td style="text-align:center; font-size:10px;">KW 12</td>
+                <td style="text-align:center;">2 Wo</td>
+                <td style="text-align:center;">2 Wo</td>
+                <td><div class="progress-bar" style="width:100%;"><div class="progress-fill" style="width:100%; background:var(--success);"></div></div></td>
+                <td><span class="badge badge-ok">✅</span></td>
+              </tr>
+              <tr style="background:rgba(0,120,212,0.03);">
+                <td style="padding-left:24px; color:var(--accent); font-weight:600;">Decke EG — Schalung ← heute</td>
+                <td style="text-align:center; font-size:10px;">KW 13</td>
+                <td style="text-align:center; font-size:10px;">KW 13</td>
+                <td style="text-align:center;">1 Wo</td>
+                <td style="text-align:center;">3 T</td>
+                <td><div class="progress-bar" style="width:100%;"><div class="progress-fill" style="width:55%; background:var(--info);"></div></div></td>
+                <td><span class="badge badge-new">🔵</span></td>
+              </tr>
+              <tr style="background:rgba(0,120,212,0.03);">
+                <td style="padding-left:24px;">Decke EG — Bewehrung</td>
+                <td style="text-align:center; font-size:10px; color:var(--text-secondary);">KW 14</td>
+                <td style="text-align:center; font-size:10px; color:var(--text-secondary);">KW 14</td>
+                <td style="text-align:center;">1 Wo</td>
+                <td style="text-align:center; color:var(--text-secondary);">—</td>
+                <td></td>
+                <td><span class="badge badge-ident">⬜</span></td>
+              </tr>
+              <tr style="background:rgba(0,120,212,0.03);">
+                <td style="padding-left:24px;">Decke EG — Betonage</td>
+                <td style="text-align:center; font-size:10px; color:var(--text-secondary);">KW 15</td>
+                <td style="text-align:center; font-size:10px; color:var(--text-secondary);">KW 15</td>
+                <td style="text-align:center;">2 T</td>
+                <td style="text-align:center; color:var(--text-secondary);">—</td>
+                <td></td>
+                <td><span class="badge badge-ident">⬜</span></td>
+              </tr>
+              <!-- Abschnitt Rohbau OG — Zukunft -->
+              <tr style="background:var(--bg-elevated); opacity:0.6;">
+                <td style="font-weight:600;">▸ Rohbau 1.OG</td>
+                <td style="text-align:center; font-size:10px;">KW 16</td>
+                <td style="text-align:center; font-size:10px;">KW 20</td>
+                <td style="text-align:center;">5 Wo</td>
+                <td style="text-align:center; color:var(--text-secondary);">—</td>
+                <td></td>
+                <td><span class="badge badge-ident">⬜</span></td>
+              </tr>
+              <tr style="background:var(--bg-elevated); opacity:0.6;">
+                <td style="font-weight:600;">▸ Dachstuhl + Dacheindeckung</td>
+                <td style="text-align:center; font-size:10px;">KW 21</td>
+                <td style="text-align:center; font-size:10px;">KW 24</td>
+                <td style="text-align:center;">4 Wo</td>
+                <td style="text-align:center; color:var(--text-secondary);">—</td>
+                <td></td>
+                <td><span class="badge badge-ident">⬜</span></td>
+              </tr>
+              <tr style="background:var(--bg-elevated); opacity:0.6;">
+                <td style="font-weight:600;">▸ Ausbau / Installationen</td>
+                <td style="text-align:center; font-size:10px;">KW 25</td>
+                <td style="text-align:center; font-size:10px;">KW 32</td>
+                <td style="text-align:center;">8 Wo</td>
+                <td style="text-align:center; color:var(--text-secondary);">—</td>
+                <td></td>
+                <td><span class="badge badge-ident">⬜</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Anstehende Vorgänge -->
+      <div class="card">
+        <div class="card-title">📌 Anstehend — Nächste 2 Wochen</div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; background:var(--bg-elevated); border-radius:4px; border-left:3px solid var(--accent);">
+            <div>
+              <div style="font-size:12px; color:var(--text-bright); font-weight:600;">Decke EG Schalung fertigstellen</div>
+              <div style="font-size:10px; color:var(--text-secondary);">Soll-Ende: Fr 28.03. | Noch 2 Tage</div>
+            </div>
+            <span class="badge badge-new">Diese Woche</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; background:var(--bg-elevated); border-radius:4px; border-left:3px solid var(--warning);">
+            <div>
+              <div style="font-size:12px; color:var(--text-bright); font-weight:600;">Bewehrungsabnahme Decke EG</div>
+              <div style="font-size:10px; color:var(--text-secondary);">Soll: Do 03.04. | Statiker Ing. Tschom</div>
+            </div>
+            <span class="badge badge-update">Nächste Woche</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; background:var(--bg-elevated); border-radius:4px; border-left:3px solid var(--warning);">
+            <div>
+              <div style="font-size:12px; color:var(--text-bright); font-weight:600;">Betonage Decke EG</div>
+              <div style="font-size:10px; color:var(--text-secondary);">Soll: Mo 07.04. | 34 m³ C25/30 | Pumpe bestellen!</div>
+            </div>
+            <span class="badge badge-update">KW 15</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; background:var(--bg-elevated); border-radius:4px; border-left:3px solid var(--text-secondary);">
+            <div>
+              <div style="font-size:12px;">Mauerwerk 1.OG beginnen</div>
+              <div style="font-size:10px; color:var(--text-secondary);">Soll: KW 16 | Ziegel bestellen bis KW 14!</div>
+            </div>
+            <span class="badge badge-ident">In 3 Wochen</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Verknüpfung mit baulotse -->
+      <div class="card">
+        <div class="card-title">🔗 Verknüpfung mit baulotse-Modulen</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; font-size:11px;">
+          <div style="padding:8px; background:var(--bg-elevated); border-radius:4px; border-left:3px solid var(--accent);">
+            <div style="color:var(--text-bright); font-weight:600;">📦 Arbeitspakete</div>
+            <div style="color:var(--text-secondary); margin-top:2px;">Ist-Fortschritt aus Fertigmeldungen → automatisch in Bauzeitplan</div>
+          </div>
+          <div style="padding:8px; background:var(--bg-elevated); border-radius:4px; border-left:3px solid var(--success);">
+            <div style="color:var(--text-bright); font-weight:600;">⏱ Zeiterfassung</div>
+            <div style="color:var(--text-secondary); margin-top:2px;">Ist-Stunden pro Vorgang → Soll-Ist-Vergleich live</div>
+          </div>
+          <div style="padding:8px; background:var(--bg-elevated); border-radius:4px; border-left:3px solid var(--warning);">
+            <div style="color:var(--text-bright); font-weight:600;">🚚 Material</div>
+            <div style="color:var(--text-secondary); margin-top:2px;">Liefertermine aus Bestellungen → Meilensteine im Plan</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:8px; font-size:11px; color:var(--text-secondary);">
+        Import: Microsoft Project (.mpp) oder XML-Export. Baulotse liest den Plan — Änderungen werden in MS Project gemacht und neu importiert. Kein MS Project nötig zum Anzeigen.
+      </div>
+    </div>
+
+  </div>
+  <div class="statusbar"><span id="statusText">Pläne | ÖWG Dobl-Zwaring | 12 Dateien gescannt</span></div>
+</div>
+<script>
+const statusMap = {
+  'plan-import': `Pläne | ÖWG Dobl-Zwaring | 12 Dateien gescannt | Bereit zum Einsortieren`,
+  'plan-learn': `Pläne | Muster anlernen | 2 Segmente offen`,
+  'dashboard': `Dashboard | 2 aktive Projekte | Letzte Aktualisierung: 14:32`,
+  'zeit': `Zeiterfassung | ÖWG Dobl-Zwaring | KW 13/2026 | 6 Mitarbeiter | 200.0 Std | Excel: Zeiterfassung_2026.xlsx`,
+  'btb': `Bautagebuch | ÖWG Dobl-Zwaring | Bericht 001 | 27.03.2026 | Entwurf`,
+  'foto': `Fotos | ÖWG Dobl-Zwaring | EG + Bewehrung | 24 Fotos, 6 für Bericht`,
+  'ap': `Nachkalkulation | ÖWG Dobl / Haus 5 | 7 Arbeitspakete | 2 fertig`,
+  'einteilung': `Arbeitseinteilung | ÖWG Dobl | Mi 27.03.2026 | 7 anwesend, 56 Ah`,
+  'fertig': `Nachkalkulation | Fertigmeldung | Mauerwerk 38er H5/EG`,
+  'katalog': `Erfahrungskatalog | 6 Tätigkeiten | 71 Messungen | 5 Projekte`,
+  'prognose': `Bauzeitprognose | ÖWG Dobl | 2.227 Ah | ~77 Tage (inkl. Puffer) | 4 FA × 8h`,
+  'beton': `Betonbestellung | ÖWG Dobl | 136 m³ bestellt | 78 m³ geliefert | 58 m³ offen`,
+  'ziegel': `Ziegelberechnung | ÖWG Dobl / Haus 5 | 463 m² | 133 Paletten | 2 Liefertermine`,
+  'ki': `KI-Assistent | ÖWG Dobl | ChatGPT | 2 Dokumente geladen | 3 Fragen`,
+  'material': `Material | ÖWG Dobl | 5 Bestellungen | 2 geliefert, 1 bestellt, 1 unterwegs, 1 offen | ClickUp ✓`,
+  'outlook': `Outlook | 3 Plan-Anhänge | 3 Termine | 3 offene Aufgaben | Sync OK`,
+  'wetter': `Wetter | ÖWG Dobl | Stündliche Abfrage ● | 14°C Sonnig | Archiv: 127 Tage gespeichert`,
+  'mobile': `Mobile App | PWA | Android-first | Offline-fähig`,
+  'gis': `GIS | ÖWG Dobl | GN 342/5 | Bauland Wohnen | 2.847 m² | Lokal gespeichert ✓`,
+  'msproject': `Bauzeitplan | ÖWG Dobl | MS Project Import | 38% Fortschritt | +3 Tage Verzug | Ende KW 32`
+};
+function show(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const view = document.getElementById(id);
+  if (view) view.classList.add('active');
+  // Find the nav button that called this
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("'" + id + "'")) {
+      b.classList.add('active');
+    }
+  });
+  document.getElementById('statusText').textContent = statusMap[id] || 'Bereit';
+}
+</script>
+</body>
+</html>

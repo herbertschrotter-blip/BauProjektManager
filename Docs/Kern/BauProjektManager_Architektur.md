@@ -111,14 +111,14 @@ Projektnummer wird automatisch aus dem Projektstart-Datum generiert (YYYYMM).
 
 ### 2.1 System of Record: SQLite
 
-SQLite ist die **einzige Wahrheitsquelle** für ALLE Daten. JSON-Dateien sind generierte Exporte oder selten geänderte Konfiguration. Wenn JSON korrupt wird → aus SQLite neu generiert. (ADR-002, ADR-004)
+SQLite ist die **einzige Wahrheitsquelle** für alle BPM-Kerndaten (Projekte, Pläne, Stammdaten, Kalkulation, Bautagebuch). JSON-Dateien sind generierte Exporte oder selten geänderte Konfiguration. Wenn JSON korrupt wird → aus SQLite neu generiert. Ausnahme: Zeiterfassung — hier bleibt Excel die Single Source of Truth für Roh-Zeitbuchungen (ADR-018). (ADR-002, ADR-004)
 
 ### 2.2 Dreistufige Speicherung
 
 | Kategorie | Speicherort | Inhalt | Synct? |
 |-----------|-------------|--------|--------|
-| **Nutzdaten** | OneDrive (Projektordner) | Pläne, Fotos, Dokumente, `_Eingang`, `_Archiv` | Ja |
-| **Konfiguration** | OneDrive (`.AppData/`) | `registry.json`, `settings.json`, `profiles.json`, `pattern-templates.json`, `templates.json` | Ja |
+| **Nutzdaten** | Cloud-Speicher (Projektordner) | Pläne, Fotos, Dokumente, `_Eingang`, `_Archiv` | Ja |
+| **Konfiguration** | Cloud-Speicher (`.AppData/`) | `registry.json`, `settings.json`, `profiles.json`, `pattern-templates.json`, `templates.json` | Ja |
 | **Operativer State** | Lokal (`%LocalAppData%\BauProjektManager\`) | SQLite-DBs, Logs, Cache, Undo-Journal, Temp | Nein |
 
 ### 2.3 Speicher-Matrix (komplett)
@@ -126,20 +126,21 @@ SQLite ist die **einzige Wahrheitsquelle** für ALLE Daten. JSON-Dateien sind ge
 | Datei/Daten | Format | Ort | Synct? | Schreiber | Leser | Änderung |
 |-------------|--------|-----|--------|-----------|-------|----------|
 | Projekt-Stammdaten | SQLite | Lokal `bpm.db` | Nein | C# | C# | Selten |
-| `registry.json` | JSON | OneDrive `.AppData/` | Ja | C# (auto) | VBA, C# | Bei Projekt-Änderung |
-| `settings.json` | JSON | OneDrive `.AppData/` | Ja | C# | C# | Selten |
-| `profiles.json` | JSON | OneDrive `.AppData/Projects/<P>/` | Ja | C# | C# | Beim Anlernen |
-| `pattern-templates.json` | JSON | OneDrive `.AppData/` | Ja | C# | C# | Beim Anlernen |
-| `templates.json` | JSON | OneDrive `.AppData/` | Ja | C# | C# | Selten |
+| `registry.json` | JSON | Cloud-Speicher `.AppData/` | Ja | C# (auto) | VBA, C# | Bei Projekt-Änderung |
+| `settings.json` | JSON | Cloud-Speicher `.AppData/` | Ja | C# | C# | Selten |
+| `profiles.json` | JSON | Cloud-Speicher `.AppData/Projects/<P>/` | Ja | C# | C# | Beim Anlernen |
+| `pattern-templates.json` | JSON | Cloud-Speicher `.AppData/` | Ja | C# | C# | Beim Anlernen |
+| `templates.json` | JSON | Cloud-Speicher `.AppData/` | Ja | C# | C# | Selten |
 | Plan-Cache | SQLite | Lokal `planmanager.db` | Nein | C# | C# | Bei Scan/Import |
 | Import-Journal | SQLite | Lokal `planmanager.db` | Nein | C# | C# | Bei Import |
 | Undo-Daten | SQLite | Lokal `planmanager.db` | Nein | C# | C# | Bei Import |
 | Logs | Dateien | Lokal `Logs/` | Nein | Serilog | Dev | Ständig |
-| `.bpm-manifest` | JSON | OneDrive Projektordner | Ja | C# | C#, Apps | Einmalig |
-| Pläne (PDF/DWG) | Dateien | OneDrive Projektordner | Ja | Import | User | Bei Import |
-| Vorlagen | Excel/Word | OneDrive `Vorlagen/` | Ja | User | User, C# | Selten |
+| `.bpm-manifest` | JSON | Cloud-Speicher Projektordner | Ja | C# | C#, Apps | Einmalig |
+| Pläne (PDF/DWG) | Dateien | Cloud-Speicher Projektordner | Ja | Import | User | Bei Import |
+| Vorlagen | Excel/Word | Cloud-Speicher `Vorlagen/` | Ja | User | User, C# | Selten |
 
-### 2.4 Ordnerstruktur (OneDrive)
+### 2.4 Ordnerstruktur (Cloud-Speicher)
+Cloud-Speicher/02Arbeit/
 
 ```
 OneDrive/02Arbeit/
@@ -741,7 +742,7 @@ BauProjektManager.sln
     │   ├── DSVGO-Architektur.md               ← ✅ Privacy Engineering, IPrivacyPolicy
     │   └── BACKLOG.md                         ← ✅ Feature-Liste
     ├── Referenz/                              ← Lesen wenn Thema aufkommt
-    │   ├── ADR.md                             ← ✅ 36 Entscheidungen
+    │   ├── ADR.md                             ← ✅ 42 Entscheidungen
     │   ├── VISION.md                          ← ✅ Nordstern
     │   ├── DEPENDENCY-MAP.md                  ← ✅ Ökosystem
     │   ├── UI_UX_Guidelines.md                ← ✅ Design-System
@@ -770,7 +771,7 @@ Detailliertes Dependency-Diagramm: siehe [DEPENDENCY-MAP.md](DEPENDENCY-MAP.md).
 
 ## 11. Technische Entscheidungen
 
-Vollständige Liste aller 36 Architekturentscheidungen mit Kontext, Alternativen und Konsequenzen: siehe [ADR.md](../Referenz/ADR.md).
+Vollständige Liste aller 42 Architekturentscheidungen mit Kontext, Alternativen und Konsequenzen: siehe [ADR.md](../Referenz/ADR.md).
 
 Zusammenfassung der wichtigsten Entscheidungen:
 
@@ -902,14 +903,14 @@ Bevor ein Feature als "fertig" gilt:
 
 | Datei | Ort | Format | Zweck | Erstellt von |
 |-------|-----|--------|-------|-------------|
-| `registry.json` | OneDrive `.AppData/` | JSON | VBA-Export (generiert) | C#-App (auto) |
-| `settings.json` | OneDrive `.AppData/` | JSON | App-Einstellungen | C#-App |
-| `pattern-templates.json` | OneDrive `.AppData/` | JSON | Musterbibliothek | C#-App |
-| `templates.json` | OneDrive `.AppData/` | JSON | Vorlagen-Verzeichnis | C#-App |
-| `profiles.json` | OneDrive `.AppData/Projects/<P>/` | JSON | Plantyp-Profile | C#-App |
+| `registry.json` | Cloud-Speicher `.AppData/` | JSON | VBA-Export (generiert) | C#-App (auto) |
+| `settings.json` | Cloud-Speicher `.AppData/` | JSON | App-Einstellungen | C#-App |
+| `pattern-templates.json` | Cloud-Speicher `.AppData/` | JSON | Musterbibliothek | C#-App |
+| `templates.json` | Cloud-Speicher `.AppData/` | JSON | Vorlagen-Verzeichnis | C#-App |
+| `profiles.json` | Cloud-Speicher `.AppData/Projects/<P>/` | JSON | Plantyp-Profile | C#-App |
 | `bpm.db` | Lokal | SQLite | Haupt-DB (Projekte) | C#-App |
 | `planmanager.db` | Lokal `Projects/<P>/` | SQLite | Cache, Journal, Undo | C#-App |
-| `.bpm-manifest` | OneDrive Projektordner | JSON | Zeiger auf Registry | C#-App |
+| `.bpm-manifest` | Cloud-Speicher Projektordner | JSON | Zeiger auf Registry | C#-App |
 
 ---
 

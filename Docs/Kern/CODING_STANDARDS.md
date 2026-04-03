@@ -2,7 +2,7 @@
 
 **Version:** 1.0.0  
 **Datum:** 26.03.2026  
-**Gilt für:** C# (.NET 9), WPF (XAML), MVVM Pattern  
+**Gilt für:** C# (.NET 10 LTS), WPF (XAML), MVVM Pattern
 **Quellen:** Microsoft .NET Conventions, Google C# Style Guide, Community Best Practices  
 
 ---
@@ -1434,6 +1434,100 @@ var allBytes = File.ReadAllBytes(largePdfPath);  // 500MB PDF → OutOfMemory!
 Thread.Sleep(1000);                          // NIEMALS!
 var result = heavyOperation.Result;          // NIEMALS!
 ```
+
+---
+
+## 17. Datenschutz im Code (PFLICHT)
+
+Verbindliche Regeln aus [DSVGO-Architektur.md](DSVGO-Architektur.md) (ADR-035, ADR-036). Gelten ab sofort für jeden neuen Code.
+
+### 17.1 Logging — Keine Personendaten
+```csharp
+// RICHTIG — nur IDs loggen
+_logger.LogInformation("Client {ClientId} aktualisiert", client.Id);
+_logger.LogInformation("Projekt {ProjectId} geladen", project.Id);
+
+// FALSCH — Personendaten loggen
+_logger.LogInformation("Client {Name} ({Email}) aktualisiert",
+    client.ContactPerson, client.Email);
+_logger.LogInformation("Mitarbeiter {Name} hat {Stunden}h gearbeitet",
+    employee.Name, hours);
+```
+
+**VERBOTEN in Log-Nachrichten:** Personennamen, E-Mail-Adressen, Telefonnummern, Personalnummern, Dokumenteninhalte, API-Keys.
+
+### 17.2 Externe Kommunikation — Kein direkter HttpClient
+
+Alle HTTP-Calls an externe APIs MÜSSEN über `IExternalCommunicationService` laufen (ADR-035). Direkter `HttpClient`-Zugriff für externe Dienste ist VERBOTEN.
+```csharp
+// RICHTIG — über zentralen Service
+public class SteiermarkGisService
+{
+    private readonly IExternalCommunicationService _comm;
+
+    public async Task<ParcelData> QueryParcelAsync(double east, double north, CancellationToken ct)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, BuildGisUrl(east, north));
+        var response = await _comm.SendAsync("gis_stmk", request, DataClassification.ClassA, "Grundstück laden", ct);
+        // ...
+    }
+}
+
+// FALSCH — direkter HttpClient
+public class SteiermarkGisService
+{
+    private readonly HttpClient _http;
+    public async Task<ParcelData> QueryParcelAsync(...)
+    {
+        var response = await _http.GetAsync(url);  // VERBOTEN — kein Audit, kein Kill-Switch
+    }
+}
+```
+
+### 17.3 Datenklassifizierung — Bei jedem externen Call
+
+Jeder externe Call bekommt eine `DataClassification`:
+```csharp
+// Klasse A — keine Personendaten (Koordinaten, Wetter)
+await _comm.SendAsync("wetter", request, DataClassification.ClassA, "Wettervorhersage", ct);
+
+// Klasse B — personenbezogene Daten (Kontakte, Mitarbeiter)
+await _comm.SendAsync("task_mgmt", request, DataClassification.ClassB, "Materialbestellung", ct);
+
+// Klasse C — sensible Drittdaten (LVs, Bescheide) → Default: BLOCKIERT
+await _comm.SendAsync("ki", request, DataClassification.ClassC, "LV-Analyse", ct);
+```
+
+### 17.4 API-Keys — Sichere Speicherung
+```csharp
+// RICHTIG — DPAPI (Windows Data Protection API)
+var key = ProtectedData.Protect(Encoding.UTF8.GetBytes(apiKey),
+    null, DataProtectionScope.CurrentUser);
+
+// FALSCH — API-Keys in Klartext
+settings.OpenAiApiKey = "sk-abc123...";  // NIEMALS in settings.json
+_logger.LogInformation("API Key: {Key}", apiKey);  // NIEMALS loggen
+```
+
+**VERBOTEN:** API-Keys in settings.json, registry.json, Git, Logs oder Quellcode.
+
+### 17.5 Privacy Policy — Austauschbar per DI
+
+Die Datenschutz-Logik wird über `IPrivacyPolicy` gesteuert (ADR-036). Der aktive Modus kommt aus der Lizenz, NICHT aus settings.json.
+```csharp
+// In App.xaml.cs — DI Registrierung
+if (license.IsCommercial)
+    services.AddSingleton<IPrivacyPolicy, StrictPrivacyPolicy>();
+else
+    services.AddSingleton<IPrivacyPolicy, RelaxedPrivacyPolicy>();
+
+// FALSCH — über Settings steuerbar
+if (settings.PrivacyMode == "relaxed")  // VERBOTEN — User kann DSGVO umgehen
+```
+
+### 17.6 registry.json — Whitelist
+
+Neue Felder in `registry.json` müssen gegen die Whitelist (DSVGO-Architektur Kap. 9.3) geprüft werden. Klasse-B-Felder nur wenn für VBA-Kompatibilität zwingend nötig.
 
 ---
 

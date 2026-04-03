@@ -1529,6 +1529,26 @@ if (settings.PrivacyMode == "relaxed")  // VERBOTEN — User kann DSGVO umgehen
 
 Neue Felder in `registry.json` müssen gegen die Whitelist (DSVGO-Architektur Kap. 9.3) geprüft werden. Klasse-B-Felder nur wenn für VBA-Kompatibilität zwingend nötig.
 
+### 17.7 Datenschutz-Logik — Trennung von Policy und UI
+
+Datenschutz-Entscheidungen werden NIEMALS im ViewModel getroffen. ViewModels dürfen nur Policy-Entscheidungen anfordern, darstellen und User-Bestätigungen zurückmelden.
+```csharp
+// RICHTIG — ViewModel fragt Policy, zeigt Ergebnis
+var decision = _policy.Evaluate(module, classification, purpose);
+if (decision.RequiresUserConfirmation)
+{
+    // Dialog anzeigen, User-Antwort zurückmelden
+}
+
+// FALSCH — ViewModel entscheidet selbst
+if (classification == DataClassification.ClassC)
+{
+    ShowWarning("Klasse C!"); // ViewModel trifft Policy-Entscheidung
+}
+```
+
+**Regel:** Kein ViewModel, kein Dialog-Code-Behind darf prüfen ob eine Datenklasse erlaubt ist oder ob eine Warnung angezeigt werden soll. Das entscheidet ausschließlich `IPrivacyPolicy`. Das ViewModel visualisiert nur die `PolicyDecision`.
+
 ---
 
 ## Zusammenfassung — Die 10 wichtigsten Regeln

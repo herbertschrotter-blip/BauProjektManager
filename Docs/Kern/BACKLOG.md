@@ -1,16 +1,17 @@
 ﻿# BauProjektManager — Backlog
 
-**Letzte Aktualisierung:** 30.03.2026  
-**Aktuelle Version:** v0.16.0
+**Letzte Aktualisierung:** 03.04.2026  
+**Aktuelle Version:** v0.16.1
 
 **Verwandte Dokumente:**
-- [VISION.md](VISION.md) — Nordstern, Schmerzpunkte, Zielgruppe
-- [ADR.md](ADR.md) — Architekturentscheidungen (27 ADRs)
-- [CHANGELOG.md](CHANGELOG.md) — Versionshistorie ab v0.0.0
-- [DEPENDENCY-MAP.md](DEPENDENCY-MAP.md) — Solution-Struktur + Ökosystem
+- [VISION.md](../Referenz/VISION.md) — Nordstern, Schmerzpunkte, Zielgruppe
+- [ADR.md](../Referenz/ADR.md) — Architekturentscheidungen (36 ADRs)
+- [CHANGELOG.md](../Referenz/CHANGELOG.md) — Versionshistorie ab v0.0.0
+- [DEPENDENCY-MAP.md](../Referenz/DEPENDENCY-MAP.md) — Solution-Struktur + Ökosystem
 - [BauProjektManager_Architektur.md](BauProjektManager_Architektur.md) — Technische Spezifikation v2.0
 - [CODING_STANDARDS.md](CODING_STANDARDS.md) — Code-Richtlinien
-- Modul-Konzepte: [Docs/Konzepte/](Konzepte/)
+- [DSVGO-Architektur.md](DSVGO-Architektur.md) — Datenschutz, Privacy Engineering
+- Modul-Konzepte: [Docs/Konzepte/](../Konzepte/)
 
 ---
 
@@ -106,6 +107,17 @@ Diese Features verbessern V1, sind aber kein Blocker für den Release.
 | Ordner umbenennen auf Disk | Bei Sortierung/Präfix-Änderung Ordner auf Festplatte umbenennen | ⬜ |
 | Plan-Sammler (#34) | Pläne per Checkbox sammeln und nach Schema sortieren | ⬜ |
 
+### Datenschutz-Infrastruktur (vor erstem Online-Modul)
+
+| Feature | Beschreibung | Status |
+|---------|-------------|--------|
+| IExternalCommunicationService | Zentrales Privacy Gate für alle externen HTTP-Calls (ADR-035) | ⬜ |
+| IPrivacyPolicy + DI | RelaxedPrivacyPolicy (intern) + StrictPrivacyPolicy (kommerziell), Lizenz-gesteuert (ADR-036) | ⬜ |
+| DataClassification Enum | ClassA/ClassB/ClassC im Domain-Projekt | ⬜ |
+| external_call_log Tabelle | Audit-Log in bpm.db (DSVGO-Architektur Kap. 11.3) | ⬜ |
+| Einstellungen: Datenschutz-Tab | Toggle pro externem Dienst, Audit-Log-Anzeige, Kill-Switch | ⬜ |
+| Log-Rotation 30 Tage | Serilog retainedFileCountLimit (trivial) | ⬜ |
+
 ---
 
 ## Could — nice to have
@@ -196,6 +208,12 @@ schema_version (version)
 - Externe Links als konfigurierbare Datenstruktur (nicht hardcoded)
 - KI-Import als gemeinsames Service-Interface (IKiImportService) für alle Import-Szenarien
 - JSON als Standard-Austauschformat für KI-Antworten
+- **Datenschutz:** Keine Personendaten in Logs — nur IDs (CODING_STANDARDS Kap. 17)
+- **Datenschutz:** Kein direkter HttpClient für externe APIs — alles über IExternalCommunicationService (ADR-035)
+- **Datenschutz:** DataClassification (A/B/C) bei jedem externen Call mitgeben
+- **Datenschutz:** IPrivacyPolicy per DI, gesteuert über Lizenz — nicht settings.json (ADR-036)
+- **Datenschutz:** API-Keys in DPAPI, NIEMALS in settings.json/registry.json/Git/Logs
+- **Datenschutz:** registry.json Whitelist beachten bei neuen Feldern (DSVGO-Architektur Kap. 9.3)
 
 ---
 

@@ -118,6 +118,7 @@ Welches Modul "besitzt" welche Tabelle (schreibt), und welche Module lesen.
 | diary_entries | Bautagebuch | Dashboard, Export | ⬜ |
 | contacts | Adressbuch | Einstellungen (Tab 3) | ⬜ |
 | material_orders | Task-Management | Dashboard | ⬜ |
+| external_call_log | Infrastructure (ExternalCommunicationService) | Einstellungen (Datenschutz-Tab) | ⬜ |
 
 ---
 
@@ -550,6 +551,32 @@ CREATE TABLE material_orders (
 **Konzept:** ModuleTaskManagement.md (noch zu erstellen)  
 **Integration:** Über ITaskManagementService Interface — nicht an ClickUp gebunden
 
+### 5.11 external_call_log (Datenschutz / Audit)
+
+Audit-Log für alle externen HTTP-Calls über `IExternalCommunicationService` (ADR-035). Protokolliert ob ein Call erlaubt oder blockiert wurde und warum.
+```sql
+CREATE TABLE external_call_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT NOT NULL,
+    module TEXT NOT NULL,              -- "ki", "gis_google", "wetter", "task_mgmt"
+    target_domain TEXT NOT NULL,       -- "api.openai.com"
+    classification TEXT NOT NULL,      -- "ClassA", "ClassB", "ClassC"
+    purpose TEXT,                      -- "LV-Analyse", "Adresse suchen"
+    status_code INTEGER,              -- HTTP Status (200, 403, 500)
+    blocked INTEGER DEFAULT 0,        -- 1 wenn blockiert
+    decision_reason TEXT              -- "allowed_class_a", "blocked_global_killswitch",
+                                      -- "blocked_module_disabled", "allowed_user_confirmed",
+                                      -- "blocked_class_c_no_anonymization",
+                                      -- "blocked_dpa_not_confirmed",
+                                      -- "allowed_anonymized_payload", "internal_mode"
+);
+```
+
+**Konzept:** DSVGO-Architektur.md Kapitel 11.3  
+**Besitzer:** Infrastructure (ExternalCommunicationService)  
+**Löschung:** Automatisch nach 90 Tagen  
+**Hinweis:** Keine Personendaten loggen — nur Modul, Domain, Klassifizierung und Entscheidungsgrund
+
 ---
 
 ## 6. PlanManager-Datenbank (separat)
@@ -630,6 +657,7 @@ CREATE TABLE import_action_files (
 | *1.8* | *geplant* | *lv_positions, performance_catalog, project_difficulty* |
 | *1.9* | *geplant* | *diary_entries* |
 | *2.0* | *geplant* | *contacts, material_orders, buildings-Tabelle entfernen* |
+| *2.1* | *geplant* | *external_call_log (Audit-Log, ADR-035)* |
 
 ### 7.2 Migrationsregeln
 

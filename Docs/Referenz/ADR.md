@@ -47,6 +47,8 @@
 | 034 | Modul-Aktivierung + Offline-Lizenzierung | 🟡 Konzept | 2026-03 |
 | 035 | IExternalCommunicationService — zentrales Privacy Gate | ✅ Entschieden | 2026-04 |
 | 036 | IPrivacyPolicy — austauschbare Policy für Internal/Commercial | ✅ Entschieden | 2026-04 |
+| 037 | ISyncTransport — austauschbarer Sync-Transport (Folder/HTTP) | 🟡 Konzept | 2026-04 |
+| 038 | IAccessControlService — rollenbasierte Projektfreigabe | 🟡 Konzept | 2026-04 |
 
 ---
 
@@ -1139,6 +1141,63 @@ else
 - Session-Override (optional): `IPrivacyContext.IsTrustedSession` für temporäres Abschalten von Klasse-B-Warnungen im Commercial-Modus. Klasse C bleibt IMMER blockiert
 - Für V1 nicht relevant (keine Online-Module). Implementierung vor dem ersten Online-Modul zusammen mit ADR-035
 - Detailliertes Konzept: [DSVGO-Architektur.md](DSVGO-Architektur.md) Kapitel 4.3
+
+---
+
+## ADR-037: ISyncTransport — austauschbarer Sync-Transport (Folder/HTTP)
+
+**Datum:** 2026-04  
+**Status:** 🟡 Konzept  
+**Herkunft:** Multi-User Architektur-Diskussion (Claude + ChatGPT), Analyse von PlanRadar/Procore/Dalux
+
+**Kontext:**
+
+Das Multi-User-Konzept sieht zwei Sync-Phasen vor: Phase 2 (JSON-Events über Cloud-Ordner für 2–3 Nutzer) und Phase 3 (REST API Server für 5–10+ Nutzer). Um nicht zweimal die Sync-Logik zu bauen, muss der Transportkanal austauschbar sein — die Payload-Struktur und Konfliktbehandlung bleiben gleich.
+
+**Entscheidung:**
+
+Ein `ISyncTransport` Interface im Domain-Projekt mit zwei Implementierungen:
+
+- `FolderSyncTransport` (Phase 2): Schreibt/liest JSON-Event-Dateien aus einem Cloud-Ordner. Append-only Events, jeder Client tracked verarbeitete Events selbst.
+- `HttpSyncTransport` (Phase 3): POST/GET gegen ASP.NET Minimal API.
+
+Beide verwenden dasselbe `SyncEnvelope`-Format mit `eventId`, `entityType`, `baseVersion`, `newVersion`, `permissionScope`.
+
+**Konsequenzen:**
+
+- Sync-Kernlogik (Konflikterkennung, Versionsprüfung, Event-Verarbeitung) wird einmal geschrieben
+- Transport wechselt per DI — kein Code-Umbau bei Phase-Wechsel
+- Phase 2 braucht keinen Server — nur einen geteilten Cloud-Ordner
+- Konzeptdokument: [MultiUserKonzept.md](../Konzepte/MultiUserKonzept.md) Kapitel 5 + 7.2
+
+---
+
+## ADR-038: IAccessControlService — rollenbasierte Projektfreigabe
+
+**Datum:** 2026-04  
+**Status:** 🟡 Konzept  
+**Herkunft:** Multi-User Architektur-Diskussion (Claude + ChatGPT)
+
+**Kontext:**
+
+Mehrere Rollen (Bauleiter, Polier, Disponent, Einkäufer, Lohnbüro) sollen am selben Projekt arbeiten, aber jeder sieht nur seinen Teil. Das bisherige Konzept (ADR-033) hatte keine Berechtigungen — nur Vertrauensbasis. Für den Verkauf und größere Teams braucht es ein echtes Berechtigungsmodell.
+
+**Entscheidung:**
+
+Zweistufiger Ansatz:
+
+- **Phase 2 (einfach):** `project_shares` Tabelle mit `permission` Enum (full, read, plans_only, diary_write). Reicht für 2–3 Nutzer.
+- **Phase 3 (RBAC):** `users`, `roles`, `project_user_role` Tabellen mit `module_flags` (JSON: welche Module in welcher Stufe). Reicht für 5–10 Nutzer.
+
+`IAccessControlService` Interface in Domain, Implementierung in Infrastructure. Für V1: `NoOpAccessControlService` (alles erlaubt). Ergänzt, nicht ersetzt die bestehende `IPrivacyPolicy` — zwei unabhängige Schichten (Zugriffskontrolle + Datenschutz).
+
+**Konsequenzen:**
+
+- Interface in Domain (keine Abhängigkeiten), Implementierung in Infrastructure
+- Berechtigungsmatrix aus DSGVO-Architektur (Kap. 10.2) wird in Code umgesetzt
+- Bei Phase 2 (JSON-Sync): Berechtigungen nicht erzwingbar, nur organisatorisch (empfängerspezifische Ordner)
+- Bei Phase 3 (Server): Server erzwingt Berechtigungen serverseitig
+- Konzeptdokument: [MultiUserKonzept.md](../Konzepte/MultiUserKonzept.md) Kapitel 6 + 7.3
 
 ---
 

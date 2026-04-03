@@ -43,7 +43,7 @@ public class FolderTreeItem
 /// ViewModel for the Settings page — manages project list, paths display,
 /// and global default folder template with subfolders and prefix toggle.
 /// </summary>
-public partial class SettingsViewModel : ObservableObject
+public partial class SettingsViewModel : ObservableObject, IDisposable
 {
     private readonly ProjectDatabase _db = new();
     private readonly RegistryJsonExporter _exporter;
@@ -551,5 +551,10 @@ public partial class SettingsViewModel : ObservableObject
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+    }
+
+    public void Dispose()
+    {
+        _db.Dispose();
     }
 }

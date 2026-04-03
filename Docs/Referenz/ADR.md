@@ -1,9 +1,18 @@
 ﻿# BauProjektManager — Architecture Decision Records (ADR)
 
 **Erstellt:** 29.03.2026  
-**Aktualisiert:** 30.03.2026  
-**Version:** 1.1  
+**Aktualisiert:** 04.04.2026  
+**Version:** 1.2  
 **Kontext:** Alle Entscheidungen aus Architektur-Sessions, Review-Runden (ChatGPT + Claude), und Implementierungs-Chats.
+
+### Statusmodell
+
+| Ebene | Werte | Bedeutung |
+|-------|-------|-----------|
+| **Decision Status** | Proposed → Accepted → Superseded → Deprecated | Ist die Architekturentscheidung getroffen? |
+| **Implementation Status** | Not Started → Partial → Implemented | Ist sie im Code umgesetzt? |
+
+Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheidung getroffen, Umsetzung vor erstem Online-Modul).
 
 ---
 
@@ -29,7 +38,7 @@
 | 016 | Coding Standards + Definition of Done | ✅ Entschieden | 2026-03 |
 | 017 | VBA liest nur, schreibt nie | ✅ Entschieden | 2026-03 |
 | 018 | Arbeitszeiterfassung: WPF + ClosedXML → Excel | ✅ Entschieden | 2026-03 |
-| 019 | Mobile PWA statt Native App | 🟡 Konzept, aufgeschoben | 2026-03 |
+| 019 | Mobile PWA statt Native App | ✅ Accepted / Not Started | 2026-03 |
 | 020 | Write-Lock mit Heartbeat für Multi-Device-Sync | 🟡 Konzept, aufgeschoben | 2026-03 |
 | 021 | Client/Firma als eigene Entität (Vorbereitung) | 🟡 Konzept | 2026-03 |
 | 022 | Segment-basiertes Dateinamen-Parsing | ✅ Entschieden | 2026-03 |
@@ -42,14 +51,17 @@
 | 029 | Arbeitspaket als zentrales Verbindungskonzept | ✅ Entschieden | 2026-03 |
 | 030 | Abschluss-Erfassung statt Tages-Aufmaß | ✅ Entschieden | 2026-03 |
 | 031 | DB-SCHEMA.md als zentrales Leitdokument | ✅ Entschieden | 2026-03 |
-| 032 | ITaskManagementService — nicht an ClickUp gebunden | 🟡 Konzept | 2026-03 |
+| 032 | ITaskManagementService — nicht an ClickUp gebunden | ✅ Accepted / Not Started | 2026-03 |
 | 033 | Multi-User: 3 Modi (eigene DB, geteilte DB, Server) | 🟡 Konzept | 2026-03 |
 | 034 | Modul-Aktivierung + Offline-Lizenzierung | 🟡 Konzept | 2026-03 |
 | 035 | IExternalCommunicationService — zentrales Privacy Gate | ✅ Entschieden | 2026-04 |
 | 036 | IPrivacyPolicy — austauschbare Policy für Internal/Commercial | ✅ Entschieden | 2026-04 |
-| 037 | ISyncTransport — austauschbarer Sync-Transport (Folder/HTTP) | 🟡 Konzept | 2026-04 |
+| 037 | ISyncTransport — austauschbarer Sync-Transport (Folder/HTTP) | ✅ Accepted / Not Started | 2026-04 |
 | 038 | IAccessControlService — rollenbasierte Projektfreigabe | 🟡 Konzept | 2026-04 |
-| 039 | Einheitliches ID-Schema — TEXT mit Präfix für alle Tabellen | ✅ Entschieden | 2026-04 |
+| 039 | Einheitliches ID-Schema — TEXT mit Präfix für alle Tabellen | ✅ Accepted / Partial | 2026-04 |
+| 040 | Migrations- und Versionierungsstrategie (DB + JSON) | ✅ Accepted / Not Started | 2026-04 |
+| 041 | Recovery / Degraded Mode | ✅ Accepted / Not Started | 2026-04 |
+| 042 | Secrets und Credentials | ✅ Accepted / Not Started | 2026-04 |
 
 ---
 
@@ -95,7 +107,9 @@ Die ursprüngliche Architektur (v1.3) verwendete JSON als primäre Datenquelle f
 
 **Entscheidung:**
 
-SQLite ist die einzige Wahrheitsquelle für alle operativen Daten. JSON dient nur als generierter Export für VBA-Interop (`registry.json`) und als selten geänderte Konfiguration (`settings.json`, `profiles.json`). Wenn JSON korrupt wird, kann es aus SQLite neu generiert werden.
+SQLite ist die einzige Wahrheitsquelle für alle BPM-Kerndaten (Projekte, Pläne, Stammdaten, Kalkulation, Bautagebuch). JSON dient nur als generierter Export für VBA-Interop (`registry.json`) und als selten geänderte Konfiguration (`settings.json`, `profiles.json`). Wenn JSON korrupt wird, kann es aus SQLite neu generiert werden.
+
+**Ausnahme:** Das Zeiterfassungs-Modul — hier bleibt Excel die Single Source of Truth für Roh-Zeitbuchungen (ADR-018). BPM schreibt per ClosedXML in die Excel-Tabelle und liest Aggregate in SQLite für Kalkulation und Bautagebuch. Diese SQLite-Kopien sind **abgeleitet, nicht führend**.
 
 **Alternativen:**
 
@@ -239,6 +253,11 @@ App             → referenziert alles (DI verdrahtet hier)
 - Infrastructure könnte mit der Zeit groß werden — dann in Unter-Namespaces gliedern (Persistence, FileSystem, Logging), ohne neues Projekt
 - Jedes Feature-Modul (PlanManager, Settings) ist ein WPF Class Library Projekt
 - App-Projekt verdrahtet alles über DI
+
+**Modulinteraktionsregeln (verbindlich):**
+- Feature-Module (PlanManager, Settings, Foto etc.) referenzieren **nicht gegenseitig**. Keine Projekt-Referenz von PlanManager → Settings oder umgekehrt.
+- Gemeinsame Verträge (Modelle, Interfaces, Enums) liegen in **Domain**. Gemeinsame technische Dienste in **Infrastructure**.
+- UI-Navigation und Modulverdrahtung passieren **ausschließlich im App-Projekt** (App.xaml.cs + MainWindow.xaml).
 
 ---
 
@@ -516,7 +535,12 @@ Herbert hat ein bestehendes Excel-basiertes Zeiterfassungssystem mit Power Query
 
 **Entscheidung:**
 
-Nein. Excel bleibt die Single Source of Truth für Zeitdaten. WPF liefert nur eine schöne Eingabemaske (Dark Theme, Dropdowns, Kalender). Daten werden per ClosedXML direkt in die Excel-Tabelle `tbl_Zeiten` geschrieben (append-only). Excel behält alle Formeln, Power Query, Pivot und Auswertungen. Baustellen-Dropdown kommt aus `bpm.db` / `registry.json`.
+Nein. Excel bleibt die Single Source of Truth für Roh-Zeitbuchungen. WPF liefert nur eine schöne Eingabemaske (Dark Theme, Dropdowns, Kalender). Daten werden per ClosedXML direkt in die Excel-Tabelle `tbl_Zeiten` geschrieben (append-only). Excel behält alle Formeln, Power Query, Pivot und Auswertungen. Baustellen-Dropdown kommt aus `bpm.db` / `registry.json`.
+
+**Abgrenzung zu ADR-002 (SQLite als SoR):**
+- Excel = **führend** für Roh-Zeitbuchungen (wer, wann, Stunden, Abwesenheit)
+- SQLite = **abgeleiteter Schatten** — darf Aggregate/Kopien für Kalkulation und Bautagebuch halten, ist aber nicht führend
+- Bei Widerspruch zwischen Excel und SQLite gilt Excel
 
 **Alternativen:**
 
@@ -585,6 +609,10 @@ Exklusiver Schreibzugriff mit Warteschlange. Wer den Lock hält, darf schreiben.
 - Passt zum Baustellen-Szenario (Polier schreibt, andere lesen)
 - Einfache Implementierung
 - Konzept erst relevant bei Mobile-Umsetzung
+
+**Scope:** Gilt für Modus B (geteilte SQLite im LAN-Netzlaufwerk). Wird für Cloud-basierte Szenarien durch ADR-037 (Event-basierter Sync) abgelöst. Heartbeat-Lock und Event-Versionierung koexistieren nicht — je nach Modus gilt eines.
+
+**Betrifft:** ADR-033, ADR-037
 
 ---
 
@@ -896,6 +924,11 @@ Ein zentrales Dokument `Docs/DB-SCHEMA.md` ist die **einzige Quelle der Wahrheit
 - Keine Inkonsistenzen zwischen Modulen
 - Implementiert als `Docs/DB-SCHEMA.md` (v1.5)
 
+**Geltungsgrenze:**
+- **ADRs** definieren Prinzipien und Entscheidungen (z.B. "TEXT-IDs mit Präfix", ADR-039)
+- **DB-SCHEMA.md** definiert Tabellen, Spalten, FKs, SQL und Naming-Konventionen — die operative Referenz
+- **Modulkonzepte** dürfen Datenbedarf beschreiben, aber kein konkurrierendes Schema führen
+
 ---
 
 ## ADR-032: ITaskManagementService — nicht an ClickUp gebunden
@@ -949,7 +982,7 @@ Drei Modi, schrittweise aktivierbar:
 | Modus | Beschreibung | Komplexität |
 |-------|-------------|-------------|
 | **A: Eigene DB** | Jeder User hat sein eigenes bpm.db (so wie jetzt). Solo-Betrieb. | Null (ist schon so) |
-| **B: Geteilte DB** | bpm.db liegt auf einem Netzlaufwerk oder Cloud-Ordner. Write-Lock mit Heartbeat (ADR-020). Read-Only Fallback wenn Lock belegt. | Mittel |
+| **B: Geteilte DB** | bpm.db auf LAN-Netzlaufwerk (NICHT Cloud-Ordner). Write-Lock mit Heartbeat (ADR-020). Read-Only Fallback wenn Lock belegt. Cloud-basierte Zusammenarbeit läuft ausschließlich über Event-/Dateisync (ADR-037). | Mittel |
 | **C: Server** | ASP.NET Minimal API auf einem Raspberry Pi (oder anderem Rechner) im LAN. Desktop + Mobile verbinden sich per REST API. Server besitzt die DB exklusiv — kein Sync-Konflikt. | Höher |
 
 Technisch wird ein `IDataService` Interface eingeführt mit 3 Implementierungen: `LocalDataService` (A), `SharedDbDataService` (B), `ServerDataService` (C). Umschaltung in den Systemeinstellungen.
@@ -964,8 +997,11 @@ Technisch wird ein `IDataService` Interface eingeführt mit 3 Implementierungen:
 - Modus A sofort verfügbar (ist der Status quo)
 - Modus B erfordert: IDataService Refactoring + Write-Lock + Read-Only Fallback
 - Modus C erfordert: ASP.NET Minimal API + REST-Endpoints + Server-Setup-Anleitung
-- Kein Berechtigungsmanagement geplant (Vertrauensbasis im kleinen Team)
+- Kein Berechtigungsmanagement in Modus A/B (Vertrauensbasis). RBAC ab Modus C — siehe ADR-038.
+- Shared SQLite ist ein optionaler LAN-Sondermodus, nicht der Standard-Evolutionspfad. Standard-Evolution: Modus A → Event-Sync (ADR-037) → Server (Modus C).
 - Konzeptdokument: `MultiUserKonzept.md`
+
+**Betrifft:** ADR-004, ADR-020, ADR-037, ADR-038
 
 ---
 
@@ -1117,13 +1153,15 @@ public class StrictPrivacyPolicy : IPrivacyPolicy
 }
 ```
 
-DI-Registrierung über Lizenztyp (ADR-034), NICHT über settings.json:
+DI-Registrierung über Compliance-Modus der Lizenz (ADR-034), NICHT über settings.json:
 ```csharp
-if (license.IsCommercial)
+if (license.RequiresStrictCompliance)
     services.AddSingleton<IPrivacyPolicy, StrictPrivacyPolicy>();
 else
     services.AddSingleton<IPrivacyPolicy, RelaxedPrivacyPolicy>();
 ```
+
+**Begriffsdefinition:** `RequiresStrictCompliance` wird durch die signierte Lizenzdatei bestimmt und steuert ausschließlich die Auswahl der Privacy Policy. Er ist unabhängig von Modulfreischaltungen, Preisstufe und UI-Einstellungen. "Strict Compliance" = App läuft bei Dritten (Firmenkunden) die eigene DSGVO-Pflichten haben. "Relaxed" = interner Betrieb (Herbert).
 
 **Alternativen:**
 
@@ -1138,7 +1176,7 @@ else
 - `ExternalCommunicationService` bekommt Policy per Constructor Injection — entscheidet nicht selbst
 - Beide Policies nutzen denselben Service — kein doppelter HTTP/Logging-Code
 - `RelaxedPrivacyPolicy` loggt trotzdem ins Audit-Log (mit `decision_reason: "internal_mode"`)
-- Commercial-Modus darf NIEMALS durch User-Settings steuerbar sein
+- Compliance-Modus (`RequiresStrictCompliance`) darf NIEMALS durch User-Settings steuerbar sein
 - Session-Override (optional): `IPrivacyContext.IsTrustedSession` für temporäres Abschalten von Klasse-B-Warnungen im Commercial-Modus. Klasse C bleibt IMMER blockiert
 - Für V1 nicht relevant (keine Online-Module). Implementierung vor dem ersten Online-Modul zusammen mit ADR-035
 - Detailliertes Konzept: [DSVGO-Architektur.md](DSVGO-Architektur.md) Kapitel 4.3
@@ -1261,7 +1299,155 @@ id TEXT UNIQUE NOT NULL                  -- fachliche Kennung ("emp_001")
 - Kapitel 9 in DB-SCHEMA.md: Abschnitt zu seq vs. id, Präfix-Tabelle aufnehmen
 - `EntityIdGenerator` als zentraler Service in Infrastructure
 - Kein Migrationsaufwand: Geplante Tabellen existieren noch nicht, nur Doku-Änderung
-- Detaillierte ADR als separate Datei: `ADR-039.md` (Download)
+
+**Hierarchie:** Diese ADR dokumentiert die Entscheidung (Prinzip). Die Präfix-Tabelle und detaillierten Regeln (seq vs. id, FK-Regel) leben als operative Referenz in DB-SCHEMA.md (ADR-031). Bei Widerspruch gilt DB-SCHEMA.md für Details, diese ADR für das Prinzip.
+
+---
+
+## ADR-040: Migrations- und Versionierungsstrategie (DB + JSON)
+
+**Datum:** 2026-04  
+**Status:** ✅ Accepted / Not Started  
+**Herkunft:** Kern-Dokumenten-Review + ADR-Review (Claude + ChatGPT)
+
+**Kontext:**
+
+BPM hat mehrere persistente Datenquellen die sich über die Zeit strukturell ändern: SQLite-Datenbanken (`bpm.db`, `planmanager.db`) und JSON-Konfigurationsdateien (`settings.json`, `profiles.json`, `pattern-templates.json`, `registry.json`). Ohne definierte Migrationsstrategie drohen inkonsistente Zustände bei App-Updates — besonders kritisch bei einer Offline-Desktop-App ohne zentrale Updatekontrolle.
+
+**Entscheidung:**
+
+Automatische Forward-Only-Migration bei App-Start mit Backup.
+
+**DB-Migration (SQLite):**
+- Schema-Version wird bei App-Start geprüft (`schema_version` Tabelle)
+- Bei älterer Version: automatische Migration (ALTER TABLE, CREATE TABLE IF NOT EXISTS)
+- Vor jeder Migration: `bpm.db` → `bpm.db.bak` kopieren
+- **Forward-Only:** Kein automatischer Rollback. Bei Fehler: Migration abbrechen, Backup wiederherstellen, User informieren
+- Harte Abbruchbedingung: Wenn DB-Version **neuer** als App-Version → App startet nicht (Schutz vor Downgrade-Schäden)
+
+**JSON-Migration:**
+- Jede JSON-Datei hat ein `schemaVersion` Feld (oder `registryVersion` bei registry.json)
+- Bei fehlenden Feldern: Default-Werte ergänzen (rückwärtskompatibel)
+- Bei unbekannten Feldern: ignorieren (vorwärtskompatibel)
+- Bei korruptem JSON: Datei umbenennen (.corrupt), Defaults neu erstellen, User informieren
+- `registry.json` wird komplett aus SQLite neu generiert — keine Migration nötig (ADR-002)
+
+**Alternativen:**
+
+- *Kein automatisches Migrationssystem:* Einfacher, aber App bricht bei Schema-Änderungen. Nicht tragbar für Offline-App.
+- *EF Core Migrations:* Zu schwer für SQLite + Solo-Projekt. Manuelles SQL reicht.
+- *Rollback-fähige Migration:* Deutlich komplexer. Forward-Only + Backup ist pragmatischer.
+
+**Konsequenzen:**
+
+- Migration-Code in `ProjectDatabase.cs` (Infrastructure), aufgerufen bei App-Start
+- Backup-Verzeichnis: `%LocalAppData%\BauProjektManager\Backups\pre-migration\`
+- JSON-Migration in `AppSettingsService.cs`
+- Logging: Jede Migration wird geloggt (Version alt → neu, Dauer, Erfolg/Fehler)
+
+**Betrifft:** ADR-002, ADR-004, ADR-016, ADR-031, ADR-039
+
+---
+
+## ADR-041: Recovery / Degraded Mode
+
+**Datum:** 2026-04  
+**Status:** ✅ Accepted / Not Started  
+**Herkunft:** Kern-Dokumenten-Review + ADR-Review (Claude + ChatGPT)
+
+**Kontext:**
+
+BPM ist eine Offline-Desktop-App mit lokaler Persistenz. Dateien können korrupt werden (Stromausfall, Cloud-Sync-Fehler, manuelle Manipulation). Ohne definierte Recovery-Strategie startet die App bei Problemen einfach nicht — der User steht ohne Fehlermeldung da.
+
+**Entscheidung:**
+
+Dreistufiges Zustandsmodell bei App-Start:
+
+| Zustand | Bedingung | Verhalten |
+|---------|-----------|-----------|
+| **Normal** | Alle Dateien lesbar, Schema aktuell | Normaler Start |
+| **Eingeschränkt** | settings.json fehlt/korrupt ODER Cloud-Dateien fehlen | Start mit Defaults, Hinweis-Banner, Einstellungen öffnen |
+| **Blockiert** | bpm.db korrupt ODER Schema-Version neuer als App | Kein Start. Reparaturdialog: Backup wiederherstellen oder DB zurücksetzen |
+
+**Recovery-Aktionen pro Dateityp:**
+
+| Datei | Problem | Aktion |
+|-------|---------|--------|
+| `settings.json` | Fehlt oder korrupt | Defaults erstellen, User informieren |
+| `profiles.json` | Fehlt | Leeres Profil, PlanManager fordert Neuanlernen |
+| `registry.json` | Fehlt oder korrupt | Aus SQLite neu generieren (ADR-002) |
+| `bpm.db` | Korrupt | Reparaturdialog: Backup anbieten, ggf. leere DB erstellen |
+| `bpm.db` | Zukunfts-Schema | App-Start blockieren, Update-Hinweis |
+| `planmanager.db` | Korrupt | Cache-Rebuild aus Dateisystem anbieten (ADR-004) |
+| Cloud-Dateien | Nicht erreichbar | Weiterarbeiten mit lokalen Daten, Sync-Warnung |
+
+**Alternativen:**
+
+- *Kein Recovery:* App crasht bei Problemen. Nicht akzeptabel für Baustellen-Einsatz.
+- *Vollautomatische Reparatur:* Riskant — könnte Daten ungewollt überschreiben. User-Bestätigung bei destruktiven Aktionen ist sicherer.
+
+**Konsequenzen:**
+
+- `StartupHealthCheck` Service in Infrastructure, aufgerufen in App.xaml.cs vor MainWindow
+- Prüfreihenfolge: bpm.db → settings.json → Cloud-Pfade → planmanager.db (pro Projekt)
+- Reparaturdialog als eigenes WPF-Fenster (nicht MainWindow-abhängig)
+- Logging: Jeder Recovery-Versuch wird geloggt
+
+**Betrifft:** ADR-002, ADR-004, ADR-040
+
+---
+
+## ADR-042: Secrets und Credentials — zentrale Sicherheitsentscheidung
+
+**Datum:** 2026-04  
+**Status:** ✅ Accepted / Not Started  
+**Herkunft:** Kern-Dokumenten-Review + ADR-Review (Claude + ChatGPT)
+
+**Kontext:**
+
+BPM verwaltet mehrere Arten sensibler Daten: API-Keys für externe Dienste (OpenAI, Google Maps, ClickUp), Lizenzsignaturen (HMAC-SHA256 shared secret), und potenziell lokale Verschlüsselungsschlüssel (SQLCipher). Bisher sind die Entscheidungen dazu über mehrere ADRs verstreut (ADR-027: Windows Credential Manager, ADR-034: HMAC-Signatur, ADR-035/036: DPAPI). Es fehlt eine zentrale Sicherheitsentscheidung.
+
+**Entscheidung:**
+
+Alle Secrets werden über DPAPI (Windows Data Protection API) geschützt. Kein Klartext, nirgends.
+
+**Speicherorte:**
+
+| Secret-Typ | Speicher | Mechanismus |
+|------------|----------|-------------|
+| API-Keys (OpenAI, Google, ClickUp etc.) | `%LocalAppData%\BauProjektManager\` | DPAPI (`ProtectedData.Protect`, Scope: CurrentUser) |
+| Lizenz-Signatur-Secret | Im Build eingebettet (embedded resource) | HMAC-SHA256 Verifikation, kein User-Zugriff |
+| SQLCipher-Key (Zukunft) | Aus DPAPI abgeleitet | An Windows-User + Maschine gebunden |
+
+**Verbote (absolut):**
+
+- ❌ Secrets in `settings.json`, `registry.json`, `.bpm-manifest` oder anderem JSON
+- ❌ Secrets in Git (Quellcode, .csproj, Ressourcen-Dateien)
+- ❌ Secrets in Serilog-Logs (auch nicht maskiert)
+- ❌ Secrets in `external_call_log` (Audit-Log)
+- ❌ Secrets in Cloud-synced Ordnern
+- ❌ Hardcoded Secrets im Quellcode (außer embedded HMAC-Secret für Lizenzverifikation)
+
+**Backup/Export:**
+
+- API-Keys sind **nicht exportierbar** — bei Gerätewechsel muss der User Keys neu eingeben
+- Lizenzdateien (`.bpm-license`) sind portabel — können auf neues Gerät kopiert werden
+- Kein automatischer Secret-Sync zwischen Geräten
+
+**Alternativen:**
+
+- *Windows Credential Manager:* Ähnlich wie DPAPI, aber UI-basiert. DPAPI ist programmatisch einfacher und reicht für Desktop-App.
+- *Azure Key Vault:* Cloud-basiert — widerspricht Offline-Prinzip.
+- *Eigene Verschlüsselung (AES etc.):* Wo ist dann der Schlüssel für den Schlüssel? DPAPI löst das über Windows.
+
+**Konsequenzen:**
+
+- `SecretStore` Service in Infrastructure mit `Store(key, value)` / `Retrieve(key)` Methoden
+- DPAPI bindet an Windows-User + Maschine — bei Benutzerwechsel/Neuinstallation gehen Secrets verloren (akzeptabel)
+- Einstellungs-UI zeigt API-Keys als `••••••••` mit "Ändern"-Button, nie im Klartext
+- Coding Standard (CODING_STANDARDS Kap. 17.4): DPAPI Pflicht, Klartext verboten
+
+**Betrifft:** ADR-027, ADR-032, ADR-034, ADR-035, ADR-036
 
 ---
 

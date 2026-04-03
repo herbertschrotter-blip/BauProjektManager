@@ -8,7 +8,7 @@
 **Autor:** Herbert + Claude  
 
 **Verwandte Dokumente:**
-- [ADR.md](../Referenz/ADR.md) — 39 Architecture Decision Records
+- [ADR.md](../Referenz/ADR.md) — 42 Architecture Decision Records
 - [VISION.md](../Referenz/VISION.md) — Nordstern, Schmerzpunkte, Zielgruppe
 - [DEPENDENCY-MAP.md](../Referenz/DEPENDENCY-MAP.md) — Solution-Struktur + Ökosystem
 - [CHANGELOG.md](../Referenz/CHANGELOG.md) — Versionshistorie ab v0.0.0

@@ -1,6 +1,6 @@
 ﻿# BauProjektManager — DSGVO-Architektur & Privacy Engineering
 
-**Version:** 1.3  
+**Version:** 1.4  
 **Erstellt:** 03.04.2026  
 **Letzte Überarbeitung:** 03.04.2026  
 **Nächste Pflicht-Revision:** Spätestens 03.04.2027 oder bei Gesetzesänderung  
@@ -344,6 +344,27 @@ Die `StrictPrivacyPolicy` prüft den Context: Bei `IsTrustedSession = true` werd
 - Kein Auto-Call beim ersten Start — User muss explizit aktivieren
 - Deaktivierung jederzeit möglich über Einstellungen → Datenschutz
 
+### 4.5 Dienststatus-Modell (PFLICHT)
+
+Jeder externe Dienst durchläuft ein definiertes Zustandsmodell:
+Disabled (Default)
+→ keine externen Calls erlaubt
+→ Übergang zu EnabledManual: explizite Aktivierung durch User
+EnabledManual
+→ nur user-initiierte Calls erlaubt (Button-Klick)
+→ Übergang zu EnabledAuto: separate Freigabe für Hintergrundaktualisierung
+EnabledAuto
+→ user-initiierte + automatische Hintergrund-Calls erlaubt
+→ Übergang zu Disabled: jederzeit durch User
+
+**Regeln:**
+- Default für alle Dienste: `Disabled`
+- Dienste die NUR manuell funktionieren (GIS Steiermark, KI-Assistent): Haben keinen `EnabledAuto`-Zustand
+- Dienste mit Hintergrund-Calls (Wetter, Task-Management): Brauchen separate Freigabe für Auto-Calls
+- In der GUI: Zwei separate Toggles pro Dienst (wo relevant):
+  - `[☐] Dienst aktivieren` (Disabled → EnabledManual)
+  - `[☐] Automatische Abfragen erlauben` (EnabledManual → EnabledAuto)
+
 ---
 
 ## 5. Datenfluss-Architektur
@@ -473,6 +494,8 @@ PDF-Upload
 **Stufe 3 — Konfigurierbares Opt-in (OPTIONAL, langfristig):**
 
 Pro Dokumenttyp konfigurierbar: „LVs immer anonymisieren" / „Baubeschreibungen immer warnen"
+
+**Architektonische Einordnung:** Die Anonymisierung wird als eigener Service hinter dem `IExternalCommunicationService` implementiert, nicht inline im KI-Modul. Das konkrete Interface entsteht wenn das KI-Modul gebaut wird — der architektonische Anker (eigener Service in Infrastructure) steht aber fest.
 
 ### 7.4 Minimierungsregel für KI
 
@@ -634,6 +657,7 @@ Kein Cloud-Zwang. Kein Account. Kein externer Datenspeicher.
 | Mitarbeiterdaten (Zeiterfassung) | 7 Jahre nach Austritt (§ 132 BAO) | Manuell (AktivBis + 7 Jahre) |
 | Projektdaten | Unbegrenzt | Manuell (Projekt archivieren/löschen) |
 | Import-Journal | Pro Projekt, unbegrenzt | Manuell (Projekt löschen) |
+| Stammdaten (Clients, Participants, Links) | Projektgebunden | Bei Projektlöschung: CASCADE für Participants/Links. Clients: Prüfung ob noch von anderem Projekt referenziert — wenn nein, User wird gefragt ob Client mitgelöscht werden soll. Clients werden bewusst als potenziell wiederverwendbare Entität behandelt (Vorbereitung ADR-021). |
 
 ---
 
@@ -720,6 +744,17 @@ CREATE TABLE external_call_log (
                                       -- "blocked_dpa_not_confirmed",
                                       -- "allowed_anonymized_payload"
 );
+
+**Negativliste (verbindlich) — external_call_log darf NICHT enthalten:**
+- Request-Body (Dokumenteninhalte, Prompts)
+- Response-Body (KI-Antworten, API-Ergebnisse)
+- HTTP-Headers (Authorization, Cookies)
+- Query-Parameter mit Personendaten
+- IP-Adressen
+
+**`purpose` Regeln:** Max. 100 Zeichen, nur fachlicher Zweck (z.B. "LV-Analyse Mengenprüfung"), keine Personen-/Dokument-/Projektdetails.
+
+**`decision_reason` — Kontrolliertes Vokabular (kein Freitext):** Definierte Codes siehe [DB-SCHEMA.md](DB-SCHEMA.md) Kapitel 5.11. Im Code als `static class ExternalDecisionReasons` mit `const string` Feldern.nymized_payload"
 ```
 
 ---
@@ -1011,6 +1046,7 @@ Vor Implementierung jedes Moduls mit externem Kontakt oder Klasse-B/C-Daten dies
 | 1.1 | 03.04.2026 | Ergänzt: Revisionspflicht (Kap. 2.6), Informationspflichten Art. 13/14 (Kap. 3 Klasse B), Rollenbasierte Zugriffskontrolle (Kap. 10.2), Verschlüsselung/SQLCipher (Kap. 9.4), KI-Anbieter-Prüfung inkl. Training/Datenverwendung (Kap. 12.4), DSFA-Checkliste (Kap. 16), Organisatorische Maßnahmen inkl. Kosten-Nutzen (Kap. 17), Dokumentklassifizierung (PFLICHT/EMPFOHLEN/OPTIONAL), Änderungshistorie |
 | 1.2 | 03.04.2026 | Überarbeitung auf Basis externer Review: `DataClassification` Enum statt bool (Kap. 4.2), Policy Enforcement im Service (Kap. 4.2), `decision_reason` im Audit-Log (Kap. 11.3), KI Klasse C Default-Block statt Warnung (Kap. 7.3), registry.json Klasse-B-Whitelist (Kap. 9.3), Multi-User Betriebsmodi-Matrix (Kap. 10.2), Verarbeitungsverzeichnis defensiver formuliert (Kap. 15), Modul-Implementierungs-Checkliste (Kap. 18) |
 | 1.3 | 03.04.2026 | IPrivacyPolicy als austauschbare Komponente (Kap. 4.3): Strategy Pattern für Internal/Commercial-Modus, RelaxedPrivacyPolicy + StrictPrivacyPolicy, Lizenz-gesteuerte DI-Registrierung, Session-Override für Klasse B |
+| 1.4 | 03.04.2026 | Kern-Dokumenten-Review (Claude + ChatGPT, 3 Runden): Dienststatus-Modell Disabled/EnabledManual/EnabledAuto (Kap. 4.5), Anonymisierung als eigener Service (Kap. 7.3), Löschkonzept für Stammdaten (Kap. 9.5), Audit-Log Negativliste + decision_reason-Katalog (Kap. 11.3) |
 
 ---
 

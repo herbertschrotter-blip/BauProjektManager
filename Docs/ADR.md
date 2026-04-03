@@ -46,6 +46,7 @@
 | 033 | Multi-User: 3 Modi (eigene DB, geteilte DB, Server) | 🟡 Konzept | 2026-03 |
 | 034 | Modul-Aktivierung + Offline-Lizenzierung | 🟡 Konzept | 2026-03 |
 | 035 | IExternalCommunicationService — zentrales Privacy Gate | ✅ Entschieden | 2026-04 |
+| 036 | IPrivacyPolicy — austauschbare Policy für Internal/Commercial | ✅ Entschieden | 2026-04 |
 
 ---
 
@@ -1068,6 +1069,76 @@ public interface IExternalCommunicationService
 - Kill-Switch sofort wirksam — ein Toggle sperrt alle externen Calls
 - Für V1 (Einstellungen + PlanManager) nicht nötig, da keine externen Calls. Implementierung vor dem ersten Online-Modul
 - Detailliertes Konzept: [DSGVO-Architektur.md](DSGVO-Architektur.md)
+
+---
+
+## ADR-036: IPrivacyPolicy — austauschbare Policy für Internal/Commercial
+
+**Datum:** 2026-04  
+**Status:** ✅ Entschieden  
+**Herkunft:** DSGVO-Architektur-Review, ChatGPT-Empfehlung (Option D + Strategy Pattern)
+
+**Kontext:**
+
+Die DSGVO-Architektur (v1.2) definiert strikte Policy-Regeln für externe Kommunikation: Default-Block für Klasse C, DPA-Pflicht für KI, Audit-Log mit Zweckangabe. Für Herbert als einzigen Nutzer ist dieser volle Stack Overhead — er will sein eigenes LV an ChatGPT schicken können ohne Pflicht-Zweckfeld und Checkbox. Für die Verkaufsversion muss aber alles strikt eingehalten werden. Die Frage war: Wie trennt man Internal und Commercial sauber, ohne zwei Codebasen oder unsichere Runtime-Flags?
+
+Fünf Optionen wurden evaluiert:
+- Option A (Compile-Time `#if`): Zwei Binaries, divergierendes Verhalten, Bugs nur in einem Build — abgelehnt
+- Option B (Runtime-Flag in settings.json): Single Point of Failure, User kann DSGVO umgehen — abgelehnt
+- Option C (Feature Flags pro Regel): Overengineering, 10+ Schalter — abgelehnt
+- Option D (Austauschbarer Service via DI): Sauber, wartbar, kein doppelter Code — **gewählt**
+- Option E (Alles immer + UX optimieren): Philosophisch sauber, aber bremst Solo-Dev — abgelehnt
+
+**Entscheidung:**
+
+Strategy Pattern: Die Datenschutz-Entscheidungslogik wird als eigene Komponente (`IPrivacyPolicy`) vom `IExternalCommunicationService` getrennt. Der Service führt aus, die Policy entscheidet. Zwei Implementierungen, ein Codepfad.
+```csharp
+// BauProjektManager.Domain/Privacy/
+public interface IPrivacyPolicy
+{
+    PolicyDecision Evaluate(
+        string module,
+        DataClassification classification,
+        string purpose);
+}
+
+// BauProjektManager.Infrastructure/Communication/
+public class RelaxedPrivacyPolicy : IPrivacyPolicy
+{
+    // Internal: alles erlaubt, loggt mit "internal_mode"
+}
+
+public class StrictPrivacyPolicy : IPrivacyPolicy
+{
+    // Commercial: volle DSGVO-Logik (Block, DPA-Check, User-Confirmation)
+}
+```
+
+DI-Registrierung über Lizenztyp (ADR-034), NICHT über settings.json:
+```csharp
+if (license.IsCommercial)
+    services.AddSingleton<IPrivacyPolicy, StrictPrivacyPolicy>();
+else
+    services.AddSingleton<IPrivacyPolicy, RelaxedPrivacyPolicy>();
+```
+
+**Alternativen:**
+
+- *Compile-Time Split:* Zwei verschiedene Binaries. Bugs tauchen nur in einem Build auf. Testing-Hölle. Abgelehnt.
+- *Runtime-Flag:* Ein Setting in settings.json entscheidet über Compliance. „Oops, falsches Setting" ist kein valider DSGVO-Grund. Abgelehnt.
+- *Immer strikt + UX weicher:* Philosophisch korrekt, aber Herbert bremst sich selbst aus. Nicht pragmatisch für Solo-Dev.
+
+**Konsequenzen:**
+
+- `IPrivacyPolicy` Interface im Domain-Projekt (keine externe Abhängigkeit)
+- `RelaxedPrivacyPolicy` und `StrictPrivacyPolicy` in Infrastructure
+- `ExternalCommunicationService` bekommt Policy per Constructor Injection — entscheidet nicht selbst
+- Beide Policies nutzen denselben Service — kein doppelter HTTP/Logging-Code
+- `RelaxedPrivacyPolicy` loggt trotzdem ins Audit-Log (mit `decision_reason: "internal_mode"`)
+- Commercial-Modus darf NIEMALS durch User-Settings steuerbar sein
+- Session-Override (optional): `IPrivacyContext.IsTrustedSession` für temporäres Abschalten von Klasse-B-Warnungen im Commercial-Modus. Klasse C bleibt IMMER blockiert
+- Für V1 nicht relevant (keine Online-Module). Implementierung vor dem ersten Online-Modul zusammen mit ADR-035
+- Detailliertes Konzept: [DSVGO-Architektur.md](DSVGO-Architektur.md) Kapitel 4.3
 
 ---
 

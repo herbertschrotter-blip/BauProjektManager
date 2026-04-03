@@ -34,7 +34,7 @@
         <!-- Pfade -->
         <StackPanel Grid.Row="2">
             <!-- OneDrive -->
-            <TextBlock Text="OneDrive-Pfad:" Foreground="#CCCCCC" Margin="0,0,0,4"/>
+            <TextBlock Text="Cloud-Speicher-Pfad:" Foreground="#CCCCCC" Margin="0,0,0,4"/>
             <Grid Margin="0,0,0,12">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>

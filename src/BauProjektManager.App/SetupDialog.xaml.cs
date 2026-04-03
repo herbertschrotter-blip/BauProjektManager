@@ -24,10 +24,10 @@ public partial class SetupDialog : Window
     private void LoadSystemInfo()
     {
         // Show system info
-        var oneDrive = AppSettingsService.DetectOneDrivePath() ?? "(nicht gefunden)";
+        var cloudStorage = AppSettingsService.DetectOneDrivePath() ?? "(nicht gefunden)";
         TxtSystemInfo.Text = $"Rechner: {Environment.MachineName}\n" +
                              $"Benutzer: {Environment.UserName}\n" +
-                             $"OneDrive: {oneDrive}";
+                             $"Cloud-Speicher: {cloudStorage}";
 
         // Pre-fill OneDrive
         var detectedOneDrive = AppSettingsService.DetectOneDrivePath();
@@ -65,7 +65,7 @@ public partial class SetupDialog : Window
 
     private void OnBrowseOneDrive(object sender, RoutedEventArgs e)
     {
-        var path = BrowseFolder("OneDrive-Ordner auswählen", TxtOneDrive.Text);
+        var path = BrowseFolder("Cloud-Speicher-Ordner auswählen", TxtOneDrive.Text);
         if (path is not null)
         {
             TxtOneDrive.Text = path;
@@ -111,7 +111,7 @@ public partial class SetupDialog : Window
         // Validate
         if (string.IsNullOrEmpty(TxtOneDrive.Text))
         {
-            TxtStatus.Text = "Bitte OneDrive-Pfad angeben!";
+            TxtStatus.Text = "Bitte Cloud-Speicher-Pfad angeben!";
             return;
         }
 

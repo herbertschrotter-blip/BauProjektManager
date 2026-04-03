@@ -4,13 +4,13 @@
     <Grid>
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
             <TextBlock Text="📁 PlanManager" 
-                       FontSize="24" Foreground="#CCCCCC"
+                       FontSize="24" Foreground="{DynamicResource BpmTextPrimary}"
                        HorizontalAlignment="Center" Margin="0,0,0,20"/>
             <TextBlock Text="Hier kommt die Planverwaltung hin." 
-                       FontSize="14" Foreground="#999999"
+                       FontSize="14" Foreground="{DynamicResource BpmTextSecondary}"
                        HorizontalAlignment="Center"/>
             <TextBlock Text="(Nächster Schritt: Projektliste mit Import-Button)" 
-                       FontSize="12" Foreground="#666666"
+                       FontSize="12" Foreground="{DynamicResource BpmTextTertiary}"
                        HorizontalAlignment="Center" Margin="0,10,0,0"/>
         </StackPanel>
     </Grid>

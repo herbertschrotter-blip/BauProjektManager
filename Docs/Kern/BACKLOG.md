@@ -54,7 +54,7 @@ Ohne diese Features ist V1 nicht brauchbar. Der PlanManager ist das Kernprodukt.
 | 5 | SQLite-Datenbank (bpm.db) | ✅ v0.8.0 |
 | 6 | Auto-Increment IDs (proj_001, client_001) | ✅ v0.8.2 |
 | 7 | registry.json Export (flach, für VBA) | ✅ v0.9.0 |
-| 9 | Ersteinrichtung (OneDrive, Pfade, settings.json) | ✅ v0.10.0 |
+| 9 | Ersteinrichtung (Cloud-Speicher, Pfade, settings.json) | ✅ v0.10.0 |
 | 10 | Projektordner erstellen (nummeriert, Template, TreeView) | ✅ v0.11.0 |
 | 13 | Pfade änderbar (📁-Buttons) | ✅ v0.12.3 |
 
@@ -78,7 +78,7 @@ Details: [BauProjektManager_Architektur.md](BauProjektManager_Architektur.md) Ka
 | 19 | Segment-Zuweiser GUI | 3-Schritt-Wizard (Typ, Muster, Ordner) |
 | 20 | Plantyp-Erkennung | prefix/contains/regex Muster |
 | 21 | PatternTemplates | Vorschlagslogik (ADR-010) |
-| 22 | profiles.json | Pro Projekt auf OneDrive |
+| 22 | profiles.json | Pro Projekt auf Cloud-Speicher |
 | 23 | pattern-templates.json | Globale Musterbibliothek |
 | 24 | Import-Workflow 1-5 | Scan, Parse, Validate, Classify, Plan (ADR-008) |
 | 25 | Import-Vorschau | GUI mit Status, Rechtsklick-Korrektur |

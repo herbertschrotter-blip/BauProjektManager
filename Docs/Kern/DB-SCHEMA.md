@@ -321,7 +321,8 @@ Mitarbeiter-Stammdaten. Basis für Zeiterfassung und Arbeitseinteilung.
 
 ```sql
 CREATE TABLE employees (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT UNIQUE NOT NULL,              -- "emp_001"
     name TEXT NOT NULL,                   -- "Biskup Dejan"
     short_name TEXT,                      -- "Biskup D."
     qualification TEXT,                   -- "Facharbeiter" | "Lehrling" | "Polier" | "Kranfahrer"
@@ -340,9 +341,10 @@ Tägliche Anwesenheits-/Stundenerfassung pro Mitarbeiter.
 
 ```sql
 CREATE TABLE time_entries (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT UNIQUE NOT NULL,              -- "te_001"
     date TEXT NOT NULL,                   -- "2025-11-05"
-    employee_id INTEGER NOT NULL,         -- FK → employees.id
+    employee_id TEXT NOT NULL,            -- FK → employees.id
     project_id TEXT NOT NULL,             -- FK → projects.id
     hours REAL NOT NULL,                  -- 8.0
     absence_type TEXT,                    -- NULL | "U" (Urlaub) | "K" (Krank) | "Kranfahrer" | "Sonstiges"
@@ -361,12 +363,13 @@ Arbeitspakete = Bauteil + Geschoß + Tätigkeit + Soll-Menge. Die zentrale Einhe
 
 ```sql
 CREATE TABLE work_packages (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT UNIQUE NOT NULL,              -- "wp_001"
     project_id TEXT NOT NULL,             -- FK → projects.id
     building_part_id TEXT,                -- FK → building_parts.id (H5)
     level_id TEXT,                        -- FK → building_levels.id (EG)
     activity TEXT NOT NULL,               -- "Mauerwerk 38er" | "Betonwand komplett"
-    lv_position_id INTEGER,              -- FK → lv_positions.id (optional)
+    lv_position_id TEXT,                  -- FK → lv_positions.id (optional)
     planned_quantity REAL,                -- 198 (Soll-Menge)
     unit TEXT NOT NULL,                   -- "m²" | "m³" | "to" | "Stk" | "lfm"
     source TEXT,                          -- "Ziegelberechnung" | "DokaCad" | "LV" | "Manuell"
@@ -387,6 +390,8 @@ CREATE TABLE work_packages (
     FOREIGN KEY (level_id) REFERENCES building_levels(id),
     FOREIGN KEY (lv_position_id) REFERENCES lv_positions(id)
 );
+
+**ID-Präfix:** `wp_`
 ```
 
 **Konzept:** ModuleKalkulation.md Kapitel 3  
@@ -398,10 +403,11 @@ Tägliche Zuordnung: welcher Mitarbeiter arbeitet an welchem Arbeitspaket.
 
 ```sql
 CREATE TABLE work_assignments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT UNIQUE NOT NULL,              -- "wa_001"
     date TEXT NOT NULL,                   -- "2025-11-05"
-    employee_id INTEGER NOT NULL,         -- FK → employees.id
-    work_package_id INTEGER NOT NULL,     -- FK → work_packages.id
+    employee_id TEXT NOT NULL,            -- FK → employees.id
+    work_package_id TEXT NOT NULL,        -- FK → work_packages.id
     hours REAL,                           -- aus time_entries (kann manuell überschrieben werden)
     notes TEXT,
     FOREIGN KEY (employee_id) REFERENCES employees(id),
@@ -418,7 +424,8 @@ Importierte LV-Positionen (aus Excel, ÖNORM A 2063 oder KI-API).
 
 ```sql
 CREATE TABLE lv_positions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT UNIQUE NOT NULL,              -- "lv_001"
     project_id TEXT NOT NULL,             -- FK → projects.id
     position_number TEXT NOT NULL,        -- "02.03.01"
     short_text TEXT NOT NULL,             -- "Mauerwerk 38er Plan"
@@ -439,12 +446,13 @@ Erfahrungswerte — wächst automatisch mit jedem abgeschlossenen Arbeitspaket.
 
 ```sql
 CREATE TABLE performance_catalog (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT UNIQUE NOT NULL,              -- "perf_001"
     activity TEXT NOT NULL,               -- "Mauerwerk 38er"
     unit TEXT NOT NULL,                   -- "m²"
     hours_per_unit REAL NOT NULL,         -- 0.62
     project_id TEXT,                      -- Quelle (welches Projekt)
-    work_package_id INTEGER,              -- Quelle (welches Arbeitspaket)
+    work_package_id TEXT,                 -- Quelle (welches Arbeitspaket)
     measured_at TEXT,                      -- Datum der Fertigmeldung
     quantity REAL,                        -- gemessene Menge
     total_hours REAL,                     -- Gesamt-Arbeitsstunden
@@ -463,7 +471,8 @@ Erschwernisfaktoren pro Projekt für die Bauzeitprognose.
 
 ```sql
 CREATE TABLE project_difficulty (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT UNIQUE NOT NULL,              -- "pdiff_001"
     project_id TEXT NOT NULL,             -- FK → projects.id
     factor_name TEXT NOT NULL,            -- "Hanglage" | "Winterarbeit" | "Enge Zufahrt"
     factor_value REAL NOT NULL,           -- 1.15
@@ -479,7 +488,8 @@ Tägliche Bautagebuch-Einträge. Wird großteils automatisch aus Arbeitseinteilu
 
 ```sql
 CREATE TABLE diary_entries (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT UNIQUE NOT NULL,              -- "diary_001"
     project_id TEXT NOT NULL,             -- FK → projects.id
     date TEXT NOT NULL,                   -- "2025-11-05"
     weather TEXT,                         -- "sonnig, 12°C" (automatisch von API)
@@ -505,7 +515,8 @@ Zentrale Kontaktdatenbank, projektübergreifend. Getrennt von project_participan
 
 ```sql
 CREATE TABLE contacts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT UNIQUE NOT NULL,              -- "contact_001"
     company TEXT NOT NULL DEFAULT '',
     contact_person TEXT NOT NULL DEFAULT '',
     role TEXT NOT NULL DEFAULT '',         -- "Statiker" | "Architekt" | "ÖBA"
@@ -528,9 +539,10 @@ Materialbestellungen, verknüpft mit Arbeitspaketen. Synchronisiert mit externem
 
 ```sql
 CREATE TABLE material_orders (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT UNIQUE NOT NULL,              -- "mo_001"
     project_id TEXT NOT NULL,             -- FK → projects.id
-    work_package_id INTEGER,              -- FK → work_packages.id (optional)
+    work_package_id TEXT,                 -- FK → work_packages.id (optional)
     building_part_id TEXT,                -- FK → building_parts.id
     level_id TEXT,                        -- FK → building_levels.id
     material TEXT NOT NULL,               -- "Ziegel 38er Objekt Plan"
@@ -556,10 +568,10 @@ CREATE TABLE material_orders (
 
 ### 5.11 external_call_log (Datenschutz / Audit)
 
-Audit-Log für alle externen HTTP-Calls über `IExternalCommunicationService` (ADR-035). Protokolliert ob ein Call erlaubt oder blockiert wurde und warum.
-```sql
+Audit-Log für alle externen HTTP-Calls über IExternalCommunicationService (ADR-035). Protokolliert ob ein Call erlaubt oder blockiert wurde und warum.```sql
 CREATE TABLE external_call_log (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT UNIQUE NOT NULL,              -- "ecl_001"
     timestamp TEXT NOT NULL,
     module TEXT NOT NULL,              -- "ki", "gis_google", "wetter", "task_mgmt"
     target_domain TEXT NOT NULL,       -- "api.openai.com"
@@ -580,12 +592,39 @@ CREATE TABLE external_call_log (
 **Löschung:** Automatisch nach 90 Tagen  
 **Hinweis:** Keine Personendaten loggen — nur Modul, Domain, Klassifizierung und Entscheidungsgrund
 
+**Negativliste (verbindlich) — external_call_log darf NICHT enthalten:**
+- Request-Body (Dokumenteninhalte, Prompts)
+- Response-Body (KI-Antworten, API-Ergebnisse)
+- HTTP-Headers (Authorization, Cookies)
+- Query-Parameter mit Personendaten
+- IP-Adressen
+
+**`purpose` Regeln:** Max. 100 Zeichen, nur fachlicher Zweck (z.B. "LV-Analyse Mengenprüfung"), keine Personen-/Dokument-/Projektdetails.
+
+**`decision_reason` — Kontrolliertes Vokabular (kein Freitext):**
+
+| Code | Bedeutung |
+|------|-----------|
+| `allowed_class_a` | Klasse A, keine Einschränkung |
+| `allowed_user_confirmed` | User hat Klasse B/C explizit bestätigt |
+| `allowed_anonymized_payload` | Payload wurde vor Senden anonymisiert |
+| `allowed_internal_mode` | RelaxedPrivacyPolicy (interner Betrieb) |
+| `blocked_global_killswitch` | Globaler Kill-Switch aktiv |
+| `blocked_module_disabled` | Modul in Einstellungen deaktiviert |
+| `blocked_auto_calls_not_enabled` | Auto-Calls für dieses Modul nicht freigeschaltet |
+| `blocked_class_c_requires_override` | Klasse C ohne Anonymisierung/User-Override |
+| `blocked_dpa_not_confirmed` | KI-Modul ohne DPA-Bestätigung |
+| `blocked_policy_denied` | Sonstige Policy-Ablehnung |
+
+Im Code als `static class ExternalDecisionReasons` mit `const string` Feldern.
+
 ### 5.12 project_shares (Multi-User / Projektfreigabe)
 
 Einfache Projektfreigaben für Phase 2 (JSON Event-Sync). Wird in Phase 3 durch RBAC-Tabellen (users, roles, project_user_role) erweitert.
 ```sql
 CREATE TABLE project_shares (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT UNIQUE NOT NULL,              -- "pshare_001"
     project_id TEXT NOT NULL,
     shared_with_user TEXT NOT NULL,   -- Username oder Geräte-ID
     permission TEXT NOT NULL,          -- "full" | "read" | "plans_only" | "diary_write"

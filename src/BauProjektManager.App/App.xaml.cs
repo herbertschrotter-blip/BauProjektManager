@@ -33,7 +33,9 @@ public partial class App : Application
             .CreateLogger();
 
         Log.Information("=== BauProjektManager gestartet ===");
-        Log.Information("Version: {Version}", "0.10.0");
+        var version = System.Reflection.Assembly.GetExecutingAssembly()
+            .GetName().Version?.ToString() ?? "unknown";
+        Log.Information("Version: {Version}", version);
         Log.Information("OS: {OS}", Environment.OSVersion);
         Log.Information("Machine: {Machine}", Environment.MachineName);
 

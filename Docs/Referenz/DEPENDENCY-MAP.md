@@ -53,7 +53,7 @@ App             → referenziert alles (DI verdrahtet hier)
 | Projekt | Typ | NuGet-Pakete | Verantwortung |
 |---------|-----|-------------|---------------|
 | **App** | WPF EXE | Microsoft.Extensions.DI | Shell, MainWindow, DI-Container, App.xaml, Themes/ (Resource Dictionaries) |
-| **Domain** | Class Library | *keine* | Project, Client, BuildingPart, BuildingLevel, ProjectParticipant, ProjectLink, Location, Timeline, AppSettings (ProjectTypes, BuildingTypes, LevelNames, ParticipantRoles, PortalTypes, FolderTemplate), Enums (inkl. DataClassification), Interfaces (inkl. IPrivacyPolicy) |
+| **Domain** | Class Library | *keine* | Project, Client, BuildingPart, BuildingLevel, ProjectParticipant, ProjectLink, Location, Timeline, AppSettings (ProjectTypes, BuildingTypes, LevelNames, ParticipantRoles, PortalTypes, FolderTemplate), Enums (inkl. DataClassification, AccessLevel), Interfaces (inkl. IPrivacyPolicy, IAccessControlService, IProjectDataService, ISyncTransport, SyncEnvelope) |
 | **Infrastructure** | Class Library | Microsoft.Data.Sqlite, Serilog, System.Text.Json | ProjectDatabase (Schema v1.5: projects, clients, building_parts, building_levels, project_participants, project_links), RegistryJsonExporter, AppSettingsService, ProjectFolderService, SerilogSetup, ExternalCommunicationService (ADR-035), RelaxedPrivacyPolicy + StrictPrivacyPolicy (ADR-036) |
 | **Settings** | WPF Class Library | CommunityToolkit.Mvvm | SettingsViewModel, ProjectEditViewModel, SettingsView.xaml, ProjectEditDialog.xaml |
 | **PlanManager** | WPF Class Library | CommunityToolkit.Mvvm | (V1 Kern — noch in Entwicklung) FileParser, ImportService, Profile, Wizard |

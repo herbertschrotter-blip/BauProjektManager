@@ -58,7 +58,7 @@ Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheid
 | 036 | IPrivacyPolicy — austauschbare Policy für Internal/Commercial | ✅ Entschieden | 2026-04 |
 | 037 | ISyncTransport — austauschbarer Sync-Transport (Folder/HTTP) | ✅ Accepted / Not Started | 2026-04 |
 | 038 | IAccessControlService — rollenbasierte Projektfreigabe | 🟡 Konzept | 2026-04 |
-| 039 | Einheitliches ID-Schema — TEXT mit Präfix für alle Tabellen | ✅ Accepted / Partial | 2026-04 |
+| 039 | Einheitliches ID-Schema — ULID als Primärschlüssel | ✅ Accepted / Not Started | 2026-04 |
 | 040 | Migrations- und Versionierungsstrategie (DB + JSON) | ✅ Accepted / Not Started | 2026-04 |
 | 041 | Recovery / Degraded Mode | ✅ Accepted / Not Started | 2026-04 |
 | 042 | Secrets und Credentials | ✅ Accepted / Not Started | 2026-04 |
@@ -1245,69 +1245,118 @@ Zweistufiger Ansatz:
 
 ---
 
-## ADR-039: Einheitliches ID-Schema — TEXT mit Präfix für alle Tabellen
+## ADR-039: Einheitliches ID-Schema — ULID als Primärschlüssel
 
 **Datum:** 2026-04  
-**Status:** ✅ Entschieden  
-**Herkunft:** Kern-Dokumenten-Review (Claude + ChatGPT, 3 Runden)
+**Status:** ✅ Accepted / Not Started  
+**Herkunft:** ID-Schema Review (Claude + ChatGPT, 4 Runden, 04.04.2026)  
+**Supersedes:** ADR-039 v1 (TEXT mit Präfix + seq, `MAX(seq)+1`)
 
 **Kontext:**
 
-Im DB-Schema v1.5 gibt es eine Inkonsistenz: Implementierte Tabellen verwenden `id TEXT UNIQUE NOT NULL` mit Präfix (`proj_001`, `bpart_042`), geplante Tabellen verwenden `id INTEGER PRIMARY KEY AUTOINCREMENT` ohne Präfix. Ohne einheitliche Entscheidung drohen Integrationsprobleme und ein verdecktes Mischmodell.
+Das ursprüngliche ID-Schema (v1) verwendete `seq INTEGER PRIMARY KEY AUTOINCREMENT` + `id TEXT UNIQUE NOT NULL` mit Präfix (`proj_001`, `bpart_042`). ID-Generierung über `MAX(seq)+1`. Ein 4-Runden-Review (Claude + ChatGPT) identifizierte drei fundamentale Probleme:
+
+1. **`MAX(seq)+1` ist nicht robust** — Race Conditions, Löschungslücken, Import-Verzerrung
+2. **Zwei ID-Spalten pro Tabelle** — `seq` war technisch untergenutzt (nie als FK, nie extern)
+3. **Nicht sync-fähig** — Herberts reales Arbeitsmodell erfordert Floating Master, Offline-Phasen auf 2-3 Geräten, kein zentraler Server. Lokal hochgezählte IDs kollidieren bei Offline-Merge.
+
+Alle etablierten Offline-Sync-Systeme (CouchDB/PouchDB, SQLite Sync/CRDTs, PowerSync, Turso) verwenden String-basierte global eindeutige IDs. Keines verwendet `INTEGER PRIMARY KEY` für sync-fähige Tabellen.
 
 **Entscheidung:**
 
-TEXT-IDs mit Präfix für alle Tabellen — bestehende und zukünftige. Jede Tabelle hat zwei Spalten:
+**ULID als einziger Primärschlüssel für ALLE Tabellen** — in `bpm.db` und `planmanager.db`. Keine `seq` Spalte, keine INTEGER IDs, keine Ausnahmen.
 ```sql
-seq INTEGER PRIMARY KEY AUTOINCREMENT,  -- interne SQLite-Reihenfolge
-id TEXT UNIQUE NOT NULL                  -- fachliche Kennung ("emp_001")
+CREATE TABLE projects (
+    id TEXT PRIMARY KEY,           -- ULID: "01HV8M2Q9AJ3W1XK7R4F5N6T8C"
+    project_number TEXT NOT NULL DEFAULT '',
+    name TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE building_parts (
+    id TEXT PRIMARY KEY,           -- ULID
+    project_id TEXT NOT NULL,      -- FK → projects.id (ULID)
+    short_name TEXT NOT NULL DEFAULT '',
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_building_parts_project_id ON building_parts(project_id);
 ```
 
-**Rollen:**
-- `seq` = rein interne Einfügereihenfolge, wird NIE als FK, in JSON, Logs oder Exports verwendet
-- `id` = fachlich stabile Kennung, wird für FKs, JSON-Export, Logging, VBA, Debugging verwendet
-- Alle FK-Spalten sind `TEXT` und referenzieren `id`, nie `seq`
+**Warum ULID statt UUID:**
+- Chronologisch sortierbar (enthält Zeitstempel) — nützlich für `ORDER BY id`
+- Kürzer als UUID (26 vs. 36 Zeichen)
+- Offline erzeugbar ohne zentrale Koordination
+- Kollisionsfrei über Gerätegrenzen
 
-**Präfix-Tabelle:**
+**ID-Generierung:**
 
-| Tabelle | Präfix | Beispiel |
-|---------|--------|---------|
-| projects | `proj_` | `proj_001` |
-| clients | `client_` | `client_042` |
-| building_parts | `bpart_` | `bpart_003` |
-| building_levels | `blvl_` | `blvl_017` |
-| project_participants | `ppart_` | `ppart_005` |
-| project_links | `plink_` | `plink_002` |
-| employees | `emp_` | `emp_007` |
-| time_entries | `te_` | `te_1523` |
-| work_packages | `wp_` | `wp_042` |
-| work_assignments | `wa_` | `wa_305` |
-| lv_positions | `lv_` | `lv_089` |
-| performance_catalog | `perf_` | `perf_012` |
-| diary_entries | `diary_` | `diary_201` |
-| contacts | `contact_` | `contact_015` |
-| material_orders | `mo_` | `mo_034` |
-| external_call_log | `ecl_` | `ecl_4201` |
-| project_shares | `pshare_` | `pshare_002` |
+Zentral über `IIdGenerator` Interface in Domain, Implementierung in Infrastructure. Nie `Ulid.NewUlid()` direkt im Code verstreut.
+```csharp
+// BauProjektManager.Domain
+public interface IIdGenerator
+{
+    string NewId();
+}
 
-**ID-Generierung:** Zentral über `EntityIdGenerator` in Infrastructure. Kein Modul darf IDs selbst zusammenbauen.
+// BauProjektManager.Infrastructure
+public sealed class UlidIdGenerator : IIdGenerator
+{
+    public string NewId() => Ulid.NewUlid().ToString();
+}
+```
 
-**Alternativen:**
+**Geltungsbereich — ALLE Tabellen, keine Ausnahmen:**
 
-- *INTEGER-only:* Performanter, aber nicht lesbar in Logs/JSON/VBA, Mischmodell mit bestehenden TEXT-IDs.
-- *GUID/ULID:* Global eindeutig, aber 36 Zeichen, nicht lesbar, kein Vorteil bei BPMs Datenmengen.
-- *Mischmodell (TEXT bestehend + INTEGER neu):* Null Migration, aber zwei mentale Modelle, FK-Datentyp-Konflikte.
+| Datenbank | Tabellen | ID-Typ |
+|-----------|----------|--------|
+| `bpm.db` | Alle Stamm-/Projektdaten (18 Tabellen) | ULID |
+| `planmanager.db` | Journal, Actions, ActionFiles | ULID |
+| Jede zukünftige Tabelle | — | ULID |
+
+**Lesbarkeit:**
+
+ULIDs sind nicht menschenlesbar. Die Lesbarkeit wird über fachliche Felder sichergestellt:
+
+| Entität | Lesbare Identifikation | Beispiel |
+|---------|----------------------|---------|
+| Projekt | `project_number + name` | „202406 ÖWG-Dobl" |
+| Bauteil | `short_name + description` | „H5 — Haus Nr. 5" |
+| Geschoss | `name` | „EG", „1.OG" |
+| Beteiligter | `role + company` | „Statiker — Müller ZT GmbH" |
+| Arbeitspaket | `activity + building + level` | „Mauerwerk 38er / H5 / EG" |
+| In Logs | Fachlicher Kontext + ULID-Suffix | „Projekt ÖWG-Dobl (01HV…)" |
+
+Keine generische `display_number` Spalte auf jeder Tabelle — das wäre Overengineering.
+
+**VBA-Kompatibilität:**
+
+VBA liest `registry.json` → sieht nur Strings. Egal ob `"proj_42"` oder `"01HV8M2Q9AJ3W1XK7R4F5N6T8C"` — VBA parst beide als String. Kein Einfluss auf VBA-Makros.
+
+**Zusätzliche Pflichtfelder auf sync-relevanten Tabellen:**
+
+- `created_at TEXT NOT NULL` — Erstellungszeitpunkt
+- `updated_at TEXT NOT NULL` — Letzter Änderungszeitpunkt
+- `origin_device_id TEXT` (optional) — Für spätere Konfliktanalyse/Debugging
+
+**Alternativen (evaluiert im Review):**
+
+- *INTEGER PRIMARY KEY:* SQLite-nativ, performant, lesbar. Aber: lokal generiert, kollidiert bei Offline-Merge. Späteres Nachrüsten von `sync_id` ist schmerzhafter Umbau.
+- *INTEGER + spätere sync_id TEXT:* Pragmatisch für Single-User, aber bewusst eingebauter späterer Umbau. Review-Ergebnis: „nicht tun wenn Multi-User bald kommt."
+- *TEXT mit Präfix (proj_001):* Lesbar, aber `MAX(seq)+1` fragil, nicht global eindeutig, zwei Spalten (seq+id) Overhead.
+- *UUID/GUID:* Global eindeutig, aber 36 Zeichen, nicht sortierbar.
 
 **Konsequenzen:**
 
-- DB-SCHEMA.md: Alle geplanten Tabellen auf TEXT-IDs umschreiben, FK-Regel dokumentieren
-- Kapitel 9 in DB-SCHEMA.md: Abschnitt zu seq vs. id, Präfix-Tabelle aufnehmen
-- `EntityIdGenerator` als zentraler Service in Infrastructure
-- Kein Migrationsaufwand: Geplante Tabellen existieren noch nicht, nur Doku-Änderung
+- Refactoring: 8 bestehende Tabellen von `seq + id TEXT` auf `id TEXT PRIMARY KEY` (ULID) umbauen. Wenige Testdaten, jetzt noch einfach.
+- NuGet-Dependency: ULID-Library (z.B. `Cysharp/Ulid` oder `NUlid`)
+- DB-SCHEMA.md komplett aktualisieren — alle Tabellen, FK-Typen, Naming-Konventionen
+- `GenerateNextId()` Methode in ProjectDatabase.cs entfällt — wird durch `IIdGenerator.NewId()` ersetzt
+- `RegistryJsonExporter`: ID kommt direkt aus DB (ist bereits ein String)
+- Multi-User Event-Sync (ADR-037) wird erheblich vereinfacht — keine ID-Mapping-Schicht nötig
 
-**Hierarchie:** Diese ADR dokumentiert die Entscheidung (Prinzip). Die Präfix-Tabelle und detaillierten Regeln (seq vs. id, FK-Regel) leben als operative Referenz in DB-SCHEMA.md (ADR-031). Bei Widerspruch gilt DB-SCHEMA.md für Details, diese ADR für das Prinzip.
-
----
+**Hierarchie:** Diese ADR dokumentiert die Entscheidung (Prinzip). Die operativen Details (Tabellen-Definitionen, FK-Regeln, Indizes) leben in DB-SCHEMA.md (ADR-031).
 
 ## ADR-040: Migrations- und Versionierungsstrategie (DB + JSON)
 

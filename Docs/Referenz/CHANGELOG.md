@@ -5,7 +5,33 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.16.3] — 2026-04-04
+
+### Geändert
+- **Settings:** SettingsView.xaml komplett auf Token-Referenzen migriert (alle hardcoded Farben → Themes/)
+- **Settings:** ProjectEditDialog.xaml komplett auf Token-Referenzen migriert (5 Tabs, alle Styles)
+- **App:** SetupDialog.xaml komplett auf Token-Referenzen migriert
+- **Settings:** Label „OneDrive" → „Cloud-Speicher" in SettingsView
+
+### Behoben
+- **Settings:** SettingsViewModel implementiert IDisposable für ProjectDatabase
+
+---
+
+## [v0.16.2] — 2026-04-04
+
+### Geändert
+- **App:** SetupDialog UI-Labels „OneDrive" → „Cloud-Speicher" (ADR-004)
+
+---
+
 ## [v0.16.1] — 2026-04-03 / 2026-04-04
+
+### Behoben (04.04.)
+- **Domain:** Dateiname client.cs → Client.cs (CODING_STANDARDS Kap. 1.1)
+- **Infrastructure:** Leerer Catch-Block in ReadStringOrDefault durch Log-Warning ersetzt
+- **App:** Version-Anzeige aus Assembly statt hardcoded „0.10.0"
+- **Build:** Directory.Build.props Version 0.2.0 → 0.16.1
 
 ### Dokumentation — DSGVO + Privacy (03.04.)
 - **DSGVO-Architektur** v1.3→v1.4 — Privacy Engineering, Datenklassifizierung A/B/C, IExternalCommunicationService, IPrivacyPolicy (Strategy Pattern), Dienststatus-Modell, Löschkonzept, Audit-Negativliste
@@ -484,6 +510,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 | v2.1.0 | 2026-04-04 | UI_UX_Guidelines | 8 Review-Punkte (Auflösung, States, Feedback) |
 | v2.0.0 | 2026-04-04 | WPF_UI_Architecture | Neufassung (15 Review-Punkte) |
 | v1.5.1 | 2026-04-04 | DB-SCHEMA | TEXT-IDs, FK-Regel, Präfix-Tabelle (ADR-039) |
+| — | 2026-04-04 | Settings/App XAML | Token-Migration: SettingsView, ProjectEditDialog, SetupDialog |
 
 ---
 

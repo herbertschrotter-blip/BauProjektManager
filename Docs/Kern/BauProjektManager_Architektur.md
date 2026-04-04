@@ -243,7 +243,7 @@ Alle Projektdaten in SQLite (`bpm.db`). Bei jeder Änderung wird `registry.json`
 ```csharp
 public class Project
 {
-    public string Id { get; set; }                    // "proj_001" (auto-increment)
+    public string Id { get; set; }                    // ULID (global eindeutig)
     public string ProjectNumber { get; set; }         // "202512" (aus Startdatum)
     public string Name { get; set; }                  // "ÖWG-Dobl-Zwaring"
     public string FullName { get; set; }              // "Gartensiedlung Dobl-Zwaring"
@@ -296,7 +296,7 @@ public class ProjectTimeline
 
 public class Building
 {
-    public string Id { get; set; }                    // "bldg_001" (auto-increment)
+    public string Id { get; set; }                    // ULID
     public string Name { get; set; }                  // "Haus Nr. 64"
     public string ShortName { get; set; }             // "H64"
     public string Type { get; set; }                  // "Reihenhaus"
@@ -316,7 +316,7 @@ public class ProjectPaths
 
 public class Client
 {
-    public string Id { get; set; }                    // "client_001" (auto-increment)
+    public string Id { get; set; }                    // ULID
     public string Company { get; set; }               // "ÖWG Wohnbau"
     public string ContactPerson { get; set; }         // "Ing. Müller"
     public string Phone { get; set; }                 // "0316/12345"
@@ -327,7 +327,7 @@ public class Client
 public enum ProjectStatus { Active, Completed }
 ```
 
-**ID-Schema:** Auto-Increment aus SQLite mit Präfix: `proj_001`, `client_001`, `bldg_001`. IDs werden nie wiederverwendet. (ADR-006)
+- **ID-Schema (ADR-039 v2):** ULID als `TEXT PRIMARY KEY` für ALLE Tabellen. Global eindeutig, offline erzeugbar, keine `seq` Spalte. ID-Generierung über `IIdGenerator` (Domain) / `UlidIdGenerator` (Infrastructure).
 
 **Building-Modell:** Aktuell minimal (Name, ShortName, Type, Levels). Wird später erweitert für Ziegelberechnung/Bauphysik (Geschoßhöhe, Wandstärke etc.) — Design dafür basierend auf realen Excel-Berechnungsblättern.
 
@@ -351,7 +351,7 @@ public enum ProjectStatus { Active, Completed }
   "customPlanTypes": [],
   "projects": [
     {
-      "id": "proj_001",
+      "id": "01HV8M2Q9AJ3W1XK7R4F5N6T8C",
       "projectNumber": "202512",
       "name": "ÖWG-Dobl-Zwaring",
       "fullName": "Gartensiedlung Dobl-Zwaring",
@@ -415,7 +415,7 @@ Versteckte Datei in jedem Projektordner als "Ausweis":
 
 ```json
 {
-  "registryId": "proj_001",
+  "registryId": "01HV8M2Q9AJ3W1XK7R4F5N6T8C",
   "projectNumber": "202512",
   "name": "ÖWG-Dobl-Zwaring",
   "registryPath": "...\\BauProjektManager\\registry.json"
@@ -589,7 +589,7 @@ Screen 3 (Architekturplan):
 
 ```sql
 CREATE TABLE import_journal (
-    id TEXT PRIMARY KEY,                -- "imp_20260326_143200"
+    id TEXT PRIMARY KEY,                -- ULID
     timestamp TEXT NOT NULL,
     completed_at TEXT,
     status TEXT NOT NULL,               -- "pending", "completed", "failed", "undone"
@@ -601,7 +601,7 @@ CREATE TABLE import_journal (
 );
 
 CREATE TABLE import_actions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT PRIMARY KEY,                -- ULID
     import_id TEXT NOT NULL,
     action_order INTEGER NOT NULL,
     action_type TEXT NOT NULL,          -- "new", "indexUpdate", "overwrite", "skip"
@@ -618,8 +618,8 @@ CREATE TABLE import_actions (
 );
 
 CREATE TABLE import_action_files (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    action_id INTEGER NOT NULL,
+    id TEXT PRIMARY KEY,                -- ULID
+    action_id TEXT NOT NULL,
     file_name TEXT NOT NULL,
     file_type TEXT NOT NULL,            -- "pdf", "dwg", "other"
     source_path TEXT NOT NULL,
@@ -700,18 +700,19 @@ BauProjektManager.sln
 │   │   ├── Enums/
 │   │   │   ├── ProjectStatus.cs               ← ✅ Implementiert
 │   │   │   └── DataClassification.cs          ← ⬜ Geplant (ClassA/B/C, ADR-035)
-│   │   ├── Privacy/
-│   │   │   └── IPrivacyPolicy.cs              ← ⬜ Geplant (ADR-036)
-│   │   └── BauProjektManager.Domain.csproj    ← KEINE Abhängigkeiten
+│   │   ├── IIdGenerator.cs                    ← ⬜ ADR-039 v2
+    │   │   ├── Privacy/
+    │   │   │   └── IPrivacyPolicy.cs              ← ⬜ Geplant (ADR-036)│   │   └── BauProjektManager.Domain.csproj    ← KEINE Abhängigkeiten
 │   │
 │   ├── BauProjektManager.Infrastructure/     ← Technische Umsetzung
 │   │   ├── Persistence/
-│   │   │   ├── ProjectDatabase.cs             ← ✅ SQLite CRUD Schema v1.5 (projects, clients, building_parts, building_levels, project_participants, project_links)
+│   │   │   ├── ProjectDatabase.cs             ← ✅ SQLite CRUD Schema v2.0 ULID (projects, clients, building_parts, building_levels, project_participants, project_links)
 │   │   │   ├── AppSettingsService.cs           ← ✅ settings.json laden/speichern
 │   │   │   ├── RegistryJsonExporter.cs        ← ✅ SQLite → JSON Export
 │   │   │   └── ProjectFolderService.cs        ← ✅ Ordner erstellen
-│   │   ├── Communication/                      ← ⬜ Geplant (vor erstem Online-Modul)
-│   │   │   ├── ExternalCommunicationService.cs ← ⬜ IExternalCommunicationService (ADR-035)
+    │   │   ├── UlidIdGenerator.cs                  ← ⬜ ADR-039 v2 (NuGet: Cysharp/Ulid)
+    │   │   ├── Communication/                      ← ⬜ Geplant (vor erstem Online-Modul)
+    │   │   │   ├── ExternalCommunicationService.cs ← ⬜ IExternalCommunicationService (ADR-035)
 │   │   │   ├── RelaxedPrivacyPolicy.cs        ← ⬜ Interner Modus (ADR-036)
 │   │   │   └── StrictPrivacyPolicy.cs         ← ⬜ Kommerzieller Modus (ADR-036)
 │   │   └── BauProjektManager.Infrastructure.csproj
@@ -737,7 +738,7 @@ BauProjektManager.sln
 └── Docs/
     ├── Kern/                                  ← Bei JEDER Code-Änderung relevant
     │   ├── BauProjektManager_Architektur.md   ← DIESES DOKUMENT
-    │   ├── DB-SCHEMA.md                       ← ✅ Schema v1.5
+    │   ├── DB-SCHEMA.md                       ← ✅ Schema v2.0 (ULID)
     │   ├── CODING_STANDARDS.md                ← ✅ Code-Richtlinien + Datenschutz (Kap. 17)
     │   ├── DSVGO-Architektur.md               ← ✅ Privacy Engineering, IPrivacyPolicy
     │   └── BACKLOG.md                         ← ✅ Feature-Liste
@@ -784,7 +785,7 @@ Zusammenfassung der wichtigsten Entscheidungen:
 | **Logging** | Serilog (File + Console) | ADR-015 |
 | **System of Record** | SQLite (`bpm.db`) | ADR-002 |
 | **VBA-Export** | registry.json (automatisch, read-only) | ADR-004, ADR-017 |
-| **ID-Schema** | Auto-Increment mit Präfix (proj_001) | ADR-006 |
+| **ID-Schema** | ULID als TEXT PRIMARY KEY für alle Tabellen | ADR-039 |
 | **Plan-Dateien** | 1..n pro Revision | ADR-007 |
 | **Import** | 10-Schritte-Workflow | ADR-008 |
 | **Undo** | 3 SQLite-Tabellen (Journal) | ADR-009 |
@@ -803,7 +804,7 @@ Zusammenfassung der wichtigsten Entscheidungen:
 | **KI-API-Import** | ChatGPT/Claude für Datenextraktion | ADR-027 |
 | **Datenschutz** | IExternalCommunicationService als zentrales Privacy Gate | ADR-035 |
 | **Privacy Policy** | IPrivacyPolicy austauschbar (Relaxed/Strict), Lizenz-gesteuert | ADR-036 |
-| **ID-Schema** | TEXT mit Präfix für alle Tabellen, seq/id Rollen definiert | ADR-039 |
+| **ID-Schema** | ULID als TEXT PRIMARY KEY, global eindeutig, offline erzeugbar | ADR-039 |
 
 ---
 

@@ -6,16 +6,18 @@
         <vm:SettingsViewModel/>
     </UserControl.DataContext>
     <UserControl.Resources>
-        <!-- Dark TabControl Style -->
+        <!-- Dark TabControl Style (Token-basiert) -->
         <Style TargetType="TabControl">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
         </Style>
         <Style TargetType="TabItem">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#666666"/>
+            <Setter Property="Foreground" Value="{DynamicResource BpmTextSecondary}"/>
             <Setter Property="Padding" Value="16,8"/>
             <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontFamily" Value="{DynamicResource BpmFontFamily}"/>
+            <Setter Property="FontSize" Value="12"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TabItem">
@@ -26,12 +28,12 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="#007ACC"/>
-                                <Setter Property="Foreground" Value="White"/>
+                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="{DynamicResource BpmAccentPrimary}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource BpmTextBright}"/>
                                 <Setter Property="FontWeight" Value="Bold"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Foreground" Value="#CCCCCC"/>
+                                <Setter Property="Foreground" Value="{DynamicResource BpmTextPrimary}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -49,8 +51,7 @@
 
         <!-- Header -->
         <TextBlock Grid.Row="0" Text="⚙ Einstellungen"
-                   FontSize="22" Foreground="#CCCCCC"
-                   Margin="0,0,0,10"/>
+                   Style="{DynamicResource BpmHeading1}"/>
 
         <!-- TabControl -->
         <TabControl Grid.Row="1">
@@ -68,28 +69,11 @@
                     <DataGrid Grid.Row="0"
                               ItemsSource="{Binding Projects}"
                               SelectedItem="{Binding SelectedProject}"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              SelectionMode="Single"
-                              Background="#252526"
-                              Foreground="#CCCCCC"
-                              BorderBrush="#3E3E42"
-                              RowBackground="#2D2D30"
-                              AlternatingRowBackground="#333337"
-                              GridLinesVisibility="Horizontal"
-                              HorizontalGridLinesBrush="#3E3E42"
-                              HeadersVisibility="Column"
-                              CanUserResizeRows="False"
+                              Style="{DynamicResource BpmDataGridZebra}"
+                              ColumnHeaderStyle="{DynamicResource BpmDataGridColumnHeader}"
+                              RowStyle="{DynamicResource BpmDataGridRow}"
+                              CellStyle="{DynamicResource BpmDataGridCell}"
                               MouseDoubleClick="OnRowDoubleClick">
-                        <DataGrid.ColumnHeaderStyle>
-                            <Style TargetType="DataGridColumnHeader">
-                                <Setter Property="Background" Value="#007ACC"/>
-                                <Setter Property="Foreground" Value="White"/>
-                                <Setter Property="Padding" Value="8,5"/>
-                                <Setter Property="BorderBrush" Value="#005A9E"/>
-                                <Setter Property="BorderThickness" Value="0,0,1,0"/>
-                            </Style>
-                        </DataGrid.ColumnHeaderStyle>
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Projekt" Binding="{Binding Name}" Width="*"/>
                             <DataGridTextColumn Header="Nr." Binding="{Binding ProjectNumber}" Width="80"/>
@@ -104,10 +88,8 @@
                             </DataGridTemplateColumn>
                             <DataGridTextColumn Header="Pfad" Binding="{Binding Paths.Root}" Width="*">
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="#666666"/>
-                                        <Setter Property="FontSize" Value="11"/>
-                                    </Style>
+                                    <Style TargetType="TextBlock"
+                                           BasedOn="{StaticResource BpmDataGridCellSecondary}"/>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
                         </DataGrid.Columns>
@@ -117,30 +99,26 @@
                     <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,8,0,0">
                         <Button Content="+ Neues Projekt"
                                 Command="{Binding AddProjectCommand}"
-                                Background="#007ACC" Foreground="White"
-                                Padding="15,8" Margin="0,0,10,0"
-                                BorderThickness="0" Cursor="Hand"/>
+                                Style="{DynamicResource BpmButtonPrimary}"
+                                Margin="0,0,10,0"/>
                         <Button Content="Bearbeiten"
                                 Command="{Binding EditProjectCommand}"
-                                Background="#3E3E42" Foreground="#CCCCCC"
-                                Padding="15,8" Margin="0,0,10,0"
-                                BorderThickness="0" Cursor="Hand"/>
+                                Style="{DynamicResource BpmButtonSecondary}"
+                                Margin="0,0,10,0"/>
                         <Button Content="Archivieren"
-                                Background="#3E3E42" Foreground="#CCCCCC"
-                                Padding="15,8" Margin="0,0,10,0"
-                                BorderThickness="0" Cursor="Hand"
+                                Style="{DynamicResource BpmButtonSecondary}"
+                                Margin="0,0,10,0"
                                 IsEnabled="False" ToolTip="Kommt in Feature #12"/>
                         <Button Content="Löschen"
                                 Command="{Binding DeleteProjectCommand}"
-                                Background="#C62828" Foreground="White"
-                                Padding="15,8"
-                                BorderThickness="0" Cursor="Hand"/>
+                                Style="{DynamicResource BpmButtonDanger}"/>
                     </StackPanel>
 
                     <!-- Pfade — unten verankert -->
                     <StackPanel Grid.Row="2" Margin="0,20,0,0">
-                        <Rectangle Height="1" Fill="#3E3E42" Margin="0,0,0,12"/>
-                        <TextBlock Text="── Pfade ──" Foreground="#007ACC" FontWeight="Bold" Margin="0,0,0,8"/>
+                        <Rectangle Height="1" Fill="{DynamicResource BpmBorderDefault}" Margin="0,0,0,12"/>
+                        <TextBlock Text="── Pfade ──" Foreground="{DynamicResource BpmAccentPrimary}"
+                                   FontWeight="Bold" FontSize="13" Margin="0,0,0,8"/>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="110"/>
@@ -154,42 +132,50 @@
                             </Grid.RowDefinitions>
 
                             <TextBlock Grid.Row="0" Grid.Column="0" Text="Arbeitsordner:"
-                                       Foreground="#CCCCCC" VerticalAlignment="Center" Margin="0,4"/>
+                                       Style="{DynamicResource BpmBodyText}"
+                                       VerticalAlignment="Center" Margin="0,4"/>
                             <TextBox Grid.Row="0" Grid.Column="1"
                                      Text="{Binding BasePath, Mode=OneWay}"
-                                     Background="#1E1E1E" Foreground="#CCCCCC"
-                                     BorderBrush="#3E3E42" Padding="5,3" Margin="0,4"
+                                     Background="{DynamicResource BpmBgBase}"
+                                     Foreground="{DynamicResource BpmTextPrimary}"
+                                     BorderBrush="{DynamicResource BpmBorderDefault}"
+                                     Padding="5,3" Margin="0,4"
                                      IsReadOnly="True" FontSize="12"/>
                             <Button Grid.Row="0" Grid.Column="2" Content="📁"
                                     Click="OnBrowseBasePath"
-                                    Background="#3E3E42" Foreground="#FFD700"
-                                    Padding="8,4" Margin="5,4,0,4"
-                                    BorderThickness="0" Cursor="Hand"
+                                    Style="{DynamicResource BpmButtonGhost}"
+                                    Margin="5,4,0,4"
                                     ToolTip="Arbeitsordner wählen"/>
 
                             <TextBlock Grid.Row="1" Grid.Column="0" Text="Archivordner:"
-                                       Foreground="#CCCCCC" VerticalAlignment="Center" Margin="0,4"/>
+                                       Style="{DynamicResource BpmBodyText}"
+                                       VerticalAlignment="Center" Margin="0,4"/>
                             <TextBox Grid.Row="1" Grid.Column="1"
                                      Text="{Binding ArchivePath, Mode=OneWay}"
-                                     Background="#1E1E1E" Foreground="#CCCCCC"
-                                     BorderBrush="#3E3E42" Padding="5,3" Margin="0,4"
+                                     Background="{DynamicResource BpmBgBase}"
+                                     Foreground="{DynamicResource BpmTextPrimary}"
+                                     BorderBrush="{DynamicResource BpmBorderDefault}"
+                                     Padding="5,3" Margin="0,4"
                                      IsReadOnly="True" FontSize="12"/>
                             <Button Grid.Row="1" Grid.Column="2" Content="📁"
                                     Click="OnBrowseArchivePath"
-                                    Background="#3E3E42" Foreground="#FFD700"
-                                    Padding="8,4" Margin="5,4,0,4"
-                                    BorderThickness="0" Cursor="Hand"
+                                    Style="{DynamicResource BpmButtonGhost}"
+                                    Margin="5,4,0,4"
                                     ToolTip="Archivordner wählen"/>
 
                             <TextBlock Grid.Row="2" Grid.Column="0" Text="Cloud-Speicher:"
-                                       Foreground="#CCCCCC" VerticalAlignment="Center" Margin="0,4"/>
+                                       Style="{DynamicResource BpmBodyText}"
+                                       VerticalAlignment="Center" Margin="0,4"/>
                             <TextBox Grid.Row="2" Grid.Column="1"
                                      Text="{Binding OneDrivePath, Mode=OneWay}"
-                                     Background="#1E1E1E" Foreground="#666666"
-                                     BorderBrush="#3E3E42" Padding="5,3" Margin="0,4"
+                                     Background="{DynamicResource BpmBgBase}"
+                                     Foreground="{DynamicResource BpmTextSecondary}"
+                                     BorderBrush="{DynamicResource BpmBorderDefault}"
+                                     Padding="5,3" Margin="0,4"
                                      IsReadOnly="True" FontSize="12"/>
                             <TextBlock Grid.Row="2" Grid.Column="2"
-                                       Text="(auto)" Foreground="#666666"
+                                       Text="(auto)"
+                                       Style="{DynamicResource BpmSmallText}"
                                        VerticalAlignment="Center" Margin="5,4,0,4"/>
                         </Grid>
                     </StackPanel>
@@ -200,7 +186,7 @@
             <TabItem Header="Standard-Ordnerstruktur">
                 <StackPanel Margin="0,10,0,0">
                     <TextBlock Text="Wird als Vorlage bei jedem neuen Projekt verwendet. Beim Anlegen pro Projekt anpassbar."
-                               Foreground="#666666" FontSize="11" Margin="0,0,0,12"/>
+                               Style="{DynamicResource BpmSmallText}" Margin="0,0,0,12"/>
 
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -212,12 +198,13 @@
                         <!-- Ordner-Baum -->
                         <TreeView x:Name="TvFolders" Grid.Column="0"
                                   ItemsSource="{Binding FolderTreeItems}"
-                                  Background="#1E1E1E" Foreground="#CCCCCC"
-                                  BorderBrush="#3E3E42" Height="400"
+                                  Background="{DynamicResource BpmBgBase}"
+                                  Foreground="{DynamicResource BpmTextPrimary}"
+                                  BorderBrush="{DynamicResource BpmBorderDefault}" Height="400"
                                   SelectedItemChanged="OnTreeSelectionChanged">
                             <TreeView.Resources>
                                 <Style TargetType="TreeViewItem">
-                                    <Setter Property="Foreground" Value="#CCCCCC"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource BpmTextPrimary}"/>
                                     <Setter Property="IsExpanded" Value="True"/>
                                     <Setter Property="Padding" Value="2"/>
                                 </Style>
@@ -225,12 +212,16 @@
                             <TreeView.ItemTemplate>
                                 <HierarchicalDataTemplate ItemsSource="{Binding Children}">
                                     <StackPanel Orientation="Horizontal" Margin="2">
-                                        <TextBlock Text="{Binding DisplayName}" Foreground="#CCCCCC"
+                                        <TextBlock Text="{Binding DisplayName}"
+                                                   Foreground="{DynamicResource BpmTextPrimary}"
                                                    VerticalAlignment="Center" FontSize="13"/>
-                                        <TextBlock Text="  📥" Foreground="#007ACC" FontSize="12"
+                                        <TextBlock Text="  📥"
+                                                   Foreground="{DynamicResource BpmAccentPrimary}"
+                                                   FontSize="12"
                                                    Visibility="{Binding InboxVisibility}"
                                                    VerticalAlignment="Center" Margin="4,0,0,0"/>
-                                        <TextBlock Text="{Binding PrefixLabel}" Foreground="#555555"
+                                        <TextBlock Text="{Binding PrefixLabel}"
+                                                   Foreground="{DynamicResource BpmTextSecondary}"
                                                    FontSize="10" VerticalAlignment="Center" Margin="8,0,0,0"/>
                                     </StackPanel>
                                 </HierarchicalDataTemplate>
@@ -254,45 +245,74 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <Button Grid.Row="0" Grid.Column="0" Content="▲" Click="OnTemplateMoveUp" Width="32" Height="28"
-                                    Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0" Cursor="Hand" VerticalAlignment="Top"/>
+                            <Button Grid.Row="0" Grid.Column="0" Content="▲" Click="OnTemplateMoveUp"
+                                    Width="32" Height="28"
+                                    Style="{DynamicResource BpmButtonSecondary}"
+                                    Padding="0" MinWidth="0" MinHeight="0"
+                                    VerticalAlignment="Top"/>
                             <TextBlock Grid.Row="0" Grid.Column="1" Text="Nach oben verschieben"
-                                       Foreground="#666666" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                       Style="{DynamicResource BpmSmallText}"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
 
-                            <Button Grid.Row="1" Grid.Column="0" Content="▼" Click="OnTemplateMoveDown" Width="32" Height="28"
-                                    Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0" Cursor="Hand" VerticalAlignment="Top"/>
+                            <Button Grid.Row="1" Grid.Column="0" Content="▼" Click="OnTemplateMoveDown"
+                                    Width="32" Height="28"
+                                    Style="{DynamicResource BpmButtonSecondary}"
+                                    Padding="0" MinWidth="0" MinHeight="0"
+                                    VerticalAlignment="Top"/>
                             <TextBlock Grid.Row="1" Grid.Column="1" Text="Nach unten verschieben"
-                                       Foreground="#666666" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                       Style="{DynamicResource BpmSmallText}"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
 
-                            <Button Grid.Row="2" Grid.Column="0" Content="＋" Click="OnTemplateAddMain" Width="32" Height="28"
-                                    Background="#007ACC" Foreground="White" BorderThickness="0" Cursor="Hand" VerticalAlignment="Top"/>
+                            <Button Grid.Row="2" Grid.Column="0" Content="＋" Click="OnTemplateAddMain"
+                                    Width="32" Height="28"
+                                    Style="{DynamicResource BpmButtonPrimary}"
+                                    Padding="0" MinWidth="0" MinHeight="0"
+                                    VerticalAlignment="Top"/>
                             <TextBlock Grid.Row="2" Grid.Column="1" Text="Hauptordner (immer nummeriert)"
-                                       Foreground="#666666" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                       Style="{DynamicResource BpmSmallText}"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
 
-                            <Button Grid.Row="3" Grid.Column="0" Content="＋└" Click="OnTemplateAddSub" Width="32" Height="28"
-                                    Background="#085041" Foreground="#5DCAA5" BorderThickness="0" Cursor="Hand" FontSize="10" VerticalAlignment="Top"/>
+                            <Button Grid.Row="3" Grid.Column="0" Content="＋└" Click="OnTemplateAddSub"
+                                    Width="32" Height="28"
+                                    Background="#085041" Foreground="#5DCAA5"
+                                    BorderThickness="0" Cursor="Hand" FontSize="10"
+                                    VerticalAlignment="Top"/>
                             <TextBlock Grid.Row="3" Grid.Column="1" Text="Unterordner zum gewählten Hauptordner"
-                                       Foreground="#5DCAA5" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                       Foreground="#5DCAA5" FontSize="11"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
 
-                            <Button Grid.Row="4" Grid.Column="0" Content="✕" Click="OnTemplateRemove" Width="32" Height="28"
-                                    Background="#C62828" Foreground="White" BorderThickness="0" Cursor="Hand" VerticalAlignment="Top"/>
+                            <Button Grid.Row="4" Grid.Column="0" Content="✕" Click="OnTemplateRemove"
+                                    Width="32" Height="28"
+                                    Style="{DynamicResource BpmButtonDanger}"
+                                    Padding="0" MinWidth="0" MinHeight="0"
+                                    VerticalAlignment="Top"/>
                             <TextBlock Grid.Row="4" Grid.Column="1" Text="Entfernen"
-                                       Foreground="#666666" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                       Style="{DynamicResource BpmSmallText}"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
 
-                            <Button Grid.Row="5" Grid.Column="0" Content="📥" Click="OnTemplateToggleInbox" Width="32" Height="28"
-                                    Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0" Cursor="Hand" VerticalAlignment="Top"/>
+                            <Button Grid.Row="5" Grid.Column="0" Content="📥" Click="OnTemplateToggleInbox"
+                                    Width="32" Height="28"
+                                    Style="{DynamicResource BpmButtonSecondary}"
+                                    Padding="0" MinWidth="0" MinHeight="0"
+                                    VerticalAlignment="Top"/>
                             <TextBlock Grid.Row="5" Grid.Column="1" Text="_Eingang ein/aus"
-                                       Foreground="#666666" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                       Style="{DynamicResource BpmSmallText}"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
 
-                            <Button Grid.Row="6" Grid.Column="0" Content="##" Click="OnTemplateTogglePrefix" Width="32" Height="28"
-                                    Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0" Cursor="Hand" FontSize="10" FontWeight="Bold" VerticalAlignment="Top"/>
+                            <Button Grid.Row="6" Grid.Column="0" Content="##" Click="OnTemplateTogglePrefix"
+                                    Width="32" Height="28"
+                                    Style="{DynamicResource BpmButtonSecondary}"
+                                    Padding="0" MinWidth="0" MinHeight="0"
+                                    FontSize="10" FontWeight="Bold"
+                                    VerticalAlignment="Top"/>
                             <TextBlock Grid.Row="6" Grid.Column="1" Text="Präfix ein/aus (nur Unterordner)"
-                                       Foreground="#666666" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                       Style="{DynamicResource BpmSmallText}"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
 
                             <StackPanel Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,12,0,0">
-                                <TextBlock Foreground="#555555" FontSize="11">Präfix an: 00 Polierpläne</TextBlock>
-                                <TextBlock Foreground="#555555" FontSize="11" Margin="0,2,0,0">Präfix aus: Baustelleneinrichtung</TextBlock>
-                                <TextBlock Foreground="#555555" FontSize="11" Margin="0,10,0,0">Änderungen werden sofort gespeichert.</TextBlock>
+                                <TextBlock Style="{DynamicResource BpmSmallText}">Präfix an: 00 Polierpläne</TextBlock>
+                                <TextBlock Style="{DynamicResource BpmSmallText}" Margin="0,2,0,0">Präfix aus: Baustelleneinrichtung</TextBlock>
+                                <TextBlock Style="{DynamicResource BpmSmallText}" Margin="0,10,0,0">Änderungen werden sofort gespeichert.</TextBlock>
                             </StackPanel>
                         </Grid>
                     </Grid>
@@ -302,6 +322,6 @@
 
         <!-- Statusleiste -->
         <TextBlock Grid.Row="2" Text="{Binding RegistryStatus}"
-                   Foreground="#999999" FontSize="11" Margin="0,8,0,0"/>
+                   Style="{DynamicResource BpmSmallText}" Margin="0,8,0,0"/>
     </Grid>
 </UserControl>

@@ -3,7 +3,7 @@
 **Erstellt:** 29.03.2026  
 **Aktualisiert:** 04.04.2026  
 **Version:** 2.1  
-**Basis:** Solution v0.16.1, DB-Schema v1.5, ADR v1.2 (42 ADRs)
+**Basis:** Solution v0.17.0, DB-Schema v2.0 (ULID), ADR v1.2 (42 ADRs)
 
 ---
 
@@ -55,7 +55,7 @@ App             → referenziert alles (DI verdrahtet hier)
 |---------|-----|-------------|---------------|
 | **App** | WPF EXE | Microsoft.Extensions.DI | Shell, MainWindow, DI-Container, App.xaml, Themes/ (Resource Dictionaries) |
 | **Domain** | Class Library | *keine* | Project, Client, BuildingPart, BuildingLevel, ProjectParticipant, ProjectLink, Location, Timeline, AppSettings (ProjectTypes, BuildingTypes, LevelNames, ParticipantRoles, PortalTypes, FolderTemplate), Enums (inkl. DataClassification, AccessLevel), Interfaces (inkl. IPrivacyPolicy, IAccessControlService ⬜, IProjectDataService ⬜, ISyncTransport ⬜, ITaskManagementService ⬜, SyncEnvelope ⬜) — ⬜ = geplant, noch nicht implementiert |
-| **Infrastructure** | Class Library | Microsoft.Data.Sqlite, Serilog, System.Text.Json | ProjectDatabase (Schema v1.5: projects, clients, building_parts, building_levels, project_participants, project_links), RegistryJsonExporter, AppSettingsService, ProjectFolderService, SerilogSetup, ExternalCommunicationService (ADR-035), RelaxedPrivacyPolicy + StrictPrivacyPolicy (ADR-036). **Geplant:** EntityIdGenerator (ADR-039), SecretStore (ADR-042), StartupHealthCheck (ADR-041), Communication/ Ordner. Für vollständige Tabellenliste (implementiert + geplant) siehe [DB-SCHEMA.md](../Kern/DB-SCHEMA.md). |
+| **Infrastructure** | Class Library | Microsoft.Data.Sqlite, Serilog, System.Text.Json, Ulid (Cysharp) | ProjectDatabase (Schema v2.0 ULID: projects, clients, building_parts, building_levels, project_participants, project_links), RegistryJsonExporter, AppSettingsService, ProjectFolderService, SerilogSetup, UlidIdGenerator (ADR-039 v2), ExternalCommunicationService (ADR-035), RelaxedPrivacyPolicy + StrictPrivacyPolicy (ADR-036). **Geplant:** SecretStore (ADR-042), StartupHealthCheck (ADR-041), Communication/ Ordner. Für vollständige Tabellenliste (implementiert + geplant) siehe [DB-SCHEMA.md](../Kern/DB-SCHEMA.md). |
 | **Settings** | WPF Class Library | CommunityToolkit.Mvvm | SettingsViewModel, ProjectEditViewModel, SettingsView.xaml, ProjectEditDialog.xaml |
 | **PlanManager** | WPF Class Library | CommunityToolkit.Mvvm | (V1 Kern — noch in Entwicklung) FileParser, ImportService, Profile, Wizard |
 
@@ -165,6 +165,7 @@ Jedes wird ein eigenes WPF Class Library Projekt, referenziert Domain + Infrastr
 | Microsoft.Extensions.DependencyInjection | DI-Container | App |
 | Serilog + Serilog.Sinks.File + Serilog.Sinks.Console | Logging | Infrastructure, App |
 | System.Text.Json | JSON Serialisierung | Infrastructure |
+| Ulid (Cysharp) | ULID-Generierung (ADR-039 v2) | Infrastructure |
 | ClosedXML | Excel lesen/schreiben | Infrastructure (Zeiterfassung) |
 | QuestPDF | PDF-Export | Infrastructure (Planlisten, Bautagebuch) |
 | PdfPig | PDF-Parsing | Infrastructure (Planlisten-Import) |

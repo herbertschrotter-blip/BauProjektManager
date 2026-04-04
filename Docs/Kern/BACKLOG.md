@@ -1,7 +1,7 @@
 ﻿# BauProjektManager — Backlog
 
-**Letzte Aktualisierung:** 03.04.2026  
-**Aktuelle Version:** v0.16.1
+**Letzte Aktualisierung:** 04.04.2026  
+**Aktuelle Version:** v0.16.3
 
 **Verwandte Dokumente:**
 - [VISION.md](../Referenz/VISION.md) — Nordstern, Schmerzpunkte, Zielgruppe
@@ -102,7 +102,7 @@ Diese Features verbessern V1, sind aber kein Blocker für den Release.
 | .bpm-manifest (#11) | Versteckte Datei als Projektordner-Ausweis, Auto-Suche bei Umbenennung (ADR-013) | ⬜ |
 | Projekt archivieren (#12) | Ordner in Archiv verschieben, Pfad aktualisieren. Button vorbereitet (disabled) | ⬜ |
 | Single-Writer Mutex (#14) | Nur eine App-Instanz gleichzeitig (ADR-016) | ⬜ |
-| Versionsnummer im Log (#16) | Aus Assembly, nicht hardcoded | ⬜ |
+| Versionsnummer im Log (#16) | Aus Assembly, nicht hardcoded | ✅ v0.16.1 |
 | Bestehende Ordner zuweisen | Existierenden Ordner einem Projekt zuweisen statt neu anlegen | ⬜ |
 | Ordner umbenennen auf Disk | Bei Sortierung/Präfix-Änderung Ordner auf Festplatte umbenennen | ⬜ |
 | Plan-Sammler (#34) | Pläne per Checkbox sammeln und nach Schema sortieren | ⬜ |
@@ -116,7 +116,7 @@ Diese Features verbessern V1, sind aber kein Blocker für den Release.
 | DataClassification Enum | ClassA/ClassB/ClassC im Domain-Projekt | ⬜ |
 | external_call_log Tabelle | Audit-Log in bpm.db (DSVGO-Architektur Kap. 11.3) | ⬜ |
 | Einstellungen: Datenschutz-Tab | Toggle pro externem Dienst, Audit-Log-Anzeige, Kill-Switch | ⬜ |
-| Log-Rotation 30 Tage | Serilog retainedFileCountLimit (trivial) | ⬜ |
+| Log-Rotation 30 Tage | Serilog retainedFileCountLimit (trivial) | ✅ v0.5.0 |
 | ADR-039 ID-Schema | Geplante Tabellen auf TEXT-IDs umschreiben (Voraussetzung vor employees, work_packages) | ✅ |
 
 ---

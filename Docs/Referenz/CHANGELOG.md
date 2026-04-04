@@ -5,6 +5,22 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.17.0] — 2026-04-04
+
+### Changed
+- **ID-Schema (ADR-039 v2):** ULID als Primärschlüssel für ALLE Tabellen (bpm.db + planmanager.db). Ersetzt seq + TEXT-Präfix-IDs. Entscheidung aus 4-Runden Claude+ChatGPT Review.
+- **DB-SCHEMA.md v2.0:** Alle Tabellen auf `id TEXT PRIMARY KEY` (ULID), `seq` Spalte entfällt, `created_at`/`updated_at` ergänzt, Indizes auf FK-Spalten
+- **IIdGenerator Interface** in Domain, UlidIdGenerator in Infrastructure (NuGet: Cysharp/Ulid)
+- **Docs aktualisiert:** Architektur, DEPENDENCY-MAP, GLOSSAR, BACKLOG, CHANGELOG
+
+### Removed
+- Präfix-IDs (`proj_001`, `bpart_042` etc.) — ersetzt durch ULID
+- `seq INTEGER PRIMARY KEY AUTOINCREMENT` Spalte aus allen Tabellen
+- `EntityIdGenerator` Konzept — ersetzt durch `IIdGenerator` / `UlidIdGenerator`
+- `GenerateNextId()` mit `MAX(seq)+1` — ersetzt durch `Ulid.NewUlid()`
+
+---
+
 ## [v0.16.3] — 2026-04-04
 
 ### Geändert

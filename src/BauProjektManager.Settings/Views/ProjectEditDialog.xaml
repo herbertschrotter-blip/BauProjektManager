@@ -5,59 +5,75 @@
         Height="900" Width="1100"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
-        Background="#2D2D30">
+        Background="{DynamicResource BpmBgElevated}">
     <Window.Resources>
         <Style TargetType="DatePicker">
-            <Setter Property="Background" Value="#1E1E1E"/>
-            <Setter Property="Foreground" Value="#CCCCCC"/>
-            <Setter Property="BorderBrush" Value="#3E3E42"/>
+            <Setter Property="Background" Value="{DynamicResource BpmBgBase}"/>
+            <Setter Property="Foreground" Value="{DynamicResource BpmTextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BpmBorderDefault}"/>
             <Setter Property="Padding" Value="3"/>
         </Style>
         <Style TargetType="DatePickerTextBox">
-            <Setter Property="Background" Value="#1E1E1E"/>
-            <Setter Property="Foreground" Value="#CCCCCC"/>
+            <Setter Property="Background" Value="{DynamicResource BpmBgBase}"/>
+            <Setter Property="Foreground" Value="{DynamicResource BpmTextPrimary}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="DatePickerTextBox">
                         <TextBox x:Name="PART_TextBox"
                                  Text="{Binding Path=SelectedDate, RelativeSource={RelativeSource AncestorType=DatePicker}, StringFormat=dd.MM.yyyy}"
-                                 Background="#1E1E1E" Foreground="#CCCCCC"
+                                 Background="{DynamicResource BpmBgBase}" Foreground="{DynamicResource BpmTextPrimary}"
                                  BorderThickness="0" Padding="2" IsReadOnly="True"/>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
         <Style TargetType="ComboBox">
-            <Setter Property="Background" Value="#1E1E1E"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#3E3E42"/>
+            <Setter Property="Background" Value="{DynamicResource BpmBgBase}"/>
+            <Setter Property="Foreground" Value="{DynamicResource BpmTextBright}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BpmBorderDefault}"/>
             <Setter Property="Padding" Value="5,3"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBox">
                         <Grid>
-                            <ToggleButton x:Name="ToggleButton" Background="#1E1E1E" BorderBrush="#3E3E42" BorderThickness="1" Padding="5,3"
+                            <ToggleButton x:Name="ToggleButton"
+                                          Background="{DynamicResource BpmBgBase}"
+                                          BorderBrush="{DynamicResource BpmBorderDefault}"
+                                          BorderThickness="1" Padding="5,3"
                                           IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" ClickMode="Press">
                                 <ToggleButton.Template>
                                     <ControlTemplate TargetType="ToggleButton">
-                                        <Border Background="#1E1E1E" BorderBrush="#3E3E42" BorderThickness="1" Padding="5,3">
+                                        <Border Background="{DynamicResource BpmBgBase}"
+                                                BorderBrush="{DynamicResource BpmBorderDefault}"
+                                                BorderThickness="1" Padding="5,3">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*"/>
                                                     <ColumnDefinition Width="20"/>
                                                 </Grid.ColumnDefinitions>
                                                 <ContentPresenter Grid.Column="0"/>
-                                                <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="#CCCCCC" StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <Path Grid.Column="1" Data="M0,0 L4,4 L8,0"
+                                                      Stroke="{DynamicResource BpmTextPrimary}"
+                                                      StrokeThickness="1.5"
+                                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             </Grid>
                                         </Border>
                                     </ControlTemplate>
                                 </ToggleButton.Template>
                             </ToggleButton>
-                            <ContentPresenter x:Name="ContentSite" Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                              Margin="8,3,25,3" VerticalAlignment="Center" HorizontalAlignment="Left" IsHitTestVisible="False"/>
-                            <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" PopupAnimation="Slide">
-                                <Border Background="#1E1E1E" BorderBrush="#3E3E42" BorderThickness="1" MinWidth="{TemplateBinding ActualWidth}">
+                            <ContentPresenter x:Name="ContentSite"
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              Margin="8,3,25,3" VerticalAlignment="Center"
+                                              HorizontalAlignment="Left" IsHitTestVisible="False"/>
+                            <Popup x:Name="Popup" Placement="Bottom"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True" PopupAnimation="Slide">
+                                <Border Background="{DynamicResource BpmBgBase}"
+                                        BorderBrush="{DynamicResource BpmBorderDefault}"
+                                        BorderThickness="1"
+                                        MinWidth="{TemplateBinding ActualWidth}">
                                     <ScrollViewer MaxHeight="200">
                                         <StackPanel IsItemsHost="True"/>
                                     </ScrollViewer>
@@ -69,17 +85,17 @@
             </Setter>
         </Style>
         <Style TargetType="ComboBoxItem">
-            <Setter Property="Background" Value="#1E1E1E"/>
-            <Setter Property="Foreground" Value="#CCCCCC"/>
+            <Setter Property="Background" Value="{DynamicResource BpmBgBase}"/>
+            <Setter Property="Foreground" Value="{DynamicResource BpmTextPrimary}"/>
             <Setter Property="Padding" Value="8,5"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#007ACC"/>
-                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Background" Value="{DynamicResource BpmAccentPrimary}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource BpmTextBright}"/>
                 </Trigger>
                 <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="#005A9E"/>
-                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Background" Value="{DynamicResource BpmAccentPressed}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource BpmTextBright}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -89,23 +105,25 @@
         </Style>
         <Style TargetType="TabItem" x:Key="DialogTabItem">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#666666"/>
+            <Setter Property="Foreground" Value="{DynamicResource BpmTextSecondary}"/>
             <Setter Property="Padding" Value="16,8"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TabItem">
-                        <Border x:Name="TabBorder" Padding="{TemplateBinding Padding}" Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2">
+                        <Border x:Name="TabBorder" Padding="{TemplateBinding Padding}"
+                                Background="Transparent"
+                                BorderBrush="Transparent" BorderThickness="0,0,0,2">
                             <ContentPresenter ContentSource="Header"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="#007ACC"/>
-                                <Setter Property="Foreground" Value="White"/>
+                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="{DynamicResource BpmAccentPrimary}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource BpmTextBright}"/>
                                 <Setter Property="FontWeight" Value="Bold"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Foreground" Value="#CCCCCC"/>
+                                <Setter Property="Foreground" Value="{DynamicResource BpmTextPrimary}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -113,44 +131,74 @@
             </Setter>
         </Style>
         <Style x:Key="FTB" TargetType="TextBox">
-            <Setter Property="Background" Value="#1E1E1E"/>
-            <Setter Property="Foreground" Value="#CCCCCC"/>
-            <Setter Property="BorderBrush" Value="#3E3E42"/>
+            <Setter Property="Background" Value="{DynamicResource BpmBgBase}"/>
+            <Setter Property="Foreground" Value="{DynamicResource BpmTextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BpmBorderDefault}"/>
             <Setter Property="Padding" Value="5,3"/>
             <Setter Property="Margin" Value="0,3"/>
         </Style>
         <Style x:Key="FL" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#CCCCCC"/>
+            <Setter Property="Foreground" Value="{DynamicResource BpmTextPrimary}"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="0,3"/>
         </Style>
         <Style x:Key="SH" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#007ACC"/>
+            <Setter Property="Foreground" Value="{DynamicResource BpmAccentPrimary}"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Margin" Value="0,12,0,6"/>
         </Style>
         <Style x:Key="IconBtn" TargetType="Button">
             <Setter Property="Width" Value="26"/>
             <Setter Property="Height" Value="26"/>
-            <Setter Property="Background" Value="#3E3E42"/>
-            <Setter Property="Foreground" Value="#999999"/>
+            <Setter Property="Background" Value="{DynamicResource BpmBgHover}"/>
+            <Setter Property="Foreground" Value="{DynamicResource BpmTextSecondary}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Padding" Value="0"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
-        <!-- Dark DataGrid cell editing style -->
         <Style x:Key="DarkDgCell" TargetType="DataGridCell">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#CCCCCC"/>
+            <Setter Property="Foreground" Value="{DynamicResource BpmTextPrimary}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="4,2"/>
             <Style.Triggers>
                 <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="#264F78"/>
-                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Background" Value="{DynamicResource BpmBgActive}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource BpmTextBright}"/>
                 </Trigger>
             </Style.Triggers>
+        </Style>
+        <!-- DataGrid Header Styles -->
+        <Style x:Key="DgHeaderPrimary" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="{DynamicResource BpmBgSurface}"/>
+            <Setter Property="Foreground" Value="{DynamicResource BpmTextBright}"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BpmBorderSubtle}"/>
+            <Setter Property="BorderThickness" Value="0,0,1,0"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style x:Key="DgHeaderSecondary" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="{DynamicResource BpmBgHover}"/>
+            <Setter Property="Foreground" Value="{DynamicResource BpmTextPrimary}"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BpmBorderDefault}"/>
+            <Setter Property="BorderThickness" Value="0,0,1,0"/>
+        </Style>
+        <!-- DataGrid Base Style -->
+        <Style x:Key="DgBase" TargetType="DataGrid">
+            <Setter Property="Background" Value="{DynamicResource BpmBgBase}"/>
+            <Setter Property="Foreground" Value="{DynamicResource BpmTextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BpmBorderDefault}"/>
+            <Setter Property="RowBackground" Value="{DynamicResource BpmBgBase}"/>
+            <Setter Property="AlternatingRowBackground" Value="{DynamicResource BpmBgBase}"/>
+            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource BpmBorderDefault}"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="AutoGenerateColumns" Value="False"/>
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="SelectionMode" Value="Single"/>
+            <Setter Property="CanUserResizeRows" Value="False"/>
         </Style>
     </Window.Resources>
 
@@ -161,7 +209,8 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" x:Name="TxtDialogTitle" Text="Projekt bearbeiten" FontSize="18" Foreground="#CCCCCC" Margin="0,0,0,10"/>
+        <TextBlock Grid.Row="0" x:Name="TxtDialogTitle" Text="Projekt bearbeiten"
+                   Style="{DynamicResource BpmHeading2}" Margin="0,0,0,10"/>
 
         <TabControl Grid.Row="1" Style="{StaticResource DialogTabs}">
 
@@ -191,8 +240,10 @@
                                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Projektstart:" Style="{StaticResource FL}"/>
                                 <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Margin="0,3">
                                     <DatePicker x:Name="DpProjectStart" Width="140" SelectedDateChanged="OnProjectStartChanged"/>
-                                    <TextBlock Text="  →  Nr:" Foreground="#999999" VerticalAlignment="Center"/>
-                                    <TextBlock x:Name="TxtNumberPreview" Text="" Foreground="#007ACC" FontWeight="Bold" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                                    <TextBlock Text="  →  Nr:" Foreground="{DynamicResource BpmTextSecondary}" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtNumberPreview" Text=""
+                                               Foreground="{DynamicResource BpmAccentPrimary}"
+                                               FontWeight="Bold" VerticalAlignment="Center" Margin="5,0,0,0"/>
                                 </StackPanel>
                                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Projektname:" Style="{StaticResource FL}"/>
                                 <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtName" Style="{StaticResource FTB}"/>
@@ -246,7 +297,7 @@
                                 <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtNotes" Style="{StaticResource FTB}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
                             </Grid>
                         </StackPanel>
-                        <Rectangle Grid.Column="1" Width="1" Fill="#3E3E42" Margin="9,0"/>
+                        <Rectangle Grid.Column="1" Width="1" Fill="{DynamicResource BpmBorderDefault}" Margin="9,0"/>
                         <StackPanel Grid.Column="2" Margin="4,0,0,0">
                             <TextBlock Text="Adresse" Style="{StaticResource SH}" Margin="0,0,0,6"/>
                             <Grid>
@@ -273,7 +324,7 @@
                                 </Grid>
                             </Grid>
                             <DockPanel Margin="0,12,0,6">
-                                <TextBlock Text="Verwaltung" Foreground="#007ACC" FontWeight="Bold" VerticalAlignment="Center"/>
+                                <TextBlock Text="Verwaltung" Foreground="{DynamicResource BpmAccentPrimary}" FontWeight="Bold" VerticalAlignment="Center"/>
                                 <Button Content="GIS" Style="{StaticResource IconBtn}" FontSize="10" IsEnabled="False" Opacity="0.4" Margin="8,0,0,0"/>
                             </DockPanel>
                             <Grid>
@@ -294,7 +345,7 @@
                                 <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtState" Style="{StaticResource FTB}"/>
                             </Grid>
                             <DockPanel Margin="0,12,0,6">
-                                <TextBlock Text="Grundstück + Koordinaten" Foreground="#007ACC" FontWeight="Bold" VerticalAlignment="Center"/>
+                                <TextBlock Text="Grundstück + Koordinaten" Foreground="{DynamicResource BpmAccentPrimary}" FontWeight="Bold" VerticalAlignment="Center"/>
                                 <Button Content="GIS" Style="{StaticResource IconBtn}" FontSize="10" IsEnabled="False" Opacity="0.4" Margin="8,0,0,0"/>
                             </DockPanel>
                             <Grid>
@@ -360,24 +411,12 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,10,0,0">
                     <StackPanel>
                         <TextBlock Text="Bauteile" Style="{StaticResource SH}" Margin="0,0,0,6"/>
-                        <TextBlock Text="Jedes Bauteil hat eigene Geschosse und ein eigenes ± 0,00 Niveau." Foreground="#555555" FontSize="11" Margin="0,0,0,8"/>
-                        <DataGrid x:Name="DgParts" AutoGenerateColumns="False" IsReadOnly="True"
-                                  SelectionMode="Single" CanUserResizeRows="False"
-                                  Background="#1E1E1E" Foreground="#CCCCCC" BorderBrush="#3E3E42"
-                                  RowBackground="#1E1E1E" AlternatingRowBackground="#1E1E1E"
-                                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#3E3E42"
-                                  HeadersVisibility="Column" Height="110"
+                        <TextBlock Text="Jedes Bauteil hat eigene Geschosse und ein eigenes ± 0,00 Niveau."
+                                   Style="{DynamicResource BpmSmallText}" Margin="0,0,0,8"/>
+                        <DataGrid x:Name="DgParts" Style="{StaticResource DgBase}" Height="110"
+                                  ColumnHeaderStyle="{StaticResource DgHeaderPrimary}"
                                   CellStyle="{StaticResource DarkDgCell}"
                                   SelectionChanged="OnPartSelectionChanged">
-                            <DataGrid.ColumnHeaderStyle>
-                                <Style TargetType="DataGridColumnHeader">
-                                    <Setter Property="Background" Value="#007ACC"/>
-                                    <Setter Property="Foreground" Value="White"/>
-                                    <Setter Property="Padding" Value="8,4"/>
-                                    <Setter Property="BorderBrush" Value="#005A9E"/>
-                                    <Setter Property="BorderThickness" Value="0,0,1,0"/>
-                                </Style>
-                            </DataGrid.ColumnHeaderStyle>
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Kürzel" Binding="{Binding ShortName}" Width="80"/>
                                 <DataGridTextColumn Header="Beschreibung" Binding="{Binding Description}" Width="*"/>
@@ -386,9 +425,9 @@
                             </DataGrid.Columns>
                         </DataGrid>
                         <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                            <Button Content="+ Bauteil" Click="OnAddPart" Background="#007ACC" Foreground="White" Padding="10,5" BorderThickness="0" Cursor="Hand" Margin="0,0,6,0"/>
-                            <Button Content="Bearbeiten" Click="OnEditPart" Background="#3E3E42" Foreground="#CCCCCC" Padding="10,5" BorderThickness="0" Cursor="Hand" Margin="0,0,6,0"/>
-                            <Button Content="Entfernen" Click="OnRemovePart" Background="#C62828" Foreground="White" Padding="10,5" BorderThickness="0" Cursor="Hand"/>
+                            <Button Content="+ Bauteil" Click="OnAddPart" Style="{DynamicResource BpmButtonPrimary}" Padding="10,5" Margin="0,0,6,0" MinWidth="0" MinHeight="0"/>
+                            <Button Content="Bearbeiten" Click="OnEditPart" Style="{DynamicResource BpmButtonSecondary}" Padding="10,5" Margin="0,0,6,0" MinWidth="0" MinHeight="0"/>
+                            <Button Content="Entfernen" Click="OnRemovePart" Style="{DynamicResource BpmButtonDanger}" Padding="10,5" MinWidth="0" MinHeight="0"/>
                         </StackPanel>
 
                         <DockPanel Margin="0,16,0,4">
@@ -396,32 +435,20 @@
                             <Button Content="✎" Style="{StaticResource IconBtn}" Click="OnEditLevelNames" ToolTip="Geschoss-Liste bearbeiten" Margin="8,12,0,6"/>
                         </DockPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                            <TextBlock Foreground="#555555" FontSize="11" Text="Direkt editierbar · Komma als Dezimalzeichen · Prefix + Beschreibung automatisch · "/>
+                            <TextBlock Foreground="{DynamicResource BpmTextSecondary}" FontSize="11" Text="Direkt editierbar · Komma als Dezimalzeichen · Prefix + Beschreibung automatisch · "/>
                             <TextBlock x:Name="TxtZeroInfo" Foreground="#5DCAA5" FontSize="11"/>
                         </StackPanel>
 
-                        <DataGrid x:Name="DgLevels" AutoGenerateColumns="False"
-                                  SelectionMode="Single" CanUserResizeRows="False" CanUserAddRows="False"
-                                  Background="#1E1E1E" Foreground="#CCCCCC" BorderBrush="#3E3E42"
-                                  RowBackground="#1E1E1E" AlternatingRowBackground="#1E1E1E"
-                                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#3E3E42"
-                                  HeadersVisibility="Column" Height="260"
+                        <DataGrid x:Name="DgLevels" Style="{StaticResource DgBase}" Height="260"
+                                  IsReadOnly="False" CanUserAddRows="False"
+                                  ColumnHeaderStyle="{StaticResource DgHeaderSecondary}"
                                   CellStyle="{StaticResource DarkDgCell}"
                                   CellEditEnding="OnLevelCellEditEnding">
-                            <DataGrid.ColumnHeaderStyle>
-                                <Style TargetType="DataGridColumnHeader">
-                                    <Setter Property="Background" Value="#3E3E42"/>
-                                    <Setter Property="Foreground" Value="#CCCCCC"/>
-                                    <Setter Property="Padding" Value="6,4"/>
-                                    <Setter Property="BorderBrush" Value="#555555"/>
-                                    <Setter Property="BorderThickness" Value="0,0,1,0"/>
-                                </Style>
-                            </DataGrid.ColumnHeaderStyle>
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Prefix" Binding="{Binding PrefixString}" Width="55" IsReadOnly="True">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="#999999"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource BpmTextSecondary}"/>
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
@@ -430,7 +457,7 @@
                                 <DataGridTextColumn Header="Beschreib." Binding="{Binding Description}" Width="90" IsReadOnly="True">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="#999999"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource BpmTextSecondary}"/>
                                             <Setter Property="FontSize" Value="11"/>
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
@@ -443,7 +470,7 @@
                                     </DataGridTextColumn.ElementStyle>
                                     <DataGridTextColumn.EditingElementStyle>
                                         <Style TargetType="TextBox">
-                                            <Setter Property="Background" Value="#252526"/>
+                                            <Setter Property="Background" Value="{DynamicResource BpmBgSurface}"/>
                                             <Setter Property="Foreground" Value="#EF9F27"/>
                                             <Setter Property="BorderThickness" Value="0"/>
                                         </Style>
@@ -452,8 +479,8 @@
                                 <DataGridTextColumn Header="FBOK" Binding="{Binding Fbok, StringFormat=F2}" Width="70">
                                     <DataGridTextColumn.EditingElementStyle>
                                         <Style TargetType="TextBox">
-                                            <Setter Property="Background" Value="#252526"/>
-                                            <Setter Property="Foreground" Value="#CCCCCC"/>
+                                            <Setter Property="Background" Value="{DynamicResource BpmBgSurface}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource BpmTextPrimary}"/>
                                             <Setter Property="BorderThickness" Value="0"/>
                                         </Style>
                                     </DataGridTextColumn.EditingElementStyle>
@@ -461,8 +488,8 @@
                                 <DataGridTextColumn Header="RDUK" Binding="{Binding RdukDisplay}" Width="70">
                                     <DataGridTextColumn.EditingElementStyle>
                                         <Style TargetType="TextBox">
-                                            <Setter Property="Background" Value="#252526"/>
-                                            <Setter Property="Foreground" Value="#CCCCCC"/>
+                                            <Setter Property="Background" Value="{DynamicResource BpmBgSurface}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource BpmTextPrimary}"/>
                                             <Setter Property="BorderThickness" Value="0"/>
                                         </Style>
                                     </DataGridTextColumn.EditingElementStyle>
@@ -470,7 +497,7 @@
                                 <DataGridTextColumn Header="Gesch.h." Binding="{Binding StoryHeight, StringFormat=F2}" Width="70" IsReadOnly="True">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="#888888"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource BpmTextSecondary}"/>
                                             <Setter Property="FontStyle" Value="Italic"/>
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
@@ -478,7 +505,7 @@
                                 <DataGridTextColumn Header="Rohb.h." Binding="{Binding RawHeight, StringFormat=F2}" Width="70" IsReadOnly="True">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="#888888"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource BpmTextSecondary}"/>
                                             <Setter Property="FontStyle" Value="Italic"/>
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
@@ -486,7 +513,7 @@
                                 <DataGridTextColumn Header="Deck.st." Binding="{Binding DeckThickness, StringFormat=F2}" Width="65" IsReadOnly="True">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="#888888"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource BpmTextSecondary}"/>
                                             <Setter Property="FontStyle" Value="Italic"/>
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
@@ -494,7 +521,7 @@
                                 <DataGridTextColumn Header="FB-Aufb." Binding="{Binding FloorBuildup, StringFormat=F2}" Width="65" IsReadOnly="True">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="#888888"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource BpmTextSecondary}"/>
                                             <Setter Property="FontStyle" Value="Italic"/>
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
@@ -502,11 +529,11 @@
                             </DataGrid.Columns>
                         </DataGrid>
                         <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                            <Button Content="+ Geschoss" Click="OnAddLevel" Background="#007ACC" Foreground="White" Padding="10,5" BorderThickness="0" Cursor="Hand" Margin="0,0,6,0"/>
-                            <Button Content="Bearbeiten" Click="OnEditLevel" Background="#3E3E42" Foreground="#CCCCCC" Padding="10,5" BorderThickness="0" Cursor="Hand" Margin="0,0,6,0"/>
-                            <Button Content="Entfernen" Click="OnRemoveLevel" Background="#C62828" Foreground="White" Padding="10,5" BorderThickness="0" Cursor="Hand" Margin="0,0,6,0"/>
-                            <Button Content="▲" Click="OnMoveLevelUp" Background="#3E3E42" Foreground="#CCCCCC" Padding="8,5" BorderThickness="0" Cursor="Hand" Margin="0,0,3,0"/>
-                            <Button Content="▼" Click="OnMoveLevelDown" Background="#3E3E42" Foreground="#CCCCCC" Padding="8,5" BorderThickness="0" Cursor="Hand"/>
+                            <Button Content="+ Geschoss" Click="OnAddLevel" Style="{DynamicResource BpmButtonPrimary}" Padding="10,5" Margin="0,0,6,0" MinWidth="0" MinHeight="0"/>
+                            <Button Content="Bearbeiten" Click="OnEditLevel" Style="{DynamicResource BpmButtonSecondary}" Padding="10,5" Margin="0,0,6,0" MinWidth="0" MinHeight="0"/>
+                            <Button Content="Entfernen" Click="OnRemoveLevel" Style="{DynamicResource BpmButtonDanger}" Padding="10,5" Margin="0,0,6,0" MinWidth="0" MinHeight="0"/>
+                            <Button Content="▲" Click="OnMoveLevelUp" Style="{DynamicResource BpmButtonSecondary}" Padding="8,5" Margin="0,0,3,0" MinWidth="0" MinHeight="0"/>
+                            <Button Content="▼" Click="OnMoveLevelDown" Style="{DynamicResource BpmButtonSecondary}" Padding="8,5" MinWidth="0" MinHeight="0"/>
                         </StackPanel>
 
                         <Grid Margin="0,12,0,0">
@@ -515,17 +542,17 @@
                                 <ColumnDefinition Width="1*"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Eingabe (3 Werte)" Foreground="#007ACC" FontWeight="Bold" FontSize="11" Margin="0,0,0,4"/>
-                                <TextBlock Foreground="#999999" FontSize="11" Text="RDOK: Rohdecken-OK (unterstes = Bodenplatten-OK)"/>
-                                <TextBlock Foreground="#999999" FontSize="11" Text="FBOK: Fertigfußboden-OK"/>
-                                <TextBlock Foreground="#999999" FontSize="11" Text="RDUK: Rohdecken-UK (unterstes: leer lassen)"/>
+                                <TextBlock Text="Eingabe (3 Werte)" Foreground="{DynamicResource BpmAccentPrimary}" FontWeight="Bold" FontSize="11" Margin="0,0,0,4"/>
+                                <TextBlock Style="{DynamicResource BpmSmallText}" Text="RDOK: Rohdecken-OK (unterstes = Bodenplatten-OK)"/>
+                                <TextBlock Style="{DynamicResource BpmSmallText}" Text="FBOK: Fertigfußboden-OK"/>
+                                <TextBlock Style="{DynamicResource BpmSmallText}" Text="RDUK: Rohdecken-UK (unterstes: leer lassen)"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1">
-                                <TextBlock Text="Live errechnet" Foreground="#007ACC" FontWeight="Bold" FontSize="11" Margin="0,0,0,4"/>
-                                <TextBlock Foreground="#999999" FontSize="11" FontStyle="Italic" Text="Gesch.h. = FBOK(n+1) − FBOK(n)"/>
-                                <TextBlock Foreground="#999999" FontSize="11" FontStyle="Italic" Text="Rohb.h. = RDOK(n+1) − RDOK(n)"/>
-                                <TextBlock Foreground="#999999" FontSize="11" FontStyle="Italic" Text="Deck.st. = RDOK − RDUK"/>
-                                <TextBlock Foreground="#999999" FontSize="11" FontStyle="Italic" Text="FB-Aufb. = FBOK − RDOK"/>
+                                <TextBlock Text="Live errechnet" Foreground="{DynamicResource BpmAccentPrimary}" FontWeight="Bold" FontSize="11" Margin="0,0,0,4"/>
+                                <TextBlock Style="{DynamicResource BpmSmallText}" FontStyle="Italic" Text="Gesch.h. = FBOK(n+1) − FBOK(n)"/>
+                                <TextBlock Style="{DynamicResource BpmSmallText}" FontStyle="Italic" Text="Rohb.h. = RDOK(n+1) − RDOK(n)"/>
+                                <TextBlock Style="{DynamicResource BpmSmallText}" FontStyle="Italic" Text="Deck.st. = RDOK − RDUK"/>
+                                <TextBlock Style="{DynamicResource BpmSmallText}" FontStyle="Italic" Text="FB-Aufb. = FBOK − RDOK"/>
                             </StackPanel>
                         </Grid>
                     </StackPanel>
@@ -539,19 +566,9 @@
                         <TextBlock Text="Beteiligte Firmen / Personen" Style="{StaticResource SH}" Margin="0"/>
                         <Button Content="✎" Style="{StaticResource IconBtn}" Click="OnEditParticipantRoles" ToolTip="Rollen-Liste bearbeiten" Margin="8,12,0,6"/>
                     </DockPanel>
-                    <DataGrid x:Name="DgParticipants" AutoGenerateColumns="False" IsReadOnly="True"
-                              SelectionMode="Single" CanUserResizeRows="False"
-                              Background="#1E1E1E" Foreground="#CCCCCC" BorderBrush="#3E3E42"
-                              RowBackground="#1E1E1E" AlternatingRowBackground="#1E1E1E"
-                              GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#3E3E42"
-                              HeadersVisibility="Column" Height="380"
+                    <DataGrid x:Name="DgParticipants" Style="{StaticResource DgBase}" Height="380"
+                              ColumnHeaderStyle="{StaticResource DgHeaderPrimary}"
                               CellStyle="{StaticResource DarkDgCell}">
-                        <DataGrid.ColumnHeaderStyle>
-                            <Style TargetType="DataGridColumnHeader">
-                                <Setter Property="Background" Value="#007ACC"/><Setter Property="Foreground" Value="White"/>
-                                <Setter Property="Padding" Value="8,4"/><Setter Property="BorderBrush" Value="#005A9E"/><Setter Property="BorderThickness" Value="0,0,1,0"/>
-                            </Style>
-                        </DataGrid.ColumnHeaderStyle>
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Rolle" Binding="{Binding Role}" Width="120"/>
                             <DataGridTextColumn Header="Firma" Binding="{Binding Company}" Width="*"/>
@@ -561,27 +578,28 @@
                         </DataGrid.Columns>
                     </DataGrid>
                     <StackPanel Orientation="Horizontal" Margin="0,6,0,16">
-                        <Button Content="+ Beteiligten" Click="OnAddParticipant" Background="#007ACC" Foreground="White" Padding="10,5" BorderThickness="0" Cursor="Hand" Margin="0,0,6,0"/>
-                        <Button Content="Bearbeiten" Click="OnEditParticipant" Background="#3E3E42" Foreground="#CCCCCC" Padding="10,5" BorderThickness="0" Cursor="Hand" Margin="0,0,6,0"/>
-                        <Button Content="Entfernen" Click="OnRemoveParticipant" Background="#C62828" Foreground="White" Padding="10,5" BorderThickness="0" Cursor="Hand" Margin="0,0,6,0"/>
-                        <Button Content="▲" Click="OnMoveParticipantUp" Background="#3E3E42" Foreground="#CCCCCC" Padding="8,5" BorderThickness="0" Cursor="Hand" Margin="0,0,3,0"/>
-                        <Button Content="▼" Click="OnMoveParticipantDown" Background="#3E3E42" Foreground="#CCCCCC" Padding="8,5" BorderThickness="0" Cursor="Hand"/>
+                        <Button Content="+ Beteiligten" Click="OnAddParticipant" Style="{DynamicResource BpmButtonPrimary}" Padding="10,5" Margin="0,0,6,0" MinWidth="0" MinHeight="0"/>
+                        <Button Content="Bearbeiten" Click="OnEditParticipant" Style="{DynamicResource BpmButtonSecondary}" Padding="10,5" Margin="0,0,6,0" MinWidth="0" MinHeight="0"/>
+                        <Button Content="Entfernen" Click="OnRemoveParticipant" Style="{DynamicResource BpmButtonDanger}" Padding="10,5" Margin="0,0,6,0" MinWidth="0" MinHeight="0"/>
+                        <Button Content="▲" Click="OnMoveParticipantUp" Style="{DynamicResource BpmButtonSecondary}" Padding="8,5" Margin="0,0,3,0" MinWidth="0" MinHeight="0"/>
+                        <Button Content="▼" Click="OnMoveParticipantDown" Style="{DynamicResource BpmButtonSecondary}" Padding="8,5" MinWidth="0" MinHeight="0"/>
                     </StackPanel>
-                    <Border BorderBrush="#3E3E42" BorderThickness="0,1,0,0" Padding="0,12,0,0">
+                    <Border BorderBrush="{DynamicResource BpmBorderDefault}" BorderThickness="0,1,0,0" Padding="0,12,0,0">
                         <StackPanel>
-                            <TextBlock Text="Import" Foreground="#007ACC" FontWeight="Bold" Margin="0,0,0,8"/>
+                            <TextBlock Text="Import" Foreground="{DynamicResource BpmAccentPrimary}" FontWeight="Bold" Margin="0,0,0,8"/>
                             <StackPanel Orientation="Horizontal">
                                 <Button Content="Liste importieren" IsEnabled="False" Opacity="0.5"
                                         Background="#085041" Foreground="#5DCAA5" Padding="10,5" BorderThickness="0" Cursor="Hand" Margin="0,0,12,0"
                                         ToolTip="Firmenliste per KI-Prompt importieren (kommt später)"/>
                                 <Button Content="Aus Adressbuch" IsEnabled="False" Opacity="0.5"
-                                        Background="#3E3E42" Foreground="#CCCCCC" Padding="10,5" BorderThickness="0" Cursor="Hand"
+                                        Style="{DynamicResource BpmButtonSecondary}" Padding="10,5"
                                         ToolTip="Aus zentralem Adressbuch übernehmen (kommt später)"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
                 </StackPanel>
             </TabItem>
+
             <!-- ═══ TAB 4: PORTALE + LINKS ═══ -->
             <TabItem Header="Portale + Links" Style="{StaticResource DialogTabItem}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,10,0,0">
@@ -598,26 +616,17 @@
                                     <TextBlock Text="Bauherren-Portale" Style="{StaticResource SH}" Margin="0"/>
                                     <Button Content="✎" Style="{StaticResource IconBtn}" Click="OnEditPortalTypes" ToolTip="Portal-Typen bearbeiten" Margin="8,12,0,6"/>
                                 </DockPanel>
-                                <TextBlock Text="Externe Plattformen des Auftraggebers. Portal-Typen konfigurierbar." Foreground="#555555" FontSize="11" Margin="0,0,0,8"/>
-                                <DataGrid x:Name="DgPortals" AutoGenerateColumns="False" IsReadOnly="True"
-                                          SelectionMode="Single" CanUserResizeRows="False"
-                                          Background="#1E1E1E" Foreground="#CCCCCC" BorderBrush="#3E3E42"
-                                          RowBackground="#1E1E1E" AlternatingRowBackground="#1E1E1E"
-                                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#3E3E42"
-                                          HeadersVisibility="Column" Height="260"
+                                <TextBlock Text="Externe Plattformen des Auftraggebers. Portal-Typen konfigurierbar."
+                                           Style="{DynamicResource BpmSmallText}" Margin="0,0,0,8"/>
+                                <DataGrid x:Name="DgPortals" Style="{StaticResource DgBase}" Height="260"
+                                          ColumnHeaderStyle="{StaticResource DgHeaderPrimary}"
                                           CellStyle="{StaticResource DarkDgCell}">
-                                    <DataGrid.ColumnHeaderStyle>
-                                        <Style TargetType="DataGridColumnHeader">
-                                            <Setter Property="Background" Value="#007ACC"/><Setter Property="Foreground" Value="White"/>
-                                            <Setter Property="Padding" Value="6,4"/><Setter Property="BorderBrush" Value="#005A9E"/><Setter Property="BorderThickness" Value="0,0,1,0"/>
-                                        </Style>
-                                    </DataGrid.ColumnHeaderStyle>
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Portal" Binding="{Binding Name}" Width="100"/>
                                         <DataGridTextColumn Header="URL" Binding="{Binding Url}" Width="*">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
-                                                    <Setter Property="Foreground" Value="#85B7EB"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource BpmInfo}"/>
                                                     <Setter Property="FontSize" Value="11"/>
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
@@ -625,37 +634,28 @@
                                     </DataGrid.Columns>
                                 </DataGrid>
                                 <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                    <Button Content="+ Portal" Click="OnAddPortal" Background="#007ACC" Foreground="White" Padding="8,4" BorderThickness="0" Cursor="Hand" Margin="0,0,4,0" FontSize="11"/>
-                                    <Button Content="Bearbeiten" Click="OnEditPortal" Background="#3E3E42" Foreground="#CCCCCC" Padding="8,4" BorderThickness="0" Cursor="Hand" Margin="0,0,4,0" FontSize="11"/>
-                                    <Button Content="Entfernen" Click="OnRemovePortal" Background="#C62828" Foreground="White" Padding="8,4" BorderThickness="0" Cursor="Hand" Margin="0,0,4,0" FontSize="11"/>
-                                    <Button Content="Öffnen" Click="OnOpenPortal" Background="#3E3E42" Foreground="#85B7EB" Padding="8,4" BorderThickness="0" Cursor="Hand" FontSize="11"/>
+                                    <Button Content="+ Portal" Click="OnAddPortal" Style="{DynamicResource BpmButtonPrimary}" Padding="8,4" Margin="0,0,4,0" FontSize="11" MinWidth="0" MinHeight="0"/>
+                                    <Button Content="Bearbeiten" Click="OnEditPortal" Style="{DynamicResource BpmButtonSecondary}" Padding="8,4" Margin="0,0,4,0" FontSize="11" MinWidth="0" MinHeight="0"/>
+                                    <Button Content="Entfernen" Click="OnRemovePortal" Style="{DynamicResource BpmButtonDanger}" Padding="8,4" Margin="0,0,4,0" FontSize="11" MinWidth="0" MinHeight="0"/>
+                                    <Button Content="Öffnen" Click="OnOpenPortal" Style="{DynamicResource BpmButtonSecondary}" Foreground="{DynamicResource BpmInfo}" Padding="8,4" FontSize="11" MinWidth="0" MinHeight="0"/>
                                 </StackPanel>
                             </StackPanel>
                             <!-- Trennlinie -->
-                            <Rectangle Grid.Column="1" Width="1" Fill="#3E3E42" Margin="9,0"/>
+                            <Rectangle Grid.Column="1" Width="1" Fill="{DynamicResource BpmBorderDefault}" Margin="9,0"/>
                             <!-- Rechte Spalte: Eigene Links -->
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Eigene Links" Style="{StaticResource SH}" Margin="0,0,0,4"/>
-                                <TextBlock Text="Projekt-spezifische Links zu SharePoint, LV, Ablagesystemen etc." Foreground="#555555" FontSize="11" Margin="0,0,0,8"/>
-                                <DataGrid x:Name="DgCustomLinks" AutoGenerateColumns="False" IsReadOnly="True"
-                                          SelectionMode="Single" CanUserResizeRows="False"
-                                          Background="#1E1E1E" Foreground="#CCCCCC" BorderBrush="#3E3E42"
-                                          RowBackground="#1E1E1E" AlternatingRowBackground="#1E1E1E"
-                                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#3E3E42"
-                                          HeadersVisibility="Column" Height="260"
+                                <TextBlock Text="Projekt-spezifische Links zu SharePoint, LV, Ablagesystemen etc."
+                                           Style="{DynamicResource BpmSmallText}" Margin="0,0,0,8"/>
+                                <DataGrid x:Name="DgCustomLinks" Style="{StaticResource DgBase}" Height="260"
+                                          ColumnHeaderStyle="{StaticResource DgHeaderSecondary}"
                                           CellStyle="{StaticResource DarkDgCell}">
-                                    <DataGrid.ColumnHeaderStyle>
-                                        <Style TargetType="DataGridColumnHeader">
-                                            <Setter Property="Background" Value="#3E3E42"/><Setter Property="Foreground" Value="#CCCCCC"/>
-                                            <Setter Property="Padding" Value="6,4"/><Setter Property="BorderBrush" Value="#555555"/><Setter Property="BorderThickness" Value="0,0,1,0"/>
-                                        </Style>
-                                    </DataGrid.ColumnHeaderStyle>
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Bezeichnung" Binding="{Binding Name}" Width="100"/>
                                         <DataGridTextColumn Header="URL" Binding="{Binding Url}" Width="*">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
-                                                    <Setter Property="Foreground" Value="#85B7EB"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource BpmInfo}"/>
                                                     <Setter Property="FontSize" Value="11"/>
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
@@ -663,18 +663,19 @@
                                     </DataGrid.Columns>
                                 </DataGrid>
                                 <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                    <Button Content="+ Link" Click="OnAddCustomLink" Background="#007ACC" Foreground="White" Padding="8,4" BorderThickness="0" Cursor="Hand" Margin="0,0,4,0" FontSize="11"/>
-                                    <Button Content="Bearbeiten" Click="OnEditCustomLink" Background="#3E3E42" Foreground="#CCCCCC" Padding="8,4" BorderThickness="0" Cursor="Hand" Margin="0,0,4,0" FontSize="11"/>
-                                    <Button Content="Entfernen" Click="OnRemoveCustomLink" Background="#C62828" Foreground="White" Padding="8,4" BorderThickness="0" Cursor="Hand" Margin="0,0,4,0" FontSize="11"/>
-                                    <Button Content="Öffnen" Click="OnOpenCustomLink" Background="#3E3E42" Foreground="#85B7EB" Padding="8,4" BorderThickness="0" Cursor="Hand" FontSize="11"/>
+                                    <Button Content="+ Link" Click="OnAddCustomLink" Style="{DynamicResource BpmButtonPrimary}" Padding="8,4" Margin="0,0,4,0" FontSize="11" MinWidth="0" MinHeight="0"/>
+                                    <Button Content="Bearbeiten" Click="OnEditCustomLink" Style="{DynamicResource BpmButtonSecondary}" Padding="8,4" Margin="0,0,4,0" FontSize="11" MinWidth="0" MinHeight="0"/>
+                                    <Button Content="Entfernen" Click="OnRemoveCustomLink" Style="{DynamicResource BpmButtonDanger}" Padding="8,4" Margin="0,0,4,0" FontSize="11" MinWidth="0" MinHeight="0"/>
+                                    <Button Content="Öffnen" Click="OnOpenCustomLink" Style="{DynamicResource BpmButtonSecondary}" Foreground="{DynamicResource BpmInfo}" Padding="8,4" FontSize="11" MinWidth="0" MinHeight="0"/>
                                 </StackPanel>
                             </StackPanel>
                         </Grid>
                         <!-- Dashboard-Vorschau -->
-                        <Border BorderBrush="#3E3E42" BorderThickness="0,1,0,0" Padding="0,12,0,0" Margin="0,16,0,0">
+                        <Border BorderBrush="{DynamicResource BpmBorderDefault}" BorderThickness="0,1,0,0" Padding="0,12,0,0" Margin="0,16,0,0">
                             <StackPanel>
-                                <TextBlock Text="Vorschau im Dashboard" Foreground="#007ACC" FontWeight="Bold" Margin="0,0,0,4"/>
-                                <TextBlock Text="So werden die Links im Projekt-Dashboard angezeigt:" Foreground="#555555" FontSize="11" Margin="0,0,0,8"/>
+                                <TextBlock Text="Vorschau im Dashboard" Foreground="{DynamicResource BpmAccentPrimary}" FontWeight="Bold" Margin="0,0,0,4"/>
+                                <TextBlock Text="So werden die Links im Projekt-Dashboard angezeigt:"
+                                           Style="{DynamicResource BpmSmallText}" Margin="0,0,0,8"/>
                                 <WrapPanel x:Name="WpLinkPreview"/>
                             </StackPanel>
                         </Border>
@@ -685,17 +686,22 @@
             <!-- ═══ TAB 5: ORDNERSTRUKTUR ═══ -->
             <TabItem Header="Ordnerstruktur" Style="{StaticResource DialogTabItem}">
                 <StackPanel Margin="0,10,0,0">
-                    <TextBlock Text="Reihenfolge = Nummerierung (00, 01, 02...)" Foreground="#999999" FontSize="11" Margin="0,0,0,8"/>
+                    <TextBlock Text="Reihenfolge = Nummerierung (00, 01, 02...)"
+                               Style="{DynamicResource BpmSmallText}" Margin="0,0,0,8"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="400"/>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TreeView x:Name="TvFolders" Grid.Column="0" Background="#1E1E1E" Foreground="#CCCCCC" BorderBrush="#3E3E42" Height="400" SelectedItemChanged="OnTreeSelectionChanged">
+                        <TreeView x:Name="TvFolders" Grid.Column="0"
+                                  Background="{DynamicResource BpmBgBase}"
+                                  Foreground="{DynamicResource BpmTextPrimary}"
+                                  BorderBrush="{DynamicResource BpmBorderDefault}" Height="400"
+                                  SelectedItemChanged="OnTreeSelectionChanged">
                             <TreeView.Resources>
                                 <Style TargetType="TreeViewItem">
-                                    <Setter Property="Foreground" Value="#CCCCCC"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource BpmTextPrimary}"/>
                                     <Setter Property="IsExpanded" Value="True"/>
                                     <Setter Property="Padding" Value="2"/>
                                 </Style>
@@ -703,25 +709,38 @@
                             <TreeView.ItemTemplate>
                                 <HierarchicalDataTemplate ItemsSource="{Binding Children}">
                                     <StackPanel Orientation="Horizontal" Margin="2">
-                                        <TextBlock Text="{Binding DisplayName}" Foreground="#CCCCCC" VerticalAlignment="Center" FontSize="13"/>
-                                        <TextBlock Text="  📥" Foreground="#007ACC" FontSize="12" Visibility="{Binding InboxVisibility}" VerticalAlignment="Center" Margin="4,0,0,0"/>
-                                        <TextBlock Text="{Binding PrefixLabel}" Foreground="#555555" FontSize="10" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                        <TextBlock Text="{Binding DisplayName}"
+                                                   Foreground="{DynamicResource BpmTextPrimary}"
+                                                   VerticalAlignment="Center" FontSize="13"/>
+                                        <TextBlock Text="  📥"
+                                                   Foreground="{DynamicResource BpmAccentPrimary}"
+                                                   FontSize="12" Visibility="{Binding InboxVisibility}"
+                                                   VerticalAlignment="Center" Margin="4,0,0,0"/>
+                                        <TextBlock Text="{Binding PrefixLabel}"
+                                                   Foreground="{DynamicResource BpmTextSecondary}"
+                                                   FontSize="10" VerticalAlignment="Center" Margin="8,0,0,0"/>
                                     </StackPanel>
                                 </HierarchicalDataTemplate>
                             </TreeView.ItemTemplate>
                         </TreeView>
                         <StackPanel Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Top">
-                            <Button Content="▲" Click="OnFolderMoveUp" Width="32" Height="28" Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0" Margin="0,0,0,3" Cursor="Hand"/>
-                            <Button Content="▼" Click="OnFolderMoveDown" Width="32" Height="28" Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0" Margin="0,0,0,10" Cursor="Hand"/>
-                            <Button Content="＋" Click="OnFolderAddMain" Width="32" Height="28" Background="#007ACC" Foreground="White" BorderThickness="0" Margin="0,0,0,3" Cursor="Hand"/>
-                            <Button Content="＋└" Click="OnFolderAddSub" Width="32" Height="28" Background="#085041" Foreground="#5DCAA5" BorderThickness="0" Margin="0,0,0,3" Cursor="Hand" FontSize="10"/>
-                            <Button Content="✕" Click="OnFolderRemove" Width="32" Height="28" Background="#C62828" Foreground="White" BorderThickness="0" Margin="0,0,0,10" Cursor="Hand"/>
-                            <Button Content="📥" Click="OnFolderToggleInbox" Width="32" Height="28" Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0" Margin="0,0,0,3" Cursor="Hand"/>
-                            <Button Content="##" Click="OnFolderTogglePrefix" Width="32" Height="28" Background="#3E3E42" Foreground="#CCCCCC" BorderThickness="0" Cursor="Hand" FontSize="10" FontWeight="Bold"/>
+                            <Button Content="▲" Click="OnFolderMoveUp" Style="{DynamicResource BpmButtonSecondary}" Width="32" Height="28" Padding="0" MinWidth="0" MinHeight="0" Margin="0,0,0,3"/>
+                            <Button Content="▼" Click="OnFolderMoveDown" Style="{DynamicResource BpmButtonSecondary}" Width="32" Height="28" Padding="0" MinWidth="0" MinHeight="0" Margin="0,0,0,10"/>
+                            <Button Content="＋" Click="OnFolderAddMain" Style="{DynamicResource BpmButtonPrimary}" Width="32" Height="28" Padding="0" MinWidth="0" MinHeight="0" Margin="0,0,0,3"/>
+                            <Button Content="＋└" Click="OnFolderAddSub" Background="#085041" Foreground="#5DCAA5" Width="32" Height="28" BorderThickness="0" Cursor="Hand" FontSize="10" Margin="0,0,0,3"/>
+                            <Button Content="✕" Click="OnFolderRemove" Style="{DynamicResource BpmButtonDanger}" Width="32" Height="28" Padding="0" MinWidth="0" MinHeight="0" Margin="0,0,0,10"/>
+                            <Button Content="📥" Click="OnFolderToggleInbox" Style="{DynamicResource BpmButtonSecondary}" Width="32" Height="28" Padding="0" MinWidth="0" MinHeight="0" Margin="0,0,0,3"/>
+                            <Button Content="##" Click="OnFolderTogglePrefix" Style="{DynamicResource BpmButtonSecondary}" Width="32" Height="28" Padding="0" MinWidth="0" MinHeight="0" FontSize="10" FontWeight="Bold"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2" Margin="12,0,0,0">
-                            <TextBlock Text="Vorschau" Foreground="#007ACC" FontWeight="Bold" Margin="0,0,0,6"/>
-                            <TextBox x:Name="TxtFolderPreview" Background="#1E1E1E" Foreground="#999999" BorderBrush="#3E3E42" FontFamily="Consolas" FontSize="12" IsReadOnly="True" TextWrapping="NoWrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Height="360" Padding="8"/>
+                            <TextBlock Text="Vorschau" Foreground="{DynamicResource BpmAccentPrimary}" FontWeight="Bold" Margin="0,0,0,6"/>
+                            <TextBox x:Name="TxtFolderPreview"
+                                     Background="{DynamicResource BpmBgBase}"
+                                     Foreground="{DynamicResource BpmTextSecondary}"
+                                     BorderBrush="{DynamicResource BpmBorderDefault}"
+                                     FontFamily="Consolas" FontSize="12"
+                                     IsReadOnly="True" TextWrapping="NoWrap" AcceptsReturn="True"
+                                     VerticalScrollBarVisibility="Auto" Height="360" Padding="8"/>
                         </StackPanel>
                     </Grid>
                 </StackPanel>
@@ -729,8 +748,10 @@
         </TabControl>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
-            <Button Content="Speichern" Click="OnSave" Background="#007ACC" Foreground="White" Padding="20,8" Margin="0,0,10,0" BorderThickness="0" Cursor="Hand"/>
-            <Button Content="Abbrechen" Click="OnCancel" Background="#3E3E42" Foreground="#CCCCCC" Padding="20,8" BorderThickness="0" Cursor="Hand"/>
+            <Button Content="Speichern" Click="OnSave"
+                    Style="{DynamicResource BpmButtonPrimary}" Padding="20,8" Margin="0,0,10,0"/>
+            <Button Content="Abbrechen" Click="OnCancel"
+                    Style="{DynamicResource BpmButtonSecondary}" Padding="20,8"/>
         </StackPanel>
     </Grid>
 </Window>

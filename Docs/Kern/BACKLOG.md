@@ -1,11 +1,11 @@
 ﻿# BauProjektManager — Backlog
 
 **Letzte Aktualisierung:** 04.04.2026  
-**Aktuelle Version:** v0.16.3
+**Aktuelle Version:** v0.17.0
 
 **Verwandte Dokumente:**
 - [VISION.md](../Referenz/VISION.md) — Nordstern, Schmerzpunkte, Zielgruppe
-- [ADR.md](../Referenz/ADR.md) — Architekturentscheidungen (36 ADRs)
+- [ADR.md](../Referenz/ADR.md) — Architekturentscheidungen (42 ADRs)
 - [CHANGELOG.md](../Referenz/CHANGELOG.md) — Versionshistorie ab v0.0.0
 - [DEPENDENCY-MAP.md](../Referenz/DEPENDENCY-MAP.md) — Solution-Struktur + Ökosystem
 - [BauProjektManager_Architektur.md](BauProjektManager_Architektur.md) — Technische Spezifikation v2.0
@@ -52,7 +52,7 @@ Ohne diese Features ist V1 nicht brauchbar. Der PlanManager ist das Kernprodukt.
 | 3 | Domain-Modelle (Project, Client, Location, Timeline, Paths) | ✅ v0.5.1 |
 | 4 | Projektliste + Bearbeitungs-Dialog | ✅ v0.7.0 |
 | 5 | SQLite-Datenbank (bpm.db) | ✅ v0.8.0 |
-| 6 | Auto-Increment IDs (proj_001, client_001) | ✅ v0.8.2 |
+| 6 | ~~Auto-Increment IDs~~ → ULID (ADR-039 v2) | ✅ v0.8.2 → v0.17.0 |
 | 7 | registry.json Export (flach, für VBA) | ✅ v0.9.0 |
 | 9 | Ersteinrichtung (Cloud-Speicher, Pfade, settings.json) | ✅ v0.10.0 |
 | 10 | Projektordner erstellen (nummeriert, Template, TreeView) | ✅ v0.11.0 |
@@ -117,7 +117,7 @@ Diese Features verbessern V1, sind aber kein Blocker für den Release.
 | external_call_log Tabelle | Audit-Log in bpm.db (DSVGO-Architektur Kap. 11.3) | ⬜ |
 | Einstellungen: Datenschutz-Tab | Toggle pro externem Dienst, Audit-Log-Anzeige, Kill-Switch | ⬜ |
 | Log-Rotation 30 Tage | Serilog retainedFileCountLimit (trivial) | ✅ v0.5.0 |
-| ADR-039 ID-Schema | Geplante Tabellen auf TEXT-IDs umschreiben (Voraussetzung vor employees, work_packages) | ✅ |
+| ADR-039 v2 ULID-Schema | Alle Tabellen auf ULID PRIMARY KEY umgestellt. IIdGenerator in Domain, UlidIdGenerator in Infrastructure (NuGet: Cysharp/Ulid) | ✅ v0.17.0 |
 
 ---
 
@@ -179,11 +179,12 @@ Betrifft mehrere Module — hier zentral dokumentiert.
 
 ---
 
-## Aktuelles DB-Schema (v1.5)
+## Aktuelles DB-Schema (v2.0 ULID — ADR-039 v2)
 
-```
-clients (seq, id, company, contact_person, phone, email, notes)
-projects (seq, id, project_number, name, full_name, status, project_type, client_id,
+Alle Tabellen verwenden `id TEXT PRIMARY KEY` (ULID). Keine `seq` Spalte. Details: [DB-SCHEMA.md](DB-SCHEMA.md)
+
+clients (id, company, contact_person, phone, email, notes, created_at, updated_at)
+projects (id, project_number, name, full_name, status, project_type, client_id,
           street, house_number, postal_code, city, municipality, district, state,
           coordinate_system, coordinate_east, coordinate_north,
           cadastral_kg, cadastral_kg_name, cadastral_gst,
@@ -191,13 +192,11 @@ projects (seq, id, project_number, name, full_name, status, project_type, client
           root_path, plans_path, inbox_path, photos_path, documents_path,
           protocols_path, invoices_path, tags, notes, created_at, updated_at)
 buildings (legacy)
-building_parts (seq, id, project_id, short_name, description, building_type, zero_level_absolute, sort_order)
-building_levels (seq, id, building_part_id, prefix, name, description, rdok, fbok, rduk, sort_order)
-project_participants (seq, id, project_id, role, company, contact_person, phone, email, contact_id, sort_order)
-project_links (seq, id, project_id, name, url, link_type, sort_order)
+building_parts (id, project_id, short_name, description, building_type, zero_level_absolute, sort_order, created_at, updated_at)
+building_levels (id, building_part_id, prefix, name, description, rdok, fbok, rduk, sort_order, created_at, updated_at)
+project_participants (id, project_id, role, company, contact_person, phone, email, contact_id, sort_order, created_at, updated_at)
+project_links (id, project_id, name, url, link_type, sort_order, created_at, updated_at)
 schema_version (version)
-```
-
 ---
 
 ## Beim Coden beachten (Architektur-Implikationen)
@@ -205,6 +204,7 @@ schema_version (version)
 - Client/Firma als eigene Entität vorbereiten (ADR-021)
 - Adressbuch getrennt von Projekt-Beteiligten (contact_id FK vorbereitet, ADR-024)
 - Projekt-ID überall mitführen
+- **ID-Generierung:** Nur über `IIdGenerator.NewId()` — nie manuell IDs zusammenbauen (ADR-039 v2)
 - Modul-Architektur beibehalten (ADR-001)
 - Externe Links als konfigurierbare Datenstruktur (nicht hardcoded)
 - KI-Import als gemeinsames Service-Interface (IKiImportService) für alle Import-Szenarien

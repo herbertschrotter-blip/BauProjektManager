@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Windows;
+using BauProjektManager.Infrastructure.Dev;
 using BauProjektManager.Infrastructure.Persistence;
 using Serilog;
 
@@ -90,7 +91,17 @@ public partial class App : Application
         Log.Information("ArchivePath: {ArchivePath}", settings.ArchivePath);
 
         // Now show main window and switch shutdown mode
-        var mainWindow = new MainWindow();
+        var db = new ProjectDatabase();
+        var logDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "BauProjektManager", "Logs");
+
+#if DEBUG
+        var devTools = new DeveloperToolsService(db.GetDatabasePath(), logDir);
+        var mainWindow = new MainWindow(devTools);
+#else
+        var mainWindow = new MainWindow(null);
+#endif
         MainWindow = mainWindow;
         ShutdownMode = ShutdownMode.OnMainWindowClose;
         mainWindow.Show();

@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.PlanManager.Views;
 using BauProjektManager.Settings.Views;
 
@@ -12,11 +13,26 @@ public partial class MainWindow : Window
 {
     private readonly PlanManagerView _planManagerView = new();
     private readonly SettingsView _settingsView = new();
+    private readonly IDeveloperToolsService? _devTools;
 
-    public MainWindow()
+    public MainWindow(IDeveloperToolsService? devTools = null)
     {
         InitializeComponent();
+        _devTools = devTools;
+#if DEBUG
+        BtnDevTools.Visibility = Visibility.Visible;
+#endif
     }
+
+    #if DEBUG
+    private void OnOpenDevTools(object sender, RoutedEventArgs e)
+    {
+        if (_devTools is null) return;
+        var dialog = new DevToolsDialog(_devTools);
+        dialog.Owner = this;
+        dialog.ShowDialog();
+    }
+#endif
 
     private void OnNavigate(object sender, RoutedEventArgs e)
     {

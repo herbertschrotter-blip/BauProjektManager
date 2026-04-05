@@ -28,6 +28,12 @@
                 <Button x:Name="BtnSettings" Content="⚙ Einstellungen"
                         Click="OnNavigate" Tag="Settings"
                         Style="{StaticResource BpmButtonNav}"/>
+                <Button x:Name="BtnDevTools" Content="🛠 Dev Tools"
+                        Click="OnOpenDevTools"
+                        Style="{StaticResource BpmButtonNav}"
+                        Foreground="#F0AD4E"
+                        Margin="0,16,0,0"
+                        Visibility="Collapsed"/>
             </StackPanel>
         </Border>
 

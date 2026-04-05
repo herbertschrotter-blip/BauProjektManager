@@ -1,8 +1,8 @@
 ﻿# BauProjektManager — Architecture Decision Records (ADR)
 
-**Erstellt:** 29.03.2026  
-**Aktualisiert:** 04.04.2026  
-**Version:** 1.2  
+**Erstellt:** 29.03.2026
+**Aktualisiert:** 04.04.2026
+**Version:** 1.2
 **Kontext:** Alle Entscheidungen aus Architektur-Sessions, Review-Runden (ChatGPT + Claude), und Implementierungs-Chats.
 
 ### Statusmodell
@@ -62,13 +62,14 @@ Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheid
 | 040 | Migrations- und Versionierungsstrategie (DB + JSON) | ✅ Accepted / Not Started | 2026-04 |
 | 041 | Recovery / Degraded Mode | ✅ Accepted / Not Started | 2026-04 |
 | 042 | Secrets und Credentials | ✅ Accepted / Not Started | 2026-04 |
+| 043 | Dev-Tools — Lokales Debug-Toolset für Entwicklung | ✅ Entschieden / Not Started | 2026-04 |
 
 ---
 
 ## ADR-001: Modularer Monolith statt Plugin-System
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Architektur-Session, ChatGPT-Review Punkt 1, Claude Gegen-Review
 
 **Kontext:**
@@ -97,8 +98,8 @@ Modularer Monolith mit fester Registrierung. Module sind separate C#-Projekte (e
 
 ## ADR-002: SQLite als System of Record
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Architektur-Session, ChatGPT-Review Punkt 2, Claude Gegen-Review
 
 **Kontext:**
@@ -128,8 +129,8 @@ SQLite ist die einzige Wahrheitsquelle für alle BPM-Kerndaten (Projekte, Pläne
 
 ## ADR-003: Internes Domänenmodell vs. flacher VBA-Export
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Architektur-Session, ChatGPT-Review Punkt 3
 
 **Kontext:**
@@ -156,8 +157,8 @@ Das interne C#-Modell ist sauber verschachtelt und stark typisiert (`Project.Loc
 
 ## ADR-004: Dreistufige Cloud-Sync-Strategie
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Architektur-Session, ChatGPT-Review Punkt 4
 
 **Kontext:**
@@ -193,8 +194,8 @@ BPM funktioniert mit jedem Cloud-Speicher der sich als Ordner im Explorer einble
 
 ## ADR-005: .NET Version — von .NET 9 über .NET 8 zu .NET 10
 
-**Datum:** 2026-03 (mehrfach geändert)  
-**Status:** ✅ Entschieden (.NET 10 LTS)  
+**Datum:** 2026-03 (mehrfach geändert)
+**Status:** ✅ Entschieden (.NET 10 LTS)
 **Herkunft:** Architektur-Session, ChatGPT-Review Punkt 5, Implementierung
 
 **Kontext:**
@@ -222,8 +223,8 @@ Die ursprüngliche Architektur sah .NET 9 vor. Die externe Review empfahl LTS. C
 
 ## ADR-006: Solution-Struktur mit 5 Projekten
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Architektur-Session, ChatGPT-Review Punkt 6
 
 **Kontext:**
@@ -263,8 +264,8 @@ App             → referenziert alles (DI verdrahtet hier)
 
 ## ADR-007: Plan-Dateien — 1..n pro Revision
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Architektur-Session
 
 **Kontext:**
@@ -285,8 +286,8 @@ Ein Plan (Revision) besteht aus 1 bis n Dateien. Dateien werden über den gemein
 
 ## ADR-008: 10-Schritte Import-Workflow
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Architektur-Session, ChatGPT-Review Punkt 7
 
 **Kontext:**
@@ -308,8 +309,8 @@ Der Import von Plänen (Dateien von `_Eingang` in die Zielordner verschieben) is
 
 ## ADR-009: Undo-Journal in SQLite (3 Tabellen)
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Architektur-Session, ChatGPT-Review Punkt 8
 
 **Kontext:**
@@ -330,8 +331,8 @@ Undo war ursprünglich als JSON geplant. Die Review forderte SQLite für Transak
 
 ## ADR-010: RecognitionProfiles und PatternTemplates getrennt
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Architektur-Session
 
 **Kontext:**
@@ -355,8 +356,8 @@ Beim Anlegen eines neuen Profils vergleicht das System mit bestehenden Templates
 
 ## ADR-011: Ordnernamen mit Nummern und Leerzeichen
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Analyse realer Projektordner (via PowerShell-Tool `Get-ProjektOrdner.ps1`)
 
 **Kontext:**
@@ -381,8 +382,8 @@ Leerzeichen: `01 Planunterlagen`, `02 Fotos`, nicht `01_Planunterlagen`. Entspri
 
 ## ADR-012: Nummern-Präfix aus Listenposition (nicht gespeichert)
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Implementierung Feature #10
 
 **Kontext:**
@@ -403,8 +404,8 @@ Die Nummer wird NICHT im Template gespeichert. Die Position in der Liste bestimm
 
 ## ADR-013: .bpm-manifest als Projektordner-Ausweis
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Architektur-Session
 
 **Kontext:**
@@ -426,8 +427,8 @@ Jeder Projektordner enthält eine versteckte `.bpm-manifest`-Datei (JSON) mit de
 
 ## ADR-014: C# + WPF statt PowerShell
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Architektur-Session (Anfang)
 
 **Kontext:**
@@ -454,8 +455,8 @@ C# + WPF. PowerShell bleibt für bestehende Tools (PhotoFolder) und kleine Autom
 
 ## ADR-015: CommunityToolkit.Mvvm + Serilog von Anfang an
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Architektur-Session
 
 **Kontext:**
@@ -477,8 +478,8 @@ CommunityToolkit.Mvvm (MVVM-Boilerplate-Reduktion) und Serilog (Structured Loggi
 
 ## ADR-016: Coding Standards + Definition of Done
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Architektur-Session, ChatGPT-Review Punkt 11
 
 **Kontext:**
@@ -502,8 +503,8 @@ Nicht für V1: COM-Objektfreigabe (erst bei Outlook/Excel-Modul), Migrations-Fra
 
 ## ADR-017: VBA liest nur, schreibt nie
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Architektur-Session
 
 **Kontext:**
@@ -525,8 +526,8 @@ VBA liest nur `registry.json`, schreibt nie. Die C#-App ist der einzige Writer. 
 
 ## ADR-018: Arbeitszeiterfassung — WPF als Eingabemaske, Excel als Wahrheitsquelle
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Phase 1 Teil 1 Chat
 
 **Kontext:**
@@ -557,8 +558,8 @@ Nein. Excel bleibt die Single Source of Truth für Roh-Zeitbuchungen. WPF liefer
 
 ## ADR-019: Mobile PWA statt Native App
 
-**Datum:** 2026-03  
-**Status:** ✅ Accepted / Not Started  
+**Datum:** 2026-03
+**Status:** ✅ Accepted / Not Started
 **Herkunft:** Smartphone-App Chat
 
 **Kontext:**
@@ -585,8 +586,8 @@ PWA (Progressive Web App) im Browser. Kein App Store nötig, funktioniert auf je
 
 ## ADR-020: Write-Lock mit Heartbeat für Shared SQLite im LAN
 
-**Datum:** 2026-03  
-**Status:** ✅ Accepted / Not Started  
+**Datum:** 2026-03
+**Status:** ✅ Accepted / Not Started
 **Herkunft:** Smartphone-App Chat, Vergleich mit Notion/ClickUp/Excel
 
 **Kontext:**
@@ -618,8 +619,8 @@ Exklusiver Schreibzugriff mit Warteschlange. Wer den Lock hält, darf schreiben.
 
 ## ADR-021: Client/Firma als eigene Entität (Vorbereitung)
 
-**Datum:** 2026-03  
-**Status:** 🟡 Konzept  
+**Datum:** 2026-03
+**Status:** 🟡 Konzept
 **Herkunft:** Backlog Vision-Sektion
 
 **Kontext:**
@@ -640,8 +641,8 @@ Für V1: Client bleibt als eingebettetes Objekt im Projekt (einfacher). Aber das
 
 ## ADR-022: Segment-basiertes Dateinamen-Parsing (Hybrid)
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Architektur-Session (PlanManager-Konzept)
 
 **Kontext:**
@@ -665,8 +666,8 @@ Verfügbare Felder: Pflicht (planNumber, planIndex), System (projectNumber, desc
 
 ## ADR-023: Arbeitsteilung — Claude schreibt Code, Herbert committet
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Alle Chats, mehrfach bekräftigt
 
 **Kontext:**
@@ -694,8 +695,8 @@ Herbert hat keinen Programmier-Hintergrund. Claude schreibt allen Code. Herbert 
 
 ## ADR-024: Adressbuch getrennt von Projekt-Beteiligten
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Tab 3 Beteiligte Implementierung
 
 **Kontext:**
@@ -720,8 +721,8 @@ Zwei getrennte Ebenen:
 
 ## ADR-025: Status vereinfacht — nur Active und Completed
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Tab 1 Stammdaten Implementierung
 
 **Kontext:**
@@ -742,8 +743,8 @@ Nur zwei Status: Active und Completed. Archivierung als Feature #12 separat.
 
 ## ADR-026: Portal-Typen als editierbare Liste
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Tab 4 Portale + Links Implementierung
 
 **Kontext:**
@@ -764,8 +765,8 @@ Editierbare Liste in settings.json (PortalTypes), änderbar über ✎-Button. Gl
 
 ## ADR-027: KI-API-Import für Datenextraktion
 
-**Datum:** 2026-03  
-**Status:** 🟡 Konzept  
+**Datum:** 2026-03
+**Status:** 🟡 Konzept
 **Herkunft:** Tab 3 Firmenliste-Import, Plankopf-Konzept
 
 **Kontext:**
@@ -798,8 +799,8 @@ Zweistufiger Ansatz:
 
 ## ADR-028: Theme-System mit Resource Dictionaries
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Phase 1 Teil 2, UI/UX Review Session
 
 **Kontext:**
@@ -840,8 +841,8 @@ Alle Dictionaries werden in `App.xaml` per `MergedDictionaries` geladen. Views v
 
 ## ADR-029: Arbeitspaket als zentrales Verbindungskonzept
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Phase 1 Teil 2, Kalkulations-Modul Konzept
 
 **Kontext:**
@@ -873,8 +874,8 @@ Arbeitspaket referenziert bestehende Tabellen `building_parts` und `building_lev
 
 ## ADR-030: Abschluss-Erfassung statt Tages-Aufmaß
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Phase 1 Teil 2, Kalkulations-Modul Konzept
 
 **Kontext:**
@@ -902,8 +903,8 @@ Abschluss-Erfassung statt täglicher Mengenerfassung. Der Polier muss täglich n
 
 ## ADR-031: DB-SCHEMA.md als zentrales Leitdokument
 
-**Datum:** 2026-03  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-03
+**Status:** ✅ Entschieden
 **Herkunft:** Phase 1 Teil 2
 
 **Kontext:**
@@ -937,8 +938,8 @@ Ein zentrales Dokument `Docs/DB-SCHEMA.md` ist die **einzige Quelle der Wahrheit
 
 ## ADR-032: ITaskManagementService — nicht an ClickUp gebunden
 
-**Datum:** 2026-03  
-**Status:** ✅ Accepted / Not Started  
+**Datum:** 2026-03
+**Status:** ✅ Accepted / Not Started
 **Herkunft:** Phase 1 Teil 2, ClickUp-Integration Diskussion
 
 **Kontext:**
@@ -971,8 +972,8 @@ Geplante Implementierungen:
 
 ## ADR-033: Multi-User — 3 Modi (eigene DB, geteilte DB, Server)
 
-**Datum:** 2026-03  
-**Status:** 🟡 Konzept  
+**Datum:** 2026-03
+**Status:** 🟡 Konzept
 **Herkunft:** Phase 1 Teil 2
 
 **Kontext:**
@@ -1012,8 +1013,8 @@ Technisch wird ein `IDataService` Interface eingeführt mit 3 Implementierungen:
 
 ## ADR-034: Modul-Aktivierung + Offline-Lizenzierung
 
-**Datum:** 2026-03  
-**Status:** 🟡 Konzept  
+**Datum:** 2026-03
+**Status:** 🟡 Konzept
 **Herkunft:** Phase 1 Teil 2
 
 **Kontext:**
@@ -1051,8 +1052,8 @@ Verkaufsmodell:
 
 ## ADR-035: IExternalCommunicationService — zentrales Privacy Gate
 
-**Datum:** 2026-04  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-04
+**Status:** ✅ Entschieden
 **Herkunft:** DSGVO-Analyse + externe Reviews (Claude + ChatGPT)
 
 **Kontext:**
@@ -1118,8 +1119,8 @@ public interface IExternalCommunicationService
 
 ## ADR-036: IPrivacyPolicy — austauschbare Policy für Internal/Commercial
 
-**Datum:** 2026-04  
-**Status:** ✅ Entschieden  
+**Datum:** 2026-04
+**Status:** ✅ Entschieden
 **Herkunft:** DSGVO-Architektur-Review, ChatGPT-Empfehlung (Option D + Strategy Pattern)
 
 **Kontext:**
@@ -1190,8 +1191,8 @@ else
 
 ## ADR-037: ISyncTransport — austauschbarer Sync-Transport (Folder/HTTP)
 
-**Datum:** 2026-04  
-**Status:** ✅ Accepted / Not Started  
+**Datum:** 2026-04
+**Status:** ✅ Accepted / Not Started
 **Herkunft:** Multi-User Architektur-Diskussion (Claude + ChatGPT), Analyse von PlanRadar/Procore/Dalux
 
 **Kontext:**
@@ -1218,8 +1219,8 @@ Beide verwenden dasselbe `SyncEnvelope`-Format mit `eventId`, `entityType`, `bas
 
 ## ADR-038: IAccessControlService — rollenbasierte Projektfreigabe
 
-**Datum:** 2026-04  
-**Status:** 🟡 Konzept  
+**Datum:** 2026-04
+**Status:** 🟡 Konzept
 **Herkunft:** Multi-User Architektur-Diskussion (Claude + ChatGPT)
 
 **Kontext:**
@@ -1247,9 +1248,9 @@ Zweistufiger Ansatz:
 
 ## ADR-039: Einheitliches ID-Schema — ULID als Primärschlüssel
 
-**Datum:** 2026-04  
-**Status:** ✅ Accepted / Not Started  
-**Herkunft:** ID-Schema Review (Claude + ChatGPT, 4 Runden, 04.04.2026)  
+**Datum:** 2026-04
+**Status:** ✅ Accepted / Not Started
+**Herkunft:** ID-Schema Review (Claude + ChatGPT, 4 Runden, 04.04.2026)
 **Supersedes:** ADR-039 v1 (TEXT mit Präfix + seq, `MAX(seq)+1`)
 
 **Kontext:**
@@ -1360,8 +1361,8 @@ VBA liest `registry.json` → sieht nur Strings. Egal ob `"proj_42"` oder `"01HV
 
 ## ADR-040: Migrations- und Versionierungsstrategie (DB + JSON)
 
-**Datum:** 2026-04  
-**Status:** ✅ Accepted / Not Started  
+**Datum:** 2026-04
+**Status:** ✅ Accepted / Not Started
 **Herkunft:** Kern-Dokumenten-Review + ADR-Review (Claude + ChatGPT)
 
 **Kontext:**
@@ -1405,8 +1406,8 @@ Automatische Forward-Only-Migration bei App-Start mit Backup.
 
 ## ADR-041: Recovery / Degraded Mode
 
-**Datum:** 2026-04  
-**Status:** ✅ Accepted / Not Started  
+**Datum:** 2026-04
+**Status:** ✅ Accepted / Not Started
 **Herkunft:** Kern-Dokumenten-Review + ADR-Review (Claude + ChatGPT)
 
 **Kontext:**
@@ -1453,8 +1454,8 @@ Dreistufiges Zustandsmodell bei App-Start:
 
 ## ADR-042: Secrets und Credentials — zentrale Sicherheitsentscheidung
 
-**Datum:** 2026-04  
-**Status:** ✅ Accepted / Not Started  
+**Datum:** 2026-04
+**Status:** ✅ Accepted / Not Started
 **Herkunft:** Kern-Dokumenten-Review + ADR-Review (Claude + ChatGPT)
 
 **Kontext:**
@@ -1505,6 +1506,61 @@ Die Offline-Lizenzprüfung per eingebettetem HMAC-Secret ist **manipulationsersc
 - Coding Standard (CODING_STANDARDS Kap. 17.4): DPAPI Pflicht, Klartext verboten
 
 **Betrifft:** ADR-027, ADR-032, ADR-034, ADR-035, ADR-036
+
+---
+
+## ADR-043: Dev-Tools — Lokales Debug-Toolset für Entwicklung
+
+**Datum:** 2026-04
+**Status:** ✅ Entschieden / Not Started
+**Herkunft:** ChatGPT + Claude Review-Gespräch (4 Runden, 05.04.2026)
+
+**Kontext:**
+
+Als Einzelentwickler ohne CI/CD braucht Herbert einen einfachen Weg, um während der Entwicklung Testdaten zurückzusetzen und Logs einzusehen — ohne Explorer, ohne Terminal, ohne externes Tool. Konkrete Anforderungen: DB löschen für sauberen Neustart (z.B. nach Schema-Änderungen), Log schnell lesen, nur für Entwicklung sichtbar.
+
+Drei Optionen wurden evaluiert:
+- **Option A** (verstecktes `#if DEBUG`-Menü in der App) — gewählt
+- **Option B** (separates `DevTools.exe` Projekt) — abgelehnt
+- **Option C** (PowerShell-Skripte) — nur als persönlicher Komfort, nicht als Projektmechanismus
+
+**Entscheidung:**
+
+Option A: Ein Dev-Dialog im `#if DEBUG`-Block der WPF-Shell. Kein zweites Binary, kein separates Projekt.
+
+**DB-Reset-Mechanismus:**
+
+Button → App schließt → gehärteter Batch löscht DB → App startet neu. Der Löschvorgang findet zwischen den zwei Prozessen statt (alle Handles freigegeben). Kein Pending-Reset-Marker nötig.
+
+Der Batch-Prozess (GUID-Name, Self-Delete) übernimmt:
+1. Wartet auf Prozessende (max. 30 Sekunden, Retry-Zähler)
+2. Löscht `bpm.db`, `bpm.db-wal`, `bpm.db-shm`
+3. Prüft alle drei Dateien auf Existenz (Retry-Loop, max. 30 Versuche)
+4. Startet App neu
+5. Bei Fehlschlag: `%TEMP%\bpm_reset_failed.txt` mit Zeitstempel
+6. Self-Delete des Batch-Scripts
+
+**Dev-Dialog Funktionen:**
+- Betroffene Dateipfade anzeigen vor dem Reset
+- Button „Lokale Datenbank löschen und neu starten" (explizite Benennung)
+- Log-Verzeichnis im Explorer öffnen
+- Letzte 200 Zeilen der aktuellen Log-Datei inline anzeigen
+
+**Alternativen (abgelehnt):**
+
+- *Separates `DevTools.exe`-Projekt:* Zweite `.csproj`, Build-Abhängigkeit, Deploy-Abhängigkeit, muss synchron mit Hauptprojekt gehalten werden — zu viel Overhead für ein Dev-only Feature.
+- *Pending-Reset (Marker-File beim nächsten Start):* Sauber, aber unnötig wenn der Batch-Ansatz denselben Effekt einfacher erreicht.
+- *Direktes Löschen aus laufendem Prozess:* SQLite WAL/SHM + offene Handles → inkonsistenter State. Verboten.
+- *PowerShell als Primärmechanismus:* Nicht GUI-only, ExecutionPolicy-Risiko, mehr Kontextwechsel.
+
+**Konsequenzen:**
+
+- `IDeveloperToolsService` in Domain, `DeveloperToolsService` in Infrastructure/Dev
+- Dev-Menüpunkt und Dialog nur in `#if DEBUG`-Blöcken — nie in Release sichtbar
+- Batch-Encoding: CP850 für korrekte Sonderzeichen in Windows-Pfaden
+- `Directory.CreateDirectory()` im `ProjectDatabase`-Konstruktor stellt sicher, dass das DB-Verzeichnis nach Reset beim nächsten Start neu angelegt wird
+- Settings/JSON-Reset: separater Button, kommt als späterer Schritt
+- Seed-/Testdaten-Mechanismus: zukünftiger Schritt, fachlich getrennt vom technischen DB-Reset
 
 ---
 

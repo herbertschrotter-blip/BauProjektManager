@@ -6,5 +6,6 @@ public interface IDeveloperToolsService
     string LogDirectory { get; }
     string ReadLogTail(int lineCount = 200);
     void OpenLogDirectory();
-    void RequestDatabaseResetAndRestart();
+    /// <summary>Startet den Batch-Reset und ruft danach shutdownAction() auf.</summary>
+    void RequestDatabaseReset(Action shutdownAction);
 }

@@ -37,7 +37,7 @@
                 <!--  DB Pfad  -->
                 <TextBlock
                     Margin="0,0,0,4"
-                    Style="{StaticResource BpmLabelText}"
+                    Style="{StaticResource BpmLabel}"
                     Text="Datenbank" />
                 <TextBlock
                     x:Name="TxtDbPath"
@@ -49,7 +49,7 @@
                 <!--  Log Verzeichnis  -->
                 <TextBlock
                     Margin="0,0,0,4"
-                    Style="{StaticResource BpmLabelText}"
+                    Style="{StaticResource BpmLabel}"
                     Text="Log-Verzeichnis" />
                 <TextBlock
                     x:Name="TxtLogPath"
@@ -86,7 +86,7 @@
             <DockPanel Grid.Row="0" Margin="0,0,0,8">
                 <TextBlock
                     VerticalAlignment="Center"
-                    Style="{StaticResource BpmLabelText}"
+                    Style="{StaticResource BpmLabel}"
                     Text="Log (letzte 200 Zeilen)" />
                 <Button
                     Padding="8,4"

@@ -24,11 +24,12 @@ public partial class DevToolsDialog : Window
 
     private void OnResetDb(object sender, RoutedEventArgs e)
     {
+        var db = _devTools.DatabasePath;
         var result = MessageBox.Show(
             $"Folgende Dateien werden gelöscht:\n\n" +
-            $"  {_devTools.DatabasePath}\n" +
-            $"  {_devTools.DatabasePath}-wal\n" +
-            $"  {_devTools.DatabasePath}-shm\n\n" +
+            $"  {db}\n" +
+            $"  {db + "-wal"}\n" +
+            $"  {db + "-shm"}\n\n" +
             "Die App wird danach neu gestartet.\n\n" +
             "Alle lokalen Daten gehen verloren!",
             "Lokale Datenbank löschen",
@@ -37,7 +38,7 @@ public partial class DevToolsDialog : Window
 
         if (result != MessageBoxResult.OK) return;
 
-        _devTools.RequestDatabaseResetAndRestart();
+        _devTools.RequestDatabaseReset(() => System.Windows.Application.Current.Shutdown());
     }
 
     private void OnOpenLogs(object sender, RoutedEventArgs e)

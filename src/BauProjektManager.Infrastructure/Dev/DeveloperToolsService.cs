@@ -3,8 +3,6 @@ using Serilog;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using System.Windows;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace BauProjektManager.Infrastructure.Dev;
 
@@ -60,7 +58,7 @@ public sealed class DeveloperToolsService : IDeveloperToolsService
         });
     }
 
-    public void RequestDatabaseResetAndRestart()
+    public void RequestDatabaseReset(Action shutdownAction)
     {
         var exePath = Environment.ProcessPath
             ?? throw new InvalidOperationException("Executable-Pfad nicht ermittelbar.");
@@ -121,6 +119,6 @@ public sealed class DeveloperToolsService : IDeveloperToolsService
         if (started is null)
             throw new InvalidOperationException("Reset-Script konnte nicht gestartet werden.");
 
-        Application.Current.Shutdown();
+        shutdownAction();
     }
 }

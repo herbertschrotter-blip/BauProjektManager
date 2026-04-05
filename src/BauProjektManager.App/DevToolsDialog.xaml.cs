@@ -14,6 +14,21 @@ public partial class DevToolsDialog : Window
         TxtDbPath.Text = _devTools.DatabasePath;
         TxtLogPath.Text = _devTools.LogDirectory;
         TxtSettingsPath.Text = _devTools.SettingsPath;
+        var sysInfo = _devTools.GetSystemInfo();
+
+        // DPI via WPF — nur hier verfügbar
+        try
+        {
+            var source = System.Windows.PresentationSource.FromVisual(this);
+            if (source?.CompositionTarget != null)
+            {
+                var dpiX = 96.0 * source.CompositionTarget.TransformToDevice.M11;
+                sysInfo += $"DPI-Skalierung:    {dpiX / 96.0 * 100:F0}% ({dpiX:F0} dpi){Environment.NewLine}";
+            }
+        }
+        catch { sysInfo += $"DPI-Skalierung:    (nicht ermittelbar){Environment.NewLine}"; }
+
+        TxtSystemInfo.Text = sysInfo;
         LoadLog();
     }
 

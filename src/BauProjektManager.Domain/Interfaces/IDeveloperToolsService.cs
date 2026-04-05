@@ -7,6 +7,7 @@ public interface IDeveloperToolsService
     string ReadLogTail(int lineCount = 200);
     void OpenLogDirectory();
     string SettingsPath { get; }
+    string GetSystemInfo();
     /// <summary>Startet den Batch-Reset und ruft danach shutdownAction() auf.</summary>
     void RequestDatabaseReset(Action shutdownAction);
     /// <summary>Löscht DB + Settings und startet neu — simuliert Ersteinrichtung.</summary>

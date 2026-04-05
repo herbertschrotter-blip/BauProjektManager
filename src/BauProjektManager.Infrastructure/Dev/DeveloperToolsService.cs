@@ -52,6 +52,43 @@ public sealed class DeveloperToolsService : IDeveloperToolsService
         }
     }
 
+    public string GetSystemInfo()
+    {
+        var sb = new System.Text.StringBuilder();
+
+        // App
+        var version = System.Reflection.Assembly.GetEntryAssembly()
+            ?.GetName().Version?.ToString() ?? "unbekannt";
+        sb.AppendLine($"App-Version:       {version}");
+        sb.AppendLine($".NET Runtime:      {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}");
+        sb.AppendLine($"Windows:           {Environment.OSVersion}");
+        sb.AppendLine($"Rechner:           {Environment.MachineName}");
+        sb.AppendLine($"Benutzer:          {Environment.UserName}");
+
+        // DB
+        sb.AppendLine($"DB-Pfad:           {_dbPath}");
+        if (File.Exists(_dbPath))
+        {
+            var size = new FileInfo(_dbPath).Length / 1024.0;
+            sb.AppendLine($"DB-Größe:          {size:F1} KB");
+        }
+        else
+        {
+            sb.AppendLine("DB-Größe:          (nicht vorhanden)");
+        }
+
+        // Freier Speicher
+        try
+        {
+            var root = Path.GetPathRoot(_dbPath) ?? "C:\\";
+            var drive = new DriveInfo(root);
+            sb.AppendLine($"Freier Speicher:   {drive.AvailableFreeSpace / 1024.0 / 1024.0 / 1024.0:F1} GB");
+        }
+        catch { sb.AppendLine("Freier Speicher:   (nicht ermittelbar)"); }
+
+        return sb.ToString();
+    }
+
     public void OpenLogDirectory()
     {
         if (!Directory.Exists(_logDirectory)) return;

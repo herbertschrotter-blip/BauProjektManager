@@ -13,6 +13,7 @@ public partial class DevToolsDialog : Window
         _devTools = devTools;
         TxtDbPath.Text = _devTools.DatabasePath;
         TxtLogPath.Text = _devTools.LogDirectory;
+        TxtSettingsPath.Text = _devTools.SettingsPath;
         LoadLog();
     }
 
@@ -39,6 +40,25 @@ public partial class DevToolsDialog : Window
         if (result != MessageBoxResult.OK) return;
 
         _devTools.RequestDatabaseReset(() => System.Windows.Application.Current.Shutdown());
+    }
+
+    private void OnFullReset(object sender, RoutedEventArgs e)
+    {
+        var db = _devTools.DatabasePath;
+        var result = MessageBox.Show(
+            $"Folgende Dateien werden gelöscht:\n\n" +
+            $"  {db}\n" +
+            $"  {db + "-wal"}\n" +
+            $"  {db + "-shm"}\n" +
+            $"  {_devTools.SettingsPath}\n\n" +
+            "Die App startet danach neu — Ersteinrichtung wird angezeigt.\n\n" +
+            "Alle lokalen Daten gehen verloren!",
+            "Komplett-Reset",
+            MessageBoxButton.OKCancel,
+            MessageBoxImage.Warning);
+
+        if (result != MessageBoxResult.OK) return;
+        _devTools.RequestFullReset(() => System.Windows.Application.Current.Shutdown());
     }
 
     private void OnOpenLogs(object sender, RoutedEventArgs e)

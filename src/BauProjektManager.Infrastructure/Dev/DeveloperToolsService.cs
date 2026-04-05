@@ -19,6 +19,9 @@ public sealed class DeveloperToolsService : IDeveloperToolsService
 
     public string DatabasePath => _dbPath;
     public string LogDirectory => _logDirectory;
+    public string SettingsPath => System.IO.Path.Combine(
+        System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
+        "BauProjektManager", "settings.json");
 
     public string ReadLogTail(int lineCount = 200)
     {
@@ -58,13 +61,26 @@ public sealed class DeveloperToolsService : IDeveloperToolsService
         });
     }
 
+    public void RequestFullReset(Action shutdownAction)
+    {
+        RequestResetInternal(includeSettings: true, shutdownAction);
+    }
+
     public void RequestDatabaseReset(Action shutdownAction)
+    {
+        RequestResetInternal(includeSettings: false, shutdownAction);
+    }
+
+    private void RequestResetInternal(bool includeSettings, Action shutdownAction)
     {
         var exePath = Environment.ProcessPath
             ?? throw new InvalidOperationException("Executable-Pfad nicht ermittelbar.");
 
         var pid = Environment.ProcessId;
         var bat = Path.Combine(Path.GetTempPath(), $"bpm_reset_{Guid.NewGuid():N}.bat");
+        var settingsLine = includeSettings
+            ? $"del /f /q \"{SettingsPath}\" 2>nul"
+            : "rem keine Settings-Löschung";
 
         var script = $$"""
             @echo off
@@ -84,6 +100,7 @@ public sealed class DeveloperToolsService : IDeveloperToolsService
             del /f /q "{{_dbPath}}" 2>nul
             del /f /q "{{_dbPath}}-wal" 2>nul
             del /f /q "{{_dbPath}}-shm" 2>nul
+            {{settingsLine}}
             if exist "{{_dbPath}}" goto retryDelete
             if exist "{{_dbPath}}-wal" goto retryDelete
             if exist "{{_dbPath}}-shm" goto retryDelete
@@ -106,6 +123,7 @@ public sealed class DeveloperToolsService : IDeveloperToolsService
             del /f /q "%~f0"
             """;
 
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         File.WriteAllText(bat, script, Encoding.GetEncoding(850));
 
         var started = Process.Start(new ProcessStartInfo("cmd.exe")

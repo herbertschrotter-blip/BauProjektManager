@@ -1,10 +1,10 @@
 ﻿<Window x:Class="BauProjektManager.App.SetupDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="BauProjektManager — Ersteinrichtung" 
-        Height="480" Width="600"
+        Title="BauProjektManager — Ersteinrichtung"
+        Height="560" Width="620"
         WindowStartupLocation="CenterScreen"
-        ResizeMode="NoResize"
+        ResizeMode="CanMinimize"
         Background="{DynamicResource BpmBgElevated}">
     <Grid Margin="25">
         <Grid.RowDefinitions>
@@ -16,10 +16,10 @@
 
         <!-- Header -->
         <StackPanel Grid.Row="0" Margin="0,0,0,20">
-            <TextBlock Text="Willkommen im BauProjektManager!" 
+            <TextBlock Text="Willkommen im BauProjektManager!"
                        Style="{DynamicResource BpmHeading1}"
                        Margin="0"/>
-            <TextBlock Text="Ersteinrichtung — wird nur einmal benötigt." 
+            <TextBlock Text="Ersteinrichtung — wird nur einmal benötigt."
                        Style="{DynamicResource BpmBodyText}"
                        Foreground="{DynamicResource BpmTextSecondary}"
                        Margin="0,5,0,0"/>
@@ -49,7 +49,7 @@
                 </Grid.ColumnDefinitions>
                 <TextBox x:Name="TxtOneDrive" Grid.Column="0"
                          Background="{DynamicResource BpmBgBase}"
-                         Foreground="{DynamicResource BpmTextPrimary}" 
+                         Foreground="{DynamicResource BpmTextPrimary}"
                          BorderBrush="{DynamicResource BpmBorderDefault}"
                          Padding="6,4" IsReadOnly="True"/>
                 <Button Grid.Column="1" Content="📁"
@@ -67,7 +67,7 @@
                 </Grid.ColumnDefinitions>
                 <TextBox x:Name="TxtBasePath" Grid.Column="0"
                          Background="{DynamicResource BpmBgBase}"
-                         Foreground="{DynamicResource BpmTextPrimary}" 
+                         Foreground="{DynamicResource BpmTextPrimary}"
                          BorderBrush="{DynamicResource BpmBorderDefault}"
                          Padding="6,4" IsReadOnly="True"/>
                 <Button Grid.Column="1" Content="📁"
@@ -85,7 +85,7 @@
                 </Grid.ColumnDefinitions>
                 <TextBox x:Name="TxtArchivePath" Grid.Column="0"
                          Background="{DynamicResource BpmBgBase}"
-                         Foreground="{DynamicResource BpmTextPrimary}" 
+                         Foreground="{DynamicResource BpmTextPrimary}"
                          BorderBrush="{DynamicResource BpmBorderDefault}"
                          Padding="6,4" IsReadOnly="True"/>
                 <Button Grid.Column="1" Content="📁"
@@ -100,7 +100,7 @@
         </StackPanel>
 
         <!-- Buttons -->
-        <StackPanel Grid.Row="3" Orientation="Horizontal" 
+        <StackPanel Grid.Row="3" Orientation="Horizontal"
                     HorizontalAlignment="Right" Margin="0,15,0,0">
             <Button Content="Speichern und starten" x:Name="BtnSave" Click="OnSave"
                     Style="{DynamicResource BpmButtonPrimary}"

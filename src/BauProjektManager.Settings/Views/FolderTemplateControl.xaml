@@ -77,14 +77,16 @@
                         Click="OnMoveDown" />
 
                 <Button x:Name="BtnAddMain"
-                        Width="32" Height="32" Margin="0,0,0,3"
+                        Width="32" Height="32" MinWidth="0" Padding="0"
+                        Margin="0,0,0,3"
                         Content="+"
                         FontSize="18" FontWeight="Medium"
                         ToolTip="Hauptordner hinzufügen"
                         Style="{StaticResource BpmButtonPrimary}"
                         Click="OnAddMain" />
                 <Button x:Name="BtnAddSub"
-                        Width="32" Height="32" Margin="0,0,0,8"
+                        Width="32" Height="32" MinWidth="0" Padding="0"
+                        Margin="0,0,0,8"
                         ToolTip="Unterordner hinzufügen"
                         Style="{StaticResource BpmButtonSuccess}"
                         Click="OnAddSub">
@@ -92,8 +94,9 @@
                 </Button>
 
                 <Button x:Name="BtnRemove"
-                        Width="32" Height="32" Margin="0,0,0,8"
-                        Content="&#x2715;"
+                        Width="32" Height="32" MinWidth="0" Padding="0"
+                        Margin="0,0,0,8"
+                        Content="✕"
                         ToolTip="Löschen"
                         Style="{StaticResource BpmButtonDanger}"
                         Click="OnRemove" />

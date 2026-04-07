@@ -25,6 +25,9 @@ public partial class FolderTemplateControl : UserControl
     /// <summary>Optionaler Projekt-Root-Name für die Vorschau (z.B. "202604_Projektname").</summary>
     public string PreviewRootName { get; set; } = string.Empty;
 
+    /// <summary>Wenn true, ist Löschen deaktiviert (Projekt-Bearbeitungsmodus).</summary>
+    public bool IsProjectMode { get; set; }
+
     public FolderTemplateControl()
     {
         InitializeComponent();
@@ -55,6 +58,7 @@ public partial class FolderTemplateControl : UserControl
         TvFolders.ItemsSource = _folderTreeItems;
         UpdatePreview();
         Log.Debug("FolderTemplateControl loaded with {Count} main folders", _folderTreeItems.Count);
+        UpdateButtonStates();
     }
 
     private void LoadSubFolders(ObservableCollection<FolderTreeItem> target, List<SubFolderEntry> subs)
@@ -96,6 +100,7 @@ public partial class FolderTemplateControl : UserControl
                 Name = cleanName,
                 Position = mainPos++,
                 IsMainFolder = true,
+                IsExisting = true,
                 HasInbox = Directory.Exists(Path.Combine(dir, "_Eingang"))
             };
 
@@ -106,6 +111,7 @@ public partial class FolderTemplateControl : UserControl
         TvFolders.ItemsSource = _folderTreeItems;
         UpdatePreview();
         Log.Debug("FolderTemplateControl loaded from disk: {Path}", projectFolderPath);
+        UpdateButtonStates();
     }
 
     private void LoadSubFoldersFromDisk(ObservableCollection<FolderTreeItem> target, string parentPath)
@@ -124,6 +130,7 @@ public partial class FolderTemplateControl : UserControl
                 Name = cleanSubName,
                 Position = subHasPrefix ? subPos++ : -1,
                 IsMainFolder = false,
+                IsExisting = true,
                 HasPrefix = subHasPrefix
             };
 
@@ -157,6 +164,18 @@ public partial class FolderTemplateControl : UserControl
             HasPrefix = sub.HasPrefix,
             SubFolders = ConvertChildrenToSubFolders(sub.Children)
         }).ToList();
+    }
+
+    public void UpdateButtonStates()
+    {
+        if (BtnRemove != null)
+        {
+            BtnRemove.IsEnabled = !IsProjectMode;
+            BtnRemove.ToolTip = IsProjectMode
+                ? "Bestehende Ordner können hier nicht gelöscht werden"
+                : "Löschen";
+            BtnRemove.Opacity = IsProjectMode ? 0.4 : 1.0;
+        }
     }
 
     // ── Interne Logik ────────────────────────────────────────
@@ -342,6 +361,16 @@ public partial class FolderTemplateControl : UserControl
     {
         if (_selectedItem == null) return;
 
+        if (_selectedItem.IsExisting)
+        {
+            MessageBox.Show(
+                $"Der Ordner '{_selectedItem.Name}' existiert bereits auf dem Laufwerk und kann hier nicht gelöscht werden.\n\nBestehende Ordner können nur im Explorer gelöscht werden.",
+                "Löschen nicht möglich",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
         var msg = _selectedItem.IsMainFolder
             ? $"Hauptordner '{_selectedItem.Name}' und alle Unterordner löschen?"
             : $"Unterordner '{_selectedItem.Name}' löschen?";
@@ -406,6 +435,7 @@ public class FolderTreeItem
     public bool IsMainFolder { get; set; }
     public bool HasInbox { get; set; }
     public bool HasPrefix { get; set; } = true;
+    public bool IsExisting { get; set; }
     public ObservableCollection<FolderTreeItem> Children { get; set; } = [];
 
     public string DisplayName => IsMainFolder

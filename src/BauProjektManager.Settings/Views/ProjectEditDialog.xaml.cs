@@ -30,6 +30,8 @@ public partial class ProjectEditDialog : Window
         Project = project;
         _isNewProject = folderTemplate is not null;
 
+        ProjectFolderTemplate.IsProjectMode = !_isNewProject;
+
         if (_isNewProject && folderTemplate is not null)
         {
             TxtDialogTitle.Text = "Neues Projekt anlegen";

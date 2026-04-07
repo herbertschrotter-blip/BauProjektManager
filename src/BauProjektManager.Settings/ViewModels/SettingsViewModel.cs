@@ -468,6 +468,12 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         {
             try
             {
+                // Sync new folders to disk (only create, never delete)
+                if (dialog.FolderTemplate != null && !string.IsNullOrEmpty(dialog.Project.Paths?.Root))
+                {
+                    _folderService.SyncNewFolders(dialog.Project, dialog.FolderTemplate);
+                }
+
                 _db.SaveProject(dialog.Project);
                 int index = Projects.IndexOf(SelectedProject);
                 if (index >= 0)

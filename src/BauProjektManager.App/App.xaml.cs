@@ -24,7 +24,7 @@ public partial class App : Application
             "BauProjektManager", "Logs", "BPM_.log");
 
         Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Information()
+            .MinimumLevel.Verbose()
             .WriteTo.File(
                 logPath,
                 rollingInterval: RollingInterval.Day,

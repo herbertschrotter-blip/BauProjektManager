@@ -100,24 +100,65 @@ public sealed class DeveloperToolsService : IDeveloperToolsService
 
     public void RequestFullReset(Action shutdownAction)
     {
-        RequestResetInternal(includeSettings: true, shutdownAction);
+        RequestResetInternal(deleteDb: true, deleteSettings: true, firstRunOnly: false, shutdownAction);
     }
 
     public void RequestDatabaseReset(Action shutdownAction)
     {
-        RequestResetInternal(includeSettings: false, shutdownAction);
+        RequestResetInternal(deleteDb: true, deleteSettings: false, firstRunOnly: false, shutdownAction);
     }
 
-    private void RequestResetInternal(bool includeSettings, Action shutdownAction)
+    public void RequestSettingsReset(Action shutdownAction)
+    {
+        RequestResetInternal(deleteDb: false, deleteSettings: true, firstRunOnly: false, shutdownAction);
+    }
+
+    public void RequestFirstRunReset(Action shutdownAction)
+    {
+        RequestResetInternal(deleteDb: false, deleteSettings: false, firstRunOnly: true, shutdownAction);
+    }
+
+    private void RequestResetInternal(bool deleteDb, bool deleteSettings, bool firstRunOnly, Action shutdownAction)
     {
         var exePath = Environment.ProcessPath
             ?? throw new InvalidOperationException("Executable-Pfad nicht ermittelbar.");
 
         var pid = Environment.ProcessId;
         var bat = Path.Combine(Path.GetTempPath(), $"bpm_reset_{Guid.NewGuid():N}.bat");
-        var settingsLine = includeSettings
+
+        // Für FirstRun-Reset: settings.json lesen, IsFirstRun setzen, neu schreiben
+        if (firstRunOnly)
+        {
+            try
+            {
+                var json = File.Exists(SettingsPath)
+                    ? File.ReadAllText(SettingsPath)
+                    : "{}";
+                // isFirstRun auf true setzen — einfaches String-Replace reicht für diesen Dev-Use-Case
+                if (json.Contains("\"isFirstRun\""))
+                    json = System.Text.RegularExpressions.Regex.Replace(
+                        json, "\"isFirstRun\"\\s*:\\s*(true|false)", "\"isFirstRun\": true");
+                else
+                    json = json.TrimEnd('}') + ",\"isFirstRun\": true}";
+                File.WriteAllText(SettingsPath, json, Encoding.UTF8);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning("DevTools: FirstRun-Reset fehlgeschlagen: {Error}", ex.Message);
+            }
+            shutdownAction();
+            return;
+        }
+
+        var dbLine = deleteDb
+            ? $"del /f /q \"{_dbPath}\" 2>nul\r\ndel /f /q \"{_dbPath}-wal\" 2>nul\r\ndel /f /q \"{_dbPath}-shm\" 2>nul"
+            : "rem keine DB-Löschung";
+        var settingsLine = deleteSettings
             ? $"del /f /q \"{SettingsPath}\" 2>nul"
             : "rem keine Settings-Löschung";
+        var checkLine = deleteDb
+            ? $"if exist \"{_dbPath}\" goto retryDelete\r\nif exist \"{_dbPath}-wal\" goto retryDelete\r\nif exist \"{_dbPath}-shm\" goto retryDelete"
+            : "rem kein DB-Check";
 
         var script = $$"""
             @echo off
@@ -134,13 +175,9 @@ public sealed class DeveloperToolsService : IDeveloperToolsService
             goto wait
 
             :delete
-            del /f /q "{{_dbPath}}" 2>nul
-            del /f /q "{{_dbPath}}-wal" 2>nul
-            del /f /q "{{_dbPath}}-shm" 2>nul
+            {{dbLine}}
             {{settingsLine}}
-            if exist "{{_dbPath}}" goto retryDelete
-            if exist "{{_dbPath}}-wal" goto retryDelete
-            if exist "{{_dbPath}}-shm" goto retryDelete
+            {{checkLine}}
             goto restart
 
             :retryDelete

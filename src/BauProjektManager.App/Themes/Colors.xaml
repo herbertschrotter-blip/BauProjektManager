@@ -62,6 +62,11 @@
     <SolidColorBrush x:Key="BpmBorderFocus" Color="{StaticResource BpmColorBorderFocus}"/>
     <SolidColorBrush x:Key="BpmBorderSubtle" Color="{StaticResource BpmColorBorderSubtle}"/>
 
+    <!-- ── Badge-Hintergründe (semitransparent) ───────────────── -->
+    <SolidColorBrush x:Key="BpmBadgeBgSuccess" Color="#224EC94E"/>
+    <SolidColorBrush x:Key="BpmBadgeBgWarning" Color="#22F0AD4E"/>
+    <SolidColorBrush x:Key="BpmBadgeBgError"   Color="#22F44747"/>
+
     <!-- ── Transparent ─────────────────────────────────────────── -->
     <SolidColorBrush x:Key="BpmTransparent" Color="Transparent"/>
 

@@ -31,6 +31,7 @@ public class ProjectDatabase : IDisposable
         {
             _connection = new SqliteConnection($"Data Source={_dbPath}");
             _connection.Open();
+            Log.Debug("Database initialized at {Path}", _dbPath);
             using var walCmd = _connection.CreateCommand();
             walCmd.CommandText = "PRAGMA journal_mode=WAL;";
             walCmd.ExecuteNonQuery();
@@ -42,6 +43,7 @@ public class ProjectDatabase : IDisposable
 
     private void EnsureTables()
     {
+        Log.Debug("Creating database tables");
         var conn = _connection!;
         var cmd = conn.CreateCommand();
         cmd.CommandText = """
@@ -175,6 +177,7 @@ public class ProjectDatabase : IDisposable
         }
         var verCmd = conn.CreateCommand();
         verCmd.CommandText = "DELETE FROM schema_version; INSERT INTO schema_version (version) VALUES ('1.5');";
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "UPDATE", "schema_version");
         verCmd.ExecuteNonQuery();
     }
 
@@ -194,6 +197,7 @@ public class ProjectDatabase : IDisposable
         var conn = GetConnection();
         var cmd = conn.CreateCommand();
         cmd.CommandText = $"SELECT MAX(seq) FROM {table}";
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "SELECT", table);
         var result = cmd.ExecuteScalar();
         var nextNum = result is DBNull || result is null ? 1 : Convert.ToInt64(result) + 1;
         return $"{prefix}_{nextNum:D3}";
@@ -212,6 +216,7 @@ public class ProjectDatabase : IDisposable
             LEFT JOIN clients c ON p.client_id = c.id
             ORDER BY p.project_number DESC
             """;
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "SELECT", "projects");
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
@@ -308,6 +313,7 @@ public class ProjectDatabase : IDisposable
         cmd.Parameters.AddWithValue("@invoices_path", project.Paths.Invoices);
         cmd.Parameters.AddWithValue("@tags", project.Tags);
         cmd.Parameters.AddWithValue("@notes", project.Notes);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", isNew ? "INSERT" : "UPDATE", "projects");
         cmd.ExecuteNonQuery();
 
         SaveBuildingParts(project.Id, project.BuildingParts);
@@ -321,6 +327,7 @@ public class ProjectDatabase : IDisposable
         var cmd = conn.CreateCommand();
         cmd.CommandText = "SELECT COUNT(*) FROM projects WHERE id = @id";
         cmd.Parameters.AddWithValue("@id", projectId);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "SELECT", "projects");
         return Convert.ToInt64(cmd.ExecuteScalar()) > 0;
     }
 
@@ -331,31 +338,37 @@ public class ProjectDatabase : IDisposable
         var linkCmd = conn.CreateCommand();
         linkCmd.CommandText = "DELETE FROM project_links WHERE project_id = @id";
         linkCmd.Parameters.AddWithValue("@id", projectId);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "DELETE", "project_links");
         linkCmd.ExecuteNonQuery();
 
         var ppartCmd = conn.CreateCommand();
         ppartCmd.CommandText = "DELETE FROM project_participants WHERE project_id = @id";
         ppartCmd.Parameters.AddWithValue("@id", projectId);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "DELETE", "project_participants");
         ppartCmd.ExecuteNonQuery();
 
         var lvlCmd = conn.CreateCommand();
         lvlCmd.CommandText = "DELETE FROM building_levels WHERE building_part_id IN (SELECT id FROM building_parts WHERE project_id = @id)";
         lvlCmd.Parameters.AddWithValue("@id", projectId);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "DELETE", "building_levels");
         lvlCmd.ExecuteNonQuery();
 
         var partCmd = conn.CreateCommand();
         partCmd.CommandText = "DELETE FROM building_parts WHERE project_id = @id";
         partCmd.Parameters.AddWithValue("@id", projectId);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "DELETE", "building_parts");
         partCmd.ExecuteNonQuery();
 
         var bldgCmd = conn.CreateCommand();
         bldgCmd.CommandText = "DELETE FROM buildings WHERE project_id = @id";
         bldgCmd.Parameters.AddWithValue("@id", projectId);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "DELETE", "buildings");
         bldgCmd.ExecuteNonQuery();
 
         var projCmd = conn.CreateCommand();
         projCmd.CommandText = "DELETE FROM projects WHERE id = @id";
         projCmd.Parameters.AddWithValue("@id", projectId);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "DELETE", "projects");
         projCmd.ExecuteNonQuery();
     }
 
@@ -367,6 +380,7 @@ public class ProjectDatabase : IDisposable
         var checkCmd = conn.CreateCommand();
         checkCmd.CommandText = "SELECT client_id FROM projects WHERE id = @id";
         checkCmd.Parameters.AddWithValue("@id", projectId);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "SELECT", "projects");
         var existingClientId = checkCmd.ExecuteScalar() as string;
         string clientId = !string.IsNullOrEmpty(existingClientId) ? existingClientId : GenerateNextId("client", "clients");
 
@@ -384,6 +398,7 @@ public class ProjectDatabase : IDisposable
         cmd.Parameters.AddWithValue("@phone", client.Phone);
         cmd.Parameters.AddWithValue("@email", client.Email);
         cmd.Parameters.AddWithValue("@notes", client.Notes);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "INSERT", "clients");
         cmd.ExecuteNonQuery();
         return clientId;
     }
@@ -397,6 +412,7 @@ public class ProjectDatabase : IDisposable
         var cmd = conn.CreateCommand();
         cmd.CommandText = "SELECT * FROM building_parts WHERE project_id = @pid ORDER BY sort_order";
         cmd.Parameters.AddWithValue("@pid", projectId);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "SELECT", "building_parts");
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
@@ -422,6 +438,7 @@ public class ProjectDatabase : IDisposable
         var cmd = conn.CreateCommand();
         cmd.CommandText = "SELECT * FROM building_levels WHERE building_part_id = @bpid ORDER BY sort_order";
         cmd.Parameters.AddWithValue("@bpid", buildingPartId);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "SELECT", "building_levels");
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
@@ -454,10 +471,12 @@ public class ProjectDatabase : IDisposable
         var delLvlCmd = conn.CreateCommand();
         delLvlCmd.CommandText = "DELETE FROM building_levels WHERE building_part_id IN (SELECT id FROM building_parts WHERE project_id = @pid)";
         delLvlCmd.Parameters.AddWithValue("@pid", projectId);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "DELETE", "building_levels");
         delLvlCmd.ExecuteNonQuery();
         var delPartCmd = conn.CreateCommand();
         delPartCmd.CommandText = "DELETE FROM building_parts WHERE project_id = @pid";
         delPartCmd.Parameters.AddWithValue("@pid", projectId);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "DELETE", "building_parts");
         delPartCmd.ExecuteNonQuery();
 
         for (int i = 0; i < parts.Count; i++)
@@ -473,6 +492,7 @@ public class ProjectDatabase : IDisposable
             cmd.Parameters.AddWithValue("@sn", part.ShortName); cmd.Parameters.AddWithValue("@desc", part.Description);
             cmd.Parameters.AddWithValue("@bt", part.BuildingType); cmd.Parameters.AddWithValue("@zla", part.ZeroLevelAbsolute);
             cmd.Parameters.AddWithValue("@so", i);
+            Log.Verbose("Executing SQL: {Operation} on {Table}", "INSERT", "building_parts");
             cmd.ExecuteNonQuery();
 
             for (int j = 0; j < part.Levels.Count; j++)
@@ -489,6 +509,7 @@ public class ProjectDatabase : IDisposable
                 lvlCmd.Parameters.AddWithValue("@desc", level.Description); lvlCmd.Parameters.AddWithValue("@rdok", level.Rdok);
                 lvlCmd.Parameters.AddWithValue("@fbok", level.Fbok); lvlCmd.Parameters.AddWithValue("@rduk", (object?)level.Rduk ?? DBNull.Value);
                 lvlCmd.Parameters.AddWithValue("@so", j);
+                Log.Verbose("Executing SQL: {Operation} on {Table}", "INSERT", "building_levels");
                 lvlCmd.ExecuteNonQuery();
             }
         }
@@ -503,6 +524,7 @@ public class ProjectDatabase : IDisposable
         var cmd = conn.CreateCommand();
         cmd.CommandText = "SELECT * FROM project_participants WHERE project_id = @pid ORDER BY sort_order";
         cmd.Parameters.AddWithValue("@pid", projectId);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "SELECT", "project_participants");
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
@@ -527,6 +549,7 @@ public class ProjectDatabase : IDisposable
         var delCmd = conn.CreateCommand();
         delCmd.CommandText = "DELETE FROM project_participants WHERE project_id = @pid";
         delCmd.Parameters.AddWithValue("@pid", projectId);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "DELETE", "project_participants");
         delCmd.ExecuteNonQuery();
 
         for (int i = 0; i < participants.Count; i++)
@@ -543,6 +566,7 @@ public class ProjectDatabase : IDisposable
             cmd.Parameters.AddWithValue("@cp", p.ContactPerson); cmd.Parameters.AddWithValue("@phone", p.Phone);
             cmd.Parameters.AddWithValue("@email", p.Email); cmd.Parameters.AddWithValue("@cid", p.ContactId);
             cmd.Parameters.AddWithValue("@so", i);
+            Log.Verbose("Executing SQL: {Operation} on {Table}", "INSERT", "project_participants");
             cmd.ExecuteNonQuery();
         }
     }
@@ -556,6 +580,7 @@ public class ProjectDatabase : IDisposable
         var cmd = conn.CreateCommand();
         cmd.CommandText = "SELECT * FROM project_links WHERE project_id = @pid ORDER BY sort_order";
         cmd.Parameters.AddWithValue("@pid", projectId);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "SELECT", "project_links");
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
@@ -577,6 +602,7 @@ public class ProjectDatabase : IDisposable
         var delCmd = conn.CreateCommand();
         delCmd.CommandText = "DELETE FROM project_links WHERE project_id = @pid";
         delCmd.Parameters.AddWithValue("@pid", projectId);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "DELETE", "project_links");
         delCmd.ExecuteNonQuery();
 
         for (int i = 0; i < links.Count; i++)
@@ -591,6 +617,7 @@ public class ProjectDatabase : IDisposable
             cmd.Parameters.AddWithValue("@id", linkId); cmd.Parameters.AddWithValue("@pid", projectId);
             cmd.Parameters.AddWithValue("@name", link.Name); cmd.Parameters.AddWithValue("@url", link.Url);
             cmd.Parameters.AddWithValue("@lt", link.LinkType); cmd.Parameters.AddWithValue("@so", i);
+            Log.Verbose("Executing SQL: {Operation} on {Table}", "INSERT", "project_links");
             cmd.ExecuteNonQuery();
         }
     }
@@ -681,6 +708,7 @@ public class ProjectDatabase : IDisposable
 
     public void Dispose()
     {
+        Log.Debug("Database connection disposed");
         _connection?.Close();
         _connection?.Dispose();
         _connection = null;

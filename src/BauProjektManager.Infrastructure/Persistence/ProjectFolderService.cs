@@ -35,6 +35,8 @@ public class ProjectFolderService
         var template = folderTemplate ?? settings.FolderTemplate;
         var projectRoot = Path.Combine(settings.BasePath, project.FolderName);
 
+        Log.Debug("Creating folder structure for project {ProjectId} at {Path}", project.Id, projectRoot);
+
         if (Directory.Exists(projectRoot))
         {
             Log.Warning("Project folder already exists: {Path}", projectRoot);
@@ -80,6 +82,7 @@ public class ProjectFolderService
                 {
                     Directory.CreateDirectory(subFolderPath);
                     Log.Information("    Subfolder created: {Parent}/{Name}", numberedName, subName);
+                    Log.Debug("Created subfolder {Folder}", subName);
                 }
 
                 // Only increment position for prefixed subfolders

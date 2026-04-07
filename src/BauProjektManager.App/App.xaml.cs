@@ -33,6 +33,8 @@ public partial class App : Application
             .WriteTo.Console()
             .CreateLogger();
 
+        Log.Debug("Serilog configured — MinimumLevel: Verbose");
+
         Log.Information("=== BauProjektManager gestartet ===");
         var version = System.Reflection.Assembly.GetExecutingAssembly()
             .GetName().Version?.ToString() ?? "unknown";
@@ -42,10 +44,17 @@ public partial class App : Application
 
         // Check if setup is needed
         var settingsService = new AppSettingsService();
+        Log.Debug("Service registered: {Service}", "AppSettingsService");
+
+        var settingsPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "BauProjektManager", "settings.json");
+        Log.Debug("Loading settings from {Path}", settingsPath);
         var settings = settingsService.Load();
 
         if (settings.IsFirstRun)
         {
+            Log.Debug("First run detected — showing setup dialog");
             Log.Information("First run detected — showing setup dialog");
             var setupDialog = new SetupDialog(settingsService, settings);
             setupDialog.ShowDialog();
@@ -92,14 +101,18 @@ public partial class App : Application
 
         // Now show main window and switch shutdown mode
         var db = new ProjectDatabase();
+        Log.Debug("Service registered: {Service}", "ProjectDatabase");
         var logDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "BauProjektManager", "Logs");
 
 #if DEBUG
         var devTools = new DeveloperToolsService(db.GetDatabasePath(), logDir);
+        Log.Debug("Service registered: {Service}", "DeveloperToolsService");
+        Log.Debug("Creating MainWindow");
         var mainWindow = new MainWindow(devTools);
 #else
+        Log.Debug("Creating MainWindow");
         var mainWindow = new MainWindow(null);
 #endif
         MainWindow = mainWindow;

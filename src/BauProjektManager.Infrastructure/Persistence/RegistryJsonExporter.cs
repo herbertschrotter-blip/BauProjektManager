@@ -29,6 +29,8 @@ public class RegistryJsonExporter
     /// </summary>
     public void Export(List<Project> projects)
     {
+        Log.Debug("Exporting registry to {Path}", _registryPath);
+
         var registry = new RegistryRoot
         {
             RegistryVersion = "1.0",
@@ -64,6 +66,7 @@ public class RegistryJsonExporter
         File.Move(tempPath, _registryPath, overwrite: true);
 
         Log.Information("Registry exported: {Count} projects → {Path}", projects.Count, _registryPath);
+        Log.Debug("Registry exported — {Count} projects", projects.Count);
     }
 
     /// <summary>

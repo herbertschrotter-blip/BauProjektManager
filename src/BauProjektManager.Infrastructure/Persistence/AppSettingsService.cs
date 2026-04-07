@@ -27,6 +27,10 @@ public class AppSettingsService
         var appData = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "BauProjektManager");
+        if (!Directory.Exists(appData))
+        {
+            Log.Debug("Creating settings directory {Dir}", appData);
+        }
         Directory.CreateDirectory(appData);
         _settingsPath = Path.Combine(appData, "settings.json");
     }
@@ -46,6 +50,7 @@ public class AppSettingsService
                 var json = File.ReadAllText(_settingsPath);
                 _cachedSettings = JsonSerializer.Deserialize<AppSettings>(json, JsonOptions) ?? new AppSettings();
                 Log.Information("Settings loaded from {Path}", _settingsPath);
+                Log.Debug("Settings loaded successfully from {Path}", _settingsPath);
             }
             catch (Exception ex)
             {
@@ -57,6 +62,7 @@ public class AppSettingsService
         {
             _cachedSettings = new AppSettings();
             Log.Information("No settings found, first run detected");
+            Log.Debug("Settings file not found at {Path} — using defaults", _settingsPath);
         }
 
         // Always update machine name
@@ -70,6 +76,7 @@ public class AppSettingsService
     /// </summary>
     public void Save(AppSettings settings)
     {
+        Log.Debug("Saving settings to {Path}", _settingsPath);
         try
         {
             var json = JsonSerializer.Serialize(settings, JsonOptions);

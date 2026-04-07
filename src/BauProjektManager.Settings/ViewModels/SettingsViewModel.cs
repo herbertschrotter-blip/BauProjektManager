@@ -124,6 +124,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
 
     private void LoadSettings()
     {
+        Log.Debug("Settings tab loaded: {Tab}", "General");
         var settings = _settingsService.Load();
         BasePath = settings.BasePath;
         ArchivePath = settings.ArchivePath;
@@ -170,6 +171,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
 
     private void SaveFolderTemplate()
     {
+        Log.Debug("Saving settings");
         var settings = _settingsService.Load();
         settings.FolderTemplate = FolderTreeItems.Select(main => new FolderTemplateEntry
         {
@@ -390,6 +392,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     {
         if (SelectedTreeItem is null || !SelectedTreeItem.IsMainFolder) return;
         SelectedTreeItem.HasInbox = !SelectedTreeItem.HasInbox;
+        Log.Debug("Setting changed: {Key}", "FolderTemplate.HasInbox");
         RefreshTreePositions();
         SaveFolderTemplate();
     }
@@ -405,6 +408,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         }
 
         SelectedTreeItem.HasPrefix = !SelectedTreeItem.HasPrefix;
+        Log.Debug("Setting changed: {Key}", "FolderTemplate.HasPrefix");
         RefreshTreePositions();
         SaveFolderTemplate();
     }
@@ -505,6 +509,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         settings.BasePath = path;
         _settingsService.Save(settings);
         BasePath = path;
+        Log.Debug("Setting changed: {Key}", "BasePath");
         Log.Information("BasePath changed to {Path}", path);
     }
 
@@ -514,6 +519,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         settings.ArchivePath = path;
         _settingsService.Save(settings);
         ArchivePath = path;
+        Log.Debug("Setting changed: {Key}", "ArchivePath");
         Log.Information("ArchivePath changed to {Path}", path);
     }
 

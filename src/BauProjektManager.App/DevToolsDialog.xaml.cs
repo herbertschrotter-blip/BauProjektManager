@@ -30,20 +30,9 @@ public partial class DevToolsDialog : Window
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        // DPI erst nach Loaded verfügbar
-        try
-        {
-            var source = PresentationSource.FromVisual(this);
-            if (source?.CompositionTarget != null)
-            {
-                var dpiX = 96.0 * source.CompositionTarget.TransformToDevice.M11;
-                TxtDpi.Text = $"{dpiX / 96.0 * 100:F0}% ({dpiX:F0} dpi)";
-            }
-        }
-        catch { TxtDpi.Text = "(nicht ermittelbar)"; }
+        // DPI is now part of GetDisplayInfo()
 
-        // Auflösung
-        TxtResolution.Text = $"{SystemParameters.PrimaryScreenWidth:F0} × {SystemParameters.PrimaryScreenHeight:F0} px";
+        // Display info is now loaded in LoadSystemInfo via GetDisplayInfo()
     }
 
     private void LoadSystemInfo()
@@ -70,6 +59,28 @@ public partial class DevToolsDialog : Window
                 case "Freier Speicher":   TxtFreeSpace.Text = val; break;
             }
         }
+
+        // Display info (physical resolution + multi-monitor)
+        var displayInfo = _devTools.GetDisplayInfo();
+        var displayLines = displayInfo.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+        var monitorCount = "";
+        var monitorDetails = new System.Text.StringBuilder();
+
+        foreach (var dline in displayLines)
+        {
+            var dparts = dline.Split(':', 2);
+            if (dparts.Length < 2) continue;
+            var dkey = dparts[0].Trim();
+            var dval = dparts[1].Trim();
+
+            if (dkey == "Monitore")
+                monitorCount = dval;
+            else
+                monitorDetails.AppendLine($"{dkey}: {dval}");
+        }
+
+        TxtResolution.Text = monitorCount + " Monitor(e)";
+        TxtDpi.Text = monitorDetails.ToString().TrimEnd();
 
         TxtSettingsPath.Text = _devTools.SettingsPath;
         TxtLogPath.Text = _devTools.LogDirectory;
@@ -163,6 +174,9 @@ public partial class DevToolsDialog : Window
         sb.AppendLine("BauProjektManager Bug-Report");
         sb.AppendLine("============================");
         sb.AppendLine(_devTools.GetSystemInfo());
+        sb.AppendLine(_devTools.GetDisplayInfo());
+        sb.AppendLine($"Einstellungen:     {_devTools.SettingsPath}");
+        sb.AppendLine($"Log-Verzeichnis:   {_devTools.LogDirectory}");
         sb.AppendLine();
         sb.AppendLine("--- LOG ---");
         sb.AppendLine(_devTools.ReadLogTail(200));

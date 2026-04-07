@@ -8,6 +8,7 @@ public interface IDeveloperToolsService
     void OpenLogDirectory();
     string SettingsPath { get; }
     string GetSystemInfo();
+    string GetDisplayInfo();
     /// <summary>Startet den Batch-Reset und ruft danach shutdownAction() auf.</summary>
     void RequestDatabaseReset(Action shutdownAction);
     /// <summary>Löscht DB + Settings und startet neu — simuliert Ersteinrichtung.</summary>

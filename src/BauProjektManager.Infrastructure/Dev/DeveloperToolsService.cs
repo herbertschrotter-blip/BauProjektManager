@@ -2,12 +2,70 @@
 using Serilog;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace BauProjektManager.Infrastructure.Dev;
 
 public sealed class DeveloperToolsService : IDeveloperToolsService
 {
+    [DllImport("user32.dll")]
+    private static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr lprcClip, MonitorEnumProc lpfnEnum, IntPtr dwData);
+
+    private delegate bool MonitorEnumProc(IntPtr hMonitor, IntPtr hdcMonitor, ref RECT lprcMonitor, IntPtr dwData);
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFOEX lpmi);
+
+    [DllImport("user32.dll")]
+    private static extern bool EnumDisplaySettings(string? deviceName, int modeNum, ref DEVMODE devMode);
+
+    [DllImport("shcore.dll")]
+    private static extern int GetDpiForMonitor(IntPtr hMonitor, int dpiType, out uint dpiX, out uint dpiY);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct RECT
+    {
+        public int Left, Top, Right, Bottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+    private struct MONITORINFOEX
+    {
+        public int Size;
+        public RECT Monitor;
+        public RECT WorkArea;
+        public uint Flags;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+        public string DeviceName;
+    }
+
+    [StructLayout(LayoutKind.Explicit, CharSet = CharSet.Auto)]
+    private struct DEVMODE
+    {
+        [FieldOffset(0)]
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+        public string dmDeviceName;
+
+        [FieldOffset(68)]
+        public short dmSize;
+
+        [FieldOffset(70)]
+        public short dmDriverExtra;
+
+        [FieldOffset(108)]
+        public int dmPelsWidth;
+
+        [FieldOffset(112)]
+        public int dmPelsHeight;
+
+        [FieldOffset(120)]
+        public int dmDisplayFrequency;
+    }
+
+    private const int ENUM_CURRENT_SETTINGS = -1;
+    private const int MDT_EFFECTIVE_DPI = 0;
+
     private readonly string _dbPath;
     private readonly string _logDirectory;
 
@@ -85,6 +143,51 @@ public sealed class DeveloperToolsService : IDeveloperToolsService
             sb.AppendLine($"Freier Speicher:   {drive.AvailableFreeSpace / 1024.0 / 1024.0 / 1024.0:F1} GB");
         }
         catch { sb.AppendLine("Freier Speicher:   (nicht ermittelbar)"); }
+
+        return sb.ToString();
+    }
+
+    public string GetDisplayInfo()
+    {
+        var sb = new System.Text.StringBuilder();
+        var monitors = new List<(IntPtr Handle, RECT Bounds)>();
+
+        EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, (IntPtr hMonitor, IntPtr hdcMonitor, ref RECT lprcMonitor, IntPtr dwData) =>
+        {
+            monitors.Add((hMonitor, lprcMonitor));
+            return true;
+        }, IntPtr.Zero);
+
+        sb.AppendLine($"Monitore:          {monitors.Count}");
+
+        for (int i = 0; i < monitors.Count; i++)
+        {
+            var (handle, bounds) = monitors[i];
+
+            var monInfo = new MONITORINFOEX();
+            monInfo.Size = Marshal.SizeOf(typeof(MONITORINFOEX));
+            GetMonitorInfo(handle, ref monInfo);
+
+            var isPrimary = (monInfo.Flags & 1) != 0;
+            var label = isPrimary ? "Primär" : $"Monitor {i + 1}";
+
+            // Physical resolution via EnumDisplaySettings
+            var devMode = new DEVMODE();
+            devMode.dmSize = 220;
+            EnumDisplaySettings(monInfo.DeviceName, ENUM_CURRENT_SETTINGS, ref devMode);
+
+            var width = devMode.dmPelsWidth;
+            var height = devMode.dmPelsHeight;
+            var refreshRate = devMode.dmDisplayFrequency;
+
+            // DPI
+            uint dpiX = 96, dpiY = 96;
+            try { GetDpiForMonitor(handle, MDT_EFFECTIVE_DPI, out dpiX, out dpiY); }
+            catch { /* Fallback 96 */ }
+            var scale = (int)Math.Round(dpiX / 96.0 * 100);
+
+            sb.AppendLine($"{label}:          {width} × {height} px, {refreshRate} Hz, {scale}% ({dpiX} DPI)");
+        }
 
         return sb.ToString();
     }

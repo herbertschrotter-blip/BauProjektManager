@@ -58,9 +58,9 @@
                                 <TextBlock Grid.Row="3" Grid.Column="1" x:Name="TxtMachine" Style="{StaticResource BpmSmallText}" Padding="12,8" FontFamily="Consolas"/>
                                 <TextBlock Grid.Row="4" Grid.Column="0" Text="Benutzer" Style="{StaticResource BpmLabel}" Padding="12,8" Background="{StaticResource BpmBgSurface}"/>
                                 <TextBlock Grid.Row="4" Grid.Column="1" x:Name="TxtUser" Style="{StaticResource BpmSmallText}" Padding="12,8" FontFamily="Consolas" Background="{StaticResource BpmBgSurface}"/>
-                                <TextBlock Grid.Row="5" Grid.Column="0" Text="Auflösung" Style="{StaticResource BpmLabel}" Padding="12,8"/>
+                                <TextBlock Grid.Row="5" Grid.Column="0" Text="Monitore" Style="{StaticResource BpmLabel}" Padding="12,8"/>
                                 <TextBlock Grid.Row="5" Grid.Column="1" x:Name="TxtResolution" Style="{StaticResource BpmSmallText}" Padding="12,8" FontFamily="Consolas"/>
-                                <TextBlock Grid.Row="6" Grid.Column="0" Text="DPI-Skalierung" Style="{StaticResource BpmLabel}" Padding="12,8" Background="{StaticResource BpmBgSurface}"/>
+                                <TextBlock Grid.Row="6" Grid.Column="0" Text="Auflösung" Style="{StaticResource BpmLabel}" Padding="12,8" Background="{StaticResource BpmBgSurface}"/>
                                 <TextBlock Grid.Row="6" Grid.Column="1" x:Name="TxtDpi" Style="{StaticResource BpmSmallText}" Padding="12,8" FontFamily="Consolas" Background="{StaticResource BpmBgSurface}"/>
                                 <TextBlock Grid.Row="7" Grid.Column="0" Text="Datenbank" Style="{StaticResource BpmLabel}" Padding="12,8"/>
                                 <TextBlock Grid.Row="7" Grid.Column="1" x:Name="TxtDbPath" Style="{StaticResource BpmSmallText}" Padding="12,8" FontFamily="Consolas" Foreground="{StaticResource BpmAccentPrimary}" TextWrapping="Wrap"/>

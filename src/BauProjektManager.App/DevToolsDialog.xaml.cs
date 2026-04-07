@@ -28,6 +28,24 @@ public partial class DevToolsDialog : Window
         LoadLog();
     }
 
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        // DPI erst nach Loaded verfügbar
+        try
+        {
+            var source = PresentationSource.FromVisual(this);
+            if (source?.CompositionTarget != null)
+            {
+                var dpiX = 96.0 * source.CompositionTarget.TransformToDevice.M11;
+                TxtDpi.Text = $"{dpiX / 96.0 * 100:F0}% ({dpiX:F0} dpi)";
+            }
+        }
+        catch { TxtDpi.Text = "(nicht ermittelbar)"; }
+
+        // Auflösung
+        TxtResolution.Text = $"{SystemParameters.PrimaryScreenWidth:F0} × {SystemParameters.PrimaryScreenHeight:F0} px";
+    }
+
     private void LoadSystemInfo()
     {
         var info = _devTools.GetSystemInfo();
@@ -46,6 +64,7 @@ public partial class DevToolsDialog : Window
                 case ".NET Runtime":      TxtRuntime.Text = val; break;
                 case "Windows":           TxtWindows.Text = val; break;
                 case "Rechner":           TxtMachine.Text = val; break;
+                case "Benutzer":          TxtUser.Text = val; break;
                 case "DB-Pfad":           TxtDbPath.Text = val; break;
                 case "DB-Größe":          TxtDbSize.Text = val; break;
                 case "Freier Speicher":   TxtFreeSpace.Text = val; break;
@@ -54,18 +73,6 @@ public partial class DevToolsDialog : Window
 
         TxtSettingsPath.Text = _devTools.SettingsPath;
         TxtLogPath.Text = _devTools.LogDirectory;
-
-        // DPI via WPF
-        try
-        {
-            var source = PresentationSource.FromVisual(this);
-            if (source?.CompositionTarget != null)
-            {
-                var dpiX = 96.0 * source.CompositionTarget.TransformToDevice.M11;
-                TxtDpi.Text = $"{dpiX / 96.0 * 100:F0}% ({dpiX:F0} dpi)";
-            }
-        }
-        catch { TxtDpi.Text = "(nicht ermittelbar)"; }
     }
 
     private void LoadLog()

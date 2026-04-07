@@ -71,6 +71,17 @@ public partial class SettingsView : UserControl
         Resources.Add("StatusConverter", new StatusConverter());
         Resources.Add("StatusColorConverter", new StatusColorConverter());
         InitializeComponent();
+
+        // Ordnerstruktur-Control initialisieren
+        if (DataContext is SettingsViewModel vm2)
+        {
+            var template = vm2.GetFolderTemplate();
+            GlobalFolderTemplate.LoadFromTemplate(template);
+            GlobalFolderTemplate.TemplateChanged += () =>
+            {
+                vm2.SaveFolderTemplateFrom(GlobalFolderTemplate.ToTemplate());
+            };
+        }
     }
 
     private void OnRowDoubleClick(object sender, MouseButtonEventArgs e)
@@ -79,49 +90,6 @@ public partial class SettingsView : UserControl
         {
             vm.EditProjectCommand.Execute(null);
         }
-    }
-
-    private void OnTreeSelectionChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
-    {
-        if (DataContext is SettingsViewModel vm)
-        {
-            vm.SelectedTreeItem = e.NewValue as FolderTreeItem;
-        }
-    }
-
-    private void OnTemplateMoveUp(object sender, RoutedEventArgs e)
-    {
-        if (DataContext is SettingsViewModel vm) vm.TemplateMoveUpCommand.Execute(null);
-    }
-
-    private void OnTemplateMoveDown(object sender, RoutedEventArgs e)
-    {
-        if (DataContext is SettingsViewModel vm) vm.TemplateMoveDownCommand.Execute(null);
-    }
-
-    private void OnTemplateAddMain(object sender, RoutedEventArgs e)
-    {
-        if (DataContext is SettingsViewModel vm) vm.TemplateAddMainCommand.Execute(null);
-    }
-
-    private void OnTemplateAddSub(object sender, RoutedEventArgs e)
-    {
-        if (DataContext is SettingsViewModel vm) vm.TemplateAddSubCommand.Execute(null);
-    }
-
-    private void OnTemplateRemove(object sender, RoutedEventArgs e)
-    {
-        if (DataContext is SettingsViewModel vm) vm.TemplateRemoveCommand.Execute(null);
-    }
-
-    private void OnTemplateToggleInbox(object sender, RoutedEventArgs e)
-    {
-        if (DataContext is SettingsViewModel vm) vm.TemplateToggleInboxCommand.Execute(null);
-    }
-
-    private void OnTemplateTogglePrefix(object sender, RoutedEventArgs e)
-    {
-        if (DataContext is SettingsViewModel vm) vm.TemplateTogglePrefixCommand.Execute(null);
     }
 
     private void OnBrowseBasePath(object sender, RoutedEventArgs e)

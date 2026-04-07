@@ -1,11 +1,9 @@
 ﻿using BauProjektManager.Domain.Enums;
 using BauProjektManager.Domain.Models;
 using BauProjektManager.Infrastructure.Persistence;
-using BauProjektManager.Settings.ViewModels;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -17,8 +15,6 @@ public partial class ProjectEditDialog : Window
     public Project Project { get; private set; }
     public List<FolderTemplateEntry>? FolderTemplate { get; private set; }
 
-    private ObservableCollection<FolderTreeItem> _folderTreeItems = [];
-    private FolderTreeItem? _selectedTreeItem;
     private readonly bool _isNewProject;
     private readonly AppSettingsService _settingsService = new();
     private ObservableCollection<BuildingPart> _buildingParts = [];
@@ -37,15 +33,20 @@ public partial class ProjectEditDialog : Window
         if (_isNewProject && folderTemplate is not null)
         {
             TxtDialogTitle.Text = "Neues Projekt anlegen";
-            _folderTreeItems = BuildTreeFromTemplate(folderTemplate);
+            ProjectFolderTemplate.LoadFromTemplate(folderTemplate);
+        }
+        else if (!string.IsNullOrEmpty(project.Paths.Root))
+        {
+            TxtDialogTitle.Text = "Projekt bearbeiten";
+            ProjectFolderTemplate.LoadFromDisk(project.Paths.Root);
         }
         else
         {
             TxtDialogTitle.Text = "Projekt bearbeiten";
-            _folderTreeItems = LoadFoldersFromDisk(project.Paths.Root);
+            ProjectFolderTemplate.LoadFromTemplate(_settingsService.Load().FolderTemplate);
         }
 
-        TvFolders.ItemsSource = _folderTreeItems;
+        ProjectFolderTemplate.PreviewRootName = $"{project.ProjectNumber}_{project.Name}";
         _buildingParts = new ObservableCollection<BuildingPart>(project.BuildingParts);
         DgParts.ItemsSource = _buildingParts;
 
@@ -65,7 +66,6 @@ public partial class ProjectEditDialog : Window
 
         LoadDropdowns();
         LoadProjectData();
-        UpdateFolderPreview();
     }
 
     private void LoadDropdowns()
@@ -132,7 +132,8 @@ public partial class ProjectEditDialog : Window
         if (DpProjectStart.SelectedDate.HasValue)
         {
             TxtNumberPreview.Text = DpProjectStart.SelectedDate.Value.ToString("yyyyMM");
-            UpdateFolderPreview();
+            var projectName = !string.IsNullOrEmpty(TxtName?.Text) ? TxtName.Text : (Project?.Name ?? "Projektname");
+            ProjectFolderTemplate.PreviewRootName = $"{TxtNumberPreview.Text}_{projectName}";
         }
     }
 
@@ -929,124 +930,6 @@ public partial class ProjectEditDialog : Window
     }
 
     // ═══════════════════════════════════════════
-    // TAB 5: ORDNERSTRUKTUR
-    // ═══════════════════════════════════════════
-
-    private static ObservableCollection<FolderTreeItem> BuildTreeFromTemplate(List<FolderTemplateEntry> template)
-    {
-        var items = new ObservableCollection<FolderTreeItem>();
-        for (int i = 0; i < template.Count; i++)
-        {
-            var entry = template[i];
-            var mainItem = new FolderTreeItem { Name = entry.Name, Position = i, IsMainFolder = true, HasInbox = entry.HasInbox };
-            int subPos = 0;
-            foreach (var sub in entry.SubFolders)
-            {
-                mainItem.Children.Add(new FolderTreeItem { Name = sub.Name, Position = sub.HasPrefix ? subPos : -1, IsMainFolder = false, HasPrefix = sub.HasPrefix });
-                if (sub.HasPrefix) subPos++;
-            }
-            items.Add(mainItem);
-        }
-        return items;
-    }
-
-    private static ObservableCollection<FolderTreeItem> LoadFoldersFromDisk(string rootPath)
-    {
-        var items = new ObservableCollection<FolderTreeItem>();
-        if (string.IsNullOrEmpty(rootPath) || !Directory.Exists(rootPath)) return items;
-        var subDirs = Directory.GetDirectories(rootPath).Select(d => new DirectoryInfo(d)).OrderBy(d => d.Name).ToList();
-        int position = 0;
-        foreach (var dir in subDirs)
-        {
-            if (dir.Attributes.HasFlag(FileAttributes.Hidden)) continue;
-            var name = dir.Name;
-            if (name.Length > 3 && char.IsDigit(name[0]) && char.IsDigit(name[1]) && name[2] == ' ') name = name[3..];
-            var mainItem = new FolderTreeItem { Name = name, HasInbox = Directory.Exists(Path.Combine(dir.FullName, "_Eingang")), Position = position++, IsMainFolder = true };
-            var subSubDirs = Directory.GetDirectories(dir.FullName).Select(d => new DirectoryInfo(d)).Where(d => !d.Attributes.HasFlag(FileAttributes.Hidden) && d.Name != "_Eingang").OrderBy(d => d.Name).ToList();
-            int subPos = 0;
-            foreach (var subDir in subSubDirs)
-            {
-                var subName = subDir.Name;
-                bool hasPrefix = subName.Length > 3 && char.IsDigit(subName[0]) && char.IsDigit(subName[1]) && subName[2] == ' ';
-                if (hasPrefix) subName = subName[3..];
-                mainItem.Children.Add(new FolderTreeItem { Name = subName, Position = hasPrefix ? subPos : -1, IsMainFolder = false, HasPrefix = hasPrefix });
-                if (hasPrefix) subPos++;
-            }
-            items.Add(mainItem);
-        }
-        return items;
-    }
-
-    private void OnTreeSelectionChanged(object sender, RoutedPropertyChangedEventArgs<object> e) => _selectedTreeItem = e.NewValue as FolderTreeItem;
-
-    private void UpdateFolderPreview()
-    {
-        if (TxtFolderPreview is null) return;
-        var projectName = !string.IsNullOrEmpty(TxtName?.Text) ? TxtName.Text : (Project?.Name ?? "Projektname");
-        var number = !string.IsNullOrEmpty(TxtNumberPreview?.Text) ? TxtNumberPreview.Text : (Project?.ProjectNumber ?? "YYYYMM");
-        var sb = new StringBuilder();
-        sb.AppendLine($"{number}_{projectName}/");
-        for (int i = 0; i < _folderTreeItems.Count; i++)
-        {
-            var entry = _folderTreeItems[i];
-            sb.AppendLine($"{(i == _folderTreeItems.Count - 1 ? "└── " : "├── ")}{entry.DisplayName}/");
-            var indent = i == _folderTreeItems.Count - 1 ? "    " : "│   ";
-            if (entry.HasInbox) sb.AppendLine($"{indent}└── _Eingang/");
-            foreach (var sub in entry.Children) sb.AppendLine($"{indent}└── {sub.DisplayName}/");
-        }
-        TxtFolderPreview.Text = sb.ToString().TrimEnd();
-    }
-
-    private void RefreshTreePositions()
-    {
-        for (int i = 0; i < _folderTreeItems.Count; i++)
-        {
-            _folderTreeItems[i].Position = i;
-            int subPos = 0;
-            foreach (var sub in _folderTreeItems[i].Children) { sub.Position = sub.HasPrefix ? subPos : -1; if (sub.HasPrefix) subPos++; }
-        }
-        var items = _folderTreeItems.ToList(); _folderTreeItems.Clear();
-        foreach (var item in items) _folderTreeItems.Add(item);
-        UpdateFolderPreview();
-    }
-
-    private void OnFolderMoveUp(object sender, RoutedEventArgs e) { if (_selectedTreeItem is null || !_selectedTreeItem.IsMainFolder) return; var i = _folderTreeItems.IndexOf(_selectedTreeItem); if (i <= 0) return; _folderTreeItems.RemoveAt(i); _folderTreeItems.Insert(i - 1, _selectedTreeItem); RefreshTreePositions(); }
-    private void OnFolderMoveDown(object sender, RoutedEventArgs e) { if (_selectedTreeItem is null || !_selectedTreeItem.IsMainFolder) return; var i = _folderTreeItems.IndexOf(_selectedTreeItem); if (i < 0 || i >= _folderTreeItems.Count - 1) return; _folderTreeItems.RemoveAt(i); _folderTreeItems.Insert(i + 1, _selectedTreeItem); RefreshTreePositions(); }
-
-    private void OnFolderAddMain(object sender, RoutedEventArgs e)
-    {
-        var name = ShowSmallInputDialog("Hauptordner hinzufügen", "Ordnername (ohne Nummer):");
-        if (string.IsNullOrEmpty(name)) return;
-        _folderTreeItems.Add(new FolderTreeItem { Name = name, Position = _folderTreeItems.Count, IsMainFolder = true }); RefreshTreePositions();
-    }
-
-    private void OnFolderAddSub(object sender, RoutedEventArgs e)
-    {
-        FolderTreeItem? parent = null;
-        if (_selectedTreeItem is not null) { if (_selectedTreeItem.IsMainFolder) parent = _selectedTreeItem; else foreach (var m in _folderTreeItems) if (m.Children.Contains(_selectedTreeItem)) { parent = m; break; } }
-        if (parent is null) { MessageBox.Show("Bitte Hauptordner auswählen.", "Unterordner", MessageBoxButton.OK, MessageBoxImage.Information); return; }
-        var name = ShowSmallInputDialog("Unterordner hinzufügen", $"Name für \"{parent.Name}\":");
-        if (string.IsNullOrEmpty(name)) return;
-        parent.Children.Add(new FolderTreeItem { Name = name, IsMainFolder = false, HasPrefix = true, Position = parent.Children.Count(c => c.HasPrefix) }); RefreshTreePositions();
-    }
-
-    private void OnFolderRemove(object sender, RoutedEventArgs e)
-    {
-        if (_selectedTreeItem is null) return;
-        if (MessageBox.Show($"\"{_selectedTreeItem.Name}\" entfernen?", "Entfernen", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
-        if (_selectedTreeItem.IsMainFolder) _folderTreeItems.Remove(_selectedTreeItem);
-        else foreach (var m in _folderTreeItems) if (m.Children.Remove(_selectedTreeItem)) break;
-        RefreshTreePositions();
-    }
-
-    private void OnFolderToggleInbox(object sender, RoutedEventArgs e) { if (_selectedTreeItem is null || !_selectedTreeItem.IsMainFolder) return; _selectedTreeItem.HasInbox = !_selectedTreeItem.HasInbox; RefreshTreePositions(); }
-    private void OnFolderTogglePrefix(object sender, RoutedEventArgs e)
-    {
-        if (_selectedTreeItem is null || _selectedTreeItem.IsMainFolder) { MessageBox.Show("Nur für Unterordner.", "Präfix", MessageBoxButton.OK, MessageBoxImage.Information); return; }
-        _selectedTreeItem.HasPrefix = !_selectedTreeItem.HasPrefix; RefreshTreePositions();
-    }
-
-    // ═══════════════════════════════════════════
     // SAVE / CANCEL
     // ═══════════════════════════════════════════
 
@@ -1084,12 +967,7 @@ public partial class ProjectEditDialog : Window
         Project.Participants = _participants.ToList();
         Project.Links = _portalLinks.Concat(_customLinks).ToList();
 
-        FolderTemplate = _folderTreeItems.Select(main => new FolderTemplateEntry
-        {
-            Name = main.Name,
-            HasInbox = main.HasInbox,
-            SubFolders = main.Children.Select(sub => new SubFolderEntry { Name = sub.Name, HasPrefix = sub.HasPrefix }).ToList()
-        }).ToList();
+        FolderTemplate = ProjectFolderTemplate.ToTemplate();
 
         DialogResult = true;
         Close();

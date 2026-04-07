@@ -1,0 +1,168 @@
+﻿<UserControl x:Class="BauProjektManager.Settings.Views.FolderTemplateControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Hinweis oben -->
+        <TextBlock Grid.Row="0"
+                   Text="Reihenfolge = Nummerierung (00, 01, 02…)"
+                   Foreground="{StaticResource BpmTextSecondary}"
+                   FontSize="11"
+                   Margin="0,0,0,8" />
+
+        <!-- Hauptbereich: Tree | Buttons | Vorschau -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="48" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Links: TreeView -->
+            <TreeView x:Name="TvFolders"
+                      Grid.Column="0"
+                      Style="{StaticResource BpmTreeView}"
+                      ItemContainerStyle="{StaticResource BpmTreeViewItem}"
+                      SelectedItemChanged="OnSelectedItemChanged">
+                <TreeView.ItemTemplate>
+                    <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                        <Grid HorizontalAlignment="Stretch">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                <TextBlock Text="{Binding DisplayName}"
+                                           Foreground="{Binding Foreground}"
+                                           FontWeight="{Binding FontWeight}"
+                                           FontSize="13" />
+                                <TextBlock Text="&#x25C9;"
+                                           Foreground="{StaticResource BpmAccentPrimary}"
+                                           FontSize="11"
+                                           Margin="6,0,0,0"
+                                           Visibility="{Binding HasInboxVisibility}" />
+                            </StackPanel>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding PrefixLabel}"
+                                       Foreground="{Binding PrefixColor}"
+                                       FontSize="11"
+                                       Margin="8,0,0,0"
+                                       Visibility="{Binding PrefixVisibility}" />
+                        </Grid>
+                    </HierarchicalDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
+
+            <!-- Mitte: Buttons -->
+            <StackPanel Grid.Column="1"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center">
+                <Button x:Name="BtnMoveUp"
+                        Width="32" Height="32" Margin="0,0,0,3"
+                        Content="&#x25B2;"
+                        ToolTip="Nach oben"
+                        Style="{StaticResource BpmButtonGhost}"
+                        Click="OnMoveUp" />
+                <Button x:Name="BtnMoveDown"
+                        Width="32" Height="32" Margin="0,0,0,8"
+                        Content="&#x25BC;"
+                        ToolTip="Nach unten"
+                        Style="{StaticResource BpmButtonGhost}"
+                        Click="OnMoveDown" />
+
+                <Button x:Name="BtnAddMain"
+                        Width="32" Height="32" Margin="0,0,0,3"
+                        Content="+"
+                        FontSize="18" FontWeight="Medium"
+                        ToolTip="Hauptordner hinzufügen"
+                        Style="{StaticResource BpmButtonPrimary}"
+                        Click="OnAddMain" />
+                <Button x:Name="BtnAddSub"
+                        Width="32" Height="32" Margin="0,0,0,8"
+                        ToolTip="Unterordner hinzufügen"
+                        Style="{StaticResource BpmButtonSuccess}"
+                        Click="OnAddSub">
+                    <TextBlock Text="└+" FontSize="12" FontWeight="Medium" />
+                </Button>
+
+                <Button x:Name="BtnRemove"
+                        Width="32" Height="32" Margin="0,0,0,8"
+                        Content="&#x2715;"
+                        ToolTip="Löschen"
+                        Style="{StaticResource BpmButtonDanger}"
+                        Click="OnRemove" />
+
+                <Button x:Name="BtnToggleInbox"
+                        Width="32" Height="32" Margin="0,0,0,3"
+                        Content="&#x25C9;"
+                        FontSize="14"
+                        Foreground="{StaticResource BpmAccentPrimary}"
+                        ToolTip="Eingang ein/aus"
+                        Style="{StaticResource BpmButtonGhost}"
+                        Click="OnToggleInbox" />
+                <Button x:Name="BtnTogglePrefix"
+                        Width="32" Height="32"
+                        Content="##"
+                        FontSize="11" FontWeight="Medium"
+                        ToolTip="Präfix ein/aus"
+                        Style="{StaticResource BpmButtonGhost}"
+                        Click="OnTogglePrefix" />
+            </StackPanel>
+
+            <!-- Rechts: Vorschau -->
+            <Border Grid.Column="2"
+                    Background="{StaticResource BpmBgSurface}"
+                    BorderBrush="{StaticResource BpmBorderDefault}"
+                    BorderThickness="0.5"
+                    CornerRadius="3"
+                    Padding="12">
+                <StackPanel>
+                    <TextBlock Text="Vorschau"
+                               Foreground="{StaticResource BpmAccentPrimary}"
+                               FontSize="12"
+                               FontWeight="Medium"
+                               Margin="0,0,0,10" />
+                    <TextBlock x:Name="TxtPreview"
+                               FontFamily="Consolas"
+                               FontSize="12"
+                               Foreground="{StaticResource BpmTextSecondary}"
+                               TextWrapping="NoWrap" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Legende unten -->
+        <WrapPanel Grid.Row="2" Margin="0,8,0,0">
+            <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
+                <TextBlock Text="&#x25B2;&#x25BC;" Foreground="{StaticResource BpmTextSecondary}" FontSize="11" />
+                <TextBlock Text=" Verschieben" Foreground="{StaticResource BpmTextSecondary}" FontSize="11" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
+                <Border Width="10" Height="10" Background="{StaticResource BpmAccentPrimary}" CornerRadius="2" />
+                <TextBlock Text=" Hauptordner" Foreground="{StaticResource BpmTextSecondary}" FontSize="11" Margin="4,0,0,0" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
+                <Border Width="10" Height="10" Background="{StaticResource BpmSuccess}" CornerRadius="2" />
+                <TextBlock Text=" Unterordner" Foreground="{StaticResource BpmTextSecondary}" FontSize="11" Margin="4,0,0,0" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
+                <Border Width="10" Height="10" Background="{StaticResource BpmError}" CornerRadius="2" />
+                <TextBlock Text=" Löschen" Foreground="{StaticResource BpmTextSecondary}" FontSize="11" Margin="4,0,0,0" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
+                <TextBlock Text="&#x25C9;" Foreground="{StaticResource BpmAccentPrimary}" FontSize="11" />
+                <TextBlock Text=" Eingang" Foreground="{StaticResource BpmTextSecondary}" FontSize="11" Margin="4,0,0,0" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="##" Foreground="{StaticResource BpmTextSecondary}" FontSize="11" />
+                <TextBlock Text=" Präfix" Foreground="{StaticResource BpmTextSecondary}" FontSize="11" Margin="4,0,0,0" />
+            </StackPanel>
+        </WrapPanel>
+    </Grid>
+</UserControl>

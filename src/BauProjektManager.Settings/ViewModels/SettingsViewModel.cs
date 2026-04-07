@@ -12,34 +12,6 @@ using Serilog;
 namespace BauProjektManager.Settings.ViewModels;
 
 /// <summary>
-/// Tree item for displaying folder template in TreeView.
-/// Represents either a main folder or a subfolder.
-/// </summary>
-public class FolderTreeItem
-{
-    public string Name { get; set; } = string.Empty;
-    public int Position { get; set; }
-    public bool IsMainFolder { get; set; }
-    public bool HasInbox { get; set; }
-    public bool HasPrefix { get; set; } = true;
-    public ObservableCollection<FolderTreeItem> Children { get; set; } = [];
-
-    /// <summary>
-    /// Display name with number prefix for main folders, optional prefix for subs.
-    /// </summary>
-    public string DisplayName => IsMainFolder
-        ? $"{Position:D2} {Name}"
-        : (HasPrefix ? $"{Position:D2} {Name}" : Name);
-
-    public Visibility InboxVisibility => HasInbox ? Visibility.Visible : Visibility.Collapsed;
-
-    /// <summary>
-    /// Shows "Präfix: an/aus" label for subfolders only.
-    /// </summary>
-    public string PrefixLabel => IsMainFolder ? "" : (HasPrefix ? "Präfix: an" : "Präfix: aus");
-}
-
-/// <summary>
 /// ViewModel for the Settings page — manages project list, paths display,
 /// and global default folder template with subfolders and prefix toggle.
 /// </summary>
@@ -49,6 +21,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     private readonly RegistryJsonExporter _exporter;
     private readonly AppSettingsService _settingsService = new();
     private readonly ProjectFolderService _folderService;
+    private AppSettings? _settings;
 
     [ObservableProperty]
     private ObservableCollection<Project> _projects = [];
@@ -125,11 +98,11 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     private void LoadSettings()
     {
         Log.Debug("Settings tab loaded: {Tab}", "General");
-        var settings = _settingsService.Load();
-        BasePath = settings.BasePath;
-        ArchivePath = settings.ArchivePath;
-        OneDrivePath = settings.OneDrivePath;
-        BuildFolderTree(settings.FolderTemplate);
+        _settings = _settingsService.Load();
+        BasePath = _settings.BasePath;
+        ArchivePath = _settings.ArchivePath;
+        OneDrivePath = _settings.OneDrivePath;
+        BuildFolderTree(_settings.FolderTemplate);
     }
 
     // === Folder Template Tree ===
@@ -185,6 +158,19 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         }).ToList();
         _settingsService.Save(settings);
         Log.Information("Folder template saved ({Count} main folders)", settings.FolderTemplate.Count);
+    }
+
+    public List<FolderTemplateEntry> GetFolderTemplate()
+    {
+        return _settings?.FolderTemplate ?? new List<FolderTemplateEntry>();
+    }
+
+    public void SaveFolderTemplateFrom(List<FolderTemplateEntry> template)
+    {
+        if (_settings == null) return;
+        _settings.FolderTemplate = template;
+        _settingsService.Save(_settings);
+        Log.Debug("Folder template saved from FolderTemplateControl");
     }
 
     private void RefreshTreePositions()

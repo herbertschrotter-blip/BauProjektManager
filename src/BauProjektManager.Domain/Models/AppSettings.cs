@@ -212,6 +212,11 @@ public class SubFolderEntry
     /// </summary>
     public bool HasPrefix { get; set; } = true;
 
+    /// <summary>
+    /// Verschachtelte Unterordner (rekursiv).
+    /// </summary>
+    public List<SubFolderEntry> SubFolders { get; set; } = [];
+
     public SubFolderEntry() { }
 
     public SubFolderEntry(string name, bool hasPrefix)

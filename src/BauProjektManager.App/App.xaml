@@ -9,6 +9,7 @@
                 <ResourceDictionary Source="Themes/Buttons.xaml"/>
                 <ResourceDictionary Source="Themes/DataGrid.xaml"/>
                 <ResourceDictionary Source="Themes/Dialogs.xaml"/>
+                <ResourceDictionary Source="Themes/TreeView.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

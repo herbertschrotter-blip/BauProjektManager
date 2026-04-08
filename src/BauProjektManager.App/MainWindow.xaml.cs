@@ -12,13 +12,18 @@ namespace BauProjektManager.App;
 public partial class MainWindow : Window
 {
     private readonly PlanManagerView _planManagerView = new();
-    private readonly SettingsView _settingsView = new();
+    private readonly SettingsView _settingsView;
     private readonly IDeveloperToolsService? _devTools;
 
     public MainWindow(IDeveloperToolsService? devTools = null)
     {
         InitializeComponent();
         _devTools = devTools;
+
+        // DialogService erstellen und an SettingsView übergeben
+        var dialogService = new BpmDialogService();
+        _settingsView = new SettingsView(dialogService);
+
 #if DEBUG
         BtnDevTools.Visibility = Visibility.Visible;
 #endif

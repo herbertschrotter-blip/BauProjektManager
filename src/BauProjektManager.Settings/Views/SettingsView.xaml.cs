@@ -5,13 +5,14 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using BauProjektManager.Domain.Enums;
+using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Settings.ViewModels;
 
 namespace BauProjektManager.Settings.Views;
 
 /// <summary>
 /// Converts ProjectStatus enum to display text.
-/// Active → "● Aktiv", Completed → "● Abgeschlossen", Archived → "● Archiviert"
+/// Active → "● Aktiv", Completed → "● Abgeschlossen"
 /// </summary>
 public class StatusConverter : IValueConverter
 {
@@ -36,7 +37,7 @@ public class StatusConverter : IValueConverter
 
 /// <summary>
 /// Converts ProjectStatus enum to color brush.
-/// Active → Green, Completed → Red, Archived → Gray
+/// Active → Green, Completed → Red
 /// </summary>
 public class StatusColorConverter : IValueConverter
 {
@@ -65,23 +66,28 @@ public class StatusColorConverter : IValueConverter
 
 public partial class SettingsView : UserControl
 {
-    public SettingsView()
+    public SettingsView() : this(null) { }
+
+    public SettingsView(IDialogService? dialogService)
     {
         // Register converters before InitializeComponent
         Resources.Add("StatusConverter", new StatusConverter());
         Resources.Add("StatusColorConverter", new StatusColorConverter());
         InitializeComponent();
 
+        // ViewModel mit DialogService erstellen
+        var vm = dialogService is not null
+            ? new SettingsViewModel(dialogService)
+            : new SettingsViewModel();
+        DataContext = vm;
+
         // Ordnerstruktur-Control initialisieren
-        if (DataContext is SettingsViewModel vm2)
+        var template = vm.GetFolderTemplate();
+        GlobalFolderTemplate.LoadFromTemplate(template);
+        GlobalFolderTemplate.TemplateChanged += () =>
         {
-            var template = vm2.GetFolderTemplate();
-            GlobalFolderTemplate.LoadFromTemplate(template);
-            GlobalFolderTemplate.TemplateChanged += () =>
-            {
-                vm2.SaveFolderTemplateFrom(GlobalFolderTemplate.ToTemplate());
-            };
-        }
+            vm.SaveFolderTemplateFrom(GlobalFolderTemplate.ToTemplate());
+        };
     }
 
     private void OnRowDoubleClick(object sender, MouseButtonEventArgs e)
@@ -92,14 +98,35 @@ public partial class SettingsView : UserControl
         }
     }
 
-    private void OnProjectMenuClick(object sender, RoutedEventArgs e)
+    private void OnNewProjectClick(object sender, RoutedEventArgs e)
     {
-        if (sender is Button btn && btn.Parent is StackPanel sp && sp.Parent is Border border)
-        {
-            border.ContextMenu.PlacementTarget = border;
-            border.ContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
-            border.ContextMenu.IsOpen = true;
-        }
+        NewProjectPopup.IsOpen = true;
+    }
+
+    private void OnMenuCreateProject(object sender, MouseButtonEventArgs e)
+    {
+        NewProjectPopup.IsOpen = false;
+        if (DataContext is SettingsViewModel vm)
+            vm.AddProjectCommand.Execute(null);
+    }
+
+    private void OnMenuImportProject(object sender, MouseButtonEventArgs e)
+    {
+        NewProjectPopup.IsOpen = false;
+        if (DataContext is SettingsViewModel vm)
+            vm.ImportFolderCommand.Execute(null);
+    }
+
+    private void OnMenuItemEnter(object sender, MouseEventArgs e)
+    {
+        if (sender is Border border)
+            border.Background = (Brush)FindResource("BpmBgHover");
+    }
+
+    private void OnMenuItemLeave(object sender, MouseEventArgs e)
+    {
+        if (sender is Border border)
+            border.Background = Brushes.Transparent;
     }
 
     private void OnBrowseBasePath(object sender, RoutedEventArgs e)

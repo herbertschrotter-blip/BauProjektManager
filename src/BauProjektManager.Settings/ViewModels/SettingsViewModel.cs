@@ -2,6 +2,7 @@
 using System.IO;
 using System.Windows;
 using BauProjektManager.Domain.Enums;
+using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models;
 using BauProjektManager.Infrastructure.Persistence;
 using BauProjektManager.Settings.Views;
@@ -22,6 +23,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     private readonly AppSettingsService _settingsService = new();
     private readonly ProjectFolderService _folderService;
     private readonly BpmManifestService _manifestService = new();
+    private readonly IDialogService _dialogService;
     private AppSettings? _settings;
 
     [ObservableProperty]
@@ -49,8 +51,12 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     // Selected item in TreeView (set from code-behind)
     public FolderTreeItem? SelectedTreeItem { get; set; }
 
-    public SettingsViewModel()
+    public SettingsViewModel() : this(new DefaultDialogService()) { }
+
+    public SettingsViewModel(IDialogService dialogService)
     {
+        _dialogService = dialogService;
+
         var appRoot = FindAppRoot();
         var exportDir = Path.Combine(appRoot, "Export");
         var registryPath = Path.Combine(exportDir, "registry.json");
@@ -301,7 +307,6 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void TemplateAddSub()
     {
-        // Find the parent main folder
         FolderTreeItem? parent = null;
         if (SelectedTreeItem is not null)
         {
@@ -309,7 +314,6 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
                 parent = SelectedTreeItem;
             else
             {
-                // Selected item is a subfolder — find its parent
                 foreach (var main in FolderTreeItems)
                 {
                     if (main.Children.Contains(SelectedTreeItem))
@@ -323,8 +327,8 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
 
         if (parent is null)
         {
-            MessageBox.Show("Bitte zuerst einen Hauptordner auswählen.",
-                "Unterordner hinzufügen", MessageBoxButton.OK, MessageBoxImage.Information);
+            _dialogService.ShowInfo("Bitte zuerst einen Hauptordner auswählen.",
+                "Unterordner hinzufügen");
             return;
         }
 
@@ -353,8 +357,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             ? $"Hauptordner \"{SelectedTreeItem.Name}\""
             : $"Unterordner \"{SelectedTreeItem.Name}\"";
 
-        if (MessageBox.Show($"{displayName} aus dem Template entfernen?",
-                "Entfernen", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+        if (!_dialogService.ShowConfirm($"{displayName} aus dem Template entfernen?", "Entfernen"))
             return;
 
         if (SelectedTreeItem.IsMainFolder)
@@ -389,8 +392,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     {
         if (SelectedTreeItem is null || SelectedTreeItem.IsMainFolder)
         {
-            MessageBox.Show("Präfix kann nur für Unterordner umgeschaltet werden.",
-                "Präfix", MessageBoxButton.OK, MessageBoxImage.Information);
+            _dialogService.ShowInfo("Präfix kann nur für Unterordner umgeschaltet werden.", "Präfix");
             return;
         }
 
@@ -453,8 +455,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             catch (Exception ex)
             {
                 Log.Error(ex, "Failed to save new project");
-                MessageBox.Show($"Fehler beim Speichern: {ex.Message}", "Fehler",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                _dialogService.ShowError($"Fehler beim Speichern: {ex.Message}");
             }
         }
     }
@@ -462,7 +463,12 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void EditProject()
     {
-        if (SelectedProject is null) return;
+        if (SelectedProject is null)
+        {
+            _dialogService.ShowInfo("Bitte zuerst ein Projekt in der Liste auswählen.",
+                "Kein Projekt ausgewählt");
+            return;
+        }
 
         var dialog = new ProjectEditDialog(SelectedProject);
         dialog.Owner = Application.Current.MainWindow;
@@ -470,7 +476,6 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         {
             try
             {
-                // Sync new folders to disk (only create, never delete)
                 if (dialog.FolderTemplate != null && !string.IsNullOrEmpty(dialog.Project.Paths?.Root))
                 {
                     _folderService.SyncNewFolders(dialog.Project, dialog.FolderTemplate);
@@ -495,8 +500,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             catch (Exception ex)
             {
                 Log.Error(ex, "Failed to update project");
-                MessageBox.Show($"Fehler beim Speichern: {ex.Message}", "Fehler",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                _dialogService.ShowError($"Fehler beim Speichern: {ex.Message}");
             }
         }
     }
@@ -524,36 +528,38 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void DeleteProject()
     {
-        if (SelectedProject is null) return;
+        if (SelectedProject is null)
+        {
+            _dialogService.ShowInfo("Bitte zuerst ein Projekt in der Liste auswählen.",
+                "Kein Projekt ausgewählt");
+            return;
+        }
 
-        var result = MessageBox.Show(
+        if (!_dialogService.ShowConfirm(
             $"Projekt \"{SelectedProject.Name}\" ({SelectedProject.ProjectNumber}) wirklich löschen?\n\n" +
             "Das Projekt wird aus der Datenbank entfernt.\n" +
             "Der Projektordner auf der Festplatte wird NICHT gelöscht.",
-            "Projekt löschen",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning);
-
-        if (result == MessageBoxResult.Yes)
+            "Projekt löschen"))
         {
-            try
-            {
-                var name = SelectedProject.Name;
-                var number = SelectedProject.ProjectNumber;
+            return;
+        }
 
-                _db.DeleteProject(SelectedProject.Id);
-                Projects.Remove(SelectedProject);
-                SelectedProject = null;
-                ExportRegistry();
-                Log.Information("Project deleted: {Name} ({Number})", name, number);
-                RegistryStatus = $"Projekt {name} gelöscht";
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Failed to delete project");
-                MessageBox.Show($"Fehler beim Löschen: {ex.Message}", "Fehler",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+        try
+        {
+            var name = SelectedProject.Name;
+            var number = SelectedProject.ProjectNumber;
+
+            _db.DeleteProject(SelectedProject.Id);
+            Projects.Remove(SelectedProject);
+            SelectedProject = null;
+            ExportRegistry();
+            Log.Information("Project deleted: {Name} ({Number})", name, number);
+            RegistryStatus = $"Projekt {name} gelöscht";
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to delete project");
+            _dialogService.ShowError($"Fehler beim Löschen: {ex.Message}");
         }
     }
 
@@ -584,8 +590,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         var manifest = _manifestService.ReadManifest(folderPath);
         if (manifest is null)
         {
-            MessageBox.Show("Manifest konnte nicht gelesen werden.", "Fehler",
-                MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogService.ShowError("Manifest konnte nicht gelesen werden.");
             return;
         }
 
@@ -608,8 +613,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             catch (Exception ex)
             {
                 Log.Error(ex, "Failed to import project from manifest");
-                MessageBox.Show($"Fehler beim Import: {ex.Message}", "Fehler",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                _dialogService.ShowError($"Fehler beim Import: {ex.Message}");
             }
         }
     }
@@ -635,8 +639,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             catch (Exception ex)
             {
                 Log.Error(ex, "Failed to import project from folder");
-                MessageBox.Show($"Fehler beim Import: {ex.Message}", "Fehler",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                _dialogService.ShowError($"Fehler beim Import: {ex.Message}");
             }
         }
     }
@@ -645,4 +648,24 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     {
         _db.Dispose();
     }
+}
+
+/// <summary>
+/// Standard-DialogService als Fallback wenn kein BpmDialogService übergeben wird.
+/// Verwendet die Windows-MessageBox — wird durch BpmDialogService ersetzt wenn
+/// über MainWindow instanziiert.
+/// </summary>
+internal class DefaultDialogService : IDialogService
+{
+    public void ShowInfo(string message, string title = "Hinweis") =>
+        MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Information);
+
+    public void ShowWarning(string message, string title = "Warnung") =>
+        MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Warning);
+
+    public void ShowError(string message, string title = "Fehler") =>
+        MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Error);
+
+    public bool ShowConfirm(string message, string title = "Bestätigung") =>
+        MessageBox.Show(message, title, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
 }

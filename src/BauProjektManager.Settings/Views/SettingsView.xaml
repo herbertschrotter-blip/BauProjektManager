@@ -3,9 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:BauProjektManager.Settings.ViewModels"
              xmlns:views="clr-namespace:BauProjektManager.Settings.Views">
-    <UserControl.DataContext>
-        <vm:SettingsViewModel/>
-    </UserControl.DataContext>
     <UserControl.Resources>
         <!-- Dark TabControl Style (Token-basiert) -->
         <Style TargetType="TabControl">
@@ -40,18 +37,6 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-        </Style>
-
-        <!-- Popup MenuItem Style (Token-basiert, Dark Theme) -->
-        <Style x:Key="BpmPopupMenuItem" TargetType="Border">
-            <Setter Property="Padding" Value="14,8"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource BpmBgHover}"/>
-                </Trigger>
-            </Style.Triggers>
         </Style>
     </UserControl.Resources>
 
@@ -110,25 +95,57 @@
 
                     <!-- Buttons -->
                     <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,8,0,0">
-                        <Button Content="＋ Neues Projekt"
-                                Command="{Binding AddProjectCommand}"
+                        <!-- Neues Projekt — öffnet Popup mit 2 Optionen -->
+                        <Button x:Name="BtnNewProject" Content="＋ Neues Projekt"
                                 Style="{DynamicResource BpmButtonPrimary}"
-                                Margin="0,0,10,0"/>
-                        <Button Content="📂 Projekt importieren"
-                                Command="{Binding ImportFolderCommand}"
-                                Style="{DynamicResource BpmButtonSecondary}"
-                                Margin="0,0,10,0"/>
+                                MinWidth="160" Margin="0,0,10,0"
+                                Click="OnNewProjectClick"/>
+                        <Popup x:Name="NewProjectPopup"
+                               PlacementTarget="{Binding ElementName=BtnNewProject}"
+                               Placement="Bottom" StaysOpen="False"
+                               AllowsTransparency="True" PopupAnimation="Fade">
+                            <Border Background="{DynamicResource BpmBgSurface}"
+                                    BorderBrush="{DynamicResource BpmBorderDefault}"
+                                    BorderThickness="1" CornerRadius="4"
+                                    Padding="0,4" MinWidth="220">
+                                <Border.Effect>
+                                    <DropShadowEffect ShadowDepth="3" BlurRadius="8" Opacity="0.35"/>
+                                </Border.Effect>
+                                <StackPanel>
+                                    <Border Padding="12,8" Cursor="Hand"
+                                            Background="Transparent"
+                                            MouseLeftButtonDown="OnMenuCreateProject"
+                                            MouseEnter="OnMenuItemEnter"
+                                            MouseLeave="OnMenuItemLeave">
+                                        <TextBlock Text="📝 Projekt erstellen"
+                                                   Foreground="{DynamicResource BpmTextPrimary}"
+                                                   FontSize="13"/>
+                                    </Border>
+                                    <Rectangle Height="1" Fill="{DynamicResource BpmBorderDefault}" Margin="8,2"/>
+                                    <Border Padding="12,8" Cursor="Hand"
+                                            Background="Transparent"
+                                            MouseLeftButtonDown="OnMenuImportProject"
+                                            MouseEnter="OnMenuItemEnter"
+                                            MouseLeave="OnMenuItemLeave">
+                                        <TextBlock Text="📂 Projekt importieren"
+                                                   Foreground="{DynamicResource BpmTextPrimary}"
+                                                   FontSize="13"/>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </Popup>
                         <Button Content="Bearbeiten"
                                 Command="{Binding EditProjectCommand}"
                                 Style="{DynamicResource BpmButtonSecondary}"
-                                Margin="0,0,10,0"/>
+                                MinWidth="160" Margin="0,0,10,0"/>
                         <Button Content="Archivieren"
                                 Style="{DynamicResource BpmButtonSecondary}"
-                                Margin="0,0,10,0"
+                                MinWidth="160" Margin="0,0,10,0"
                                 IsEnabled="False" ToolTip="Kommt in Feature #12"/>
                         <Button Content="Löschen"
                                 Command="{Binding DeleteProjectCommand}"
-                                Style="{DynamicResource BpmButtonDanger}"/>
+                                Style="{DynamicResource BpmButtonDanger}"
+                                MinWidth="160"/>
                     </StackPanel>
 
                     <!-- Pfade — unten verankert -->

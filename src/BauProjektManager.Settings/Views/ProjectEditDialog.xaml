@@ -326,7 +326,8 @@
                             </Grid>
                             <DockPanel Margin="0,12,0,6">
                                 <TextBlock Text="Verwaltung" Foreground="{DynamicResource BpmAccentPrimary}" FontWeight="Bold" VerticalAlignment="Center"/>
-                                <Button Content="GIS" Style="{StaticResource IconBtn}" FontSize="10" IsEnabled="False" Opacity="0.4" Margin="8,0,0,0"/>
+                                <Button Content="GIS" Style="{StaticResource IconBtn}" FontSize="10" IsEnabled="False" Opacity="0.4"
+                                        MinWidth="50" Padding="12,4" HorizontalAlignment="Right"/>
                             </DockPanel>
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -347,7 +348,8 @@
                             </Grid>
                             <DockPanel Margin="0,12,0,6">
                                 <TextBlock Text="Grundstück + Koordinaten" Foreground="{DynamicResource BpmAccentPrimary}" FontWeight="Bold" VerticalAlignment="Center"/>
-                                <Button Content="GIS" Style="{StaticResource IconBtn}" FontSize="10" IsEnabled="False" Opacity="0.4" Margin="8,0,0,0"/>
+                                <Button Content="GIS" Style="{StaticResource IconBtn}" FontSize="10" IsEnabled="False" Opacity="0.4"
+                                        MinWidth="50" Padding="12,4" HorizontalAlignment="Right"/>
                             </DockPanel>
                             <Grid>
                                 <Grid.ColumnDefinitions>

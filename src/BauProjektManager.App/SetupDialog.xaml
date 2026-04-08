@@ -52,7 +52,7 @@
                          Foreground="{DynamicResource BpmTextPrimary}"
                          BorderBrush="{DynamicResource BpmBorderDefault}"
                          Padding="6,4" IsReadOnly="True"/>
-                <Button Grid.Column="1" Content="📁"
+                <Button Grid.Column="1" Content="{StaticResource IconActionBrowse}"
                         Margin="5,0,0,0" Click="OnBrowseOneDrive"
                         Style="{DynamicResource BpmButtonGhost}"/>
             </Grid>
@@ -70,7 +70,7 @@
                          Foreground="{DynamicResource BpmTextPrimary}"
                          BorderBrush="{DynamicResource BpmBorderDefault}"
                          Padding="6,4" IsReadOnly="True"/>
-                <Button Grid.Column="1" Content="📁"
+                <Button Grid.Column="1" Content="{StaticResource IconActionBrowse}"
                         Margin="5,0,0,0" Click="OnBrowseBasePath"
                         Style="{DynamicResource BpmButtonGhost}"/>
             </Grid>
@@ -88,7 +88,7 @@
                          Foreground="{DynamicResource BpmTextPrimary}"
                          BorderBrush="{DynamicResource BpmBorderDefault}"
                          Padding="6,4" IsReadOnly="True"/>
-                <Button Grid.Column="1" Content="📁"
+                <Button Grid.Column="1" Content="{StaticResource IconActionBrowse}"
                         Margin="5,0,0,0" Click="OnBrowseArchivePath"
                         Style="{DynamicResource BpmButtonGhost}"/>
             </Grid>

@@ -12,12 +12,14 @@ public partial class DevToolsDialog : Window
     private readonly IDeveloperToolsService _devTools;
     private string _selectedReset = "DbOnly";
 
+    private const string DeleteIcon = "🗑";
+
     private readonly Dictionary<string, string> _resetLabels = new()
     {
-        { "DbOnly",       "🗑 Datenbank zurücksetzen und neu starten" },
-        { "SettingsOnly", "🗑 Einstellungen zurücksetzen und neu starten" },
-        { "FirstRun",     "🗑 Ersteinrichtung zurücksetzen und neu starten" },
-        { "All",          "🗑 Alles zurücksetzen und neu starten" }
+        { "DbOnly",       $"{DeleteIcon} Datenbank zurücksetzen und neu starten" },
+        { "SettingsOnly", $"{DeleteIcon} Einstellungen zurücksetzen und neu starten" },
+        { "FirstRun",     $"{DeleteIcon} Ersteinrichtung zurücksetzen und neu starten" },
+        { "All",          $"{DeleteIcon} Alles zurücksetzen und neu starten" }
     };
 
     public DevToolsDialog(IDeveloperToolsService devTools)

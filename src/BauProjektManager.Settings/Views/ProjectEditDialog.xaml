@@ -252,7 +252,7 @@
                                 <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtFullName" Style="{StaticResource FTB}"/>
                                 <TextBlock Grid.Row="3" Grid.Column="0" Text="Projektart:" Style="{StaticResource FL}"/>
                                 <DockPanel Grid.Row="3" Grid.Column="1" Margin="0,3">
-                                    <Button DockPanel.Dock="Right" Content="✎" Style="{StaticResource IconBtn}" Click="OnEditProjectTypes" ToolTip="Liste bearbeiten" Margin="4,0,0,0"/>
+                                    <Button DockPanel.Dock="Right" Content="{StaticResource IconActionEdit}" Style="{StaticResource IconBtn}" Click="OnEditProjectTypes" ToolTip="Liste bearbeiten" Margin="4,0,0,0"/>
                                     <ComboBox x:Name="CmbProjectType"/>
                                 </DockPanel>
                                 <TextBlock Grid.Row="4" Grid.Column="0" Text="Status:" Style="{StaticResource FL}"/>
@@ -273,10 +273,10 @@
                                 </Grid.RowDefinitions>
                                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Firma:" Style="{StaticResource FL}"/>
                                 <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtClientCompany" Style="{StaticResource FTB}"/>
-                                <Button Grid.Row="0" Grid.Column="2" Content="📋" Style="{StaticResource IconBtn}" IsEnabled="False" Opacity="0.4" Margin="4,3,0,3"/>
+                                <Button Grid.Row="0" Grid.Column="2" Content="{StaticResource IconActionCopy}" Style="{StaticResource IconBtn}" IsEnabled="False" Opacity="0.4" Margin="4,3,0,3"/>
                                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Kontakt:" Style="{StaticResource FL}"/>
                                 <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtClientContact" Style="{StaticResource FTB}"/>
-                                <Button Grid.Row="1" Grid.Column="2" Content="👤" Style="{StaticResource IconBtn}" IsEnabled="False" Opacity="0.4" Margin="4,3,0,3"/>
+                                <Button Grid.Row="1" Grid.Column="2" Content="{StaticResource IconPerson}" Style="{StaticResource IconBtn}" IsEnabled="False" Opacity="0.4" Margin="4,3,0,3"/>
                                 <TextBlock Grid.Row="2" Grid.Column="0" Text="Telefon:" Style="{StaticResource FL}"/>
                                 <TextBox Grid.Row="2" Grid.Column="1" x:Name="TxtClientPhone" Style="{StaticResource FTB}"/>
                                 <TextBlock Grid.Row="3" Grid.Column="0" Text="Email:" Style="{StaticResource FL}"/>
@@ -435,7 +435,7 @@
 
                         <DockPanel Margin="0,16,0,4">
                             <TextBlock x:Name="TxtLevelsHeader" Text="Geschosse" Style="{StaticResource SH}" Margin="0"/>
-                            <Button Content="✎" Style="{StaticResource IconBtn}" Click="OnEditLevelNames" ToolTip="Geschoss-Liste bearbeiten" Margin="8,12,0,6"/>
+                            <Button Content="{StaticResource IconActionEdit}" Style="{StaticResource IconBtn}" Click="OnEditLevelNames" ToolTip="Geschoss-Liste bearbeiten" Margin="8,12,0,6"/>
                         </DockPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                             <TextBlock Foreground="{DynamicResource BpmTextSecondary}" FontSize="11" Text="Direkt editierbar · Komma als Dezimalzeichen · Prefix + Beschreibung automatisch · "/>
@@ -535,8 +535,8 @@
                             <Button Content="+ Geschoss" Click="OnAddLevel" Style="{DynamicResource BpmButtonPrimary}" Padding="10,5" Margin="0,0,6,0" MinWidth="0" MinHeight="0"/>
                             <Button Content="Bearbeiten" Click="OnEditLevel" Style="{DynamicResource BpmButtonSecondary}" Padding="10,5" Margin="0,0,6,0" MinWidth="0" MinHeight="0"/>
                             <Button Content="Entfernen" Click="OnRemoveLevel" Style="{DynamicResource BpmButtonDanger}" Padding="10,5" Margin="0,0,6,0" MinWidth="0" MinHeight="0"/>
-                            <Button Content="▲" Click="OnMoveLevelUp" Style="{DynamicResource BpmButtonSecondary}" Padding="8,5" Margin="0,0,3,0" MinWidth="0" MinHeight="0"/>
-                            <Button Content="▼" Click="OnMoveLevelDown" Style="{DynamicResource BpmButtonSecondary}" Padding="8,5" MinWidth="0" MinHeight="0"/>
+                            <Button Content="{StaticResource IconArrowUp}" Click="OnMoveLevelUp" Style="{DynamicResource BpmButtonSecondary}" Padding="8,5" Margin="0,0,3,0" MinWidth="0" MinHeight="0"/>
+                            <Button Content="{StaticResource IconArrowDown}" Click="OnMoveLevelDown" Style="{DynamicResource BpmButtonSecondary}" Padding="8,5" MinWidth="0" MinHeight="0"/>
                         </StackPanel>
 
                         <Grid Margin="0,12,0,0">
@@ -567,7 +567,7 @@
                 <StackPanel Margin="0,10,0,0">
                     <DockPanel Margin="0,0,0,8">
                         <TextBlock Text="Beteiligte Firmen / Personen" Style="{StaticResource SH}" Margin="0"/>
-                        <Button Content="✎" Style="{StaticResource IconBtn}" Click="OnEditParticipantRoles" ToolTip="Rollen-Liste bearbeiten" Margin="8,12,0,6"/>
+                        <Button Content="{StaticResource IconActionEdit}" Style="{StaticResource IconBtn}" Click="OnEditParticipantRoles" ToolTip="Rollen-Liste bearbeiten" Margin="8,12,0,6"/>
                     </DockPanel>
                     <DataGrid x:Name="DgParticipants" Style="{StaticResource DgBase}" Height="380"
                               ColumnHeaderStyle="{StaticResource DgHeaderPrimary}"
@@ -584,8 +584,8 @@
                         <Button Content="+ Beteiligten" Click="OnAddParticipant" Style="{DynamicResource BpmButtonPrimary}" Padding="10,5" Margin="0,0,6,0" MinWidth="0" MinHeight="0"/>
                         <Button Content="Bearbeiten" Click="OnEditParticipant" Style="{DynamicResource BpmButtonSecondary}" Padding="10,5" Margin="0,0,6,0" MinWidth="0" MinHeight="0"/>
                         <Button Content="Entfernen" Click="OnRemoveParticipant" Style="{DynamicResource BpmButtonDanger}" Padding="10,5" Margin="0,0,6,0" MinWidth="0" MinHeight="0"/>
-                        <Button Content="▲" Click="OnMoveParticipantUp" Style="{DynamicResource BpmButtonSecondary}" Padding="8,5" Margin="0,0,3,0" MinWidth="0" MinHeight="0"/>
-                        <Button Content="▼" Click="OnMoveParticipantDown" Style="{DynamicResource BpmButtonSecondary}" Padding="8,5" MinWidth="0" MinHeight="0"/>
+                        <Button Content="{StaticResource IconArrowUp}" Click="OnMoveParticipantUp" Style="{DynamicResource BpmButtonSecondary}" Padding="8,5" Margin="0,0,3,0" MinWidth="0" MinHeight="0"/>
+                        <Button Content="{StaticResource IconArrowDown}" Click="OnMoveParticipantDown" Style="{DynamicResource BpmButtonSecondary}" Padding="8,5" MinWidth="0" MinHeight="0"/>
                     </StackPanel>
                     <Border BorderBrush="{DynamicResource BpmBorderDefault}" BorderThickness="0,1,0,0" Padding="0,12,0,0">
                         <StackPanel>
@@ -617,7 +617,7 @@
                             <StackPanel Grid.Column="0">
                                 <DockPanel Margin="0,0,0,4">
                                     <TextBlock Text="Bauherren-Portale" Style="{StaticResource SH}" Margin="0"/>
-                                    <Button Content="✎" Style="{StaticResource IconBtn}" Click="OnEditPortalTypes" ToolTip="Portal-Typen bearbeiten" Margin="8,12,0,6"/>
+                                    <Button Content="{StaticResource IconActionEdit}" Style="{StaticResource IconBtn}" Click="OnEditPortalTypes" ToolTip="Portal-Typen bearbeiten" Margin="8,12,0,6"/>
                                 </DockPanel>
                                 <TextBlock Text="Externe Plattformen des Auftraggebers. Portal-Typen konfigurierbar."
                                            Style="{DynamicResource BpmSmallText}" Margin="0,0,0,8"/>

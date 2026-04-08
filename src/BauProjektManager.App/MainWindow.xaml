@@ -22,18 +22,24 @@
                            FontSize="14" FontWeight="Bold"
                            Foreground="{StaticResource BpmTextBright}"
                            Margin="15,5,15,15"/>
-                <Button x:Name="BtnPlans" Content="📁 Pläne"
+                <Button x:Name="BtnPlans"
                         Click="OnNavigate" Tag="Plans"
-                        Style="{StaticResource BpmButtonNav}"/>
-                <Button x:Name="BtnSettings" Content="⚙ Einstellungen"
+                        Style="{StaticResource BpmButtonNav}">
+                    <Button.Content><TextBlock><Run Text="{StaticResource IconNavPlans}"/><Run Text=" Pläne"/></TextBlock></Button.Content>
+                </Button>
+                <Button x:Name="BtnSettings"
                         Click="OnNavigate" Tag="Settings"
-                        Style="{StaticResource BpmButtonNav}"/>
-                <Button x:Name="BtnDevTools" Content="🛠 Dev Tools"
+                        Style="{StaticResource BpmButtonNav}">
+                    <Button.Content><TextBlock><Run Text="{StaticResource IconNavSettings}"/><Run Text=" Einstellungen"/></TextBlock></Button.Content>
+                </Button>
+                <Button x:Name="BtnDevTools"
                         Click="OnOpenDevTools"
                         Style="{StaticResource BpmButtonNav}"
                         Foreground="#F0AD4E"
                         Margin="0,16,0,0"
-                        Visibility="Collapsed"/>
+                        Visibility="Collapsed">
+                    <Button.Content><TextBlock><Run Text="{StaticResource IconNavDevTools}"/><Run Text=" Dev Tools"/></TextBlock></Button.Content>
+                </Button>
             </StackPanel>
         </Border>
 

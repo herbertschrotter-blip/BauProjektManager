@@ -19,7 +19,7 @@
                     BorderBrush="{StaticResource BpmBorderDefault}">
 
             <!-- TAB 1: SYSTEM-INFO -->
-            <TabItem Header="📋 System-Info" Style="{StaticResource BpmTabItem}">
+            <TabItem Style="{StaticResource BpmTabItem}"><TabItem.Header><TextBlock><Run Text="{StaticResource IconActionCopy}"/><Run Text=" System-Info"/></TextBlock></TabItem.Header>
                 <Grid Margin="20">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
@@ -76,18 +76,20 @@
                         </ScrollViewer>
                     </Border>
                     <StackPanel Grid.Row="1" Orientation="Horizontal">
-                        <Button Content="📋 System-Info + Log kopieren"
-                                Style="{StaticResource BpmButtonSecondary}"
-                                Click="OnCopyBugReport" Margin="0,0,8,0"/>
-                        <Button Content="📂 Log-Ordner öffnen"
-                                Style="{StaticResource BpmButtonSecondary}"
-                                Click="OnOpenLogs"/>
+                        <Button Style="{StaticResource BpmButtonSecondary}"
+                                Click="OnCopyBugReport" Margin="0,0,8,0">
+                            <Button.Content><TextBlock><Run Text="{StaticResource IconActionCopy}"/><Run Text=" System-Info + Log kopieren"/></TextBlock></Button.Content>
+                        </Button>
+                        <Button Style="{StaticResource BpmButtonSecondary}"
+                                Click="OnOpenLogs">
+                            <Button.Content><TextBlock><Run Text="{StaticResource IconFolderOpen}"/><Run Text=" Log-Ordner öffnen"/></TextBlock></Button.Content>
+                        </Button>
                     </StackPanel>
                 </Grid>
             </TabItem>
 
             <!-- TAB 2: LOG -->
-            <TabItem Header="📄 Log" Style="{StaticResource BpmTabItem}">
+            <TabItem Style="{StaticResource BpmTabItem}"><TabItem.Header><TextBlock><Run Text="{StaticResource IconFile}"/><Run Text=" Log"/></TextBlock></TabItem.Header>
                 <Grid Margin="20">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -96,7 +98,9 @@
                     <DockPanel Grid.Row="0" Margin="0,0,0,8">
                         <TextBlock Text="Letzte 200 Zeilen" Style="{StaticResource BpmLabel}" VerticalAlignment="Center"/>
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-                            <Button Content="📋 Kopieren" Style="{StaticResource BpmButtonSecondary}" Click="OnCopyLog" Margin="0,0,8,0"/>
+                            <Button Style="{StaticResource BpmButtonSecondary}" Click="OnCopyLog" Margin="0,0,8,0">
+                                <Button.Content><TextBlock><Run Text="{StaticResource IconActionCopy}"/><Run Text=" Kopieren"/></TextBlock></Button.Content>
+                            </Button>
                             <Button Content="↻ Aktualisieren" Style="{StaticResource BpmButtonSecondary}" Click="OnRefreshLog"/>
                         </StackPanel>
                     </DockPanel>
@@ -119,7 +123,7 @@
             </TabItem>
 
             <!-- TAB 3: RESET -->
-            <TabItem Header="🗑 Reset" Style="{StaticResource BpmTabItem}">
+            <TabItem Style="{StaticResource BpmTabItem}"><TabItem.Header><TextBlock><Run Text="{StaticResource IconActionDelete}"/><Run Text=" Reset"/></TextBlock></TabItem.Header>
                 <Grid Margin="20">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -288,19 +292,21 @@
                             BorderBrush="{StaticResource BpmWarning}"
                             BorderThickness="1" CornerRadius="4"
                             Padding="12,8" Margin="0,0,0,16">
-                        <TextBlock Text="⚠  Die App wird nach dem Reset automatisch neu gestartet. Alle gewählten Daten gehen unwiderruflich verloren."
-                                   Style="{StaticResource BpmSmallText}"
+                        <TextBlock Style="{StaticResource BpmSmallText}"
                                    Foreground="{StaticResource BpmWarning}"
-                                   TextWrapping="Wrap"/>
+                                   TextWrapping="Wrap">
+                            <Run Text="{StaticResource IconStatusWarning}"/><Run Text="  Die App wird nach dem Reset automatisch neu gestartet. Alle gewählten Daten gehen unwiderruflich verloren."/>
+                        </TextBlock>
                     </Border>
 
                     <!-- Reset Button -->
                     <Button Grid.Row="3"
                             x:Name="BtnReset"
-                            Content="🗑 Ersteinrichtung zurücksetzen und neu starten"
                             Style="{StaticResource BpmButtonDanger}"
                             Click="OnReset"
-                            HorizontalAlignment="Left"/>
+                            HorizontalAlignment="Left">
+                        <Button.Content><TextBlock><Run Text="{StaticResource IconActionDelete}"/><Run Text=" Ersteinrichtung zurücksetzen und neu starten"/></TextBlock></Button.Content>
+                    </Button>
                 </Grid>
             </TabItem>
 

@@ -48,8 +48,7 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <TextBlock Grid.Row="0" Text="⚙ Einstellungen"
-                   Style="{DynamicResource BpmHeading1}"/>
+        <TextBlock Grid.Row="0" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource BpmTextBright}" Margin="32,24,0,0"><Run Text="{StaticResource IconNavSettings}"/><Run Text=" Einstellungen"/></TextBlock>
 
         <!-- TabControl -->
         <TabControl Grid.Row="1">
@@ -80,11 +79,10 @@
                                      BorderBrush="{DynamicResource BpmBorderDefault}"
                                      Padding="8,6" FontSize="13"
                                      x:Name="TxtSearch"/>
-                            <TextBlock Text="🔍 Suche in Projekten..."
-                                       Foreground="{DynamicResource BpmTextSecondary}"
+                            <TextBlock Foreground="{DynamicResource BpmTextSecondary}"
                                        FontSize="13" Padding="10,7"
                                        IsHitTestVisible="False"
-                                       Visibility="{Binding SearchText, Converter={StaticResource PlaceholderVisibilityConverter}}"/>
+                                       Visibility="{Binding SearchText, Converter={StaticResource PlaceholderVisibilityConverter}}"><Run Text="{StaticResource IconActionSearch}"/><Run Text=" Suche in Projekten..."/></TextBlock>
                         </Grid>
 
                         <!-- Statusfilter Toggle-Buttons -->
@@ -127,17 +125,10 @@
                               x:Name="ProjectGrid">
                     <DataGrid.ContextMenu>
                         <ContextMenu Style="{StaticResource BpmContextMenu}">
-                            <MenuItem Header="📂 Ordner öffnen" InputGestureText="Ctrl+O"
-                                      Style="{StaticResource BpmMenuItem}"
-                                      Click="OnContextOpenFolder"/>
+                            <MenuItem InputGestureText="Ctrl+O" Style="{StaticResource BpmMenuItem}" Click="OnContextOpenFolder"><MenuItem.Header><TextBlock><Run Text="{StaticResource IconFolderOpen}"/><Run Text=" Ordner öffnen"/></TextBlock></MenuItem.Header></MenuItem>
                             <Separator Style="{StaticResource BpmMenuSeparator}"/>
-                            <MenuItem Header="✏ Bearbeiten" InputGestureText="Enter"
-                                      Style="{StaticResource BpmMenuItem}"
-                                      Click="OnContextEdit"/>
-                            <MenuItem Header="🗑 Löschen" InputGestureText="Del"
-                                      Style="{StaticResource BpmMenuItem}"
-                                      Foreground="{StaticResource BpmError}"
-                                      Click="OnContextDelete"/>
+                            <MenuItem InputGestureText="Enter" Style="{StaticResource BpmMenuItem}" Click="OnContextEdit"><MenuItem.Header><TextBlock><Run Text="{StaticResource IconActionEditAlt}"/><Run Text=" Bearbeiten"/></TextBlock></MenuItem.Header></MenuItem>
+                            <MenuItem InputGestureText="Del" Style="{StaticResource BpmMenuItem}" Foreground="{StaticResource BpmError}" Click="OnContextDelete"><MenuItem.Header><TextBlock><Run Text="{StaticResource IconActionDelete}"/><Run Text=" Löschen"/></TextBlock></MenuItem.Header></MenuItem>
                         </ContextMenu>
                     </DataGrid.ContextMenu>
                         <DataGrid.Columns>
@@ -156,7 +147,7 @@
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <DockPanel>
-                                        <Button DockPanel.Dock="Right" Content="📂"
+                                        <Button DockPanel.Dock="Right" Content="{StaticResource IconFolderOpen}"
                                                 FontSize="12" Padding="4,0" MinWidth="24"
                                                 Height="20" VerticalAlignment="Center"
                                                 Background="Transparent" BorderThickness="0"
@@ -215,9 +206,8 @@
                                             MouseLeftButtonDown="OnMenuCreateProject"
                                             MouseEnter="OnMenuItemEnter"
                                             MouseLeave="OnMenuItemLeave">
-                                        <TextBlock Text="📝 Projekt erstellen"
-                                                   Foreground="{DynamicResource BpmTextPrimary}"
-                                                   FontSize="13"/>
+                                        <TextBlock Foreground="{DynamicResource BpmTextPrimary}"
+                                                   FontSize="13"><Run Text="{StaticResource IconActionCreate}"/><Run Text=" Projekt erstellen"/></TextBlock>
                                     </Border>
                                     <Rectangle Height="1" Fill="{DynamicResource BpmBorderDefault}" Margin="8,2"/>
                                     <Border Padding="12,8" Cursor="Hand"
@@ -225,9 +215,8 @@
                                             MouseLeftButtonDown="OnMenuImportProject"
                                             MouseEnter="OnMenuItemEnter"
                                             MouseLeave="OnMenuItemLeave">
-                                        <TextBlock Text="📂 Projekt importieren"
-                                                   Foreground="{DynamicResource BpmTextPrimary}"
-                                                   FontSize="13"/>
+                                        <TextBlock Foreground="{DynamicResource BpmTextPrimary}"
+                                                   FontSize="13"><Run Text="{StaticResource IconActionImport}"/><Run Text=" Projekt importieren"/></TextBlock>
                                     </Border>
                                 </StackPanel>
                             </Border>
@@ -273,7 +262,7 @@
                                      BorderBrush="{DynamicResource BpmBorderDefault}"
                                      Padding="5,3" Margin="0,4"
                                      IsReadOnly="True" FontSize="12"/>
-                            <Button Grid.Row="0" Grid.Column="2" Content="📁"
+                            <Button Grid.Row="0" Grid.Column="2" Content="{StaticResource IconActionBrowse}"
                                     Click="OnBrowseBasePath"
                                     Style="{DynamicResource BpmButtonGhost}"
                                     Margin="5,4,0,4"
@@ -289,7 +278,7 @@
                                      BorderBrush="{DynamicResource BpmBorderDefault}"
                                      Padding="5,3" Margin="0,4"
                                      IsReadOnly="True" FontSize="12"/>
-                            <Button Grid.Row="1" Grid.Column="2" Content="📁"
+                            <Button Grid.Row="1" Grid.Column="2" Content="{StaticResource IconActionBrowse}"
                                     Click="OnBrowseArchivePath"
                                     Style="{DynamicResource BpmButtonGhost}"
                                     Margin="5,4,0,4"

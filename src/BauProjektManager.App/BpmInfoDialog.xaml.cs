@@ -44,7 +44,7 @@ public partial class BpmInfoDialog : Window
             Title = title,
             Owner = Application.Current.MainWindow
         };
-        dialog.TxtIcon.Text = "⚠";
+        dialog.TxtIcon.Text = (string)Application.Current.FindResource("IconStatusWarning");
         dialog.TxtMessage.Text = message;
         dialog.ShowDialog();
     }
@@ -59,7 +59,7 @@ public partial class BpmInfoDialog : Window
             Title = title,
             Owner = Application.Current.MainWindow
         };
-        dialog.TxtIcon.Text = "❌";
+        dialog.TxtIcon.Text = (string)Application.Current.FindResource("IconStatusError");
         dialog.TxtMessage.Text = message;
         dialog.ShowDialog();
     }

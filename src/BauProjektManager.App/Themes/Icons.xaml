@@ -1,0 +1,51 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!-- ══════════════════════════════════════════════════════════
+         BPM Icon-Registry
+
+         PROVISORISCH: Emoji-basiert.
+         Wird bei UI-Refresh durch Segoe Fluent Icons ersetzt.
+         Dann nur DIESE Datei ändern — alle Referenzen bleiben.
+
+         Nutzung in XAML:
+           Nur Icon:   Content="{StaticResource IconFolder}"
+           Icon+Text:  <TextBlock><Run Text="{StaticResource IconFolderOpen}"/><Run Text=" Ordner öffnen"/></TextBlock>
+
+         Namenskonvention: Icon[Kategorie][Objekt/Aktion]
+         ══════════════════════════════════════════════════════════ -->
+
+    <!-- ── Navigation / Sidebar ────────────────────────────────── -->
+    <sys:String x:Key="IconNavPlans">📁</sys:String>
+    <sys:String x:Key="IconNavSettings">⚙</sys:String>
+    <sys:String x:Key="IconNavDevTools">🛠</sys:String>
+
+    <!-- ── Ordner / Dateien ────────────────────────────────────── -->
+    <sys:String x:Key="IconFolder">📁</sys:String>
+    <sys:String x:Key="IconFolderOpen">📂</sys:String>
+    <sys:String x:Key="IconFile">📄</sys:String>
+
+    <!-- ── Aktionen ────────────────────────────────────────────── -->
+    <sys:String x:Key="IconActionAdd">＋</sys:String>
+    <sys:String x:Key="IconActionEdit">✎</sys:String>
+    <sys:String x:Key="IconActionEditAlt">✏</sys:String>
+    <sys:String x:Key="IconActionDelete">🗑</sys:String>
+    <sys:String x:Key="IconActionCopy">📋</sys:String>
+    <sys:String x:Key="IconActionSearch">🔍</sys:String>
+    <sys:String x:Key="IconActionBrowse">📁</sys:String>
+    <sys:String x:Key="IconActionImport">📂</sys:String>
+    <sys:String x:Key="IconActionCreate">📝</sys:String>
+
+    <!-- ── Richtung / Sortierung ───────────────────────────────── -->
+    <sys:String x:Key="IconArrowUp">▲</sys:String>
+    <sys:String x:Key="IconArrowDown">▼</sys:String>
+
+    <!-- ── Status / Feedback ───────────────────────────────────── -->
+    <sys:String x:Key="IconStatusWarning">⚠</sys:String>
+    <sys:String x:Key="IconStatusError">❌</sys:String>
+
+    <!-- ── Personen ────────────────────────────────────────────── -->
+    <sys:String x:Key="IconPerson">👤</sys:String>
+
+</ResourceDictionary>

@@ -21,6 +21,7 @@ public partial class ProjectEditDialog : Window
     private ObservableCollection<ProjectParticipant> _participants = [];
     private ObservableCollection<ProjectLink> _portalLinks = [];
     private ObservableCollection<ProjectLink> _customLinks = [];
+    private FileSystemWatcher? _folderWatcher;
 
     public ProjectEditDialog(Project project) : this(project, null) { }
 
@@ -41,6 +42,7 @@ public partial class ProjectEditDialog : Window
         {
             TxtDialogTitle.Text = "Projekt bearbeiten";
             ProjectFolderTemplate.LoadFromDisk(project.Paths.Root);
+            StartFolderWatcher(project.Paths.Root);
         }
         else
         {
@@ -976,6 +978,38 @@ public partial class ProjectEditDialog : Window
     }
 
     private void OnCancel(object sender, RoutedEventArgs e) { DialogResult = false; Close(); }
+
+    // ── FileSystemWatcher für Live-Ordnerstruktur ────────────
+    private void StartFolderWatcher(string rootPath)
+    {
+        if (!Directory.Exists(rootPath)) return;
+
+        _folderWatcher = new FileSystemWatcher(rootPath)
+        {
+            IncludeSubdirectories = true,
+            NotifyFilter = NotifyFilters.DirectoryName,
+            EnableRaisingEvents = true
+        };
+
+        _folderWatcher.Created += OnFolderChanged;
+        _folderWatcher.Deleted += OnFolderChanged;
+        _folderWatcher.Renamed += OnFolderChanged;
+
+        Closed += (_, _) =>
+        {
+            _folderWatcher.EnableRaisingEvents = false;
+            _folderWatcher.Dispose();
+            _folderWatcher = null;
+        };
+    }
+
+    private void OnFolderChanged(object sender, FileSystemEventArgs e)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            ProjectFolderTemplate.LoadFromDisk(Project.Paths.Root);
+        });
+    }
 
     // ═══════════════════════════════════════════
     // HELPERS

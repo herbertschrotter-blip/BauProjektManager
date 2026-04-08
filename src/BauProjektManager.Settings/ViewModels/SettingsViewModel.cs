@@ -21,6 +21,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     private readonly RegistryJsonExporter _exporter;
     private readonly AppSettingsService _settingsService = new();
     private readonly ProjectFolderService _folderService;
+    private readonly BpmManifestService _manifestService = new();
     private AppSettings? _settings;
 
     [ObservableProperty]
@@ -442,6 +443,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
                 dialog.Project.Paths.Root = projectRoot;
 
                 _db.SaveProject(dialog.Project);
+                _manifestService.WriteManifest(dialog.Project, projectRoot);
                 Projects.Add(dialog.Project);
                 SelectedProject = dialog.Project;
                 ExportRegistry();
@@ -475,6 +477,10 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
                 }
 
                 _db.SaveProject(dialog.Project);
+                if (!string.IsNullOrEmpty(dialog.Project.Paths?.Root))
+                {
+                    _manifestService.WriteManifest(dialog.Project, dialog.Project.Paths.Root);
+                }
                 int index = Projects.IndexOf(SelectedProject);
                 if (index >= 0)
                 {
@@ -546,6 +552,115 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             {
                 Log.Error(ex, "Failed to delete project");
                 MessageBox.Show($"Fehler beim Löschen: {ex.Message}", "Fehler",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+    }
+
+    [RelayCommand]
+    private void ImportFolder()
+    {
+        var dialog = new Microsoft.Win32.OpenFolderDialog
+        {
+            Title = "Projektordner auswählen"
+        };
+
+        if (dialog.ShowDialog() != true) return;
+
+        var folderPath = dialog.FolderName;
+
+        if (_manifestService.HasManifest(folderPath))
+        {
+            ImportFromManifest(folderPath);
+        }
+        else
+        {
+            ImportFromFolder(folderPath);
+        }
+    }
+
+    [RelayCommand]
+    private void ImportManifest()
+    {
+        var dialog = new Microsoft.Win32.OpenFolderDialog
+        {
+            Title = "Projektordner mit .bpm-manifest auswählen"
+        };
+
+        if (dialog.ShowDialog() != true) return;
+
+        var folderPath = dialog.FolderName;
+
+        if (!_manifestService.HasManifest(folderPath))
+        {
+            MessageBox.Show(
+                "In diesem Ordner wurde keine .bpm-manifest Datei gefunden.\n\n" +
+                "Verwende \"Bestehenden Ordner importieren\" um ein Projekt ohne Manifest aufzunehmen.",
+                "Kein Manifest gefunden",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        ImportFromManifest(folderPath);
+    }
+
+    private void ImportFromManifest(string folderPath)
+    {
+        var manifest = _manifestService.ReadManifest(folderPath);
+        if (manifest is null)
+        {
+            MessageBox.Show("Manifest konnte nicht gelesen werden.", "Fehler",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
+        var project = _manifestService.ManifestToProject(manifest, folderPath);
+
+        var confirmDialog = new ProjectEditDialog(project);
+        confirmDialog.Owner = Application.Current.MainWindow;
+        if (confirmDialog.ShowDialog() == true)
+        {
+            try
+            {
+                _db.SaveProject(confirmDialog.Project);
+                _manifestService.WriteManifest(confirmDialog.Project, folderPath);
+                Projects.Add(confirmDialog.Project);
+                SelectedProject = confirmDialog.Project;
+                ExportRegistry();
+                Log.Information("Project imported from manifest: {Name} ({Number})",
+                    confirmDialog.Project.Name, confirmDialog.Project.ProjectNumber);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to import project from manifest");
+                MessageBox.Show($"Fehler beim Import: {ex.Message}", "Fehler",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+    }
+
+    private void ImportFromFolder(string folderPath)
+    {
+        var project = _manifestService.ScanFolder(folderPath);
+
+        var editDialog = new ProjectEditDialog(project);
+        editDialog.Owner = Application.Current.MainWindow;
+        if (editDialog.ShowDialog() == true)
+        {
+            try
+            {
+                _db.SaveProject(editDialog.Project);
+                _manifestService.WriteManifest(editDialog.Project, folderPath);
+                Projects.Add(editDialog.Project);
+                SelectedProject = editDialog.Project;
+                ExportRegistry();
+                Log.Information("Project imported from folder: {Name} ({Number}) at {Path}",
+                    editDialog.Project.Name, editDialog.Project.ProjectNumber, folderPath);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to import project from folder");
+                MessageBox.Show($"Fehler beim Import: {ex.Message}", "Fehler",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

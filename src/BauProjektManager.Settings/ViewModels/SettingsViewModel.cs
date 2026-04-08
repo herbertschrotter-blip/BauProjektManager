@@ -579,31 +579,6 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         }
     }
 
-    [RelayCommand]
-    private void ImportManifest()
-    {
-        var dialog = new Microsoft.Win32.OpenFolderDialog
-        {
-            Title = "Projektordner mit .bpm-manifest auswählen"
-        };
-
-        if (dialog.ShowDialog() != true) return;
-
-        var folderPath = dialog.FolderName;
-
-        if (!_manifestService.HasManifest(folderPath))
-        {
-            MessageBox.Show(
-                "In diesem Ordner wurde keine .bpm-manifest Datei gefunden.\n\n" +
-                "Verwende \"Bestehenden Ordner importieren\" um ein Projekt ohne Manifest aufzunehmen.",
-                "Kein Manifest gefunden",
-                MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
-        ImportFromManifest(folderPath);
-    }
-
     private void ImportFromManifest(string folderPath)
     {
         var manifest = _manifestService.ReadManifest(folderPath);

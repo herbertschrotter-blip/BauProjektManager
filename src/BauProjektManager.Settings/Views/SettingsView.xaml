@@ -41,6 +41,18 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Popup MenuItem Style (Token-basiert, Dark Theme) -->
+        <Style x:Key="BpmPopupMenuItem" TargetType="Border">
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource BpmBgHover}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </UserControl.Resources>
 
     <Grid Margin="10">
@@ -98,9 +110,13 @@
 
                     <!-- Buttons -->
                     <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,8,0,0">
-                        <Button Content="+ Neues Projekt"
+                        <Button Content="＋ Neues Projekt"
                                 Command="{Binding AddProjectCommand}"
                                 Style="{DynamicResource BpmButtonPrimary}"
+                                Margin="0,0,10,0"/>
+                        <Button Content="📂 Projekt importieren"
+                                Command="{Binding ImportFolderCommand}"
+                                Style="{DynamicResource BpmButtonSecondary}"
                                 Margin="0,0,10,0"/>
                         <Button Content="Bearbeiten"
                                 Command="{Binding EditProjectCommand}"

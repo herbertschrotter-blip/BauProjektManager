@@ -92,6 +92,16 @@ public partial class SettingsView : UserControl
         }
     }
 
+    private void OnProjectMenuClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Parent is StackPanel sp && sp.Parent is Border border)
+        {
+            border.ContextMenu.PlacementTarget = border;
+            border.ContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+            border.ContextMenu.IsOpen = true;
+        }
+    }
+
     private void OnBrowseBasePath(object sender, RoutedEventArgs e)
     {
         var dialog = new Microsoft.Win32.OpenFolderDialog

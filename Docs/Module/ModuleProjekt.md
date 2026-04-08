@@ -30,12 +30,18 @@ Das Projekt-Modul ist das Herzstück des BauProjektManager. Es verwaltet alle Ba
 | Domain | `Models/ProjectTimeline.cs` | Zeitplan (4 Datumswerte) |
 | Domain | `Models/ProjectPaths.cs` | Pfade relativ zu Root |
 | Domain | `Models/AppSettings.cs` | Globale Einstellungen, Ordner-Template, editierbare Listen |
+| Domain | `Models/BpmManifest.cs` | Portabler Projekt-Snapshot (.bpm-manifest) mit eigenen DTOs |
 | Domain | `Enums/ProjectStatus.cs` | Active, Completed |
+| Domain | `Interfaces/IDialogService.cs` | Abstraktion für Info/Warn/Error/Confirm Dialoge |
 | Infrastructure | `Persistence/ProjectDatabase.cs` | SQLite Schema, CRUD für alle Tabellen |
 | Infrastructure | `Persistence/RegistryJsonExporter.cs` | Flacher JSON-Export für VBA |
 | Infrastructure | `Persistence/AppSettingsService.cs` | settings.json lesen/schreiben |
 | Infrastructure | `Persistence/ProjectFolderService.cs` | Projektordner auf Disk erstellen/synchronisieren |
-| Settings | `ViewModels/SettingsViewModel.cs` | ViewModel: Projekte, Pfade, Ordner-Template |
+| Infrastructure | `Persistence/BpmManifestService.cs` | .bpm-manifest lesen/schreiben/scannen, Hidden+ReadOnly |
+| App | `BpmDialogService.cs` | Implementation von IDialogService mit Dark Theme Dialogen |
+| App | `BpmInfoDialog.xaml` + `.cs` | Eigene Info/Warn/Error MessageBox im BPM-Design |
+| App | `BpmConfirmDialog.xaml` + `.cs` | Ja/Nein-Dialog im BPM-Design |
+| Settings | `ViewModels/SettingsViewModel.cs` | ViewModel: Projekte, Pfade, Ordner-Template, Suche, Filter, Import |
 | Settings | `Views/SettingsView.xaml` + `.cs` | 2-Tab-Seite (Projekte + Ordnerstruktur) |
 | Settings | `Views/ProjectEditDialog.xaml` + `.cs` | 5-Tab-Dialog zum Anlegen/Bearbeiten |
 | Settings | `Views/FolderTemplateControl.xaml` + `.cs` | Shared UserControl für Ordner-TreeView |
@@ -266,11 +272,14 @@ Exportiert alle Projekte als flaches JSON nach `{AppRoot}/Export/registry.json`.
 
 | Element | Beschreibung |
 |---------|-------------|
-| Projektliste | DataGrid mit Spalten: Projekt, Nr., Status (● Aktiv grün, ● Abgeschlossen rot), Pfad |
-| + Neues Projekt | Öffnet ProjectEditDialog im Anlegen-Modus |
-| Bearbeiten | Öffnet ProjectEditDialog im Bearbeiten-Modus |
+| Suchfeld | Oben links, Platzhalter "🔍 Suche in Projekten...", durchsucht Name, FullName, Projektnummer, Client, Ort, Tags, Notes (300ms Debounce) |
+| Statusfilter | Toggle-Buttons rechts: Alle (blau aktiv) / Aktiv / Abgeschlossen — filtert über CollectionView |
+| Filterinfo | Unter der Liste: "4 Projekte geladen" oder "1 von 4 Projekten" |
+| Projektliste | DataGrid bindet an gefilterte ProjectsView, Spalten: Projekt, Nr., Status (● Aktiv grün, ● Abgeschlossen rot), Pfad |
+| ＋ Neues Projekt | Popup-Button mit 2 Optionen: "📝 Projekt erstellen" und "📂 Projekt importieren" |
+| Bearbeiten | Öffnet ProjectEditDialog. Zeigt BPM-Dialog wenn kein Projekt ausgewählt. |
 | Archivieren | Vorbereitet, disabled |
-| Löschen | Rot, mit Bestätigungsdialog. Löscht aus DB, nicht von Disk. |
+| Löschen | Rot, mit BPM-Bestätigungsdialog. Zeigt BPM-Dialog wenn kein Projekt ausgewählt. Löscht aus DB, nicht von Disk. |
 | Pfade-Bereich | Unten verankert: Arbeitsordner, Archivordner, Cloud-Speicher (mit 📁-Buttons) |
 | Statusleiste | Zeigt Anzahl geladener Projekte / Export-Status |
 
@@ -419,7 +428,7 @@ Diese Listen sind vom User anpassbar und werden als ComboBox-Quellen im Dialog v
 - **ProjectEditDialog.xaml.cs ist zu groß** (~46 KB, ~1200 Zeilen) — Refactoring/Split geplant aber depriorisiert hinter PlanManager.
 - **Code-Behind statt reines MVVM** — Der ProjectEditDialog verwendet Code-Behind für Tab-Logik. Akzeptabler Kompromiss für die Komplexität des 5-Tab-Dialogs.
 - **FolderTemplateControl Bug** — beim Bearbeiten bestehender Projekte "funktioniert noch nicht ganz so wie gewollt" (Herbert-Feedback, noch nicht debuggt).
-- **Keine Suche in Projektliste** — Suchfeld ist im Backlog, noch nicht implementiert.
+- **Suche durchsucht keine Bauteile/Geschosse** — nur Stammdaten, Auftraggeber, Adresse, Tags.
 - **Archivieren nicht implementiert** — Button existiert, ist disabled.
 - **Adressbuch fehlt** — Clients sind aktuell pro Projekt eingebettet. Zentrales Adressbuch mit Wiederverwendung geplant.
 - **ULID-Migration ausstehend** — Alle IDs sind noch Präfix-basiert (ADR-039 v2 beschlossen, Code-Umbau noch nicht durchgeführt).
@@ -434,7 +443,7 @@ Diese Listen sind vom User anpassbar und werden als ComboBox-Quellen im Dialog v
 | ProjectEditDialog Split | .xaml.cs aufteilen (Tab-Handler als Partial Classes oder eigene Klassen) | Geplant, depriorisiert |
 | ULID-Migration | Alle IDs auf ULID umstellen (IIdGenerator, Cysharp/Ulid) | ADR-039 v2 beschlossen |
 | Adressbuch | Zentrale contacts-Tabelle, Wiederverwendung über Projekte | Backlog |
-| Suchfeld Projektliste | Textfeld zum Filtern der Projektliste | Backlog |
+| Suchfeld Projektliste | Suchfeld + Statusfilter mit CollectionView | ✅ v0.22.0 |
 | 2-Spalten Layout Dialog | Breitere rechte Spalte, mehr Platz für Ordnerstruktur | Backlog |
 | Token-Migration | Hardcoded Colors → DynamicResource Token-Referenzen | Teilweise erledigt, Rest geplant |
 | FolderTemplateControl Fix | Bug beim Bearbeiten bestehender Projekte beheben | Offen |
@@ -519,3 +528,6 @@ src/
 | v0.19.0 | FolderTemplateControl als Shared UserControl (DRY) |
 | v0.19.1 | Button-Größen Fix in FolderTemplateControl |
 | v0.19.2 | IsExisting-Flag: Löschschutz für bestehende Ordner |
+| v0.20.0 | BpmManifest + BpmManifestService: .bpm-manifest lesen/schreiben/scannen. Projekt-Import (Ordner + Manifest Auto-Erkennung). Manifest wird bei Add/Edit automatisch geschrieben. |
+| v0.21.0 | IDialogService + BpmDialogService: eigene Dark Theme Dialoge statt MessageBox. Popup-Button "＋ Neues Projekt" mit 2 Optionen. Hinweis-Dialog bei Bearbeiten/Löschen ohne Auswahl. |
+| v0.22.0 | Projektsuche (Suchfeld mit Platzhalter, 300ms Debounce, durchsucht Name/FullName/Nr/Client/Ort/Tags). Statusfilter (Toggle-Buttons Alle/Aktiv/Abgeschlossen, CollectionView). Filterinfo-Anzeige. |

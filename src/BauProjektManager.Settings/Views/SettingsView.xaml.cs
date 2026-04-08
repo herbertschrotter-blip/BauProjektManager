@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Diagnostics;
 using BauProjektManager.Domain.Enums;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Settings.ViewModels;
@@ -185,6 +186,58 @@ public partial class SettingsView : UserControl
     {
         if (sender is Border border)
             border.Background = Brushes.Transparent;
+    }
+
+    private void OnOpenFolderClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is string path && !string.IsNullOrEmpty(path))
+        {
+            try
+            {
+                if (System.IO.Directory.Exists(path))
+                    System.Diagnostics.Process.Start("explorer.exe", path);
+            }
+            catch { }
+        }
+    }
+
+    private void OnContextOpenFolder(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is SettingsViewModel vm)
+            vm.OpenProjectFolderCommand.Execute(null);
+    }
+
+    private void OnContextEdit(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is SettingsViewModel vm)
+            vm.EditProjectCommand.Execute(null);
+    }
+
+    private void OnContextDelete(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is SettingsViewModel vm)
+            vm.DeleteProjectCommand.Execute(null);
+    }
+
+    private void OnDataGridKeyDown(object sender, KeyEventArgs e)
+    {
+        if (DataContext is not SettingsViewModel vm) return;
+
+        if (e.Key == Key.Enter)
+        {
+            vm.EditProjectCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Delete)
+        {
+            vm.DeleteProjectCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.O && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+        {
+            vm.OpenProjectFolderCommand.Execute(null);
+            e.Handled = true;
+        }
     }
 
     private void OnBrowseBasePath(object sender, RoutedEventArgs e)

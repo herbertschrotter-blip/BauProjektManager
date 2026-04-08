@@ -122,7 +122,24 @@
                               ColumnHeaderStyle="{DynamicResource BpmDataGridColumnHeader}"
                               RowStyle="{DynamicResource BpmDataGridRow}"
                               CellStyle="{DynamicResource BpmDataGridCell}"
-                              MouseDoubleClick="OnRowDoubleClick">
+                              MouseDoubleClick="OnRowDoubleClick"
+                              KeyDown="OnDataGridKeyDown"
+                              x:Name="ProjectGrid">
+                    <DataGrid.ContextMenu>
+                        <ContextMenu Style="{StaticResource BpmContextMenu}">
+                            <MenuItem Header="📂 Ordner öffnen" InputGestureText="Ctrl+O"
+                                      Style="{StaticResource BpmMenuItem}"
+                                      Click="OnContextOpenFolder"/>
+                            <Separator Style="{StaticResource BpmMenuSeparator}"/>
+                            <MenuItem Header="✏ Bearbeiten" InputGestureText="Enter"
+                                      Style="{StaticResource BpmMenuItem}"
+                                      Click="OnContextEdit"/>
+                            <MenuItem Header="🗑 Löschen" InputGestureText="Del"
+                                      Style="{StaticResource BpmMenuItem}"
+                                      Foreground="{StaticResource BpmError}"
+                                      Click="OnContextDelete"/>
+                        </ContextMenu>
+                    </DataGrid.ContextMenu>
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Projekt" Binding="{Binding Name}" Width="*"/>
                             <DataGridTextColumn Header="Nr." Binding="{Binding ProjectNumber}" Width="80"/>
@@ -135,12 +152,37 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="Pfad" Binding="{Binding Paths.Root}" Width="*">
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock"
-                                           BasedOn="{StaticResource BpmDataGridCellSecondary}"/>
-                                </DataGridTextColumn.ElementStyle>
-                            </DataGridTextColumn>
+                        <DataGridTemplateColumn Header="Pfad" Width="*" MinWidth="200">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <DockPanel>
+                                        <Button DockPanel.Dock="Right" Content="📂"
+                                                FontSize="12" Padding="4,0" MinWidth="24"
+                                                Height="20" VerticalAlignment="Center"
+                                                Background="Transparent" BorderThickness="0"
+                                                Foreground="{DynamicResource BpmTextPrimary}"
+                                                Cursor="Hand" ToolTip="Ordner im Explorer öffnen"
+                                                Click="OnOpenFolderClick" Tag="{Binding Paths.Root}">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Foreground" Value="{StaticResource BpmTextPrimary}"/>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Foreground" Value="{StaticResource BpmAccentPrimary}"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                        <TextBlock Text="{Binding Paths.Root}"
+                                                   Foreground="{DynamicResource BpmTextSecondary}"
+                                                   FontSize="12" VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Margin="0,0,4,0"/>
+                                    </DockPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
 

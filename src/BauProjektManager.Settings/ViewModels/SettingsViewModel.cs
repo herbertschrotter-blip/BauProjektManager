@@ -684,6 +684,36 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private void OpenProjectFolder()
+    {
+        if (SelectedProject is null)
+        {
+            _dialogService.ShowInfo("Bitte zuerst ein Projekt in der Liste auswählen.",
+                "Kein Projekt ausgewählt");
+            return;
+        }
+
+        var path = SelectedProject.Paths?.Root;
+        if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
+        {
+            _dialogService.ShowWarning("Der Projektordner existiert nicht oder ist nicht konfiguriert.",
+                "Ordner nicht gefunden");
+            return;
+        }
+
+        try
+        {
+            System.Diagnostics.Process.Start("explorer.exe", path);
+            Log.Information("Opened project folder: {Path}", path);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to open project folder");
+            _dialogService.ShowError($"Ordner konnte nicht geöffnet werden: {ex.Message}");
+        }
+    }
+
+    [RelayCommand]
     private void ImportFolder()
     {
         var dialog = new Microsoft.Win32.OpenFolderDialog

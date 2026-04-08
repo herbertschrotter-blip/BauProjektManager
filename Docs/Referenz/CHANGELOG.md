@@ -5,6 +5,45 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.22.0] — 2026-04-08
+
+### Hinzugefügt
+- **Settings:** Projektsuche — Suchfeld mit Platzhalter, durchsucht Name, FullName, Projektnummer, Auftraggeber, Ort, Tags (300ms Debounce)
+- **Settings:** Statusfilter — Toggle-Buttons (Alle/Aktiv/Abgeschlossen) mit CollectionView
+- **Settings:** Filterinfo-Anzeige ("3 von 4 Projekten")
+
+---
+
+## [v0.21.0] — 2026-04-08
+
+### Hinzugefügt
+- **Domain:** `IDialogService` Interface — abstrakte Benutzer-Dialoge (Info/Warnung/Fehler/Bestätigung)
+- **App:** `BpmDialogService` Implementation mit Dark Theme Dialogen
+- **App:** `BpmInfoDialog.xaml` — eigene Info/Warn/Error MessageBox im BPM-Design
+- **App:** `BpmConfirmDialog.xaml` — eigener Ja/Nein-Dialog im BPM-Design
+- **Settings:** Popup-Button "＋ Neues Projekt" mit 2 Optionen (Erstellen / Importieren)
+- **Settings:** Hinweis-Dialog wenn Bearbeiten/Löschen ohne Projektauswahl
+
+### Geändert
+- **Settings:** Alle `MessageBox.Show()` durch `IDialogService` ersetzt
+- **App:** `MainWindow.xaml.cs` erstellt `BpmDialogService` und übergibt an SettingsView
+
+---
+
+## [v0.20.0] — 2026-04-08
+
+### Hinzugefügt
+- **Domain:** `BpmManifest.cs` — portabler Projekt-Snapshot als .bpm-manifest (ADR-013 v2)
+- **Infrastructure:** `BpmManifestService.cs` — Manifest lesen/schreiben/scannen, Hidden+ReadOnly Attribute, Atomic Write
+- **Settings:** Projekt-Import — Ordner wählen, Auto-Erkennung (mit/ohne Manifest)
+- **Settings:** Manifest wird automatisch bei Projekt-Erstellen und -Bearbeiten geschrieben
+
+### Geändert
+- **Docs:** ADR-013 v2 — Manifest erweitert von Ausweis auf vollständigen Projekt-Snapshot
+- **Docs:** Architektur Kap. 3.6 — Manifest-Schema mit allen Projektdaten
+
+---
+
 ## [v0.17.0] — 2026-04-04
 
 ### Changed

@@ -701,6 +701,7 @@ BauProjektManager.sln
 │   │   │   ├── ProjectStatus.cs               ← ✅ Implementiert
 │   │   │   └── DataClassification.cs          ← ⬜ Geplant (ClassA/B/C, ADR-035)
 │   │   ├── IIdGenerator.cs                    ← ⬜ ADR-039 v2
+│   │   │   ├── IDialogService.cs              ← ✅ Info/Warn/Error/Confirm Dialoge
     │   │   ├── Privacy/
     │   │   │   └── IPrivacyPolicy.cs              ← ⬜ Geplant (ADR-036)│   │   └── BauProjektManager.Domain.csproj    ← KEINE Abhängigkeiten
 │   │
@@ -709,7 +710,8 @@ BauProjektManager.sln
 │   │   │   ├── ProjectDatabase.cs             ← ✅ SQLite CRUD Schema v2.0 ULID (projects, clients, building_parts, building_levels, project_participants, project_links)
 │   │   │   ├── AppSettingsService.cs           ← ✅ settings.json laden/speichern
 │   │   │   ├── RegistryJsonExporter.cs        ← ✅ SQLite → JSON Export
-│   │   │   └── ProjectFolderService.cs        ← ✅ Ordner erstellen
+│   │   │   ├── ProjectFolderService.cs        ← ✅ Ordner erstellen
+│   │   │   └── BpmManifestService.cs          ← ✅ .bpm-manifest lesen/schreiben/scannen
     │   │   ├── UlidIdGenerator.cs                  ← ⬜ ADR-039 v2 (NuGet: Cysharp/Ulid)
     │   │   ├── Communication/                      ← ⬜ Geplant (vor erstem Online-Modul)
     │   │   │   ├── ExternalCommunicationService.cs ← ⬜ IExternalCommunicationService (ADR-035)
@@ -719,11 +721,12 @@ BauProjektManager.sln
 │   │
 │   ├── BauProjektManager.Settings/           ← ✅ Einstellungen Feature
 │   │   ├── ViewModels/
-│   │   │   ├── SettingsViewModel.cs           ← ✅ 2-Tab-Seite
+│   │   │   ├── SettingsViewModel.cs           ← ✅ 2-Tab-Seite, IDialogService, Suche+Filter, Import
 │   │   │   └── ProjectEditViewModel.cs        ← ✅ 2-Spalten-Dialog
 │   │   ├── Views/
-│   │   │   ├── SettingsView.xaml              ← ✅ Projektliste + Pfade + Ordnerstruktur
-│   │   │   └── ProjectEditDialog.xaml         ← ✅ Alle Felder + TreeView
+│   │   │   ├── SettingsView.xaml              ← ✅ Suchfeld, Statusfilter, Popup-Button, Pfade
+│   │   │   ├── FolderTemplateControl.xaml     ← ✅ Shared Ordner-TreeView
+│   │   │   └── ProjectEditDialog.xaml         ← ✅ 5-Tab-Dialog
 │   │   └── BauProjektManager.Settings.csproj
 │   │
 │   └── BauProjektManager.PlanManager/        ← ⬜ PlanManager Feature (nächste Phase)

@@ -99,11 +99,11 @@ Diese Features verbessern V1, sind aber kein Blocker für den Release.
 
 | Feature | Beschreibung | Status |
 |---------|-------------|--------|
-| .bpm-manifest (#11) | Versteckte Datei als Projektordner-Ausweis, Auto-Suche bei Umbenennung (ADR-013) | ⬜ |
+| .bpm-manifest (#11) | Versteckte Datei als Projektordner-Ausweis + vollständiger Projekt-Snapshot für Import/Übergabe (ADR-013 v2). Hidden + ReadOnly. Auto-Write bei Speichern. | ✅ v0.20.0 |
 | Projekt archivieren (#12) | Ordner in Archiv verschieben, Pfad aktualisieren. Button vorbereitet (disabled) | ⬜ |
 | Single-Writer Mutex (#14) | Nur eine App-Instanz gleichzeitig (ADR-016) | ⬜ |
 | Versionsnummer im Log (#16) | Aus Assembly, nicht hardcoded | ✅ v0.16.1 |
-| Bestehende Ordner zuweisen | Existierenden Ordner einem Projekt zuweisen statt neu anlegen | ⬜ |
+| Bestehende Ordner zuweisen | Existierenden Ordner einem Projekt zuweisen statt neu anlegen. "Projekt importieren" Button mit Auto-Manifest-Erkennung. | ✅ v0.20.0 |
 | Ordner umbenennen auf Disk | Bei Sortierung/Präfix-Änderung Ordner auf Festplatte umbenennen | ⬜ |
 | Plan-Sammler (#34) | Pläne per Checkbox sammeln und nach Schema sortieren | ⬜ |
 

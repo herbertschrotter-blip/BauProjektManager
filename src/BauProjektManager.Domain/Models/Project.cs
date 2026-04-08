@@ -29,6 +29,18 @@ public class Project
     public List<BuildingPart> BuildingParts { get; set; } = [];
 
     /// <summary>
+    /// Wenn true, verwenden alle Bauteile denselben ± 0,00 Wert (GlobalZeroLevel).
+    /// Wenn false, hat jedes Bauteil sein eigenes ZeroLevelAbsolute.
+    /// </summary>
+    public bool UseGlobalZeroLevel { get; set; }
+
+    /// <summary>
+    /// Globales ± 0,00 Absolutniveau in Meter über Adria.
+    /// Wird nur verwendet wenn UseGlobalZeroLevel = true.
+    /// </summary>
+    public double GlobalZeroLevel { get; set; }
+
+    /// <summary>
     /// Beteiligte Firmen/Personen am Projekt (Architekt, Statiker, ÖBA etc.).
     /// Projektbezogen gespeichert, später mit zentralem Adressbuch verknüpft.
     /// </summary>

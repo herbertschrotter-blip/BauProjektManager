@@ -424,13 +424,43 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Text="Bauteile" Style="{StaticResource SH}" Margin="0,0,0,6"/>
-                        <TextBlock Grid.Row="1" Text="Jedes Bauteil hat eigene Geschosse und ein eigenes ± 0,00 Niveau."
-                                   Style="{DynamicResource BpmSmallText}" Margin="0,0,0,8"/>
-                        <DataGrid Grid.Row="2" x:Name="DgParts" Style="{StaticResource DgBase}"
+                        <TextBlock Grid.Row="0" Text="Bauteile" Style="{StaticResource SH}" Margin="0,0,0,4"/>
+
+                        <!-- Globales ± 0,00 Toggle -->
+                        <Border Grid.Row="1" Background="{DynamicResource BpmBgSurface}"
+                                BorderBrush="{DynamicResource BpmBorderDefault}" BorderThickness="0.5"
+                                CornerRadius="4" Padding="8,5" Margin="0,0,0,6">
+                            <StackPanel Orientation="Horizontal">
+                                <!-- Ovaler Toggle-Switch -->
+                                <Border x:Name="ToggleTrack" Width="38" Height="20" CornerRadius="10"
+                                        Background="#555" Cursor="Hand" VerticalAlignment="Center"
+                                        MouseLeftButtonDown="OnToggleGlobalZero">
+                                    <Ellipse x:Name="ToggleKnob" Width="16" Height="16"
+                                             Fill="White" HorizontalAlignment="Left" Margin="2,0,0,0"/>
+                                </Border>
+                                <TextBlock Text="Globales ± 0,00 Niveau"
+                                           Foreground="{DynamicResource BpmTextPrimary}" FontSize="12"
+                                           VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                <TextBox x:Name="TxtGlobalZero" Width="80" Margin="12,0,8,0"
+                                         Background="{DynamicResource BpmBgBase}"
+                                         Foreground="#EF9F27"
+                                         BorderBrush="{DynamicResource BpmBorderDefault}"
+                                         TextAlignment="Right" FontSize="12"
+                                         Visibility="Collapsed"
+                                         TextChanged="OnGlobalZeroValueChanged"/>
+                                <TextBlock x:Name="TxtGlobalZeroHint" Text="m ü.A. — wird auf alle Bauteile übernommen"
+                                           Foreground="{DynamicResource BpmTextSecondary}" FontSize="11"
+                                           VerticalAlignment="Center" Visibility="Collapsed"/>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Grid.Row="2" Text="Jedes Bauteil hat eigene Geschosse."
+                                   Style="{DynamicResource BpmSmallText}" Margin="0,0,0,6"/>
+                        <DataGrid Grid.Row="3" x:Name="DgParts" Style="{StaticResource DgBase}"
                                   ColumnHeaderStyle="{StaticResource DgHeaderPrimary}"
                                   CellStyle="{StaticResource DarkDgCell}"
                                   SelectionChanged="OnPartSelectionChanged">
@@ -441,7 +471,7 @@
                                 <DataGridTextColumn Header="± 0,00 abs." Binding="{Binding ZeroLevelAbsolute, StringFormat=F2}" Width="100"/>
                             </DataGrid.Columns>
                         </DataGrid>
-                        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,6,0,0">
+                        <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,6,0,0">
                             <Button Content="+ Bauteil" Click="OnAddPart" Style="{DynamicResource BpmButtonPrimary}" Padding="10,5" Margin="0,0,6,0" MinWidth="0" MinHeight="0"/>
                             <Button Content="Bearbeiten" Click="OnEditPart" Style="{DynamicResource BpmButtonSecondary}" Padding="10,5" Margin="0,0,6,0" MinWidth="0" MinHeight="0"/>
                             <Button Content="Entfernen" Click="OnRemovePart" Style="{DynamicResource BpmButtonDanger}" Padding="10,5" MinWidth="0" MinHeight="0"/>
@@ -463,10 +493,10 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <DockPanel Grid.Row="0" Margin="0,4,0,4">
-                            <TextBlock x:Name="TxtLevelsHeader" Text="Geschosse" Style="{StaticResource SH}" Margin="0"/>
-                            <Button Content="{StaticResource IconActionEdit}" Style="{StaticResource IconBtn}" Click="OnEditLevelNames" ToolTip="Geschoss-Liste bearbeiten" Margin="8,12,0,6"/>
-                        </DockPanel>
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,4,0,4">
+                            <TextBlock x:Name="TxtLevelsHeader" Text="Geschosse" Style="{StaticResource SH}" Margin="0" VerticalAlignment="Center"/>
+                            <Button Content="{StaticResource IconActionEdit}" Style="{StaticResource IconBtn}" Click="OnEditLevelNames" ToolTip="Geschoss-Liste bearbeiten" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
                         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
                             <TextBlock Foreground="{DynamicResource BpmTextSecondary}" FontSize="11" Text="Direkt editierbar · Komma als Dezimalzeichen · Prefix + Beschreibung automatisch · "/>
                             <TextBlock x:Name="TxtZeroInfo" Foreground="#5DCAA5" FontSize="11"/>
@@ -587,7 +617,7 @@
                             <TextBlock Text="Live errechnet" Foreground="{DynamicResource BpmAccentPrimary}" FontWeight="Bold" FontSize="11" Margin="0,0,0,4"/>
                             <TextBlock Style="{DynamicResource BpmSmallText}" FontStyle="Italic" Text="Gesch.h. = FBOK(n+1) − FBOK(n)"/>
                             <TextBlock Style="{DynamicResource BpmSmallText}" FontStyle="Italic" Text="Rohb.h. = RDOK(n+1) − RDOK(n)"/>
-                            <TextBlock Style="{DynamicResource BpmSmallText}" FontStyle="Italic" Text="Deck.st. = RDOK − RDUK"/>
+                            <TextBlock Style="{DynamicResource BpmSmallText}" FontStyle="Italic" Text="Deck.st. = RDOK(n+1) − RDUK(n)"/>
                             <TextBlock Style="{DynamicResource BpmSmallText}" FontStyle="Italic" Text="FB-Aufb. = FBOK − RDOK"/>
                         </StackPanel>
                     </Grid>

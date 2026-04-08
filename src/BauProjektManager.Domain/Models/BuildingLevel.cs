@@ -53,7 +53,11 @@ public class BuildingLevel
 
     // === 4 errechnete Werte (NICHT in DB) ===
 
-    public double? DeckThickness => Rduk.HasValue ? Math.Round(Rdok - Rduk.Value, 3) : null;
+    /// <summary>
+    /// Deckenstärke = RDOK(n+1) − RDUK(n).
+    /// Wird von RecalculateLevels gesetzt, NICHT selbst berechnet.
+    /// </summary>
+    public double? DeckThickness { get; set; }
     public double FloorBuildup => Math.Round(Fbok - Rdok, 3);
     public double? StoryHeight { get; set; }
     public double? RawHeight { get; set; }

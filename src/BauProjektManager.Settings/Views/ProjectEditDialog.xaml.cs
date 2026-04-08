@@ -22,6 +22,7 @@ public partial class ProjectEditDialog : Window
     private ObservableCollection<ProjectLink> _portalLinks = [];
     private ObservableCollection<ProjectLink> _customLinks = [];
     private FileSystemWatcher? _folderWatcher;
+    private bool _isGlobalZeroActive;
 
     public ProjectEditDialog(Project project) : this(project, null) { }
 
@@ -51,6 +52,17 @@ public partial class ProjectEditDialog : Window
         }
 
         ProjectFolderTemplate.PreviewRootName = $"{project.ProjectNumber}_{project.Name}";
+
+        // Globales Nullniveau laden
+        _isGlobalZeroActive = project.UseGlobalZeroLevel;
+        if (_isGlobalZeroActive)
+        {
+            TxtGlobalZero.Text = project.GlobalZeroLevel.ToString("F2");
+            TxtGlobalZero.Visibility = Visibility.Visible;
+            TxtGlobalZeroHint.Visibility = Visibility.Visible;
+            UpdateToggleVisual();
+        }
+
         _buildingParts = new ObservableCollection<BuildingPart>(project.BuildingParts);
         DgParts.ItemsSource = _buildingParts;
 
@@ -180,11 +192,16 @@ public partial class ProjectEditDialog : Window
             {
                 levels[i].StoryHeight = Math.Round(levels[i + 1].Fbok - levels[i].Fbok, 3);
                 levels[i].RawHeight = Math.Round(levels[i + 1].Rdok - levels[i].Rdok, 3);
+                // Deckenstärke = RDOK(darüber) − RDUK(aktuell)
+                levels[i].DeckThickness = levels[i].Rduk.HasValue
+                    ? Math.Round(levels[i + 1].Rdok - levels[i].Rduk.Value, 3)
+                    : null;
             }
             else
             {
                 levels[i].StoryHeight = null;
                 levels[i].RawHeight = null;
+                levels[i].DeckThickness = null;
             }
         }
     }
@@ -1092,6 +1109,55 @@ public partial class ProjectEditDialog : Window
     }
 
     // ═══════════════════════════════════════════
+    // GLOBALES NULLNIVEAU
+    // ═══════════════════════════════════════════
+
+    private void OnToggleGlobalZero(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        _isGlobalZeroActive = !_isGlobalZeroActive;
+        UpdateToggleVisual();
+
+        TxtGlobalZero.Visibility = _isGlobalZeroActive ? Visibility.Visible : Visibility.Collapsed;
+        TxtGlobalZeroHint.Visibility = _isGlobalZeroActive ? Visibility.Visible : Visibility.Collapsed;
+
+        if (_isGlobalZeroActive && double.TryParse(TxtGlobalZero.Text.Replace(',', '.'),
+            CultureInfo.InvariantCulture, out var val))
+        {
+            foreach (var part in _buildingParts)
+                part.ZeroLevelAbsolute = val;
+            DgParts.Items.Refresh();
+        }
+    }
+
+    private void UpdateToggleVisual()
+    {
+        if (_isGlobalZeroActive)
+        {
+            ToggleTrack.Background = BrushFromHex("#007ACC");
+            ToggleKnob.HorizontalAlignment = HorizontalAlignment.Right;
+            ToggleKnob.Margin = new Thickness(0, 0, 2, 0);
+        }
+        else
+        {
+            ToggleTrack.Background = BrushFromHex("#555555");
+            ToggleKnob.HorizontalAlignment = HorizontalAlignment.Left;
+            ToggleKnob.Margin = new Thickness(2, 0, 0, 0);
+        }
+    }
+
+    private void OnGlobalZeroValueChanged(object sender, TextChangedEventArgs e)
+    {
+        if (!_isGlobalZeroActive) return;
+        if (double.TryParse(TxtGlobalZero.Text.Replace(',', '.'),
+            CultureInfo.InvariantCulture, out var val))
+        {
+            foreach (var part in _buildingParts)
+                part.ZeroLevelAbsolute = val;
+            DgParts.Items.Refresh();
+        }
+    }
+
+    // ═══════════════════════════════════════════
     // SAVE / CANCEL
     // ═══════════════════════════════════════════
 
@@ -1128,6 +1194,11 @@ public partial class ProjectEditDialog : Window
         Project.BuildingParts = _buildingParts.ToList();
         Project.Participants = _participants.ToList();
         Project.Links = _portalLinks.Concat(_customLinks).ToList();
+
+        Project.UseGlobalZeroLevel = _isGlobalZeroActive;
+        if (Project.UseGlobalZeroLevel && double.TryParse(TxtGlobalZero.Text.Replace(',', '.'),
+            CultureInfo.InvariantCulture, out var gz))
+            Project.GlobalZeroLevel = gz;
 
         FolderTemplate = ProjectFolderTemplate.ToTemplate();
 

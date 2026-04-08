@@ -411,12 +411,26 @@
 
             <!-- ═══ TAB 2: BAUWERK ═══ -->
             <TabItem Header="Bauwerk" Style="{StaticResource DialogTabItem}">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,10,0,0">
-                    <StackPanel>
-                        <TextBlock Text="Bauteile" Style="{StaticResource SH}" Margin="0,0,0,6"/>
-                        <TextBlock Text="Jedes Bauteil hat eigene Geschosse und ein eigenes ± 0,00 Niveau."
+                <Grid Margin="0,10,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" MinHeight="120"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*" MinHeight="180"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- ── Bauteile (obere Hälfte) ── -->
+                    <Grid Grid.Row="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="Bauteile" Style="{StaticResource SH}" Margin="0,0,0,6"/>
+                        <TextBlock Grid.Row="1" Text="Jedes Bauteil hat eigene Geschosse und ein eigenes ± 0,00 Niveau."
                                    Style="{DynamicResource BpmSmallText}" Margin="0,0,0,8"/>
-                        <DataGrid x:Name="DgParts" Style="{StaticResource DgBase}" Height="110"
+                        <DataGrid Grid.Row="2" x:Name="DgParts" Style="{StaticResource DgBase}"
                                   ColumnHeaderStyle="{StaticResource DgHeaderPrimary}"
                                   CellStyle="{StaticResource DarkDgCell}"
                                   SelectionChanged="OnPartSelectionChanged">
@@ -427,22 +441,38 @@
                                 <DataGridTextColumn Header="± 0,00 abs." Binding="{Binding ZeroLevelAbsolute, StringFormat=F2}" Width="100"/>
                             </DataGrid.Columns>
                         </DataGrid>
-                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,6,0,0">
                             <Button Content="+ Bauteil" Click="OnAddPart" Style="{DynamicResource BpmButtonPrimary}" Padding="10,5" Margin="0,0,6,0" MinWidth="0" MinHeight="0"/>
                             <Button Content="Bearbeiten" Click="OnEditPart" Style="{DynamicResource BpmButtonSecondary}" Padding="10,5" Margin="0,0,6,0" MinWidth="0" MinHeight="0"/>
                             <Button Content="Entfernen" Click="OnRemovePart" Style="{DynamicResource BpmButtonDanger}" Padding="10,5" MinWidth="0" MinHeight="0"/>
                         </StackPanel>
+                    </Grid>
 
-                        <DockPanel Margin="0,16,0,4">
+                    <!-- ── GridSplitter ── -->
+                    <GridSplitter Grid.Row="1" Height="6" HorizontalAlignment="Stretch"
+                                  Background="{DynamicResource BpmBorderDefault}" Cursor="SizeNS"
+                                  ShowsPreview="True" Margin="0,4"/>
+
+                    <!-- ── Geschosse (untere Hälfte) ── -->
+                    <Grid Grid.Row="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <DockPanel Grid.Row="0" Margin="0,4,0,4">
                             <TextBlock x:Name="TxtLevelsHeader" Text="Geschosse" Style="{StaticResource SH}" Margin="0"/>
                             <Button Content="{StaticResource IconActionEdit}" Style="{StaticResource IconBtn}" Click="OnEditLevelNames" ToolTip="Geschoss-Liste bearbeiten" Margin="8,12,0,6"/>
                         </DockPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
                             <TextBlock Foreground="{DynamicResource BpmTextSecondary}" FontSize="11" Text="Direkt editierbar · Komma als Dezimalzeichen · Prefix + Beschreibung automatisch · "/>
                             <TextBlock x:Name="TxtZeroInfo" Foreground="#5DCAA5" FontSize="11"/>
                         </StackPanel>
 
-                        <DataGrid x:Name="DgLevels" Style="{StaticResource DgBase}" Height="260"
+                        <DataGrid Grid.Row="2" x:Name="DgLevels" Style="{StaticResource DgBase}"
                                   IsReadOnly="False" CanUserAddRows="False"
                                   ColumnHeaderStyle="{StaticResource DgHeaderSecondary}"
                                   CellStyle="{StaticResource DarkDgCell}"
@@ -531,7 +561,7 @@
                                 </DataGridTextColumn>
                             </DataGrid.Columns>
                         </DataGrid>
-                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,6,0,0">
                             <Button Content="+ Geschoss" Click="OnAddLevel" Style="{DynamicResource BpmButtonPrimary}" Padding="10,5" Margin="0,0,6,0" MinWidth="0" MinHeight="0"/>
                             <Button Content="Bearbeiten" Click="OnEditLevel" Style="{DynamicResource BpmButtonSecondary}" Padding="10,5" Margin="0,0,6,0" MinWidth="0" MinHeight="0"/>
                             <Button Content="Entfernen" Click="OnRemoveLevel" Style="{DynamicResource BpmButtonDanger}" Padding="10,5" Margin="0,0,6,0" MinWidth="0" MinHeight="0"/>
@@ -539,27 +569,29 @@
                             <Button Content="{StaticResource IconArrowDown}" Click="OnMoveLevelDown" Style="{DynamicResource BpmButtonSecondary}" Padding="8,5" MinWidth="0" MinHeight="0"/>
                         </StackPanel>
 
-                        <Grid Margin="0,12,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="1*"/>
-                                <ColumnDefinition Width="1*"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Eingabe (3 Werte)" Foreground="{DynamicResource BpmAccentPrimary}" FontWeight="Bold" FontSize="11" Margin="0,0,0,4"/>
-                                <TextBlock Style="{DynamicResource BpmSmallText}" Text="RDOK: Rohdecken-OK (unterstes = Bodenplatten-OK)"/>
-                                <TextBlock Style="{DynamicResource BpmSmallText}" Text="FBOK: Fertigfußboden-OK"/>
-                                <TextBlock Style="{DynamicResource BpmSmallText}" Text="RDUK: Rohdecken-UK (unterstes: leer lassen)"/>
-                            </StackPanel>
-                            <StackPanel Grid.Column="1">
-                                <TextBlock Text="Live errechnet" Foreground="{DynamicResource BpmAccentPrimary}" FontWeight="Bold" FontSize="11" Margin="0,0,0,4"/>
-                                <TextBlock Style="{DynamicResource BpmSmallText}" FontStyle="Italic" Text="Gesch.h. = FBOK(n+1) − FBOK(n)"/>
-                                <TextBlock Style="{DynamicResource BpmSmallText}" FontStyle="Italic" Text="Rohb.h. = RDOK(n+1) − RDOK(n)"/>
-                                <TextBlock Style="{DynamicResource BpmSmallText}" FontStyle="Italic" Text="Deck.st. = RDOK − RDUK"/>
-                                <TextBlock Style="{DynamicResource BpmSmallText}" FontStyle="Italic" Text="FB-Aufb. = FBOK − RDOK"/>
-                            </StackPanel>
                         </Grid>
-                    </StackPanel>
-                </ScrollViewer>
+
+                    <!-- ── Info-Legende (fixiert unten) ── -->
+                    <Grid Grid.Row="3" Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Eingabe (3 Werte)" Foreground="{DynamicResource BpmAccentPrimary}" FontWeight="Bold" FontSize="11" Margin="0,0,0,4"/>
+                            <TextBlock Style="{DynamicResource BpmSmallText}" Text="RDOK: Rohdecken-OK (unterstes = Bodenplatten-OK)"/>
+                            <TextBlock Style="{DynamicResource BpmSmallText}" Text="FBOK: Fertigfußboden-OK"/>
+                            <TextBlock Style="{DynamicResource BpmSmallText}" Text="RDUK: Rohdecken-UK (unterstes: leer lassen)"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Live errechnet" Foreground="{DynamicResource BpmAccentPrimary}" FontWeight="Bold" FontSize="11" Margin="0,0,0,4"/>
+                            <TextBlock Style="{DynamicResource BpmSmallText}" FontStyle="Italic" Text="Gesch.h. = FBOK(n+1) − FBOK(n)"/>
+                            <TextBlock Style="{DynamicResource BpmSmallText}" FontStyle="Italic" Text="Rohb.h. = RDOK(n+1) − RDOK(n)"/>
+                            <TextBlock Style="{DynamicResource BpmSmallText}" FontStyle="Italic" Text="Deck.st. = RDOK − RDUK"/>
+                            <TextBlock Style="{DynamicResource BpmSmallText}" FontStyle="Italic" Text="FB-Aufb. = FBOK − RDOK"/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
             </TabItem>
 
             <!-- ═══ TAB 3: BETEILIGTE ═══ -->

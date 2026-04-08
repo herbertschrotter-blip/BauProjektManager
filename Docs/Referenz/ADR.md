@@ -402,26 +402,50 @@ Die Nummer wird NICHT im Template gespeichert. Die Position in der Liste bestimm
 
 ---
 
-## ADR-013: .bpm-manifest als Projektordner-Ausweis
+## ADR-013: .bpm-manifest als Projektordner-Ausweis (v2)
 
-**Datum:** 2026-03
+**Datum:** 2026-03 (v2: 2026-04)
 **Status:** ✅ Entschieden
-**Herkunft:** Architektur-Session
+**Herkunft:** Architektur-Session (v2: Projekt-Import Konzept)
 
 **Kontext:**
 
-Wenn ein Projektordner umbenannt wird (im Explorer), verliert die App den Bezug zum Projekt. Die Frage war: Wie erkennt die App den Ordner wieder?
+v1: Wenn ein Projektordner umbenannt wird (im Explorer), verliert die App den Bezug zum Projekt. Wie erkennt die App den Ordner wieder?
+
+v2: Zusätzlich zum Ausweis-Zweck soll das Manifest auch als portabler Projekt-Snapshot für Import und Übergabe dienen (Polier → Bauleiter, Alt-Projekt migrieren, Backup/Restore).
 
 **Entscheidung:**
 
-Jeder Projektordner enthält eine versteckte `.bpm-manifest`-Datei (JSON) mit der Projekt-ID und dem Pfad zur Registry. Bei Ordner-Umbenennung sucht die App nach `.bpm-manifest`-Dateien im BasePath und aktualisiert den Pfad automatisch.
+Jeder Projektordner enthält eine versteckte `.bpm-manifest`-Datei (JSON) mit **allen Projektdaten** die für einen vollständigen Import nötig sind:
+
+- Ausweis-Daten: Projekt-ID, Projektnummer, Name, Registry-Pfad
+- Stammdaten: FullName, Status, ProjectType, Tags, Notes
+- Auftraggeber: Firma, Kontakt, Telefon, E-Mail
+- Adresse + Koordinaten + Grundstück
+- Zeitplan: Projektstart, Baubeginn, geplantes/tatsächliches Ende
+- Bauteile mit Geschossen (inkl. RDOK/FBOK/RDUK)
+- Beteiligte mit Rollen
+- Portale + Links
+- Ordnerstruktur (relative Pfade)
+- Meta: SchemaVersion, UpdatedAtUtc, CreatedByMachine
+
+Das Manifest wird automatisch geschrieben bei: Neues Projekt anlegen, Projekt bearbeiten (Speichern). Keine DB-IDs im Manifest — nur fachliche Daten. Eigene DTOs (ManifestClient, ManifestLocation etc.) statt direkte Domain-Modelle.
+
+Import-Szenarien:
+- **Aus .bpm-manifest:** Ordner wählen → Manifest lesen → alles vorausgefüllt → Bestätigen → DB-Eintrag
+- **Bestehenden Ordner importieren:** Ordner wählen → Struktur scannen → Stammdaten ergänzen → DB-Eintrag + Manifest erzeugen
 
 **Konsequenzen:**
 
-- Robuste Pfad-Erkennung auch nach Umbenennung
-- `.bpm-manifest` hat Hidden-Attribut (nicht für Kollegen sichtbar)
+- Robuste Pfad-Erkennung auch nach Umbenennung (wie v1)
+- `.bpm-manifest` hat Hidden + ReadOnly Attribute (unsichtbar, schreibgeschützt)
+- BPM entfernt ReadOnly temporär beim Aktualisieren, setzt es danach wieder
 - Syncht über Cloud-Speicher (liegt im Projektordner)
-- Feature #11 im Backlog (noch nicht implementiert)
+- Portabler Projekt-Snapshot — unabhängig von der lokalen SQLite-DB
+- Ermöglicht Projekt-Übergabe zwischen BPM-Instanzen ohne gemeinsame DB
+- SchemaVersion für Vorwärtskompatibilität bei Manifest-Erweiterungen
+- Domain-Klasse: BpmManifest.cs mit eigenen DTOs (keine DB-IDs)
+- Infrastructure-Service: BpmManifestService (Read/Write/ScanFolder)
 
 ---
 

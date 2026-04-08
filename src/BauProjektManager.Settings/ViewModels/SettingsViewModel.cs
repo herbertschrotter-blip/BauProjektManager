@@ -1,6 +1,8 @@
 ﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Windows;
+using System.Windows.Data;
 using BauProjektManager.Domain.Enums;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models;
@@ -14,7 +16,7 @@ namespace BauProjektManager.Settings.ViewModels;
 
 /// <summary>
 /// ViewModel for the Settings page — manages project list, paths display,
-/// and global default folder template with subfolders and prefix toggle.
+/// search/filter, and global default folder template.
 /// </summary>
 public partial class SettingsViewModel : ObservableObject, IDisposable
 {
@@ -43,6 +45,97 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private string _oneDrivePath = "";
+
+    // === Suche + Filter ===
+
+    [ObservableProperty]
+    private string _searchText = "";
+
+    [ObservableProperty]
+    private string _statusFilter = "Alle";
+
+    [ObservableProperty]
+    private string _filterInfo = "";
+
+    private ICollectionView? _projectsView;
+
+    /// <summary>
+    /// Gefilterte Ansicht der Projektliste. DataGrid bindet hieran.
+    /// </summary>
+    public ICollectionView? ProjectsView => _projectsView;
+
+    partial void OnSearchTextChanged(string value)
+    {
+        _projectsView?.Refresh();
+        UpdateFilterInfo();
+    }
+
+    partial void OnStatusFilterChanged(string value)
+    {
+        _projectsView?.Refresh();
+        UpdateFilterInfo();
+    }
+
+    private void SetupFilter()
+    {
+        _projectsView = CollectionViewSource.GetDefaultView(Projects);
+        _projectsView.Filter = ProjectFilter;
+        OnPropertyChanged(nameof(ProjectsView));
+        UpdateFilterInfo();
+    }
+
+    private bool ProjectFilter(object obj)
+    {
+        if (obj is not Project project) return false;
+
+        // Statusfilter
+        if (StatusFilter == "Aktiv" && project.Status != ProjectStatus.Active) return false;
+        if (StatusFilter == "Abgeschlossen" && project.Status != ProjectStatus.Completed) return false;
+
+        // Textsuche
+        if (string.IsNullOrWhiteSpace(SearchText)) return true;
+
+        var search = SearchText.Trim().ToLowerInvariant();
+        return MatchesSearch(project, search);
+    }
+
+    private static bool MatchesSearch(Project project, string search)
+    {
+        if (project.Name.Contains(search, StringComparison.OrdinalIgnoreCase)) return true;
+        if (project.FullName.Contains(search, StringComparison.OrdinalIgnoreCase)) return true;
+        if (project.ProjectNumber.Contains(search, StringComparison.OrdinalIgnoreCase)) return true;
+        if (project.Tags.Contains(search, StringComparison.OrdinalIgnoreCase)) return true;
+        if (project.Notes.Contains(search, StringComparison.OrdinalIgnoreCase)) return true;
+        if (project.ProjectType.Contains(search, StringComparison.OrdinalIgnoreCase)) return true;
+
+        // Auftraggeber
+        if (project.Client.Company.Contains(search, StringComparison.OrdinalIgnoreCase)) return true;
+        if (project.Client.ContactPerson.Contains(search, StringComparison.OrdinalIgnoreCase)) return true;
+
+        // Adresse
+        if (project.Location.City.Contains(search, StringComparison.OrdinalIgnoreCase)) return true;
+        if (project.Location.Street.Contains(search, StringComparison.OrdinalIgnoreCase)) return true;
+        if (project.Location.Municipality.Contains(search, StringComparison.OrdinalIgnoreCase)) return true;
+
+        return false;
+    }
+
+    private void UpdateFilterInfo()
+    {
+        if (_projectsView is null) return;
+
+        var visibleCount = _projectsView.Cast<object>().Count();
+        var totalCount = Projects.Count;
+
+        if (string.IsNullOrWhiteSpace(SearchText) && StatusFilter == "Alle")
+        {
+            FilterInfo = $"{totalCount} Projekte geladen";
+        }
+        else
+        {
+            FilterInfo = $"{visibleCount} von {totalCount} Projekten";
+        }
+    }
 
     // Folder template tree
     [ObservableProperty]
@@ -91,6 +184,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         {
             var loaded = _db.LoadAllProjects();
             Projects = new ObservableCollection<Project>(loaded);
+            SetupFilter();
             Log.Information("Loaded {Count} projects from database", loaded.Count);
             RegistryStatus = $"{loaded.Count} Projekte geladen";
         }
@@ -258,6 +352,20 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             : "";
     }
 
+    // === Filter Commands ===
+
+    [RelayCommand]
+    private void SetFilterAll() => StatusFilter = "Alle";
+
+    [RelayCommand]
+    private void SetFilterActive() => StatusFilter = "Aktiv";
+
+    [RelayCommand]
+    private void SetFilterCompleted() => StatusFilter = "Abgeschlossen";
+
+    [RelayCommand]
+    private void ClearSearch() => SearchText = "";
+
     // === Template Commands ===
 
     [RelayCommand]
@@ -418,6 +526,15 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         }
     }
 
+    /// <summary>
+    /// Aktualisiert den Filter nach CRUD-Operationen.
+    /// </summary>
+    private void RefreshFilter()
+    {
+        _projectsView?.Refresh();
+        UpdateFilterInfo();
+    }
+
     [RelayCommand]
     private void AddProject()
     {
@@ -449,6 +566,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
                 Projects.Add(dialog.Project);
                 SelectedProject = dialog.Project;
                 ExportRegistry();
+                RefreshFilter();
                 Log.Information("Project added: {Name} ({Number}) at {Path}",
                     dialog.Project.Name, dialog.Project.ProjectNumber, projectRoot);
             }
@@ -494,6 +612,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
                     SelectedProject = dialog.Project;
                 }
                 ExportRegistry();
+                RefreshFilter();
                 Log.Information("Project updated: {Name} ({Number})",
                     dialog.Project.Name, dialog.Project.ProjectNumber);
             }
@@ -553,6 +672,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             Projects.Remove(SelectedProject);
             SelectedProject = null;
             ExportRegistry();
+            RefreshFilter();
             Log.Information("Project deleted: {Name} ({Number})", name, number);
             RegistryStatus = $"Projekt {name} gelöscht";
         }
@@ -607,6 +727,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
                 Projects.Add(confirmDialog.Project);
                 SelectedProject = confirmDialog.Project;
                 ExportRegistry();
+                RefreshFilter();
                 Log.Information("Project imported from manifest: {Name} ({Number})",
                     confirmDialog.Project.Name, confirmDialog.Project.ProjectNumber);
             }
@@ -633,6 +754,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
                 Projects.Add(editDialog.Project);
                 SelectedProject = editDialog.Project;
                 ExportRegistry();
+                RefreshFilter();
                 Log.Information("Project imported from folder: {Name} ({Number}) at {Path}",
                     editDialog.Project.Name, editDialog.Project.ProjectNumber, folderPath);
             }

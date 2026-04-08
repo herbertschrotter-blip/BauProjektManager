@@ -64,8 +64,28 @@ public class StatusColorConverter : IValueConverter
         => throw new NotImplementedException();
 }
 
+/// <summary>
+/// Shows placeholder text when search field is empty.
+/// </summary>
+public class PlaceholderVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return string.IsNullOrEmpty(value as string) ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}
+
 public partial class SettingsView : UserControl
 {
+    // Filter button colors
+    private static readonly SolidColorBrush ActiveFilterBg = new(Color.FromRgb(0x00, 0x7A, 0xCC));
+    private static readonly SolidColorBrush ActiveFilterFg = new(Colors.White);
+    private static readonly SolidColorBrush InactiveFilterBg = new(Colors.Transparent);
+    private static readonly SolidColorBrush InactiveFilterFg = new(Color.FromRgb(0x99, 0x99, 0x99));
+
     public SettingsView() : this(null) { }
 
     public SettingsView(IDialogService? dialogService)
@@ -73,6 +93,7 @@ public partial class SettingsView : UserControl
         // Register converters before InitializeComponent
         Resources.Add("StatusConverter", new StatusConverter());
         Resources.Add("StatusColorConverter", new StatusColorConverter());
+        Resources.Add("PlaceholderVisibilityConverter", new PlaceholderVisibilityConverter());
         InitializeComponent();
 
         // ViewModel mit DialogService erstellen
@@ -88,6 +109,43 @@ public partial class SettingsView : UserControl
         {
             vm.SaveFolderTemplateFrom(GlobalFolderTemplate.ToTemplate());
         };
+
+        // Filter-Buttons initial stylen
+        UpdateFilterButtonStyles("Alle");
+
+        // Suchfeld Platzhalter
+        TxtSearch.GotFocus += (_, _) =>
+        {
+            if (TxtSearch.Text == "") TxtSearch.Tag = "focused";
+        };
+        TxtSearch.LostFocus += (_, _) => TxtSearch.Tag = null;
+
+        // Filter-Button-Styles bei Property-Änderung aktualisieren
+        vm.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(SettingsViewModel.StatusFilter))
+            {
+                UpdateFilterButtonStyles(vm.StatusFilter);
+            }
+        };
+    }
+
+    private void UpdateFilterButtonStyles(string activeFilter)
+    {
+        StyleFilterButton(BtnFilterAll, activeFilter == "Alle");
+        StyleFilterButton(BtnFilterActive, activeFilter == "Aktiv");
+        StyleFilterButton(BtnFilterCompleted, activeFilter == "Abgeschlossen");
+    }
+
+    private static void StyleFilterButton(Button btn, bool isActive)
+    {
+        btn.Background = isActive ? ActiveFilterBg : InactiveFilterBg;
+        btn.Foreground = isActive ? ActiveFilterFg : InactiveFilterFg;
+    }
+
+    private void OnFilterButtonClick(object sender, RoutedEventArgs e)
+    {
+        // Styling wird über PropertyChanged-Event gehandelt
     }
 
     private void OnRowDoubleClick(object sender, MouseButtonEventArgs e)

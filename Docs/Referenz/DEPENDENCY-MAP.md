@@ -1,9 +1,9 @@
 ﻿# BauProjektManager — Dependency Map
 
 **Erstellt:** 29.03.2026  
-**Aktualisiert:** 04.04.2026  
-**Version:** 2.1  
-**Basis:** Solution v0.17.0, DB-Schema v2.0 (ULID), ADR v1.2 (42 ADRs)
+**Aktualisiert:** 08.04.2026  
+**Version:** 2.2  
+**Basis:** Solution v0.23.0, DB-Schema v2.0 (ULID), ADR v1.3 (44 ADRs)
 
 ---
 
@@ -53,7 +53,7 @@ App             → referenziert alles (DI verdrahtet hier)
 
 | Projekt | Typ | NuGet-Pakete | Verantwortung |
 |---------|-----|-------------|---------------|
-| **App** | WPF EXE | Microsoft.Extensions.DI | Shell, MainWindow, DI-Container, App.xaml, Themes/ (Resource Dictionaries) |
+| **App** | WPF EXE | Microsoft.Extensions.DI | Shell, MainWindow, DI-Container, App.xaml, Themes/ (8 Resource Dictionaries inkl. Icons.xaml) |
 | **Domain** | Class Library | *keine* | Project, Client, BuildingPart, BuildingLevel, ProjectParticipant, ProjectLink, Location, Timeline, AppSettings (ProjectTypes, BuildingTypes, LevelNames, ParticipantRoles, PortalTypes, FolderTemplate), BpmManifest (+ ManifestClient, ManifestLocation, ManifestTimeline etc.), Enums (inkl. DataClassification, AccessLevel), Interfaces (inkl. IDialogService ✅, IIdGenerator, IPrivacyPolicy, IAccessControlService ⬜, IProjectDataService ⬜, ISyncTransport ⬜, ITaskManagementService ⬜, SyncEnvelope ⬜) — ⬜ = geplant, noch nicht implementiert |
 | **Infrastructure** | Class Library | Microsoft.Data.Sqlite, Serilog, System.Text.Json, Ulid (Cysharp) | ProjectDatabase (Schema v2.0 ULID: projects, clients, building_parts, building_levels, project_participants, project_links), RegistryJsonExporter, AppSettingsService, ProjectFolderService, SerilogSetup, UlidIdGenerator (ADR-039 v2), ExternalCommunicationService (ADR-035), RelaxedPrivacyPolicy + StrictPrivacyPolicy (ADR-036). BpmManifestService (Read/Write/ScanFolder, Hidden+ReadOnly Attribute). **Geplant:** SecretStore (ADR-042), StartupHealthCheck (ADR-041), Communication/ Ordner. Für vollständige Tabellenliste (implementiert + geplant) siehe [DB-SCHEMA.md](../Kern/DB-SCHEMA.md). |
 | **Settings** | WPF Class Library | CommunityToolkit.Mvvm | SettingsViewModel (IDialogService, CollectionView-Filter, Projekt-Import), ProjectEditViewModel, SettingsView.xaml (Suchfeld, Statusfilter, Popup-Button), ProjectEditDialog.xaml, FolderTemplateControl.xaml |

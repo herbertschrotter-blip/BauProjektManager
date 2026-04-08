@@ -5,6 +5,30 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.23.0] — 2026-04-08
+
+### Hinzugefügt
+- **App:** `Icons.xaml` — zentrale Icon-Registry mit 18 String-Resources (Emoji als Brücke zu Segoe Fluent Icons)
+- **App:** `Dialogs.xaml` — 3 neue Styles: `BpmContextMenu`, `BpmMenuItem`, `BpmMenuSeparator` (Dark Theme)
+
+### Geändert
+- **Alle Module:** 40 hardcoded Emoji-Referenzen in 10 Dateien durch `StaticResource`/`FindResource` ersetzt
+- **Settings:** Kontextmenü auf BpmContextMenu/BpmMenuItem Styles umgestellt
+- **Settings:** Pfad-Spalte 📂-Button: Clipping behoben (`Height="20"`, `MinWidth="28"`), Hover-Effekt (BpmAccentPrimary)
+- **Build:** `Directory.Build.props` Version 0.19.2 → 0.23.0
+- **App:** `App.xaml` — Icons.xaml in MergedDictionaries (8 statt 7 ResourceDictionaries)
+
+---
+
+## [v0.22.2] — 2026-04-08
+
+### Behoben
+- **Settings:** Kontextmenü Dark Theme — eigene Styles statt WPF-Defaults
+- **Settings:** Pfad-Spalte 📂-Button Clipping — MinWidth + Height gesetzt
+- **Build:** `Directory.Build.props` Version 0.19.2 → 0.22.1 nachgezogen
+
+---
+
 ## [v0.22.0] — 2026-04-08
 
 ### Hinzugefügt

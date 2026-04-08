@@ -39,7 +39,8 @@ BauProjektManager.App/
 │   ├── Inputs.xaml                   ← TextBox, ComboBox, DatePicker, CheckBox Styles
 │   ├── DataGrid.xaml                 ← Tabellen-Styles (Header, Zeilen, Hover)
 │   ├── Tabs.xaml                     ← TabControl + TabItem Styles
-│   └── Dialogs.xaml                  ← Dialog-Basis (Header, Footer, Overlay)
+│   ├── Dialogs.xaml                  ← Dialog-Basis, ContextMenu, Cards, Tooltips
+│   └── Icons.xaml                    ← Zentrale Icon-Registry (Emoji → Fluent Icons)
 │
 ├── Controls/                         ← Shell-only Basis-Komponenten
 │   ├── BpmToast.xaml                 ← Toast-Benachrichtigungen (🎯)
@@ -95,7 +96,7 @@ BauProjektManager.PlanManager/
 
 ## 3. Resource Dictionary Architektur
 
-### 3.1 Übersicht: 7 ResourceDictionaries (ADR-028)
+### 3.1 Übersicht: 8 ResourceDictionaries (ADR-028, ADR-044)
 
 | Dictionary | Verantwortung | Abhängigkeiten |
 |---|---|---|
@@ -105,9 +106,10 @@ BauProjektManager.PlanManager/
 | **Inputs.xaml** | TextBox, ComboBox, DatePicker, CheckBox | Colors.xaml, Typography.xaml |
 | **DataGrid.xaml** | Header, Row, Cell, Zebra-Variante | Colors.xaml, Typography.xaml |
 | **Tabs.xaml** | TabControl, TabItem mit Unterstrich-Style | Colors.xaml, Typography.xaml |
-| **Dialogs.xaml** | Dialog-Basis (Header/Footer/Overlay), Cards, Tooltips, Separatoren | Colors.xaml, Typography.xaml |
+| **Dialogs.xaml** | Dialog-Basis (Header/Footer/Overlay), Cards, Tooltips, Separatoren, ContextMenu/MenuItem Styles | Colors.xaml, Typography.xaml |
+| **Icons.xaml** | Zentrale Icon-Registry — alle UI-Icons als `sys:String` Resources. Provisorisch Emoji, später Segoe Fluent Icons. Nutzung: `Content="{StaticResource IconFolder}"` oder `<Run Text="{StaticResource IconFolderOpen}"/>` | Keine |
 
-**Historie:** Ursprünglich 5 Dictionaries (ADR-028 v1). Erweitert um Inputs.xaml und Tabs.xaml für vollständige Formular- und Tab-Abdeckung — Styles lagen vorher verstreut in Dialogs.xaml und lokalen Views. ADR-028 wird auf 7 nachgezogen.
+**Historie:** Ursprünglich 5 Dictionaries (ADR-028 v1). Erweitert um Inputs.xaml und Tabs.xaml (v0.16.0), dann Icons.xaml (v0.23.0) für zentrale Icon-Verwaltung. ADR-028 auf 8 nachgezogen.
 
 ### 3.2 Merge-Reihenfolge in App.xaml
 
@@ -117,7 +119,9 @@ BauProjektManager.PlanManager/
         <ResourceDictionary.MergedDictionaries>
             <!-- 1. Farben zuerst (werden von allen anderen referenziert) -->
             <ResourceDictionary Source="Themes/Colors.xaml"/>
-            <!-- 2. Typografie -->
+            <!-- 2. Icons -->
+            <ResourceDictionary Source="Themes/Icons.xaml"/>
+            <!-- 3. Typografie -->
             <ResourceDictionary Source="Themes/Typography.xaml"/>
             <!-- 3. Komponenten-Styles (referenzieren Farben + Typo) -->
             <ResourceDictionary Source="Themes/Buttons.xaml"/>
@@ -137,6 +141,7 @@ BauProjektManager.PlanManager/
 | Farbe (SolidColorBrush) | `Bpm` | `BpmBgBase`, `BpmAccentPrimary`, `BpmTextSecondary` |
 | Farbe (Color) | `BpmColor` | `BpmColorAccentPrimary`, `BpmColorError` |
 | Style | `Bpm<Typ>` | `BpmButtonPrimary`, `BpmDataGridDefault` |
+| Icon (String) | `Icon<Kategorie><Objekt>` | `IconFolder`, `IconActionDelete`, `IconNavPlans` |
 | ControlTemplate | `Bpm<Typ>Template` | `BpmButtonTemplate`, `BpmTabItemTemplate` |
 | Thickness/Margin | `Bpm<Kontext>` | `BpmDialogPadding`, `BpmCardMargin` |
 | Double (Schriftgröße) | `BpmFontSize<Stufe>` | `BpmFontSizeH1`, `BpmFontSizeBody` |

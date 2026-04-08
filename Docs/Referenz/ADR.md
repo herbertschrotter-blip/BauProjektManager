@@ -63,6 +63,7 @@ Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheid
 | 041 | Recovery / Degraded Mode | ✅ Accepted / Not Started | 2026-04 |
 | 042 | Secrets und Credentials | ✅ Accepted / Not Started | 2026-04 |
 | 043 | Dev-Tools — Lokales Debug-Toolset für Entwicklung | ✅ Entschieden / Not Started | 2026-04 |
+| 044 | Icons.xaml — Zentrale Icon-Registry | ✅ Entschieden / Implemented | 2026-04 |
 
 ---
 
@@ -1585,6 +1586,56 @@ Der Batch-Prozess (GUID-Name, Self-Delete) übernimmt:
 - `Directory.CreateDirectory()` im `ProjectDatabase`-Konstruktor stellt sicher, dass das DB-Verzeichnis nach Reset beim nächsten Start neu angelegt wird
 - Settings/JSON-Reset: separater Button, kommt als späterer Schritt
 - Seed-/Testdaten-Mechanismus: zukünftiger Schritt, fachlich getrennt vom technischen DB-Reset
+
+---
+
+## ADR-044: Icons.xaml — Zentrale Icon-Registry
+
+**Datum:** 2026-04
+**Status:** ✅ Entschieden / Implemented
+**Herkunft:** Phase 1 Teil 8, UI-Refactoring
+
+**Kontext:**
+
+BPM verwendete 14 verschiedene Emoji-Zeichen (📂, 📁, 🗑, ✎, ▲, ▼, ⚙, 🛠, 📋, 📄, 🔍, 👤, ✏, 📝) hardcoded in 10 XAML- und C#-Dateien — insgesamt ~40 Stellen. Laut UI_UX_Guidelines (Kap. 8.7) sind Emojis provisorisch und werden bei einem UI-Refresh durch Segoe Fluent Icons ersetzt. Ohne zentrale Verwaltung hätte dieser Umstieg ein aufwändiges Suchen/Ersetzen über die gesamte Codebasis erfordert.
+
+**Entscheidung:**
+
+Neue `Icons.xaml` als 8. ResourceDictionary in `Themes/`. Alle Icons als `sys:String`-Resources mit einheitlicher Namenskonvention `Icon[Kategorie][Objekt/Aktion]`.
+
+Drei Nutzungsmuster:
+
+```xml
+<!-- 1. Reine Icon-Buttons (Content ist nur das Icon) -->
+<Button Content="{StaticResource IconActionBrowse}"/>
+
+<!-- 2. Icon + Text in Buttons/Headers/Labels -->
+<TextBlock>
+    <Run Text="{StaticResource IconFolderOpen}"/>
+    <Run Text=" Ordner öffnen"/>
+</TextBlock>
+
+<!-- 3. C#-Code (wo kein StaticResource möglich) -->
+var icon = (string)Application.Current.FindResource("IconStatusWarning");
+```
+
+18 Icon-Definitionen in 5 Kategorien: Navigation (3), Ordner/Dateien (3), Aktionen (9), Richtung (2), Status/Personen (3).
+
+Beim späteren Umstieg auf Segoe Fluent Icons: Nur Icons.xaml anpassen (Emoji → Glyph-Codes) und ggf. `FontFamily` am Icon-`Run` setzen. Alle 40 Referenzen bleiben unverändert.
+
+**Alternativen:**
+
+- *Weiter hardcoded:* Funktioniert, aber Umstieg auf Fluent Icons erfordert Änderungen in 10+ Dateien.
+- *Geometry/Path-Icons:* Skaliert perfekt, aber aufwändiger zu pflegen und für Emoji-Phase unnötig.
+- *Icon-Font direkt:* Segoe Fluent Icons sofort einsetzen. Möglich, aber Emojis reichen für V1 und sind universell lesbar.
+
+**Konsequenzen:**
+
+- `Icons.xaml` in App.xaml zwischen Colors.xaml und Typography.xaml geladen (keine Abhängigkeiten)
+- ADR-028 auf 8 ResourceDictionaries nachgezogen
+- C#-Code mit Emojis (z.B. DevToolsDialog Reset-Labels) nutzt `const string` als Brücke
+- Neue UI-Elemente MÜSSEN Icons aus Icons.xaml referenzieren — hardcoded Emojis sind ab sofort verboten
+- Bei Bedarf: Icon-`Run` kann einen eigenen Style bekommen (`BpmIconRun` mit FontFamily) für den Fluent-Umstieg
 
 ---
 

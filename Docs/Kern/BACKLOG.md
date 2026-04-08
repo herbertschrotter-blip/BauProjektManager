@@ -1,11 +1,11 @@
 ﻿# BauProjektManager — Backlog
 
-**Letzte Aktualisierung:** 04.04.2026  
-**Aktuelle Version:** v0.17.0
+**Letzte Aktualisierung:** 08.04.2026  
+**Aktuelle Version:** v0.23.0
 
 **Verwandte Dokumente:**
 - [VISION.md](../Referenz/VISION.md) — Nordstern, Schmerzpunkte, Zielgruppe
-- [ADR.md](../Referenz/ADR.md) — Architekturentscheidungen (42 ADRs)
+- [ADR.md](../Referenz/ADR.md) — Architekturentscheidungen (44 ADRs)
 - [CHANGELOG.md](../Referenz/CHANGELOG.md) — Versionshistorie ab v0.0.0
 - [DEPENDENCY-MAP.md](../Referenz/DEPENDENCY-MAP.md) — Solution-Struktur + Ökosystem
 - [BauProjektManager_Architektur.md](BauProjektManager_Architektur.md) — Technische Spezifikation v2.0
@@ -127,7 +127,8 @@ Gut wenn vorhanden, aber kein Grund V1 zu verzögern.
 
 | Feature | Beschreibung | Status |
 |---------|-------------|--------|
-| Suchfeld Projekte (#15) | Schnellfilter in der Projektliste | ⬜ |
+| Suchfeld Projekte (#15) | Schnellfilter in der Projektliste | ✅ v0.22.0 |
+| Duplikat-Import verhindern | Prüfung ob Projekt schon in DB existiert (gleicher Pfad oder Manifest-ID) | ⬜ |
 | Adressbuch | Zentrale contacts-Tabelle, projektübergreifend, Outlook-kompatibel (contact_id FK vorbereitet, ADR-024) | ⬜ |
 | Button "Aus Adressbuch" | Tab 3: Kontakt aus Adressbuch übernehmen (Button vorbereitet, disabled) | ⬜ |
 | Firmenliste importieren | Geführter KI-Ablauf: Prompt → Copy → Paste → Parse. Später per API (ADR-027). Button vorbereitet | ⬜ |

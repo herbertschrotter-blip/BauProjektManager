@@ -40,7 +40,7 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid Margin="10">
+    <Grid Margin="0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -48,7 +48,7 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <TextBlock Grid.Row="0" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource BpmTextBright}" Margin="32,24,0,0"><Run Text="{StaticResource IconNavSettings}"/><Run Text=" Einstellungen"/></TextBlock>
+        <TextBlock Grid.Row="0" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource BpmTextBright}" Margin="0,4,0,12"><Run Text="{StaticResource IconNavSettings}"/><Run Text=" Einstellungen"/></TextBlock>
 
         <!-- TabControl -->
         <TabControl Grid.Row="1">

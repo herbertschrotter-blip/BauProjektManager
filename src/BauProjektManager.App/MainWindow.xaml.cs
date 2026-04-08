@@ -56,6 +56,25 @@ public partial class MainWindow : Window
                 "Settings" => "Einstellungen",
                 _ => "Bereit"
             };
+
+            HighlightNavButton(button);
         }
+    }
+
+    private void HighlightNavButton(Button active)
+    {
+        var navButtons = new[] { BtnPlans, BtnSettings };
+        var normalBrush = (System.Windows.Media.Brush)FindResource("BpmTextPrimary");
+        var activeBrush = (System.Windows.Media.Brush)FindResource("BpmAccentPrimary");
+        var activeBg = (System.Windows.Media.Brush)FindResource("BpmBgActive");
+
+        foreach (var btn in navButtons)
+        {
+            btn.Foreground = normalBrush;
+            btn.Background = System.Windows.Media.Brushes.Transparent;
+        }
+
+        active.Foreground = activeBrush;
+        active.Background = activeBg;
     }
 }

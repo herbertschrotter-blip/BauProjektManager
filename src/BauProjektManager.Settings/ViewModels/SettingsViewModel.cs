@@ -737,6 +737,12 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
 
     private void ImportFromManifest(string folderPath)
     {
+        if (_db.ProjectExistsByPath(folderPath))
+        {
+            _dialogService.ShowWarning("Dieses Projekt ist bereits in der Datenbank vorhanden.");
+            return;
+        }
+
         var manifest = _manifestService.ReadManifest(folderPath);
         if (manifest is null)
         {
@@ -771,6 +777,12 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
 
     private void ImportFromFolder(string folderPath)
     {
+        if (_db.ProjectExistsByPath(folderPath))
+        {
+            _dialogService.ShowWarning("Dieses Projekt ist bereits in der Datenbank vorhanden.");
+            return;
+        }
+
         var project = _manifestService.ScanFolder(folderPath);
 
         var editDialog = new ProjectEditDialog(project);

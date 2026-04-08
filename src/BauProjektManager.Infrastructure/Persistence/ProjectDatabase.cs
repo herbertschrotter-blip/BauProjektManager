@@ -321,6 +321,14 @@ public class ProjectDatabase : IDisposable
         SaveLinks(project.Id, project.Links);
     }
 
+    public bool ProjectExistsByPath(string rootPath)
+    {
+        using var cmd = _connection.CreateCommand();
+        cmd.CommandText = "SELECT COUNT(*) FROM projects WHERE root_path = @path";
+        cmd.Parameters.AddWithValue("@path", rootPath);
+        return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+    }
+
     private bool ProjectExists(string projectId)
     {
         var conn = GetConnection();

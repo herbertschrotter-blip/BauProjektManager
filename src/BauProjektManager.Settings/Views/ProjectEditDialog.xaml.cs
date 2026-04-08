@@ -233,14 +233,60 @@ public partial class ProjectEditDialog : Window
     private void OnAddPart(object sender, RoutedEventArgs e)
     {
         var settings = _settingsService.Load();
-        var part = new BuildingPart();
-        if (ShowPartEditDialog(part, settings, "Bauteil hinzufügen"))
+
+        bool addMore = true;
+        while (addMore)
         {
+            var part = new BuildingPart();
+            if (!ShowPartEditDialog(part, settings, "Bauteil hinzufügen"))
+                break;
+
             part.SortOrder = _buildingParts.Count;
             _buildingParts.Add(part);
             DgParts.SelectedItem = part;
+
+            // Geschoss-Schleife für dieses Bauteil
+            AddLevelsLoop(part, settings);
+
+            // Weiteres Bauteil?
+            addMore = ShowDarkConfirm("Weiteres Bauteil anlegen?", "Bauteil");
         }
     }
+
+    /// <summary>
+    /// Geschoss-Eingabeschleife: Öffnet den Geschoss-Dialog wiederholt
+    /// bis der User "Fertig" wählt.
+    /// </summary>
+    private void AddLevelsLoop(BuildingPart part, AppSettings settings)
+    {
+        bool addMoreLevels = true;
+        while (addMoreLevels)
+        {
+            string suggestedName;
+            if (part.Levels.Count == 0)
+                suggestedName = settings.LevelNames.Count > 0 ? settings.LevelNames[0].ShortName : "EG";
+            else
+                suggestedName = BuildingLevel.GetNextLevelName(part.Levels[^1].Name, settings.LevelNames);
+
+            var suggestedDesc = BuildingLevel.GetAutoDescription(suggestedName, settings.LevelNames);
+            var level = new BuildingLevel { Name = suggestedName, Description = suggestedDesc };
+
+            var result = ShowLevelEditDialogWithContinue(level, settings);
+            if (result == LevelDialogResult.Cancel)
+                break;
+
+            level.SortOrder = part.Levels.Count;
+            part.Levels.Add(level);
+            RefreshLevelsGrid();
+
+            if (result == LevelDialogResult.Done)
+                break;
+
+            // result == LevelDialogResult.AddMore → weiter im Loop
+        }
+    }
+
+    private enum LevelDialogResult { Cancel, Done, AddMore }
 
     private void OnEditPart(object sender, RoutedEventArgs e)
     {
@@ -270,12 +316,15 @@ public partial class ProjectEditDialog : Window
         {
             Title = title,
             Width = 420,
-            Height = 280,
+            Height = 240,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             Owner = this,
             ResizeMode = ResizeMode.NoResize,
             Background = BrushFromHex("#2D2D30")
         };
+        // Dark Theme Styles vom Dialog vererben (ComboBox, TextBox etc.)
+        foreach (var key in Resources.Keys)
+            w.Resources[key] = Resources[key];
         var grid = new Grid { Margin = new Thickness(15) };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(100) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -410,12 +459,14 @@ public partial class ProjectEditDialog : Window
         {
             Title = title,
             Width = 400,
-            Height = 310,
+            Height = 280,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             Owner = this,
             ResizeMode = ResizeMode.NoResize,
             Background = BrushFromHex("#2D2D30")
         };
+        foreach (var key in Resources.Keys)
+            w.Resources[key] = Resources[key];
 
         var grid = new Grid { Margin = new Thickness(15) };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(100) });
@@ -431,6 +482,7 @@ public partial class ProjectEditDialog : Window
             Text = level.Name,
             Margin = new Thickness(0, 3, 0, 3)
         };
+        StyleComboBoxDark(cmbName);
         Grid.SetRow(cmbName, 0); Grid.SetColumn(cmbName, 1);
 
         // Beschreibung (auto-filled, aber editierbar)
@@ -483,6 +535,112 @@ public partial class ProjectEditDialog : Window
             return true;
         }
         return false;
+    }
+
+    /// <summary>
+    /// Geschoss-Dialog mit 2 Buttons: "+ Geschoss" (speichern + nächstes) und "Fertig" (speichern + schließen).
+    /// Wird von AddLevelsLoop aufgerufen.
+    /// </summary>
+    private LevelDialogResult ShowLevelEditDialogWithContinue(BuildingLevel level, AppSettings settings)
+    {
+        var result = LevelDialogResult.Cancel;
+
+        var w = new Window
+        {
+            Title = "Geschoss hinzufügen",
+            Width = 400,
+            Height = 290,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Owner = this,
+            ResizeMode = ResizeMode.NoResize,
+            Background = BrushFromHex("#2D2D30")
+        };
+        foreach (var key in Resources.Keys)
+            w.Resources[key] = Resources[key];
+
+        var grid = new Grid { Margin = new Thickness(15) };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(100) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        for (int i = 0; i < 7; i++) grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+        var shortNames = settings.LevelNames.Select(l => l.ShortName).ToList();
+        var cmbName = new ComboBox
+        {
+            IsEditable = true,
+            ItemsSource = shortNames,
+            Text = level.Name,
+            Margin = new Thickness(0, 3, 0, 3)
+        };
+        Grid.SetRow(cmbName, 0); Grid.SetColumn(cmbName, 1);
+
+        var txtDesc = MakeTextBox(level.Description, 1, 1);
+        cmbName.SelectionChanged += (_, _) =>
+        {
+            var selectedName = cmbName.SelectedItem as string ?? cmbName.Text;
+            var autoDesc = BuildingLevel.GetAutoDescription(selectedName, settings.LevelNames);
+            if (!string.IsNullOrEmpty(autoDesc)) txtDesc.Text = autoDesc;
+        };
+
+        var txtRdok = MakeTextBox("", 2, 1);
+        var txtFbok = MakeTextBox("", 3, 1);
+        var txtRduk = MakeTextBox("", 4, 1);
+
+        // 2 Buttons: + Geschoss und Fertig
+        var btnPanel = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Margin = new Thickness(0, 12, 0, 0)
+        };
+        Grid.SetRow(btnPanel, 6); Grid.SetColumn(btnPanel, 0); Grid.SetColumnSpan(btnPanel, 2);
+
+        var btnAddMore = new Button
+        {
+            Content = "+ Geschoss",
+            Padding = new Thickness(12, 5, 12, 5),
+            Margin = new Thickness(0, 0, 8, 0),
+            Background = BrushFromHex("#007ACC"),
+            Foreground = System.Windows.Media.Brushes.White,
+            BorderThickness = new Thickness(0),
+            Cursor = System.Windows.Input.Cursors.Hand
+        };
+
+        var btnDone = new Button
+        {
+            Content = "Fertig",
+            Padding = new Thickness(12, 5, 12, 5),
+            Background = BrushFromHex("#3C3C3C"),
+            Foreground = System.Windows.Media.Brushes.White,
+            BorderThickness = new Thickness(0),
+            Cursor = System.Windows.Input.Cursors.Hand
+        };
+
+        void ApplyValues()
+        {
+            level.Name = (cmbName.SelectedItem as string ?? cmbName.Text).Trim();
+            level.Description = string.IsNullOrWhiteSpace(txtDesc.Text)
+                ? BuildingLevel.GetAutoDescription(level.Name, settings.LevelNames)
+                : txtDesc.Text.Trim();
+            if (double.TryParse(txtRdok.Text.Replace(',', '.'), CultureInfo.InvariantCulture, out var rdok)) level.Rdok = rdok;
+            if (double.TryParse(txtFbok.Text.Replace(',', '.'), CultureInfo.InvariantCulture, out var fbok)) level.Fbok = fbok;
+            level.Rduk = double.TryParse(txtRduk.Text.Replace(',', '.'), CultureInfo.InvariantCulture, out var rduk) ? rduk : null;
+        }
+
+        btnAddMore.Click += (_, _) => { ApplyValues(); result = LevelDialogResult.AddMore; w.DialogResult = true; w.Close(); };
+        btnDone.Click += (_, _) => { ApplyValues(); result = LevelDialogResult.Done; w.DialogResult = true; w.Close(); };
+
+        btnPanel.Children.Add(btnAddMore);
+        btnPanel.Children.Add(btnDone);
+
+        grid.Children.Add(MakeLabel("Geschoss:", 0, 0)); grid.Children.Add(cmbName);
+        grid.Children.Add(MakeLabel("Beschreibung:", 1, 0)); grid.Children.Add(txtDesc);
+        grid.Children.Add(MakeLabel("RDOK:", 2, 0)); grid.Children.Add(txtRdok);
+        grid.Children.Add(MakeLabel("FBOK:", 3, 0)); grid.Children.Add(txtFbok);
+        grid.Children.Add(MakeLabel("RDUK:", 4, 0)); grid.Children.Add(txtRduk);
+        grid.Children.Add(btnPanel);
+        w.Content = grid;
+
+        return w.ShowDialog() == true ? result : LevelDialogResult.Cancel;
     }
 
     /// <summary>
@@ -1064,5 +1222,34 @@ public partial class ProjectEditDialog : Window
         var tb = new TextBox { Text = text, Background = BrushFromHex("#1E1E1E"), Foreground = BrushFromHex("#CCCCCC"), BorderBrush = BrushFromHex("#3E3E42"), Padding = new Thickness(5, 3, 5, 3), Margin = new Thickness(0, 3, 0, 3) };
         Grid.SetRow(tb, row); Grid.SetColumn(tb, col);
         return tb;
+    }
+
+    private static void StyleComboBoxDark(ComboBox cmb)
+    {
+        // Nicht mehr nötig — Styles werden über Window.Resources vererbt
+    }
+
+    private bool ShowDarkConfirm(string message, string title)
+    {
+        var w = new Window
+        {
+            Title = title, Width = 360, Height = 150,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Owner = this, ResizeMode = ResizeMode.NoResize,
+            Background = BrushFromHex("#2D2D30")
+        };
+        var sp = new StackPanel { Margin = new Thickness(20, 16, 20, 16) };
+        sp.Children.Add(new TextBlock { Text = message, Foreground = BrushFromHex("#CCCCCC"), FontSize = 14, Margin = new Thickness(0, 0, 0, 16) });
+        var bp = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
+        bool result = false;
+        var btnYes = new Button { Content = "Ja", Width = 80, Padding = new Thickness(0, 5, 0, 5), Margin = new Thickness(0, 0, 8, 0), Background = BrushFromHex("#007ACC"), Foreground = System.Windows.Media.Brushes.White, BorderThickness = new Thickness(0), Cursor = System.Windows.Input.Cursors.Hand };
+        var btnNo = new Button { Content = "Nein", Width = 80, Padding = new Thickness(0, 5, 0, 5), Background = BrushFromHex("#3C3C3C"), Foreground = BrushFromHex("#CCCCCC"), BorderThickness = new Thickness(0), Cursor = System.Windows.Input.Cursors.Hand };
+        btnYes.Click += (_, _) => { result = true; w.DialogResult = true; w.Close(); };
+        btnNo.Click += (_, _) => { w.DialogResult = false; w.Close(); };
+        bp.Children.Add(btnYes); bp.Children.Add(btnNo);
+        sp.Children.Add(bp);
+        w.Content = sp;
+        w.ShowDialog();
+        return result;
     }
 }

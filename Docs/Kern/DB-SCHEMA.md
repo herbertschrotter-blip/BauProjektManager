@@ -189,6 +189,9 @@ CREATE TABLE projects (
     documents_path TEXT NOT NULL DEFAULT '',
     protocols_path TEXT NOT NULL DEFAULT '',
     invoices_path TEXT NOT NULL DEFAULT '',
+    -- Globales Nullniveau (v0.24.2)
+    use_global_zero_level INTEGER NOT NULL DEFAULT 0,  -- 0=pro Bauteil, 1=global
+    global_zero_level REAL NOT NULL DEFAULT 0,          -- m ü.A., nur wenn use_global=1
     -- Sonstiges
     tags TEXT NOT NULL DEFAULT '',
     notes TEXT NOT NULL DEFAULT '',
@@ -260,7 +263,11 @@ CREATE TABLE building_levels (
 CREATE INDEX idx_building_levels_part_id ON building_levels(building_part_id);
 ```
 
-**Berechnete Werte (im Code):** Geschosshöhe, Rohbauhöhe, Deckenstärke, Fußbodenaufbau
+**Berechnete Werte (im Code, NICHT in DB gespeichert):**
+- Geschosshöhe = FBOK(n+1) − FBOK(n)
+- Rohbauhöhe = RDOK(n+1) − RDOK(n)
+- Deckenstärke = RDOK(n+1) − RDUK(n) ← korrigiert v0.24.2, war vorher RDOK−RDUK gleiche Zeile
+- Fußbodenaufbau = FBOK − RDOK
 **Gelesen von:** Kalkulation (work_packages.level_id), Ziegelberechnung
 
 ### 4.6 project_participants

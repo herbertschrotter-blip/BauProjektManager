@@ -592,6 +592,18 @@ Welches Feedback-Medium für welchen Anlass. Ersetzt pauschal `MessageBox.Show()
 
 ---
 
+## 19. Toggle-Switch (v0.24.2)
+
+Für An/Aus-Schalter wird ein ovaler Toggle-Switch verwendet (nicht WPF-CheckBox):
+- **Aktiv:** Blauer Track (#007ACC), Knob rechts
+- **Inaktiv:** Grauer Track (#555), Knob links
+- **Größe:** 38×20px Track, 16×16px Knob (Border CornerRadius=10 + Ellipse)
+- **Implementierung:** XAML Border+Ellipse, State-Feld + UpdateToggleVisual() im Code-Behind
+
+Einsatzbereich: Globales ± 0,00 Niveau, zukünftig alle An/Aus-Einstellungen im Dark Theme.
+
+---
+
 *Dieses Dokument ist der verbindliche Standard für alle UI-Entscheidungen in BPM. Abweichungen müssen dokumentiert und begründet werden.*
 
 *Änderungen v2.0 → v2.1 (04.04.2026):*
@@ -601,5 +613,9 @@ Welches Feedback-Medium für welchen Anlass. Ersetzt pauschal `MessageBox.Show()
 - *Overlay-Klick bei Formulardialogen entfernt*
 - *Validierungszusammenfassung für Mehrtab-Dialoge ergänzt (Kap. 12)*
 - *Feedback-Matrix als neues Kap. 18 (Ersatz für MessageBox.Show())*
-- *Sprache intern vs. App-UI klargestellt*
-- *Verwandte Dokumente + Querverweise ergänzt*
+*- Sprache intern vs. App-UI klargestellt*
+*- Verwandte Dokumente + Querverweise ergänzt*
+
+*Änderungen v2.1 → v2.2 (09.04.2026):*
+*- Neues Kap. 19: Toggle-Switch als UI-Pattern (statt CheckBox für An/Aus)*
+*- Version 2.1 → 2.2*

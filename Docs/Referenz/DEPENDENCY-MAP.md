@@ -2,8 +2,8 @@
 
 **Erstellt:** 29.03.2026  
 **Aktualisiert:** 08.04.2026  
-**Version:** 2.2  
-**Basis:** Solution v0.23.0, DB-Schema v2.0 (ULID), ADR v1.3 (44 ADRs)
+**Version:** 2.3  
+**Basis:** Solution v0.24.2, DB-Schema v2.1, ADR v1.3 (44 ADRs)
 
 ---
 

@@ -5,6 +5,64 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.24.2] — 2026-04-09
+
+### Hinzugefügt
+- **Domain:** `UseGlobalZeroLevel` + `GlobalZeroLevel` Properties auf `Project` — optionales globales ± 0,00 Niveau für alle Bauteile
+- **Settings:** Ovaler Toggle-Switch im Bauwerk-Tab für globales ± 0,00 Niveau (Custom Border+Ellipse, kein CheckBox)
+- **Settings:** Bauteil+Geschoss Eingabe-Workflow — nach Bauteil-OK öffnet sich automatisch Geschoss-Dialog mit Schleife (+ Geschoss / Fertig / Weiteres Bauteil)
+- **Settings:** `ShowLevelEditDialogWithContinue` — Geschoss-Dialog mit 2 Buttons statt 1
+- **Settings:** `ShowDarkConfirm` — Dark-Theme Ja/Nein-Dialog für Code-behind Dialoge (statt MessageBox)
+- **Settings:** `AddLevelsLoop` + `LevelDialogResult` Enum für Geschoss-Eingabeschleife
+- **Settings:** FileSystemWatcher im ProjectEditDialog — Ordnerstruktur-Tab aktualisiert sich live bei Änderungen im Explorer
+- **Settings:** GridSplitter im Bauwerk-Tab — Bauteile/Geschosse 50/50 Aufteilung, ziehbar
+
+### Geändert
+- **App:** `BpmButtonSecondary` — Border hinzugefügt (`BpmBorderDefault`, 1px) für sichtbare Umrandung
+- **App:** `MainWindow.xaml.cs` — `HighlightNavButton()` für aktive Sidebar-Hervorhebung (Foreground + Background)
+- **Settings:** `SettingsView.xaml` — Überschrift "Einstellungen" höher und links ausgerichtet (Margin angepasst)
+- **Settings:** `ProjectEditDialog.xaml` — Geschoss-Liste ✎-Button kompakt neben "Geschosse"-Überschrift statt eigene Zeile
+- **Settings:** `ProjectEditDialog.xaml` — Info-Legende aus Geschosse-Bereich in eigene fixe Row verschoben
+
+### Behoben
+- **Domain:** `DeckThickness` korrigiert — war `RDOK − RDUK` (gleiche Zeile), jetzt `RDOK(n+1) − RDUK(n)` (Decke darüber minus UK aktuell). Property von berechnet auf gesetzt umgestellt.
+- **Settings:** Code-behind Dialoge (Bauteil/Geschoss) erben jetzt XAML-Resources vom Owner-Dialog (`foreach Resources.Keys`) — ComboBox Dark Theme funktioniert korrekt
+- **Infrastructure:** Duplikat-Import verhindert — `ProjectExistsByPath()` Prüfung vor Import
+
+### Build
+- **Version:** Directory.Build.props 0.23.0 → 0.24.2
+
+---
+
+## [v0.23.4] — 2026-04-09
+
+### Hinzugefügt
+- **Settings:** GridSplitter im Bauwerk-Tab — Bauteile und Geschosse 50/50 mit ziehbarer Trennlinie
+
+---
+
+## [v0.23.3] — 2026-04-09
+
+### Hinzugefügt
+- **Settings:** FileSystemWatcher im ProjectEditDialog — Ordnerstruktur aktualisiert sich live bei Explorer-Änderungen
+
+---
+
+## [v0.23.2] — 2026-04-09
+
+### Behoben
+- **App:** Sidebar-Highlight — aktiver Nav-Button wird visuell hervorgehoben (BpmAccentPrimary + BpmBgActive)
+- **Settings:** Einstellungen-Überschrift Position — höher und links ausgerichtet
+
+---
+
+## [v0.23.1] — 2026-04-08
+
+### Behoben
+- **Infrastructure:** Duplikat-Import verhindert — `ProjectExistsByPath()` prüft vor ImportFromManifest und ImportFromFolder
+
+---
+
 ## [v0.23.0] — 2026-04-08
 
 ### Hinzugefügt

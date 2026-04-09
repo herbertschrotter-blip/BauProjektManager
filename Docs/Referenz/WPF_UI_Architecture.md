@@ -35,7 +35,7 @@ BauProjektManager.App/
 ├── Themes/                           ← ZENTRAL: Alle globalen Styles und Token
 │   ├── Colors.xaml                   ← Farb-Token (bg-base, accent-primary etc.)
 │   ├── Typography.xaml               ← Schriftgrößen, -gewichte
-│   ├── Buttons.xaml                  ← Button-Styles (Primary, Secondary, Danger, Ghost)
+│   ├── Buttons.xaml                  ← Button-Styles (Primary, Secondary+Border, Danger, Ghost, Nav+Highlight)
 │   ├── Inputs.xaml                   ← TextBox, ComboBox, DatePicker, CheckBox Styles
 │   ├── DataGrid.xaml                 ← Tabellen-Styles (Header, Zeilen, Hover)
 │   ├── Tabs.xaml                     ← TabControl + TabItem Styles
@@ -102,7 +102,7 @@ BauProjektManager.PlanManager/
 |---|---|---|
 | **Colors.xaml** | Farb-Token als SolidColorBrush + Color | Keine |
 | **Typography.xaml** | Schriftgrößen, -gewichte als Doubles + Styles | Colors.xaml |
-| **Buttons.xaml** | Button-Varianten (Primary, Secondary, Danger, Ghost, Nav) | Colors.xaml, Typography.xaml |
+| **Buttons.xaml** | Button-Varianten (Primary, Secondary mit Border, Danger, Ghost, Nav mit Code-Behind Highlight) | Colors.xaml, Typography.xaml |
 | **Inputs.xaml** | TextBox, ComboBox, DatePicker, CheckBox | Colors.xaml, Typography.xaml |
 | **DataGrid.xaml** | Header, Row, Cell, Zebra-Variante | Colors.xaml, Typography.xaml |
 | **Tabs.xaml** | TabControl, TabItem mit Unterstrich-Style | Colors.xaml, Typography.xaml |
@@ -287,6 +287,29 @@ private void NavigateTo(string moduleId)
 ```
 
 **V1-Übergang:** Bei >5 Modulen auf DI-basierte View-Auflösung umstellen (INavigationService oder ViewFactory mit DI-Container). Aktuell nicht nötig.
+
+**Sidebar-Highlight (v0.23.2):** Aktiver Nav-Button wird per `HighlightNavButton()` im Code-Behind hervorgehoben (Foreground=BpmAccentPrimary, Background=BpmBgActive). Alle anderen Buttons werden zurückgesetzt.
+
+### 5.4 Code-Behind Dialog Patterns (v0.24.2)
+
+**Resource-Vererbung:** Programmatisch erstellte Fenster (ShowPartEditDialog, ShowLevelEditDialog etc.) erben die impliziten XAML-Styles nicht automatisch. PFLICHT-Pattern:
+
+```csharp
+var w = new Window { ... };
+// Dark Theme Styles vom XAML-Dialog vererben
+foreach (var key in Resources.Keys)
+    w.Resources[key] = Resources[key];
+```
+
+Ohne diese Zeile haben ComboBoxen, TextBoxen etc. im Code-Behind-Dialog kein Dark Theme.
+
+**Toggle-Switch:** Für An/Aus-Schalter wird ein ovaler Custom-Toggle verwendet (Border + Ellipse im XAML, State-Feld + UpdateToggleVisual() im Code-Behind). Keine WPF-CheckBox — die passt nicht zum Dark Theme.
+
+**Dark Confirm-Dialog:** Für Ja/Nein-Fragen in Code-Behind-Dialogen `ShowDarkConfirm()` verwenden statt `MessageBox.Show()`. Die System-MessageBox ist weiß und passt nicht zum Dark Theme.
+
+**GridSplitter:** Für geteilte Bereiche (z.B. Bauteile/Geschosse) `GridSplitter` mit `BpmBorderDefault` Background verwenden. MinHeight auf beiden Seiten setzen.
+
+**FileSystemWatcher:** Für Ordnerstruktur-Dialoge einen `FileSystemWatcher` auf `project.Paths.Root` starten, bei `Created/Deleted/Renamed` → `LoadFromDisk()` neu aufrufen. Watcher wird im `Closed`-Event disposed.
 
 ---
 

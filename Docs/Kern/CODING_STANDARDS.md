@@ -1546,6 +1546,33 @@ if (classification == DataClassification.ClassC)
     ShowWarning("Klasse C!"); // ViewModel trifft Policy-Entscheidung
 }
 ```
+## 18. WPF Code-Behind Dialoge (v0.24.2)
+
+### 18.1 Resource-Vererbung (PFLICHT)
+
+Programmatisch erstellte Fenster (z.B. in ShowPartEditDialog, ShowLevelEditDialog) erben NICHT die impliziten Styles aus dem XAML-Dialog. Ohne explizite Vererbung haben ComboBoxen, TextBoxen etc. kein Dark Theme.
+
+```csharp
+var w = new Window { ... };
+// PFLICHT: Dark Theme Styles vom Owner-Dialog vererben
+foreach (var key in Resources.Keys)
+    w.Resources[key] = Resources[key];
+```
+
+### 18.2 Toggle-Switch statt CheckBox
+
+Für An/Aus-Schalter im Dark Theme einen Custom Toggle verwenden (Border mit CornerRadius + Ellipse), nicht die WPF-CheckBox.
+
+### 18.3 ShowDarkConfirm statt MessageBox
+
+Für Ja/Nein-Fragen in Code-Behind-Dialogen eigenen Dark-Theme-Dialog verwenden. `MessageBox.Show()` ist weiß und passt nicht zum Dark Theme.
+
+### 18.4 VERBOTEN
+
+- `MessageBox.Show()` in Code-behind Dialogen innerhalb von Dark-Theme-Fenstern
+- WPF-CheckBox für Toggle-Schalter (visuell inkompatibel)
+- Code-behind Fenster ohne Resource-Vererbung
+
 
 **Regel:** Kein ViewModel, kein Dialog-Code-Behind darf prüfen ob eine Datenklasse erlaubt ist oder ob eine Warnung angezeigt werden soll. Das entscheidet ausschließlich `IPrivacyPolicy`. Das ViewModel visualisiert nur die `PolicyDecision`.
 

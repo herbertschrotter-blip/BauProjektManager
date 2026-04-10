@@ -24,6 +24,35 @@ public class CountToVisInverseConverter : IValueConverter
         => throw new NotImplementedException();
 }
 
+/// <summary>
+/// Count == 0 -> Visible, Count > 0 -> Collapsed.
+/// </summary>
+public class CountToVisZeroConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType,
+        object parameter, CultureInfo culture)
+        => value is int count && count == 0
+            ? Visibility.Visible : Visibility.Collapsed;
+
+    public object ConvertBack(object value, Type targetType,
+        object parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}
+
+/// <summary>
+/// Bool -> inverted bool (fuer IsEnabled-Binding).
+/// </summary>
+public class InverseBoolConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType,
+        object parameter, CultureInfo culture)
+        => value is bool b ? !b : true;
+
+    public object ConvertBack(object value, Type targetType,
+        object parameter, CultureInfo culture)
+        => value is bool b ? !b : true;
+}
+
 public partial class ProfileWizardDialog : Window
 {
     private readonly ProfileWizardViewModel _vm;
@@ -31,7 +60,9 @@ public partial class ProfileWizardDialog : Window
     public ProfileWizardDialog(Project? project = null)
     {
         Resources.Add("CountToVisInverse", new CountToVisInverseConverter());
+        Resources.Add("CountToVisZero", new CountToVisZeroConverter());
         Resources.Add("BoolToVis", new BoolToVisConverter());
+        Resources.Add("BoolToVisInverse2", new InverseBoolConverter());
         InitializeComponent();
 
         _vm = new ProfileWizardViewModel(project);
@@ -62,6 +93,11 @@ public partial class ProfileWizardDialog : Window
         {
             _vm.SelectedIndexSource = option.Value;
         }
+    }
+
+    private void OnHierarchyCheckChanged(object sender, RoutedEventArgs e)
+    {
+        _vm.OnHierarchyLevelChanged();
     }
 
     private void OnCancel(object sender, RoutedEventArgs e)
@@ -98,6 +134,8 @@ public partial class ProfileWizardDialog : Window
         Step1Panel.Visibility = _vm.CurrentStep == 1
             ? Visibility.Visible : Visibility.Collapsed;
         Step2Panel.Visibility = _vm.CurrentStep == 2
+            ? Visibility.Visible : Visibility.Collapsed;
+        Step3Panel.Visibility = _vm.CurrentStep == 3
             ? Visibility.Visible : Visibility.Collapsed;
 
         // Progress Dots

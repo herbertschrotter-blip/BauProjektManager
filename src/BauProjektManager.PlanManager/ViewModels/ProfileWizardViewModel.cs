@@ -13,7 +13,8 @@ namespace BauProjektManager.PlanManager.ViewModels;
 /// ViewModel für den 4-Schritt Profil-Wizard.
 /// Schritt 1: Dateiname → Segmente zuweisen.
 /// Schritt 2: IndexSource → FileName/None, indexMode, indexComparison.
-/// Schritte 3–4: kommen in späteren Versionen.
+/// Schritt 3: Zielordner + Ordner-Hierarchie.
+/// Schritt 4: kommt in späterer Version.
 /// </summary>
 public partial class ProfileWizardViewModel : ObservableObject
 {
@@ -104,6 +105,42 @@ public partial class ProfileWizardViewModel : ObservableObject
     [ObservableProperty]
     private bool _showIndexWarning;
 
+    // === Schritt 3: Zielordner ===
+
+    /// <summary>
+    /// Standard-Ordner aus typischer BPM-Projektstruktur.
+    /// </summary>
+    public List<string> TargetFolderOptions { get; } =
+    [
+        "01 Planunterlagen",
+        "02 Statik",
+        "03 Dokumente",
+        "04 Protokolle",
+        "05 Fotos",
+        "06 Sonstiges"
+    ];
+
+    [ObservableProperty]
+    private string _selectedTargetFolder = "01 Planunterlagen";
+
+    [ObservableProperty]
+    private bool _useCustomFolder;
+
+    [ObservableProperty]
+    private string _customFolderName = "";
+
+    /// <summary>
+    /// Verfügbare Hierarchie-Ebenen — nur FieldTypes die in Schritt 1 zugewiesen wurden.
+    /// </summary>
+    [ObservableProperty]
+    private ObservableCollection<HierarchyLevelOption> _availableHierarchyLevels = [];
+
+    /// <summary>
+    /// Live-Vorschau des Zielpfads.
+    /// </summary>
+    [ObservableProperty]
+    private string _folderPreview = "";
+
     /// <summary>
     /// Ob PlanIndex-Segment in Schritt 1 zugewiesen wurde.
     /// </summary>
@@ -133,6 +170,24 @@ public partial class ProfileWizardViewModel : ObservableObject
     partial void OnSelectedIndexSourceChanged(IndexSourceType value)
     {
         ShowIndexModeOptions = value == IndexSourceType.FileName;
+        ValidateCurrentStep();
+    }
+
+    partial void OnSelectedTargetFolderChanged(string value)
+    {
+        UpdateFolderPreview();
+        ValidateCurrentStep();
+    }
+
+    partial void OnUseCustomFolderChanged(bool value)
+    {
+        UpdateFolderPreview();
+        ValidateCurrentStep();
+    }
+
+    partial void OnCustomFolderNameChanged(string value)
+    {
+        UpdateFolderPreview();
         ValidateCurrentStep();
     }
 
@@ -197,6 +252,8 @@ public partial class ProfileWizardViewModel : ObservableObject
             _ => ""
         };
         CanGoBack = CurrentStep > 1;
+        if (CurrentStep == 3)
+            BuildHierarchyLevels();
         ValidateCurrentStep();
     }
 
@@ -206,7 +263,8 @@ public partial class ProfileWizardViewModel : ObservableObject
         {
             1 => ValidateStep1(),
             2 => ValidateStep2(),
-            _ => false // Schritte 3-4 kommen noch
+            3 => ValidateStep3(),
+            _ => false // Schritt 4 kommt noch
         };
     }
 
@@ -278,6 +336,72 @@ public partial class ProfileWizardViewModel : ObservableObject
         // None ist immer gültig
         ShowIndexWarning = false;
         return true;
+    }
+
+    private bool ValidateStep3()
+    {
+        if (UseCustomFolder)
+            return !string.IsNullOrWhiteSpace(CustomFolderName);
+
+        return !string.IsNullOrWhiteSpace(SelectedTargetFolder);
+    }
+
+    /// <summary>
+    /// Baut die Hierarchie-Ebenen basierend auf den in Schritt 1 zugewiesenen Segmenten.
+    /// Wird beim Wechsel zu Schritt 3 aufgerufen.
+    /// </summary>
+    public void BuildHierarchyLevels()
+    {
+        var hierarchyFieldTypes = new[]
+        {
+            (FieldType.Geschoss, "Geschoss"),
+            (FieldType.Haus, "Haus"),
+            (FieldType.Bauteil, "Bauteil"),
+            (FieldType.Bauabschnitt, "Bauabschnitt"),
+            (FieldType.Stiege, "Stiege"),
+            (FieldType.Zone, "Zone"),
+            (FieldType.Block, "Block"),
+        };
+
+        var levels = new List<HierarchyLevelOption>();
+        foreach (var (fieldType, label) in hierarchyFieldTypes)
+        {
+            var segment = Segments.FirstOrDefault(s => s.FieldType == fieldType);
+            if (segment is not null)
+            {
+                levels.Add(new HierarchyLevelOption(fieldType, label, segment.RawValue));
+            }
+        }
+
+        AvailableHierarchyLevels = new ObservableCollection<HierarchyLevelOption>(levels);
+        UpdateFolderPreview();
+    }
+
+    private void UpdateFolderPreview()
+    {
+        var folder = UseCustomFolder ? CustomFolderName : SelectedTargetFolder;
+        if (string.IsNullOrWhiteSpace(folder))
+        {
+            FolderPreview = "";
+            return;
+        }
+
+        var parts = new List<string> { folder };
+        foreach (var level in AvailableHierarchyLevels)
+        {
+            if (level.IsSelected && !string.IsNullOrWhiteSpace(level.SampleValue))
+                parts.Add(level.SampleValue);
+        }
+
+        FolderPreview = string.Join("/", parts) + "/";
+    }
+
+    /// <summary>
+    /// Wird vom Code-Behind aufgerufen wenn eine Hierarchie-Checkbox geändert wird.
+    /// </summary>
+    public void OnHierarchyLevelChanged()
+    {
+        UpdateFolderPreview();
     }
 
     private static char[] ParseDelimiters(string text)
@@ -353,4 +477,28 @@ public class IndexSourceOption
     }
 
     public override string ToString() => Label;
+}
+
+/// <summary>
+/// Option fuer Unterordner-Hierarchie-Checkbox.
+/// </summary>
+public class HierarchyLevelOption : ObservableObject
+{
+    public FieldType FieldType { get; }
+    public string Label { get; }
+    public string SampleValue { get; }
+
+    private bool _isSelected;
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set => SetProperty(ref _isSelected, value);
+    }
+
+    public HierarchyLevelOption(FieldType fieldType, string label, string sampleValue)
+    {
+        FieldType = fieldType;
+        Label = label;
+        SampleValue = sampleValue;
+    }
 }

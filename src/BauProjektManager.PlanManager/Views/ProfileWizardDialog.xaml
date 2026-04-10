@@ -235,6 +235,92 @@
                 </StackPanel>
             </ScrollViewer>
 
+            <!-- === SCHRITT 3: Zielordner === -->
+            <ScrollViewer x:Name="Step3Panel" VerticalScrollBarVisibility="Auto" Padding="16"
+                          Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock Text="Wohin sollen die Dokumente sortiert werden?"
+                               Foreground="{DynamicResource BpmTextBright}"
+                               FontSize="14" FontWeight="SemiBold" Margin="0,0,0,16"/>
+
+                    <!-- Zielordner Dropdown -->
+                    <TextBlock Text="Hauptordner"
+                               Foreground="{DynamicResource BpmTextSecondary}"
+                               FontSize="12" Margin="0,0,0,4"/>
+                    <ComboBox ItemsSource="{Binding TargetFolderOptions}"
+                              SelectedItem="{Binding SelectedTargetFolder}"
+                              IsEnabled="{Binding UseCustomFolder, Converter={StaticResource BoolToVisInverse2}}"
+                              Background="{DynamicResource BpmBgInput}"
+                              Foreground="{DynamicResource BpmTextPrimary}"
+                              BorderBrush="{DynamicResource BpmBorderDefault}"
+                              FontSize="13" Margin="0,0,0,8"/>
+
+                    <!-- Eigener Ordner -->
+                    <CheckBox IsChecked="{Binding UseCustomFolder}"
+                              Foreground="{DynamicResource BpmTextPrimary}"
+                              FontSize="12" Margin="0,0,0,4">
+                        <TextBlock Text="Eigenen Ordnernamen eingeben"/>
+                    </CheckBox>
+                    <TextBox Text="{Binding CustomFolderName, UpdateSourceTrigger=PropertyChanged}"
+                             Visibility="{Binding UseCustomFolder, Converter={StaticResource BoolToVis}}"
+                             FontSize="13"
+                             Background="{DynamicResource BpmBgInput}"
+                             Foreground="{DynamicResource BpmTextPrimary}"
+                             BorderBrush="{DynamicResource BpmBorderDefault}"
+                             Padding="8,6" Margin="0,0,0,12"/>
+
+                    <!-- Unterordner-Ebenen -->
+                    <TextBlock Text="Unterordner-Ebenen (optional)"
+                               Foreground="{DynamicResource BpmTextBright}"
+                               FontSize="13" FontWeight="SemiBold" Margin="0,8,0,4"/>
+                    <TextBlock Text="Dokumente werden in Unterordner sortiert nach:"
+                               Foreground="{DynamicResource BpmTextSecondary}"
+                               FontSize="11" Margin="0,0,0,8"/>
+
+                    <ItemsControl ItemsSource="{Binding AvailableHierarchyLevels}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding IsSelected}"
+                                          Checked="OnHierarchyCheckChanged"
+                                          Unchecked="OnHierarchyCheckChanged"
+                                          Foreground="{DynamicResource BpmTextPrimary}"
+                                          FontSize="12" Margin="0,0,0,6">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Label}" FontWeight="SemiBold"/>
+                                        <TextBlock Text=" (z.B. " Foreground="{DynamicResource BpmTextSecondary}"/>
+                                        <TextBlock Text="{Binding SampleValue}"
+                                                   Foreground="{DynamicResource BpmAccentPrimary}"
+                                                   FontFamily="Consolas"/>
+                                        <TextBlock Text=")" Foreground="{DynamicResource BpmTextSecondary}"/>
+                                    </StackPanel>
+                                </CheckBox>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <TextBlock Text="Keine Segmente mit Ordner-Ebenen in Schritt 1 zugewiesen."
+                               Foreground="{DynamicResource BpmTextSecondary}"
+                               FontSize="11" FontStyle="Italic" Margin="0,4,0,0"
+                               Visibility="{Binding AvailableHierarchyLevels.Count, Converter={StaticResource CountToVisZero}}"/>
+
+                    <!-- Vorschau -->
+                    <Border Margin="0,16,0,0" Padding="12"
+                            Background="{DynamicResource BpmBgSurface}"
+                            BorderBrush="{DynamicResource BpmBorderDefault}"
+                            BorderThickness="1" CornerRadius="4">
+                        <StackPanel>
+                            <TextBlock Text="Vorschau Zielpfad"
+                                       Foreground="{DynamicResource BpmTextSecondary}"
+                                       FontSize="11" Margin="0,0,0,4"/>
+                            <TextBlock Text="{Binding FolderPreview}"
+                                       Foreground="{DynamicResource BpmAccentPrimary}"
+                                       FontSize="14" FontFamily="Consolas"
+                                       FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
         </Grid>
 
         <!-- Footer: Abbrechen / Zurueck / Weiter -->

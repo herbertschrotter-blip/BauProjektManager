@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using BauProjektManager.Domain.Models;
 using BauProjektManager.PlanManager.ViewModels;
 
 namespace BauProjektManager.PlanManager.Views;
@@ -34,22 +35,41 @@ public class CountToVisConverter : IValueConverter
 public partial class PlanManagerView : UserControl
 {
     private readonly PlanManagerViewModel _vm;
+    private readonly BoolToVisConverter _boolToVis = new();
 
     public PlanManagerView()
     {
-        Resources.Add("BoolToVis", new BoolToVisConverter());
+        Resources.Add("BoolToVis", _boolToVis);
         Resources.Add("CountToVis", new CountToVisConverter());
         InitializeComponent();
 
         _vm = new PlanManagerViewModel();
+        _vm.ProjectSelected += NavigateToDetail;
         DataContext = _vm;
     }
 
     private void OnProjectDoubleClick(object sender, MouseButtonEventArgs e)
     {
         if (_vm.SelectedProject is not null)
-        {
             _vm.OnProjectDoubleClicked(_vm.SelectedProject);
-        }
+    }
+
+    private void NavigateToDetail(Project project)
+    {
+        var detailView = new ProjectDetailView(project, _boolToVis);
+        detailView.ViewModel.NavigateBack += NavigateToList;
+
+        ProjectListPanel.Visibility = Visibility.Collapsed;
+        DetailHost.Content = detailView;
+        DetailHost.Visibility = Visibility.Visible;
+    }
+
+    private void NavigateToList()
+    {
+        DetailHost.Content = null;
+        DetailHost.Visibility = Visibility.Collapsed;
+        ProjectListPanel.Visibility = Visibility.Visible;
+
+        _vm.RefreshCommand.Execute(null);
     }
 }

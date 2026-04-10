@@ -3,80 +3,80 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:BauProjektManager.PlanManager.ViewModels">
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+        <!-- Projektliste (sichtbar wenn kein Projekt gewählt) -->
+        <Grid x:Name="ProjectListPanel">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <Grid Grid.Row="0" Margin="0,0,0,16">
-            <TextBlock Style="{DynamicResource BpmHeading1}">
-                <Run Text="{DynamicResource IconNavPlans}"/>
-                <Run Text=" PlanManager"/>
-            </TextBlock>
-            <Button Content="⟳ Aktualisieren"
-                    Style="{DynamicResource BpmButtonSecondary}"
-                    HorizontalAlignment="Right"
-                    Command="{Binding RefreshCommand}"
-                    VerticalAlignment="Center"/>
+            <!-- Header -->
+            <Grid Grid.Row="0" Margin="0,0,0,16">
+                <TextBlock Style="{DynamicResource BpmHeading1}">
+                    <Run Text="{DynamicResource IconNavPlans}"/>
+                    <Run Text=" PlanManager"/>
+                </TextBlock>
+                <Button Content="⟳ Aktualisieren"
+                        Style="{DynamicResource BpmButtonSecondary}"
+                        HorizontalAlignment="Right"
+                        Command="{Binding RefreshCommand}"
+                        VerticalAlignment="Center"/>
+            </Grid>
+
+            <!-- Projektliste -->
+            <DataGrid Grid.Row="1"
+                      ItemsSource="{Binding Projects}"
+                      SelectedItem="{Binding SelectedProject}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      SelectionMode="Single"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="None"
+                      Background="{DynamicResource BpmBgBase}"
+                      BorderThickness="0"
+                      RowBackground="{DynamicResource BpmBgBase}"
+                      AlternatingRowBackground="{DynamicResource BpmBgElevated}"
+                      Foreground="{DynamicResource BpmTextPrimary}"
+                      MouseDoubleClick="OnProjectDoubleClick">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="Eingang" Width="70">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border Background="{DynamicResource BpmWarning}"
+                                        CornerRadius="8" Padding="6,2"
+                                        HorizontalAlignment="Center"
+                                        Visibility="{Binding HasInbox, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="{Binding InboxBadge}"
+                                               FontSize="11" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource BpmTextBright}"
+                                               HorizontalAlignment="Center"/>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="Projektnr." Binding="{Binding Project.ProjectNumber}" Width="90"/>
+                    <DataGridTextColumn Header="Projektname" Binding="{Binding Project.Name}" Width="*"/>
+                    <DataGridTextColumn Header="Ort" Binding="{Binding Project.Location.City}" Width="150"/>
+                    <DataGridTextColumn Header="Status" Binding="{Binding Project.Status}" Width="100"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- Empty State -->
+            <StackPanel Grid.Row="1"
+                        VerticalAlignment="Center" HorizontalAlignment="Center"
+                        Visibility="{Binding Projects.Count, Converter={StaticResource CountToVis}}">
+                <TextBlock Text="Noch keine Projekte vorhanden."
+                           Foreground="{DynamicResource BpmTextSecondary}" FontSize="13"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="Erstelle zuerst ein Projekt in den Einstellungen."
+                           Foreground="{DynamicResource BpmTextSecondary}" FontSize="11"
+                           HorizontalAlignment="Center" Margin="0,8,0,0"/>
+            </StackPanel>
         </Grid>
 
-        <!-- Projektliste -->
-        <DataGrid Grid.Row="1"
-                  ItemsSource="{Binding Projects}"
-                  SelectedItem="{Binding SelectedProject}"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  SelectionMode="Single"
-                  CanUserAddRows="False"
-                  CanUserDeleteRows="False"
-                  HeadersVisibility="Column"
-                  GridLinesVisibility="None"
-                  Background="{DynamicResource BpmBgBase}"
-                  BorderThickness="0"
-                  RowBackground="{DynamicResource BpmBgBase}"
-                  AlternatingRowBackground="{DynamicResource BpmBgElevated}"
-                  Foreground="{DynamicResource BpmTextPrimary}"
-                  MouseDoubleClick="OnProjectDoubleClick">
-            <DataGrid.Columns>
-                <!-- Eingang-Badge -->
-                <DataGridTemplateColumn Header="Eingang" Width="70">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Border Background="{DynamicResource BpmWarning}"
-                                    CornerRadius="8"
-                                    Padding="6,2"
-                                    HorizontalAlignment="Center"
-                                    Visibility="{Binding HasInbox, Converter={StaticResource BoolToVis}}">
-                                <TextBlock Text="{Binding InboxBadge}"
-                                           FontSize="11" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource BpmTextBright}"
-                                           HorizontalAlignment="Center"/>
-                            </Border>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-
-                <DataGridTextColumn Header="Projektnr." Binding="{Binding Project.ProjectNumber}" Width="90"/>
-                <DataGridTextColumn Header="Projektname" Binding="{Binding Project.Name}" Width="*"/>
-                <DataGridTextColumn Header="Ort" Binding="{Binding Project.Location.City}" Width="150"/>
-                <DataGridTextColumn Header="Status" Binding="{Binding Project.Status}" Width="100"/>
-            </DataGrid.Columns>
-        </DataGrid>
-
-        <!-- Empty State -->
-        <StackPanel Grid.Row="1"
-                    VerticalAlignment="Center"
-                    HorizontalAlignment="Center"
-                    Visibility="{Binding Projects.Count, Converter={StaticResource CountToVis}}">
-            <TextBlock Text="Noch keine Projekte vorhanden."
-                       Foreground="{DynamicResource BpmTextSecondary}"
-                       FontSize="13"
-                       HorizontalAlignment="Center"/>
-            <TextBlock Text="Erstelle zuerst ein Projekt in den Einstellungen."
-                       Foreground="{DynamicResource BpmTextSecondary}"
-                       FontSize="11"
-                       HorizontalAlignment="Center" Margin="0,8,0,0"/>
-        </StackPanel>
+        <!-- Projektdetail (sichtbar wenn Projekt gewählt) -->
+        <ContentControl x:Name="DetailHost" Visibility="Collapsed"/>
     </Grid>
 </UserControl>

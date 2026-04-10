@@ -204,10 +204,11 @@ string BuildDocumentKey(Profile profile, ParsedFile parsed)
 
 4-Schritt-Wizard (auch erreichbar über „✎ Profil" im Projektdetail):
 
-1. **Segmente zuweisen** → Dateiname splitten, Feldtypen zuweisen
-2. **IndexSource** → FileName / None / PlanHeader(Post-V1), indexMode, indexComparison
-3. **Zielordner + Ordner-Hierarchie** → Hauptordner + Unterebenen (Geschoss, Haus etc.)
-4. **Erkennung** → prefix/contains Muster (regex nur unter „Erweitert"), Priorität
+1. **Datei auswaehlen** → Datei aus Eingang klicken oder Name eingeben, Trennzeichen, Parsen → Segmente als Vorschau
+2. **Segmente zuweisen** → Feldtypen per Dropdown zuweisen (PlanNumber Pflicht)
+3. **IndexSource** → FileName / None / PlanHeader(Post-V1), indexMode, indexComparison
+4. **Zielordner + Ordner-Hierarchie** → Hauptordner + Unterebenen (Geschoss, Haus etc.)
+5. **Erkennung** → Klickbare Segment-Bloecke (Toggle), auto-Muster + auto-Methode (prefix/contains), Live-Test, Prioritaet
 
 Ergebnis: RecognitionProfile in `profiles.json` + PatternTemplate in `pattern-templates.json`.
 
@@ -605,7 +606,7 @@ Bauprotokoll: "BB_2026-04-09_003_Baubesprechung.pdf" → [BB][2026-04-09][003][B
 | **Hauptseite** | Projektliste mit Eingang-Badge (amber/grün) |
 | **Projektdetail** | 2 Tabs: Automatisch (Profile gruppiert nach Zielordner, ✎ Profil-Button) + Manuell sortieren |
 | **Import-Vorschau** | DataGrid mit 9 Status-Typen, Zusammenfassungszeile, Rechtsklick-Korrekturen |
-| **Profil-Wizard** | 4 Schritte: Segmente → IndexSource → Zielordner → Erkennung |
+| **Profil-Wizard** | 5 Schritte: Datei auswaehlen → Segmente zuweisen → IndexSource → Zielordner → Erkennung (klickbare Segment-Bloecke) |
 | **Manueller Sortier-Dialog** | Links: Dateien, Rechts: Formular + Umbenennung + Vorschau |
 
 **UI-Regeln:** Screen States (5 Pflicht), max. 1 Primary/Kontext, BPM Dark Theme Tokens,
@@ -645,13 +646,13 @@ BauProjektManager.PlanManager/
 
 ## 17. Implementierungsreihenfolge
 
-| Prio | # | Feature |
-|------|---|---------|
-| 1 | 18 | Dateinamen-Parser (Segment-Splitting, Domain-Logik) |
-| 2 | 19 | Segment-Zuweiser GUI (4-Schritt-Wizard) |
-| 3 | 20 | Dokumenttyp-Erkennung (prefix/contains) |
-| 4 | 21 | PatternTemplates (Vorschlagslogik) |
-| 5 | 22 | profiles.json (Pro Projekt) |
+| Prio | # | Feature | Status |
+|------|---|---------|--------|
+| 1 | 18 | Dateinamen-Parser (Segment-Splitting, Domain-Logik) | ✅ v0.24.3 |
+| 2 | 19 | Profil-Wizard GUI (5-Schritt: Datei, Segmente, Index, Zielordner, Erkennung) | ✅ v0.24.10 (UI, Speichern offen) |
+| 3 | 20 | Dokumenttyp-Erkennung (prefix/contains) | |
+| 4 | 21 | PatternTemplates (Vorschlagslogik) | |
+| 5 | 22 | profiles.json (Pro Projekt) — ProfileManager Service | |
 | 6 | 23 | pattern-templates.json (Globale Bibliothek) |
 | 7 | 24 | Import-Workflow Scan→Parse→Classify→Plan |
 | 8 | 25 | Import-Vorschau (9 Status, Rechtsklick) |

@@ -158,6 +158,7 @@ Welche Docs bei welchem Änderungstyp geladen werden müssen.
   - FieldType.cs (Enum: 16 Bau-Felder + Custom)
   - FileNameSegment.cs (Segment-Modell)
   - ParsedFileName.cs (Parse-Ergebnis)
+  - IndexSourceType.cs (Enum: FileName, None, PlanHeader — ADR-045)
 - **Enums/** — Status-Enums. Laden bei Workflow- oder Status-Änderungen.
   - ProjectStatus.cs
 
@@ -184,10 +185,12 @@ Welche Docs bei welchem Änderungstyp geladen werden müssen.
 ### src/BauProjektManager.PlanManager — Plan-Modul (V1-Kernfeature, im Aufbau)
 
 - **ViewModels/** — MVVM ViewModels. Laden bei neuen Commands, Bindings, Navigation.
-  - PlanManagerViewModel.cs — Projektliste, Eingangs-Zähler, PlanProjectItem Wrapper.
+  - PlanManagerViewModel.cs — Projektliste, Eingangs-Zaehler, PlanProjectItem Wrapper.
   - ProjectDetailViewModel.cs — Projektdetail, Eingangs-Info, GoBack-Navigation.
+  - ProfileWizardViewModel.cs — 5-Schritt Profil-Wizard (Datei, Segmente, Index, Zielordner, Erkennung). Helper-Klassen: FieldTypeOption, IndexSourceOption, HierarchyLevelOption, RecognitionSegment.
 - **Views/PlanManagerView.xaml/.cs** — Host: Projektliste + DetailHost ContentControl, DynamicResource.
 - **Views/ProjectDetailView.xaml/.cs** — Projektdetail: Toolbar + 3 Tabs (Profile, Manuell, Sync).
+- **Views/ProfileWizardDialog.xaml/.cs** — 5-Schritt Profil-Wizard (modal, 750x580). Converter: CountToVisInverse, CountToVisZero, InverseBool.
 - **Services/** — PlanManager-Logik. Laden bei Parser/Import/Profil-Änderungen.
   - FileNameParser.cs — Segment-Splitting (ADR-022), statisch, keine Abhängigkeiten.
 

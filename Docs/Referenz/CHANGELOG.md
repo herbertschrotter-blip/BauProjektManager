@@ -5,6 +5,29 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.24.10] — 2026-04-10
+
+### Hinzugefuegt
+- **PlanManager:** 5-Schritt Profil-Wizard (Refactoring von 4 auf 5 Schritte)
+  - Schritt 1: Datei auswaehlen + Parsen (Segment-Vorschau als WrapPanel)
+  - Schritt 2: Segmente zuweisen (FieldType-Dropdowns, PlanNumber Pflicht)
+  - Schritt 3: Index-Konfiguration (IndexSource: FileName/None/PlanHeader, indexMode, caseInsensitive)
+  - Schritt 4: Zielordner + Ordner-Hierarchie (Dropdown, Custom, Checkboxen, Pfad-Vorschau)
+  - Schritt 5: Erkennung via klickbare Segment-Bloecke (Toggle blau/grau, auto-Muster, auto-Methode prefix/contains, Live-Test)
+- **Domain:** `IndexSourceType` Enum (FileName, None, PlanHeader) — ADR-045
+- **PlanManager:** `RecognitionSegment` Klasse fuer klickbare Erkennungs-Bloecke
+- **PlanManager:** Step-Navigation (GoNext/GoBack Commands, 5 Progress Dots, dynamischer Button-Text "Speichern")
+- **PlanManager:** Converter: `CountToVisZeroConverter`, `InverseBoolConverter`
+
+### Geaendert
+- **Docs:** INDEX.md — PC-Tabelle mit Auto-Discovery via `hostname` + `[System.Environment]::GetEnvironmentVariable('OneDrive', 'User')`
+- **Skill:** cc-steuerung SKILL.md v3 — Abschnitt 4 mit dynamischer Pfad-Ermittlung + Self-Registration
+
+### Build
+- **Version:** Directory.Build.props 0.24.6 → 0.24.10
+
+---
+
 ## [v0.24.6] — 2026-04-10
 
 ### Hinzugefügt

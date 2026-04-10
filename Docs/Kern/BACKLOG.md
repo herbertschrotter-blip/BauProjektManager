@@ -1,7 +1,7 @@
 ﻿# BauProjektManager — Backlog
 
-**Letzte Aktualisierung:** 09.04.2026  
-**Aktuelle Version:** v0.24.2
+**Letzte Aktualisierung:** 10.04.2026  
+**Aktuelle Version:** v0.24.10
 
 **Verwandte Dokumente:**
 - [VISION.md](../Referenz/VISION.md) — Nordstern, Schmerzpunkte, Zielgruppe
@@ -74,11 +74,11 @@ Details: [BauProjektManager_Architektur.md](BauProjektManager_Architektur.md) Ka
 
 | # | Feature | Beschreibung |
 |---|---------|-------------|
-| 18 | Dateinamen-Parser | Segmente splitten an Trennzeichen (ADR-022) |
-| 19 | Segment-Zuweiser GUI | 3-Schritt-Wizard (Typ, Muster, Ordner) |
+| 18 | Dateinamen-Parser | Segmente splitten an Trennzeichen (ADR-022) ✅ v0.24.3 |
+| 19 | Segment-Zuweiser GUI | 5-Schritt-Wizard: Datei, Segmente, Index, Zielordner, Erkennung ✅ v0.24.10 (UI fertig, Speichern offen) |
 | 20 | Plantyp-Erkennung | prefix/contains/regex Muster |
 | 21 | PatternTemplates | Vorschlagslogik (ADR-010) |
-| 22 | profiles.json | Pro Projekt auf Cloud-Speicher |
+| 22 | profiles.json | Pro Projekt auf Cloud-Speicher — ProfileManager Service |
 | 23 | pattern-templates.json | Globale Musterbibliothek |
 | 24 | Import-Workflow 1-5 | Scan, Parse, Validate, Classify, Plan (ADR-008) |
 | 25 | Import-Vorschau | GUI mit Status, Rechtsklick-Korrektur |

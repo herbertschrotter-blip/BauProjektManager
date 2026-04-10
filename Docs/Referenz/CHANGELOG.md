@@ -5,6 +5,22 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.24.4] — 2026-04-10
+
+### Hinzugefügt
+- **PlanManager:** `PlanManagerViewModel` — Projektliste laden, Eingangs-Zähler (`_Eingang/`-Ordner scannen), `PlanProjectItem` Wrapper
+- **PlanManager:** `PlanManagerView.xaml` — DataGrid mit Projektliste, amber Eingangs-Badge (Pill-Form), Empty State, Aktualisieren-Button
+- **PlanManager:** `BoolToVisConverter` + `CountToVisConverter` für Badge/Empty-State Sichtbarkeit
+- **PlanManager:** CommunityToolkit.Mvvm + Serilog als NuGet-Referenzen in PlanManager.csproj
+
+### Geändert
+- **PlanManager:** `PlanManagerView.xaml` — alle `StaticResource` → `DynamicResource` (Modul-Projekte können App-Resources erst zur Laufzeit auflösen)
+
+### Build
+- **Version:** Directory.Build.props 0.24.3 → 0.24.4
+
+---
+
 ## [v0.24.3] — 2026-04-10
 
 ### Hinzugefügt

@@ -1,18 +1,82 @@
 <UserControl x:Class="BauProjektManager.PlanManager.Views.PlanManagerView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:BauProjektManager.PlanManager.ViewModels">
     <Grid>
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-            <TextBlock FontSize="24" Foreground="{DynamicResource BpmTextPrimary}"
-                       HorizontalAlignment="Center" Margin="0,0,0,20">
-                <Run Text="{StaticResource IconNavPlans}"/><Run Text=" PlanManager"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Style="{DynamicResource BpmHeading1}">
+                <Run Text="{DynamicResource IconNavPlans}"/>
+                <Run Text=" PlanManager"/>
             </TextBlock>
-            <TextBlock Text="Hier kommt die Planverwaltung hin." 
-                       FontSize="14" Foreground="{DynamicResource BpmTextSecondary}"
+            <Button Content="⟳ Aktualisieren"
+                    Style="{DynamicResource BpmButtonSecondary}"
+                    HorizontalAlignment="Right"
+                    Command="{Binding RefreshCommand}"
+                    VerticalAlignment="Center"/>
+        </Grid>
+
+        <!-- Projektliste -->
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding Projects}"
+                  SelectedItem="{Binding SelectedProject}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  SelectionMode="Single"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  HeadersVisibility="Column"
+                  GridLinesVisibility="None"
+                  Background="{DynamicResource BpmBgBase}"
+                  BorderThickness="0"
+                  RowBackground="{DynamicResource BpmBgBase}"
+                  AlternatingRowBackground="{DynamicResource BpmBgElevated}"
+                  Foreground="{DynamicResource BpmTextPrimary}"
+                  MouseDoubleClick="OnProjectDoubleClick">
+            <DataGrid.Columns>
+                <!-- Eingang-Badge -->
+                <DataGridTemplateColumn Header="Eingang" Width="70">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border Background="{DynamicResource BpmWarning}"
+                                    CornerRadius="8"
+                                    Padding="6,2"
+                                    HorizontalAlignment="Center"
+                                    Visibility="{Binding HasInbox, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Text="{Binding InboxBadge}"
+                                           FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource BpmTextBright}"
+                                           HorizontalAlignment="Center"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTextColumn Header="Projektnr." Binding="{Binding Project.ProjectNumber}" Width="90"/>
+                <DataGridTextColumn Header="Projektname" Binding="{Binding Project.Name}" Width="*"/>
+                <DataGridTextColumn Header="Ort" Binding="{Binding Project.Location.City}" Width="150"/>
+                <DataGridTextColumn Header="Status" Binding="{Binding Project.Status}" Width="100"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Empty State -->
+        <StackPanel Grid.Row="1"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    Visibility="{Binding Projects.Count, Converter={StaticResource CountToVis}}">
+            <TextBlock Text="Noch keine Projekte vorhanden."
+                       Foreground="{DynamicResource BpmTextSecondary}"
+                       FontSize="13"
                        HorizontalAlignment="Center"/>
-            <TextBlock Text="(Nächster Schritt: Projektliste mit Import-Button)" 
-                       FontSize="12" Foreground="{DynamicResource BpmTextTertiary}"
-                       HorizontalAlignment="Center" Margin="0,10,0,0"/>
+            <TextBlock Text="Erstelle zuerst ein Projekt in den Einstellungen."
+                       Foreground="{DynamicResource BpmTextSecondary}"
+                       FontSize="11"
+                       HorizontalAlignment="Center" Margin="0,8,0,0"/>
         </StackPanel>
     </Grid>
 </UserControl>

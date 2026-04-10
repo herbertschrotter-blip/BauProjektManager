@@ -169,7 +169,9 @@ Welche Docs bei welchem Änderungstyp geladen werden müssen.
 
 ### src/BauProjektManager.PlanManager — Plan-Modul (V1-Kernfeature, im Aufbau)
 
-- **Views/PlanManagerView.xaml/.cs** — Platzhalter-View, noch minimal.
+- **ViewModels/** — MVVM ViewModels. Laden bei neuen Commands, Bindings, Navigation.
+  - PlanManagerViewModel.cs — Projektliste, Eingangs-Zähler, PlanProjectItem Wrapper.
+- **Views/PlanManagerView.xaml/.cs** — Projektliste mit Eingangs-Badge, DynamicResource.
 - **Services/** — PlanManager-Logik. Laden bei Parser/Import/Profil-Änderungen.
   - FileNameParser.cs — Segment-Splitting (ADR-022), statisch, keine Abhängigkeiten.
 

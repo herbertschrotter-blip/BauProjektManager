@@ -140,6 +140,10 @@ Welche Docs bei welchem Änderungstyp geladen werden müssen.
   - Project.cs, Client.cs, Building.cs, BuildingLevel.cs, BuildingPart.cs
   - ProjectLocation.cs, ProjectParticipant.cs, ProjectLink.cs, ProjectPaths.cs, ProjectTimeline.cs
   - AppSettings.cs, BpmManifest.cs
+- **Models/PlanManager/** — PlanManager Domain-Modelle. Laden bei Parser/Profil/Import-Änderungen.
+  - FieldType.cs (Enum: 16 Bau-Felder + Custom)
+  - FileNameSegment.cs (Segment-Modell)
+  - ParsedFileName.cs (Parse-Ergebnis)
 - **Enums/** — Status-Enums. Laden bei Workflow- oder Status-Änderungen.
   - ProjectStatus.cs
 
@@ -163,9 +167,11 @@ Welche Docs bei welchem Änderungstyp geladen werden müssen.
   - ProjectEditDialog.xaml/.cs (je ~58KB, sehr groß → nur SUCHE/ERSETZE)
   - FolderTemplateControl.xaml/.cs — UserControl-Muster.
 
-### src/BauProjektManager.PlanManager — Plan-Modul (nächstes V1-Feature, im Aufbau)
+### src/BauProjektManager.PlanManager — Plan-Modul (V1-Kernfeature, im Aufbau)
 
 - **Views/PlanManagerView.xaml/.cs** — Platzhalter-View, noch minimal.
+- **Services/** — PlanManager-Logik. Laden bei Parser/Import/Profil-Änderungen.
+  - FileNameParser.cs — Segment-Splitting (ADR-022), statisch, keine Abhängigkeiten.
 
 ---
 

@@ -5,6 +5,23 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.24.3] — 2026-04-10
+
+### Hinzugefügt
+- **Domain:** `FieldType` Enum — 16 vordefinierte Feldtypen (System + Bau) + Custom für benutzerdefinierte
+- **Domain:** `FileNameSegment` Modell — Position, RawValue, FieldType, CustomFieldName, DisplayName
+- **Domain:** `ParsedFileName` Modell — OriginalFileName, BaseName, Extension, Segmente, Trennzeichen
+- **PlanManager:** `FileNameParser.Parse()` — statischer Service, splittet Dateinamen an konfigurierbaren Trennzeichen in Segmente (ADR-022)
+
+### Architektur
+- Domain-Modelle unter `Domain/Models/PlanManager/` (teilbar mit zukünftigen Modulen)
+- Parser-Logik in `PlanManager/Services/` (modulspezifisch)
+
+### Build
+- **Version:** Directory.Build.props 0.24.2 → 0.24.3
+
+---
+
 ## [v0.24.2] — 2026-04-09
 
 ### Hinzugefügt

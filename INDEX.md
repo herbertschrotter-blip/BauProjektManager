@@ -17,9 +17,23 @@
 - **Typ:** WPF Desktop-Anwendung, modularer Monolith, offline-first
 - **Repo:** github.com/herbertschrotter-blip/BauProjektManager, Branch: main
 - **Version:** In `Directory.Build.props` im Repo-Root
-- **Arbeitsverzeichnis:**
-  - Büro-PC: `D:\OneDrive\Dokumente\02 Arbeit\05 Vorlagen - Scripte\05_BauProjekteManager`
-  - Surface: `C:\Users\herbe\OneDrive\Dokumente\02 Arbeit\05 Vorlagen - Scripte\05_BauProjekteManager`
+- **Arbeitsverzeichnis:** Dynamisch via PC-Tabelle (siehe unten)
+
+### PCs und Arbeitsverzeichnisse
+
+**Projekt-Suffix** (gleich auf allen PCs): `Dokumente\02 Arbeit\05 Vorlagen - Scripte\05_BauProjekteManager`
+
+| PC-Name | COMPUTERNAME | Bemerkung |
+|---------|-------------|-----------|
+| Firmenlaptop | FIRMENLAPTOP | Arbeits-PC |
+| Surface | (TODO) | Surface Tablet |
+| Standrechner | (TODO) | PC zuhause |
+
+**Ermittlung durch Claude (DC):**
+```powershell
+$pc = hostname; $od = [System.Environment]::GetEnvironmentVariable('OneDrive', 'User'); Write-Host "$pc|$od"
+```
+**workFolder** = OneDrive-Pfad + `\` + Projekt-Suffix. Unbekannte PCs werden bei Erstverwendung registriert.
 
 ---
 

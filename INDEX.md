@@ -27,7 +27,7 @@
 |---------|-------------|-----------|
 | Firmenlaptop | FIRMENLAPTOP | Arbeits-PC |
 | Surface | (TODO) | Surface Tablet |
-| Standrechner | (TODO) | PC zuhause |
+| Standrechner | Desktop_PC | PC zuhause |
 
 **Ermittlung durch Claude (DC):**
 ```powershell

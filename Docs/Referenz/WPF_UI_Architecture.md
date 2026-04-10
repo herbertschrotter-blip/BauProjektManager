@@ -792,7 +792,48 @@ Die Datenschutz-Entscheidung trifft die Policy, nicht das ViewModel. Das ViewMod
 
 ---
 
-*Änderungen v1.0 → v2.0 (04.04.2026):*
+## 15. Modul-Projekte: XAML-Regeln (PFLICHT)
+
+### 15.1 DynamicResource statt StaticResource
+
+Modul-Projekte (BauProjektManager.PlanManager, .Settings etc.) haben zur Kompilierzeit
+**keinen Zugriff** auf die App-ResourceDictionaries (Colors.xaml, Buttons.xaml etc.).
+Diese werden erst zur Laufzeit durch die App-Shell bereitgestellt.
+
+**Regel:** In Modul-XAML IMMER `DynamicResource` verwenden, NIE `StaticResource`
+fuer Theme-Tokens, Brushes und Styles.
+
+```xml
+<!-- RICHTIG (Modul) -->
+Background="{DynamicResource BpmBgSurface}"
+Style="{DynamicResource BpmButtonPrimary}"
+
+<!-- FALSCH (verursacht XamlParseException zur Laufzeit) -->
+Background="{StaticResource BpmBgSurface}"
+```
+
+**Ausnahme:** Converter und lokale Ressourcen die im Window/UserControl selbst
+definiert sind, duerfen `StaticResource` verwenden.
+
+### 15.2 BAML-Cache bei XAML-Aenderungen
+
+Nach Aenderungen an XAML-Dateien in Modul-Projekten kann der BAML-Cache veraltet sein.
+
+**Loesung:** Vor dem Build den `obj/`-Ordner des betroffenen Projekts loeschen:
+```powershell
+Remove-Item -Recurse -Force src\BauProjektManager.PlanManager\obj
+dotnet restore src\BauProjektManager.PlanManager\BauProjektManager.PlanManager.csproj
+```
+Oder in Visual Studio: `Erstellen → Projektmappe bereinigen` vor dem Build.
+
+### 15.3 Typografische Anfuehrungszeichen
+
+Typografische Anfuehrungszeichen (z.B. `„"`) sind in XAML-Text-Attributen verboten.
+Sie verursachen XML-Parser-Fehler. Stattdessen einfache gerade Anfuehrungszeichen verwenden.
+
+---
+
+*Aenderungen v1.0 → v2.0 (04.04.2026):*
 - *Controls/ als Shell-only markiert (nicht für Module zugänglich) — ADR-006*
 - *5 → 7 ResourceDictionaries offiziell (+Inputs.xaml, +Tabs.xaml) — ADR-028 nachgezogen*
 - *Token → WPF-Key Mapping-Tabelle eingefügt (Kap. 4)*
@@ -808,3 +849,6 @@ Die Datenschutz-Entscheidung trifft die Policy, nicht das ViewModel. Das ViewMod
 - *Migration hardcoded → tokenisiert beschrieben (Kap. 12.2)*
 - *Datenschutz: license.IsCommercial → RequiresStrictCompliance, DPAPI → SecretStore (Kap. 14)*
 - *Verwandte Dokumente + Querverweise ergänzt*
+
+*Aenderungen v2.0 → v2.1 (10.04.2026):*
+- *Kap. 15 NEU: DynamicResource-Pflicht fuer Modul-Projekte, BAML-Cache-Regel, typografische Anfuehrungszeichen*

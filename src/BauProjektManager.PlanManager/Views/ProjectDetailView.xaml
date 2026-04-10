@@ -52,15 +52,22 @@
 
             <!-- Tab 1: Profile -->
             <TabItem Header="Profile">
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <TextBlock Text="Dokumenttyp-Profile"
-                               Foreground="{DynamicResource BpmTextSecondary}"
-                               FontSize="14" HorizontalAlignment="Center"/>
-                    <TextBlock Text="Hier werden die angelernten Profile angezeigt. (kommt mit #19c/d)"
-                               Foreground="{DynamicResource BpmTextSecondary}"
-                               FontSize="11" HorizontalAlignment="Center"
-                               Margin="0,8,0,0"/>
-                </StackPanel>
+                <Grid Margin="0,12,0,0">
+                    <Button Content="+ Neuer Dokumenttyp"
+                            Style="{DynamicResource BpmButtonSecondary}"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Click="OnNewProfile"/>
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <TextBlock Text="Noch keine Profile angelegt."
+                                   Foreground="{DynamicResource BpmTextSecondary}"
+                                   FontSize="13" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Klicke + Neuer Dokumenttyp um einen Dateinamen anzulernen."
+                                   Foreground="{DynamicResource BpmTextSecondary}"
+                                   FontSize="11" HorizontalAlignment="Center"
+                                   Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Grid>
             </TabItem>
 
             <!-- Tab 2: Manuell sortieren -->

@@ -5,6 +5,35 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.24.6] — 2026-04-10
+
+### Hinzugefügt
+- **PlanManager:** `ProfileWizardDialog.xaml` — 4-Schritt Profil-Wizard (Schritt 1 implementiert: Dateiname parsen, Segmente zuweisen mit FieldType-Dropdown)
+- **PlanManager:** `ProfileWizardViewModel` — Wizard-State, FileNameParser-Integration, FieldTypeOption-Dropdown, Validierung (PlanNumber Pflicht)
+- **PlanManager:** `CountToVisInverseConverter` — Count>0 → Visible (für Segment-Anzeige)
+- **PlanManager:** Button „+ Neuer Dokumenttyp" im Profile-Tab öffnet den Wizard
+
+### Build
+- **Version:** Directory.Build.props 0.24.5 → 0.24.6
+
+---
+
+## [v0.24.5] — 2026-04-10
+
+### Hinzugefügt
+- **PlanManager:** `ProjectDetailView.xaml` — Projektdetail mit Toolbar (← Zurück, Projektname, Import starten disabled), Eingangs-Banner, 3 Tabs (Profile, Manuell sortieren, Sync)
+- **PlanManager:** `ProjectDetailViewModel` — hält gewähltes Projekt, Eingangs-Info, GoBack-Event
+- **PlanManager:** Navigation Projektliste ↔ Projektdetail via ContentControl-Wechsel in PlanManagerView
+
+### Geändert
+- **PlanManager:** `PlanManagerView.xaml` — umgebaut zu Host mit ProjectListPanel + DetailHost ContentControl
+- **PlanManager:** `PlanManagerView.xaml.cs` — NavigateToDetail/NavigateToList Logik, ProjectSelected Event
+
+### Build
+- **Version:** Directory.Build.props 0.24.4 → 0.24.5
+
+---
+
 ## [v0.24.4] — 2026-04-10
 
 ### Hinzugefügt

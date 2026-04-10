@@ -171,7 +171,9 @@ Welche Docs bei welchem Änderungstyp geladen werden müssen.
 
 - **ViewModels/** — MVVM ViewModels. Laden bei neuen Commands, Bindings, Navigation.
   - PlanManagerViewModel.cs — Projektliste, Eingangs-Zähler, PlanProjectItem Wrapper.
-- **Views/PlanManagerView.xaml/.cs** — Projektliste mit Eingangs-Badge, DynamicResource.
+  - ProjectDetailViewModel.cs — Projektdetail, Eingangs-Info, GoBack-Navigation.
+- **Views/PlanManagerView.xaml/.cs** — Host: Projektliste + DetailHost ContentControl, DynamicResource.
+- **Views/ProjectDetailView.xaml/.cs** — Projektdetail: Toolbar + 3 Tabs (Profile, Manuell, Sync).
 - **Services/** — PlanManager-Logik. Laden bei Parser/Import/Profil-Änderungen.
   - FileNameParser.cs — Segment-Splitting (ADR-022), statisch, keine Abhängigkeiten.
 

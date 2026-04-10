@@ -15,6 +15,13 @@ public partial class ProjectDetailView : UserControl
         DataContext = vm;
     }
 
+    private void OnNewProfile(object sender, System.Windows.RoutedEventArgs e)
+    {
+        var dialog = new ProfileWizardDialog();
+        dialog.Owner = System.Windows.Window.GetWindow(this);
+        dialog.ShowDialog();
+    }
+
     /// <summary>
     /// Zugriff auf das ViewModel für Event-Verdrahtung.
     /// </summary>

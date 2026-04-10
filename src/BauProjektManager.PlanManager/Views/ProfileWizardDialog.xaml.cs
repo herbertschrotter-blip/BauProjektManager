@@ -9,9 +9,6 @@ using BauProjektManager.PlanManager.ViewModels;
 
 namespace BauProjektManager.PlanManager.Views;
 
-/// <summary>
-/// Count > 0 -> Visible, Count == 0 -> Collapsed.
-/// </summary>
 public class CountToVisInverseConverter : IValueConverter
 {
     public object Convert(object value, Type targetType,
@@ -24,9 +21,6 @@ public class CountToVisInverseConverter : IValueConverter
         => throw new NotImplementedException();
 }
 
-/// <summary>
-/// Count == 0 -> Visible, Count > 0 -> Collapsed.
-/// </summary>
 public class CountToVisZeroConverter : IValueConverter
 {
     public object Convert(object value, Type targetType,
@@ -39,9 +33,6 @@ public class CountToVisZeroConverter : IValueConverter
         => throw new NotImplementedException();
 }
 
-/// <summary>
-/// Bool -> inverted bool (fuer IsEnabled-Binding).
-/// </summary>
 public class InverseBoolConverter : IValueConverter
 {
     public object Convert(object value, Type targetType,
@@ -100,6 +91,16 @@ public partial class ProfileWizardDialog : Window
         _vm.OnHierarchyLevelChanged();
     }
 
+    private void OnRecognitionSegmentClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn
+            && btn.DataContext is RecognitionSegment seg)
+        {
+            seg.IsSelected = !seg.IsSelected;
+            _vm.OnRecognitionSegmentToggled();
+        }
+    }
+
     private void OnCancel(object sender, RoutedEventArgs e)
     {
         DialogResult = false;
@@ -116,7 +117,6 @@ public partial class ProfileWizardDialog : Window
     {
         if (_vm.CurrentStep >= _vm.TotalSteps)
         {
-            // Letzter Schritt: Dialog abschliessen
             DialogResult = true;
             Close();
             return;
@@ -126,9 +126,6 @@ public partial class ProfileWizardDialog : Window
         UpdateStepVisibility();
     }
 
-    /// <summary>
-    /// Blendet Step-Panels um und aktualisiert Progress Dots.
-    /// </summary>
     private void UpdateStepVisibility()
     {
         Step1Panel.Visibility = _vm.CurrentStep == 1
@@ -137,20 +134,25 @@ public partial class ProfileWizardDialog : Window
             ? Visibility.Visible : Visibility.Collapsed;
         Step3Panel.Visibility = _vm.CurrentStep == 3
             ? Visibility.Visible : Visibility.Collapsed;
+        Step4Panel.Visibility = _vm.CurrentStep == 4
+            ? Visibility.Visible : Visibility.Collapsed;
+        Step5Panel.Visibility = _vm.CurrentStep == 5
+            ? Visibility.Visible : Visibility.Collapsed;
 
         // Progress Dots
         var accent = FindResource("BpmAccentPrimary");
         var inactive = FindResource("BpmBorderDefault");
-        Dot2.Fill = _vm.CurrentStep >= 2
-            ? (System.Windows.Media.Brush)accent
-            : (System.Windows.Media.Brush)inactive;
-        Dot3.Fill = _vm.CurrentStep >= 3
-            ? (System.Windows.Media.Brush)accent
-            : (System.Windows.Media.Brush)inactive;
-        Dot4.Fill = _vm.CurrentStep >= 4
-            ? (System.Windows.Media.Brush)accent
-            : (System.Windows.Media.Brush)inactive;
+        var a = (System.Windows.Media.Brush)accent;
+        var i = (System.Windows.Media.Brush)inactive;
+        Dot2.Fill = _vm.CurrentStep >= 2 ? a : i;
+        Dot3.Fill = _vm.CurrentStep >= 3 ? a : i;
+        Dot4.Fill = _vm.CurrentStep >= 4 ? a : i;
+        Dot5.Fill = _vm.CurrentStep >= 5 ? a : i;
 
-        StepCounter.Text = $"Schritt {_vm.CurrentStep} von {_vm.TotalSteps}";
+        StepCounter.Text =
+            $"Schritt {_vm.CurrentStep} von {_vm.TotalSteps}";
+
+        NextButton.Content = _vm.CurrentStep >= _vm.TotalSteps
+            ? "Speichern" : "Weiter";
     }
 }

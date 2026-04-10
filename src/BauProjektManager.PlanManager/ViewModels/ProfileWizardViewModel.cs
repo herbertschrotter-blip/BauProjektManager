@@ -10,11 +10,12 @@ using Serilog;
 namespace BauProjektManager.PlanManager.ViewModels;
 
 /// <summary>
-/// ViewModel für den 4-Schritt Profil-Wizard.
-/// Schritt 1: Dateiname → Segmente zuweisen.
-/// Schritt 2: IndexSource → FileName/None, indexMode, indexComparison.
-/// Schritt 3: Zielordner + Ordner-Hierarchie.
-/// Schritt 4: kommt in späterer Version.
+/// ViewModel fuer den 5-Schritt Profil-Wizard.
+/// Schritt 1: Datei auswaehlen + Parsen.
+/// Schritt 2: Segmente zuweisen (FieldType-Dropdowns).
+/// Schritt 3: Index-Konfiguration.
+/// Schritt 4: Zielordner + Ordner-Hierarchie.
+/// Schritt 5: Erkennung (klickbare Segmente).
 /// </summary>
 public partial class ProfileWizardViewModel : ObservableObject
 {
@@ -22,10 +23,10 @@ public partial class ProfileWizardViewModel : ObservableObject
     private int _currentStep = 1;
 
     [ObservableProperty]
-    private int _totalSteps = 4;
+    private int _totalSteps = 5;
 
     [ObservableProperty]
-    private string _stepTitle = "Schritt 1: Segmente zuweisen";
+    private string _stepTitle = "Schritt 1: Datei auswaehlen";
 
     // === Dateien im Eingang ===
 
@@ -38,7 +39,7 @@ public partial class ProfileWizardViewModel : ObservableObject
     [ObservableProperty]
     private bool _hasInboxFiles;
 
-    // === Schritt 1: Dateiname + Segmente ===
+    // === Schritt 1: Datei auswaehlen + Parsen ===
 
     [ObservableProperty]
     private string _sampleFileName = "";
@@ -53,27 +54,18 @@ public partial class ProfileWizardViewModel : ObservableObject
     private string _parseInfo = "";
 
     /// <summary>
-    /// Verfügbare Feldtypen für das Dropdown.
+    /// Verfuegbare Feldtypen fuer das Dropdown (Schritt 2).
     /// </summary>
     public List<FieldTypeOption> FieldTypeOptions { get; } = BuildFieldTypeOptions();
 
-    /// <summary>
-    /// Wird true wenn der aktuelle Schritt gültig ist.
-    /// </summary>
     [ObservableProperty]
     private bool _canGoNext;
 
-    /// <summary>
-    /// Wird true ab Schritt 2 (Zurück-Button sichtbar).
-    /// </summary>
     [ObservableProperty]
     private bool _canGoBack;
 
-    // === Schritt 2: IndexSource ===
+    // === Schritt 3: IndexSource ===
 
-    /// <summary>
-    /// Verfügbare IndexSource-Optionen für RadioButtons.
-    /// </summary>
     public List<IndexSourceOption> IndexSourceOptions { get; } =
     [
         new("Aus Dateiname", IndexSourceType.FileName,
@@ -81,15 +73,13 @@ public partial class ProfileWizardViewModel : ObservableObject
         new("Kein Index", IndexSourceType.None,
             "Dokument hat keinen Index. Versionen werden per MD5-Hash erkannt."),
         new("Aus Plankopf (Post-V1)", IndexSourceType.PlanHeader,
-            "Index wird aus dem PDF-Plankopf gelesen. Noch nicht verfügbar.", isEnabled: false)
+            "Index wird aus dem PDF-Plankopf gelesen. Noch nicht verfuegbar.",
+            isEnabled: false)
     ];
 
     [ObservableProperty]
     private IndexSourceType _selectedIndexSource = IndexSourceType.FileName;
 
-    /// <summary>
-    /// Ob IndexMode-Optionen sichtbar sind (nur bei FileName).
-    /// </summary>
     [ObservableProperty]
     private bool _showIndexModeOptions = true;
 
@@ -99,17 +89,11 @@ public partial class ProfileWizardViewModel : ObservableObject
     [ObservableProperty]
     private bool _indexCaseInsensitive = true;
 
-    /// <summary>
-    /// Warnung wenn FileName gewählt aber kein PlanIndex-Segment zugewiesen.
-    /// </summary>
     [ObservableProperty]
     private bool _showIndexWarning;
 
-    // === Schritt 3: Zielordner ===
+    // === Schritt 4: Zielordner ===
 
-    /// <summary>
-    /// Standard-Ordner aus typischer BPM-Projektstruktur.
-    /// </summary>
     public List<string> TargetFolderOptions { get; } =
     [
         "01 Planunterlagen",
@@ -129,22 +113,51 @@ public partial class ProfileWizardViewModel : ObservableObject
     [ObservableProperty]
     private string _customFolderName = "";
 
-    /// <summary>
-    /// Verfügbare Hierarchie-Ebenen — nur FieldTypes die in Schritt 1 zugewiesen wurden.
-    /// </summary>
     [ObservableProperty]
     private ObservableCollection<HierarchyLevelOption> _availableHierarchyLevels = [];
 
-    /// <summary>
-    /// Live-Vorschau des Zielpfads.
-    /// </summary>
     [ObservableProperty]
     private string _folderPreview = "";
 
+    // === Schritt 5: Erkennung (klickbare Segmente) ===
+
+    [ObservableProperty]
+    private string _documentTypeName = "";
+
     /// <summary>
-    /// Ob PlanIndex-Segment in Schritt 1 zugewiesen wurde.
+    /// Segmente als klickbare Bloecke fuer Erkennung.
+    /// IsSelected = User hat dieses Segment als Erkennungsmuster gewaehlt.
     /// </summary>
-    public bool HasPlanIndexSegment => Segments.Any(s => s.FieldType == FieldType.PlanIndex);
+    [ObservableProperty]
+    private ObservableCollection<RecognitionSegment> _recognitionSegments = [];
+
+    [ObservableProperty]
+    private string _recognitionPattern = "";
+
+    [ObservableProperty]
+    private string _selectedRecognitionMethod = "contains";
+
+    [ObservableProperty]
+    private int _recognitionPriority = 100;
+
+    [ObservableProperty]
+    private string _patternTestResult = "";
+
+    [ObservableProperty]
+    private bool _patternTestSuccess;
+
+    public bool IsPrefix
+    {
+        get => SelectedRecognitionMethod == "prefix";
+        set
+        {
+            SelectedRecognitionMethod = value ? "prefix" : "contains";
+            OnPropertyChanged();
+        }
+    }
+
+    public bool HasPlanIndexSegment =>
+        Segments.Any(s => s.FieldType == FieldType.PlanIndex);
 
     public ProfileWizardViewModel(Project? project = null)
     {
@@ -152,9 +165,8 @@ public partial class ProfileWizardViewModel : ObservableObject
             LoadInboxFiles(project);
     }
 
-    /// <summary>
-    /// Wird aufgerufen wenn der User eine Datei aus der Eingang-Liste anklickt.
-    /// </summary>
+    // === OnChanged Handlers ===
+
     partial void OnSelectedInboxFileChanged(string? value)
     {
         if (!string.IsNullOrEmpty(value))
@@ -164,9 +176,6 @@ public partial class ProfileWizardViewModel : ObservableObject
         }
     }
 
-    /// <summary>
-    /// Aktualisiert UI wenn IndexSource gewechselt wird.
-    /// </summary>
     partial void OnSelectedIndexSourceChanged(IndexSourceType value)
     {
         ShowIndexModeOptions = value == IndexSourceType.FileName;
@@ -191,6 +200,11 @@ public partial class ProfileWizardViewModel : ObservableObject
         ValidateCurrentStep();
     }
 
+    partial void OnDocumentTypeNameChanged(string value)
+    {
+        ValidateCurrentStep();
+    }
+
     private void LoadInboxFiles(Project project)
     {
         try
@@ -211,7 +225,8 @@ public partial class ProfileWizardViewModel : ObservableObject
 
             InboxFiles = new ObservableCollection<string>(files);
             HasInboxFiles = files.Count > 0;
-            Log.Information("Wizard: {Count} Dateien im Eingang geladen", files.Count);
+            Log.Information("Wizard: {Count} Dateien im Eingang geladen",
+                files.Count);
         }
         catch (Exception ex)
         {
@@ -245,15 +260,18 @@ public partial class ProfileWizardViewModel : ObservableObject
     {
         StepTitle = CurrentStep switch
         {
-            1 => "Schritt 1: Segmente zuweisen",
-            2 => "Schritt 2: Index-Konfiguration",
-            3 => "Schritt 3: Zielordner",
-            4 => "Schritt 4: Erkennung",
+            1 => "Schritt 1: Datei auswaehlen",
+            2 => "Schritt 2: Segmente zuweisen",
+            3 => "Schritt 3: Index-Konfiguration",
+            4 => "Schritt 4: Zielordner",
+            5 => "Schritt 5: Erkennung",
             _ => ""
         };
         CanGoBack = CurrentStep > 1;
-        if (CurrentStep == 3)
+        if (CurrentStep == 4)
             BuildHierarchyLevels();
+        if (CurrentStep == 5)
+            BuildRecognitionSegments();
         ValidateCurrentStep();
     }
 
@@ -264,7 +282,9 @@ public partial class ProfileWizardViewModel : ObservableObject
             1 => ValidateStep1(),
             2 => ValidateStep2(),
             3 => ValidateStep3(),
-            _ => false // Schritt 4 kommt noch
+            4 => ValidateStep4(),
+            5 => ValidateStep5(),
+            _ => false
         };
     }
 
@@ -287,9 +307,9 @@ public partial class ProfileWizardViewModel : ObservableObject
             var result = FileNameParser.Parse(SampleFileName, delimiters);
 
             Segments = new ObservableCollection<FileNameSegment>(result.Segments);
-            ParseInfo = $"{result.Segments.Count} Segmente erkannt · Trennzeichen: {string.Join(" ", result.UsedDelimiters)}";
+            ParseInfo = $"{result.Segments.Count} Segmente erkannt";
             ValidateCurrentStep();
-            Log.Information("Dateiname geparst: {FileName} → {Count} Segmente",
+            Log.Information("Dateiname geparst: {FileName} -> {Count} Segmente",
                 SampleFileName, result.Segments.Count);
         }
         catch (Exception ex)
@@ -301,55 +321,63 @@ public partial class ProfileWizardViewModel : ObservableObject
         }
     }
 
+    // === Schritt 2: Segmente zuweisen ===
+
     public void OnFieldTypeChanged(FileNameSegment segment, FieldTypeOption? option)
     {
         if (option is null) return;
 
         segment.FieldType = option.Value;
-        segment.CustomFieldName = option.Value == FieldType.Custom ? option.DisplayName : null;
+        segment.CustomFieldName = option.Value == FieldType.Custom
+            ? option.DisplayName : null;
         ValidateCurrentStep();
         OnPropertyChanged(nameof(HasPlanIndexSegment));
     }
 
-    private bool ValidateStep1()
-    {
-        return Segments.Count > 0
-            && Segments.Any(s => s.FieldType == FieldType.PlanNumber);
-    }
+    // === Validierung ===
 
-    private bool ValidateStep2()
+    /// <summary>Schritt 1: Mindestens 1 Segment geparst.</summary>
+    private bool ValidateStep1() => Segments.Count > 0;
+
+    /// <summary>Schritt 2: PlanNumber muss zugewiesen sein.</summary>
+    private bool ValidateStep2() =>
+        Segments.Count > 0
+        && Segments.Any(s => s.FieldType == FieldType.PlanNumber);
+
+    /// <summary>Schritt 3: IndexSource gueltig.</summary>
+    private bool ValidateStep3()
     {
-        // FileName erfordert PlanIndex-Segment aus Schritt 1
         if (SelectedIndexSource == IndexSourceType.FileName)
         {
             ShowIndexWarning = !HasPlanIndexSegment;
             return HasPlanIndexSegment;
         }
-
-        // PlanHeader ist Post-V1, nicht wählbar
         if (SelectedIndexSource == IndexSourceType.PlanHeader)
         {
             ShowIndexWarning = false;
             return false;
         }
-
-        // None ist immer gültig
         ShowIndexWarning = false;
         return true;
     }
 
-    private bool ValidateStep3()
+    /// <summary>Schritt 4: Zielordner nicht leer.</summary>
+    private bool ValidateStep4()
     {
         if (UseCustomFolder)
             return !string.IsNullOrWhiteSpace(CustomFolderName);
-
         return !string.IsNullOrWhiteSpace(SelectedTargetFolder);
     }
 
-    /// <summary>
-    /// Baut die Hierarchie-Ebenen basierend auf den in Schritt 1 zugewiesenen Segmenten.
-    /// Wird beim Wechsel zu Schritt 3 aufgerufen.
-    /// </summary>
+    /// <summary>Schritt 5: Name + mind. 1 Segment gewaehlt.</summary>
+    private bool ValidateStep5()
+    {
+        return !string.IsNullOrWhiteSpace(DocumentTypeName)
+            && RecognitionSegments.Any(s => s.IsSelected);
+    }
+
+    // === Schritt 4: Hierarchie ===
+
     public void BuildHierarchyLevels()
     {
         var hierarchyFieldTypes = new[]
@@ -366,14 +394,15 @@ public partial class ProfileWizardViewModel : ObservableObject
         var levels = new List<HierarchyLevelOption>();
         foreach (var (fieldType, label) in hierarchyFieldTypes)
         {
-            var segment = Segments.FirstOrDefault(s => s.FieldType == fieldType);
+            var segment = Segments.FirstOrDefault(
+                s => s.FieldType == fieldType);
             if (segment is not null)
-            {
-                levels.Add(new HierarchyLevelOption(fieldType, label, segment.RawValue));
-            }
+                levels.Add(new HierarchyLevelOption(
+                    fieldType, label, segment.RawValue));
         }
 
-        AvailableHierarchyLevels = new ObservableCollection<HierarchyLevelOption>(levels);
+        AvailableHierarchyLevels =
+            new ObservableCollection<HierarchyLevelOption>(levels);
         UpdateFolderPreview();
     }
 
@@ -389,25 +418,104 @@ public partial class ProfileWizardViewModel : ObservableObject
         var parts = new List<string> { folder };
         foreach (var level in AvailableHierarchyLevels)
         {
-            if (level.IsSelected && !string.IsNullOrWhiteSpace(level.SampleValue))
+            if (level.IsSelected
+                && !string.IsNullOrWhiteSpace(level.SampleValue))
                 parts.Add(level.SampleValue);
         }
-
         FolderPreview = string.Join("/", parts) + "/";
     }
 
-    /// <summary>
-    /// Wird vom Code-Behind aufgerufen wenn eine Hierarchie-Checkbox geändert wird.
-    /// </summary>
     public void OnHierarchyLevelChanged()
     {
         UpdateFolderPreview();
     }
 
+    // === Schritt 5: Erkennung ===
+
+    /// <summary>
+    /// Baut klickbare Segment-Bloecke aus den Schritt-1-Segmenten.
+    /// </summary>
+    public void BuildRecognitionSegments()
+    {
+        var segments = Segments.Select(s =>
+            new RecognitionSegment(s.Position, s.RawValue)).ToList();
+        RecognitionSegments =
+            new ObservableCollection<RecognitionSegment>(segments);
+        UpdateRecognitionPattern();
+    }
+
+    /// <summary>
+    /// Wird aufgerufen wenn User ein Segment an-/abklickt.
+    /// </summary>
+    public void OnRecognitionSegmentToggled()
+    {
+        UpdateRecognitionPattern();
+        ValidateCurrentStep();
+    }
+
+    private void UpdateRecognitionPattern()
+    {
+        var selected = RecognitionSegments
+            .Where(s => s.IsSelected)
+            .OrderBy(s => s.Position)
+            .ToList();
+
+        if (selected.Count == 0)
+        {
+            RecognitionPattern = "";
+            PatternTestResult = "";
+            PatternTestSuccess = false;
+            return;
+        }
+
+        // Muster aus gewaehlten Segmenten bauen
+        // Trennzeichen zwischen Segmenten mitnehmen
+        var pattern = string.Join("", selected.Select(s => s.RawValue));
+        // Wenn benachbarte Segmente: Trennzeichen dazwischen
+        var delimiters = ParseDelimiters(DelimiterText);
+        if (selected.Count >= 1)
+        {
+            var parts = new List<string>();
+            for (int i = 0; i < selected.Count; i++)
+            {
+                parts.Add(selected[i].RawValue);
+                if (i < selected.Count - 1)
+                {
+                    // Trennzeichen zwischen Segmenten
+                    int gap = selected[i + 1].Position
+                              - selected[i].Position;
+                    if (gap == 1 && delimiters.Length > 0)
+                        parts.Add(delimiters[0].ToString());
+                }
+            }
+            pattern = string.Join("", parts);
+        }
+
+        RecognitionPattern = pattern;
+
+        // Auto-Methode: erstes Segment = prefix, sonst contains
+        bool isFirst = selected[0].Position == 0;
+        SelectedRecognitionMethod = isFirst ? "prefix" : "contains";
+        OnPropertyChanged(nameof(IsPrefix));
+
+        // Test gegen Beispieldatei
+        bool match = isFirst
+            ? SampleFileName.StartsWith(pattern,
+                StringComparison.OrdinalIgnoreCase)
+            : SampleFileName.Contains(pattern,
+                StringComparison.OrdinalIgnoreCase);
+
+        PatternTestSuccess = match;
+        PatternTestResult = match ? "Treffer" : "Kein Treffer";
+    }
+
+    // === Helpers ===
+
     private static char[] ParseDelimiters(string text)
     {
         var chars = new List<char>();
-        foreach (var part in text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        foreach (var part in text.Split(' ',
+            StringSplitOptions.RemoveEmptyEntries))
         {
             if (part.Length == 1)
                 chars.Add(part[0]);
@@ -417,9 +525,9 @@ public partial class ProfileWizardViewModel : ObservableObject
 
     private static List<FieldTypeOption> BuildFieldTypeOptions()
     {
-        var options = new List<FieldTypeOption>
-        {
-            new("— Nicht zugewiesen", null),
+        return
+        [
+            new("-- Nicht zugewiesen", null),
             new("Plannummer", FieldType.PlanNumber),
             new("Index", FieldType.PlanIndex),
             new("Projektnummer", FieldType.ProjectNumber),
@@ -436,14 +544,12 @@ public partial class ProfileWizardViewModel : ObservableObject
             new("Achse", FieldType.Achse),
             new("Zone", FieldType.Zone),
             new("Block", FieldType.Block),
-        };
-        return options;
+        ];
     }
 }
 
-/// <summary>
-/// Option für das FieldType-Dropdown mit deutschem Anzeigenamen.
-/// </summary>
+// === Helper-Klassen ===
+
 public class FieldTypeOption
 {
     public string DisplayName { get; }
@@ -458,9 +564,6 @@ public class FieldTypeOption
     public override string ToString() => DisplayName;
 }
 
-/// <summary>
-/// Option für IndexSource-RadioButtons.
-/// </summary>
 public class IndexSourceOption
 {
     public string Label { get; }
@@ -468,7 +571,8 @@ public class IndexSourceOption
     public string Description { get; }
     public bool IsEnabled { get; }
 
-    public IndexSourceOption(string label, IndexSourceType value, string description, bool isEnabled = true)
+    public IndexSourceOption(string label, IndexSourceType value,
+        string description, bool isEnabled = true)
     {
         Label = label;
         Value = value;
@@ -479,9 +583,6 @@ public class IndexSourceOption
     public override string ToString() => Label;
 }
 
-/// <summary>
-/// Option fuer Unterordner-Hierarchie-Checkbox.
-/// </summary>
 public class HierarchyLevelOption : ObservableObject
 {
     public FieldType FieldType { get; }
@@ -495,10 +596,33 @@ public class HierarchyLevelOption : ObservableObject
         set => SetProperty(ref _isSelected, value);
     }
 
-    public HierarchyLevelOption(FieldType fieldType, string label, string sampleValue)
+    public HierarchyLevelOption(FieldType fieldType, string label,
+        string sampleValue)
     {
         FieldType = fieldType;
         Label = label;
         SampleValue = sampleValue;
+    }
+}
+
+/// <summary>
+/// Klickbarer Segment-Block fuer Schritt 5 (Erkennung).
+/// </summary>
+public class RecognitionSegment : ObservableObject
+{
+    public int Position { get; }
+    public string RawValue { get; }
+
+    private bool _isSelected;
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set => SetProperty(ref _isSelected, value);
+    }
+
+    public RecognitionSegment(int position, string rawValue)
+    {
+        Position = position;
+        RawValue = rawValue;
     }
 }

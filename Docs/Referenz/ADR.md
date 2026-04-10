@@ -64,6 +64,7 @@ Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheid
 | 042 | Secrets und Credentials | ✅ Accepted / Not Started | 2026-04 |
 | 043 | Dev-Tools — Lokales Debug-Toolset für Entwicklung | ✅ Entschieden / Not Started | 2026-04 |
 | 044 | Icons.xaml — Zentrale Icon-Registry | ✅ Entschieden / Implemented | 2026-04 |
+| 045 | IndexSource — Dreistufiges Modell für Plan-Index-Erkennung | ✅ Entschieden | 2026-04 |
 
 ---
 
@@ -1636,6 +1637,66 @@ Beim späteren Umstieg auf Segoe Fluent Icons: Nur Icons.xaml anpassen (Emoji �
 - C#-Code mit Emojis (z.B. DevToolsDialog Reset-Labels) nutzt `const string` als Brücke
 - Neue UI-Elemente MÜSSEN Icons aus Icons.xaml referenzieren — hardcoded Emojis sind ab sofort verboten
 - Bei Bedarf: Icon-`Run` kann einen eigenen Style bekommen (`BpmIconRun` mit FontFamily) für den Fluent-Umstieg
+
+---
+
+## ADR-045: IndexSource — Dreistufiges Modell für Plan-Index-Erkennung
+
+**Datum:** 2026-04
+**Status:** ✅ Entschieden
+**Herkunft:** PlanManager Konzeptphase (Claude + Herbert, 09.04.2026)
+
+**Kontext:**
+
+Beim Einsortieren von Plänen muss der PlanManager den aktuellen Index (Revision) eines Plans kennen — um zu entscheiden ob ein Plan neu ist, ob er einen älteren Index ersetzt (Archivierung), oder ob er identisch ist (überspringen). In der Praxis gibt es drei Szenarien:
+
+1. **Index im Dateinamen:** z.B. `S-103-D_TG Wände.pdf` — Index „D" ist direkt parsbar aus dem Segment. Standard bei vielen Projekten.
+2. **Kein Index erkennbar:** z.B. `S-103_TG Wände.pdf` — kein Index im Dateinamen, auch nicht aus dem PDF extrahierbar (V1). Dateiname bei neuer Version identisch. Nur MD5-Hash zeigt ob sich was geändert hat.
+3. **Index im Plankopf (Revisionstabelle):** z.B. ÖWG-Projekt — Polierpläne haben keinen Index im Dateinamen, aber der Plankopf im PDF enthält die Revisionstabelle mit Index „D". Der Polier will den echten Index sehen und kontrollieren.
+
+Ohne explizite Konfiguration müsste der PlanManager raten — das widerspricht dem Prinzip „keine Annahmen treffen".
+
+**Entscheidung:**
+
+Pro Projekt und Plantyp (= im RecognitionProfile) wird ein `IndexSource` Feld gespeichert. Drei Werte:
+
+| Wert | Verhalten | Archivierung | Wann |
+|------|-----------|-------------|------|
+| `FileName` | Index aus Dateinamen-Segment geparst (Pflichtfeld `planIndex` im Profil) | Alte Indizes → `_Archiv/` nach Buchstabe | Standard, wenn Index im Dateinamen steht |
+| `None` | Kein Index vorhanden. MD5-Hash-Vergleich bei gleichem Dateinamen | Bei geändertem Hash → alte Datei ins `_Archiv/` mit Timestamp-Suffix (z.B. `_2026-04-09`) | Wenn weder Dateiname noch PDF den Index liefert |
+| `PlanHeader` | Index wird aus dem Plankopf im PDF gelesen (PdfPig oder KI-API) | Wie `FileName` — Index ist bekannt, Archivierung nach Buchstabe | Post-V1 (Modul Plankopf-Extraktion) |
+
+**V1-Scope:** `FileName` und `None` werden implementiert. `PlanHeader` ist als Enum-Wert vorhanden, aber die Implementierung kommt mit dem Plankopf-Extraktions-Modul (siehe `Docs/Konzepte/Moduleplanheader.md`).
+
+**UI im Profil-Wizard:** Nach der Segment-Zuweisung (Schritt 1) zeigt der Wizard eine Frage: „Hat dieser Plantyp einen Index im Dateinamen?" — Toggle Ja/Nein. Bei „Ja" → `FileName`, Segment `planIndex` muss zugewiesen sein. Bei „Nein" → `None`. Später kommt eine dritte Option „Index aus Plankopf lesen" hinzu.
+
+**Import-Vorschau bei `None`:**
+- Gleicher Dateiname + gleicher MD5 → Status „Identisch (übersprungen)"
+- Gleicher Dateiname + anderer MD5 → Status „Geändert — alte Version wird archiviert"
+- Neuer Dateiname → Status „Neu"
+
+**Import-Vorschau bei `PlanHeader` (Post-V1):**
+- PlanManager liest den Index aus dem PDF und zeigt ihn in der Vorschau-Tabelle
+- User sieht den echten Index **bevor** der Import ausgeführt wird
+- Volle Kontrolle und Sicherheit
+
+**Alternativen:**
+
+- *Nur FileName-basiert:* Projekte ohne Index im Dateinamen (wie ÖWG Polierpläne) können nicht sauber verarbeitet werden.
+- *Immer MD5-Vergleich:* Funktioniert technisch, aber der User hat keine Kontrolle über den Index. Kein Wissen welcher Index aktuell ist.
+- *Automatische Erkennung:* System rät ob Index vorhanden ist — fragil, fehleranfällig, widerspricht Projektprinzipien.
+
+**Konsequenzen:**
+
+- `IndexSource` Enum in Domain: `FileName`, `None`, `PlanHeader`
+- Feld `indexSource` im RecognitionProfile (profiles.json)
+- Import-Workflow Schritt 4 (Classify) berücksichtigt IndexSource für Versionierungs-Logik
+- Bei `None`: MD5-Hash wird in `import_action_files.md5_hash` gespeichert (Schema steht schon, ADR-009)
+- Bei `PlanHeader`: Abhängigkeit zu PdfPig oder KI-API (ADR-027) — erst Post-V1
+- Profil-Wizard bekommt zusätzlichen Schritt/Toggle nach Segment-Zuweisung
+- BACKLOG.md: Feature #20 (Plantyp-Erkennung) und #22 (profiles.json) müssen IndexSource berücksichtigen
+
+**Betrifft:** ADR-008, ADR-009, ADR-010, ADR-022, ADR-027
 
 ---
 

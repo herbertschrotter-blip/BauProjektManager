@@ -48,11 +48,11 @@ Welche Docs bei welchem Änderungstyp geladen werden müssen.
 | Foto / Dateiimport | ModuleFoto.md, DSVGO-Architektur.md |
 | Zeiterfassung / Excel | ModuleZeiterfassung.md, DSVGO-Architektur.md |
 | Einstellungen-UI | UI_UX_Guidelines.md, WPF_UI_Architecture.md |
-| Plan-Management | Architektur-Doc, DB-SCHEMA.md |
+| Plan-Management | PlanManager.md, Architektur-Doc, DB-SCHEMA.md, UI_Navigation.md |
 | SQLite / Repository | DB-SCHEMA.md, Architektur-Doc |
 | Neuer Dialog | UI_UX_Guidelines.md, WPF_UI_Architecture.md, Dialogs.xaml |
 | Neues Modul | Architektur-Doc, zugehöriges Konzept-Doc, DB-SCHEMA.md |
-| Navigation / Shell | Architektur-Doc, MainWindow.xaml/.cs |
+| Navigation / Shell | UI_Navigation.md, Architektur-Doc, MainWindow.xaml/.cs |
 | DevTools | Docs/Module/ModuleDevTools.md |
 | Kalkulation | ModuleKalkulation.md, DB-SCHEMA.md |
 | KI-Assistent | ModuleKiAssistent.md, DSVGO-Architektur.md |
@@ -78,7 +78,7 @@ Welche Docs bei welchem Änderungstyp geladen werden müssen.
 
 | Datei | Inhalt | Größe |
 |-------|--------|-------|
-| ADR.md | 43 Architecture Decision Records | 76KB |
+| ADR.md | 45 Architecture Decision Records | 78KB |
 | CHANGELOG.md | Versionshistorie | 23KB |
 | VISION.md | Produktvision, Zielgruppe, Roadmap | 19KB |
 | DEPENDENCY-MAP.md | Projektabhängigkeiten, NuGet-Pakete | 13KB |
@@ -87,6 +87,7 @@ Welche Docs bei welchem Änderungstyp geladen werden müssen.
 | UX_Flows.md | Benutzerflüsse, Dialog-Abfolgen | 17KB |
 | GLOSSAR.md | Österreichische Bau-Terminologie, Fachbegriffe | 19KB |
 | Setup-ClaudeCode-MCP.md | Claude Code / Desktop Commander Setup-Anleitung | 4KB |
+| UI_Navigation.md | Shell-Aufbau, Sidebar, Toolbar, Screen-Hierarchie, Navigationsregeln | 7KB |
 
 ### Docs/Konzepte/ — Erst relevant wenn Modul gebaut wird
 
@@ -107,6 +108,7 @@ Welche Docs bei welchem Änderungstyp geladen werden müssen.
 | BPM-Mobile-Konzept.md | Mobile PWA |
 | MultiUserKonzept.md | Multi-User / Sync |
 | ModuleAktivierungLizenzierung.md | Lizenzierung |
+| ModuleOrdnerSync.md | Ordner-Sync (Firmenserver ↔ OneDrive, bidirektional) |
 
 ### Docs/Module/ — Implementierte Module
 
@@ -114,6 +116,7 @@ Welche Docs bei welchem Änderungstyp geladen werden müssen.
 |-------|--------|
 | ModuleProjekt.md | Implementiert (v0.16.x) |
 | ModuleDevTools.md | Implementiert (v0.16.x) |
+| PlanManager.md | V1 Kernmodul, 21 Kapitel, v2.0 nach ChatGPT Cross-Review |
 
 ---
 

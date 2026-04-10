@@ -106,6 +106,7 @@ Diese Features verbessern V1, sind aber kein Blocker für den Release.
 | Bestehende Ordner zuweisen | Existierenden Ordner einem Projekt zuweisen statt neu anlegen. "Projekt importieren" Button mit Auto-Manifest-Erkennung. | ✅ v0.20.0 |
 | Ordner umbenennen auf Disk | Bei Sortierung/Präfix-Änderung Ordner auf Festplatte umbenennen | ⬜ |
 | Plan-Sammler (#34) | Pläne per Checkbox sammeln und nach Schema sortieren | ⬜ |
+| Ordner-Sync (#35) | Bidirektionaler Sync zwischen lokalem Projektordner und Remote (Firmenserver/Netzlaufwerk). Pro Projekt konfigurierbar: welche Ordner, welche Richtung (←→/←/→). Neue Dateien vom Remote landen im _Eingang/ → PlanManager sortiert. Sortierte zurücksynchen. Tab „Sync" im Projektdetail. [ModuleOrdnerSync.md](../Konzepte/ModuleOrdnerSync.md) | ⬜ |
 
 ### Datenschutz-Infrastruktur (PFLICHT vor erstem Online-Modul — DSGVO-Architektur Kap. 15)
 

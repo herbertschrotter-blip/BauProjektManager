@@ -71,7 +71,8 @@ Welche Docs bei welchem Änderungstyp geladen werden müssen.
 | Kalkulation | ModuleKalkulation.md, DB-SCHEMA.md |
 | KI-Assistent | ModuleKiAssistent.md, DSVGO-Architektur.md |
 | Mobile/PWA | BPM-Mobile-Konzept.md |
-| Multi-User | MultiUserKonzept.md |
+| Multi-User | MultiUserKonzept.md, DatenarchitekturSync.md |
+| Sync / Datenstruktur / Outbox | DatenarchitekturSync.md, DB-SCHEMA.md |
 | Lizenzierung | ModuleAktivierungLizenzierung.md |
 
 ---
@@ -121,6 +122,7 @@ Welche Docs bei welchem Änderungstyp geladen werden müssen.
 | Moduleplanheader.md | Plankopf-Extraktion |
 | BPM-Mobile-Konzept.md | Mobile PWA |
 | MultiUserKonzept.md | Multi-User / Sync |
+| DatenarchitekturSync.md | Datenklassifizierung, Sync-Konzept, User/Rollen, Outbox/Inbox, Snapshots (4-Runden Cross-Review) |
 | ModuleAktivierungLizenzierung.md | Lizenzierung |
 | ModuleOrdnerSync.md | Ordner-Sync (Firmenserver ↔ OneDrive, bidirektional) |
 

@@ -797,6 +797,37 @@ ULIDs sind nicht menschenlesbar. Die Lesbarkeit wird über fachliche Felder sich
 | `pattern-templates.json` | Cloud .AppData/ | Globale Musterbibliothek | PlanManager |
 | `.bpm-manifest` | Cloud Projektordner | Versteckter Projekt-Ausweis | ProjectFolderService |
 
+### Neue Datenarchitektur (DatenarchitekturSync.md)
+
+Folgende Tabellen und Konzepte sind im Cross-Review (10.04.2026) entschieden und werden bei der nächsten Schema-Migration umgesetzt:
+
+**Neue Tabellen (bpm.db):**
+
+| Tabelle | Zweck | Sync-Klasse |
+|---------|-------|-------------|
+| `users` | Benutzer-Identitäten | B (shared) |
+| `user_devices` | Geräte pro Benutzer | B (shared) |
+| `roles` | Fachliche Rollen (bauleiter, polier etc.) | C (reference) |
+| `user_roles` | User ↔ Rolle Zuordnung | B (shared) |
+| `project_memberships` | User ↔ Projekt Zugriff | B (shared) |
+| `change_log` | Lokales Änderungsprotokoll | A (local-only) |
+| `sync_outbox` | Ausstehende Sync-Events | A (local-only) |
+| `sync_applied_events` | Verarbeitete Events | A (local-only) |
+| `sync_conflicts` | Konflikte zur Auflösung | A (local-only) |
+| `diary_days` | Bautagebuch Tageskopf (Wetter, Bestätigung) | B (shared) |
+| `diary_notes` | Bautagebuch Notizen (viele pro Tag pro User) | B (shared) |
+| `employee_compensation` | Lohnsätze, Überstundensätze | D (restricted) |
+| `lv_pricing` | Einheitspreise | D (restricted) |
+| `material_order_prices` | Einkaufspreise | D (restricted) |
+
+**Schema-Änderungen an bestehenden Tabellen:**
+
+Alle Shared-Tabellen (Klasse B+D) bekommen 12 Sync-Metadaten-Spalten: `created_by_user_id`, `updated_by_user_id`, `entity_version`, `is_deleted`, `deleted_at_utc`, `deleted_by_user_id`, `origin_device_id`, `last_change_id`. Soft Deletes statt Hard Deletes.
+
+**Datenklassifizierung:** Siehe [DatenarchitekturSync.md](../Konzepte/DatenarchitekturSync.md) Kapitel 2.
+
+**settings.json Split:** `device-settings.json` (lokal) + `shared-config.json` (Cloud). Siehe DatenarchitekturSync.md Kapitel 9.
+
 ---
 
 *Dieses Dokument wird bei jeder Schema-Änderung aktualisiert. Es ist die einzige Quelle der Wahrheit für die Datenbankstruktur.*

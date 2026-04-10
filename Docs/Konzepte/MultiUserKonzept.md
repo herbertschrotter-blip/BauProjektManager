@@ -7,6 +7,7 @@
 **Abhängigkeiten:** Keine (kann unabhängig von anderen Modulen implementiert werden)  
 **Relevante ADRs:** ADR-016 (Single-Writer Mutex), ADR-020 (Write-Lock mit Heartbeat), ADR-033 (3 Modi), ADR-035 (IExternalCommunicationService), ADR-036 (IPrivacyPolicy), ADR-037 (ISyncTransport — geplant), ADR-038 (IAccessControlService — geplant)  
 **Verwandte Dokumente:**
+- [DatenarchitekturSync.md](DatenarchitekturSync.md) — **Konkretisierung:** Datenklassifizierung, Sync-Mechanismus, User/Rollen-Schema, Outbox/Inbox, Snapshots (4-Runden Cross-Review, 10.04.2026)
 - [DSVGO-Architektur.md](../Kern/DSVGO-Architektur.md) — Rollenmatrix, Datenschutz-Klassifizierung
 - [BPM-Mobile-Konzept.md](BPM-Mobile-Konzept.md) — PWA nutzt Server-Modus
 - [ModuleAktivierungLizenzierung.md](ModuleAktivierungLizenzierung.md) — Lizenz steuert IPrivacyPolicy

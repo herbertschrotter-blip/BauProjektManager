@@ -120,6 +120,23 @@ Diese Features verbessern V1, sind aber kein Blocker für den Release.
 | Log-Rotation 30 Tage | Serilog retainedFileCountLimit (trivial) | ✅ v0.5.0 |
 | ADR-039 v2 ULID-Schema | Alle Tabellen auf ULID PRIMARY KEY umgestellt. IIdGenerator in Domain, UlidIdGenerator in Infrastructure (NuGet: Cysharp/Ulid) | ✅ v0.17.0 |
 
+### Sync-Infrastruktur (PFLICHT vor Multi-User — DatenarchitekturSync.md)
+
+| Feature | Beschreibung | Status |
+|---------|-------------|--------|
+| ULID-Migration (v2.0) | Bestehende 8 Tabellen von seq+TEXT auf ULID PRIMARY KEY | ⬜ |
+| users + user_devices Tabellen | Stabile Benutzer-Identitäten für Audit/Sync | ⬜ |
+| roles + project_memberships | RBAC-ready Schema (fachliche Rollen) | ⬜ |
+| Sync-Metadaten auf Shared-Tabellen | 12 Spalten (entity_version, is_deleted, origin_device_id etc.) | ⬜ |
+| Soft Deletes | is_deleted + Tombstone-Events statt Hard Delete | ⬜ |
+| settings.json Split | device-settings.json (lokal) + shared-config.json (Cloud) | ⬜ |
+| IChangeTracker + Mutation Boundary | Transaktionale Konsistenz: Domain + change_log + sync_outbox | ⬜ |
+| change_log + sync_outbox Tabellen | Grundlage für Outbox/Inbox Sync | ⬜ |
+| diary_days + diary_notes | Bautagebuch-Aggregate aufsplitten (Konflikte vermeiden) | ⬜ |
+| employee_compensation, lv_pricing | Sensitive Tabellen separieren (restricted) | ⬜ |
+| ISyncExporter + ISyncImporter | Transport-Logik (Export/Import Events) | ⬜ |
+| FolderSyncTransport | Phase 2 Cloud-Ordner-Sync (bewusst temporär) | ⬜ |
+
 ---
 
 ## Could — nice to have

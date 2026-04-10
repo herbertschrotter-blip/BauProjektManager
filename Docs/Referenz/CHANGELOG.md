@@ -5,6 +5,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.24.12] — 2026-04-10
+
+### Hinzugefuegt
+
+- **DatenarchitekturSync.md** (520 Zeilen): Datenklassifizierung (4 Klassen), Sync-Konzept (Outbox/Inbox + Snapshots), User/Rollen-Schema, Event-Format, Konflikt-Behandlung, settings.json Split — Ergebnis aus 4-Runden Cross-Review (Claude + ChatGPT)
+- INDEX.md, DB-SCHEMA.md, MultiUserKonzept.md, BACKLOG.md aktualisiert (Verweise + 12 neue Sync-Features)
+- **ADR-047:** Datenarchitektur + Sync — State-based lokal, change-based sync. Phase 2 bewusst temporär, Phase 3 PostgreSQL.
+
+---
+
 ## [v0.24.11] — 2026-04-10
 
 ### Hinzugefuegt

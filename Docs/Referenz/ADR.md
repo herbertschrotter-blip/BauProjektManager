@@ -66,6 +66,7 @@ Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheid
 | 044 | Icons.xaml — Zentrale Icon-Registry | ✅ Entschieden / Implemented | 2026-04 |
 | 045 | IndexSource — Dreistufiges Modell für Plan-Index-Erkennung | ✅ Entschieden | 2026-04 |
 | 046 | .bpm/ Ordner — Manifest-Split und Profilablage im Projektordner | ✅ Entschieden | 2026-04 |
+| 047 | Datenarchitektur + Sync — State-based lokal, change-based sync | ✅ Entschieden | 2026-04 |
 
 ---
 
@@ -1792,6 +1793,65 @@ Beim Öffnen eines Projekts prüft die App:
 - Spätere Module (Foto, Bautagebuch) können eigene Dateien in `.bpm/` ablegen
 
 **Betrifft:** ADR-004, ADR-010, ADR-013, ADR-039, ADR-040
+
+---
+
+## ADR-047: Datenarchitektur + Sync — State-based lokal, change-based sync
+
+**Datum:** 2026-04
+**Status:** ✅ Entschieden
+**Herkunft:** Claude + ChatGPT Cross-Review (4 Runden, 10.04.2026)
+**Konzeptdokument:** [DatenarchitekturSync.md](../Konzepte/DatenarchitekturSync.md)
+
+**Kontext:**
+
+BPM wird nicht nur Solo-Betrieb sein — Multi-User mit 10+ Nutzern (Bauleiter, Poliere, Disponent, Einkäufer, Lohnbüro) ist realistisches Zielszenario. Die bisherige Architektur (SQLite lokal, JSON-Events über Cloud-Ordner) musste grundsätzlich durchdacht werden: Welche Daten syncen, welche bleiben lokal, wie funktioniert Konfliktbehandlung, was muss jetzt schon vorbereitet werden?
+
+**Entscheidung:**
+
+1. **State-based lokal, change-based zwischen Clients.** SQLite ist einzige lokale Wahrheit. Events sind Replikationsmechanismus, nicht Source of Truth. Kein Full Event Sourcing.
+
+2. **4-Klassen-Datenmodell:**
+   - A: Local-only (Logs, Undo, Caches, Device-Settings)
+   - B: Shared domain (Projekte, Bauteile, Bautagebuch, Arbeitseinteilung)
+   - C: Shared reference (ProjectTypes, BuildingTypes, FolderTemplate)
+   - D: Restricted (Lohnsätze, Einheitspreise — erst mit Server Phase 3)
+
+3. **Sensitive Daten in eigenen Tabellen** (nicht als Spalten-Flags). `employees` + `employee_compensation`, `lv_positions` + `lv_pricing` etc.
+
+4. **Outbox/Inbox Pattern:** Domain-Mutation → change_log → sync_outbox in einer Transaktion. Separater Exporter schreibt Events. Separater Importer liest Events.
+
+5. **Snapshots + Events:** Initial-Sync über modulare Snapshots (root-snapshot.json + diary/work/plans.snapshot.json). Danach nur Delta-Events. Snapshot-Trigger: 100 Events ODER 7 Tage.
+
+6. **Volle Sync-Metadaten** auf allen Shared-Tabellen (12 Spalten inkl. entity_version, is_deleted, origin_device_id, last_change_id).
+
+7. **User-Modell jetzt** (users + user_devices + roles + project_memberships). Stabile Identitäten für Audit/Sync/Berechtigungen.
+
+8. **settings.json Split jetzt:** device-settings.json (lokal) + shared-config.json (Cloud).
+
+9. **Phase 2 ist bewusst temporäre Übergangsarchitektur** für kleine Teams (2-3 User) mit projektbasierter Sichtbarkeit. Keine Sicherheits- oder Skalierungsarchitektur. Exit-Kriterien zu Phase 3 definiert.
+
+10. **Phase 3: PostgreSQL serverseitig**, SQLite clientseitig. Gleiches Fachmodell, anderer Betriebsmodus.
+
+11. **Aggregate-Design reduziert Konflikte:** Bautagebuch aufgeteilt in diary_days + diary_notes (mehrere Poliere können gleichzeitig schreiben).
+
+**Alternativen (evaluiert):**
+
+- *Full Event Sourcing:* Events als Wahrheit, Tabellen nur Views. Zu komplex für Solo-Entwickler (Rebuild, Schema-Evolution, Debugging). Abgelehnt.
+- *CRDTs:* Automatischer Merge ohne Konflikte. Für strukturierte Daten (Projekte, Bauteile) nicht passend. Abgelehnt.
+- *Last-Write-Wins global:* Einfach, aber Datenverlust bei gleichzeitigen Änderungen. Nur für Soft-Deletes auf bereits gelöschte Datensätze akzeptabel.
+- *Shared SQLite über Cloud-Speicher:* SQLite + OneDrive-Sync = korrupte DB. Offiziell von SQLite abgeraten. Abgelehnt.
+
+**Konsequenzen:**
+
+- 12 neue Tabellen in bpm.db (users, user_devices, roles, user_roles, project_memberships, change_log, sync_outbox, sync_applied_events, sync_conflicts, diary_days, diary_notes, employee_compensation + weitere)
+- Alle bestehenden Shared-Tabellen bekommen 12 Sync-Metadaten-Spalten (Migration v2.0)
+- settings.json wird aufgespalten (Breaking Change für bestehende Installationen)
+- Transaktionale Mutation Boundary (IChangeTrackedDb + ChangeContext) wird zentrale Infrastruktur
+- FolderSyncTransport als Phase-2-Übergang, HttpSyncTransport als Phase-3-Ziel
+- Code-Umbau-Reihenfolge: 12 Schritte definiert (siehe DatenarchitekturSync.md Kap. 11)
+
+**Betrifft:** ADR-002, ADR-004, ADR-033, ADR-037, ADR-038, ADR-039, ADR-040, ADR-046
 
 ---
 

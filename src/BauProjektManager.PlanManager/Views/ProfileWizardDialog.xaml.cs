@@ -10,15 +10,17 @@ using BauProjektManager.PlanManager.ViewModels;
 namespace BauProjektManager.PlanManager.Views;
 
 /// <summary>
-/// Count > 0 → Visible, Count == 0 → Collapsed.
-/// Inverse des CountToVisConverter in PlanManagerView.
+/// Count > 0 -> Visible, Count == 0 -> Collapsed.
 /// </summary>
 public class CountToVisInverseConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        => value is int count && count > 0 ? Visibility.Visible : Visibility.Collapsed;
+    public object Convert(object value, Type targetType,
+        object parameter, CultureInfo culture)
+        => value is int count && count > 0
+            ? Visibility.Visible : Visibility.Collapsed;
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    public object ConvertBack(object value, Type targetType,
+        object parameter, CultureInfo culture)
         => throw new NotImplementedException();
 }
 
@@ -42,7 +44,8 @@ public partial class ProfileWizardDialog : Window
             _vm.ParseFileNameCommand.Execute(null);
     }
 
-    private void OnFieldTypeSelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void OnFieldTypeSelectionChanged(
+        object sender, SelectionChangedEventArgs e)
     {
         if (sender is ComboBox combo
             && combo.DataContext is FileNameSegment segment
@@ -52,17 +55,64 @@ public partial class ProfileWizardDialog : Window
         }
     }
 
+    private void OnIndexSourceChecked(object sender, RoutedEventArgs e)
+    {
+        if (sender is RadioButton rb
+            && rb.DataContext is IndexSourceOption option)
+        {
+            _vm.SelectedIndexSource = option.Value;
+        }
+    }
+
     private void OnCancel(object sender, RoutedEventArgs e)
     {
         DialogResult = false;
         Close();
     }
 
+    private void OnBack(object sender, RoutedEventArgs e)
+    {
+        _vm.GoBackCommand.Execute(null);
+        UpdateStepVisibility();
+    }
+
     private void OnNext(object sender, RoutedEventArgs e)
     {
-        // Schritt 2–4 kommen später.
-        // Für jetzt: Dialog schließen mit Erfolg.
-        DialogResult = true;
-        Close();
+        if (_vm.CurrentStep >= _vm.TotalSteps)
+        {
+            // Letzter Schritt: Dialog abschliessen
+            DialogResult = true;
+            Close();
+            return;
+        }
+
+        _vm.GoNextCommand.Execute(null);
+        UpdateStepVisibility();
+    }
+
+    /// <summary>
+    /// Blendet Step-Panels um und aktualisiert Progress Dots.
+    /// </summary>
+    private void UpdateStepVisibility()
+    {
+        Step1Panel.Visibility = _vm.CurrentStep == 1
+            ? Visibility.Visible : Visibility.Collapsed;
+        Step2Panel.Visibility = _vm.CurrentStep == 2
+            ? Visibility.Visible : Visibility.Collapsed;
+
+        // Progress Dots
+        var accent = FindResource("BpmAccentPrimary");
+        var inactive = FindResource("BpmBorderDefault");
+        Dot2.Fill = _vm.CurrentStep >= 2
+            ? (System.Windows.Media.Brush)accent
+            : (System.Windows.Media.Brush)inactive;
+        Dot3.Fill = _vm.CurrentStep >= 3
+            ? (System.Windows.Media.Brush)accent
+            : (System.Windows.Media.Brush)inactive;
+        Dot4.Fill = _vm.CurrentStep >= 4
+            ? (System.Windows.Media.Brush)accent
+            : (System.Windows.Media.Brush)inactive;
+
+        StepCounter.Text = $"Schritt {_vm.CurrentStep} von {_vm.TotalSteps}";
     }
 }

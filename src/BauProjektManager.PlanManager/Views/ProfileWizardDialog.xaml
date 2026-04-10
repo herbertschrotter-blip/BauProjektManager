@@ -14,19 +14,23 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Header: Schritt-Anzeige -->
+        <!-- Header: Schritt-Anzeige mit dynamischen Progress Dots -->
         <Border Grid.Row="0" Background="{DynamicResource BpmBgSurface}" Padding="16,12">
             <StackPanel>
                 <TextBlock FontSize="15" FontWeight="SemiBold"
                            Foreground="{DynamicResource BpmTextBright}"
                            Text="{Binding StepTitle}"/>
                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                    <!-- Progress Dots -->
-                    <Ellipse Width="10" Height="10" Fill="{DynamicResource BpmAccentPrimary}" Margin="0,0,6,0"/>
-                    <Ellipse Width="10" Height="10" Fill="{DynamicResource BpmBorderDefault}" Margin="0,0,6,0"/>
-                    <Ellipse Width="10" Height="10" Fill="{DynamicResource BpmBorderDefault}" Margin="0,0,6,0"/>
-                    <Ellipse Width="10" Height="10" Fill="{DynamicResource BpmBorderDefault}"/>
-                    <TextBlock Text="Schritt 1 von 4"
+                    <Ellipse Width="10" Height="10" Margin="0,0,6,0"
+                             Fill="{DynamicResource BpmAccentPrimary}"/>
+                    <Ellipse x:Name="Dot2" Width="10" Height="10" Margin="0,0,6,0"
+                             Fill="{DynamicResource BpmBorderDefault}"/>
+                    <Ellipse x:Name="Dot3" Width="10" Height="10" Margin="0,0,6,0"
+                             Fill="{DynamicResource BpmBorderDefault}"/>
+                    <Ellipse x:Name="Dot4" Width="10" Height="10"
+                             Fill="{DynamicResource BpmBorderDefault}"/>
+                    <TextBlock x:Name="StepCounter"
+                               Text="Schritt 1 von 4"
                                Foreground="{DynamicResource BpmTextSecondary}"
                                FontSize="11" Margin="12,0,0,0"
                                VerticalAlignment="Center"/>
@@ -34,136 +38,223 @@
             </StackPanel>
         </Border>
 
-        <!-- Content: Schritt 1 — Dateiname + Segmente -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="16">
-            <StackPanel>
-                <!-- Dateien im Eingang -->
-                <TextBlock Text="Dateien im Eingang — klicke eine Datei um sie als Vorlage zu verwenden:"
-                           Foreground="{DynamicResource BpmTextSecondary}"
-                           FontSize="12" Margin="0,0,0,4"
-                           Visibility="{Binding HasInboxFiles, Converter={StaticResource BoolToVis}}"/>
-                <ListBox ItemsSource="{Binding InboxFiles}"
-                         SelectedItem="{Binding SelectedInboxFile}"
-                         MaxHeight="140"
-                         Background="{DynamicResource BpmBgSurface}"
-                         Foreground="{DynamicResource BpmTextPrimary}"
-                         BorderBrush="{DynamicResource BpmBorderDefault}"
-                         BorderThickness="1"
-                         FontSize="12" FontFamily="Consolas"
-                         Margin="0,0,0,12"
-                         Visibility="{Binding HasInboxFiles, Converter={StaticResource BoolToVis}}"/>
+        <!-- Content: Steps via Visibility -->
+        <Grid Grid.Row="1">
 
-                <!-- Dateiname eingeben -->
-                <TextBlock Text="Beispiel-Dateiname"
-                           Foreground="{DynamicResource BpmTextSecondary}"
-                           FontSize="12" Margin="0,0,0,4"/>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0"
-                             Text="{Binding SampleFileName, UpdateSourceTrigger=PropertyChanged}"
-                             FontSize="13"
-                             Background="{DynamicResource BpmBgInput}"
+            <!-- === SCHRITT 1: Dateiname + Segmente === -->
+            <ScrollViewer x:Name="Step1Panel" VerticalScrollBarVisibility="Auto" Padding="16">
+                <StackPanel>
+                    <!-- Dateien im Eingang -->
+                    <TextBlock Text="Dateien im Eingang - klicke eine Datei um sie als Vorlage zu verwenden:"
+                               Foreground="{DynamicResource BpmTextSecondary}"
+                               FontSize="12" Margin="0,0,0,4"
+                               Visibility="{Binding HasInboxFiles, Converter={StaticResource BoolToVis}}"/>
+                    <ListBox ItemsSource="{Binding InboxFiles}"
+                             SelectedItem="{Binding SelectedInboxFile}"
+                             MaxHeight="140"
+                             Background="{DynamicResource BpmBgSurface}"
                              Foreground="{DynamicResource BpmTextPrimary}"
                              BorderBrush="{DynamicResource BpmBorderDefault}"
-                             Padding="8,6"
-                             KeyDown="OnFileNameKeyDown"/>
-                    <Button Grid.Column="1" Content="Parsen"
-                            Style="{DynamicResource BpmButtonSecondary}"
-                            Command="{Binding ParseFileNameCommand}"
-                            Margin="8,0,0,0"
-                            VerticalAlignment="Stretch"/>
-                </Grid>
+                             BorderThickness="1"
+                             FontSize="12" FontFamily="Consolas"
+                             Margin="0,0,0,12"
+                             Visibility="{Binding HasInboxFiles, Converter={StaticResource BoolToVis}}"/>
 
-                <!-- Trennzeichen -->
-                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-                    <TextBlock Text="Trennzeichen:"
+                    <!-- Dateiname eingeben -->
+                    <TextBlock Text="Beispiel-Dateiname"
                                Foreground="{DynamicResource BpmTextSecondary}"
-                               FontSize="12" VerticalAlignment="Center"/>
-                    <TextBox Text="{Binding DelimiterText, UpdateSourceTrigger=PropertyChanged}"
-                             Width="80" Margin="8,0,0,0"
-                             FontSize="13" FontFamily="Consolas"
-                             Background="{DynamicResource BpmBgInput}"
-                             Foreground="{DynamicResource BpmTextPrimary}"
-                             BorderBrush="{DynamicResource BpmBorderDefault}"
-                             Padding="6,4"/>
-                    <TextBlock Text="(Leerzeichen-getrennt, z.B.: - _ .)"
+                               FontSize="12" Margin="0,0,0,4"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding SampleFileName, UpdateSourceTrigger=PropertyChanged}"
+                                 FontSize="13"
+                                 Background="{DynamicResource BpmBgInput}"
+                                 Foreground="{DynamicResource BpmTextPrimary}"
+                                 BorderBrush="{DynamicResource BpmBorderDefault}"
+                                 Padding="8,6"
+                                 KeyDown="OnFileNameKeyDown"/>
+                        <Button Grid.Column="1" Content="Parsen"
+                                Style="{DynamicResource BpmButtonSecondary}"
+                                Command="{Binding ParseFileNameCommand}"
+                                Margin="8,0,0,0"
+                                VerticalAlignment="Stretch"/>
+                    </Grid>
+
+                    <!-- Trennzeichen -->
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <TextBlock Text="Trennzeichen:"
+                                   Foreground="{DynamicResource BpmTextSecondary}"
+                                   FontSize="12" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding DelimiterText, UpdateSourceTrigger=PropertyChanged}"
+                                 Width="80" Margin="8,0,0,0"
+                                 FontSize="13" FontFamily="Consolas"
+                                 Background="{DynamicResource BpmBgInput}"
+                                 Foreground="{DynamicResource BpmTextPrimary}"
+                                 BorderBrush="{DynamicResource BpmBorderDefault}"
+                                 Padding="6,4"/>
+                        <TextBlock Text="(Leerzeichen-getrennt, z.B.: - _ .)"
+                                   Foreground="{DynamicResource BpmTextSecondary}"
+                                   FontSize="11" VerticalAlignment="Center"
+                                   Margin="8,0,0,0"/>
+                    </StackPanel>
+
+                    <!-- Parse-Info -->
+                    <TextBlock Text="{Binding ParseInfo}"
                                Foreground="{DynamicResource BpmTextSecondary}"
-                               FontSize="11" VerticalAlignment="Center"
-                               Margin="8,0,0,0"/>
+                               FontSize="11" Margin="0,8,0,0"/>
+
+                    <!-- Segmente zuweisen -->
+                    <TextBlock Text="Segmente - jedem Block einen Feldtyp zuweisen:"
+                               Foreground="{DynamicResource BpmTextSecondary}"
+                               FontSize="12" Margin="0,20,0,8"
+                               Visibility="{Binding Segments.Count, Converter={StaticResource CountToVisInverse}}"/>
+
+                    <ItemsControl ItemsSource="{Binding Segments}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{DynamicResource BpmBgSurface}"
+                                        BorderBrush="{DynamicResource BpmBorderDefault}"
+                                        BorderThickness="1" CornerRadius="3"
+                                        Padding="10,8" Margin="0,0,0,6">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="30"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="180"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding Position}"
+                                                   Foreground="{DynamicResource BpmTextSecondary}"
+                                                   FontSize="12" FontWeight="SemiBold"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding RawValue}"
+                                                   Foreground="{DynamicResource BpmTextBright}"
+                                                   FontSize="14" FontFamily="Consolas"
+                                                   VerticalAlignment="Center"/>
+                                        <ComboBox Grid.Column="2"
+                                                  ItemsSource="{Binding DataContext.FieldTypeOptions, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                  DisplayMemberPath="DisplayName"
+                                                  SelectionChanged="OnFieldTypeSelectionChanged"
+                                                  Background="{DynamicResource BpmBgInput}"
+                                                  Foreground="{DynamicResource BpmTextPrimary}"
+                                                  BorderBrush="{DynamicResource BpmBorderDefault}"
+                                                  FontSize="12"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Hinweis -->
+                    <TextBlock Text="Pflicht: Mindestens Plannummer muss zugewiesen werden."
+                               Foreground="{DynamicResource BpmWarning}"
+                               FontSize="11" Margin="0,12,0,0"
+                               Visibility="{Binding Segments.Count, Converter={StaticResource CountToVisInverse}}"/>
                 </StackPanel>
+            </ScrollViewer>
 
-                <!-- Parse-Info -->
-                <TextBlock Text="{Binding ParseInfo}"
-                           Foreground="{DynamicResource BpmTextSecondary}"
-                           FontSize="11" Margin="0,8,0,0"/>
+            <!-- === SCHRITT 2: IndexSource === -->
+            <ScrollViewer x:Name="Step2Panel" VerticalScrollBarVisibility="Auto" Padding="16"
+                          Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock Text="Wie wird der Index (Revision) erkannt?"
+                               Foreground="{DynamicResource BpmTextBright}"
+                               FontSize="14" FontWeight="SemiBold" Margin="0,0,0,16"/>
 
-                <!-- Segmente zuweisen -->
-                <TextBlock Text="Segmente — jedem Block einen Feldtyp zuweisen:"
-                           Foreground="{DynamicResource BpmTextSecondary}"
-                           FontSize="12" Margin="0,20,0,8"
-                           Visibility="{Binding Segments.Count, Converter={StaticResource CountToVisInverse}}"/>
+                    <!-- IndexSource RadioButtons -->
+                    <ItemsControl ItemsSource="{Binding IndexSourceOptions}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="0,0,0,12">
+                                    <StackPanel>
+                                        <RadioButton GroupName="IndexSource"
+                                                     IsEnabled="{Binding IsEnabled}"
+                                                     Checked="OnIndexSourceChecked"
+                                                     Foreground="{DynamicResource BpmTextPrimary}"
+                                                     FontSize="13">
+                                            <TextBlock Text="{Binding Label}" FontWeight="SemiBold"/>
+                                        </RadioButton>
+                                        <TextBlock Text="{Binding Description}"
+                                                   Foreground="{DynamicResource BpmTextSecondary}"
+                                                   FontSize="11" Margin="20,2,0,0"
+                                                   TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
 
-                <ItemsControl ItemsSource="{Binding Segments}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border Background="{DynamicResource BpmBgSurface}"
-                                    BorderBrush="{DynamicResource BpmBorderDefault}"
-                                    BorderThickness="1" CornerRadius="3"
-                                    Padding="10,8" Margin="0,0,0,6">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="30"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="180"/>
-                                    </Grid.ColumnDefinitions>
-                                    <!-- Position -->
-                                    <TextBlock Grid.Column="0"
-                                               Text="{Binding Position}"
-                                               Foreground="{DynamicResource BpmTextSecondary}"
-                                               FontSize="12" FontWeight="SemiBold"
-                                               VerticalAlignment="Center"/>
-                                    <!-- Wert -->
-                                    <TextBlock Grid.Column="1"
-                                               Text="{Binding RawValue}"
-                                               Foreground="{DynamicResource BpmTextBright}"
-                                               FontSize="14" FontFamily="Consolas"
-                                               VerticalAlignment="Center"/>
-                                    <!-- FieldType Dropdown -->
-                                    <ComboBox Grid.Column="2"
-                                              ItemsSource="{Binding DataContext.FieldTypeOptions, RelativeSource={RelativeSource AncestorType=Window}}"
-                                              DisplayMemberPath="DisplayName"
-                                              SelectionChanged="OnFieldTypeSelectionChanged"
-                                              Background="{DynamicResource BpmBgInput}"
-                                              Foreground="{DynamicResource BpmTextPrimary}"
-                                              BorderBrush="{DynamicResource BpmBorderDefault}"
-                                              FontSize="12"/>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                    <!-- IndexMode (nur bei FileName) -->
+                    <Border Margin="0,8,0,0" Padding="12"
+                            Background="{DynamicResource BpmBgSurface}"
+                            BorderBrush="{DynamicResource BpmBorderDefault}"
+                            BorderThickness="1" CornerRadius="4"
+                            Visibility="{Binding ShowIndexModeOptions, Converter={StaticResource BoolToVis}}">
+                        <StackPanel>
+                            <TextBlock Text="Index-Modus"
+                                       Foreground="{DynamicResource BpmTextBright}"
+                                       FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                            <RadioButton GroupName="IndexMode"
+                                         IsChecked="{Binding IndexModeOptional}"
+                                         Foreground="{DynamicResource BpmTextPrimary}"
+                                         FontSize="12" Margin="0,0,0,6">
+                                <TextBlock Text="Optional (Erstausgabe kann ohne Index sein)"/>
+                            </RadioButton>
+                            <RadioButton GroupName="IndexMode"
+                                         Foreground="{DynamicResource BpmTextPrimary}"
+                                         FontSize="12">
+                                <TextBlock Text="Pflicht (Jedes Dokument muss einen Index haben)"/>
+                            </RadioButton>
 
-                <!-- Hinweis -->
-                <TextBlock Text="Pflicht: Mindestens Plannummer muss zugewiesen werden."
-                           Foreground="{DynamicResource BpmWarning}"
-                           FontSize="11" Margin="0,12,0,0"
-                           Visibility="{Binding Segments.Count, Converter={StaticResource CountToVisInverse}}"/>
-            </StackPanel>
-        </ScrollViewer>
+                            <Separator Margin="0,12,0,12"
+                                       Background="{DynamicResource BpmBorderDefault}"/>
 
-        <!-- Footer: Abbrechen / Weiter -->
+                            <CheckBox IsChecked="{Binding IndexCaseInsensitive}"
+                                      Foreground="{DynamicResource BpmTextPrimary}"
+                                      FontSize="12">
+                                <TextBlock Text="Gross-/Kleinschreibung ignorieren (A = a)"/>
+                            </CheckBox>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Warnung: kein PlanIndex-Segment -->
+                    <Border Margin="0,12,0,0" Padding="10"
+                            Background="{DynamicResource BpmBgSurface}"
+                            BorderBrush="{DynamicResource BpmWarning}"
+                            BorderThickness="1" CornerRadius="4"
+                            Visibility="{Binding ShowIndexWarning, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Foreground="{DynamicResource BpmWarning}"
+                                   FontSize="12" TextWrapping="Wrap"
+                                   Text="In Schritt 1 wurde kein Index-Segment zugewiesen. Gehe zurueck und weise einem Segment den Typ 'Index' zu, oder waehle 'Kein Index'."/>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+        </Grid>
+
+        <!-- Footer: Abbrechen / Zurueck / Weiter -->
         <Border Grid.Row="2" Background="{DynamicResource BpmBgSurface}" Padding="16,10">
             <Grid>
-                <Button Content="Abbrechen"
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" Content="Abbrechen"
                         Style="{DynamicResource BpmButtonSecondary}"
-                        HorizontalAlignment="Left"
                         Click="OnCancel"/>
-                <Button Content="Weiter →"
+                <Button Grid.Column="1" Content="Zurueck"
+                        Style="{DynamicResource BpmButtonSecondary}"
+                        HorizontalAlignment="Right" Margin="0,0,8,0"
+                        Visibility="{Binding CanGoBack, Converter={StaticResource BoolToVis}}"
+                        Click="OnBack"/>
+                <Button Grid.Column="2" Content="Weiter"
                         Style="{DynamicResource BpmButtonPrimary}"
-                        HorizontalAlignment="Right"
                         IsEnabled="{Binding CanGoNext}"
                         Click="OnNext"/>
             </Grid>

@@ -12,7 +12,8 @@ namespace BauProjektManager.PlanManager.ViewModels;
 /// <summary>
 /// ViewModel für den 4-Schritt Profil-Wizard.
 /// Schritt 1: Dateiname → Segmente zuweisen.
-/// Schritte 2–4: kommen in späteren Versionen.
+/// Schritt 2: IndexSource → FileName/None, indexMode, indexComparison.
+/// Schritte 3–4: kommen in späteren Versionen.
 /// </summary>
 public partial class ProfileWizardViewModel : ObservableObject
 {
@@ -56,10 +57,57 @@ public partial class ProfileWizardViewModel : ObservableObject
     public List<FieldTypeOption> FieldTypeOptions { get; } = BuildFieldTypeOptions();
 
     /// <summary>
-    /// Wird true wenn Schritt 1 gültig ist (mind. 1 Segment + PlanNumber zugewiesen).
+    /// Wird true wenn der aktuelle Schritt gültig ist.
     /// </summary>
     [ObservableProperty]
     private bool _canGoNext;
+
+    /// <summary>
+    /// Wird true ab Schritt 2 (Zurück-Button sichtbar).
+    /// </summary>
+    [ObservableProperty]
+    private bool _canGoBack;
+
+    // === Schritt 2: IndexSource ===
+
+    /// <summary>
+    /// Verfügbare IndexSource-Optionen für RadioButtons.
+    /// </summary>
+    public List<IndexSourceOption> IndexSourceOptions { get; } =
+    [
+        new("Aus Dateiname", IndexSourceType.FileName,
+            "Index wird aus einem Segment im Dateinamen gelesen (z.B. A, B, C)"),
+        new("Kein Index", IndexSourceType.None,
+            "Dokument hat keinen Index. Versionen werden per MD5-Hash erkannt."),
+        new("Aus Plankopf (Post-V1)", IndexSourceType.PlanHeader,
+            "Index wird aus dem PDF-Plankopf gelesen. Noch nicht verfügbar.", isEnabled: false)
+    ];
+
+    [ObservableProperty]
+    private IndexSourceType _selectedIndexSource = IndexSourceType.FileName;
+
+    /// <summary>
+    /// Ob IndexMode-Optionen sichtbar sind (nur bei FileName).
+    /// </summary>
+    [ObservableProperty]
+    private bool _showIndexModeOptions = true;
+
+    [ObservableProperty]
+    private bool _indexModeOptional = true;
+
+    [ObservableProperty]
+    private bool _indexCaseInsensitive = true;
+
+    /// <summary>
+    /// Warnung wenn FileName gewählt aber kein PlanIndex-Segment zugewiesen.
+    /// </summary>
+    [ObservableProperty]
+    private bool _showIndexWarning;
+
+    /// <summary>
+    /// Ob PlanIndex-Segment in Schritt 1 zugewiesen wurde.
+    /// </summary>
+    public bool HasPlanIndexSegment => Segments.Any(s => s.FieldType == FieldType.PlanIndex);
 
     public ProfileWizardViewModel(Project? project = null)
     {
@@ -69,7 +117,6 @@ public partial class ProfileWizardViewModel : ObservableObject
 
     /// <summary>
     /// Wird aufgerufen wenn der User eine Datei aus der Eingang-Liste anklickt.
-    /// Übernimmt den Dateinamen ins Eingabefeld und parst automatisch.
     /// </summary>
     partial void OnSelectedInboxFileChanged(string? value)
     {
@@ -78,6 +125,15 @@ public partial class ProfileWizardViewModel : ObservableObject
             SampleFileName = value;
             ParseFileNameCommand.Execute(null);
         }
+    }
+
+    /// <summary>
+    /// Aktualisiert UI wenn IndexSource gewechselt wird.
+    /// </summary>
+    partial void OnSelectedIndexSourceChanged(IndexSourceType value)
+    {
+        ShowIndexModeOptions = value == IndexSourceType.FileName;
+        ValidateCurrentStep();
     }
 
     private void LoadInboxFiles(Project project)
@@ -108,10 +164,54 @@ public partial class ProfileWizardViewModel : ObservableObject
         }
     }
 
-    /// <summary>
-    /// Parst den Beispiel-Dateinamen mit den gewählten Trennzeichen.
-    /// Wird aufgerufen wenn der User den Dateinamen ändert oder Enter drückt.
-    /// </summary>
+    // === Navigation ===
+
+    [RelayCommand]
+    private void GoNext()
+    {
+        if (CurrentStep < TotalSteps)
+        {
+            CurrentStep++;
+            UpdateStepState();
+        }
+    }
+
+    [RelayCommand]
+    private void GoBack()
+    {
+        if (CurrentStep > 1)
+        {
+            CurrentStep--;
+            UpdateStepState();
+        }
+    }
+
+    private void UpdateStepState()
+    {
+        StepTitle = CurrentStep switch
+        {
+            1 => "Schritt 1: Segmente zuweisen",
+            2 => "Schritt 2: Index-Konfiguration",
+            3 => "Schritt 3: Zielordner",
+            4 => "Schritt 4: Erkennung",
+            _ => ""
+        };
+        CanGoBack = CurrentStep > 1;
+        ValidateCurrentStep();
+    }
+
+    private void ValidateCurrentStep()
+    {
+        CanGoNext = CurrentStep switch
+        {
+            1 => ValidateStep1(),
+            2 => ValidateStep2(),
+            _ => false // Schritte 3-4 kommen noch
+        };
+    }
+
+    // === Schritt 1: Parsen ===
+
     [RelayCommand]
     private void ParseFileName()
     {
@@ -130,8 +230,9 @@ public partial class ProfileWizardViewModel : ObservableObject
 
             Segments = new ObservableCollection<FileNameSegment>(result.Segments);
             ParseInfo = $"{result.Segments.Count} Segmente erkannt · Trennzeichen: {string.Join(" ", result.UsedDelimiters)}";
-            ValidateStep1();
-            Log.Information("Dateiname geparst: {FileName} → {Count} Segmente", SampleFileName, result.Segments.Count);
+            ValidateCurrentStep();
+            Log.Information("Dateiname geparst: {FileName} → {Count} Segmente",
+                SampleFileName, result.Segments.Count);
         }
         catch (Exception ex)
         {
@@ -142,22 +243,41 @@ public partial class ProfileWizardViewModel : ObservableObject
         }
     }
 
-    /// <summary>
-    /// Wird aufgerufen wenn der User einen FieldType für ein Segment wählt.
-    /// </summary>
     public void OnFieldTypeChanged(FileNameSegment segment, FieldTypeOption? option)
     {
         if (option is null) return;
 
         segment.FieldType = option.Value;
         segment.CustomFieldName = option.Value == FieldType.Custom ? option.DisplayName : null;
-        ValidateStep1();
+        ValidateCurrentStep();
+        OnPropertyChanged(nameof(HasPlanIndexSegment));
     }
 
-    private void ValidateStep1()
+    private bool ValidateStep1()
     {
-        CanGoNext = Segments.Count > 0
+        return Segments.Count > 0
             && Segments.Any(s => s.FieldType == FieldType.PlanNumber);
+    }
+
+    private bool ValidateStep2()
+    {
+        // FileName erfordert PlanIndex-Segment aus Schritt 1
+        if (SelectedIndexSource == IndexSourceType.FileName)
+        {
+            ShowIndexWarning = !HasPlanIndexSegment;
+            return HasPlanIndexSegment;
+        }
+
+        // PlanHeader ist Post-V1, nicht wählbar
+        if (SelectedIndexSource == IndexSourceType.PlanHeader)
+        {
+            ShowIndexWarning = false;
+            return false;
+        }
+
+        // None ist immer gültig
+        ShowIndexWarning = false;
+        return true;
     }
 
     private static char[] ParseDelimiters(string text)
@@ -182,7 +302,7 @@ public partial class ProfileWizardViewModel : ObservableObject
             new("Bezeichnung", FieldType.Description),
             new("Ignorieren", FieldType.Ignore),
             new("Datum", FieldType.Datum),
-            new("Geschoß", FieldType.Geschoss),
+            new("Geschoss", FieldType.Geschoss),
             new("Haus", FieldType.Haus),
             new("Planart", FieldType.Planart),
             new("Objekt", FieldType.Objekt),
@@ -212,4 +332,25 @@ public class FieldTypeOption
     }
 
     public override string ToString() => DisplayName;
+}
+
+/// <summary>
+/// Option für IndexSource-RadioButtons.
+/// </summary>
+public class IndexSourceOption
+{
+    public string Label { get; }
+    public IndexSourceType Value { get; }
+    public string Description { get; }
+    public bool IsEnabled { get; }
+
+    public IndexSourceOption(string label, IndexSourceType value, string description, bool isEnabled = true)
+    {
+        Label = label;
+        Value = value;
+        Description = description;
+        IsEnabled = isEnabled;
+    }
+
+    public override string ToString() => Label;
 }

@@ -65,6 +65,7 @@ Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheid
 | 043 | Dev-Tools — Lokales Debug-Toolset für Entwicklung | ✅ Entschieden / Not Started | 2026-04 |
 | 044 | Icons.xaml — Zentrale Icon-Registry | ✅ Entschieden / Implemented | 2026-04 |
 | 045 | IndexSource — Dreistufiges Modell für Plan-Index-Erkennung | ✅ Entschieden | 2026-04 |
+| 046 | .bpm/ Ordner — Manifest-Split und Profilablage im Projektordner | ✅ Entschieden | 2026-04 |
 
 ---
 
@@ -1697,6 +1698,100 @@ Pro Projekt und Plantyp (= im RecognitionProfile) wird ein `IndexSource` Feld ge
 - BACKLOG.md: Feature #20 (Plantyp-Erkennung) und #22 (profiles.json) müssen IndexSource berücksichtigen
 
 **Betrifft:** ADR-008, ADR-009, ADR-010, ADR-022, ADR-027
+
+---
+
+## ADR-046: .bpm/ Ordner — Manifest-Split und Profilablage im Projektordner
+
+**Datum:** 2026-04
+**Status:** ✅ Entschieden
+**Herkunft:** PlanManager-Entwicklung (Claude + Herbert, 10.04.2026), ChatGPT-Review Empfehlung Settings-Split
+**Supersedes:** ADR-013 v2 (einzelne `.bpm-manifest`-Datei)
+
+**Kontext:**
+
+Die bisherige `.bpm-manifest`-Datei (ADR-013 v2) vereint zwei Aufgaben in einer Datei: Ordner-Wiedererkennung ("Ausweis") und vollständiger Projektexport (alle 5 Tabs aus ProjectEditDialog). Mit dem PlanManager kommen weitere projektbezogene Daten hinzu: Plantyp-Profile (`profiles.json`) und später ein Bestandsmanifest (`plan-index.json`). Diese gehören zum Projektordner (synct über Cloud-Speicher), nicht in `.AppData/`. Die bisherige Lösung — alles in einer Datei — skaliert nicht.
+
+Zusätzlich hat ChatGPT im Review empfohlen, `AppSettings.cs` aufzuspalten (maschinenlokal vs. fachlich/global). Das wird NACH PlanManager V1 umgesetzt, aber die `.bpm/`-Struktur ist architektonisch vorbereitet dafür.
+
+**Entscheidung:**
+
+Die einzelne `.bpm-manifest`-Datei wird durch einen **versteckten `.bpm/` Ordner** pro Projektordner ersetzt:
+
+```
+Projektordner/
+├── .bpm/                          ← Versteckter Ordner (Hidden)
+│   ├── manifest.json              ← Schlank: Identität + Module-Flags
+│   ├── project.json               ← Vollständiger Projektexport (wie bisherige .bpm-manifest)
+│   ├── profiles/                  ← PlanManager: eine JSON-Datei pro Profil
+│   │   ├── <profilname>.json
+│   │   └── ...
+│   └── plan-index.json            ← PlanManager: Bestandsmanifest (später)
+├── 01 Planunterlagen/
+└── ...
+```
+
+**manifest.json (schlank):**
+```json
+{
+  "schemaVersion": 2,
+  "projectId": "01HV8M2Q9AJ3W1XK7R4F5N6T8C",
+  "projectNumber": "202512",
+  "name": "ÖWG-Dobl-Zwaring",
+  "updatedAtUtc": "2026-04-10T14:30:00Z",
+  "createdByMachine": "Desktop_PC",
+  "modules": {
+    "planManager": true,
+    "foto": false,
+    "bautagebuch": false
+  }
+}
+```
+
+**project.json (Vollexport):**
+Enthält dieselben Daten wie die bisherige `.bpm-manifest` (Stammdaten, Client, Location, Timeline, BuildingParts, Participants, Links, Paths, Tags, Notes). Keine DB-IDs, eigene DTOs. Wird bei jedem Speichern aktualisiert.
+
+**profiles/ (PlanManager-Profile):**
+Pro Plantyp-Profil eine eigene JSON-Datei. Synct über Cloud-Speicher zwischen Geräten. Bisher in `.AppData/Projects/<P>/profiles.json` — wandert jetzt in den Projektordner, weil Profile zum Projekt gehören und zwischen Geräten verfügbar sein müssen.
+
+**Code-Impact:**
+
+| Datei | Änderung |
+|-------|----------|
+| `BpmManifestService.cs` | Aufsplitten in `ManifestService` (schlank, `.bpm/manifest.json`) + `ProjectExportService` (Vollabbild, `.bpm/project.json`) |
+| `BpmManifest.cs` (Domain) | Neues schlankes `ManifestV2` Modell (nur ID, Nummer, Name, Machine, Modules) |
+| `SettingsViewModel.cs` | 4 Stellen anpassen (AddProject, EditProject, ImportFromManifest, ImportFromFolder) — schreibt jetzt in `.bpm/` statt `.bpm-manifest` |
+| Neuer `ProfileManager.cs` | PlanManager/Services/ — liest/schreibt `.bpm/profiles/<name>.json` |
+| `.bpm-manifest` (alt) | Migration: beim ersten Zugriff alte Datei lesen → `.bpm/`-Ordner erstellen → alte Datei löschen |
+
+**Ordner-Attribute:**
+- `.bpm/` Ordner: Hidden-Attribut (wie bisherige `.bpm-manifest`)
+- Dateien innerhalb: Normal (kein ReadOnly — war bei der einzelnen Datei nötig, beim Ordner reicht Hidden)
+- Ordner wird bei Projekt-Erstellung automatisch angelegt
+
+**Vorwärtsmigration:**
+Beim Öffnen eines Projekts prüft die App:
+1. Existiert `.bpm/manifest.json`? → Neues Format, normal weiter
+2. Existiert `.bpm-manifest` (alt)? → Migration: Alte Datei lesen, `.bpm/`-Ordner erstellen, `manifest.json` + `project.json` schreiben, alte Datei löschen
+3. Existiert keines? → Leerer Ordner (Import-Szenario)
+
+**Alternativen:**
+
+- *Einzelne Datei beibehalten + Profile in .AppData:* Funktioniert, aber Profile synchen nicht über Cloud-Speicher zum zweiten Gerät. Herbert sortiert Pläne auf beiden Geräten (ADR-004).
+- *Alles in einer großen Manifest-Datei:* Wird immer größer — Profile, Plan-Index, Module-Flags. Nicht wartbar.
+- *Profile in SQLite:* Lokal, syncht nicht. Erfordert separaten Export/Import-Mechanismus.
+
+**Konsequenzen:**
+
+- Projektordner hat jetzt einen versteckten Unterordner statt einer versteckten Datei — für Kollegen/Partner weiterhin unsichtbar
+- Profile synchen automatisch über Cloud-Speicher (wie bisher `settings.json`)
+- `ManifestService` bleibt schlank — nur Ausweis-Funktion, schnell zu lesen
+- `ProjectExportService` schreibt den Vollexport — nur bei Speichern, nicht bei jedem Zugriff
+- PlanManager `ProfileManager` liest/schreibt direkt in `.bpm/profiles/` — kein Umweg über `.AppData`
+- Migration von altem Format ist einmalig und automatisch
+- Spätere Module (Foto, Bautagebuch) können eigene Dateien in `.bpm/` ablegen
+
+**Betrifft:** ADR-004, ADR-010, ADR-013, ADR-039, ADR-040
 
 ---
 

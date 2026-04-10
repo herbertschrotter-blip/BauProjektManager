@@ -5,6 +5,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.24.11] — 2026-04-10
+
+### Hinzugefuegt
+
+- **ADR-046:** `.bpm/` Ordner — Manifest-Split (manifest.json schlank + project.json Vollexport) und Profilablage im Projektordner statt `.AppData/`. Supersedes ADR-013 v2.
+- Architektur.md, BACKLOG.md, DEPENDENCY-MAP.md, PlanManager.md, CHANGELOG.md aktualisiert (8+ Stellen pro Datei)
+
+---
+
 ## [v0.24.10] — 2026-04-10
 
 ### Hinzugefuegt

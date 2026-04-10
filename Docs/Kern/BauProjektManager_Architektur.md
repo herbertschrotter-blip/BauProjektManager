@@ -1,7 +1,7 @@
 ﻿# BauProjektManager — Architektur & Spezifikation
 
-**Version:** 2.1.0  
-**Datum:** 03.04.2026  
+**Version:** 2.2.0  
+**Datum:** 10.04.2026  
 **Sprache:** C# (.NET 10 LTS), WPF (XAML), MVVM  
 **Frameworks:** CommunityToolkit.Mvvm, Serilog, ClosedXML, PdfPig, QuestPDF  
 **Basis:** v1.4 + Phase 0/1 Implementierung + Herberts Feedback + Docs-Reorganisation  
@@ -135,7 +135,7 @@ SQLite ist die **einzige Wahrheitsquelle** für alle BPM-Kerndaten (Projekte, Pl
 | Import-Journal | SQLite | Lokal `planmanager.db` | Nein | C# | C# | Bei Import |
 | Undo-Daten | SQLite | Lokal `planmanager.db` | Nein | C# | C# | Bei Import |
 | Logs | Dateien | Lokal `Logs/` | Nein | Serilog | Dev | Ständig |
-| `.bpm-manifest` | JSON | Cloud-Speicher Projektordner | Ja | C# | C#, Apps | Einmalig |
+| `.bpm/` Ordner | JSON | Cloud-Speicher Projektordner | Ja | C# | C#, Apps | Bei Speichern |
 | Pläne (PDF/DWG) | Dateien | Cloud-Speicher Projektordner | Ja | Import | User | Bei Import |
 | Vorlagen | Excel/Word | Cloud-Speicher `Vorlagen/` | Ja | User | User, C# | Selten |
 
@@ -170,7 +170,10 @@ OneDrive/02Arbeit/
 │   └── BPM_Helper.xlam                       ← Excel Add-In (offen)
 │
 ├── 202512_ÖWG-Dobl-Zwaring/                  ← Projektordner (SAUBER!)
-│   ├── .bpm-manifest                          ← Versteckt
+│   ├── .bpm/                              ← Versteckter Ordner (ADR-046)
+│   │   ├── manifest.json
+│   │   ├── project.json
+│   │   └── profiles/
 │   ├── 01 Planunterlagen/                     ← Nummerierte Ordner
 │   │   ├── _Eingang/                          ← Sammelordner
 │   │   ├── Polierplan/
@@ -189,7 +192,7 @@ OneDrive/02Arbeit/
 │   └── 07 Sonstiges/
 │
 ├── 202302_Reihenhäuser-Kapfenberg/
-│   ├── .bpm-manifest
+│   ├── .bpm/
 │   └── ...
 │
 └── BauProjektManager/                         ← Die App
@@ -226,7 +229,7 @@ OneDrive/02Arbeit/
 | Ordner/Datei | Hidden? | Warum |
 |---|---|---|
 | `.AppData/` | Ja (Hidden + System) | Nicht für User sichtbar |
-| `.bpm-manifest` | Ja (Hidden) | Nicht für Kollegen sichtbar |
+| `.bpm/` | Ja (Hidden) | Nicht für Kollegen sichtbar |
 | `_Eingang/` | Nein | User muss hier Dateien reinwerfen |
 | `_Archiv/` | Nein | User soll alte Pläne finden |
 
@@ -409,20 +412,27 @@ public enum ProjectStatus { Active, Completed }
 - `registryVersion` und `schema_version` (DB) sind **unabhängig** — nicht jede DB-Schema-Änderung ändert den VBA-Exportvertrag
 - Whitelist für Klasse-B-Felder: siehe [DSGVO-Architektur Kap. 9.3](DSVGO-Architektur.md)
 
-### 3.6 .bpm-manifest
+### 3.6 .bpm/ Ordner (ADR-046)
 
-Versteckte Datei in jedem Projektordner als "Ausweis":
+Versteckter Ordner in jedem Projektordner — ersetzt die einzelne `.bpm-manifest`-Datei (ADR-013 v2):
 
-```json
-{
-  "registryId": "01HV8M2Q9AJ3W1XK7R4F5N6T8C",
-  "projectNumber": "202512",
-  "name": "ÖWG-Dobl-Zwaring",
-  "registryPath": "...\\BauProjektManager\\registry.json"
-}
+```
+Projektordner/
+├── .bpm/                          ← Hidden
+│   ├── manifest.json              ← Schlank: Identität + Module-Flags
+│   ├── project.json               ← Vollständiger Projektexport
+│   ├── profiles/                  ← PlanManager: Plantyp-Profile
+│   │   └── <profilname>.json
+│   └── plan-index.json            ← Bestandsmanifest (später)
 ```
 
-Bei Ordner-Umbenennung: BPM sucht über Manifest automatisch den neuen Pfad und aktualisiert die DB. (ADR-012)
+**manifest.json** (schlank — nur Ausweis): projectId, projectNumber, name, updatedAtUtc, createdByMachine, modules (Flags welche Module aktiv sind).
+
+**project.json** (Vollexport): Alle Projektdaten für Import/Übergabe. Keine DB-IDs, eigene DTOs. Wird bei jedem Speichern aktualisiert.
+
+**profiles/**: Eine JSON-Datei pro Plantyp-Profil. Synct über Cloud-Speicher zwischen Geräten.
+
+Bei Ordner-Umbenennung: BPM sucht über `.bpm/manifest.json` automatisch den neuen Pfad und aktualisiert die DB. Vorwärtsmigration: Alte `.bpm-manifest`-Datei wird automatisch in `.bpm/`-Ordner migriert.
 
 ### 3.6 Automatische Projektordner-Erstellung
 
@@ -711,7 +721,8 @@ BauProjektManager.sln
 │   │   │   ├── AppSettingsService.cs           ← ✅ settings.json laden/speichern
 │   │   │   ├── RegistryJsonExporter.cs        ← ✅ SQLite → JSON Export
 │   │   │   ├── ProjectFolderService.cs        ← ✅ Ordner erstellen
-│   │   │   └── BpmManifestService.cs          ← ✅ .bpm-manifest lesen/schreiben/scannen
+│   │   │   ├── ManifestService.cs             ← ⬜ .bpm/manifest.json (schlank, ADR-046)
+│   │   │   └── ProjectExportService.cs        ← ⬜ .bpm/project.json (Vollexport, ADR-046)
     │   │   ├── UlidIdGenerator.cs                  ← ⬜ ADR-039 v2 (NuGet: Cysharp/Ulid)
     │   │   ├── Communication/                      ← ⬜ Geplant (vor erstem Online-Modul)
     │   │   │   ├── ExternalCommunicationService.cs ← ⬜ IExternalCommunicationService (ADR-035)
@@ -794,7 +805,7 @@ Zusammenfassung der wichtigsten Entscheidungen:
 | **Undo** | 3 SQLite-Tabellen (Journal) | ADR-009 |
 | **Profile** | RecognitionProfiles + PatternTemplates | ADR-010 |
 | **Ordner-Naming** | Nummerierte Präfixe mit Leerzeichen | ADR-011 |
-| **Manifest** | .bpm-manifest als versteckter Ausweis | ADR-012 |
+| **Manifest** | .bpm/ Ordner — Manifest-Split + Profilablage | ADR-046 |
 | **C# statt PowerShell** | Für Hauptapp | ADR-014 |
 | **Zeiterfassung** | WPF + ClosedXML → Excel | ADR-018 |
 | **Mobile** | PWA, deferred | ADR-019 |
@@ -839,7 +850,7 @@ Zusammenfassung der wichtigsten Entscheidungen:
 | 8 | Git-Aufräumung | ✅ |
 | 9 | Ersteinrichtung | ✅ |
 | 10 | Projektordner erstellen | ✅ |
-| 11 | .bpm-manifest | ⬜ |
+| 11 | .bpm/ Ordner (ADR-046) | ⬜ |
 | 12 | Projekt archivieren | ⬜ |
 | 13 | Pfade änderbar | ✅ |
 | 14 | Single-Writer Mutex | ⬜ |
@@ -911,18 +922,30 @@ Bevor ein Feature als "fertig" gilt:
 | `settings.json` | Cloud-Speicher `.AppData/` | JSON | App-Einstellungen | C#-App |
 | `pattern-templates.json` | Cloud-Speicher `.AppData/` | JSON | Musterbibliothek | C#-App |
 | `templates.json` | Cloud-Speicher `.AppData/` | JSON | Vorlagen-Verzeichnis | C#-App |
-| `profiles.json` | Cloud-Speicher `.AppData/Projects/<P>/` | JSON | Plantyp-Profile | C#-App |
+| ~~`profiles.json`~~ | ~~Cloud-Speicher `.AppData/Projects/<P>/`~~ | — | Wandert nach `.bpm/profiles/` (ADR-046) | — |
 | `bpm.db` | Lokal | SQLite | Haupt-DB (Projekte) | C#-App |
 | `planmanager.db` | Lokal `Projects/<P>/` | SQLite | Cache, Journal, Undo | C#-App |
-| `.bpm-manifest` | Cloud-Speicher Projektordner | JSON | Zeiger auf Registry | C#-App |
+| `.bpm/manifest.json` | Cloud-Speicher Projektordner | JSON | Projekt-Identität | C#-App |
+| `.bpm/project.json` | Cloud-Speicher Projektordner | JSON | Vollständiger Projektexport | C#-App |
+| `.bpm/profiles/*.json` | Cloud-Speicher Projektordner | JSON | Plantyp-Profile | C#-App |
 
 ---
 
-*Dokument Version 2.1.0 — 03.04.2026*
+*Dokument Version 2.2.0 — 10.04.2026*
+
+*Kernänderungen v2.1.0 → v2.2.0:*
+- *Kapitel 2.4: .bpm-manifest → .bpm/ Ordner in Projektordner-Diagramm*
+- *Kapitel 2.6: Hidden-Attribute Tabelle: .bpm/ statt .bpm-manifest*
+- *Kapitel 3.1: Daten-Übersicht Tabelle: .bpm/ Ordner statt .bpm-manifest*
+- *Kapitel 3.6: Komplett neu — .bpm/ Ordner mit manifest.json, project.json, profiles/ (ADR-046)*
+- *Kapitel 10: Solution-Struktur: ManifestService + ProjectExportService statt BpmManifestService*
+- *Kapitel 11: ADR-046 (.bpm/ Ordner) in Referenztabelle*
+- *Kapitel 12: Feature #11 umbenannt*
+- *Kapitel 14: Config-Übersicht: 3 Zeilen für .bpm/ statt 1 für .bpm-manifest; profiles.json wandert aus .AppData nach .bpm/profiles/*
 
 *Kernänderungen v2.0.0 → v2.1.0:*
 - *Kapitel 3.5 NEU: registry.json als versionierter Exportvertrag (registryVersion unabhängig von schema_version, Whitelist-Verweis auf DSGVO-Architektur)*
-- *Kapitel 3.6: .bpm-manifest (umbenannt von 3.5)*
+- *Kapitel 3.6: .bpm-manifest (umbenannt von 3.5) — in v2.2.0 durch .bpm/ Ordner ersetzt (ADR-046)*
 - *Kapitel 10: Privacy Control Layer in Solution-Struktur (Domain/Enums/DataClassification, Domain/Privacy/IPrivacyPolicy, Infrastructure/Communication/)*
 - *Kapitel 11: ADR-039 (ID-Schema) ergänzt*
 - *Kapitel 12 NEU: Betriebsmodi A/B/C (Solo, Team, Server)*

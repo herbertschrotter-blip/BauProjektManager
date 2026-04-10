@@ -82,7 +82,7 @@ auch mehreren Revisionen zugeordnet sein (Sammel-DWG) oder eigenständig bleiben
 
 | Datei | Ort | Synct? |
 |-------|-----|--------|
-| `profiles.json` | Cloud `.AppData/Projects/<P>/` | Ja |
+| `profiles.json` → `.bpm/profiles/<n>.json` | Cloud Projektordner `.bpm/profiles/` (ADR-046) | Ja |
 | `pattern-templates.json` | Cloud `.AppData/` | Ja |
 | `_plan_index.json` | Cloud Projektordner (hidden) | Ja |
 | `planmanager.db` | Lokal `%LocalAppData%/Projects/<P>/` | Nein |
@@ -210,7 +210,7 @@ string BuildDocumentKey(Profile profile, ParsedFile parsed)
 4. **Zielordner + Ordner-Hierarchie** → Hauptordner + Unterebenen (Geschoss, Haus etc.)
 5. **Erkennung** → Klickbare Segment-Bloecke (Toggle), auto-Muster + auto-Methode (prefix/contains), Live-Test, Prioritaet
 
-Ergebnis: RecognitionProfile in `profiles.json` + PatternTemplate in `pattern-templates.json`.
+Ergebnis: RecognitionProfile in `.bpm/profiles/<n>.json` (ADR-046) + PatternTemplate in `pattern-templates.json`.
 
 ### Phase 1 — Dateien landen im Eingang
 
@@ -237,7 +237,7 @@ Import erst nach Bestätigung: Button „Import ausführen".
 
 | Schritt | Was passiert |
 |---------|-------------|
-| 4a. Backup | planmanager.db + profiles.json als .bak |
+| 4a. Backup | planmanager.db + .bpm/profiles/ als .bak |
 | 4b. Journal | Alle Aktionen VORHER ins Undo-Journal (Status: pending) |
 | 4c. Execute | Pro Aktion: _Archiv/ erstellen → verschieben → ggf. umbenennen → completed |
 | 4d. Finalize | Journal completed. _plan_index.json aktualisieren. Zusammenfassung. |
@@ -635,7 +635,7 @@ BauProjektManager.PlanManager/
 │   ├── DocumentTypeRecognizer.cs      ← Dokumenttyp-Erkennung
 │   ├── DocumentKeyBuilder.cs          ← document_key deterministisch bilden
 │   ├── ImportWorkflowService.cs       ← Workflow-Orchestrierung
-│   ├── ProfileManager.cs             ← profiles.json + pattern-templates.json
+│   ├── ProfileManager.cs             ← .bpm/profiles/ lesen/schreiben (ADR-046) + pattern-templates.json
 │   ├── PlanIndexManifestService.cs   ← _plan_index.json lesen/schreiben
 │   ├── FileRenamer.cs                ← RenameSchemaEngine + FileNameSanitizer
 │   └── PlanManagerDatabase.cs        ← planmanager.db CRUD
@@ -652,7 +652,7 @@ BauProjektManager.PlanManager/
 | 2 | 19 | Profil-Wizard GUI (5-Schritt: Datei, Segmente, Index, Zielordner, Erkennung) | ✅ v0.24.10 (UI, Speichern offen) |
 | 3 | 20 | Dokumenttyp-Erkennung (prefix/contains) | |
 | 4 | 21 | PatternTemplates (Vorschlagslogik) | |
-| 5 | 22 | profiles.json (Pro Projekt) — ProfileManager Service | |
+| 5 | 22 | .bpm/profiles/ (Pro Projekt) — ProfileManager Service (ADR-046) | |
 | 6 | 23 | pattern-templates.json (Globale Bibliothek) |
 | 7 | 24 | Import-Workflow Scan→Parse→Classify→Plan |
 | 8 | 25 | Import-Vorschau (9 Status, Rechtsklick) |

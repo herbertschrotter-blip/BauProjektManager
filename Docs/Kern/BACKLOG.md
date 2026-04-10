@@ -22,7 +22,7 @@
 | Kategorie | Bedeutung | Beispiel |
 |-----------|-----------|---------|
 | **Must** | Ohne das ist V1 nicht nutzbar | PlanManager, Projektordner |
-| **Should** | Wichtig, aber V1 funktioniert auch ohne | .bpm-manifest, Archivierung |
+| **Should** | Wichtig, aber V1 funktioniert auch ohne | .bpm/ Ordner (ADR-046), Archivierung |
 | **Could** | Nice to have, wenn Zeit da ist | Suchfeld, Adressbuch |
 | **Won't** | Bewusst nicht in V1 — kommt später | Dashboard, Bautagebuch, KI-Assistent |
 
@@ -99,7 +99,7 @@ Diese Features verbessern V1, sind aber kein Blocker für den Release.
 
 | Feature | Beschreibung | Status |
 |---------|-------------|--------|
-| .bpm-manifest (#11) | Versteckte Datei als Projektordner-Ausweis + vollständiger Projekt-Snapshot für Import/Übergabe (ADR-013 v2). Hidden + ReadOnly. Auto-Write bei Speichern. | ✅ v0.20.0 |
+| .bpm/ Ordner (#11) | Manifest-Split: `.bpm/manifest.json` (schlank) + `.bpm/project.json` (Vollexport) + `.bpm/profiles/` (Plantyp-Profile). Ersetzt einzelne `.bpm-manifest`-Datei (ADR-046). Migration automatisch. | ⬜ |
 | Projekt archivieren (#12) | Ordner in Archiv verschieben, Pfad aktualisieren. Button vorbereitet (disabled) | ⬜ |
 | Single-Writer Mutex (#14) | Nur eine App-Instanz gleichzeitig (ADR-016) | ⬜ |
 | Versionsnummer im Log (#16) | Aus Assembly, nicht hardcoded | ✅ v0.16.1 |

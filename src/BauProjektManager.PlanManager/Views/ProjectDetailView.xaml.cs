@@ -17,7 +17,7 @@ public partial class ProjectDetailView : UserControl
 
     private void OnNewProfile(object sender, System.Windows.RoutedEventArgs e)
     {
-        var dialog = new ProfileWizardDialog();
+        var dialog = new ProfileWizardDialog(ViewModel.Project);
         dialog.Owner = System.Windows.Window.GetWindow(this);
         dialog.ShowDialog();
     }

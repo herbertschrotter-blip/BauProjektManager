@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using BauProjektManager.Domain.Models;
 using BauProjektManager.Domain.Models.PlanManager;
 using BauProjektManager.PlanManager.ViewModels;
 
@@ -25,12 +26,13 @@ public partial class ProfileWizardDialog : Window
 {
     private readonly ProfileWizardViewModel _vm;
 
-    public ProfileWizardDialog()
+    public ProfileWizardDialog(Project? project = null)
     {
         Resources.Add("CountToVisInverse", new CountToVisInverseConverter());
+        Resources.Add("BoolToVis", new BoolToVisConverter());
         InitializeComponent();
 
-        _vm = new ProfileWizardViewModel();
+        _vm = new ProfileWizardViewModel(project);
         DataContext = _vm;
     }
 

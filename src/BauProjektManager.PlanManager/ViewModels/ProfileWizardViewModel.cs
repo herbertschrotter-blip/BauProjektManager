@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.IO;
+using BauProjektManager.Domain.Models;
 using BauProjektManager.Domain.Models.PlanManager;
 using BauProjektManager.PlanManager.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -22,6 +24,17 @@ public partial class ProfileWizardViewModel : ObservableObject
 
     [ObservableProperty]
     private string _stepTitle = "Schritt 1: Segmente zuweisen";
+
+    // === Dateien im Eingang ===
+
+    [ObservableProperty]
+    private ObservableCollection<string> _inboxFiles = [];
+
+    [ObservableProperty]
+    private string? _selectedInboxFile;
+
+    [ObservableProperty]
+    private bool _hasInboxFiles;
 
     // === Schritt 1: Dateiname + Segmente ===
 
@@ -48,8 +61,51 @@ public partial class ProfileWizardViewModel : ObservableObject
     [ObservableProperty]
     private bool _canGoNext;
 
-    public ProfileWizardViewModel()
+    public ProfileWizardViewModel(Project? project = null)
     {
+        if (project is not null)
+            LoadInboxFiles(project);
+    }
+
+    /// <summary>
+    /// Wird aufgerufen wenn der User eine Datei aus der Eingang-Liste anklickt.
+    /// Übernimmt den Dateinamen ins Eingabefeld und parst automatisch.
+    /// </summary>
+    partial void OnSelectedInboxFileChanged(string? value)
+    {
+        if (!string.IsNullOrEmpty(value))
+        {
+            SampleFileName = value;
+            ParseFileNameCommand.Execute(null);
+        }
+    }
+
+    private void LoadInboxFiles(Project project)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(project.Paths.Root))
+                return;
+
+            var inboxPath = Path.Combine(project.Paths.Root, project.Paths.Inbox);
+            if (!Directory.Exists(inboxPath))
+                return;
+
+            var files = Directory.GetFiles(inboxPath)
+                .Select(Path.GetFileName)
+                .Where(f => f is not null)
+                .Cast<string>()
+                .OrderBy(f => f)
+                .ToList();
+
+            InboxFiles = new ObservableCollection<string>(files);
+            HasInboxFiles = files.Count > 0;
+            Log.Information("Wizard: {Count} Dateien im Eingang geladen", files.Count);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Eingang konnte nicht geladen werden");
+        }
     }
 
     /// <summary>

@@ -37,6 +37,22 @@
         <!-- Content: Schritt 1 — Dateiname + Segmente -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="16">
             <StackPanel>
+                <!-- Dateien im Eingang -->
+                <TextBlock Text="Dateien im Eingang — klicke eine Datei um sie als Vorlage zu verwenden:"
+                           Foreground="{DynamicResource BpmTextSecondary}"
+                           FontSize="12" Margin="0,0,0,4"
+                           Visibility="{Binding HasInboxFiles, Converter={StaticResource BoolToVis}}"/>
+                <ListBox ItemsSource="{Binding InboxFiles}"
+                         SelectedItem="{Binding SelectedInboxFile}"
+                         MaxHeight="140"
+                         Background="{DynamicResource BpmBgSurface}"
+                         Foreground="{DynamicResource BpmTextPrimary}"
+                         BorderBrush="{DynamicResource BpmBorderDefault}"
+                         BorderThickness="1"
+                         FontSize="12" FontFamily="Consolas"
+                         Margin="0,0,0,12"
+                         Visibility="{Binding HasInboxFiles, Converter={StaticResource BoolToVis}}"/>
+
                 <!-- Dateiname eingeben -->
                 <TextBlock Text="Beispiel-Dateiname"
                            Foreground="{DynamicResource BpmTextSecondary}"

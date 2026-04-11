@@ -566,7 +566,7 @@ BauProjektManager.sln
 │   │
 │   ├── BauProjektManager.Infrastructure/     ← Technische Umsetzung
 │   │   ├── Persistence/
-│   │   │   ├── ProjectDatabase.cs             ← ✅ SQLite CRUD Schema v2.0 ULID (projects, clients, building_parts, building_levels, project_participants, project_links)
+│   │   │   ├── ProjectDatabase.cs             ← ✅ SQLite CRUD Schema v1.5 (seq+Präfix) — ⬜ Migration auf v2.0 ULID ausstehend (ADR-039 v2)
 │   │   │   ├── AppSettingsService.cs           ← ✅ settings.json laden/speichern
 │   │   │   ├── RegistryJsonExporter.cs        ← ✅ SQLite → JSON Export
 │   │   │   ├── ProjectFolderService.cs        ← ✅ Ordner erstellen

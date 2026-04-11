@@ -1,12 +1,14 @@
-# INDEX.md — Projekt-Index
+# INDEX.md — Projekt-Router
 
 > **Zweck:** Routing-Matrix für KI-gestützte Code-Erstellung und Doku-Pflege.
 > Claude lädt diese Datei ZUERST um zu entscheiden welche Docs und Code-Dateien
 > für eine Aufgabe geladen werden müssen.
 >
-> **Pflege:** Bei neuen Docs, Modulen oder zentralen Code-Einstiegspunkten
-> aktualisieren. Keine per-File-Vollständigkeit für normalen Code.
-> Wird vom `doc-pflege` Skill automatisch mitgepflegt.
+> **Laderegel:** Nach INDEX.md → Quickload der relevanten Docs lesen → nur bei
+> Bedarf Langform nachladen. Siehe DOC-STANDARD.md Kapitel 8.
+>
+> **Norm:** Docs/Referenz/DOC-STANDARD.md definiert Frontmatter, Quickload,
+> Kapitelvorlagen und Skill-Ladereihenfolge.
 
 ---
 
@@ -17,243 +19,155 @@
 - **Typ:** WPF Desktop-Anwendung, modularer Monolith, offline-first
 - **Repo:** github.com/herbertschrotter-blip/BauProjektManager, Branch: main
 - **Version:** In `Directory.Build.props` im Repo-Root
-- **Arbeitsverzeichnis:** Dynamisch via PC-Tabelle (siehe unten)
 
 ### PCs und Arbeitsverzeichnisse
 
-**Projekt-Suffix** (gleich auf allen PCs): `Dokumente\02 Arbeit\05 Vorlagen - Scripte\05_BauProjekteManager`
+| PC | COMPUTERNAME | Projekt-Suffix |
+|----|-------------|----------------|
+| Büro-PC | (per hostname) | `Dokumente\02 Arbeit\05 Vorlagen - Scripte\05_BauProjekteManager` |
+| Surface | (per hostname) | `Dokumente\02 Arbeit\05 Vorlagen - Scripte\05_BauProjekteManager` |
 
-| PC-Name | COMPUTERNAME | Bemerkung |
-|---------|-------------|-----------|
-| Firmenlaptop | FIRMENLAPTOP | Arbeits-PC |
-| Surface | (TODO) | Surface Tablet |
-| Standrechner | Desktop_PC | PC zuhause |
-
-**Ermittlung durch Claude (DC):**
-```powershell
-$pc = hostname; $od = [System.Environment]::GetEnvironmentVariable('OneDrive', 'User'); Write-Host "$pc|$od"
-```
-**workFolder** = OneDrive-Pfad + `\` + Projekt-Suffix. Unbekannte PCs werden bei Erstverwendung registriert.
+Basispfad = OneDrive-Pfad + `\` + Projekt-Suffix.
 
 ---
 
-## 1. Global Mandatory Reads
+## 1. Task-to-Doc Routing
 
-Dateien die bei vielen Änderungstypen kritisch sind. Im Zweifel laden.
+### Plan-Management
+- Primary: `Docs/Module/PlanManager.md`
+- Secondary: `Docs/Kern/DB-SCHEMA.md`, `Docs/Kern/BauProjektManager_Architektur.md`
+- Reference: `Docs/Referenz/UI_Navigation.md`
 
-| Datei | Laden wenn | Pfad |
-|-------|-----------|------|
-| Architektur-Doc | Neue Services, Module, DI, Schichtfragen | `Docs/Kern/BauProjektManager_Architektur.md` |
-| DB-Schema | Persistenzänderungen, neue Tabellen, Spalten | `Docs/Kern/DB-SCHEMA.md` |
-| DSGVO-Architektur | Externe Kommunikation, personenbezogene Daten, API-Calls | `Docs/Kern/DSVGO-Architektur.md` |
-| UI/UX Guidelines | Sichtbare UI-Änderungen, neue Controls | `Docs/Referenz/UI_UX_Guidelines.md` |
-| WPF UI Architecture | Neue Views, Styles, ResourceDictionaries, Theme-Tokens | `Docs/Referenz/WPF_UI_Architecture.md` |
-| Coding Standards | Naming, Patterns, Anti-Patterns (nur wenn unsicher) | `Docs/Kern/CODING_STANDARDS.md` |
+### Einstellungen / Projekt-UI
+- Primary: `Docs/Module/ModuleProjekt.md`
+- Secondary: `Docs/Referenz/UI_UX_Guidelines.md`, `Docs/Referenz/WPF_UI_Architecture.md`
 
----
+### Wetter / externe API
+- Primary: `Docs/Konzepte/ModuleWetter.md`
+- Secondary: `Docs/Kern/DSVGO-Architektur.md`, `Docs/Kern/BauProjektManager_Architektur.md`
 
-## 2. Task-to-Doc Routing
+### Foto / Dateiimport
+- Primary: `Docs/Konzepte/ModuleFoto.md`
+- Secondary: `Docs/Kern/DSVGO-Architektur.md`
 
-Welche Docs bei welchem Änderungstyp geladen werden müssen.
+### Zeiterfassung / Excel
+- Primary: `Docs/Konzepte/ModuleZeiterfassung.md`
+- Secondary: `Docs/Kern/DSVGO-Architektur.md`
 
-| Änderungstyp | Pflicht-Docs |
-|-------------|-------------|
-| Wetter / externe API | ModuleWetter.md, DSVGO-Architektur.md, Architektur-Doc |
-| Foto / Dateiimport | ModuleFoto.md, DSVGO-Architektur.md |
-| Zeiterfassung / Excel | ModuleZeiterfassung.md, DSVGO-Architektur.md |
-| Einstellungen-UI | UI_UX_Guidelines.md, WPF_UI_Architecture.md |
-| Plan-Management | PlanManager.md, Architektur-Doc, DB-SCHEMA.md, UI_Navigation.md |
-| SQLite / Repository | DB-SCHEMA.md, Architektur-Doc |
-| Neuer Dialog | UI_UX_Guidelines.md, WPF_UI_Architecture.md, Dialogs.xaml |
-| Neues Modul | Architektur-Doc, zugehöriges Konzept-Doc, DB-SCHEMA.md |
-| Navigation / Shell | UI_Navigation.md, Architektur-Doc, MainWindow.xaml/.cs |
-| DevTools | Docs/Module/ModuleDevTools.md |
-| Kalkulation | ModuleKalkulation.md, DB-SCHEMA.md |
-| KI-Assistent | ModuleKiAssistent.md, DSVGO-Architektur.md |
-| Mobile/PWA | BPM-Mobile-Konzept.md |
-| Multi-User | MultiUserKonzept.md, DatenarchitekturSync.md |
-| Sync / Datenstruktur / Outbox | DatenarchitekturSync.md, DB-SCHEMA.md |
-| Lizenzierung | ModuleAktivierungLizenzierung.md |
+### SQLite / Repository / Datenbankänderung
+- Primary: `Docs/Kern/DB-SCHEMA.md`
+- Secondary: `Docs/Kern/BauProjektManager_Architektur.md`
 
----
+### Neuer Dialog / UI-Element
+- Primary: `Docs/Referenz/UI_UX_Guidelines.md`
+- Secondary: `Docs/Referenz/WPF_UI_Architecture.md`
 
-## 3. Docs-Verzeichnis
+### Neues Modul
+- Primary: `Docs/Kern/BauProjektManager_Architektur.md`
+- Secondary: Zugehöriges Konzept-Doc, `Docs/Kern/DB-SCHEMA.md`
 
-### Docs/Kern/ — Bei JEDER Code-Änderung potenziell relevant
+### Navigation / Shell
+- Primary: `Docs/Referenz/UI_Navigation.md`
+- Secondary: `Docs/Kern/BauProjektManager_Architektur.md`
 
-| Datei | Inhalt | Größe |
-|-------|--------|-------|
-| BauProjektManager_Architektur.md | Solution-Struktur, DI-Setup, Service-Architektur, Schichten, Modulstruktur | 42KB |
-| DB-SCHEMA.md | Alle SQLite-Tabellen, Spalten, Constraints, Migrations-Logik | 28KB |
-| CODING_STANDARDS.md | BPM-spezifische Coding-Regeln, XAML-Konventionen, Naming | 43KB |
-| DSVGO-Architektur.md | Datenschutz, DataClassification, IExternalCommunicationService, Logging-Regeln | 49KB |
-| BACKLOG.md | Offene Features, Bugs, Ideen, Prioritäten | 12KB |
+### DevTools
+- Primary: `Docs/Module/ModuleDevTools.md`
 
-### Docs/Referenz/ — Lesen wenn Thema aufkommt
+### Kalkulation
+- Primary: `Docs/Konzepte/ModuleKalkulation.md`
+- Secondary: `Docs/Kern/DB-SCHEMA.md`
 
-| Datei | Inhalt | Größe |
-|-------|--------|-------|
-| ADR.md | 45 Architecture Decision Records | 78KB |
-| CHANGELOG.md | Versionshistorie | 23KB |
-| VISION.md | Produktvision, Zielgruppe, Roadmap | 19KB |
-| DEPENDENCY-MAP.md | Projektabhängigkeiten, NuGet-Pakete | 13KB |
-| UI_UX_Guidelines.md | Farben, Spacing, Komponenten, Layout-Regeln | 25KB |
-| WPF_UI_Architecture.md | Theme-System, 7 ResourceDictionaries, Token-Architektur | 32KB |
-| UX_Flows.md | Benutzerflüsse, Dialog-Abfolgen | 17KB |
-| GLOSSAR.md | Österreichische Bau-Terminologie, Fachbegriffe | 19KB |
-| Setup-ClaudeCode-MCP.md | Claude Code / Desktop Commander Setup-Anleitung | 4KB |
-| UI_Navigation.md | Shell-Aufbau, Sidebar, Toolbar, Screen-Hierarchie, Navigationsregeln | 7KB |
+### KI-Assistent
+- Primary: `Docs/Konzepte/ModuleKiAssistent.md`
+- Secondary: `Docs/Kern/DSVGO-Architektur.md`
 
-### Docs/Konzepte/ — Erst relevant wenn Modul gebaut wird
+### Mobile / PWA
+- Primary: `Docs/Konzepte/BPM-Mobile-Konzept.md`
 
-| Datei | Modul |
-|-------|-------|
-| ModuleWetter.md | Wetter-Modul (Google Sheets Worker, CSV-Sync) |
-| ModuleFoto.md | Foto-Modul |
-| ModuleZeiterfassung.md | Zeiterfassung (Excel als SoT) |
-| ModuleBautagebuch.md | Bautagebuch |
-| ModuleDashboard.md | Dashboard |
-| ModuleOutlook.md | Outlook-Integration |
-| ModuleKiAssistent.md | KI-Assistent |
-| ModuleKalkulation.md | Kalkulation |
-| ModuleGIS.md | GIS / Koordinaten |
-| ModuleVorlagen.md | Vorlagen-System |
-| ModuleTaskManagement.md | Task-Management |
-| Moduleplanheader.md | Plankopf-Extraktion |
-| BPM-Mobile-Konzept.md | Mobile PWA |
-| MultiUserKonzept.md | Multi-User / Sync |
-| DatenarchitekturSync.md | Datenklassifizierung, Sync-Konzept, User/Rollen, Outbox/Inbox, Snapshots (4-Runden Cross-Review) |
-| ModuleAktivierungLizenzierung.md | Lizenzierung |
-| ModuleOrdnerSync.md | Ordner-Sync (Firmenserver ↔ OneDrive, bidirektional) |
+### Multi-User / Sync
+- Primary: `Docs/Konzepte/MultiUserKonzept.md`
 
-### Docs/Module/ — Implementierte Module
+### Lizenzierung
+- Primary: `Docs/Konzepte/ModuleAktivierungLizenzierung.md`
 
-| Datei | Status |
-|-------|--------|
-| ModuleProjekt.md | Implementiert (v0.16.x) |
-| ModuleDevTools.md | Implementiert (v0.16.x) |
-| PlanManager.md | V1 Kernmodul, 21 Kapitel, v2.0 nach ChatGPT Cross-Review |
+### DSGVO / Datenschutz / externe Kommunikation
+- Primary: `Docs/Kern/DSVGO-Architektur.md`
+
+### Ordner-Sync
+- Primary: `Docs/Konzepte/ModuleOrdnerSync.md`
 
 ---
 
-## 4. Code Entry Points
+## 2. Code Entry Points
 
-### src/BauProjektManager.App — WPF Shell
+### src/BauProjektManager.App
+- **App.xaml.cs** — DI-Setup, Startup. Bei neuen Services.
+- **MainWindow.xaml/.cs** — Shell, Navigation. Bei neuen Views.
+- **SetupDialog.xaml/.cs** — Ersteinrichtung.
+- **Themes/** — Colors, Buttons, DataGrid, Dialogs, Icons, TreeView, Typography.
 
-- **App.xaml.cs** — DI-Setup, Startup, alle Service-Registrierungen. MUSS laden bei neuen Services, Dialogen, DI-Änderungen.
-- **MainWindow.xaml/.cs** — Shell, Navigation, Tab-Steuerung. Laden bei neuen Views, Navigationseinträgen.
-- **SetupDialog.xaml/.cs** — Ersteinrichtung. Laden bei Setup-Änderungen.
-- **Themes/** — 7 ResourceDictionaries. MUSS laden bei neuen sichtbaren Controls, Dialog-Styling.
-  - Colors.xaml, Buttons.xaml, DataGrid.xaml, Dialogs.xaml, Icons.xaml, TreeView.xaml, Typography.xaml
-- **Referenz: DevToolsDialog.xaml/.cs** — Neustes Dialog-Muster (3-Tab, Theme-Tokens, Safety-Badges).
-- BpmConfirmDialog, BpmInfoDialog, BpmDialogService — Dialog-Infrastruktur.
+### src/BauProjektManager.Domain
+- **Interfaces/** — Service-Verträge.
+- **Models/** — Domain-Entities.
+- **Enums/** — Status-Enums.
 
-### src/BauProjektManager.Domain — Entities, Interfaces, Enums
+### src/BauProjektManager.Infrastructure
+- **Persistence/** — ProjectDatabase.cs (35KB), AppSettingsService, BpmManifestService, ProjectFolderService, RegistryJsonExporter.
 
-- **Interfaces/** — Service-Verträge. Zuerst laden bei neuen Services, DI-relevanten Änderungen.
-  - IDeveloperToolsService.cs, IDialogService.cs
-- **Models/** — Domain-Entities. Laden bei neuen Feldern, Validierung, DB-naher Fachlogik.
-  - Project.cs, Client.cs, Building.cs, BuildingLevel.cs, BuildingPart.cs
-  - ProjectLocation.cs, ProjectParticipant.cs, ProjectLink.cs, ProjectPaths.cs, ProjectTimeline.cs
-  - AppSettings.cs, BpmManifest.cs
-- **Models/PlanManager/** — PlanManager Domain-Modelle. Laden bei Parser/Profil/Import-Änderungen.
-  - FieldType.cs (Enum: 16 Bau-Felder + Custom)
-  - FileNameSegment.cs (Segment-Modell)
-  - ParsedFileName.cs (Parse-Ergebnis)
-  - IndexSourceType.cs (Enum: FileName, None, PlanHeader — ADR-045)
-- **Enums/** — Status-Enums. Laden bei Workflow- oder Status-Änderungen.
-  - ProjectStatus.cs
+### src/BauProjektManager.Settings
+- **SettingsViewModel.cs** (28KB) — Referenz MVVM.
+- **ProjectEditDialog.xaml/.cs** (je ~58KB, nur SUCHE/ERSETZE)
 
-### src/BauProjektManager.Infrastructure — Services, SQLite, Persistence
+### src/BauProjektManager.PlanManager
+- **Views/PlanManagerView.xaml/.cs** — Im Aufbau.
 
-- **Persistence/** — Service-Implementierungen + DB-Zugriff. Laden bei neuen Services oder DB-Änderungen.
-  - ProjectDatabase.cs (35KB, SQLite-Zugriff, groß → SUCHE/ERSETZE)
-  - AppSettingsService.cs (settings.json lesen/schreiben)
-  - BpmManifestService.cs (manifest.json, Projektverwaltung)
-  - ProjectFolderService.cs (Ordnerstruktur-Erstellung)
-  - RegistryJsonExporter.cs (registry.json für VBA-Kompatibilität)
-  - **Referenz: AppSettingsService.cs** — Sauberes Service-Pattern mit Serilog.
-- **Dev/** — Developer-only Services.
-  - DeveloperToolsService.cs — DB-Reset, Batch-Script-Generierung. Referenz für Debug-only Pattern.
+---
 
-### src/BauProjektManager.Settings — Einstellungen-Modul
+## 3. Referenzimplementierungen
 
-- **ViewModels/SettingsViewModel.cs** (28KB) — Referenz für MVVM mit CommunityToolkit.Mvvm, 5-Tab-Dialog.
-- **Views/** — Referenz für modulare Tab-Dialog-Struktur.
-  - SettingsView.xaml/.cs — 5-Tab-Hauptdialog. **Referenz für neue Modul-Views.**
-  - ProjectEditDialog.xaml/.cs (je ~58KB, sehr groß → nur SUCHE/ERSETZE)
-  - FolderTemplateControl.xaml/.cs — UserControl-Muster.
+| Datei | Referenz für |
+|-------|-------------|
+| DevToolsDialog.xaml/.cs | Dialog-Pattern |
+| SettingsView + SettingsViewModel | MVVM-Pattern |
+| AppSettingsService.cs | Service-Pattern |
 
-### src/BauProjektManager.PlanManager — Plan-Modul (V1-Kernfeature, im Aufbau)
+NICHT als Referenz: ProjectEditDialog.xaml.cs (Refactoring geplant)
 
-- **ViewModels/** — MVVM ViewModels. Laden bei neuen Commands, Bindings, Navigation.
-  - PlanManagerViewModel.cs — Projektliste, Eingangs-Zaehler, PlanProjectItem Wrapper.
-  - ProjectDetailViewModel.cs — Projektdetail, Eingangs-Info, GoBack-Navigation.
-  - ProfileWizardViewModel.cs — 5-Schritt Profil-Wizard (Datei, Segmente, Index, Zielordner, Erkennung). Helper-Klassen: FieldTypeOption, IndexSourceOption, HierarchyLevelOption, RecognitionSegment.
-- **Views/PlanManagerView.xaml/.cs** — Host: Projektliste + DetailHost ContentControl, DynamicResource.
-- **Views/ProjectDetailView.xaml/.cs** — Projektdetail: Toolbar + 3 Tabs (Profile, Manuell, Sync).
-- **Views/ProfileWizardDialog.xaml/.cs** — 5-Schritt Profil-Wizard (modal, 750x580). Converter: CountToVisInverse, CountToVisZero, InverseBool.
-- **Services/** — PlanManager-Logik. Laden bei Parser/Import/Profil-Änderungen.
-  - FileNameParser.cs — Segment-Splitting (ADR-022), statisch, keine Abhängigkeiten.
+---
+
+## 4. Risk Triggers → Modus Deep
+
+- Externe API / HTTP / Export
+- Personenbezogene Daten / DSGVO
+- Neue Tabelle / Schemaänderung
+- Neuer Dialog / View / Benutzerfluss
+- Neues Interface + Service
+- Änderungen in mehreren Projekten
+- DI betroffen UND nicht rein lokal
 
 ---
 
 ## 5. Cross-Cutting Anchors
 
-Dateien die nicht modulär sind, sondern immer querliegend relevant.
-
 | Datei | Querschnitt |
 |-------|-------------|
-| App.xaml.cs | DI, Startup, Service-Registrierung — bei JEDEM neuen Service |
-| DSVGO-Architektur.md | Externe Kommunikation, Klassifikation — bei JEDER externen Verbindung |
-| Architektur-Doc | Schichtgrenzen, Modulzuordnung — bei jeder neuen Klasse |
-| Themes/Colors.xaml + Buttons.xaml | Visuelle Konsistenz — bei jedem neuen UI-Element |
-| DB-SCHEMA.md | Datenstruktur — bei jeder Persistenzänderung |
+| App.xaml.cs | DI — bei jedem neuen Service |
+| DSVGO-Architektur.md | Externe Verbindungen |
+| Architektur-Doc | Schichtgrenzen |
+| Themes/Colors+Buttons | Visuelle Konsistenz |
+| DB-SCHEMA.md | Persistenzänderungen |
 
 ---
 
-## 6. Referenzimplementierungen
+## 6. Doc-Pflege Policy
 
-Diese Dateien sind "gute Vorbilder" — bevorzugt als Muster verwenden.
-
-| Datei | Referenz für |
-|-------|-------------|
-| DevToolsDialog.xaml/.cs | Neustes Dialog-Pattern (Theme-Tokens, 3-Tab, Safety) |
-| SettingsView.xaml/.cs + SettingsViewModel.cs | MVVM-Pattern, 5-Tab-Dialog, CommunityToolkit |
-| AppSettingsService.cs | Service-Pattern mit Serilog, JSON, Fehlerbehandlung |
-| DeveloperToolsService.cs | Debug-only Service, Batch-Script, Interface-Pattern |
-
-**NICHT als Referenz verwenden:**
-- ProjectEditDialog.xaml.cs (58KB, historisch gewachsen, Refactoring geplant)
-
----
-
-## 7. Risk Triggers
-
-Wenn eine Anfrage eines davon enthält → mindestens Modus **Deep** verwenden.
-
-- Externe API / HTTP / Datei-Export
-- Personenbezogene Daten / DSGVO
-- Neue Tabelle / Schemaänderung / SQLite-Migration
-- Neuer Dialog / neue View / neuer Benutzerfluss
-- Neues Interface + neue Service-Implementierung
-- Änderungen in mehr als einem Projekt (z.B. Domain + Infrastructure + App)
-- DI-Registrierung betroffen UND fachliche Änderung nicht rein lokal
-
----
-
-## 8. Doc-Pflege Policy
-
-Wann welche Begleitdokumente mitgepflegt werden müssen.
-
-| Trigger | Pflicht-Docs aktualisieren |
-|---------|---------------------------|
-| Neues Modul-Doc erstellt | INDEX.md (neuer Routing-Eintrag) |
-| Neue Tabelle / DB-Änderung | DB-SCHEMA.md, INDEX.md |
+| Trigger | Aktion |
+|---------|--------|
+| Neues Doc | INDEX.md Routing + Frontmatter prüfen |
+| Neue Tabelle | DB-SCHEMA.md |
 | Neues Feature fertig | CHANGELOG.md |
-| Neue Architekturentscheidung | ADR.md, INDEX.md (falls neuer Entry Point) |
-| Neuer zentraler Code-Einstiegspunkt | INDEX.md (Code Entry Points) |
-| Neue externe Abhängigkeit | DEPENDENCY-MAP.md, ggf. ADR.md |
-| Neue Referenzimplementierung | INDEX.md (Referenzimplementierungen) |
-| Konzept wesentlich geändert | BACKLOG.md prüfen |
-| Neues Modul implementiert | Docs/Module/ (neues Doc), INDEX.md |
+| Neue Architekturentscheidung | ADR.md |
+| Neuer Code-Entry-Point | INDEX.md |
+| Neue Abhängigkeit | DEPENDENCY-MAP.md |
+| Konzept geändert | BACKLOG.md prüfen |
+| Doc geändert | Frontmatter + Quickload prüfen |

@@ -376,13 +376,13 @@ public class Building
 
 public class ProjectPaths
 {
-    public string Root { get; set; }                  // Absoluter Pfad
-    public string Plans { get; set; }                 // "Pläne" (relativ zu Root)
-    public string Inbox { get; set; }                 // "Pläne\_Eingang"
-    public string Photos { get; set; }                // "Fotos"
-    public string Documents { get; set; }             // "Dokumente"
-    public string Protocols { get; set; }             // "Protokolle"
-    public string Invoices { get; set; }              // "Rechnungen"
+    public string Root { get; set; }                  // Absoluter Pfad (→ wird durch ADR-049 zu berechnetem Pfad)
+    public string Plans { get; set; }                 // z.B. "01 Planunterlagen" (aus FolderTemplate, relativ zu Root)
+    public string Inbox { get; set; }                 // z.B. "01 Planunterlagen\_Eingang"
+    public string Photos { get; set; }                // z.B. "02 Fotos"
+    public string Documents { get; set; }             // z.B. "03 Dokumente"
+    public string Protocols { get; set; }             // z.B. "04 Protokolle"
+    public string Invoices { get; set; }              // z.B. "05 Rechnungen"
 }
 
 public class Client

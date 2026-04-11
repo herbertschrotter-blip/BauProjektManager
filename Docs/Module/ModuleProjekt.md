@@ -208,13 +208,13 @@ Vorbereitet für späteres Adressbuch und Outlook-Sync. Aktuell eingebettet im P
 
 | Property | Typ | Default |
 |----------|-----|---------|
-| `Root` | `string` | (leer, wird beim Anlegen gesetzt) |
-| `Plans` | `string` | "Pläne" |
-| `Inbox` | `string` | "Pläne\\_Eingang" |
-| `Photos` | `string` | "Fotos" |
-| `Documents` | `string` | "Dokumente" |
-| `Protocols` | `string` | "Protokolle" |
-| `Invoices` | `string` | "Rechnungen" |
+| `Root` | `string` | (leer, wird beim Anlegen gesetzt — ADR-049: wird zu berechnetem Pfad) |
+| `Plans` | `string` | Aus FolderTemplate, z.B. "01 Planunterlagen" |
+| `Inbox` | `string` | Aus FolderTemplate, z.B. "01 Planunterlagen\\_Eingang" |
+| `Photos` | `string` | Aus FolderTemplate, z.B. "02 Fotos" |
+| `Documents` | `string` | Aus FolderTemplate, z.B. "03 Dokumente" |
+| `Protocols` | `string` | Aus FolderTemplate, z.B. "04 Protokolle" |
+| `Invoices` | `string` | Aus FolderTemplate, z.B. "05 Rechnungen" |
 
 ---
 

@@ -1,7 +1,49 @@
+---
+doc_id: architektur
+doc_type: architecture
+authority: source_of_truth
+status: active
+owner: herbert
+topics: [architektur, solution-struktur, speicherstrategie, registry, betriebsmodi, v1-scope]
+read_when: [neues-modul, schichtgrenzen, di-setup, speicherort, registry-änderung]
+related_docs: [db-schema, dsvgo-architektur, coding-standards, backlog, planmanager]
+related_code: [src/BauProjektManager.App/App.xaml.cs, src/BauProjektManager.Domain/, src/BauProjektManager.Infrastructure/Persistence/]
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Systemarchitektur, Speicherstrategie, Solution-Struktur und V1-Scope des BPM
+- Autorität: source_of_truth
+- Lesen wenn: Neues Modul, Schichtgrenzen prüfen, DI-Setup, Speicherort klären, Registry-Änderung
+- Nicht zuständig für: DB-Schema-Details (→ DB-SCHEMA.md), Datenschutz-Regeln (→ DSVGO-Architektur.md), Code-Style (→ CODING_STANDARDS.md), PlanManager-Fachlogik (→ PlanManager.md)
+- Kapitel:
+  - 1. Vision & Übersicht
+  - 2. Speicherstrategie
+  - 3. Zentrale Projekt-Registry
+  - 4. PlanManager — Überblick
+  - 5. Solution-Struktur
+  - 6. Technische Entscheidungen
+  - 7. Betriebsmodi
+  - 8. V1-Scope & Roadmap
+  - 9. Coding Standards + Definition of Done
+  - 10. Alle Config-Dateien — Übersicht
+- Pflichtlesen:
+  - Kapitel 2 (Speicherstrategie) bei jeder Persistenz-Änderung
+  - Kapitel 5 (Solution-Struktur) bei neuem Service/Interface/Projekt
+  - Kapitel 3.4 (VBA-Kompatibilitäts-Regeln) bei registry.json-Änderung
+- Fachliche Invarianten:
+  - SQLite ist System of Record — JSON ist generierter Export
+  - Dependency-Regel: Domain→NICHTS, Infrastructure→nur Domain, App→alles
+  - registry.json ist versionierter Exportvertrag — Felder entfernen ist Breaking Change
+  - Modularer Monolith — feste DI-Registrierung, kein Plugin-System (ADR-001)
+  - Offline-first — keine Cloud-Services, kein Abo
+
+---
+
 ﻿# BauProjektManager — Architektur & Spezifikation
 
-**Version:** 2.2.0  
-**Datum:** 10.04.2026  
+**Version:** 3.0.0  
+**Datum:** 11.04.2026  
 **Sprache:** C# (.NET 10 LTS), WPF (XAML), MVVM  
 **Frameworks:** CommunityToolkit.Mvvm, Serilog, ClosedXML, PdfPig, QuestPDF  
 **Basis:** v1.4 + Phase 0/1 Implementierung + Herberts Feedback + Docs-Reorganisation  
@@ -447,243 +489,29 @@ Beim Anlegen eines neuen Projekts erstellt BPM automatisch die Ordnerstruktur:
 
 ---
 
-## 4. PlanManager — Kernfunktionen
+## 4. PlanManager — Überblick
 
-### 4.1 Workflow-Übersicht
+Der PlanManager ist das Kernfeature von BPM. Er sortiert Dokumente aus dem `_Eingang/`-Ordner
+automatisch in die richtige Ordnerstruktur — mit Index-Versionierung, Undo-Journal, anlernbaren
+Profilen und manuellem Sortier-Modus.
 
-```
-1. Projekt aus Registry laden (oder neues anlegen)
-2. Plantyp-Profil erstellen (Muster anlernen — mit Vorschlägen)
-3. Pläne in _Eingang werfen (manuell / Outlook / Portal)
-4. Import starten → 10-Schritte-Workflow → Bestätigen
-5. Pläne werden automatisch einsortiert
-```
+**Vollständige Dokumentation:** [PlanManager.md](../Module/PlanManager.md)
 
-### 4.2 Plan-Dateien: Flexibles Modell
-
-Ein Plan (Revision) besteht aus **1 bis n Dateien**. Kein festes PDF/DWG-Paar. (ADR-007)
-
-```
-PlanRevision (z.B. "S-103, Index D")
-├── PlanFile: S-103-D_TG Wämde.pdf         (Typ: PDF)
-├── PlanFile: S-103-D_TG Wämde.dwg         (Typ: DWG)
-└── (optional weitere)
-```
-
-Dateien werden über den gemeinsamen Dateinamen-Stamm (ohne Extension) zusammengeführt. Fehlende PDF oder DWG ist KEIN Fehler.
-
-### 4.3 Sammelordner (Briefkasten)
-
-- Fester `_Eingang/` pro Projekt unter `Pläne/`
-- Quellen: Email (manuell oder Outlook-VBA), Portal-Download, USB, manuell
-- Nach Import: Dateien werden **verschoben** (Eingang wird leer)
-- Beim App-Start: Prüfe alle Eingänge → Benachrichtigung
-
-### 4.4 Index-Versionierung
-
-| Situation | Aktion |
-|-----------|--------|
-| Neuer Plan (Nummer existiert nicht) | Einsortieren in Zielordner |
-| Neuer Index (z.B. C→D) | Alle Dateien des alten Index → `_Archiv/`, neue an Stelle |
-| Gleicher Index, geänderte Datei (MD5 anders) | Überschreiben (kein Archiv) |
-| Gleicher Index, identische Datei (MD5 gleich) | Überspringen |
-| Leerer Index | User definiert pro Projekt Bedeutung |
-
-### 4.5 Bestandsverwaltung
-
-- **Hybrid:** Filesystem-Scan + SQLite-Cache
-- **MD5-Hash** für exakten Dateivergleich
-- **Cache-Rebuild:** Auf neuem Gerät baut sich Cache beim ersten Scan automatisch aus Dateisystem (OneDrive) auf
-- **Import-History:** Wann, was, wohin (für Rückgängig) in SQLite
+Dort dokumentiert:
+- Workflow (5 Phasen), Import-Analyse, Entscheidungsmatrix (9 Status-Typen)
+- Dateinamen-Parsing (Segment-basiert, ADR-022), Feldtypen, Ordner-Hierarchie
+- Profil-System (RecognitionProfiles + PatternTemplates, ADR-010)
+- IndexSource-Modell (FileName / None / PlanHeader, ADR-045)
+- Undo-Journal (3 SQLite-Tabellen), Recovery, Preflight
+- Manueller Sortier-Modus + Umbenennung
+- Bestandsmanifest (`_plan_index.json`), Cache-Rebuild
+- DB-Schema (planmanager.db, 6 Tabellen)
+- Planlisten Import/Export (V1.1)
+- Solution-Struktur + Implementierungsreihenfolge
 
 ---
 
-## 5. PlanManager — Dateinamen-Parsing
-
-### 5.1 Hybrid-Mechanismus
-
-1. **Segmente:** Dateiname an Trennzeichen splitten → klickbare Blöcke in der GUI (ADR-022)
-2. **Zeichen-Level:** Fallback per Toggle-Button für Feinauswahl innerhalb eines Segments
-
-### 5.2 Praxis-Beispiele
-
-```
-Screen 1 (Polierplan):
-  "S-103-C_TG Wämde-Stützen-Träg + Decke ü.TG Grundriss.pdf"
-  Split [-_]: [S] [103] [C] [TG Wämde-Stützen-Träg + Decke ü.TG Grundriss]
-  Zuweisung:  Pref  Nr   Idx  Bezeichnung
-
-Screen 2 (Schalungsplan):
-  "5998-003_Wände_KG_Teil_1.pdf"
-  Split [-_]: [5998] [003] [Wände] [KG] [Teil] [1]
-  Zuweisung:  ProjNr  Nr   Objekt Gesch  ign  Idx
-
-Screen 3 (Architekturplan):
-  "21005_104_AP_H1_GR_E2_05_Grundriss E+2.pdf"
-  Split [_]:  [21005] [104] [AP] [H1] [GR] [E2] [05] [Grundriss E+2]
-  Zuweisung:  ProjNr   Nr   Typ  Haus Plan Gesch Idx  Bezeichnung
-```
-
-### 5.3 Verfügbare Feld-Typen
-
-**Pflicht:** `planNumber`, `planIndex`
-
-**System-Felder:** `projectNumber`, `description`, `ignore`
-
-**Bau-spezifische Felder (vordefiniert):**
-
-| Feld-ID | Anzeigename | Beispiel |
-|---------|------------|---------|
-| `geschoss` | Geschoß/Ebene | EG, 1.OG, KG, E+2 |
-| `haus` | Haus/Gebäude | H1, Haus 2, Nr. 64 |
-| `planart` | Planart | GR (Grundriss), SC (Schnitt) |
-| `objekt` | Objekt | Wände, Decke, Stützen |
-| `bauteil` | Bauteil | Bauteil B-13 |
-| `bauabschnitt` | Bauabschnitt | BA1, BA2 |
-| `stiege` | Stiege/Trakt | Stiege 1, Trakt A |
-| `achse` | Achse/Raster | Achse A-C |
-| `zone` | Zone | Zone Nord |
-| `block` | Block | Block A |
-
-**Benutzerdefiniert:** User kann jederzeit neue Feld-Namen erstellen. Werden dauerhaft gespeichert.
-
-### 5.4 Ordner-Hierarchie
-
-- **Plantyp** IMMER Ebene 1 (fix, nicht abwählbar)
-- Darunter: User wählt per Checkbox welche Felder Ordner-Ebenen werden
-- Reihenfolge frei sortierbar (↑↓ Pfeile)
-- Wird beim Profil-Erstellen festgelegt, nur bei Neuerstellung änderbar
-
-### 5.5 Plantyp-Erkennung
-
-- Automatisch per gespeichertem Muster
-- **Methoden:** `prefix` (beginnt mit), `contains` (enthält), `regex` (komplex)
-- **Mehrere Muster pro Profil** → Profil "lernt" mit der Zeit
-- **Konflikt:** Spezifischeres Muster gewinnt. Bei Gleichstand → User-Dialog
-
-### 5.6 Vorschlags- und Profil-System
-
-| Konzept | Zweck | Gespeichert | Wann erstellt |
-|---------|-------|-------------|---------------|
-| **RecognitionProfile** | Verbindlich pro Projekt/Plantyp | `profiles.json` (OneDrive, pro Projekt) | Beim Anlernen |
-| **PatternTemplate** | Vorschlag aus Musterbibliothek | `pattern-templates.json` (OneDrive, global) | Automatisch nach jedem Profil |
-
-(ADR-010)
-
----
-
-## 6. PlanManager — Import-Workflow (10 Schritte)
-
-### 6.1 Übersicht
-
-| # | Schritt | Was passiert | User sieht |
-|---|---------|-------------|-----------|
-| 1 | **Scan** | `_Eingang` durchsuchen | Nein |
-| 2 | **Parse** | Dateinamen in Segmente splitten | Nein |
-| 3 | **Validate** | Profil vorhanden? Pflichtfelder? | Nein |
-| 4 | **Classify** | Plantyp erkennen, Status bestimmen | Nein |
-| 5 | **Plan** | Zielpfad berechnen, Dateien gruppieren (1..n) | Nein |
-| 6 | **Preview** | Ergebnis anzeigen, User kann korrigieren | **JA** |
-| 7 | **Execute** | Journal → Dateien verschieben → Cache | Fortschritt |
-| 8 | **Finalize** | Journal "completed", Eingang aufräumen | Nein |
-| 9 | **Recover** | Beim App-Start: pending → Reparatur anbieten | Nur bei Bedarf |
-| 10 | **Undo** | Journal rückwärts, Dateien zurück | Auf Knopfdruck |
-
-(ADR-008, ADR-009)
-
----
-
-## 7. PlanManager — Undo-Journal (SQLite)
-
-### 3 Tabellen
-
-```sql
-CREATE TABLE import_journal (
-    id TEXT PRIMARY KEY,                -- ULID
-    timestamp TEXT NOT NULL,
-    completed_at TEXT,
-    status TEXT NOT NULL,               -- "pending", "completed", "failed", "undone"
-    source_path TEXT NOT NULL,
-    file_count INTEGER NOT NULL,
-    profile_id TEXT,
-    machine_name TEXT,
-    error_message TEXT
-);
-
-CREATE TABLE import_actions (
-    id TEXT PRIMARY KEY,                -- ULID
-    import_id TEXT NOT NULL,
-    action_order INTEGER NOT NULL,
-    action_type TEXT NOT NULL,          -- "new", "indexUpdate", "overwrite", "skip"
-    action_status TEXT NOT NULL,        -- "pending", "completed", "failed"
-    started_at TEXT,
-    completed_at TEXT,
-    plan_number TEXT NOT NULL,
-    plan_index TEXT,
-    old_index TEXT,
-    destination_path TEXT NOT NULL,
-    archive_path TEXT,
-    error_message TEXT,
-    FOREIGN KEY (import_id) REFERENCES import_journal(id)
-);
-
-CREATE TABLE import_action_files (
-    id TEXT PRIMARY KEY,                -- ULID
-    action_id TEXT NOT NULL,
-    file_name TEXT NOT NULL,
-    file_type TEXT NOT NULL,            -- "pdf", "dwg", "other"
-    source_path TEXT NOT NULL,
-    destination_path TEXT NOT NULL,
-    md5_hash TEXT,
-    file_size INTEGER,
-    FOREIGN KEY (action_id) REFERENCES import_actions(id)
-);
-```
-
-(ADR-009)
-
----
-
-## 8. Planlisten (V1.1)
-
-### 8.1 Import
-
-**Formate:** Excel (.xlsx), CSV. PDF (Best Effort mit PdfPig) → nach V1.
-
-**Spalten-Zuordnung:** Angelernt pro Plantyp. User weist Spalten den Feldern zu.
-
-**Abgleich-Ergebnis:**
-
-| Status | Symbol | Bedeutung |
-|--------|--------|-----------|
-| Aktuell | ✅ | Index stimmt überein |
-| Veraltet | ⚠️ | User hat älteren Index |
-| Fehlend | ❌ | In Planliste aber nicht im Bestand |
-| Extra | ℹ️ | Im Bestand aber nicht in Planliste |
-
-### 8.2 Export
-
-- Plantypen wählen (Checkboxen)
-- Spalten wählen (Checkboxen)
-- Format: Excel (.xlsx via ClosedXML) oder PDF (via QuestPDF)
-
----
-
-## 9. GUI-Mockups
-
-Umfangreiche GUI-Mockups für alle Dialoge sind in der Architektur v1.4 enthalten und bleiben gültig. Zusammenfassung der wichtigsten Screens:
-
-- **Shell** — Sidebar-Navigation + ContentFrame + Statusleiste
-- **Einstellungen** — 2-Tab-Seite (Projekte+Pfade, Standard-Ordnerstruktur) mit Status-Farbpunkten
-- **ProjectEditDialog** — 2-Spalten Layout (1050×780): links Projektdaten, rechts Ordner-TreeView
-- **PlanManager Projektdetail** — Plantyp-Übersicht mit Status und Import-Button
-- **Plantyp-Wizard** — 3-Schritt-Wizard (Typ wählen, Muster, Ordner)
-- **Import-Vorschau** — Tabelle mit Status-Icons, Rechtsklick-Korrektur
-- **Planlisten Import/Export** — Spalten-Zuordnung, Soll/Ist-Abgleich, Druckoptionen
-
----
-
-## 10. Solution-Struktur (implementiert)
+## 5. Solution-Struktur (implementiert)
 
 ```
 BauProjektManager.sln
@@ -784,7 +612,7 @@ Detailliertes Dependency-Diagramm: siehe [DEPENDENCY-MAP.md](DEPENDENCY-MAP.md).
 
 ---
 
-## 11. Technische Entscheidungen
+## 6. Technische Entscheidungen
 
 Vollständige Liste aller 42 Architekturentscheidungen mit Kontext, Alternativen und Konsequenzen: siehe [ADR.md](../Referenz/ADR.md).
 
@@ -822,7 +650,7 @@ Zusammenfassung der wichtigsten Entscheidungen:
 
 ---
 
-## 12. Betriebsmodi
+## 7. Betriebsmodi
 
 | Modus | Beschreibung | RBAC | Datenschutz-Besonderheiten |
 |-------|-------------|------|---------------------------|
@@ -834,7 +662,7 @@ Zusammenfassung der wichtigsten Entscheidungen:
 
 ---
 
-## 13. V1-Scope & Roadmap
+## 8. V1-Scope & Roadmap
 
 ### V1 Phase 1 — Einstellungen (✅ größtenteils erledigt)
 
@@ -881,7 +709,7 @@ Detaillierte Feature-Liste mit Status: siehe [BACKLOG.md](BACKLOG.md).
 
 ---
 
-## 13. Coding Standards + Definition of Done
+## 9. Coding Standards + Definition of Done
 
 ### V1-Pflicht Standards
 
@@ -914,7 +742,7 @@ Bevor ein Feature als "fertig" gilt:
 
 ---
 
-## 14. Alle Config-Dateien — Übersicht
+## 10. Alle Config-Dateien — Übersicht
 
 | Datei | Ort | Format | Zweck | Erstellt von |
 |-------|-----|--------|-------|-------------|
@@ -931,7 +759,7 @@ Bevor ein Feature als "fertig" gilt:
 
 ---
 
-*Dokument Version 2.2.0 — 10.04.2026*
+*Dokument Version 3.0.0 — 11.04.2026*
 
 *Kernänderungen v2.1.0 → v2.2.0:*
 - *Kapitel 2.4: .bpm-manifest → .bpm/ Ordner in Projektordner-Diagramm*
@@ -972,3 +800,12 @@ Bevor ein Feature als "fertig" gilt:
 - *Kapitel 10: Konzepte/ModuleKiAssistent.md hinzugefügt*
 - *Kapitel 11: ADR-024 bis ADR-027 verlinkt*
 - *Kapitel 12: KI-Assistent in Nach-V1 Prio-Liste*
+
+*Kernänderungen v2.2.0 → v3.0.0 (Docs-Refactoring auf Quickload):*
+- *Frontmatter + AI-Quickload-Block ergänzt (DOC-STANDARD.md)*
+- *Kapitel 4–8 (PlanManager-Fachlogik) ausgelagert → PlanManager.md (Inhalt war dort bereits vollständig)*
+- *Kapitel 9 (GUI-Mockups) entfernt — Verweis auf PlanManager.md Kap. 15*
+- *Kapitel 4 neu: PlanManager — Überblick (Kurzverweis auf PlanManager.md)*
+- *Doppelte Kapitelnummer 13 aufgelöst*
+- *Kapitelnummern neu: 5=Solution, 6=Entscheidungen, 7=Betriebsmodi, 8=Roadmap, 9=Coding Standards, 10=Config-Dateien*
+- *Planlisten-Details (Spalten-Zuordnung, Abgleich-Ergebnis, Export) nach PlanManager.md Kap. 19.1 ergänzt*

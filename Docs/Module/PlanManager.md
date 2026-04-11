@@ -1,3 +1,56 @@
+---
+doc_id: planmanager
+doc_type: module
+authority: source_of_truth
+status: active
+owner: herbert
+topics: [planmanager, import, profil, parsing, undo, versionierung, index, sortierung]
+read_when: [planmanager-feature, import-workflow, profil-anlernen, dateinamen-parsing, undo-journal]
+related_docs: [architektur, db-schema, dsvgo-architektur, ui-ux-guidelines, wpf-ui-architecture]
+related_code: [src/BauProjektManager.PlanManager/, src/BauProjektManager.Domain/Models/, src/BauProjektManager.Infrastructure/Persistence/]
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Modul-Dokumentation für den PlanManager — Kern-Feature von BPM
+- Autorität: source_of_truth
+- Lesen wenn: PlanManager-Feature, Import-Workflow, Profil anlernen, Dateinamen-Parsing, Undo-Journal
+- Nicht zuständig für: Allgemeine Architektur (→ Architektur.md), DB-Schema-Details (→ DB-SCHEMA.md), UI-Tokens (→ UI_UX_Guidelines.md)
+- Kapitel:
+  - 1. Zweck
+  - 2. Datenschutz-Einordnung (DSGVO)
+  - 3. Konzeptübersicht
+  - 4. IndexSource — Dreistufiges Modell (ADR-045)
+  - 5. Entscheidungsmatrix (Import-Versionierung)
+  - 6. Workflow — 5 Phasen
+  - 7. Manueller Sortier-Modus
+  - 8. DWG-Veraltet-Warnung
+  - 9. Bestandsmanifest — _plan_index.json
+  - 10. Datenbank-Schema (planmanager.db)
+  - 11. Undo-System
+  - 12. MD5 als universeller Fingerabdruck
+  - 13. Dateinamen-Parsing (ADR-022)
+  - 14. Profil-System (ADR-010)
+  - 15. UI-Screens
+  - 16. Solution-Struktur
+  - 17. Implementierungsreihenfolge
+  - 18. Verwandte ADRs
+  - 19. Post-V1 Erweiterungen
+  - 20. Implementierungs-Disziplinen
+  - 21. Verwandte Konzepte
+- Pflichtlesen:
+  - Kapitel 5 (Entscheidungsmatrix) bei Import-Logik
+  - Kapitel 10 (DB-Schema) bei Persistenz-Änderung
+  - Kapitel 14 (Profil-System) bei Profil-Feature
+- Fachliche Invarianten:
+  - document_key über identityFields — nie nur plan_number allein
+  - Import-Journal VORHER schreiben (pending) — erst dann Dateien verschieben
+  - MD5 + file_size IMMER Pflicht — auch bei IndexSource=FileName
+  - Alle Pfade im Journal relativ zum Projektordner
+  - Undo nur letzter Import + Preflight-Prüfung (Trockenlauf)
+
+---
+
 # BauProjektManager — PlanManager (Modul-Dokumentation)
 
 **Version:** 2.0
@@ -694,6 +747,26 @@ BauProjektManager.PlanManager/
 | Batch-Umbenennung | FileRenamer + eigene rename_history Tabelle | Niedrig |
 | DB-Sync (planmanager.db über Cloud) | Event-Sync ADR-037 | Post-V1 |
 | IndexComparison numeric/natural | indexComparison Policy | Bei Bedarf |
+
+### 19.1 Planlisten Import/Export (V1.1 — Details)
+
+**Import-Formate:** Excel (.xlsx), CSV. PDF (Best Effort mit PdfPig) → Post-V1.
+
+**Spalten-Zuordnung:** Angelernt pro Plantyp. User weist Spalten den Feldern zu.
+
+**Abgleich-Ergebnis:**
+
+| Status | Symbol | Bedeutung |
+|--------|--------|-----------|
+| Aktuell | ✅ | Index stimmt überein |
+| Veraltet | ⚠️ | User hat älteren Index |
+| Fehlend | ❌ | In Planliste aber nicht im Bestand |
+| Extra | ℹ️ | Im Bestand aber nicht in Planliste |
+
+**Export:**
+- Plantypen wählen (Checkboxen)
+- Spalten wählen (Checkboxen)
+- Format: Excel (.xlsx via ClosedXML) oder PDF (via QuestPDF)
 
 ---
 

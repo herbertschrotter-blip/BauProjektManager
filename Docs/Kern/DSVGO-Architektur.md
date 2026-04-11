@@ -1,3 +1,41 @@
+---
+doc_id: dsvgo-architektur
+doc_type: policy
+authority: source_of_truth
+status: active
+owner: herbert
+topics: [dsgvo, datenschutz, privacy, datenklassifizierung, external-communication, iprivacypolicy, audit-log]
+read_when: [externe-api, personendaten, neues-modul-online, registry-export, logging-personendaten]
+related_docs: [architektur, coding-standards, db-schema]
+related_code: [src/BauProjektManager.Domain/Enums/DataClassification.cs, src/BauProjektManager.Domain/Privacy/IPrivacyPolicy.cs, src/BauProjektManager.Infrastructure/Communication/]
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Verbindlicher Datenschutz-Architekturstandard für alle Module und externe Anbindungen
+- Autorität: source_of_truth
+- Lesen wenn: Externe API, Personendaten verarbeiten, neues Online-Modul, Registry-Export, Logging mit Personenbezug
+- Nicht zuständig für: Code-Style-Regeln (→ CODING_STANDARDS.md Kap. 17), DB-Schema (→ DB-SCHEMA.md)
+- Kapitel:
+  - 1. Ziel & Geltungsbereich
+  - 2. Kernprinzipien (PFLICHT)
+  - 3. Datenklassifizierung
+  - 4. Architektur-Übersicht
+  - 5. Datenfluss-Architektur
+  - 6–19. (Details: IExternalCommunicationService, IPrivacyPolicy, Audit-Log, registry.json Whitelist, Betriebsmodi, Löschkonzept, DSFA, Compliance-Checkliste)
+- Pflichtlesen:
+  - Kapitel 2 (Kernprinzipien) bei JEDEM externen API-Call
+  - Kapitel 3 (Datenklassifizierung) bei neuem Datentyp
+  - Kapitel 9.3 (registry.json Whitelist) bei Registry-Änderung
+- Fachliche Invarianten:
+  - Keine Personendaten in Serilog-Logs — nur IDs
+  - Kein direkter HttpClient — alles über IExternalCommunicationService (ADR-035)
+  - DataClassification (ClassA/B/C) bei jedem externen Call
+  - registry.json nur Whitelist-Felder
+  - IPrivacyPolicy über Lizenz gesteuert, nicht settings.json (ADR-036)
+
+---
+
 ﻿# BauProjektManager — DSGVO-Architektur & Privacy Engineering
 
 **Version:** 1.4  

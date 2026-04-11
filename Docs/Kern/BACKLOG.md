@@ -1,3 +1,29 @@
+---
+doc_id: backlog
+doc_type: backlog
+authority: source_of_truth
+status: active
+owner: herbert
+topics: [features, roadmap, v1-scope, planmanager, post-v1, bugs]
+read_when: [neues-feature, feature-status, priorität-klären, was-kommt-als-nächstes]
+related_docs: [architektur, planmanager, changelog]
+related_code: []
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Feature-Liste mit Status, Prioritäten und V1-Scope für das gesamte BPM-Projekt
+- Autorität: source_of_truth
+- Lesen wenn: Neues Feature planen, Feature-Status prüfen, Priorität klären, nächsten Schritt bestimmen
+- Nicht zuständig für: Versionshistorie (→ CHANGELOG.md), Architektur-Details (→ Architektur.md)
+- Pflichtlesen: keine (freie Struktur)
+- Fachliche Invarianten:
+  - V1-Scope: NUR PlanManager + Einstellungen — alles andere ist Post-V1
+  - Feature-Nummern fortlaufend, nie wiederverwenden
+  - Status-Werte: ✅ erledigt, ⬜ offen, 🔧 in Arbeit
+
+---
+
 ﻿# BauProjektManager — Backlog
 
 **Letzte Aktualisierung:** 10.04.2026  

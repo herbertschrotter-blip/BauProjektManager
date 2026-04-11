@@ -1,3 +1,53 @@
+---
+doc_id: coding-standards
+doc_type: policy
+authority: source_of_truth
+status: active
+owner: herbert
+topics: [naming, formatierung, mvvm, wpf, xaml, di, async, testing, json, sicherheit, git, performance, datenschutz]
+read_when: [neue-klasse, neuer-service, neues-viewmodel, code-review, xaml-erstellen, datenschutz-code]
+related_docs: [architektur, dsvgo-architektur, db-schema]
+related_code: [src/BauProjektManager.App/, src/BauProjektManager.Domain/, src/BauProjektManager.Settings/, src/BauProjektManager.PlanManager/]
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Verbindliche Code-Richtlinien für C#, WPF/XAML, MVVM, Git und Datenschutz im BPM-Projekt
+- Autorität: source_of_truth
+- Lesen wenn: Neue Klasse/Service/ViewModel, Code-Review, XAML erstellen, Datenschutz-relevanter Code
+- Nicht zuständig für: DB-Schema (→ DB-SCHEMA.md), Architektur-Entscheidungen (→ Architektur.md, ADR.md), Privacy-Architektur (→ DSVGO-Architektur.md)
+- Kapitel:
+  - 1. Namensgebung
+  - 2. Code-Formatierung
+  - 3. Klassen-Struktur
+  - 4. Variablen & Typen
+  - 5. Methoden
+  - 6. Error-Handling
+  - 7. MVVM Pattern (WPF-spezifisch)
+  - 8. Services & Dependency Injection
+  - 9. Dokumentation
+  - 10. XAML-Konventionen (WPF)
+  - 11. Async/Await
+  - 12. Testing
+  - 13. JSON-Konventionen (Registry & Config)
+  - 14. Sicherheit & Dateisystem
+  - 15. Git Commit Standards
+  - 16. Performance-Richtlinien
+  - 17. Datenschutz im Code (PFLICHT)
+  - 18. WPF Code-Behind Dialoge
+- Pflichtlesen:
+  - Kapitel 7 (MVVM) bei neuem ViewModel oder View
+  - Kapitel 10 (XAML) bei neuer XAML-Datei
+  - Kapitel 17 (Datenschutz) bei externem API-Call oder Personendaten
+- Fachliche Invarianten:
+  - Alle Farben über Theme-Tokens (StaticResource) — nie hardcoded Hex
+  - DynamicResource in Custom-Dialog-Windows (StaticResource → XamlParseException)
+  - Keine Business-Logik im Code-Behind — nur View-Logik
+  - Datenschutz-Entscheidungen nie im ViewModel — immer über IPrivacyPolicy
+  - Logging: Keine Personendaten, nur IDs (Serilog Structured Logging)
+
+---
+
 # BauProjektManager — Coding Standards
 
 **Version:** 1.0.0  

@@ -835,9 +835,10 @@ ULIDs sind nicht menschenlesbar. Die Lesbarkeit wird über fachliche Felder sich
 |-------|------------|-------------|----------------|
 | `settings.json` | Cloud .AppData/ | App-Einstellungen, Pfade, Listen | AppSettingsService |
 | `registry.json` | Cloud .AppData/ | Generierter VBA-Export (read-only für VBA) | RegistryJsonExporter |
-| `profiles.json` | Cloud .AppData/Projects/<P>/ | Plantyp-Profile pro Projekt | PlanManager |
+| `profiles/*.json` | Cloud Projektordner `.bpm/profiles/` (ADR-046) | Plantyp-Profile pro Projekt | PlanManager |
 | `pattern-templates.json` | Cloud .AppData/ | Globale Musterbibliothek | PlanManager |
-| `.bpm-manifest` | Cloud Projektordner | Versteckter Projekt-Ausweis | ProjectFolderService |
+| `.bpm/manifest.json` | Cloud Projektordner `.bpm/` (ADR-046) | Schlanker Projekt-Ausweis | ManifestService |
+| `.bpm/project.json` | Cloud Projektordner `.bpm/` (ADR-046) | Vollständiger Projektexport | ProjectExportService |
 
 ### Neue Datenarchitektur (DatenarchitekturSync.md)
 

@@ -196,7 +196,7 @@ SQLite ist die **einzige Wahrheitsquelle** für alle BPM-Kerndaten (Projekte, Pl
 | Projekt-Stammdaten | SQLite | Lokal `bpm.db` | Nein | C# | C# | Selten |
 | `registry.json` | JSON | Cloud-Speicher `.AppData/` | Ja | C# (auto) | VBA, C# | Bei Projekt-Änderung |
 | `settings.json` | JSON | Cloud-Speicher `.AppData/` | Ja | C# | C# | Selten |
-| `profiles.json` | JSON | Cloud-Speicher `.AppData/Projects/<P>/` | Ja | C# | C# | Beim Anlernen |
+| ~~`profiles.json`~~ | — | ~~`.AppData/Projects/<P>/`~~ → `.bpm/profiles/*.json` im Projektordner (ADR-046) | Ja | C# | C# | Beim Anlernen |
 | `pattern-templates.json` | JSON | Cloud-Speicher `.AppData/` | Ja | C# | C# | Beim Anlernen |
 | `templates.json` | JSON | Cloud-Speicher `.AppData/` | Ja | C# | C# | Selten |
 | Plan-Cache | SQLite | Lokal `planmanager.db` | Nein | C# | C# | Bei Scan/Import |
@@ -218,12 +218,7 @@ OneDrive/02Arbeit/
 │       ├── registry.json                      ← Generierter VBA-Export
 │       ├── settings.json                      ← App-Einstellungen
 │       ├── pattern-templates.json             ← Musterbibliothek
-│       ├── templates.json                     ← Vorlagen-Verzeichnis
-│       └── Projects/
-│           ├── 202512_OeWG-Dobl/
-│           │   └── profiles.json              ← Plantyp-Profile
-│           └── 202302_Kapfenberg/
-│               └── profiles.json
+│       └── templates.json                     ← Vorlagen-Verzeichnis
 │
 ├── Vorlagen/                                  ← Excel/Word Vorlagen
 │   ├── Excel/

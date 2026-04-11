@@ -641,7 +641,64 @@ CREATE TABLE project_shares (
 
 Pro Projekt eine eigene SQLite-DB. Liegt in `%LocalAppData%\BauProjektManager\Projects\<ProjektID>\planmanager.db`.
 
-### 6.1 import_journal
+**6 Tabellen:** 3 Plan-Revisions-Cache + 3 Import-Journal (PlanManager.md v2.0, Cross-Review 09.04.2026).
+
+### 6.1 plan_revisions (Cache)
+
+```sql
+CREATE TABLE plan_revisions (
+    id TEXT PRIMARY KEY,                -- ULID
+    document_key TEXT NOT NULL,         -- aus identityFields: "Polierplan_103_H5"
+    plan_number TEXT NOT NULL,
+    plan_index TEXT,                    -- NULL bei Erstausgabe / IndexSource=None
+    document_type TEXT NOT NULL,
+    target_folder TEXT NOT NULL,
+    relative_directory TEXT NOT NULL,
+    index_source TEXT NOT NULL,         -- "FileName", "None", "PlanHeader"
+    revision_status TEXT NOT NULL,      -- "current", "archived"
+    last_import_id TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+CREATE UNIQUE INDEX ux_plan_revision_current
+ON plan_revisions(document_key, revision_status)
+WHERE revision_status = 'current';
+```
+
+### 6.2 plan_files (Cache)
+
+```sql
+CREATE TABLE plan_files (
+    id TEXT PRIMARY KEY,                -- ULID
+    file_name TEXT NOT NULL,
+    relative_path TEXT NOT NULL,
+    file_type TEXT NOT NULL,            -- "pdf", "dwg", "jpg", "other"
+    md5_hash TEXT NOT NULL,             -- IMMER Pflicht (universeller Fingerabdruck)
+    file_size INTEGER NOT NULL,
+    origin_mode TEXT NOT NULL,          -- "autoGrouped", "manualLinked", "standalone"
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+```
+
+### 6.3 revision_file_links (n:m Verknüpfung)
+
+```sql
+CREATE TABLE revision_file_links (
+    revision_id TEXT NOT NULL,
+    file_id TEXT NOT NULL,
+    link_mode TEXT NOT NULL,            -- "auto", "manual"
+    is_primary INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (revision_id, file_id),
+    FOREIGN KEY (revision_id) REFERENCES plan_revisions(id),
+    FOREIGN KEY (file_id) REFERENCES plan_files(id)
+);
+```
+
+**n:m Verknüpfung:** Eine Datei kann mehreren Revisionen zugeordnet sein (Sammel-DWG). Eine Datei ohne Links ist standalone.
+
+### 6.4 import_journal
 
 ```sql
 CREATE TABLE import_journal (
@@ -657,22 +714,23 @@ CREATE TABLE import_journal (
 );
 ```
 
-### 6.2 import_actions
+### 6.5 import_actions
 
 ```sql
 CREATE TABLE import_actions (
     id TEXT PRIMARY KEY,                   -- ULID
     import_id TEXT NOT NULL,
     action_order INTEGER NOT NULL,
-    action_type TEXT NOT NULL,
-    action_status TEXT NOT NULL,
-    started_at TEXT,
-    completed_at TEXT,
+    action_type TEXT NOT NULL,          -- "new", "indexUpdate", "changed", "changedSameIdx",
+                                       -- "olderRevision", "skip", "manual", "learnIndex"
+    action_status TEXT NOT NULL,        -- "pending", "completed", "failed"
+    document_key TEXT,
     plan_number TEXT NOT NULL,
     plan_index TEXT,
     old_index TEXT,
-    destination_path TEXT NOT NULL,
-    archive_path TEXT,
+    source_path TEXT NOT NULL,          -- relativ zum Projektordner
+    destination_path TEXT NOT NULL,     -- relativ
+    archive_path TEXT,                  -- relativ
     error_message TEXT,
     FOREIGN KEY (import_id) REFERENCES import_journal(id)
 );
@@ -680,17 +738,20 @@ CREATE TABLE import_actions (
 CREATE INDEX idx_actions_import ON import_actions(import_id);
 ```
 
-### 6.3 import_action_files
+### 6.6 import_action_files
 
 ```sql
 CREATE TABLE import_action_files (
     id TEXT PRIMARY KEY,                   -- ULID
     action_id TEXT NOT NULL,
+    file_id TEXT,                       -- FK → plan_files.id (optional, für Cache-Verknüpfung)
     file_name TEXT NOT NULL,
-    file_type TEXT NOT NULL,
-    source_path TEXT NOT NULL,
-    destination_path TEXT NOT NULL,
-    md5_hash TEXT,
+    original_file_name TEXT,            -- vor Umbenennung (NULL wenn nicht umbenannt)
+    final_file_name TEXT,               -- nach Umbenennung (NULL wenn nicht umbenannt)
+    file_type TEXT NOT NULL,            -- "pdf", "dwg", "jpg", "other"
+    source_path TEXT NOT NULL,          -- relativ zum Projektordner
+    destination_path TEXT NOT NULL,     -- relativ
+    md5_hash TEXT NOT NULL,
     file_size INTEGER,
     FOREIGN KEY (action_id) REFERENCES import_actions(id)
 );

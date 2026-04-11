@@ -1,3 +1,45 @@
+---
+doc_id: db-schema
+doc_type: schema
+authority: source_of_truth
+status: active
+owner: herbert
+topics: [sqlite, bpm-db, planmanager-db, tabellen, migration, ulid, json-dateien]
+read_when: [neue-tabelle, spalte-ändern, fk-ändern, migration, db-query, json-konfiguration]
+related_docs: [architektur, dsvgo-architektur, planmanager]
+related_code: [src/BauProjektManager.Infrastructure/Persistence/ProjectDatabase.cs, src/BauProjektManager.PlanManager/Services/PlanManagerDatabase.cs]
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Zentrale Referenz für alle SQLite-Tabellen und JSON-Konfigurationsdateien in BPM
+- Autorität: source_of_truth
+- Lesen wenn: Neue Tabelle, Spalte ändern, FK ändern, Migration, DB-Query, JSON-Konfiguration
+- Nicht zuständig für: Domain-Modell-Logik (→ Architektur.md), Datenschutz-Klassifikation (→ DSVGO-Architektur.md)
+- Kapitel:
+  - 1. Überblick
+  - 2. Beziehungsdiagramm
+  - 3. Modul-Zuordnung
+  - 4. Tabellen-Schema (Ziel: v2.0 ULID)
+  - 5. Geplante Tabellen (nach V1)
+  - 6. PlanManager-Datenbank (separat)
+  - 7. Schema-Migration
+  - 8. Datenfluss zwischen Modulen
+  - 9. Naming-Konventionen
+  - 10. JSON-Konfigurationsdateien (kein SQLite)
+- Pflichtlesen:
+  - Kapitel 4 (Tabellen-Schema) bei jeder Tabellen-/Spaltenänderung
+  - Kapitel 9 (Naming-Konventionen) bei neuer Tabelle
+  - Kapitel 7 (Schema-Migration) bei Schemaänderung
+- Fachliche Invarianten:
+  - ULID als TEXT PRIMARY KEY für ALLE Tabellen — keine INTEGER IDs, keine seq
+  - ID-Generierung NUR über IIdGenerator.NewId() — nie manuell
+  - Jede Tabelle hat created_at und updated_at (TEXT, ISO 8601)
+  - FK-Indizes auf alle Fremdschlüssel-Spalten
+  - schema_version Tabelle in jeder DB
+
+---
+
 # BauProjektManager — Datenbank-Schema
 
 **Version:** 2.0 (ULID-Migration geplant)  

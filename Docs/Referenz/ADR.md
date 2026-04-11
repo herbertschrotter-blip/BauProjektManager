@@ -1883,4 +1883,48 @@ BPM wird nicht nur Solo-Betrieb sein — Multi-User mit 10+ Nutzern (Bauleiter, 
 
 ---
 
+## ADR-048: Ansichtsprofile als UI-Sichtschicht über Modul-Aktivierung
+
+**Datum:** 11.04.2026
+**Status:** Accepted
+**Implementierung:** Not Started (Post-V1)
+**Betrifft:** Shell-Navigation, Sidebar, Modul-Aktivierung, Settings
+
+**Kontext:**
+
+Verschiedene Nutzerrollen (Polier, Bauleiter, Disponent, Lohnverrechnung) benötigen unterschiedliche Module. Statt alle Module zu zeigen und den User manuell filtern zu lassen, sollen vordefinierte Ansichtsprofile eine rollennahe Sidebar bieten. Gleichzeitig darf kein Berechtigungssystem entstehen, das mit zukünftigem RBAC (ADR-038) kollidiert.
+
+**Entscheidung:**
+
+1. **Ansichtsprofile (ViewProfiles) sind reine UI-Sichtprofile.** Sie steuern ausschließlich die Sidebar-Sichtbarkeit. Keine Berechtigungen, keine Lese-/Schreibrechte, kein Access Control.
+
+2. **Schichtung der Modul-Sichtbarkeit:**
+   - Lizenz / Verfügbarkeit → welche Module technisch freigeschaltet sind
+   - Ansichtsprofil → welche Module standardmäßig sichtbar sein sollen
+   - Benutzer-Override → manuelle Ein-/Ausblendung
+   - Kernmodule → immer sichtbar (Einstellungen)
+
+3. **Effektive Sichtbarkeit wird zentral aufgelöst** über einen `IModuleVisibilityResolver`-Service. Die Shell rendert nur das Ergebnis, enthält keine Sichtbarkeitslogik.
+
+4. **Built-in-Profile sind schreibgeschützt** und werden zentral im Code definiert (`IModuleProfileCatalog`). Benutzer können sie duplizieren und als eigene Profile anpassen. App-Updates können Standardprofile aktualisieren ohne User-Anpassungen zu zerstören.
+
+5. **Begriffstrennung:** „Ansichtsprofil" / `ViewProfile` für UI-Sichtbarkeit. „Rolle" bleibt zukünftigen Zugriffskonzepten vorbehalten.
+
+6. **Fallback:** Ungültige oder fehlende Profile fallen auf „alle lizenzierten Module + Kernmodule" zurück. Eine leere Sidebar darf nie entstehen.
+
+**Alternativen (evaluiert):**
+
+- *activeModules als einzige Wahrheit:* Vermischt Lizenz, Profil und User-Override in einem flachen Dictionary. Bei Profilwechsel geht die Information verloren was manuell geändert wurde. Abgelehnt.
+- *RBAC direkt implementieren:* Überengineered für V1 (Single-User). Kommt mit Multi-User in späteren Phasen.
+- *Eigenes Konzeptdokument statt Architektur-Abschnitt:* Erst bei Implementierung nötig. Architekturprinzip jetzt in BauProjektManager_Architektur.md Kap. 1.4 verankert.
+
+**Konsequenzen:**
+
+- Neues Kapitel 1.4 in BauProjektManager_Architektur.md
+- Bei Implementierung: `IModuleVisibilityResolver`, `IModuleProfileCatalog`, Erweiterung von settings.json
+- `activeModules` in settings.json wird bei Implementierung ersetzt durch `selectedProfileId` + `visibilityOverrides`
+- Profilwahl im SetupDialog (Ersteinrichtung) + Einstellungen → Arbeitsprofil (dauerhaft änderbar)
+
+---
+
 *Dokument wird laufend aktualisiert wenn neue Architekturentscheidungen getroffen werden.*

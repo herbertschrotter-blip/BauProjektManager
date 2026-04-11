@@ -17,7 +17,7 @@ supersedes: []
 - Lesen wenn: Neues Modul, Schichtgrenzen prüfen, DI-Setup, Speicherort klären, Registry-Änderung
 - Nicht zuständig für: DB-Schema-Details (→ DB-SCHEMA.md), Datenschutz-Regeln (→ DSVGO-Architektur.md), Code-Style (→ CODING_STANDARDS.md), PlanManager-Fachlogik (→ PlanManager.md)
 - Kapitel:
-  - 1. Vision & Übersicht
+  - 1. Vision & Übersicht (inkl. 1.4 Ansichtsprofile)
   - 2. Speicherstrategie
   - 3. Zentrale Projekt-Registry
   - 4. PlanManager — Überblick
@@ -111,7 +111,33 @@ BauProjektManager.exe
 | **KI-Assistent** | LV-Analyse, Dokumentensuche, ChatGPT/Claude API | Nach V1 | [Konzepte/ModuleKiAssistent.md](Konzepte/ModuleKiAssistent.md) |
 | **Mobile PWA** | Bautagebuch + Plan-Viewer am Handy | Nach V1 | BPM-Mobile-Konzept.md |
 
-### 1.4 Externe Anbindungen
+### 1.4 Ansichtsprofile für die Sidebar (Post-V1)
+
+Ansichtsprofile sind vordefinierte Arbeitsprofile für die Sidebar-Navigation. Ein Ansichtsprofil definiert, welche Module in der Sidebar standardmäßig sichtbar sind. Ziel ist eine reduzierte, arbeitsnahe Oberfläche (z. B. Polier, Bauleiter, Disponent, Lohnverrechnung), ohne ein Berechtigungs- oder Multi-User-System einzuführen. (ADR-048)
+
+**Wichtige Abgrenzung:**
+- Ansichtsprofile sind **keine Berechtigungen**.
+- Ansichtsprofile steuern **nur die Sichtbarkeit in der Sidebar**.
+- Ansichtsprofile erzwingen **keine** Lese-/Schreibrechte.
+- Ansichtsprofile ersetzen **kein** zukünftiges Access-Control- oder RBAC-Modell.
+
+Der Begriff **„Rolle"** bleibt zukünftigen Zugriffskonzepten vorbehalten. Im Code wird daher von `ViewProfile` bzw. Ansichtsprofil gesprochen.
+
+Die effektive Sichtbarkeit eines Moduls ergibt sich aus vier Schichten:
+1. **Lizenz / Verfügbarkeit** — welche Module technisch freigeschaltet sind
+2. **Ansichtsprofil** — welche Module standardmäßig sichtbar sein sollen
+3. **Benutzer-Override** — welche Module der User zusätzlich ein- oder ausblendet
+4. **Kernmodule** — unverzichtbare Module bleiben immer sichtbar
+
+Die Shell rendert nicht direkt aus einer einzelnen `activeModules`-Liste, sondern aus der **effektiven Modul-Sichtbarkeit**. Diese wird zentral aufgelöst und berücksichtigt Lizenzstatus, gewähltes Profil, manuelle Überschreibungen und erforderliche Modul-Abhängigkeiten.
+
+Die Berechnung der effektiven Modul-Sichtbarkeit liegt in einem zentralen Resolver-Service (`IModuleVisibilityResolver`) und nicht in der Shell selbst.
+
+Built-in-Profile werden zentral definiert und sind nicht direkt editierbar. Benutzer können sie duplizieren und als eigene Profile anpassen.
+
+Ansichtsprofile sind ein **Post-V1-Feature**. V1 implementiert weiterhin nur die feste Sidebar für die vorhandenen Kernmodule. Die operative Ausgestaltung von UI, Persistenz, Migration und Modul-Metadaten wird erst bei Implementierung konkretisiert.
+
+### 1.5 Externe Anbindungen
 
 Bestehende VBA-Makros lesen die automatisch generierte `registry.json`:
 
@@ -127,7 +153,7 @@ Bestehende VBA-Makros lesen die automatisch generierte `registry.json`:
 
 Detailliertes Ökosystem-Diagramm mit Datenflüssen: siehe [DEPENDENCY-MAP.md](DEPENDENCY-MAP.md).
 
-### 1.5 Multi-Device & Cloud-Sync
+### 1.6 Multi-Device & Cloud-Sync
 
 - **Zwei Geräte:** PC zuhause + Laptop auf der Baustelle
 - **Sync:** Cloud-Speicher (OneDrive, Google Drive, Dropbox etc.) synchronisiert Nutzdaten + Konfiguration
@@ -135,7 +161,7 @@ Detailliertes Ökosystem-Diagramm mit Datenflüssen: siehe [DEPENDENCY-MAP.md](D
 - **Sortiert auf beiden Geräten:** Ja — Profile synchen über den Cloud-Speicher
 - **Cache-Rebuild:** Wenn auf dem zweiten Gerät gearbeitet wird, baut sich der SQLite-Cache beim ersten Scan automatisch aus dem Dateisystem (Cloud-Ordner) neu auf
 
-### 1.6 Projektname-Format
+### 1.7 Projektname-Format
 
 ```
 Format: YYYYMM_Kurzname
@@ -647,6 +673,7 @@ Zusammenfassung der wichtigsten Entscheidungen:
 | **Datenschutz** | IExternalCommunicationService als zentrales Privacy Gate | ADR-035 |
 | **Privacy Policy** | IPrivacyPolicy austauschbar (Relaxed/Strict), Lizenz-gesteuert | ADR-036 |
 | **ID-Schema** | ULID als TEXT PRIMARY KEY, global eindeutig, offline erzeugbar | ADR-039 |
+| **Ansichtsprofile** | ViewProfiles als UI-Sichtschicht über Modul-Aktivierung, Resolver-basiert | ADR-048 |
 
 ---
 

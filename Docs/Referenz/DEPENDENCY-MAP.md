@@ -32,7 +32,7 @@ supersedes: []
 **Erstellt:** 29.03.2026  
 **Aktualisiert:** 08.04.2026  
 **Version:** 2.3  
-**Basis:** Solution v0.24.2, DB-Schema v2.1, ADR v1.3 (44 ADRs)
+**Basis:** Solution v0.24.14, DB-Schema v2.0, ADR v1.2 (49 ADRs)
 
 ---
 
@@ -163,9 +163,11 @@ Jedes wird ein eigenes WPF Class Library Projekt, referenziert Domain + Infrastr
 | `planmanager.db` | SQLite | C#-App | C#-App | Lokal (pro Projekt) |
 | `registry.json` | JSON | C#-App (auto) | VBA, PhotoFolder | Cloud-Speicher .AppData/ |
 | `settings.json` | JSON | C#-App | C#-App | Cloud-Speicher .AppData/ |
-| `profiles.json` | JSON | C#-App | C#-App | Cloud-Speicher .AppData/Projects/ |
+| ~~`profiles.json`~~ | — | — | — | → `.bpm/profiles/*.json` im Projektordner (ADR-046) |
 | `pattern-templates.json` | JSON | C#-App | C#-App | Cloud-Speicher .AppData/ |
-| `.bpm-manifest` | JSON | C#-App | C#-App, Apps | Cloud-Speicher Projektordner |
+| `.bpm/manifest.json` | JSON | C#-App (ManifestService) | C#-App | Cloud-Speicher Projektordner `.bpm/` (ADR-046) |
+| `.bpm/project.json` | JSON | C#-App (ProjectExportService) | C#-App | Cloud-Speicher Projektordner `.bpm/` (ADR-046) |
+| `.bpm/profiles/*.json` | JSON | C#-App (ProfileManager) | C#-App | Cloud-Speicher Projektordner `.bpm/` (ADR-046) |
 | Projektordner | Dateien | C#-App, User | Alle, Kollegen | Cloud-Speicher |
 | Excel (Zeiten) | .xlsx | C#-App (ClosedXML) | Lohnbüro, Excel | Cloud-Speicher |
 | Outlook-Ordner | — | VBA (aktuell) | User | Outlook |

@@ -50,7 +50,7 @@ supersedes: []
 **Autor:** Herbert + Claude  
 
 **Verwandte Dokumente:**
-- [ADR.md](../Referenz/ADR.md) — 42 Architecture Decision Records
+- [ADR.md](../Referenz/ADR.md) — 48 Architecture Decision Records
 - [VISION.md](../Referenz/VISION.md) — Nordstern, Schmerzpunkte, Zielgruppe
 - [DEPENDENCY-MAP.md](../Referenz/DEPENDENCY-MAP.md) — Solution-Struktur + Ökosystem
 - [CHANGELOG.md](../Referenz/CHANGELOG.md) — Versionshistorie ab v0.0.0
@@ -611,7 +611,7 @@ BauProjektManager.sln
     │   ├── DSVGO-Architektur.md               ← ✅ Privacy Engineering, IPrivacyPolicy
     │   └── BACKLOG.md                         ← ✅ Feature-Liste
     ├── Referenz/                              ← Lesen wenn Thema aufkommt
-    │   ├── ADR.md                             ← ✅ 42 Entscheidungen
+    │   ├── ADR.md                             ← ✅ 48 Entscheidungen
     │   ├── VISION.md                          ← ✅ Nordstern
     │   ├── DEPENDENCY-MAP.md                  ← ✅ Ökosystem
     │   ├── UI_UX_Guidelines.md                ← ✅ Design-System

@@ -304,6 +304,7 @@ Diese Prinzipien gelten für alle zukünftigen Module und Entscheidungen:
 | Kollegen nehmen BPM nicht an | Mittel | Einfache GUI, kein Konfigurationsaufwand, sofortiger Nutzen sichtbar |
 | VBA-Makros werden langfristig nicht mehr gebraucht | Niedrig | registry.json ist ein einfacher Export — kann jederzeit entfernt werden |
 | Claude/KI-generierter Code hat Qualitätsprobleme | Mittel | Herbert testet alles selbst, ChatGPT als Zweit-Reviewer, Coding Standards |
+| Datenverlust beim Kunden (SQLite-Korruption, Sync-Konflikt) | Mittel | Automatische Backups bei App-Start, klare Kommunikation an User |
 
 ---
 
@@ -313,11 +314,17 @@ BPM wird als internes Werkzeug entwickelt. Falls es irgendwann für andere Baufi
 
 - Mandantenfähigkeit (aktuell nicht geplant)
 - Installer / Auto-Update (Feature im Backlog)
-- Dokumentation für Endnutzer (nicht nur für Entwicklung)
+- Dokumentation für Endnutzer (einfache Sprache, Screenshots, pro Feature eine halbe Seite)
+- EULA / Nutzungsbedingungen
 - Lizenzmodell klären (ADR-034: Offline-Lizenzierung)
-- Support-Konzept
+- Preismodell definieren (Einmalzahlung vs. Jahresupdate-Gebühr vs. Modul-Staffelung)
+- Support-Konzept (RAG-basierter Chat-Bot, kontextbezogene Hilfe pro Feature)
+- Automatisierte Fehlerberichte als GitHub Issues (über IExternalCommunicationService, mit User-Zustimmung)
 - DSGVO-Compliance: StrictPrivacyPolicy automatisch aktiv bei kommerzieller Lizenz (ADR-036)
 - Verarbeitungsverzeichnis, Datenschutzerklärung, Mitarbeiter-Informationsvorlage (siehe DSVGO-Architektur.md Kap. 15)
+- Code Signing Zertifikat für Auto-Updates
+- SQLite-Verschlüsselung (SQLCipher) vor Zeiterfassung mit Mitarbeiterdaten
+- Steuerberater für USt/OSS-Regelung bei digitalen Leistungen in der EU
 
 Das ist kein aktuelles Ziel und beeinflusst keine Architekturentscheidung. Die modulare Struktur und saubere Codebasis machen einen späteren Schritt in diese Richtung aber grundsätzlich möglich.
 

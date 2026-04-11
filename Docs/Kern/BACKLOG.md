@@ -184,6 +184,7 @@ Gut wenn vorhanden, aber kein Grund V1 zu verzögern.
 | CSV-Import | Für Planlisten | ⬜ |
 | GIS Steiermark API | KG, GST, Koordinaten auto-befüllen (Buttons in Tab 1 vorbereitet) | ⬜ |
 | Google Maps API | Adresse → PLZ, Ort, Gemeinde, Koordinaten | ⬜ |
+| SQLite-Verschlüsselung | SQLCipher für Encryption at rest. DSGVO-relevant sobald Mitarbeiterdaten (Zeiterfassung) in bpm.db liegen | ⬜ |
 
 ---
 
@@ -207,7 +208,10 @@ Gute Ideen, aber erst nach einem funktionierenden PlanManager. Konzepte sind dok
 | Outlook-Adressbuch Sync | — | Braucht zuerst eigenes Adressbuch |
 | PDF-Vorschau | — | Windows PDF-Viewer reicht |
 | VERALTET-Stempel | — | Manuell machbar |
-| Auto-Update | — | F5 in Visual Studio reicht für Solo-Entwickler |
+| Auto-Update / Vertrieb | — | F5 reicht für Entwicklung. Optionen für Release: Velopack/Squirrel, MSIX/Windows Store, eigene Website. Konzeptdokument vor Marktreife erstellen |
+| Kontextbezogene Hilfe | — | Fragezeichen-Icon pro Modul/Feature → öffnet Hilfe-Website oder Chat-Bot mit Modul-Kontext als Parameter. Support-Bot (RAG) beantwortet Standardfragen aus Endnutzer-Doku |
+| Automatische Fehlerberichte | — | Unbehandelte Exception → Serilog-Logs + Stacktrace + Systeminfo → GitHub Issue via API. Über IExternalCommunicationService, DataClassification ClassA. Explizite User-Zustimmung per Dialog |
+| Sicherheitskonzept | — | Docs/Konzepte/Sicherheitskonzept.md erstellen vor Zeiterfassung/KI-Assistent/Multi-User. Themen: SQLCipher, Code Signing, Obfuscation, registry.json Whitelist |
 
 ---
 

@@ -768,7 +768,7 @@ _logger.LogInformation("Client {Name} ({Email}) aktualisiert",
 
 ```sql
 CREATE TABLE external_call_log (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT PRIMARY KEY,                   -- ULID (ADR-039 v2)
     timestamp TEXT NOT NULL,
     module TEXT NOT NULL,              -- "ki", "gis_google", "wetter", "task_mgmt"
     target_domain TEXT NOT NULL,       -- "api.openai.com"

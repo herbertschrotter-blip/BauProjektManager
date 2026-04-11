@@ -60,7 +60,7 @@ Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheid
 | 010 | Profil- und Template-System getrennt | ✅ Entschieden | 2026-03 |
 | 011 | Ordnernamen: Nummern mit Leerzeichen | ✅ Entschieden | 2026-03 |
 | 012 | Nummern-Präfix aus Listenposition | ✅ Entschieden | 2026-03 |
-| 013 | .bpm-manifest als Projektordner-Ausweis | ✅ Entschieden | 2026-03 |
+| 013 | .bpm-manifest als Projektordner-Ausweis | ⬅️ Superseded by ADR-046 | 2026-03 |
 | 014 | C# + WPF statt PowerShell | ✅ Entschieden | 2026-03 |
 | 015 | CommunityToolkit.Mvvm + Serilog | ✅ Entschieden | 2026-03 |
 | 016 | Coding Standards + Definition of Done | ✅ Entschieden | 2026-03 |
@@ -439,7 +439,7 @@ Die Nummer wird NICHT im Template gespeichert. Die Position in der Liste bestimm
 ## ADR-013: .bpm-manifest als Projektordner-Ausweis (v2)
 
 **Datum:** 2026-03 (v2: 2026-04)
-**Status:** ✅ Entschieden
+**Status:** ⬅️ Superseded by ADR-046 (.bpm/ Ordner ersetzt einzelne .bpm-manifest Datei)
 **Herkunft:** Architektur-Session (v2: Projekt-Import Konzept)
 
 **Kontext:**

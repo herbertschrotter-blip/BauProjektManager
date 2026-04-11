@@ -131,7 +131,8 @@ clients ◄──────────── projects
 | lv_positions | projects | project_id | CASCADE | ⬜ Geplant |
 | performance_catalog | projects | project_id | — | ⬜ Geplant |
 | project_difficulty | projects | project_id | CASCADE | ⬜ Geplant |
-| diary_entries | projects | project_id | CASCADE | ⬜ Geplant |
+| diary_days | projects | project_id | CASCADE | ⬜ Geplant |
+| diary_notes | diary_days | diary_day_id | CASCADE | ⬜ Geplant |
 | material_orders | work_packages | work_package_id | — | ⬜ Geplant |
 | project_participants | contacts | contact_id | — | ⬜ Vorbereitet (FK leer) |
 
@@ -161,7 +162,8 @@ Welches Modul "besitzt" welche Tabelle (schreibt), und welche Module lesen.
 | lv_positions | Kalkulation (LV-Import) | Dashboard | ⬜ |
 | performance_catalog | Kalkulation (Nachkalk) | Bauzeitprognose | ⬜ |
 | project_difficulty | Kalkulation | Bauzeitprognose | ⬜ |
-| diary_entries | Bautagebuch | Dashboard, Export | ⬜ |
+| diary_days | Bautagebuch | Dashboard, Export | ⬜ |
+| diary_notes | Bautagebuch | Dashboard, Export | ⬜ |
 | contacts | Adressbuch | Einstellungen (Tab 3) | ⬜ |
 | material_orders | Task-Management | Dashboard | ⬜ |
 | external_call_log | Infrastructure (ExternalCommunicationService) | Einstellungen (Datenschutz-Tab) | ⬜ |
@@ -515,10 +517,12 @@ CREATE TABLE project_difficulty (
 );
 ```
 
-### 5.8 diary_entries (Bautagebuch)
+### 5.8 diary_days + diary_notes (Bautagebuch — ADR-047)
+
+Aufgeteilt in Tageskopf + Notizen (statt einer großen `diary_entries`-Tabelle). Ermöglicht dass mehrere Poliere gleichzeitig Notizen zum selben Tag schreiben (weniger Sync-Konflikte).
 
 ```sql
-CREATE TABLE diary_entries (
+CREATE TABLE diary_days (
     id TEXT PRIMARY KEY,                   -- ULID
     project_id TEXT NOT NULL,
     date TEXT NOT NULL,
@@ -527,17 +531,27 @@ CREATE TABLE diary_entries (
     temperature_max REAL,
     personnel_count INTEGER,
     absent_count INTEGER,
-    activities_summary TEXT,
-    remarks TEXT,
     confirmed INTEGER DEFAULT 0,
     confirmed_at TEXT,
-    photos TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_diary_project_date ON diary_entries(project_id, date);
+CREATE UNIQUE INDEX ux_diary_day ON diary_days(project_id, date);
+
+CREATE TABLE diary_notes (
+    id TEXT PRIMARY KEY,                   -- ULID
+    diary_day_id TEXT NOT NULL,
+    note_type TEXT NOT NULL,            -- "activity", "remark", "photo"
+    content TEXT NOT NULL,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (diary_day_id) REFERENCES diary_days(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_diary_notes_day ON diary_notes(diary_day_id);
 ```
 
 ### 5.9 contacts (Adressbuch)

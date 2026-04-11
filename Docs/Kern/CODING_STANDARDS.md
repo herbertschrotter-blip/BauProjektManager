@@ -726,29 +726,21 @@ PlanManager/
 │   ├── ImportResult.cs
 │   └── PlanStatus.cs
 ├── ViewModels/                     ← Logik + State für die GUI
-│   ├── BaseViewModel.cs            ← INotifyPropertyChanged Basisklasse
-│   ├── MainViewModel.cs
+│   ├── PlanManagerViewModel.cs      ← partial class : ObservableObject
 │   ├── ProjectDetailViewModel.cs
 │   ├── ImportPreviewViewModel.cs
-│   └── SegmentAssignerViewModel.cs
+│   └── ProfileWizardViewModel.cs
 ├── Views/                          ← XAML Dateien (rein visuell)
 │   ├── MainWindow.xaml
 │   ├── MainWindow.xaml.cs          ← Minimal! Nur DataContext setzen
 │   ├── ProjectDetailView.xaml
 │   ├── ImportPreviewDialog.xaml
 │   └── SegmentAssignerDialog.xaml
-├── Services/                       ← Geschäftslogik (Interface + Implementation)
-│   ├── IRegistryService.cs
-│   ├── RegistryService.cs
-│   ├── IFileParserService.cs
-│   ├── FileParserService.cs
-│   ├── IPlanCompareService.cs
-│   ├── PlanCompareService.cs
-│   ├── IFileOperationService.cs
-│   ├── FileOperationService.cs
-│   └── ILogService.cs
-├── Commands/                       ← ICommand Implementierungen
-│   └── RelayCommand.cs
+├── Services/                       ← Geschäftslogik (in Domain + Infrastructure)
+│   ├── FileNameParser.cs
+│   ├── DocumentTypeRecognizer.cs
+│   ├── ImportWorkflowService.cs
+│   └── ProfileManager.cs
 ├── Converters/                     ← WPF Value Converters
 │   ├── StatusToColorConverter.cs
 │   └── BoolToVisibilityConverter.cs
@@ -786,74 +778,58 @@ public class Plan
 
 ### 7.3 ViewModel (GUI-Logik)
 
-ViewModel implementiert INotifyPropertyChanged und exponiert Properties + Commands:
+ViewModel erbt von `ObservableObject` (CommunityToolkit.Mvvm) und nutzt `[ObservableProperty]` für Binding-Properties und `[RelayCommand]` für Commands (ADR-015):
 
 ```csharp
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+
 namespace BauProjektManager.PlanManager.ViewModels;
 
 /// <summary>
-/// Basisklasse für alle ViewModels — implementiert INotifyPropertyChanged.
+/// ViewModel für die Projektliste im PlanManager.
+/// partial class ist Pflicht für CommunityToolkit Source Generators.
 /// </summary>
-public abstract class BaseViewModel : INotifyPropertyChanged
+public partial class PlanManagerViewModel : ObservableObject
 {
-    public event PropertyChangedEventHandler? PropertyChanged;
+    private readonly ProjectDatabase _db = new();
 
-    protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
+    // [ObservableProperty] generiert automatisch:
+    // - public Property "Projects" (PascalCase)
+    // - OnPropertyChanged wird automatisch aufgerufen
+    // - Feld muss private + _camelCase sein
+    [ObservableProperty]
+    private ObservableCollection<PlanProjectItem> _projects = [];
 
-    protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
-    {
-        if (EqualityComparer<T>.Default.Equals(field, value))
-        {
-            return false;
-        }
+    [ObservableProperty]
+    private PlanProjectItem? _selectedProject;
 
-        field = value;
-        OnPropertyChanged(propertyName);
-        return true;
-    }
-}
+    [ObservableProperty]
+    private string _statusText = "";
 
-/// <summary>
-/// ViewModel für das Hauptfenster — zeigt Projektliste.
-/// </summary>
-public class MainViewModel : BaseViewModel
-{
-    private readonly IRegistryService _registryService;
-    private Project? _selectedProject;
-
-    public MainViewModel(IRegistryService registryService)
-    {
-        _registryService = registryService;
-        LoadProjectsCommand = new RelayCommand(async () => await LoadProjectsAsync());
-    }
-
-    // Properties für Data Binding
-    public ObservableCollection<Project> Projects { get; } = new();
-
-    public Project? SelectedProject
-    {
-        get => _selectedProject;
-        set => SetProperty(ref _selectedProject, value);
-    }
-
-    // Commands für UI-Aktionen
-    public ICommand LoadProjectsCommand { get; }
-
-    // Methoden
+    // [RelayCommand] generiert automatisch:
+    // - public IRelayCommand LoadProjectsCommand
+    // - Async-Methoden werden korrekt behandelt
+    [RelayCommand]
     private async Task LoadProjectsAsync()
     {
-        var projects = await _registryService.GetProjectsAsync();
+        var projects = _db.LoadAllProjects();
         Projects.Clear();
-        foreach (var project in projects)
+        foreach (var p in projects)
         {
-            Projects.Add(project);
+            Projects.Add(new PlanProjectItem(p));
         }
+        StatusText = $"{Projects.Count} Projekte geladen";
     }
 }
 ```
+
+**WICHTIG — CommunityToolkit Regeln:**
+- Klasse muss `partial` sein (Source Generators)
+- Felder: `private` + `_camelCase` → generiert `PascalCase` Property
+- Kein manuelles `OnPropertyChanged` nötig
+- Kein eigenes `BaseViewModel` — `ObservableObject` ist die Basisklasse
+- Kein eigenes `RelayCommand` — kommt vom NuGet
 
 ### 7.4 View (XAML)
 
@@ -909,60 +885,42 @@ public partial class MainWindow : Window
 | Commands statt Events | `ICommand` für Button-Clicks, nicht Click-EventHandler |
 | ObservableCollection | Für Listen die sich ändern (nicht `List<T>`) |
 
-### 7.6 RelayCommand (ICommand Implementation)
+### 7.6 RelayCommand (CommunityToolkit.Mvvm)
+
+**Keine eigene RelayCommand-Klasse nötig.** CommunityToolkit.Mvvm liefert `RelayCommand` und `AsyncRelayCommand` per NuGet (ADR-015). Commands werden über das `[RelayCommand]` Attribut generiert:
 
 ```csharp
-namespace BauProjektManager.PlanManager.Commands;
-
-/// <summary>
-/// Standard ICommand Implementation für MVVM.
-/// Erlaubt Binding von Buttons zu ViewModel-Methoden.
-/// </summary>
-public class RelayCommand : ICommand
+public partial class ProjectDetailViewModel : ObservableObject
 {
-    private readonly Action _execute;
-    private readonly Func<bool>? _canExecute;
-
-    public RelayCommand(Action execute, Func<bool>? canExecute = null)
+    // Synchroner Command — generiert OpenFolderCommand
+    [RelayCommand]
+    private void OpenFolder(string path)
     {
-        _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-        _canExecute = canExecute;
+        Process.Start("explorer.exe", path);
     }
 
-    public event EventHandler? CanExecuteChanged
+    // Async Command — generiert ImportPlansCommand
+    [RelayCommand]
+    private async Task ImportPlansAsync()
     {
-        add => CommandManager.RequerySuggested += value;
-        remove => CommandManager.RequerySuggested -= value;
+        // ...
     }
 
-    public bool CanExecute(object? parameter) => _canExecute?.Invoke() ?? true;
-    public void Execute(object? parameter) => _execute();
-}
-
-/// <summary>
-/// Generische Version mit Parameter.
-/// </summary>
-public class RelayCommand<T> : ICommand
-{
-    private readonly Action<T?> _execute;
-    private readonly Func<T?, bool>? _canExecute;
-
-    public RelayCommand(Action<T?> execute, Func<T?, bool>? canExecute = null)
+    // Command mit CanExecute — generiert DeleteCommand + NotifyCanExecuteChanged
+    [RelayCommand(CanExecute = nameof(CanDelete))]
+    private void Delete()
     {
-        _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-        _canExecute = canExecute;
+        // ...
     }
 
-    public event EventHandler? CanExecuteChanged
-    {
-        add => CommandManager.RequerySuggested += value;
-        remove => CommandManager.RequerySuggested -= value;
-    }
-
-    public bool CanExecute(object? parameter) => _canExecute?.Invoke((T?)parameter) ?? true;
-    public void Execute(object? parameter) => _execute((T?)parameter);
+    private bool CanDelete() => SelectedProject is not null;
 }
 ```
+
+**VERBOTEN:**
+- Eigene `RelayCommand`-Klasse implementieren (existiert nicht mehr im Projekt)
+- `ICommand` manuell implementieren
+- `CommandManager.RequerySuggested` direkt verwenden
 
 ### 7.7 Value Converters
 

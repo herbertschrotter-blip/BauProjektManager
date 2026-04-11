@@ -126,7 +126,7 @@ Diese Features verbessern V1, sind aber kein Blocker für den Release.
 | Feature | Beschreibung | Status |
 |---------|-------------|--------|
 | .bpm/ Ordner (#11) | Manifest-Split: `.bpm/manifest.json` (schlank) + `.bpm/project.json` (Vollexport) + `.bpm/profiles/` (Plantyp-Profile). Ersetzt einzelne `.bpm-manifest`-Datei (ADR-046). Migration automatisch. | ⬜ |
-| Projekt archivieren (#12) | Ordner in Archiv verschieben, Pfad aktualisieren. Button vorbereitet (disabled) | ⬜ |
+| Projekt archivieren (#12) | Status → Completed, Ordner von BasePath nach ArchivePath verschieben. Kein eigener Status „Archived" (ADR-025). Pfad-Resolution: relativer folder_name + Manifest-Fallback (Option C). Button vorbereitet (disabled) | ⬜ |
 | Single-Writer Mutex (#14) | Nur eine App-Instanz gleichzeitig (ADR-016) | ⬜ |
 | Versionsnummer im Log (#16) | Aus Assembly, nicht hardcoded | ✅ v0.16.1 |
 | Bestehende Ordner zuweisen | Existierenden Ordner einem Projekt zuweisen statt neu anlegen. "Projekt importieren" Button mit Auto-Manifest-Erkennung. | ✅ v0.20.0 |

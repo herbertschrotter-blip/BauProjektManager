@@ -706,7 +706,7 @@ Zusammenfassung der wichtigsten Entscheidungen:
 | 9 | Ersteinrichtung | ✅ |
 | 10 | Projektordner erstellen | ✅ |
 | 11 | .bpm/ Ordner (ADR-046) | ⬜ |
-| 12 | Projekt archivieren | ⬜ |
+| 12 | Projekt archivieren (Status → Completed, Ordner → ArchivePath, Pfad-Resolution via Option C) | ⬜ |
 | 13 | Pfade änderbar | ✅ |
 | 14 | Single-Writer Mutex | ⬜ |
 

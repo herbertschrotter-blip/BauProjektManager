@@ -693,7 +693,7 @@ Kein Cloud-Zwang. Kein Account. Kein externer Datenspeicher.
 | Serilog-Logs | 30 Tage | Automatisch (Serilog `retainedFileCountLimit`) |
 | Audit-Log (ext. Calls) | 90 Tage | Automatisch |
 | Mitarbeiterdaten (Zeiterfassung) | 7 Jahre nach Austritt (§ 132 BAO) | Manuell (AktivBis + 7 Jahre) |
-| Projektdaten | Unbegrenzt | Manuell (Projekt archivieren/löschen) |
+| Projektdaten | Unbegrenzt | Manuell (Projekt auf Completed setzen → Ordner in ArchivePath verschieben, oder Projekt löschen) |
 | Import-Journal | Pro Projekt, unbegrenzt | Manuell (Projekt löschen) |
 | Stammdaten (Clients, Participants, Links) | Projektgebunden | Bei Projektlöschung: CASCADE für Participants/Links. Clients: Prüfung ob noch von anderem Projekt referenziert — wenn nein, User wird gefragt ob Client mitgelöscht werden soll. Clients werden bewusst als potenziell wiederverwendbare Entität behandelt (Vorbereitung ADR-021). |
 

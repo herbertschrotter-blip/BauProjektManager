@@ -787,7 +787,7 @@ Ursprünglich hatte ProjectStatus drei Werte: Active, Completed, Archived. Archi
 
 **Entscheidung:**
 
-Nur zwei Status: Active und Completed. Archivierung als Feature #12 separat.
+Nur zwei Status: Active und Completed. Archivierung ist kein eigener Status, sondern eine Aktion: Status auf Completed setzen + Projektordner von BasePath nach ArchivePath verschieben. Pfad-Resolution über Option C (relativer folder_name + Manifest-Fallback bei Umbenennung). Feature #12.
 
 **Konsequenzen:**
 

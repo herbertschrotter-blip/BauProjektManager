@@ -1,3 +1,28 @@
+---
+doc_id: glossar
+doc_type: reference
+authority: secondary
+status: active
+owner: herbert
+topics: [glossar, fachbegriffe, bauwesen, österreich, abkürzungen, bpm-codebasis]
+read_when: [fachbegriff-unklar, österreichische-bau-terminologie, codebasis-begriffe]
+related_docs: [architektur, planmanager]
+related_code: []
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Fachbegriffe aus dem österreichischen Bauwesen und der BPM-Codebasis
+- Autorität: secondary
+- Lesen wenn: Fachbegriff unklar, österreichische Bau-Terminologie, Codebasis-Begriffe nachschlagen
+- Nicht zuständig für: Code-Konventionen (→ CODING_STANDARDS.md), Architektur (→ Architektur.md)
+- Pflichtlesen: keine (Nachschlagewerk)
+- Fachliche Invarianten:
+  - Österreichische Terminologie verwenden (Polier, Geschoß, RDOK)
+  - Begriffe alphabetisch innerhalb jeder Kategorie
+
+---
+
 # BauProjektManager — Glossar
 
 **Erstellt:** 30.03.2026  

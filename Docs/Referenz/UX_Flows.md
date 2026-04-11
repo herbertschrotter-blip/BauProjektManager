@@ -1,3 +1,28 @@
+---
+doc_id: ux-flows
+doc_type: reference
+authority: secondary
+status: active
+owner: herbert
+topics: [ux-flows, user-workflows, app-start, projekt-anlegen, import, navigation]
+read_when: [neuer-workflow, user-flow-prüfen, screen-reihenfolge, fehlerfall-klären]
+related_docs: [ui-ux-guidelines, ui-navigation, planmanager, module-projekt]
+related_code: []
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: User-Workflow-Beschreibungen mit Flowcharts für alle BPM-Hauptaktionen
+- Autorität: secondary (UI_UX_Guidelines.md = source_of_truth für Design)
+- Lesen wenn: Neuer Workflow, User-Flow prüfen, Screen-Reihenfolge, Fehlerfall klären
+- Nicht zuständig für: Design-Tokens (→ UI_UX_Guidelines.md), technische XAML-Umsetzung (→ WPF_UI_Architecture.md)
+- Pflichtlesen: keine (gezieltes Nachschlagen per Workflow)
+- Fachliche Invarianten:
+  - Jeder Flow zeigt: Ziel, Schritte, Screens, Fehlerfälle
+  - ASCII-Flowcharts als Darstellungsformat
+
+---
+
 # BauProjektManager — UX Flows
 
 **Version:** 1.0  

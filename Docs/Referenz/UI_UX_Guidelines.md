@@ -1,3 +1,41 @@
+---
+doc_id: ui-ux-guidelines
+doc_type: reference
+authority: source_of_truth
+status: active
+owner: herbert
+topics: [ui, ux, design-system, farbtokens, typografie, buttons, screen-states, navigation, icons, dialoge, datagrid]
+read_when: [neuer-dialog, neues-ui-element, farbe-wählen, button-style, screen-states, icon-hinzufügen]
+related_docs: [wpf-ui-architecture, coding-standards, dsvgo-architektur]
+related_code: [src/BauProjektManager.App/Themes/]
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Design-System und UI/UX-Regeln für alle BPM-Module und Screens
+- Autorität: source_of_truth (für Design-Regeln; WPF_UI_Architecture.md = technische Umsetzung)
+- Lesen wenn: Neuer Dialog, neues UI-Element, Farbe wählen, Button-Style, Screen States, Icon hinzufügen
+- Nicht zuständig für: WPF-ResourceDictionary-Aufbau (→ WPF_UI_Architecture.md), XAML-Code-Konventionen (→ CODING_STANDARDS.md Kap. 10)
+- Kapitel:
+  - 0. Schnellreferenz
+  - 1–4. Farben, Typografie, Spacing, Buttons
+  - 5–6. Screen States (5 Pflicht), Navigation
+  - 7–8. Icons, Dialoge
+  - 9–12. DataGrid, Formulare, Feedback, TreeView
+  - 13–15. Sprache, Barrierefreiheit, Responsive
+  - 16–19. Datenschutz-GUI, Animationen, Anti-Patterns, Offene Punkte
+- Pflichtlesen:
+  - Kapitel 0 (Schnellreferenz) bei jedem UI-Element
+  - Kapitel 5 (Screen States) bei neuem Screen/View
+  - Kapitel 7 (Icons) bei neuem Icon
+- Fachliche Invarianten:
+  - Alle Farben über Theme-Tokens — nie hardcoded Hex
+  - 5 Screen States Pflicht: Loading, Empty, Content, Error, Disabled
+  - Max 1 Primary-Button + 1 Kontext-Button pro Screen
+  - Alle UI-Texte Deutsch, interne Pattern-Begriffe dürfen Englisch sein
+
+---
+
 # BauProjektManager — UI/UX Guidelines
 
 **Version:** 2.1  

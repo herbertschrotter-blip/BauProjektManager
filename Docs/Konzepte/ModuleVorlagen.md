@@ -1,3 +1,29 @@
+---
+doc_id: konzept-vorlagen
+doc_type: concept
+authority: secondary
+status: active
+owner: herbert
+topics: [vorlagen, excel, word, closedxml, com-interop, platzhalter]
+read_when: [vorlagen-feature, excel-befüllen, word-befüllen, template-system]
+related_docs: [architektur, konzept-bautagebuch]
+related_code: []
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Konzept für Vorlagen-System — Excel/Word-Vorlagen mit Projektdaten befüllen
+- Autorität: secondary
+- Lesen wenn: Vorlagen-Feature, Excel befüllen, Word befüllen
+- Nicht zuständig für: Bautagebuch-Export (→ ModuleBautagebuch.md)
+- Pflichtlesen: keine
+- Fachliche Invarianten:
+  - Excel über ClosedXML (kein COM), Word über COM Interop
+  - Vorlagen liegen im Cloud-Speicher unter Vorlagen/
+  - Platzhalter in Vorlagen werden zur Laufzeit ersetzt
+
+---
+
 # BauProjektManager — Modul: Vorlagen-System
 
 **Status:** Später (Phase 4+)  

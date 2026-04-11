@@ -1,3 +1,32 @@
+---
+doc_id: module-projekt
+doc_type: module
+authority: source_of_truth
+status: active
+owner: herbert
+topics: [projekt-crud, auftraggeber, bauteile, geschosse, beteiligte, ordnerstruktur, registry-export, einstellungen]
+read_when: [projekt-feature, projektdialog, ordnerstruktur, registry-json, auftraggeber, bauteile-geschosse]
+related_docs: [architektur, db-schema, ui-ux-guidelines, wpf-ui-architecture]
+related_code: [src/BauProjektManager.Settings/, src/BauProjektManager.Infrastructure/Persistence/ProjectDatabase.cs, src/BauProjektManager.Domain/Models/]
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Modul-Dokumentation für Projekt-CRUD, Einstellungen, Ordnerstruktur und registry.json-Export
+- Autorität: source_of_truth
+- Lesen wenn: Projekt-Feature, ProjectEditDialog, Ordnerstruktur, registry.json, Auftraggeber, Bauteile/Geschosse
+- Nicht zuständig für: PlanManager (→ PlanManager.md), DB-Schema-Details (→ DB-SCHEMA.md), Architektur (→ Architektur.md)
+- Pflichtlesen:
+  - Kapitel 3 (Datenmodell) bei Projekt-Entitäts-Änderung
+  - Kapitel 7 (Ordnerstruktur) bei FolderTemplate-Änderung
+- Fachliche Invarianten:
+  - ProjectNumber wird aus ProjectStart generiert (YYYYMM) — nie manuell
+  - registry.json ist generierter Export — VBA liest nur, schreibt nie
+  - FolderTemplateEntry-Nummern aus Listenposition, nicht gespeichert
+  - Client ist eigene Entität mit ULID — kein einfacher String (ADR-021)
+
+---
+
 ﻿# Projekt-Modul — Dokumentation
 
 **Letzte Änderung:** v0.19.2  

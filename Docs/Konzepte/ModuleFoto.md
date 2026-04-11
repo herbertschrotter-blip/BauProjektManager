@@ -1,3 +1,29 @@
+---
+doc_id: konzept-foto
+doc_type: concept
+authority: secondary
+status: active
+owner: herbert
+topics: [foto, viewer, tags, geodaten, exif, thumbnails, bautagebuch-integration]
+read_when: [foto-feature, bild-viewer, foto-tags, geodaten-fotos]
+related_docs: [architektur, konzept-bautagebuch, dsvgo-architektur]
+related_code: []
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Konzept für Foto-Management — WPF-Viewer, Tags, Geodaten, Bautagebuch-Integration
+- Autorität: secondary
+- Lesen wenn: Foto-Feature, Bild-Viewer, Foto-Tags, Geodaten
+- Nicht zuständig für: Bautagebuch (→ ModuleBautagebuch.md), PlanManager (→ PlanManager.md)
+- Pflichtlesen: keine
+- Fachliche Invarianten:
+  - Fotos bleiben im Dateisystem — nur Metadaten in SQLite
+  - Thumbnails lokal gecached in %LocalAppData%
+  - EXIF-Daten lesen, nie schreiben
+
+---
+
 ﻿# BauProjektManager — Konzept: Foto-Management
 
 **Erstellt:** 27.03.2026  

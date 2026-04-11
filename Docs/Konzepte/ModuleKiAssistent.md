@@ -1,3 +1,29 @@
+---
+doc_id: konzept-ki-assistent
+doc_type: concept
+authority: secondary
+status: active
+owner: herbert
+topics: [ki, chatgpt, claude, lv-analyse, dokumentensuche, api]
+read_when: [ki-feature, lv-analyse, dokumentensuche, externe-api-ki]
+related_docs: [architektur, dsvgo-architektur, konzept-kalkulation]
+related_code: []
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Konzept für KI-Assistent — LV-Analyse, Dokumentensuche, ChatGPT/Claude API
+- Autorität: secondary
+- Lesen wenn: KI-Feature, LV-Analyse, Dokumentensuche, externe KI-API
+- Nicht zuständig für: Plankopf-Extraktion (→ Moduleplanheader.md)
+- Pflichtlesen: keine
+- Fachliche Invarianten:
+  - DSGVO Klasse C — unverarbeitete Dokumente an externe API
+  - IExternalCommunicationService Pflicht (ADR-035)
+  - User muss explizit zustimmen bevor Daten an API gesendet werden
+
+---
+
 ﻿# Modul-Konzept: KI-Assistent für Bauprojekte
 
 **Version:** 0.1.0  

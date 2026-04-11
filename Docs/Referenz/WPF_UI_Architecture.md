@@ -1,3 +1,40 @@
+---
+doc_id: wpf-ui-architecture
+doc_type: reference
+authority: secondary
+status: active
+owner: herbert
+topics: [wpf, xaml, theme-system, resourcedictionary, tokens, viewstate, dialog-pattern, dark-theme]
+read_when: [neuer-dialog, neues-theme-token, resourcedictionary-ändern, viewstate-pattern, modul-xaml]
+related_docs: [ui-ux-guidelines, coding-standards]
+related_code: [src/BauProjektManager.App/Themes/, src/BauProjektManager.App/App.xaml]
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Technische WPF-Umsetzung des Design-Systems — ResourceDictionaries, Token-Mapping, ViewState, Dialog-Pattern
+- Autorität: secondary (UI_UX_Guidelines.md = source_of_truth für Design-Regeln)
+- Lesen wenn: Neuer Dialog, neues Theme-Token, ResourceDictionary ändern, ViewState-Pattern, Modul-XAML
+- Nicht zuständig für: Design-Entscheidungen (→ UI_UX_Guidelines.md), XAML-Code-Konventionen (→ CODING_STANDARDS.md Kap. 10)
+- Kapitel:
+  - 1–4. Ziel, ResourceDictionary-Aufbau, Token-Mapping, Buttons
+  - 5–7. Dialog-Pattern, Screen States, Theme-System
+  - 8–10. DataGrid, Sidebar/Navigation, ContextMenu
+  - 11–13. TreeView, Inputs/Tabs, Tooltips
+  - 14. Anti-Patterns
+  - 15. Implementierungsreihenfolge
+  - 16. Modul-Projekte: XAML-Regeln (PFLICHT)
+- Pflichtlesen:
+  - Kapitel 5 (Dialog-Pattern) bei neuem Dialog
+  - Kapitel 16 (Modul-XAML-Regeln) bei XAML in Modul-Projekten (Settings, PlanManager)
+- Fachliche Invarianten:
+  - DynamicResource in Custom-Dialog-Windows — StaticResource verursacht XamlParseException
+  - Alle Farben über Theme-Tokens aus Colors.xaml — nie hardcoded
+  - 8 ResourceDictionaries: Colors, Typography, Buttons, DataGrid, Dialogs, Icons, TreeView, Inputs
+  - Icons über Icons.xaml Registry (ADR-044)
+
+---
+
 ﻿# BauProjektManager — WPF UI Architecture
 
 **Version:** 2.0  
@@ -792,7 +829,7 @@ Die Datenschutz-Entscheidung trifft die Policy, nicht das ViewModel. Das ViewMod
 
 ---
 
-## 15. Modul-Projekte: XAML-Regeln (PFLICHT)
+## 16. Modul-Projekte: XAML-Regeln (PFLICHT)
 
 ### 15.1 DynamicResource statt StaticResource
 

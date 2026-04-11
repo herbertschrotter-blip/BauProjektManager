@@ -1,3 +1,37 @@
+---
+doc_id: ui-navigation
+doc_type: reference
+authority: secondary
+status: active
+owner: herbert
+topics: [navigation, sidebar, toolbar, screen-hierarchie, breadcrumb, shell]
+read_when: [neuer-screen, navigation-ändern, sidebar-eintrag, toolbar-frage]
+related_docs: [ui-ux-guidelines, wpf-ui-architecture, architektur]
+related_code: [src/BauProjektManager.App/MainWindow.xaml]
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Shell-Aufbau, Sidebar-/Toolbar-Regeln und Screen-Hierarchie für die BPM-Navigation
+- Autorität: secondary (UI_UX_Guidelines.md = source_of_truth für Design)
+- Lesen wenn: Neuer Screen, Navigation ändern, Sidebar-Eintrag, Toolbar-Frage
+- Nicht zuständig für: Design-Tokens (→ UI_UX_Guidelines.md), XAML-Umsetzung (→ WPF_UI_Architecture.md)
+- Kapitel:
+  - 1. Shell-Aufbau
+  - 2. Sidebar
+  - 3. Toolbar
+  - 4. Screen-Hierarchie
+  - 5. Navigationsregeln
+  - 6. Breadcrumb
+  - 7. Offene Punkte
+- Pflichtlesen: keine
+- Fachliche Invarianten:
+  - Sidebar links (56px) für Modul-Wechsel — keine Top-Level-Toolbar dafür
+  - Toolbar nur innerhalb eines Moduls wenn es mehrere Seiten hat
+  - Modale Dialoge (Import, Wizard) überlagern das Hauptfenster
+
+---
+
 # BauProjektManager — UI-Navigation und Screen-Hierarchie
 
 **Version:** 1.0

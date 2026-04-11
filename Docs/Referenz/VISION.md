@@ -1,3 +1,29 @@
+---
+doc_id: vision
+doc_type: reference
+authority: source_of_truth
+status: active
+owner: herbert
+topics: [vision, nordstern, schmerzpunkte, zielgruppe, marktpositionierung, lizenzmodell]
+read_when: [produktstrategie, zielgruppe-klären, warum-bpm, lizenzfrage]
+related_docs: [architektur, backlog]
+related_code: []
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Produktvision, Schmerzpunkte, Zielgruppe und strategische Positionierung von BPM
+- Autorität: source_of_truth (für Produktstrategie und Nordstern)
+- Lesen wenn: Produktstrategie, Zielgruppe klären, Warum BPM, Lizenzfrage
+- Nicht zuständig für: Technische Architektur (→ Architektur.md), Feature-Planung (→ BACKLOG.md)
+- Pflichtlesen: keine
+- Fachliche Invarianten:
+  - Offline-first, kein Cloud-Abo — Kernprinzip
+  - Zielgruppe: Poliere und Bauleiter in Österreich (kleine Firmen)
+  - Cloud-Speicher-neutral — nie "OneDrive" in Docs, immer "Cloud-Speicher"
+
+---
+
 ﻿# BauProjektManager — Vision & Produktstrategie
 
 **Erstellt:** 29.03.2026  

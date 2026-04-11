@@ -1,3 +1,28 @@
+---
+doc_id: konzept-ordner-sync
+doc_type: concept
+authority: secondary
+status: active
+owner: herbert
+topics: [ordner-sync, filesystem, cloud-speicher, ordnerstruktur, abgleich]
+read_when: [ordner-sync-feature, filesystem-abgleich, ordnerstruktur-sync]
+related_docs: [architektur, konzept-datenarchitektur-sync]
+related_code: []
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Konzept für Ordner-Sync — Dateisystem-Abgleich zwischen Geräten über Cloud-Speicher
+- Autorität: secondary
+- Lesen wenn: Ordner-Sync-Feature, Filesystem-Abgleich
+- Nicht zuständig für: Daten-Sync (→ DatenarchitekturSync.md), PlanManager-Import (→ PlanManager.md)
+- Pflichtlesen: keine
+- Fachliche Invarianten:
+  - Cloud-Speicher-neutral — kein OneDrive-spezifischer Code
+  - Nur Dateisystem-Operationen — keine DB-Sync-Logik hier
+
+---
+
 # BauProjektManager — Ordner-Sync (Modul-Konzept)
 
 **Version:** 1.0

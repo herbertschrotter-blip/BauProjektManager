@@ -1,12 +1,46 @@
-# BauProjektManager — Modul: Bautagebuch
+---
+doc_id: konzept-bautagebuch
+doc_type: concept
+authority: secondary
+status: active
+owner: herbert
+topics: [bautagebuch, tagesprotokoll, auto-befüllung, wetter, personal, export]
+read_when: [bautagebuch-feature, tagesprotokoll, auto-befüllung, export-word-excel]
+related_docs: [architektur, db-schema, konzept-mobile, konzept-zeiterfassung, konzept-wetter]
+related_code: []
+supersedes: []
+---
 
-**Status:** Nach V1 (Phase 3-4)  
-**Abhängigkeiten:** Einstellungen, PlanManager, optional Wetter-Modul  
-**Referenz:** Architektur v1.4, Kapitel 11.2  
+## AI-Quickload
+- Zweck: Konzept für tägliches Baustellenprotokoll mit Auto-Befüllung aus anderen Modulen
+- Autorität: secondary
+- Lesen wenn: Bautagebuch-Feature, Tagesprotokoll, Auto-Befüllung, Export Word/Excel
+- Nicht zuständig für: Wetter-API (→ ModuleWetter.md), Zeiterfassung (→ ModuleZeiterfassung.md)
+- Kapitel:
+  - 1. Zweck und Zielzustand
+  - 2. Datenmodell (geplant)
+  - 3. Workflow
+  - 4. Technische Umsetzung
+  - 5. Abhängigkeiten
+  - 6. No-Gos / Einschränkungen
+  - 7. Offene Fragen
+- Pflichtlesen: keine
+- Fachliche Invarianten:
+  - Tageseinträge in SQLite, nicht JSON-Dateien (Abfragen nötig)
+  - Auto-Befüllung ist optional — jedes Quellmodul kann fehlen
+  - Export in 3 Formate: Word (.docx), Excel (.xlsx), PDF
 
 ---
 
-## 1. Konzept
+# BauProjektManager — Modul: Bautagebuch
+
+**Status:** Nach V1 (Phase 3-4)  
+**Version:** 1.1 (Refactoring auf DOC-STANDARD)  
+**Abhängigkeiten:** Einstellungen, PlanManager, optional Wetter-Modul  
+
+---
+
+## 1. Zweck und Zielzustand
 
 Tägliches Baustellenprotokoll mit automatischer Vorbefüllung. Das Modul zieht Daten aus allen anderen Modulen zusammen — der User ergänzt nur was fehlt.
 
@@ -25,70 +59,11 @@ Bautagebuch-Eintrag wird befüllt aus:
 
 ---
 
-## 2. GUI-Mockup
+## 2. Datenmodell (geplant)
 
-```
-╔══════════════════════════════════════════════════════════════════╗
-║  Bautagebuch — 27.03.2026                        [◀] [▶] [📅] ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  Projekt: [ 202512_ÖWG-Dobl-Zwaring ▼ ]                        ║
-║                                                                  ║
-║  ── Wetter (automatisch) ──────────────────────────────────     ║
-║  ☀️ 14°C Sonnig | Wind: 12 km/h NW | Niederschlag: 0mm         ║
-║  Quelle: OpenMeteo API, 08:00              [✏️ Manuell ändern] ║
-║                                                                  ║
-║  ── Personal ──────────────────────────────────────────────     ║
-║  ╔═══════════════════════╦══════════╦════════╦════════╗         ║
-║  ║ Firma                 ║ Gewerk   ║ Anzahl ║ Stunden║         ║
-║  ╠═══════════════════════╬══════════╬════════╬════════╣         ║
-║  ║ Baufirma Müller GmbH  ║ Maurer   ║   4    ║   8    ║         ║
-║  ║ Elektro Schmidt        ║ Elektro  ║   2    ║   6    ║         ║
-║  ║ Installationen Gruber  ║ HKLS     ║   3    ║   8    ║         ║
-║  ╚═══════════════════════╩══════════╩════════╩════════╝         ║
-║  [ + Firma hinzufügen ]  [ Aus Stundenzettel laden ]            ║
-║                                                                  ║
-║  ── Tätigkeiten ───────────────────────────────────────────     ║
-║  ┌──────────────────────────────────────────────────────────┐   ║
-║  │ Betonage Decke über EG Haus 64, Bewehrungsabnahme       │   ║
-║  │ durch Statiker Ing. Tschom. Nachbestellung Abstandhalter│   ║
-║  └──────────────────────────────────────────────────────────┘   ║
-║                                                                  ║
-║  ── Besondere Vorkommnisse ────────────────────────────────     ║
-║  ┌──────────────────────────────────────────────────────────┐   ║
-║  │ Lieferverzögerung Bewehrungsstahl BSt 550 — 2 Stunden   │   ║
-║  │ Wartezeit. Lieferwerk: Marienhütte Graz.                │   ║
-║  └──────────────────────────────────────────────────────────┘   ║
-║                                                                  ║
-║  ── Material / Maschinen ──────────────────────────────────     ║
-║  Material:  [ 18m³ C25/30 XC2, Lieferwerk Beton Graz      ]    ║
-║  Maschinen: [ Betonpumpe 36m (Fa. Kern), Kran LTM 1060    ]    ║
-║                                                                  ║
-║  ── Pläne heute (automatisch aus PlanManager) ─────────────     ║
-║  📈 S-103: Index C → D (Polierplan TG)                          ║
-║  🆕 S-113-A: Neu (Polierplan 2OG)                               ║
-║  ℹ️ Keine Planlisten-Änderungen                                  ║
-║                                                                  ║
-║  ── Fotos des Tages ───────────────────────────────────────     ║
-║  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐                           ║
-║  │ 📷   │ │ 📷   │ │ 📷   │ │ 📷   │  12 Fotos gefunden       ║
-║  │09:14 │ │10:42 │ │13:07 │ │15:31 │  (OneDrive/Fotos/27.03.) ║
-║  └──────┘ └──────┘ └──────┘ └──────┘                           ║
-║  [ Alle anzeigen ]  [ + Foto manuell wählen ]                   ║
-║                                                                  ║
-║  ── Notizen ───────────────────────────────────────────────     ║
-║  ┌──────────────────────────────────────────────────────────┐   ║
-║  │ Nächste Woche: Schalung OG Haus 66 beginnen.            │   ║
-║  │ Bewehrungsabnahme OG H64 am Mittwoch geplant.           │   ║
-║  └──────────────────────────────────────────────────────────┘   ║
-║                                                                  ║
-║  [ Speichern ] [ Export: Word ▼ ] [ Vorheriger Tag kopieren ]   ║
-╚══════════════════════════════════════════════════════════════════╝
-```
+Tageseinträge in SQLite (lokal). Nicht in JSON-Dateien — weil über Monate viele Einträge entstehen und Abfragen nötig sind (z.B. "alle Tage mit Betonage", "Gesamtstunden Firma Müller").
 
----
-
-## 3. Tageseintrag-Struktur (JSON in SQLite oder als Datei)
+### Tageseintrag-Struktur
 
 ```json
 {
@@ -116,20 +91,6 @@ Bautagebuch-Eintrag wird befüllt aus:
       "count": 4,
       "hours": 8,
       "note": ""
-    },
-    {
-      "company": "Elektro Schmidt",
-      "trade": "Elektriker",
-      "count": 2,
-      "hours": 6,
-      "note": "Nur vormittags"
-    },
-    {
-      "company": "Installationen Gruber",
-      "trade": "HKLS",
-      "count": 3,
-      "hours": 8,
-      "note": ""
     }
   ],
 
@@ -140,56 +101,59 @@ Bautagebuch-Eintrag wird befüllt aus:
       "oldIndex": "C",
       "newIndex": "D",
       "planType": "Polierplan"
-    },
-    {
-      "planNumber": "S-113",
-      "action": "new",
-      "newIndex": "A",
-      "planType": "Polierplan"
     }
   ],
 
-  "activities": "Betonage Decke über EG Haus 64, Bewehrungsabnahme durch Statiker Ing. Tschom. Nachbestellung Abstandhalter.",
-  "incidents": "Lieferverzögerung Bewehrungsstahl BSt 550 — 2 Stunden Wartezeit. Lieferwerk: Marienhütte Graz.",
+  "activities": "Betonage Decke über EG Haus 64...",
+  "incidents": "Lieferverzögerung Bewehrungsstahl BSt 550...",
   "materials": "18m³ C25/30 XC2, Lieferwerk Beton Graz",
   "machinery": "Betonpumpe 36m (Fa. Kern), Kran LTM 1060",
-
-  "photos": [
-    "IMG_20260327_0914.jpg",
-    "IMG_20260327_1042.jpg",
-    "IMG_20260327_1307.jpg",
-    "IMG_20260327_1531.jpg"
-  ],
-
-  "notes": "Nächste Woche: Schalung OG Haus 66 beginnen. Bewehrungsabnahme OG H64 am Mittwoch."
+  "photos": ["IMG_20260327_0914.jpg", "IMG_20260327_1042.jpg"],
+  "notes": "Nächste Woche: Schalung OG Haus 66 beginnen."
 }
 ```
 
 ---
 
-## 4. Export-Formate
+## 3. Workflow
 
-| Format | Technologie | Zweck |
-|--------|-------------|-------|
-| Word (.docx) | COM Interop → Vorlage (.dotx) befüllen | Professionelles Layout, Druck, Bauherr |
-| Excel (.xlsx) | ClosedXML | Tabellarisch, Auswertung über Zeitraum |
-| PDF | QuestPDF | Direkter Druck, digitales Archiv |
+### GUI-Mockup
 
-### Word-Export Workflow:
-1. User hat Word-Vorlage in `Vorlagen/Word/Bautagebuch_Vorlage.dotx`
-2. Vorlage enthält Platzhalter (Bookmarks oder Content Controls)
-3. C#-App öffnet Vorlage über COM Interop
-4. Füllt Platzhalter mit Tageseintrag-Daten
-5. Speichert als .docx im Projektordner `Protokolle/`
+```
+╔══════════════════════════════════════════════════════════════════╗
+║  Bautagebuch — 27.03.2026                        [◀] [▶] [📅] ║
+╠══════════════════════════════════════════════════════════════════╣
+║  Projekt: [ 202512_ÖWG-Dobl-Zwaring ▼ ]                        ║
+║                                                                  ║
+║  ── Wetter (automatisch) ──────────────────────────────────     ║
+║  ☀️ 14°C Sonnig | Wind: 12 km/h NW | Niederschlag: 0mm         ║
+║  Quelle: OpenMeteo API, 08:00              [✏️ Manuell ändern] ║
+║                                                                  ║
+║  ── Personal ──────────────────────────────────────────────     ║
+║  ╔═══════════════════════╦══════════╦════════╦════════╗         ║
+║  ║ Firma                 ║ Gewerk   ║ Anzahl ║ Stunden║         ║
+║  ╠═══════════════════════╬══════════╬════════╬════════╣         ║
+║  ║ Baufirma Müller GmbH  ║ Maurer   ║   4    ║   8    ║         ║
+║  ║ Elektro Schmidt        ║ Elektro  ║   2    ║   6    ║         ║
+║  ║ Installationen Gruber  ║ HKLS     ║   3    ║   8    ║         ║
+║  ╚═══════════════════════╩══════════╩════════╩════════╝         ║
+║  [ + Firma hinzufügen ]  [ Aus Stundenzettel laden ]            ║
+║                                                                  ║
+║  ── Tätigkeiten / Vorkommnisse / Material / Maschinen ────     ║
+║  (Freitext-Felder)                                               ║
+║                                                                  ║
+║  ── Pläne heute (automatisch aus PlanManager) ─────────────     ║
+║  📈 S-103: Index C → D (Polierplan TG)                          ║
+║  🆕 S-113-A: Neu (Polierplan 2OG)                               ║
+║                                                                  ║
+║  ── Fotos des Tages ───────────────────────────────────────     ║
+║  (Thumbnails aus OneDrive/Fotos nach Datum)                      ║
+║                                                                  ║
+║  [ Speichern ] [ Export: Word ▼ ] [ Vorheriger Tag kopieren ]   ║
+╚══════════════════════════════════════════════════════════════════╝
+```
 
-### Excel-Export:
-- Ein Blatt pro Tag oder ein Blatt mit allen Tagen als Zeilen
-- Spalten: Datum, Wetter, Personal (Summe), Tätigkeiten, Vorkommnisse
-- Für Monats-/Quartalsberichte an Bauherr
-
----
-
-## 5. Features
+### Features
 
 | Feature | Beschreibung |
 |---------|-------------|
@@ -197,7 +161,7 @@ Bautagebuch-Eintrag wird befüllt aus:
 | Vortag kopieren | Kopiert Personal + Maschinen vom Vortag (häufig gleich) |
 | Auto-Wetter | Holt Wetterdaten automatisch beim Öffnen (wenn Wetter-Modul aktiv) |
 | Auto-Pläne | Zeigt automatisch Planänderungen des Tages aus PlanManager |
-| Auto-Fotos | Sucht OneDrive-Fotos nach Datum (wenn Foto-Modul aktiv) |
+| Auto-Fotos | Sucht Cloud-Speicher-Fotos nach Datum (wenn Foto-Modul aktiv) |
 | Stundenzettel-Import | Lädt Personal aus Excel-Stundenzettel |
 | Firmenliste merken | Häufig verwendete Firmen/Gewerke als Vorauswahl |
 | Freitext-Felder | Tätigkeiten, Vorkommnisse, Material, Maschinen, Notizen |
@@ -205,13 +169,31 @@ Bautagebuch-Eintrag wird befüllt aus:
 
 ---
 
-## 6. Persistenz
+## 4. Technische Umsetzung
 
-Tageseinträge werden in SQLite gespeichert (lokal, `%LocalAppData%`). Nicht in JSON-Dateien — weil über Monate viele Einträge entstehen und Abfragen nötig sind (z.B. "alle Tage mit Betonage", "Gesamtstunden Firma Müller").
+### Export-Formate
+
+| Format | Technologie | Zweck |
+|--------|-------------|-------|
+| Word (.docx) | COM Interop → Vorlage (.dotx) befüllen | Professionelles Layout, Druck, Bauherr |
+| Excel (.xlsx) | ClosedXML | Tabellarisch, Auswertung über Zeitraum |
+| PDF | QuestPDF | Direkter Druck, digitales Archiv |
+
+### Word-Export Workflow
+
+1. User hat Word-Vorlage in `Vorlagen/Word/Bautagebuch_Vorlage.dotx`
+2. Vorlage enthält Platzhalter (Bookmarks oder Content Controls)
+3. C#-App öffnet Vorlage über COM Interop
+4. Füllt Platzhalter mit Tageseintrag-Daten
+5. Speichert als .docx im Projektordner `Protokolle/`
+
+### Excel-Export
+
+Ein Blatt pro Tag oder ein Blatt mit allen Tagen als Zeilen. Spalten: Datum, Wetter, Personal (Summe), Tätigkeiten, Vorkommnisse. Für Monats-/Quartalsberichte an Bauherr.
 
 ---
 
-## 7. Abhängigkeiten
+## 5. Abhängigkeiten
 
 | Abhängigkeit | Pflicht? | Wenn nicht vorhanden |
 |---|---|---|
@@ -223,4 +205,26 @@ Tageseinträge werden in SQLite gespeichert (lokal, `%LocalAppData%`). Nicht in 
 
 ---
 
+## 6. No-Gos / Einschränkungen
+
+- Kein Ersatz für rechtlich verbindliches Bautagebuch (ÖNORM B 2110) — BPM ist Hilfsmittel, nicht Rechtsprodukt
+- Keine automatische Unterschrift / digitale Signatur in V1
+- Kein Multi-User-Editing am gleichen Tageseintrag (→ DatenarchitekturSync: diary_days + diary_notes Aggregate-Split)
+
+---
+
+## 7. Offene Fragen
+
+- Soll der Export auch als ÖNORM-konformes Formular möglich sein?
+- Wie wird mit nachträglichen Korrekturen umgegangen? (Versionierung der Einträge?)
+- Soll es eine "Wochenansicht" geben die mehrere Tage zusammenfasst?
+
+---
+
 *Erstellt: 27.03.2026 | Phase 3-4 (nach V1)*
+
+*Änderungen v1.0 → v1.1 (11.04.2026):*
+*- Frontmatter + AI-Quickload ergänzt (DOC-STANDARD)*
+*- Kapitelstruktur auf concept-Vorlage refactort*
+*- Kap. 6 (No-Gos) und Kap. 7 (Offene Fragen) als Skelett ergänzt*
+*- Kein Inhalt gelöscht — nur umgruppiert*

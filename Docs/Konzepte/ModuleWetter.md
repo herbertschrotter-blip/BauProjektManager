@@ -1,3 +1,29 @@
+---
+doc_id: konzept-wetter
+doc_type: concept
+authority: secondary
+status: active
+owner: herbert
+topics: [wetter, api, openmeteo, google-sheets, offline-sync, bautagebuch]
+read_when: [wetter-feature, wetter-api, google-sheets-worker, wetter-sync]
+related_docs: [architektur, dsvgo-architektur, konzept-bautagebuch]
+related_code: []
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Konzept für Wetter-Modul — API-Anbindung pro Baustelle, Google Sheets als Cloud-Worker
+- Autorität: secondary
+- Lesen wenn: Wetter-Feature, Wetter-API, Google Sheets Worker, Wetter-Sync
+- Nicht zuständig für: Bautagebuch-Auto-Befüllung (→ ModuleBautagebuch.md)
+- Pflichtlesen: keine
+- Fachliche Invarianten:
+  - Google Sheets als 24/7 Cloud-Worker (Apps Script pollt API stündlich)
+  - BPM synct über IWeatherSyncService / IExternalCommunicationService
+  - Offline-first: Lokaler SQLite Weather-Cache
+
+---
+
 # BauProjektManager — Modul: Wetter
 
 **Version:** 0.2  

@@ -1,3 +1,29 @@
+---
+doc_id: changelog
+doc_type: changelog
+authority: source_of_truth
+status: active
+owner: herbert
+topics: [versionshistorie, changelog, releases, semantic-versioning]
+read_when: [version-nachschlagen, was-hat-sich-geändert, release-notes]
+related_docs: [backlog, adr]
+related_code: [Directory.Build.props]
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Chronologische Versionshistorie aller Änderungen am BPM-Projekt
+- Autorität: source_of_truth
+- Lesen wenn: Version nachschlagen, Änderungen prüfen, Release-Notes
+- Nicht zuständig für: Feature-Planung (→ BACKLOG.md), Architektur-Entscheidungen (→ ADR.md)
+- Pflichtlesen: keine (gezieltes Nachschlagen per Version)
+- Fachliche Invarianten:
+  - Keep-a-Changelog Format, chronologisch absteigend (neueste oben)
+  - Semantic Versioning: PATCH=Fix, MINOR=Feature, MAJOR=Breaking Change
+  - Jeder Commit = ein Eintrag mit Version, Datum und Beschreibung
+
+---
+
 ﻿# BauProjektManager — Changelog
 
 Alle Änderungen am Projekt, chronologisch dokumentiert.  

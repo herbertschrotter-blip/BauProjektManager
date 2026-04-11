@@ -1,3 +1,31 @@
+---
+doc_id: adr
+doc_type: adr
+authority: source_of_truth
+status: active
+owner: herbert
+topics: [architektur-entscheidungen, adr, modularer-monolith, sqlite, ulid, datenschutz, wpf, mvvm]
+read_when: [neue-architekturentscheidung, bestehende-adr-prüfen, adr-status-ändern, entscheidung-nachschlagen]
+related_docs: [architektur, db-schema, dsvgo-architektur, planmanager]
+related_code: []
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Alle Architecture Decision Records des BPM-Projekts — Kontext, Entscheidung, Konsequenzen
+- Autorität: source_of_truth
+- Lesen wenn: Neue Architekturentscheidung treffen, bestehende ADR prüfen, Status ändern, Entscheidung nachschlagen
+- Nicht zuständig für: Implementierungs-Details (→ jeweilige Modul-Docs), Code-Standards (→ CODING_STANDARDS.md)
+- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-046+)
+- Pflichtlesen: keine (gezieltes Nachschlagen per ADR-Nummer)
+- Fachliche Invarianten:
+  - Statusmodell: Decision Status (Proposed/Accepted/Superseded/Deprecated) getrennt von Implementation Status (Not Started/Partial/Implemented)
+  - ADR-Nummern fortlaufend — nie wiederverwenden
+  - Superseded-ADR bleibt erhalten mit Verweis auf Nachfolger
+  - Jede ADR hat: Status, Kontext, Entscheidung, Konsequenzen
+
+---
+
 ﻿# BauProjektManager — Architecture Decision Records (ADR)
 
 **Erstellt:** 29.03.2026

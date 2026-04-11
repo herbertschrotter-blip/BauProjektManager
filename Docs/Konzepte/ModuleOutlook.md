@@ -1,3 +1,28 @@
+---
+doc_id: konzept-outlook
+doc_type: concept
+authority: secondary
+status: active
+owner: herbert
+topics: [outlook, com-interop, email, anhänge, vba]
+read_when: [outlook-feature, email-integration, anhänge-extrahieren]
+related_docs: [architektur, planmanager, dsvgo-architektur]
+related_code: []
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Konzept für Outlook-Integration — COM Interop, Anhänge extrahieren, Email-Zuordnung
+- Autorität: secondary
+- Lesen wenn: Outlook-Feature, Email-Integration, Anhänge extrahieren
+- Nicht zuständig für: VBA-Makros (bestehend, extern), PlanManager-Import (→ PlanManager.md)
+- Pflichtlesen: keine
+- Fachliche Invarianten:
+  - COM Interop nur wenn Outlook läuft — kein Hintergrund-Service
+  - Anhänge werden in _Eingang/ kopiert — PlanManager importiert von dort
+
+---
+
 # BauProjektManager — Modul: Outlook-Integration
 
 **Status:** Später (Phase 4+)  

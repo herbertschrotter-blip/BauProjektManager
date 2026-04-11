@@ -1,3 +1,29 @@
+---
+doc_id: konzept-kalkulation
+doc_type: concept
+authority: secondary
+status: active
+owner: herbert
+topics: [kalkulation, nachkalkulation, bauzeitprognose, arbeitspakete, lv, soll-ist]
+read_when: [kalkulation-feature, nachkalkulation, bauzeitprognose, arbeitspakete]
+related_docs: [architektur, db-schema, konzept-zeiterfassung, dsvgo-architektur]
+related_code: []
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Konzept für Kalkulation — Nachkalkulation, Bauzeitprognose, Arbeitspakete, LV-Import
+- Autorität: secondary
+- Lesen wenn: Kalkulation-Feature, Nachkalkulation, Bauzeitprognose, Arbeitspakete
+- Nicht zuständig für: Zeiterfassung-Rohdaten (→ ModuleZeiterfassung.md)
+- Pflichtlesen: keine
+- Fachliche Invarianten:
+  - Sensitive Finanzdaten (Lohnsätze, Einheitspreise) in eigenen restricted-Tabellen
+  - LV-Import aus ÖNORM B 2063 oder Excel
+  - Soll/Ist-Vergleich auf Arbeitspaket-Ebene
+
+---
+
 ﻿# BauProjektManager — Modul: Kalkulation & Bauzeitprognose
 
 **Erstellt:** 29.03.2026  

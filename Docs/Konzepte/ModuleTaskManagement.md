@@ -1,3 +1,28 @@
+---
+doc_id: konzept-task-management
+doc_type: concept
+authority: secondary
+status: active
+owner: herbert
+topics: [task-management, materialbestellung, arbeitspakete, clickup, asana]
+read_when: [task-feature, materialbestellung, arbeitspaket-verwaltung]
+related_docs: [architektur, konzept-kalkulation]
+related_code: []
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Konzept für Task-Management — Arbeitspakete, Materialbestellung, ClickUp/Asana-Integration
+- Autorität: secondary
+- Lesen wenn: Task-Feature, Materialbestellung, Arbeitspaket-Verwaltung
+- Nicht zuständig für: Kalkulation (→ ModuleKalkulation.md), Zeiterfassung (→ ModuleZeiterfassung.md)
+- Pflichtlesen: keine
+- Fachliche Invarianten:
+  - BPM ist Master für Arbeitspakete — externe Tools (ClickUp) sind optional Sync
+  - Offline-first: Tasks funktionieren ohne externe Dienste
+
+---
+
 # BauProjektManager — Modul: Task-Management & Materialbestellung
 
 **Erstellt:** 30.03.2026  

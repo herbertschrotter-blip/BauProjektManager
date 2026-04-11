@@ -1,3 +1,28 @@
+---
+doc_id: konzept-gis
+doc_type: concept
+authority: secondary
+status: active
+owner: herbert
+topics: [gis, koordinaten, kataster, epsg-31258, projnet, geodaten]
+read_when: [gis-feature, koordinaten, kataster-abfrage, karten-integration]
+related_docs: [architektur, db-schema, konzept-foto]
+related_code: []
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Konzept für GIS-Integration — Katasterdaten, Koordinaten automatisch befüllen
+- Autorität: secondary
+- Lesen wenn: GIS-Feature, Koordinaten, Kataster-Abfrage, Karten-Integration
+- Nicht zuständig für: Foto-Geodaten (→ ModuleFoto.md)
+- Pflichtlesen: keine
+- Fachliche Invarianten:
+  - Offline-Koordinatentransformation über ProjNet (EPSG:31258↔WGS84)
+  - Kataster-API nur bei Verbindung — Fallback auf manuelle Eingabe
+
+---
+
 ﻿# BauProjektManager — Konzept: GIS-Integration
 
 **Erstellt:** 29.03.2026  

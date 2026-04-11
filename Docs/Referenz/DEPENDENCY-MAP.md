@@ -1,3 +1,32 @@
+---
+doc_id: dependency-map
+doc_type: reference
+authority: secondary
+status: active
+owner: herbert
+topics: [dependencies, solution-struktur, nuget, vba, ökosystem, datenfluss]
+read_when: [neue-abhängigkeit, neues-nuget-paket, vba-integration, solution-struktur-prüfen]
+related_docs: [architektur, db-schema]
+related_code: [src/BauProjektManager.App/BauProjektManager.App.csproj, src/BauProjektManager.Infrastructure/BauProjektManager.Infrastructure.csproj]
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Solution-Abhängigkeiten, externes Ökosystem (VBA/PowerShell) und NuGet-Pakete
+- Autorität: secondary (Architektur.md ist source_of_truth für Solution-Struktur)
+- Lesen wenn: Neue Abhängigkeit, neues NuGet-Paket, VBA-Integration, Solution-Struktur prüfen
+- Nicht zuständig für: Architektur-Entscheidungen (→ ADR.md), Schichtgrenzen (→ Architektur.md)
+- Kapitel:
+  - 1. Interne Solution-Struktur
+  - 2. Externes Ökosystem
+  - 3. Technologie-Abhängigkeiten
+- Pflichtlesen: keine
+- Fachliche Invarianten:
+  - Dependency-Regel: Domain→NICHTS, Infrastructure→nur Domain, App→alles
+  - Keine neuen NuGet-Pakete ohne Freigabe
+
+---
+
 ﻿# BauProjektManager — Dependency Map
 
 **Erstellt:** 29.03.2026  

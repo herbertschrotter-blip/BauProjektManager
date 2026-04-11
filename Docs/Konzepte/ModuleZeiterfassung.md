@@ -1,3 +1,29 @@
+---
+doc_id: konzept-zeiterfassung
+doc_type: concept
+authority: secondary
+status: active
+owner: herbert
+topics: [zeiterfassung, stundenzettel, excel, closedxml, personal, lohn]
+read_when: [zeiterfassung-feature, stundenzettel, excel-export, personal-stunden]
+related_docs: [architektur, dsvgo-architektur, konzept-kalkulation, konzept-bautagebuch]
+related_code: []
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Konzept für Zeiterfassung — WPF-Eingabemaske, Excel als Single Source of Truth via ClosedXML
+- Autorität: secondary
+- Lesen wenn: Zeiterfassung-Feature, Stundenzettel, Excel-Export, Personal-Stunden
+- Nicht zuständig für: Kalkulation (→ ModuleKalkulation.md), Bautagebuch-Personal (→ ModuleBautagebuch.md)
+- Pflichtlesen: keine
+- Fachliche Invarianten:
+  - Excel bleibt Single Source of Truth für Roh-Zeitbuchungen (ADR-018)
+  - DSGVO Klasse B — Mitarbeiterdaten in cloud-synced Excel
+  - WPF-Maske schreibt via ClosedXML, kein COM Interop
+
+---
+
 ﻿# BauProjektManager — Konzept: Arbeitszeiterfassung
 
 **Erstellt:** 29.03.2026  

@@ -1,3 +1,29 @@
+---
+doc_id: konzept-planheader
+doc_type: concept
+authority: secondary
+status: active
+owner: herbert
+topics: [plankopf, revisionstabelle, pdfpig, ki-api, indexsource-planheader]
+read_when: [planheader-feature, plankopf-extraktion, pdf-parsing, revisionstabelle]
+related_docs: [planmanager, dsvgo-architektur, konzept-ki-assistent]
+related_code: []
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Konzept für Plankopf-Erkennung — Revisionstabelle aus PDF lesen (PdfPig + KI-API)
+- Autorität: secondary
+- Lesen wenn: PlanHeader-Feature, Plankopf-Extraktion, PDF-Parsing, IndexSource.PlanHeader
+- Nicht zuständig für: Dateinamen-Parsing (→ PlanManager.md Kap. 13), KI-API allgemein (→ ModuleKiAssistent.md)
+- Pflichtlesen: keine
+- Fachliche Invarianten:
+  - Post-V1 Feature — IndexSource.PlanHeader Enum existiert, Implementierung offen
+  - DSGVO Klasse C wenn KI-API genutzt wird
+  - PdfPig für lokale Extraktion, KI-API nur als Fallback
+
+---
+
 ﻿# BauProjektManager — Modul: Plankopf-Erkennung (PlanHeader)
 
 **Erstellt:** 29.03.2026  

@@ -1,12 +1,45 @@
-# BauProjektManager — Modul: Dashboard
+---
+doc_id: konzept-dashboard
+doc_type: concept
+authority: secondary
+status: active
+owner: herbert
+topics: [dashboard, widgets, startseite, projekt-übersicht, quick-actions]
+read_when: [dashboard-feature, widget-hinzufügen, startseite]
+related_docs: [architektur, planmanager, konzept-wetter, konzept-bautagebuch]
+related_code: []
+supersedes: []
+---
 
-**Status:** Nach V1 (Phase 3)  
-**Abhängigkeiten:** Einstellungen-Modul, PlanManager-Modul  
-**Referenz:** Architektur v1.4, Kapitel 11.1  
+## AI-Quickload
+- Zweck: Konzept für Dashboard-Startseite mit Widgets (Projekte, Pläne, Wetter, Outlook, Bautagebuch)
+- Autorität: secondary
+- Lesen wenn: Dashboard-Feature, Widget hinzufügen, Startseite
+- Nicht zuständig für: Widget-Datenquellen (→ jeweilige Modul-Docs)
+- Kapitel:
+  - 1. Zweck und Zielzustand
+  - 2. Datenmodell (geplant)
+  - 3. Workflow
+  - 4. Technische Umsetzung
+  - 5. Abhängigkeiten
+  - 6. No-Gos / Einschränkungen
+  - 7. Offene Fragen
+- Pflichtlesen: keine
+- Fachliche Invarianten:
+  - Widgets laden asynchron — App blockiert nie
+  - Widgets die ein nicht-implementiertes Modul brauchen werden ausgeblendet
 
 ---
 
-## 1. Konzept
+# BauProjektManager — Modul: Dashboard
+
+**Status:** Nach V1 (Phase 3)  
+**Version:** 1.1 (Refactoring auf DOC-STANDARD)  
+**Abhängigkeiten:** Einstellungen-Modul, PlanManager-Modul  
+
+---
+
+## 1. Zweck und Zielzustand
 
 Das Dashboard ist die Startseite der App. Es zeigt auf einen Blick den Status aller aktiven Projekte: Neue Pläne im Eingang, Wetter auf den Baustellen, offene Outlook-Emails, Bautagebuch-Status.
 
@@ -14,7 +47,9 @@ Jedes Widget ist ein eigenständiges WPF UserControl das Daten aus einem Service
 
 ---
 
-## 2. Widgets
+## 2. Datenmodell (geplant)
+
+### Widgets
 
 | Widget | Datenquelle | Aktualisierung | Abhängigkeit |
 |--------|-------------|---------------|-------------|
@@ -24,49 +59,7 @@ Jedes Widget ist ein eigenständiges WPF UserControl das Daten aus einem Service
 | Outlook | Outlook COM (wenn Outlook offen) | Manuell (Sync-Button) | Outlook-Modul |
 | Bautagebuch-Status | Bautagebuch-DB | Beim Start | Bautagebuch-Modul |
 
----
-
-## 3. GUI-Mockup
-
-```
-╔══════════════════════════════════════════════════════════════════╗
-║  BauProjektManager                [Dashboard] [Pläne] [BTB] [⚙]║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  ┌─ Projekte ──────────────┐  ┌─ Wetter ────────────────────┐  ║
-║  │ 3 Aktiv   1 Fertig      │  │ Dobl-Zwaring:               │  ║
-║  │                          │  │ ☀️ 14°C Sonnig, Wind 12km/h │  ║
-║  │ 🏗 Dobl-Zwaring         │  │ Morgen: 🌧 8°C Regen        │  ║
-║  │   ⚠️ 5 neue Pläne       │  │ → Kein Betonieren morgen!   │  ║
-║  │   ⚠️ 2 Pläne veraltet   │  │                              │  ║
-║  │ 🏗 Kapfenberg            │  │ Kapfenberg:                 │  ║
-║  │   ✅ Alles aktuell       │  │ ⛅ 11°C Bewölkt             │  ║
-║  │ 🏗 Leoben (fertig)      │  │ Morgen: ☀️ 15°C Sonnig      │  ║
-║  │   🔴 Abgeschlossen       │  │                              │  ║
-║  └──────────────────────────┘  └──────────────────────────────┘  ║
-║                                                                  ║
-║  ┌─ Neue Pläne (Eingang) ───────────────────────────────────┐  ║
-║  │ 📥 Dobl-Zwaring:  5 Dateien (3 PDF, 2 DWG)    [Import]  │  ║
-║  │ 📥 Kapfenberg:    0 Dateien                               │  ║
-║  │ 📥 Leoben:        — (abgeschlossen)                      │  ║
-║  └───────────────────────────────────────────────────────────┘  ║
-║                                                                  ║
-║  ┌─ Outlook ────────────────┐  ┌─ Heute ────────────────────┐  ║
-║  │ 📧 3 Emails mit Anhängen │  │ 📓 Bautagebuch:            │  ║
-║  │ von: arch.tschom@...     │  │    Dobl: Noch nicht        │  ║
-║  │ von: statik@...          │  │    ausgefüllt!             │  ║
-║  │ von: eplan@...           │  │    Kapfenberg: ✅ Fertig   │  ║
-║  │              [Sync]      │  │               [Öffnen]     │  ║
-║  └──────────────────────────┘  └──────────────────────────────┘  ║
-║                                                                  ║
-║  ── Statusleiste ───────────────────────────────────────────── ║
-║  Registry OK | 3 Projekte | Letzte Sync: 14:32                 ║
-╚══════════════════════════════════════════════════════════════════╝
-```
-
----
-
-## 4. Datenmodell
+### C# Datenmodell
 
 ```csharp
 public class DashboardData
@@ -86,20 +79,15 @@ public class ProjectSummary
     public bool DiaryCompletedToday { get; set; }
     public int UnprocessedEmailCount { get; set; }
 }
-
-public class WeatherInfo
-{
-    public double Temperature { get; set; }
-    public string Condition { get; set; }
-    public string Wind { get; set; }
-    public double Precipitation { get; set; }
-    public string ForecastTomorrow { get; set; }
-}
 ```
 
 ---
 
-## 5. Quick-Actions
+## 3. Workflow
+
+### GUI-Mockup (Kurzform)
+
+Dashboard zeigt Kacheln/Widgets in 2-Spalten-Layout: Projekte (links oben), Wetter (rechts oben), Neue Pläne (Mitte), Outlook + Bautagebuch (unten). Quick-Actions:
 
 | Aktion | Wohin |
 |--------|-------|
@@ -110,9 +98,13 @@ public class WeatherInfo
 
 ---
 
-## 6. Widget-Abhängigkeiten
+## 4. Technische Umsetzung
 
-Widgets die ein noch nicht implementiertes Modul benötigen werden nicht angezeigt. Das Dashboard wächst mit jedem neuen Modul.
+Jedes Widget ist ein eigenständiges WPF UserControl mit eigenem ViewModel. Daten werden über Services geladen (DI). Async-Loading mit CancellationToken.
+
+---
+
+## 5. Abhängigkeiten
 
 | Widget | Benötigt | Ohne Modul |
 |--------|---------|------------|
@@ -124,4 +116,24 @@ Widgets die ein noch nicht implementiertes Modul benötigen werden nicht angezei
 
 ---
 
+## 6. No-Gos / Einschränkungen
+
+- Kein automatischer Refresh im Hintergrund (nur beim Start + manuell)
+- Keine eigenen Daten — Dashboard ist rein lesend
+- Kein Widget-Customizing in V1 (feste Anordnung)
+
+---
+
+## 7. Offene Fragen
+
+- Soll das Dashboard konfigurierbar sein (Widgets ein/aus, Reihenfolge)?
+- Soll es einen "Heute"-Zusammenfassungs-Widget geben?
+
+---
+
 *Erstellt: 27.03.2026 | Phase 3 (nach V1)*
+
+*Änderungen v1.0 → v1.1 (11.04.2026):*
+*- Frontmatter + AI-Quickload ergänzt (DOC-STANDARD)*
+*- Kapitelstruktur auf concept-Vorlage refactort*
+*- Kein Inhalt gelöscht — nur umgruppiert*

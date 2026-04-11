@@ -1,3 +1,29 @@
+---
+doc_id: module-devtools
+doc_type: module
+authority: source_of_truth
+status: active
+owner: herbert
+topics: [devtools, debug, diagnose, reset, log-ansicht, bug-report]
+read_when: [devtools-feature, debug-dialog, app-reset, log-viewer]
+related_docs: [architektur, coding-standards]
+related_code: [src/BauProjektManager.App/DevToolsDialog.xaml, src/BauProjektManager.Infrastructure/Dev/DeveloperToolsService.cs, src/BauProjektManager.Domain/Interfaces/IDeveloperToolsService.cs]
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Modul-Dokumentation für DevTools — Diagnose, Log-Ansicht, Reset, Bug-Report (nur DEBUG)
+- Autorität: source_of_truth
+- Lesen wenn: DevTools-Feature, Debug-Dialog, App-Reset, Log-Viewer
+- Nicht zuständig für: Produktiv-Features, Release-Builds
+- Pflichtlesen: keine
+- Fachliche Invarianten:
+  - Nur in DEBUG-Builds sichtbar — kein Zugriff in Release
+  - Kein DI-Container — manuell instanziiert (Migration geplant)
+  - Reset löscht unwiderruflich — kein Backup
+
+---
+
 ﻿# DevTools-Modul — Dokumentation
 
 **Letzte Änderung:** v0.19.0  

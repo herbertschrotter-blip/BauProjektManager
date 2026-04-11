@@ -1,3 +1,29 @@
+---
+doc_id: konzept-multi-user
+doc_type: concept
+authority: secondary
+status: active
+owner: herbert
+topics: [multi-user, write-lock, heartbeat, phasen-modell, server, rbac]
+read_when: [multi-user-feature, write-lock, sync-architektur, server-modus]
+related_docs: [architektur, dsvgo-architektur, konzept-datenarchitektur-sync, konzept-mobile]
+related_code: []
+supersedes: []
+---
+
+## AI-Quickload
+- Zweck: Konzept für Multi-User Support — 3 Phasen (Solo, Event-Sync, Server), Write-Lock, RBAC
+- Autorität: secondary (DatenarchitekturSync.md hat detaillierteres Sync-Modell)
+- Lesen wenn: Multi-User-Feature, Write-Lock, Sync-Architektur, Server-Modus
+- Nicht zuständig für: Sync-Tabellen/Events (→ DatenarchitekturSync.md), Mobile-App (→ BPM-Mobile-Konzept.md)
+- Pflichtlesen: keine
+- Fachliche Invarianten:
+  - Phase 1 (Solo): Single Active Operator, Write-Lock mit 60s Heartbeat (ADR-020)
+  - Phase 2 (Event-Sync): Bewusst temporär, nur für 2-3 User
+  - Phase 3 (Server): PostgreSQL + ASP.NET, RBAC Pflicht
+
+---
+
 ﻿# BauProjektManager — Konzept: Multi-User Support
 
 **Erstellt:** 30.03.2026  

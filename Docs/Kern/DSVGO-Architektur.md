@@ -45,10 +45,10 @@ supersedes: []
 **Status:** Verbindlicher Architekturstandard  
 **Gilt für:** Alle Module, alle externen Anbindungen  
 **Verwandte Dokumente:**
-- [ADR.md](ADR.md) — ADR-035 (IExternalCommunicationService)
+- [ADR.md](../Referenz/ADR.md) — ADR-035 (IExternalCommunicationService)
 - [CODING_STANDARDS.md](CODING_STANDARDS.md) — Kapitel 17 (Datenschutz im Code)
 - [BauProjektManager_Architektur.md](BauProjektManager_Architektur.md) — Speicherstrategie, Solution-Struktur
-- Modul-Konzepte: [ModuleKiAssistent.md](Konzepte/ModuleKiAssistent.md), [ModuleZeiterfassung.md](Konzepte/ModuleZeiterfassung.md)
+- Modul-Konzepte: [ModuleKiAssistent.md](../Konzepte/ModuleKiAssistent.md), [ModuleZeiterfassung.md](../Konzepte/ModuleZeiterfassung.md)
 
 ---
 

@@ -95,6 +95,8 @@ Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheid
 | 045 | IndexSource — Dreistufiges Modell für Plan-Index-Erkennung | ✅ Entschieden | 2026-04 |
 | 046 | .bpm/ Ordner — Manifest-Split und Profilablage im Projektordner | ✅ Entschieden | 2026-04 |
 | 047 | Datenarchitektur + Sync — State-based lokal, change-based sync | ✅ Entschieden | 2026-04 |
+| 048 | Ansichtsprofile als UI-Sichtschicht über Modul-Aktivierung | ✅ Accepted / Not Started | 2026-04 |
+| 049 | Pfad-Resolution Option C — relativer folder_name + Manifest-Fallback | ✅ Entschieden | 2026-04 |
 
 ---
 
@@ -1926,5 +1928,60 @@ Verschiedene Nutzerrollen (Polier, Bauleiter, Disponent, Lohnverrechnung) benöt
 - Profilwahl im SetupDialog (Ersteinrichtung) + Einstellungen → Arbeitsprofil (dauerhaft änderbar)
 
 ---
+
+---
+
+## ADR-049: Pfad-Resolution Option C — relativer folder_name + Manifest-Fallback
+
+**Datum:** 2026-04
+**Status:** ✅ Entschieden
+**Implementierung:** Not Started
+**Herkunft:** Docs-Audit Archivierungs-Diskussion (Claude + Herbert, 11.04.2026)
+
+**Kontext:**
+
+Projekte haben in der DB ein `root_path` Feld mit absolutem Pfad zum Projektordner. Beim Archivieren (Ordner von BasePath nach ArchivePath verschieben) muss dieser Pfad aktualisiert werden. Ebenso bei Ordner-Umbenennung im Explorer. Drei Optionen wurden evaluiert:
+
+- **Option A (relativ):** DB speichert nur `folder_name`, voller Pfad wird zur Laufzeit aus `BasePath/ArchivePath + Status + FolderName` berechnet. Einfachste Lösung, aber bricht bei Explorer-Umbenennung.
+- **Option B (Manifest-Scan):** Kein Pfad in der DB. App scannt bei Start alle Ordner nach `.bpm/manifest.json` und findet Projekte über `projectId`. Robust, aber Scan-Overhead.
+- **Option C (A + B als Fallback):** Relativer `folder_name` als Default. Wenn der berechnete Pfad nicht existiert → Fallback auf Manifest-Scan. Robust UND performant.
+
+**Entscheidung:**
+
+Option C. `root_path` wird ersetzt durch berechneten Pfad aus `folder_name` + Status. Bei Nicht-Existenz Fallback auf `.bpm/manifest.json`-Scan.
+
+```csharp
+string GetProjectPath(Project p)
+{
+    // Primär: berechnet aus folder_name + Status
+    var basePath = p.Status == ProjectStatus.Active
+        ? settings.BasePath
+        : settings.ArchivePath;
+    var calculated = Path.Combine(basePath, p.FolderName);
+
+    if (Directory.Exists(calculated))
+        return calculated;
+
+    // Fallback: Manifest-Scan über projectId
+    return ScanForManifest(p.Id, settings.BasePath, settings.ArchivePath);
+}
+```
+
+**Konsequenzen:**
+
+- `root_path` in der DB wird zu `folder_name` (nur der Ordnername, nicht der volle Pfad)
+- Archivierung: Nur Status auf Completed setzen + Ordner physisch verschieben. Kein DB-Pfad-Update nötig.
+- Reaktivierung: Status auf Active + Ordner zurück verschieben. Kein DB-Pfad-Update nötig.
+- Explorer-Umbenennung: Fallback findet den Ordner über `.bpm/manifest.json`
+- `registry.json`: `rootPath` wird weiterhin als absoluter Pfad berechnet (nicht aus DB gelesen)
+- 6 C#-Dateien betroffen: ProjectDatabase.cs, SettingsViewModel.cs, ProjectEditDialog.xaml.cs, RegistryJsonExporter.cs, PlanManagerViewModel.cs, ProjectDetailViewModel.cs, ProfileWizardViewModel.cs
+- DB-Migration: `root_path` Spalte bleibt, wird aber mit relativem `folder_name` befüllt
+
+**Alternativen (abgelehnt):**
+
+- *Absoluter Pfad beibehalten:* Einfachster Code, aber Archivierung und Umbenennung erfordern DB-Update + registry.json-Update. Fragil.
+- *Nur Manifest-Scan (Option B):* Robust, aber unnötiger Scan-Overhead bei jedem Start wenn der Pfad korrekt ist.
+
+**Betrifft:** ADR-004, ADR-013, ADR-025, ADR-046
 
 *Dokument wird laufend aktualisiert wenn neue Architekturentscheidungen getroffen werden.*

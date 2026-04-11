@@ -50,7 +50,7 @@ supersedes: []
 **Autor:** Herbert + Claude  
 
 **Verwandte Dokumente:**
-- [ADR.md](../Referenz/ADR.md) — 48 Architecture Decision Records
+- [ADR.md](../Referenz/ADR.md) — 49 Architecture Decision Records
 - [VISION.md](../Referenz/VISION.md) — Nordstern, Schmerzpunkte, Zielgruppe
 - [DEPENDENCY-MAP.md](../Referenz/DEPENDENCY-MAP.md) — Solution-Struktur + Ökosystem
 - [CHANGELOG.md](../Referenz/CHANGELOG.md) — Versionshistorie ab v0.0.0
@@ -611,7 +611,7 @@ BauProjektManager.sln
     │   ├── DSVGO-Architektur.md               ← ✅ Privacy Engineering, IPrivacyPolicy
     │   └── BACKLOG.md                         ← ✅ Feature-Liste
     ├── Referenz/                              ← Lesen wenn Thema aufkommt
-    │   ├── ADR.md                             ← ✅ 48 Entscheidungen
+    │   ├── ADR.md                             ← ✅ 49 Entscheidungen
     │   ├── VISION.md                          ← ✅ Nordstern
     │   ├── DEPENDENCY-MAP.md                  ← ✅ Ökosystem
     │   ├── UI_UX_Guidelines.md                ← ✅ Design-System
@@ -674,6 +674,7 @@ Zusammenfassung der wichtigsten Entscheidungen:
 | **Privacy Policy** | IPrivacyPolicy austauschbar (Relaxed/Strict), Lizenz-gesteuert | ADR-036 |
 | **ID-Schema** | ULID als TEXT PRIMARY KEY, global eindeutig, offline erzeugbar | ADR-039 |
 | **Ansichtsprofile** | ViewProfiles als UI-Sichtschicht über Modul-Aktivierung, Resolver-basiert | ADR-048 |
+| **Pfad-Resolution** | Relativer folder_name + Manifest-Fallback (Option C) — kein absoluter root_path in DB | ADR-049 |
 
 ---
 

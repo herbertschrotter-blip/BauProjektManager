@@ -255,7 +255,7 @@ string BuildDocumentKey(Profile profile, ParsedFile parsed)
 
 ### Phase 0 — Profil anlernen (einmalig pro Dokumenttyp)
 
-4-Schritt-Wizard (auch erreichbar über „✎ Profil" im Projektdetail):
+5-Schritt-Wizard (auch erreichbar über „✎ Profil" im Projektdetail):
 
 1. **Datei auswaehlen** → Datei aus Eingang klicken oder Name eingeben, Trennzeichen, Parsen → Segmente als Vorschau
 2. **Segmente zuweisen** → Feldtypen per Dropdown zuweisen (PlanNumber Pflicht)

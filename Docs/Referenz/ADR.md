@@ -294,6 +294,8 @@ App             → referenziert alles (DI verdrahtet hier)
 - Gemeinsame Verträge (Modelle, Interfaces, Enums) liegen in **Domain**. Gemeinsame technische Dienste in **Infrastructure**.
 - UI-Navigation und Modulverdrahtung passieren **ausschließlich im App-Projekt** (App.xaml.cs + MainWindow.xaml).
 
+**Betrifft:** ADR-047 (Datenklassifizierung Shared/Local bestimmt welche Daten in Domain vs. lokal)
+
 ---
 
 ## ADR-007: Plan-Dateien — 1..n pro Revision

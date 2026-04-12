@@ -149,16 +149,19 @@ public async Task ImportPlans()
 ### 1.3 Namespace-Struktur
 
 ```csharp
-// Hauptstruktur
-BauProjektManager.PlanManager              // App
-BauProjektManager.PlanManager.Models       // Datenmodelle
-BauProjektManager.PlanManager.ViewModels   // MVVM ViewModels
-BauProjektManager.PlanManager.Views        // WPF XAML Views
-BauProjektManager.PlanManager.Services     // Geschäftslogik
-BauProjektManager.PlanManager.Commands     // ICommand Implementierungen
-BauProjektManager.PlanManager.Converters   // WPF Value Converters
-BauProjektManager.Shared.Registry          // Gemeinsame Registry-Lib
-BauProjektManager.Shared.Logging           // Gemeinsames Logging
+// 5-Projekte-Struktur (ADR-006) — kein Shared-Projekt!
+BauProjektManager                              // Root-Namespace (App-Projekt)
+BauProjektManager.Domain.Models                // Fachmodelle (Project, Client, Building...)
+BauProjektManager.Domain.Models.PlanManager    // PlanManager-spezifische Models (FileNameSegment, FieldType...)
+BauProjektManager.Domain.Interfaces            // Service-Verträge (IDialogService, IDeveloperToolsService)
+BauProjektManager.Domain.Enums                 // Enums (ProjectStatus, DataClassification)
+BauProjektManager.Infrastructure.Persistence   // SQLite, JSON, Dateisystem (ProjectDatabase, AppSettingsService)
+BauProjektManager.Infrastructure.Dev           // Dev-only Services (DeveloperToolsService)
+BauProjektManager.Settings.ViewModels          // Einstellungen-MVVM (SettingsViewModel)
+BauProjektManager.Settings.Views               // Einstellungen-XAML (SettingsView, ProjectEditDialog)
+BauProjektManager.PlanManager.ViewModels       // PlanManager-MVVM (PlanManagerViewModel, ProfileWizardViewModel)
+BauProjektManager.PlanManager.Views            // PlanManager-XAML
+BauProjektManager.PlanManager.Services         // PlanManager-Logik (FileNameParser, ProfileManager)
 ```
 
 ---

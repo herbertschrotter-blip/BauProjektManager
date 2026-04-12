@@ -260,7 +260,7 @@ Die DB verwendet WAL-Modus (`PRAGMA journal_mode=WAL`) für bessere Concurrency.
 
 ### AppSettingsService
 
-Liest und schreibt `settings.json` in `%LocalAppData%\BauProjektManager\`.
+Liest und schreibt `settings.json` in Cloud-Speicher `.AppData/BauProjektManager/`. Post-V1: Split in `device-settings.json` (lokal) + `shared-config.json` (Cloud) geplant (ADR-047).
 
 **Inhalt von settings.json:**
 - `BasePath` — Arbeitsordner (wo Projektordner erstellt werden)

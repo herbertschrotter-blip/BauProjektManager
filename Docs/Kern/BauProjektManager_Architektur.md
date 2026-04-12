@@ -195,7 +195,7 @@ SQLite ist die **einzige Wahrheitsquelle** für alle BPM-Kerndaten (Projekte, Pl
 |-------------|--------|-----|--------|-----------|-------|----------|
 | Projekt-Stammdaten | SQLite | Lokal `bpm.db` | Nein | C# | C# | Selten |
 | `registry.json` | JSON | Cloud-Speicher `.AppData/` | Ja | C# (auto) | VBA, C# | Bei Projekt-Änderung |
-| `settings.json` | JSON | Cloud-Speicher `.AppData/` | Ja | C# | C# | Selten |
+| `settings.json` | JSON | Cloud-Speicher `.AppData/` | Ja | C# | C# | Selten | Post-V1: Split in `device-settings.json` (lokal) + `shared-config.json` (Cloud) — ADR-047 |
 | ~~`profiles.json`~~ | — | ~~`.AppData/Projects/<P>/`~~ → `.bpm/profiles/*.json` im Projektordner (ADR-046) | Ja | C# | C# | Beim Anlernen |
 | `pattern-templates.json` | JSON | Cloud-Speicher `.AppData/` | Ja | C# | C# | Beim Anlernen |
 | `templates.json` | JSON | Cloud-Speicher `.AppData/` | Ja | C# | C# | Selten |

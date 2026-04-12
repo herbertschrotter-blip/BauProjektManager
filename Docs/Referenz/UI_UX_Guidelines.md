@@ -59,21 +59,20 @@ supersedes: []
 ### 0.1 Shell-Aufbau
 
 ```
-┌────────────────────────────────────────────────────┐
-│ Sidebar (200px)  │  Content Area                   │
-│ ─────────────── │                                  │
-│ BauProjektManager│  ContentControl (wechselt pro   │
-│                  │  Modul: SettingsView,            │
-│ 📁 Pläne        │  PlanManagerView)                │
-│ ⚙ Einstellungen │                                  │
-│                  │                                  │
-│                  │                                  │
-├──────────────────┴──────────────────────────────────┤
-│ Statusleiste (#007ACC): "Bereit | Kein Projekt"     │
-└─────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│ Sidebar │ Toolbar (nur wenn Modul sie braucht)       │
+│  (56px) │────────────────────────────────────────────│
+│         │                                            │
+│  [📁]   │  Content-Bereich                           │
+│  [⚙]    │  (wechselt pro Modul: SettingsView,       │
+│         │   PlanManagerView)                         │
+│         │                                            │
+│  v0.25  │────────────────────────────────────────────│
+│         │ Statusleiste (22px)                        │
+└──────────────────────────────────────────────────────┘
 ```
 
-- **Sidebar:** Fest 200px, immer sichtbar, `#2D2D30` Hintergrund
+- **Sidebar:** 56px Icon-Leiste, immer sichtbar, `BpmBgSurface` Hintergrund (siehe UI_Navigation.md)
 - **Content:** `#1E1E1E` Hintergrund, 20px Margin
 - **Statusleiste:** 28px Höhe, `#007ACC` Blau, weißer Text
 - **Navigation:** Button-Click → ContentControl wird befüllt
@@ -120,7 +119,7 @@ supersedes: []
 
 | Bereich | Aktuell | Ziel (diese Guideline) | Wann |
 |---------|---------|----------------------|------|
-| Sidebar | Fest 200px | Immer sichtbar, 220px | ✅ Fast gleich |
+| Sidebar | Fest 220px (Code) | 56px Icon-Leiste (UI_Navigation.md) | Code-Umbau nötig |
 | Toolbar | Nicht vorhanden | Modul-spezifische Aktionsleiste | UI-Refresh |
 | Breadcrumb | Nicht vorhanden | Oben über Content | UI-Refresh |
 | Toasts | Nicht vorhanden | Oben rechts, gestapelt | UI-Refresh |
@@ -336,30 +335,28 @@ Inverse Variante. Farb-Token bleiben gleich, nur Werte ändern sich.
 ┌──────────────────────────────────────────────────────────────────┐
 │  Breadcrumb: Einstellungen > Projekte > ÖWG Dobl                │
 ├────────┬─────────────────────────────────────────────────────────┤
-│ S      │  ╔══════════════════════════════════════════════════╗   │
-│ I      │  ║  TOOLBAR (modul-spezifische Aktionen)           ║   │
-│ D      │  ║  [Neues Projekt] [Bearbeiten] [Löschen] │ [Export] ║ │
-│ E      │  ╚══════════════════════════════════════════════════╝   │
-│ B      │                                                         │
-│ A      │  ┌─────────────────────────────────────────────────┐   │
-│ R      │  │              CONTENT AREA                       │   │
+│ Side   │  ╔══════════════════════════════════════════════════╗   │
+│ bar    │  ║  TOOLBAR (modul-spezifische Aktionen)           ║   │
+│ (56px) │  ║  [← Zurück] [Projektname]    │ [Import starten] ║  │
+│        │  ╚══════════════════════════════════════════════════╝   │
+│ [📁]   │                                                        │
+│ [⚙]    │  ┌─────────────────────────────────────────────────┐   │
+│        │  │              CONTENT AREA                       │   │
 │        │  │              (Tabellen, Formulare, etc.)        │   │
-│ (220px │  │                                                 │   │
-│  immer │  └─────────────────────────────────────────────────┘   │
-│  sicht │                                                         │
-│  bar)  │                                                         │
+│        │  │                                                 │   │
+│        │  └─────────────────────────────────────────────────┘   │
+│ v0.25  │                                                        │
 ├────────┴─────────────────────────────────────────────────────────┤
-│  Statusleiste: DB: bpm.db | Schema v1.5 | Gespeichert ✓ 14:32   │
+│  Statusleiste (22px)                                             │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
 ### 6.2 Sidebar
 
-- **Position:** Links
-- **Verhalten:** Immer sichtbar, nicht einklappbar
-- **Breite:** 220px
+- **Position:** Links, immer sichtbar
+- **Breite:** 56px fest (Icon-Leiste, siehe UI_Navigation.md)
 - **Hintergrund:** `bg-surface`
-- **Inhalt:** Modul-Icons + Text, nur aktive Module
+- **Inhalt:** Modul-Icons (kein Text), nur aktive Module
 - **Aktives Modul:** `accent-primary` Hintergrund + `text-bright`
 - **Icons:** Emoji (provisorisch), Segoe Fluent Icons (geplant)
 - **Unten:** User-Name + App-Version

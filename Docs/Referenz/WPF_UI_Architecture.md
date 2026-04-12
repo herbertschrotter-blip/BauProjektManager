@@ -270,14 +270,14 @@ Verbindliche Brücke zwischen Design-Token (UI_UX_Guidelines.md) und WPF Resourc
 ┌──────────────────────────────────────────────────────────────┐
 │ BpmBreadcrumb (28px) 🎯                                      │
 ├────────┬─────────────────────────────────────────────────────┤
-│        │ BpmToolbar (40px) 🎯                                │
-│ Side-  ├─────────────────────────────────────────────────────┤
-│ bar    │                                                     │
-│ (220px)│ ContentControl (wechselt pro Modul)                 │
+│ Side-  │ BpmToolbar (34px, nur wenn Modul sie braucht)      │
+│ bar    ├─────────────────────────────────────────────────────┤
+│ (56px) │                                                     │
+│ Icons  │ ContentControl (wechselt pro Modul)                 │
 │        │                                                     │
 │        │                                                     │
 ├────────┴─────────────────────────────────────────────────────┤
-│ BpmStatusBar (24px)                                          │
+│ BpmStatusBar (22px)                                          │
 └──────────────────────────────────────────────────────────────┘
 
 🎯 = Zielstandard, kommt mit UI-Refresh
@@ -689,7 +689,7 @@ Technische Umsetzung der Auflösungsregeln aus UI_UX_Guidelines.md Kap. 17.
 
 ### 11.2 Technische Leitplanken
 
-- **Sidebar:** Feste 220px. Bei <1600px perspektivisch Icon-only Modus (🎯 Zielstandard)
+- **Sidebar:** 56px Icon-Leiste, immer sichtbar (UI_Navigation.md). Modul-Unterpunkte in der Toolbar.
 - **Dialoge:** `MinWidth`/`MinHeight` setzen, `MaxWidth` an Screen binden. Für enge Bildschirme: ScrollViewer um den Content
 - **DataGrids:** Horizontaler Scroll erlaubt in Tabellen, NICHT auf Seitenebene
 - **Fixe Breiten:** Nur für Sidebar, Toolbar, Statusleiste. Content-Bereich immer `Width="*"`

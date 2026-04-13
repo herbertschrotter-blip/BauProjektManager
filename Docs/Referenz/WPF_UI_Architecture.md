@@ -288,14 +288,14 @@ Verbindliche Brücke zwischen Design-Token (UI_UX_Guidelines.md) und WPF Resourc
 ```xml
 <Grid>
     <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="220"/>  <!-- Sidebar -->
+        <ColumnDefinition Width="56"/>   <!-- Sidebar (56px Icon-Leiste) -->
         <ColumnDefinition Width="*"/>    <!-- Content -->
     </Grid.ColumnDefinitions>
     <Grid.RowDefinitions>
-        <RowDefinition Height="28"/>     <!-- Breadcrumb (🎯) -->
-        <RowDefinition Height="40"/>     <!-- Toolbar (🎯) -->
+        <RowDefinition Height="28"/>     <!-- Breadcrumb (Post-V1) -->
+        <RowDefinition Height="34"/>     <!-- Toolbar -->
         <RowDefinition Height="*"/>      <!-- Content -->
-        <RowDefinition Height="24"/>     <!-- Statusleiste -->
+        <RowDefinition Height="22"/>     <!-- Statusleiste -->
     </Grid.RowDefinitions>
 
     <!-- Sidebar: Zeile 0-3, Spalte 0 -->

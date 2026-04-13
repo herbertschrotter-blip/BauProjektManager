@@ -65,7 +65,7 @@ supersedes: []
 |------|--------|-----------|---------|
 | **Geschosshöhe** | FBOK(oben) − FBOK(unten) | Lichte Höhe von Fertigfußboden zu Fertigfußboden des darüberliegenden Geschosses. | `BuildingLevel.StoryHeight` |
 | **Rohbauhöhe** | RDOK(oben) − RDOK(unten) | Höhe von Rohdecke zu Rohdecke. Relevant für Schalungshöhe und Mauerwerk. | `BuildingLevel.RawHeight` |
-| **Deckenstärke** | RDOK − RDUK | Dicke der Betondecke. | `BuildingLevel.DeckThickness` |
+| **Deckenstärke** | RDOK(n+1) − RDUK(n) | Dicke der Betondecke (Decke darüber minus UK aktuell). Seit v0.24.2 korrigiert — war vorher fälschlich RDOK − RDUK (gleiche Zeile). | `BuildingLevel.DeckThickness` |
 | **Fußbodenaufbau** | FBOK − RDOK | Schichtdicke zwischen Rohdecke und Fertigfußboden (Estrich, Dämmung, Belag). | `BuildingLevel.FloorBuildup` |
 
 ### 2.3 Geschoss-Bezeichnungen
@@ -210,7 +210,7 @@ Im Code: `PortalTypes` in `settings.json`, editierbar. Tab 4 im ProjectEditDialo
 | **04 DOKA** | Schalungspläne und -unterlagen (DOKA = Schalungshersteller). | |
 | **05 LV** | Leistungsverzeichnis, Angebote, Nachträge. | |
 | **06 Protokolle** | Baubesprechungsprotokolle, Abnahmeprotokolle. | |
-| **.bpm-manifest** | Versteckte JSON-Datei als "Ausweis" des Projektordners. Enthält Projekt-ID. Ermöglicht Wiedererkennung nach Ordner-Umbenennung. | ADR-013 |
+| **.bpm/** | Versteckter Ordner als Projekt-Identität im Projektordner. Enthält manifest.json (schlank), project.json (Vollexport), profiles/ (Plantyp-Profile). Ermöglicht Wiedererkennung nach Ordner-Umbenennung. | ADR-046 |
 | **_Eingang** | Inbox-Unterordner in Plantyp-Ordnern. Neue Pläne landen hier, BPM sortiert sie in die Zielstruktur. | |
 | **_Archiv** | Alte Plan-Indizes werden hierhin verschoben wenn ein neuer Index importiert wird. | |
 
@@ -224,8 +224,10 @@ Im Code: `PortalTypes` in `settings.json`, editierbar. Tab 4 im ProjectEditDialo
 | **planmanager.db** | SQLite | Lokal pro Projekt | Import-Journal, Undo, Cache. Syncht NICHT. |
 | **registry.json** | JSON | Cloud-Speicher `.AppData/` | Auto-generierter Export für VBA-Makros. Read-only für VBA. |
 | **settings.json** | JSON | Cloud-Speicher `.AppData/` | App-Einstellungen (Pfade, Ordner-Template, Listen). Syncht zwischen Geräten. |
-| **profiles.json** | JSON | Cloud-Speicher `.AppData/Projects/` | RecognitionProfiles pro Projekt. |
+| **profiles.json** | JSON | Cloud-Speicher `.bpm/profiles/` im Projektordner | RecognitionProfiles pro Projekt (ADR-046). |
 | **pattern-templates.json** | JSON | Cloud-Speicher `.AppData/` | Globale Muster-Bibliothek für Plantyp-Erkennung. |
+| **.bpm/manifest.json** | JSON | Cloud-Speicher Projektordner | Projekt-Identität (schlank: ID, Name, Module-Flags). ADR-046. |
+| **.bpm/project.json** | JSON | Cloud-Speicher Projektordner | Vollständiger Projektexport für Import/Übergabe. ADR-046. |
 
 ---
 

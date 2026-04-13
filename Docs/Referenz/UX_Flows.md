@@ -46,7 +46,7 @@ App öffnet
     │
     ▼
 Ersteinrichtungs-Dialog
-    │ Cloud-Speicher Auto-Erkennung (OneDrive, Google Drive, Dropbox)
+    │ Cloud-Speicher Auto-Erkennung
     │ Arbeitsordner wählen (oder Vorschlag bestätigen)
     │ Archivordner wählen (oder Vorschlag bestätigen)
     │
@@ -125,7 +125,7 @@ ProjectEditDialog öffnet (5 Tabs)
     │
     ├── Projekt in bpm.db speichern
     ├── Ordner im Dateisystem erstellen
-    ├── .bpm-manifest in Projektordner schreiben
+    ├── .bpm/ Ordner in Projektordner erstellen (ADR-046)
     ├── registry.json aktualisieren
     │
     ▼
@@ -277,7 +277,7 @@ Toast: "12 Pläne importiert (2 neu, 1 Update)"
 | Fehler | Reaktion |
 |--------|---------|
 | Eingangsordner existiert nicht | Error State: "Eingangsordner nicht gefunden. Projekt-Pfade prüfen." |
-| Datei gesperrt (OneDrive Sync) | Warnung pro Datei in der Vorschau, überspringbar |
+| Datei gesperrt (Cloud-Speicher-Sync) | Warnung pro Datei in der Vorschau, überspringbar |
 | Zielordner nicht beschreibbar | Error Toast + betroffene Dateien in Vorschau markiert |
 | Plantyp nicht erkannt | Gelb markiert in Vorschau, manuell zuweisbar |
 
@@ -307,7 +307,7 @@ Tab 5: Ordnerstruktur
     │
     ├── Gewählte Ordner im Dateisystem erstellen
     ├── _Eingang-Ordner merken (für PlanManager)
-    ├── .bpm-manifest in Root-Ordner schreiben
+    ├── .bpm/ Ordner in Projektordner erstellen (ADR-046)
     │
     ▼
 Toast: "Projektordner erstellt ✓"

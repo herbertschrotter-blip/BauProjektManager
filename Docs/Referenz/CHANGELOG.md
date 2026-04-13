@@ -31,6 +31,41 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.24.14] — 2026-04-11 / 2026-04-13
+
+### Docs-Audit: 20 Widersprüche gefunden und gefixt
+
+Systematischer Konsistenz-Audit über alle Kern- und Referenz-Docs. 19 Commits, alle reine Docs-Fixes (kein Code, kein Version-Bump).
+
+### Hinzugefuegt
+
+- **ADR-048:** Ansichtsprofile (ViewProfiles) als UI-Sichtschicht über Modul-Aktivierung, Resolver-basiert
+- **ADR-049:** Pfad-Resolution Option C — relativer folder_name + Manifest-Fallback bei Umbenennung
+
+### Geaendert
+
+- **Architektur** v2.2.0→v3.0.0 — Frontmatter/Quickload, PlanManager-Kapitel ausgelagert nach PlanManager.md, Kapitel neu nummeriert, Cloud-neutral (OneDrive→generisch), rootPath→folderName (ADR-049), ADR-Zähler auf 49
+- **DB-SCHEMA** — Frontmatter/Quickload, Schema-Status korrigiert (v1.5 implementiert, v2.0 ULID ausstehend), Kap. 6 um 3 Plan-Cache-Tabellen erweitert, diary_entries aufgeteilt in diary_days + diary_notes (ADR-047)
+- **CODING_STANDARDS** — Kap. 1.3 Namespaces an echte 5-Projekte-Solution, Kap. 7 komplett auf CommunityToolkit.Mvvm umgeschrieben (ADR-015)
+- **DSVGO-Architektur** — external_call_log auf ULID TEXT PRIMARY KEY, broken relative Links gefixt
+- **DEPENDENCY-MAP** — .bpm/ statt .bpm-manifest, profiles.json Pfad korrigiert, ADR-Zähler 49
+- **PlanManager.md** — Wizard 4-Schritt auf 5-Schritt korrigiert
+- **UI_UX_Guidelines + WPF_UI_Architecture** — Sidebar-Breite überall auf 56px Icon-Leiste
+- **VISION** — Modul-Reihenfolge an Architektur-Priorität angepasst (Foto→Zeit→Tagebuch→Dashboard)
+- **ADR.md** — ADR-013 Status auf Superseded by ADR-046, ADR-048 + ADR-049 ergänzt, Zähler auf 49
+- **BACKLOG** — Archivierung als Aktion klargestellt, settings.json Speicherort korrigiert
+- Alle Kern/Referenz/Module-Docs: Frontmatter + Quickload nach DOC-STANDARD.md ergänzt
+
+---
+
+## [v0.24.13] — 2026-04-11
+
+### Hinzugefuegt
+
+- **ADR-048:** Ansichtsprofile als Architekturkonzept in Architektur.md Kap. 1.4 verankert
+
+---
+
 ## [v0.24.12] — 2026-04-10
 
 ### Hinzugefuegt
@@ -778,6 +813,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 | v2.0.0 | 2026-04-04 | WPF_UI_Architecture | Neufassung (15 Review-Punkte) |
 | v1.5.1 | 2026-04-04 | DB-SCHEMA | TEXT-IDs, FK-Regel, Präfix-Tabelle (ADR-039) |
 | — | 2026-04-04 | Settings/App XAML | Token-Migration: SettingsView, ProjectEditDialog, SetupDialog |
+| v3.0.0 | 2026-04-11 | Architektur | Quickload-Refactor, PlanManager ausgelagert, Cloud-neutral, ADR-049 |
+| v1.3.0 | 2026-04-11 | ADR | 49 ADRs (ADR-043 bis ADR-049), ADR-013 Superseded |
+| — | 2026-04-11 | DB-SCHEMA | Schema-Status, Plan-Cache-Tabellen, diary Split |
+| — | 2026-04-11 | CODING_STANDARDS | Namespaces, CommunityToolkit.Mvvm |
+| — | 2026-04-11 | Alle Kern/Referenz/Module | Frontmatter + Quickload nach DOC-STANDARD |
+| — | 2026-04-13 | GLOSSAR | Deckenstärke-Formel, .bpm/ Ordner, profiles.json Pfad |
+| — | 2026-04-13 | UX_Flows | Cloud-neutral, .bpm/ Ordner |
+| — | 2026-04-13 | CHANGELOG | v0.24.13–v0.24.14 nachgetragen |
 
 ---
 

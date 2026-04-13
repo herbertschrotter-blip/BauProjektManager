@@ -16,7 +16,7 @@ supersedes: []
 - Autorität: source_of_truth
 - Lesen wenn: Neue Architekturentscheidung treffen, bestehende ADR prüfen, Status ändern, Entscheidung nachschlagen
 - Nicht zuständig für: Implementierungs-Details (→ jeweilige Modul-Docs), Code-Standards (→ CODING_STANDARDS.md)
-- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-046+)
+- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-049)
 - Pflichtlesen: keine (gezieltes Nachschlagen per ADR-Nummer)
 - Fachliche Invarianten:
   - Statusmodell: Decision Status (Proposed/Accepted/Superseded/Deprecated) getrennt von Implementation Status (Not Started/Partial/Implemented)
@@ -29,8 +29,8 @@ supersedes: []
 ﻿# BauProjektManager — Architecture Decision Records (ADR)
 
 **Erstellt:** 29.03.2026
-**Aktualisiert:** 04.04.2026
-**Version:** 1.2
+**Aktualisiert:** 13.04.2026
+**Version:** 1.3
 **Kontext:** Alle Entscheidungen aus Architektur-Sessions, Review-Runden (ChatGPT + Claude), und Implementierungs-Chats.
 
 ### Statusmodell
@@ -869,7 +869,7 @@ Die ersten Views (MainWindow, SettingsView, ProjectEditDialog) hatten alle Farbe
 
 **Entscheidung:**
 
-Zentrales Theme-System mit 7 Resource Dictionaries im Ordner `Themes/` des App-Projekts:
+Zentrales Theme-System mit 8 Resource Dictionaries im Ordner `Themes/` des App-Projekts:
 
 - **Colors.xaml** — Alle Farb-Token als SolidColorBrush (Background, Surface, Text, Accent, Status-Farben)
 - **Typography.xaml** — Schriftgrößen-Stufen (XS bis XXL, Segoe UI)
@@ -878,8 +878,9 @@ Zentrales Theme-System mit 7 Resource Dictionaries im Ordner `Themes/` des App-P
 - **DataGrid.xaml** — Header, Row, Cell, Zebra-Variante
 - **Tabs.xaml** — TabControl + TabItem mit Unterstrich-Style
 - **Dialogs.xaml** — Dialog-Basis, Cards, Tooltips, Separatoren
+- **Icons.xaml** — Zentrale Icon-Registry mit Emoji-String-Resources (ADR-044)
 
-Ursprünglich 5 Dictionaries. Erweitert um Inputs.xaml und Tabs.xaml für vollständige Formular- und Tab-Abdeckung — Styles lagen vorher verstreut in Dialogs.xaml und lokalen Views.
+Ursprünglich 5 Dictionaries. Erweitert um Inputs.xaml und Tabs.xaml (7), dann Icons.xaml (8, ADR-044).
 
 Alle Dictionaries werden in `App.xaml` per `MergedDictionaries` geladen. Views verwenden ausschließlich `{StaticResource TokenName}` statt hardcoded Werte.
 
@@ -1572,7 +1573,7 @@ Die Offline-Lizenzprüfung per eingebettetem HMAC-Secret ist **manipulationsersc
 ## ADR-043: Dev-Tools — Lokales Debug-Toolset für Entwicklung
 
 **Datum:** 2026-04
-**Status:** ✅ Entschieden / Not Started
+**Status:** ✅ Entschieden / Partial (v0.17.2: 3 Tabs + 4 Reset-Optionen, planmanager.db-Reset fehlt noch)
 **Herkunft:** ChatGPT + Claude Review-Gespräch (4 Runden, 05.04.2026)
 
 **Kontext:**

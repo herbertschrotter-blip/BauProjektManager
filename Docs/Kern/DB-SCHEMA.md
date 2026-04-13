@@ -34,7 +34,7 @@ supersedes: []
 - Fachliche Invarianten:
   - ULID als TEXT PRIMARY KEY für ALLE Tabellen — keine INTEGER IDs, keine seq
   - ID-Generierung NUR über IIdGenerator.NewId() — nie manuell
-  - Jede Tabelle hat created_at und updated_at (TEXT, ISO 8601)
+  - Fachliche Entitätstabellen haben created_at und updated_at (TEXT, ISO 8601). Hilfstabellen (schema_version, Verknüpfungstabellen, Journal-Details) sind ausgenommen.
   - FK-Indizes auf alle Fremdschlüssel-Spalten
   - schema_version Tabelle in jeder DB
 
@@ -791,11 +791,11 @@ CREATE INDEX idx_action_files_action ON import_action_files(action_id);
 | *2.1* | *geplant* | *employees, time_entries* |
 | *2.2* | *geplant* | *work_packages, work_assignments* |
 | *2.3* | *geplant* | *lv_positions, performance_catalog, project_difficulty* |
-| *2.4* | *geplant* | *diary_entries* |
+| *2.4* | *geplant* | *diary_days, diary_notes (ADR-047)* |
 | *2.5* | *geplant* | *contacts, material_orders, buildings-Tabelle entfernen* |
 | *2.6* | *geplant* | *external_call_log (Audit-Log, ADR-035)* |
 | *2.7* | *geplant* | *project_shares (Multi-User Phase 2, ADR-038)* |
-| *3.0* | *geplant* | *users, roles, project_user_role (Multi-User Phase 3)* |
+| *3.0* | *geplant* | *users, user_roles, project_memberships (Multi-User Phase 3)* |
 
 ### 7.2 Migrationsregeln
 
@@ -835,7 +835,7 @@ EINSTELLUNGEN (Stammdaten)
 │    │    │ work_assignments
 │    │    │
 │    │    └──→ BAUTAGEBUCH (täglich, auto-befüllt)
-│    │         │ diary_entries
+│    │         │ diary_days + diary_notes
 │    │         │
 │    │         └──→ DASHBOARD (Übersicht)
 │    │

@@ -298,7 +298,7 @@ public class PolicyDecision
 public class RelaxedPrivacyPolicy : IPrivacyPolicy
 {
     public PolicyDecision Evaluate(string module, DataClassification classification, string purpose)
-        => new() { IsAllowed = true, Reason = "internal_mode", RequiresUserConfirmation = false };
+        => new() { IsAllowed = true, Reason = "allowed_internal_mode", RequiresUserConfirmation = false };
 }
 
 // Für Verkaufsversion — volle DSGVO-Logik
@@ -315,7 +315,7 @@ public class StrictPrivacyPolicy : IPrivacyPolicy
 **DI-Registrierung (in App.xaml.cs):**
 ```csharp
 // Entscheidung über Lizenz, NICHT über settings.json
-if (license.IsCommercial)
+if (license.RequiresStrictCompliance)
     services.AddSingleton<IPrivacyPolicy, StrictPrivacyPolicy>();
 else
     services.AddSingleton<IPrivacyPolicy, RelaxedPrivacyPolicy>();
@@ -351,7 +351,7 @@ public class ExternalCommunicationService : IExternalCommunicationService
 
 - Der aktive Modus wird NIEMALS über `settings.json` gesteuert — sonst kann jeder User die DSGVO umgehen
 - Die Entscheidung kommt aus der Lizenz (ADR-034: `.bpm-license`) oder aus einem Build-Flag
-- `RelaxedPrivacyPolicy` loggt trotzdem ins Audit-Log (mit `decision_reason: "internal_mode"`) — damit ist auch im internen Betrieb nachvollziehbar was nach außen ging
+- `RelaxedPrivacyPolicy` loggt trotzdem ins Audit-Log (mit `decision_reason: "allowed_internal_mode"`) — damit ist auch im internen Betrieb nachvollziehbar was nach außen ging
 - Beide Policies nutzen denselben `ExternalCommunicationService` — kein doppelter Code
 
 **Session-Override (OPTIONAL — für Commercial-Modus):**
@@ -435,7 +435,7 @@ Datenklassifizierung: Welche Klasse? (A / B / C)
 IExternalCommunicationService.SendAsync()
     │
     ▼
-Audit-Log (Zeitstempel, Modul, Domain, containsPersonalData)
+Audit-Log (Zeitstempel, Modul, Domain, DataClassification)
     │
     ▼
 Response → Lokale Verarbeitung → Anzeige
@@ -449,7 +449,7 @@ Jeder externe Datenfluss MUSS diese 4 Schritte durchlaufen:
 
 ### Schritt 1: Klassifizierung
 
-Welche Datenklasse wird gesendet? Service muss `containsPersonalData` korrekt setzen.
+Welche Datenklasse wird gesendet? Service muss `DataClassification` korrekt setzen (ClassA/ClassB/ClassC).
 
 ### Schritt 2: Risikoprüfung
 
@@ -619,7 +619,7 @@ Kein Cloud-Zwang. Kein Account. Kein externer Datenspeicher.
 |---|---|---|
 | `registry.json` | Kontaktdaten (Name, E-Mail, Telefon) | B |
 | `settings.json` | Pfade, Einstellungen | A |
-| `profiles.json` | Plantyp-Muster | A |
+| `.bpm/profiles/*.json` | Plantyp-Muster | A |
 | Excel Zeiterfassung | Mitarbeiterdaten, Arbeitszeiten | B |
 
 **Regel:** BPM informiert den User, dass Cloud-Sync die Verantwortung des Users ist. BPM selbst sendet keine Daten an Cloud-Anbieter — der Cloud-Speicher-Client (OneDrive, Dropbox etc.) macht das.
@@ -778,7 +778,7 @@ CREATE TABLE external_call_log (
     blocked INTEGER DEFAULT 0,        -- 1 wenn blockiert
     decision_reason TEXT              -- "allowed_class_a", "blocked_global_killswitch",
                                       -- "blocked_module_disabled", "allowed_user_confirmed",
-                                      -- "blocked_class_c_no_anonymization",
+                                      -- "blocked_class_c_requires_override",
                                       -- "blocked_dpa_not_confirmed",
                                       -- "allowed_anonymized_payload"
 );

@@ -115,7 +115,7 @@ Im Code: `LevelNameEntry` mit `ShortName` + `LongName`, editierbar in `settings.
 | **Plannummer** | Eindeutige Kennung eines Plans innerhalb eines Projekts. Kommt vom Planer (Architekt, Statiker). | Segment im Dateinamen |
 | **_Eingang** | Inbox-Ordner pro Plantyp. Neue Pläne werden hier abgelegt (per E-Mail, Download, USB). BPM sortiert von hier in die Zielordner. | `FolderTemplateEntry.HasInbox` |
 | **_Archiv** | Ordner für alte Planversionen. Wenn ein Plan einen neuen Index bekommt, wird der alte Index hierhin verschoben. |
-| **RecognitionProfile** | Erlerntes Muster pro Projekt/Plantyp. Definiert welches Segment im Dateinamen was bedeutet (Nummer, Index, Geschoss etc.). Pro Projekt in `profiles.json`. | `profiles.json` |
+| **RecognitionProfile** | Erlerntes Muster pro Projekt/Plantyp. Definiert welches Segment im Dateinamen was bedeutet (Nummer, Index, Geschoss etc.). Pro Projekt in `.bpm/profiles/*.json` (ADR-046). | `.bpm/profiles/` |
 | **PatternTemplate** | Vorschlag aus der globalen Musterbibliothek. Wenn ein neues Profil angelegt wird, schlägt BPM ähnliche bestehende Templates vor. | `pattern-templates.json` |
 | **Segment** | Teil eines Dateinamens, gesplittet an Trennzeichen (-, _, .). Z.B. `AR-H64-EG-GR-01.pdf` → 5 Segmente. | ADR-022 |
 | **Import-Workflow** | 10-Schritte-Prozess: Scan → Parse → Validate → Classify → Plan → Preview → Execute → Finalize → Recover → Undo. | ADR-008 |

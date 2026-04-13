@@ -211,7 +211,7 @@ SQLite ist die **einzige Wahrheitsquelle** für alle BPM-Kerndaten (Projekte, Pl
 Cloud-Speicher/02Arbeit/
 
 ```
-OneDrive/02Arbeit/
+<Cloud-Speicher-Ordner>/
 │
 ├── .AppData/                                  ← VERSTECKT, synct
 │   └── BauProjektManager/
@@ -404,8 +404,8 @@ public enum ProjectStatus { Active, Completed }
   "registryVersion": "1.0",
   "generatedAt": "2026-03-27T10:00:00",
   "settings": {
-    "basePath": "C:\\Users\\Herbert\\OneDrive\\02Arbeit",
-    "appDataPath": "...\\02Arbeit\\.AppData\\BauProjektManager",
+    "basePath": "<Cloud-Speicher-Pfad>\\Projekte",
+    "appDataPath": "<Cloud-Speicher-Pfad>\\.AppData\\BauProjektManager",
     "templatesPath": "...\\02Arbeit\\Vorlagen",
     "folderTemplate": "{projectNumber}_{projectName}"
   },
@@ -436,13 +436,13 @@ public enum ProjectStatus { Active, Completed }
       "constructionStart": "2024-06-01",
       "plannedEnd": "2026-12-31",
       "actualEnd": null,
-      "rootPath": "C:\\Users\\Herbert\\OneDrive\\02Arbeit\\202512_ÖWG-Dobl-Zwaring",
-      "plansPath": "Pläne",
-      "inboxPath": "Pläne\\_Eingang",
-      "photosPath": "Fotos",
-      "documentsPath": "Dokumente",
-      "protocolsPath": "Protokolle",
-      "invoicesPath": "Rechnungen",
+      "folderName": "202512_ÖWG-Dobl-Zwaring",
+      "plansPath": "01 Planunterlagen",
+      "inboxPath": "01 Planunterlagen\\_Eingang",
+      "photosPath": "02 Fotos",
+      "documentsPath": "03 Dokumente",
+      "protocolsPath": "04 Protokolle",
+      "invoicesPath": "05 Rechnungen",
       "buildings": "H64:Haus Nr. 64:Reihenhaus:KG,EG,1.OG,2.OG,Dach|H66:Haus Nr. 66:Reihenhaus:EG,OG,Dach",
       "tags": "Wohnbau, Reihenhäuser, ÖWGES",
       "notes": "Bauteil B-13, 3 Häuser"

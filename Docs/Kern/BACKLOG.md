@@ -31,7 +31,7 @@ supersedes: []
 
 **Verwandte Dokumente:**
 - [VISION.md](../Referenz/VISION.md) — Nordstern, Schmerzpunkte, Zielgruppe
-- [ADR.md](../Referenz/ADR.md) — Architekturentscheidungen (44+ ADRs)
+- [ADR.md](../Referenz/ADR.md) — Architekturentscheidungen (49 ADRs)
 - [CHANGELOG.md](../Referenz/CHANGELOG.md) — Versionshistorie ab v0.0.0
 - [DEPENDENCY-MAP.md](../Referenz/DEPENDENCY-MAP.md) — Solution-Struktur + Ökosystem
 - [BauProjektManager_Architektur.md](BauProjektManager_Architektur.md) — Technische Spezifikation v2.0
@@ -78,7 +78,7 @@ Ohne diese Features ist V1 nicht brauchbar. Der PlanManager ist das Kernprodukt.
 | 3 | Domain-Modelle (Project, Client, Location, Timeline, Paths) | ✅ v0.5.1 |
 | 4 | Projektliste + Bearbeitungs-Dialog | ✅ v0.7.0 |
 | 5 | SQLite-Datenbank (bpm.db) | ✅ v0.8.0 |
-| 6 | ~~Auto-Increment IDs~~ → ULID (ADR-039 v2) | ✅ v0.8.2 → v0.17.0 |
+| 6 | ~~Auto-Increment IDs~~ → ULID (ADR-039 v2) | ✅ v0.8.2 (Legacy-IDs) — ULID-Migration ausstehend |
 | 7 | registry.json Export (flach, für VBA) | ✅ v0.9.0 |
 | 9 | Ersteinrichtung (Cloud-Speicher, Pfade, settings.json) | ✅ v0.10.0 |
 | 10 | Projektordner erstellen (nummeriert, Template, TreeView) | ✅ v0.11.0 |
@@ -96,7 +96,7 @@ Ohne diese Features ist V1 nicht brauchbar. Der PlanManager ist das Kernprodukt.
 
 ### PlanManager (⬜ nächste Phase — DAS KERNFEATURE)
 
-Details: [BauProjektManager_Architektur.md](BauProjektManager_Architektur.md) Kapitel 4–8.
+Details: [BauProjektManager_Architektur.md](BauProjektManager_Architektur.md) Kap. 4 (Überblick) + [PlanManager.md](../Module/PlanManager.md).
 
 | # | Feature | Beschreibung |
 |---|---------|-------------|
@@ -104,7 +104,7 @@ Details: [BauProjektManager_Architektur.md](BauProjektManager_Architektur.md) Ka
 | 19 | Segment-Zuweiser GUI | 5-Schritt-Wizard: Datei, Segmente, Index, Zielordner, Erkennung ✅ v0.24.10 (UI fertig, Speichern offen) |
 | 20 | Plantyp-Erkennung | prefix/contains/regex Muster |
 | 21 | PatternTemplates | Vorschlagslogik (ADR-010) |
-| 22 | profiles.json | Pro Projekt auf Cloud-Speicher — ProfileManager Service |
+| 22 | .bpm/profiles/*.json | Pro Projekt im .bpm/-Ordner (ADR-046) — ProfileManager Service |
 | 23 | pattern-templates.json | Globale Musterbibliothek |
 | 24 | Import-Workflow 1-5 | Scan, Parse, Validate, Classify, Plan (ADR-008) |
 | 25 | Import-Vorschau | GUI mit Status, Rechtsklick-Korrektur |
@@ -144,7 +144,7 @@ Diese Features verbessern V1, sind aber kein Blocker für den Release.
 | external_call_log Tabelle | Audit-Log in bpm.db (DSVGO-Architektur Kap. 11.3) | ⬜ |
 | Einstellungen: Datenschutz-Tab | Toggle pro externem Dienst, Audit-Log-Anzeige, Kill-Switch | ⬜ |
 | Log-Rotation 30 Tage | Serilog retainedFileCountLimit (trivial) | ✅ v0.5.0 |
-| ADR-039 v2 ULID-Schema | Alle Tabellen auf ULID PRIMARY KEY umgestellt. IIdGenerator in Domain, UlidIdGenerator in Infrastructure (NuGet: Cysharp/Ulid) | ✅ v0.17.0 |
+| ADR-039 v2 ULID-Schema | Entschieden v0.17.0 — Migration aller Tabellen auf ULID ausstehend | ⬜ |
 
 ### Sync-Infrastruktur (PFLICHT vor Multi-User — DatenarchitekturSync.md)
 
@@ -228,9 +228,9 @@ Betrifft mehrere Module — hier zentral dokumentiert.
 
 ---
 
-## Aktuelles DB-Schema (v2.0 ULID — ADR-039 v2)
+## Aktuelles DB-Schema (v1.5 — ULID v2.0 ausstehend)
 
-Alle Tabellen verwenden `id TEXT PRIMARY KEY` (ULID). Keine `seq` Spalte. Details: [DB-SCHEMA.md](DB-SCHEMA.md)
+Code hat noch seq + Präfix-IDs. ULID-Migration entschieden (ADR-039 v2), aber noch nicht implementiert. Details: [DB-SCHEMA.md](DB-SCHEMA.md)
 
 clients (id, company, contact_person, phone, email, notes, created_at, updated_at)
 projects (id, project_number, name, full_name, status, project_type, client_id,

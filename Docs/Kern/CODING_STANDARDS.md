@@ -40,8 +40,8 @@ supersedes: []
   - Kapitel 10 (XAML) bei neuer XAML-Datei
   - Kapitel 17 (Datenschutz) bei externem API-Call oder Personendaten
 - Fachliche Invarianten:
-  - Alle Farben über Theme-Tokens (StaticResource) — nie hardcoded Hex
-  - DynamicResource in Custom-Dialog-Windows (StaticResource → XamlParseException)
+  - App/Shell-XAML: Farben über Theme-Tokens (StaticResource) — nie hardcoded Hex
+  - Modul-XAML + Custom-Dialog-Windows: DynamicResource (Pflicht, da App-Resources erst zur Laufzeit aufgelöst werden)
   - Keine Business-Logik im Code-Behind — nur View-Logik
   - Datenschutz-Entscheidungen nie im ViewModel — immer über IPrivacyPolicy
   - Logging: Keine Personendaten, nur IDs (Serilog Structured Logging)
@@ -884,7 +884,7 @@ public partial class MainWindow : Window
 | ViewModel kennt View NICHT | Niemals Window/Control Referenzen im ViewModel |
 | ViewModel kennt Model | Liest/schreibt Daten |
 | Model kennt niemanden | Reine Datenklasse |
-| Kein Code-Behind | Nur `InitializeComponent()` + `DataContext` setzen |
+| Minimaler Code-Behind | `InitializeComponent()`, `DataContext`, UI-Orchestrierung (Dialog-Öffnung, Fokus, Navigation). Keine Business-Logik. |
 | Commands statt Events | `ICommand` für Button-Clicks, nicht Click-EventHandler |
 | ObservableCollection | Für Listen die sich ändern (nicht `List<T>`) |
 
@@ -1527,7 +1527,7 @@ _logger.LogInformation("API Key: {Key}", apiKey);  // NIEMALS loggen
 Die Datenschutz-Logik wird über `IPrivacyPolicy` gesteuert (ADR-036). Der aktive Modus kommt aus der Lizenz, NICHT aus settings.json.
 ```csharp
 // In App.xaml.cs — DI Registrierung
-if (license.IsCommercial)
+if (license.RequiresStrictCompliance)
     services.AddSingleton<IPrivacyPolicy, StrictPrivacyPolicy>();
 else
     services.AddSingleton<IPrivacyPolicy, RelaxedPrivacyPolicy>();
@@ -1606,4 +1606,4 @@ Für Ja/Nein-Fragen in Code-Behind-Dialogen eigenen Dark-Theme-Dialog verwenden.
 
 *Diese Standards gelten für alle C#/WPF-Dateien im BauProjektManager-Projekt.*  
 *Claude verwendet diese Standards automatisch beim Code-Generieren.*  
-*Für UI-Design-Regeln (Farben, Spacing, Komponenten-Verhalten) siehe `Docs/UI_UX_Guidelines.md`.*
+*Für UI-Design-Regeln (Farben, Spacing, Komponenten-Verhalten) siehe `../Referenz/UI_UX_Guidelines.md`.*

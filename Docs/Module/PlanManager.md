@@ -25,7 +25,7 @@ supersedes: []
   - 6. Workflow — 5 Phasen
   - 7. Manueller Sortier-Modus
   - 8. DWG-Veraltet-Warnung
-  - 9. Bestandsmanifest — _plan_index.json
+  - 9. Bestandsmanifest — .bpm/plan-index.json
   - 10. Datenbank-Schema (planmanager.db)
   - 11. Undo-System
   - 12. MD5 als universeller Fingerabdruck
@@ -60,7 +60,7 @@ supersedes: []
 **Review:** ChatGPT Cross-Review (3 Runden, 09.04.2026)
 
 **Verwandte Dokumente:**
-- [BauProjektManager_Architektur.md](../Kern/BauProjektManager_Architektur.md) — Kap. 4–8
+- [BauProjektManager_Architektur.md](../Kern/BauProjektManager_Architektur.md) — Kap. 4 (Überblick), Kap. 2–3 (Speicher/Registry)
 - [BACKLOG.md](../Kern/BACKLOG.md) — Features #18–#33
 - [DB-SCHEMA.md](../Kern/DB-SCHEMA.md) — planmanager.db Tabellen
 - [ADR.md](../Referenz/ADR.md) — ADR-007 bis ADR-010, ADR-022, ADR-045
@@ -137,7 +137,7 @@ auch mehreren Revisionen zugeordnet sein (Sammel-DWG) oder eigenständig bleiben
 |-------|-----|--------|
 | `profiles.json` → `.bpm/profiles/<n>.json` | Cloud Projektordner `.bpm/profiles/` (ADR-046) | Ja |
 | `pattern-templates.json` | Cloud `.AppData/` | Ja |
-| `_plan_index.json` | Cloud Projektordner (hidden) | Ja |
+| `.bpm/plan-index.json` | Cloud Projektordner (.bpm/) | Ja |
 | `planmanager.db` | Lokal `%LocalAppData%/Projects/<P>/` | Nein |
 | Dokumente (PDF/DWG) | Cloud Projektordner | Ja |
 | Backups (pre-import) | Lokal `%LocalAppData%/Backups/` | Nein |
@@ -293,7 +293,7 @@ Import erst nach Bestätigung: Button „Import ausführen".
 | 4a. Backup | planmanager.db + .bpm/profiles/ als .bak |
 | 4b. Journal | Alle Aktionen VORHER ins Undo-Journal (Status: pending) |
 | 4c. Execute | Pro Aktion: _Archiv/ erstellen → verschieben → ggf. umbenennen → completed |
-| 4d. Finalize | Journal completed. _plan_index.json aktualisieren. Zusammenfassung. |
+| 4d. Finalize | Journal completed. .bpm/plan-index.json aktualisieren. Zusammenfassung. |
 
 **Journal = Execution-Log:** Speichert die tatsächlich ausgeführten Aktionen, nicht nur geplante.
 **Alle Pfade relativ** zum Projektordner (keine absoluten Pfade im Journal).
@@ -358,7 +358,7 @@ Index B → Warnung: „Verknüpfte Dateien haben unterschiedliche Revisionsstä
 
 ---
 
-## 9. Bestandsmanifest — `_plan_index.json`
+## 9. Bestandsmanifest — `.bpm/plan-index.json`
 
 Versteckte JSON-Datei im Projektordner (Cloud-synced), ähnlich `.bpm-manifest`. Enthält den
 aktuellen Dokumentenbestand als leichtgewichtigen Export.
@@ -404,7 +404,7 @@ Wird nach jedem Import automatisch aktualisiert.
 
 ### 9.4 Cache-Rebuild auf Gerät B
 
-1. `_plan_index.json` laden (aus Cloud)
+1. `.bpm/plan-index.json` laden (aus Cloud)
 2. Lokalen Cache daraus aufbauen
 3. Delta-Scan: Dateisystem prüfen ob Manifest stimmt
 4. Abweichungen markieren: `ManifestOnly`, `VerifiedOnDisk`, `MissingOnDisk`, `DiscoveredNotInManifest`
@@ -657,7 +657,7 @@ Bauprotokoll: "BB_2026-04-09_003_Baubesprechung.pdf" → [BB][2026-04-09][003][B
 | Screen | Beschreibung |
 |--------|-------------|
 | **Hauptseite** | Projektliste mit Eingang-Badge (amber/grün) |
-| **Projektdetail** | 2 Tabs: Automatisch (Profile gruppiert nach Zielordner, ✎ Profil-Button) + Manuell sortieren |
+| **Projektdetail** | 3 Tabs: Profile (gruppiert nach Zielordner, ✎ Profil-Button), Manuell sortieren, Sync |
 | **Import-Vorschau** | DataGrid mit 9 Status-Typen, Zusammenfassungszeile, Rechtsklick-Korrekturen |
 | **Profil-Wizard** | 5 Schritte: Datei auswaehlen → Segmente zuweisen → IndexSource → Zielordner → Erkennung (klickbare Segment-Bloecke) |
 | **Manueller Sortier-Dialog** | Links: Dateien, Rechts: Formular + Umbenennung + Vorschau |
@@ -689,7 +689,7 @@ BauProjektManager.PlanManager/
 │   ├── DocumentKeyBuilder.cs          ← document_key deterministisch bilden
 │   ├── ImportWorkflowService.cs       ← Workflow-Orchestrierung
 │   ├── ProfileManager.cs             ← .bpm/profiles/ lesen/schreiben (ADR-046) + pattern-templates.json
-│   ├── PlanIndexManifestService.cs   ← _plan_index.json lesen/schreiben
+│   ├── PlanIndexManifestService.cs   ← .bpm/plan-index.json lesen/schreiben
 │   ├── FileRenamer.cs                ← RenameSchemaEngine + FileNameSanitizer
 │   └── PlanManagerDatabase.cs        ← planmanager.db CRUD
 └── BauProjektManager.PlanManager.csproj
@@ -709,7 +709,7 @@ BauProjektManager.PlanManager/
 | 6 | 23 | pattern-templates.json (Globale Bibliothek) |
 | 7 | 24 | Import-Workflow Scan→Parse→Classify→Plan |
 | 8 | 25 | Import-Vorschau (9 Status, Rechtsklick) |
-| 9 | 26 | Import-Execute (Verschieben, Journal, _plan_index.json) |
+| 9 | 26 | Import-Execute (Verschieben, Journal, .bpm/plan-index.json) |
 | 10 | 27 | Index-Archivierung (_Archiv/) |
 | 11 | 28 | DB-Schema (6 SQLite-Tabellen) |
 | 12 | 29 | Recovery (pending → Reparatur) |
@@ -790,7 +790,7 @@ Manuelle Links haben Vorrang vor Auto-Links.
 
 ### 20.3 Manifest ≠ Wahrheit
 
-`_plan_index.json` = synchronisierter Soll-Bestand.
+`.bpm/plan-index.json` = synchronisierter Soll-Bestand.
 Lokaler Disk-Scan = Ist-Bestand.
 BPM muss mit Abweichungen leben können (Dateien fehlen, neue da, Hash anders).
 Delta-Scan erkennt Differenzen und markiert sie intern.
@@ -821,7 +821,7 @@ Delta-Scan erkennt Differenzen und markiert sie intern.
 *- 9 Status-Typen statt 6 (+CHANGED_SAME_INDEX, OLDER_REVISION, CONFLICT)*
 *- IndexComparison Policy im Profil statt hardcoded*
 *- indexMode: optional im Profil*
-*- _plan_index.json als Bestandsmanifest (Cloud-synced)*
+*- .bpm/plan-index.json als Bestandsmanifest (Cloud-synced)*
 *- DWG-Veraltet-Warnung (Revisions-Inkonsistenz)*
 *- rename_log gestrichen, Felder in import_action_files integriert*
 *- MD5 + file_size immer Pflicht*

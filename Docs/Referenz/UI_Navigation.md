@@ -136,11 +136,12 @@ Projektdetail
     │                          Buttons: Abbrechen + Import ausführen
     │
     ├── [✎ Profil]      ──►  Profil-Wizard (ProfileWizardDialog)
-    │                          4 Schritte mit Progress-Bar:
-    │                          1. Segmente zuweisen
-    │                          2. IndexSource + Vergleichslogik
-    │                          3. Zielordner + Unterordner-Ebenen
-    │                          4. Erkennung (prefix/contains + Test)
+    │                          5 Schritte mit Progress-Bar:
+    │                          1. Datei auswählen + Parsen
+    │                          2. Segmente zuweisen
+    │                          3. IndexSource + Vergleichslogik
+    │                          4. Zielordner + Unterordner-Ebenen
+    │                          5. Erkennung (prefix/contains + Test)
     │                          Buttons: Abbrechen/Zurück + Weiter/Speichern
     │
     └── [+ Neuer Typ]   ──►  Gleicher Wizard (leer statt vorausgefüllt)

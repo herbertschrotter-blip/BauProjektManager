@@ -59,14 +59,14 @@ Das Projekt-Modul ist das Herzstück des BauProjektManager. Es verwaltet alle Ba
 | Domain | `Models/ProjectTimeline.cs` | Zeitplan (4 Datumswerte) |
 | Domain | `Models/ProjectPaths.cs` | Pfade relativ zu Root |
 | Domain | `Models/AppSettings.cs` | Globale Einstellungen, Ordner-Template, editierbare Listen |
-| Domain | `Models/BpmManifest.cs` | Portabler Projekt-Snapshot (.bpm-manifest) mit eigenen DTOs |
+| Domain | `Models/BpmManifest.cs` | .bpm/ Ordner (ADR-046): manifest.json (Identität) + project.json (Vollexport) |
 | Domain | `Enums/ProjectStatus.cs` | Active, Completed |
 | Domain | `Interfaces/IDialogService.cs` | Abstraktion für Info/Warn/Error/Confirm Dialoge |
 | Infrastructure | `Persistence/ProjectDatabase.cs` | SQLite Schema, CRUD für alle Tabellen |
 | Infrastructure | `Persistence/RegistryJsonExporter.cs` | Flacher JSON-Export für VBA |
 | Infrastructure | `Persistence/AppSettingsService.cs` | settings.json lesen/schreiben |
 | Infrastructure | `Persistence/ProjectFolderService.cs` | Projektordner auf Disk erstellen/synchronisieren |
-| Infrastructure | `Persistence/BpmManifestService.cs` | .bpm-manifest lesen/schreiben/scannen, Hidden+ReadOnly |
+| Infrastructure | `Persistence/ManifestService.cs` | .bpm/ Ordner lesen/schreiben/scannen (ADR-046), Hidden+ReadOnly |
 | App | `BpmDialogService.cs` | Implementation von IDialogService mit Dark Theme Dialogen |
 | App | `BpmInfoDialog.xaml` + `.cs` | Eigene Info/Warn/Error MessageBox im BPM-Design |
 | App | `BpmConfirmDialog.xaml` + `.cs` | Ja/Nein-Dialog im BPM-Design |
@@ -151,7 +151,7 @@ Vorbereitet für späteres Adressbuch und Outlook-Sync. Aktuell eingebettet im P
 | `SortOrder` | `int` | Reihenfolge |
 
 **Errechnete Werte (nicht in DB):**
-- `DeckThickness` — Deckendicke: RDOK − RDUK
+- `DeckThickness` — Deckendicke: RDOK(n+1) − RDUK(n) (Decke darüber minus UK aktuell)
 - `FloorBuildup` — Fußbodenaufbau: FBOK − RDOK
 - `StoryHeight` — Geschosshöhe (berechnet im UI aus dem Geschoss darüber)
 - `RawHeight` — Rohbauhöhe (berechnet im UI)
@@ -265,7 +265,7 @@ Liest und schreibt `settings.json` in Cloud-Speicher `.AppData/BauProjektManager
 **Inhalt von settings.json:**
 - `BasePath` — Arbeitsordner (wo Projektordner erstellt werden)
 - `ArchivePath` — Archivordner
-- `OneDrivePath` — Cloud-Speicher-Pfad
+- `CloudStoragePath` — Cloud-Speicher-Pfad
 - `IsFirstRun` — Ersteinrichtung-Flag
 - `FolderTemplate` — Standard-Ordnerstruktur (Hauptordner + Unterordner + Präfix-Schalter + Inbox-Flag)
 - `ProjectTypes` — Editierbare Liste (Neubau, Sanierung, Umbau...)
@@ -283,15 +283,15 @@ Erstellt Projektordner auf Disk basierend auf dem Ordner-Template.
 | `CreateProjectFolders(Project, List<FolderTemplateEntry>?)` | Erstellt den kompletten Ordnerbaum beim Projekt-Anlegen. Gibt Root-Pfad zurück. |
 | `SyncNewFolders(Project, List<FolderTemplateEntry>)` | Erstellt nur neue Ordner bei bestehendem Projekt. **Löscht nie** bestehende Ordner. |
 
-**Ordner-Format:** Hauptordner immer nummeriert (`00 Pläne`, `01 Fotos`, ...). Unterordner optional nummeriert (Präfix-Schalter). Inbox-Unterordner heißt `_Eingang`.
+**Ordner-Format:** Hauptordner immer nummeriert (`01 Planunterlagen`, `02 Fotos`, ...). Unterordner optional nummeriert (Präfix-Schalter). Inbox-Unterordner heißt `_Eingang`.
 
 ### RegistryJsonExporter
 
-Exportiert alle Projekte als flaches JSON nach `{AppRoot}/Export/registry.json`.
+Exportiert alle Projekte als flaches JSON nach `Cloud-Speicher .AppData/BauProjektManager/registry.json`.
 
 **Zweck:** VBA-Makros in Excel und Outlook können die JSON-Datei lesen um Projektdaten zu verwenden (Pfade, Projektnummern, Adressen).
 
-**Format:** Array von flachen Objekten (kein Nesting), alle Felder als Strings. Atomic Write über temp-Datei + Rename.
+**Format:** Root-Objekt mit `registryVersion`, `settings`, `planTypes`, `projects`. Projekte als flache Objekte (kein Nesting innerhalb projects), VBA-kompatibel. Versionierter Exportvertrag — Felder entfernen ist Breaking Change (Architektur Kap. 3.5). Atomic Write über temp-Datei + Rename.
 
 ---
 
@@ -432,7 +432,7 @@ Beim Bearbeiten bestehender Projekte werden von Disk gelesene Ordner mit `IsExis
 ### Registry-Export (VBA-Interop)
 
 ```
-ProjectDatabase (SQLite) → RegistryJsonExporter → Export/registry.json → VBA-Makros (Excel, Outlook)
+ProjectDatabase (SQLite) → RegistryJsonExporter → Cloud .AppData/registry.json → VBA-Makros (Excel, Outlook)
 ```
 
 ---
@@ -453,7 +453,7 @@ Diese Listen sind vom User anpassbar und werden als ComboBox-Quellen im Dialog v
 
 ## 11. Bekannte Einschränkungen
 
-- **Kein DI-Container** — SettingsViewModel instanziiert Services manuell (`new ProjectDatabase()`). Migration auf DI geplant nach PlanManager.
+- **Noch kein DI** — SettingsViewModel instanziiert Services manuell (`new ProjectDatabase()`). DI-Migration geplant nach PlanManager V1.
 - **ProjectEditDialog.xaml.cs ist zu groß** (~46 KB, ~1200 Zeilen) — Refactoring/Split geplant aber depriorisiert hinter PlanManager.
 - **Code-Behind statt reines MVVM** — Der ProjectEditDialog verwendet Code-Behind für Tab-Logik. Akzeptabler Kompromiss für die Komplexität des 5-Tab-Dialogs.
 - **FolderTemplateControl Bug** — beim Bearbeiten bestehender Projekte "funktioniert noch nicht ganz so wie gewollt" (Herbert-Feedback, noch nicht debuggt).
@@ -522,11 +522,14 @@ src/
 | ADR | Titel | Relevanz |
 |-----|-------|----------|
 | ADR-001 | Modularer Monolith | Settings als eigenes Class Library Projekt |
-| ADR-006 | ID-Schema mit Präfix | proj_001, client_001 etc. (wird durch ADR-039 abgelöst) |
-| ADR-022 | Dateinamen-Konvention | Beeinflusst FolderName-Format |
+| ADR-002 | SQLite als System of Record | Projekt-Stammdaten in bpm.db |
+| ADR-004 | Cloud-Speicher-neutral | Pfade, settings.json, kein OneDrive-Hardcoding |
+| ADR-025 | Status Active + Completed | Kein eigenständiger Archived-Status |
 | ADR-035 | IExternalCommunicationService | Zukünftig für Adressbuch-Sync relevant |
 | ADR-036 | Privacy Policy | RelaxedPrivacyPolicy für lokale Daten |
-| ADR-039 | ULID als Primärschlüssel | Geplante Migration aller IDs |
+| ADR-039 | ULID als Primärschlüssel | Geplante Migration aller IDs (noch nicht implementiert) |
+| ADR-046 | .bpm/ Ordner | Manifest + Profiles im Projektordner |
+| ADR-049 | Pfad-Resolution Option C | folder_name + Manifest-Fallback statt absoluter Pfad |
 
 ---
 
@@ -557,6 +560,6 @@ src/
 | v0.19.0 | FolderTemplateControl als Shared UserControl (DRY) |
 | v0.19.1 | Button-Größen Fix in FolderTemplateControl |
 | v0.19.2 | IsExisting-Flag: Löschschutz für bestehende Ordner |
-| v0.20.0 | BpmManifest + BpmManifestService: .bpm-manifest lesen/schreiben/scannen. Projekt-Import (Ordner + Manifest Auto-Erkennung). Manifest wird bei Add/Edit automatisch geschrieben. |
+| v0.20.0 | BpmManifest + ManifestService: .bpm/ Ordner (ADR-046) lesen/schreiben/scannen. Projekt-Import (Ordner + Manifest Auto-Erkennung). Manifest wird bei Add/Edit automatisch geschrieben. |
 | v0.21.0 | IDialogService + BpmDialogService: eigene Dark Theme Dialoge statt MessageBox. Popup-Button "＋ Neues Projekt" mit 2 Optionen. Hinweis-Dialog bei Bearbeiten/Löschen ohne Auswahl. |
 | v0.22.0 | Projektsuche (Suchfeld mit Platzhalter, 300ms Debounce, durchsucht Name/FullName/Nr/Client/Ort/Tags). Statusfilter (Toggle-Buttons Alle/Aktiv/Abgeschlossen, CollectionView). Filterinfo-Anzeige. |

@@ -112,9 +112,10 @@ Zeigt in einem 2-Spalten-Grid (Label + Wert) mit Zebra-Striping (`BpmBgSurface`)
 | Benutzer | `Environment.UserName` | DSGVO: OK für Dev-Tools, nie in Logs |
 | Monitore | `EnumDisplayMonitors` (P/Invoke) | Anzahl erkannter Monitore |
 | Auflösung | `EnumDisplaySettings` + `GetDpiForMonitor` | Pro Monitor: Auflösung, Hz, DPI% |
-| Datenbank | `DatabasePath` Property | Pfad + Dateigröße in KB |
+| Haupt-DB (bpm.db) | `DatabasePath` Property | Pfad + Dateigröße in KB |
+| PlanManager-DBs | Pro Projekt in `%LocalAppData%\BauProjektManager\Projects\` | Anzahl + Gesamtgröße |
 | Freier Speicher | `DriveInfo.AvailableFreeSpace` | Laufwerk der DB |
-| Einstellungen | `SettingsPath` Property | Pfad zur settings.json |
+| Einstellungen | `SettingsPath` Property | Pfad zur settings.json (Cloud .AppData/) |
 | Log-Verzeichnis | `LogDirectory` Property | Pfad zum Log-Ordner |
 
 Pfad-Felder verwenden `BpmAccentPrimary` Foreground und `TextWrapping="Wrap"`.
@@ -134,9 +135,10 @@ Pfad-Felder verwenden `BpmAccentPrimary` Foreground und `TextWrapping="Wrap"`.
 | Option | Was passiert | Risiko |
 |--------|-------------|--------|
 | Ersteinrichtung wiederholen | Setzt `isFirstRun: true` in settings.json | Niedrig — Setup-Dialog erscheint beim nächsten Start |
-| Nur Datenbank zurücksetzen | Löscht bpm.db | Mittel — alle Projekte weg |
+| Nur Haupt-DB zurücksetzen | Löscht bpm.db | Mittel — alle Projekte weg |
 | Nur Einstellungen zurücksetzen | Löscht settings.json | Niedrig — Pfade und Ordner-Template weg |
-| Komplett-Reset | Löscht bpm.db + settings.json | Hoch — alles weg |
+| PlanManager-Caches zurücksetzen | Löscht alle planmanager.db (pro Projekt, lokal) | Mittel — Import-Journal, Undo-Daten und Cache weg, Pläne im Dateisystem bleiben |
+| Komplett-Reset | Löscht bpm.db + settings.json + alle planmanager.db | Hoch — alles weg |
 
 Jede Option zeigt eine Bestätigungs-MessageBox vor Ausführung.
 
@@ -184,8 +186,8 @@ Monitore:          2
 Primär:            1920 × 1080 px, 60 Hz, 150% (144 DPI)
 Monitor 2:         1920 × 1080 px, 60 Hz, 100% (96 DPI)
 
-Einstellungen:     C:\Users\herbe\AppData\Local\BauProjektManager\settings.json
-Log-Verzeichnis:   C:\Users\herbe\AppData\Local\BauProjektManager\Logs
+Einstellungen:     Cloud-Speicher .AppData/BauProjektManager/settings.json
+Log-Verzeichnis:   %LocalAppData%\BauProjektManager\Logs (lokal, synct nicht)
 
 --- LOG ---
 [Letzte 200 Log-Zeilen]

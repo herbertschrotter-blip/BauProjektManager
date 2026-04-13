@@ -294,7 +294,7 @@ Systematischer Konsistenz-Audit über alle Kern- und Referenz-Docs. 19 Commits, 
 ## [v0.17.0] — 2026-04-04
 
 ### Changed
-- **ID-Schema (ADR-039 v2):** ULID als Primärschlüssel für ALLE Tabellen (bpm.db + planmanager.db). Ersetzt seq + TEXT-Präfix-IDs. Entscheidung aus 4-Runden Claude+ChatGPT Review.
+- **ID-Schema (ADR-039 v2):** ULID als Primärschlüssel für ALLE Tabellen (bpm.db + planmanager.db). Ersetzt seq + TEXT-Präfix-IDs. Entscheidung aus 4-Runden Claude+ChatGPT Review. **Hinweis:** Entscheidung dokumentiert — Code hat noch v1.5 Schema (seq+Präfix). ULID-Migration steht aus.
 - **DB-SCHEMA.md v2.0:** Alle Tabellen auf `id TEXT PRIMARY KEY` (ULID), `seq` Spalte entfällt, `created_at`/`updated_at` ergänzt, Indizes auf FK-Spalten
 - **IIdGenerator Interface** in Domain, UlidIdGenerator in Infrastructure (NuGet: Cysharp/Ulid)
 - **Docs aktualisiert:** Architektur, DEPENDENCY-MAP, GLOSSAR, BACKLOG, CHANGELOG

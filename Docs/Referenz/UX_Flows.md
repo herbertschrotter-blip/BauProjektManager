@@ -477,7 +477,7 @@ Auto-Vorschlag wird angezeigt:
     ▼
 [✓ Bestätigen]
     │
-    ├── diary_entries in bpm.db schreiben
+    ├── diary_days + diary_notes in bpm.db schreiben (ADR-047)
     │
     ▼
 Toast: "Bautagebuch 05.11. bestätigt ✓"
@@ -500,7 +500,7 @@ Sidebar → Modul klicken → View wechselt
     ├── Kalkulation → CalculationView (Arbeitspakete, Prognose)
     │
     ▼
-Breadcrumb zeigt: [Modulname] > [Unterseite] > [Detail]
+Breadcrumb zeigt: [Modulname] > [Unterseite] > [Detail]  ← Post-V1, V1 hat keine Breadcrumb
 Toolbar zeigt: Modul-spezifische Buttons
 ```
 
@@ -509,7 +509,7 @@ Toolbar zeigt: Modul-spezifische Buttons
 Viele Module brauchen ein Projekt als Kontext. Das aktive Projekt wird global gespeichert:
 
 ```
-Toolbar: [ÖWG Dobl ▾] ← Projekt-Auswahl (immer sichtbar wenn Modul es braucht)
+Toolbar: [ÖWG Dobl ▾] ← Projekt-Auswahl (Post-V1, V1 wählt Projekt in der Modulliste)
 
 Modulwechsel:
 ├── Einstellungen → kein Projekt-Kontext nötig (zeigt alle)

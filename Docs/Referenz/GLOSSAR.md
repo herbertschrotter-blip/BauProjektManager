@@ -249,7 +249,7 @@ Im Code: `PortalTypes` in `settings.json`, editierbar. Tab 4 im ProjectEditDialo
 | **Framework-dependent** | .exe die ein installiertes .NET voraussetzt. Kleiner aber .NET muss am Rechner sein. |
 | **PWA** | Progressive Web App. Browser-App die offline funktioniert (Service Worker + IndexedDB). |
 | **CRDT** | Conflict-free Replicated Data Type. Automatische Konfliktauflösung (wie in Notion). BPM verwendet stattdessen Write-Lock. |
-| **ULID** | Universally Unique Lexicographically Sortable Identifier. 26-stellige TEXT-ID, global eindeutig, offline erzeugbar, chronologisch sortierbar. In BPM der Primärschlüssel für ALLE Tabellen (ADR-039 v2). NuGet: Cysharp/Ulid. |
+| **ULID** | Universally Unique Lexicographically Sortable Identifier. 26-stellige TEXT-ID, global eindeutig, offline erzeugbar, chronologisch sortierbar. Entschieden als Primärschlüssel für ALLE Tabellen (ADR-039 v2), aber noch nicht implementiert — Code hat noch v1.5 Schema (seq+Präfix). NuGet: Cysharp/Ulid. |
 | **Heartbeat** | Regelmäßiges Signal (alle 60 Sekunden) das zeigt dass ein Client noch aktiv ist. Für Write-Lock-Mechanismus. |
 
 ---

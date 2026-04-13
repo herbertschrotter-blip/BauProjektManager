@@ -67,7 +67,7 @@ supersedes: []
 
 Ein modulares Desktop-Tool für Baustellen-Management in Österreich (Steiermark). Eine einzige Anwendung mit internen Feature-Modulen. Offline-fähig, lokal im Dateisystem, synchronisiert über beliebigen Cloud-Speicher (OneDrive, Google Drive, Dropbox etc.), kein Cloud-Abo.
 
-Ausführliche Vision, Schmerzpunkte und Zielgruppe: siehe [VISION.md](VISION.md).
+Ausführliche Vision, Schmerzpunkte und Zielgruppe: siehe [VISION.md](../Referenz/VISION.md).
 
 ### 1.2 Architekturmodell: Modularer Monolith
 
@@ -99,16 +99,16 @@ BauProjektManager.exe
 |-------|----------|-------|-------------|
 | **Einstellungen** | Projekte, Registry, Pfade, Ordnerstruktur | V1 Pflicht | Dieses Dokument |
 | **PlanManager** | Pläne sortieren, versionieren | V1 Pflicht | Dieses Dokument |
-| **Foto-Management** | WPF-Viewer, Tags, Geodaten, Bautagebuch-Integration | Nach V1, Prio 1 | [Konzepte/ModuleFoto.md](Konzepte/ModuleFoto.md) |
-| **Zeiterfassung** | WPF-Maske → Excel via ClosedXML | Nach V1, Prio 2 | [Konzepte/ModuleZeiterfassung.md](Konzepte/ModuleZeiterfassung.md) |
-| **Bautagebuch** | Tägliches Protokoll, Auto-Befüllung, Export | Nach V1, Prio 3 | [Konzepte/ModuleBautagebuch.md](Konzepte/ModuleBautagebuch.md) |
-| **Dashboard** | Übersicht + Widgets | Nach V1, Prio 4 | [Konzepte/ModuleDashboard.md](Konzepte/ModuleDashboard.md) |
-| **Outlook** | COM Interop, Anhänge extrahieren | Nach V1 | [Konzepte/ModuleOutlook.md](Konzepte/ModuleOutlook.md) |
-| **Wetter** | API-Anbindung pro Baustelle | Nach V1 | [Konzepte/ModuleWetter.md](Konzepte/ModuleWetter.md) |
-| **Vorlagen** | Excel/Word mit Projektdaten befüllen | Nach V1 | [Konzepte/ModuleVorlagen.md](Konzepte/ModuleVorlagen.md) |
-| **Plankopf-Extraktion** | Revisionstabelle aus PDF lesen (PdfPig), KI-API | Nach V1 | [Konzepte/Moduleplanheader.md](Konzepte/Moduleplanheader.md) |
-| **GIS-Integration** | Katasterdaten, Koordinaten automatisch befüllen | Nach V1 | [Konzepte/ModuleGIS.md](Konzepte/ModuleGIS.md) |
-| **KI-Assistent** | LV-Analyse, Dokumentensuche, ChatGPT/Claude API | Nach V1 | [Konzepte/ModuleKiAssistent.md](Konzepte/ModuleKiAssistent.md) |
+| **Foto-Management** | WPF-Viewer, Tags, Geodaten, Bautagebuch-Integration | Nach V1, Prio 1 | [Konzepte/ModuleFoto.md](../Konzepte/ModuleFoto.md) |
+| **Zeiterfassung** | WPF-Maske → Excel via ClosedXML | Nach V1, Prio 2 | [Konzepte/ModuleZeiterfassung.md](../Konzepte/ModuleZeiterfassung.md) |
+| **Bautagebuch** | Tägliches Protokoll, Auto-Befüllung, Export | Nach V1, Prio 3 | [Konzepte/ModuleBautagebuch.md](../Konzepte/ModuleBautagebuch.md) |
+| **Dashboard** | Übersicht + Widgets | Nach V1, Prio 4 | [Konzepte/ModuleDashboard.md](../Konzepte/ModuleDashboard.md) |
+| **Outlook** | COM Interop, Anhänge extrahieren | Nach V1 | [Konzepte/ModuleOutlook.md](../Konzepte/ModuleOutlook.md) |
+| **Wetter** | API-Anbindung pro Baustelle | Nach V1 | [Konzepte/ModuleWetter.md](../Konzepte/ModuleWetter.md) |
+| **Vorlagen** | Excel/Word mit Projektdaten befüllen | Nach V1 | [Konzepte/ModuleVorlagen.md](../Konzepte/ModuleVorlagen.md) |
+| **Plankopf-Extraktion** | Revisionstabelle aus PDF lesen (PdfPig), KI-API | Nach V1 | [Konzepte/Moduleplanheader.md](../Konzepte/Moduleplanheader.md) |
+| **GIS-Integration** | Katasterdaten, Koordinaten automatisch befüllen | Nach V1 | [Konzepte/ModuleGIS.md](../Konzepte/ModuleGIS.md) |
+| **KI-Assistent** | LV-Analyse, Dokumentensuche, ChatGPT/Claude API | Nach V1 | [Konzepte/ModuleKiAssistent.md](../Konzepte/ModuleKiAssistent.md) |
 | **Mobile PWA** | Bautagebuch + Plan-Viewer am Handy | Nach V1 | BPM-Mobile-Konzept.md |
 
 ### 1.4 Ansichtsprofile für die Sidebar (Post-V1)
@@ -151,7 +151,7 @@ Bestehende VBA-Makros lesen die automatisch generierte `registry.json`:
   PowerShell (PhotoFolder) ←───┘
 ```
 
-Detailliertes Ökosystem-Diagramm mit Datenflüssen: siehe [DEPENDENCY-MAP.md](DEPENDENCY-MAP.md).
+Detailliertes Ökosystem-Diagramm mit Datenflüssen: siehe [DEPENDENCY-MAP.md](../Referenz/DEPENDENCY-MAP.md).
 
 ### 1.6 Multi-Device & Cloud-Sync
 
@@ -309,15 +309,15 @@ Alle Projektdaten in SQLite (`bpm.db`). Bei jeder Änderung wird `registry.json`
 ```csharp
 public class Project
 {
-    public string Id { get; set; }                    // ULID (global eindeutig)
+    public string Id { get; set; }                    // Aktuell seq+Präfix, geplant ULID (ADR-039 v2)
     public string ProjectNumber { get; set; }         // "202512" (aus Startdatum)
     public string Name { get; set; }                  // "ÖWG-Dobl-Zwaring"
     public string FullName { get; set; }              // "Gartensiedlung Dobl-Zwaring"
-    public ProjectStatus Status { get; set; }         // Active, Completed, Archived
+    public ProjectStatus Status { get; set; }         // Active, Completed
     public ProjectLocation Location { get; set; }
     public ProjectTimeline Timeline { get; set; }
     public Client Client { get; set; }                // Auftraggeber/Bauherr
-    public List<Building> Buildings { get; set; }
+    public List<BuildingPart> BuildingParts { get; set; }
     public ProjectPaths Paths { get; set; }
     public string Tags { get; set; }
     public string Notes { get; set; }
@@ -360,18 +360,38 @@ public class ProjectTimeline
     public DateTime? ActualEnd { get; set; }
 }
 
-public class Building
+public class BuildingPart
 {
-    public string Id { get; set; }                    // ULID
-    public string Name { get; set; }                  // "Haus Nr. 64"
-    public string ShortName { get; set; }             // "H64"
-    public string Type { get; set; }                  // "Reihenhaus"
-    public List<string> Levels { get; set; }          // ["KG","EG","1.OG","2.OG","Dach"]
+    public string Id { get; set; }                    // Aktuell seq+Präfix, geplant ULID
+    public string ShortName { get; set; }             // "BT-A", "GEW", "TG"
+    public string Description { get; set; }           // "Stiege 1+2", "Gewerbe EG"
+    public string BuildingType { get; set; }          // "Wohnanlage", "Gewerbe" (aus settings.json)
+    public double ZeroLevelAbsolute { get; set; }     // ± 0,00 Absolutniveau in m ü. A.
+    public int SortOrder { get; set; }
+    public List<BuildingLevel> Levels { get; set; }
+}
+
+public class BuildingLevel
+{
+    public string Id { get; set; }                    // Aktuell seq+Präfix, geplant ULID
+    public int Prefix { get; set; }                   // EG=0, UG=-01, OG1=01
+    public string Name { get; set; }                  // "UG", "EG", "OG1", "DG"
+    public string Description { get; set; }           // "Erdgeschoss" (aus settings.json)
+    // 3 Eingabewerte (von ± 0,00, in Meter)
+    public double Rdok { get; set; }
+    public double Fbok { get; set; }
+    public double? Rduk { get; set; }                 // null beim untersten Geschoss
+    public int SortOrder { get; set; }
+    // 4 errechnete Werte (NICHT in DB)
+    public double? DeckThickness { get; set; }        // RDOK(n+1) − RDUK(n)
+    public double FloorBuildup => Fbok - Rdok;        // Fußbodenaufbau
+    public double? StoryHeight { get; set; }          // FBOK(oben) − FBOK(unten)
+    public double? RawHeight { get; set; }            // RDOK(oben) − RDOK(unten)
 }
 
 public class ProjectPaths
 {
-    public string Root { get; set; }                  // Absoluter Pfad (→ wird durch ADR-049 zu berechnetem Pfad)
+    public string Root { get; set; }                  // Ist: absoluter Pfad. Ziel (ADR-049): berechnet aus folder_name + BasePath
     public string Plans { get; set; }                 // z.B. "01 Planunterlagen" (aus FolderTemplate, relativ zu Root)
     public string Inbox { get; set; }                 // z.B. "01 Planunterlagen\_Eingang"
     public string Photos { get; set; }                // z.B. "02 Fotos"
@@ -382,7 +402,7 @@ public class ProjectPaths
 
 public class Client
 {
-    public string Id { get; set; }                    // ULID
+    public string Id { get; set; }                    // Aktuell seq+Präfix, geplant ULID
     public string Company { get; set; }               // "ÖWG Wohnbau"
     public string ContactPerson { get; set; }         // "Ing. Müller"
     public string Phone { get; set; }                 // "0316/12345"
@@ -395,7 +415,7 @@ public enum ProjectStatus { Active, Completed }
 
 - **ID-Schema (ADR-039 v2):** ULID als `TEXT PRIMARY KEY` für ALLE Tabellen. Global eindeutig, offline erzeugbar, keine `seq` Spalte. ID-Generierung über `IIdGenerator` (Domain) / `UlidIdGenerator` (Infrastructure).
 
-**Building-Modell:** Aktuell minimal (Name, ShortName, Type, Levels). Wird später erweitert für Ziegelberechnung/Bauphysik (Geschoßhöhe, Wandstärke etc.) — Design dafür basierend auf realen Excel-Berechnungsblättern.
+**BuildingPart/Level-Modell:** Seit v0.13.1 implementiert. Pro Bauteil: Kürzel, Beschreibung, Bauwerkstyp, ± 0,00 Niveau. Pro Geschoss: 3 Eingabewerte (RDOK, FBOK, RDUK), 4 errechnete Werte (Deckenstärke, Fußbodenaufbau, Geschosshöhe, Rohbauhöhe). Wird später erweitert für Ziegelberechnung/Bauphysik.
 
 ### 3.3 registry.json (Generierter Export — flach für VBA)
 
@@ -525,7 +545,7 @@ Dort dokumentiert:
 - IndexSource-Modell (FileName / None / PlanHeader, ADR-045)
 - Undo-Journal (3 SQLite-Tabellen), Recovery, Preflight
 - Manueller Sortier-Modus + Umbenennung
-- Bestandsmanifest (`_plan_index.json`), Cache-Rebuild
+- Bestandsmanifest (`.bpm/plan-index.json`), Cache-Rebuild
 - DB-Schema (planmanager.db, 6 Tabellen)
 - Planlisten Import/Export (V1.1)
 - Solution-Struktur + Implementierungsreihenfolge
@@ -582,7 +602,7 @@ BauProjektManager.sln
 │   ├── BauProjektManager.Settings/           ← ✅ Einstellungen Feature
 │   │   ├── ViewModels/
 │   │   │   ├── SettingsViewModel.cs           ← ✅ 2-Tab-Seite, IDialogService, Suche+Filter, Import
-│   │   │   └── ProjectEditViewModel.cs        ← ✅ 2-Spalten-Dialog
+│   │   │   └── ProjectEditDialog.xaml.cs       ← ✅ 5-Tab-Dialog (Code-behind, kein ViewModel)
 │   │   ├── Views/
 │   │   │   ├── SettingsView.xaml              ← ✅ Suchfeld, Statusfilter, Popup-Button, Pfade
 │   │   │   ├── FolderTemplateControl.xaml     ← ✅ Shared Ordner-TreeView
@@ -629,7 +649,7 @@ Settings        → Domain + Infrastructure
 App             → alles (DI verdrahtet hier)
 ```
 
-Detailliertes Dependency-Diagramm: siehe [DEPENDENCY-MAP.md](DEPENDENCY-MAP.md).
+Detailliertes Dependency-Diagramm: siehe [DEPENDENCY-MAP.md](../Referenz/DEPENDENCY-MAP.md).
 
 ---
 
@@ -779,6 +799,7 @@ Bevor ein Feature als "fertig" gilt:
 | `.bpm/manifest.json` | Cloud-Speicher Projektordner | JSON | Projekt-Identität | C#-App |
 | `.bpm/project.json` | Cloud-Speicher Projektordner | JSON | Vollständiger Projektexport | C#-App |
 | `.bpm/profiles/*.json` | Cloud-Speicher Projektordner | JSON | Plantyp-Profile | C#-App |
+| `.bpm/plan-index.json` | Cloud-Speicher Projektordner | JSON | Bestandsmanifest (Soll-Planliste) | C#-App |
 
 ---
 

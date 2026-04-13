@@ -188,7 +188,7 @@ Kollegen in der Firma sollen BPM selbst öffnen und nutzen können — nicht nur
 |----------|----------|--------|------|
 | **Jetzt** (V1) | 2026 | Einstellungen, PlanManager | Kernproblem lösen: Pläne automatisch sortieren und versionieren |
 | **Bald** (V1.1) | 2026 | Planlisten Import/Export, Adressbuch, Suche | Vollständiges Planmanagement |
-| **Nächste Welle** | 2026–2027 | Dashboard, Bautagebuch, Zeiterfassung, Foto | Täglichen Arbeitsalltag abdecken |
+| **Nächste Welle** | 2026–2027 | Foto, Zeiterfassung, Bautagebuch, Dashboard | Täglichen Arbeitsalltag abdecken |
 | **Danach** | 2027+ | Outlook, Wetter, Vorlagen, Mobile PWA | Ökosystem vervollständigen |
 | **Langfristig** | offen | GIS-Integration, Kalender, Bestellungen, ClickUp | Vision Dashboard mit allem |
 

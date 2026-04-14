@@ -79,7 +79,7 @@ public sealed class DeveloperToolsService : IDeveloperToolsService
     public string LogDirectory => _logDirectory;
     public string SettingsPath => System.IO.Path.Combine(
         System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
-        "BauProjektManager", "settings.json");
+        "BauProjektManager", "device-settings.json");
 
     public string ReadLogTail(int lineCount = 200)
     {

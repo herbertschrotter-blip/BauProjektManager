@@ -288,7 +288,7 @@
                                        Style="{DynamicResource BpmBodyText}"
                                        VerticalAlignment="Center" Margin="0,4"/>
                             <TextBox Grid.Row="2" Grid.Column="1"
-                                     Text="{Binding OneDrivePath, Mode=OneWay}"
+                                     Text="{Binding CloudStoragePath, Mode=OneWay}"
                                      Background="{DynamicResource BpmBgBase}"
                                      Foreground="{DynamicResource BpmTextSecondary}"
                                      BorderBrush="{DynamicResource BpmBorderDefault}"

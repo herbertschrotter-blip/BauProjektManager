@@ -3,7 +3,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <Version>0.24.24</Version>
+    <Version>0.24.25</Version>
     <Authors>Herbert Schrotter</Authors>
     <Company>BauProjektManager</Company>
   </PropertyGroup>

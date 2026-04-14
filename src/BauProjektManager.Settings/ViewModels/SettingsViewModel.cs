@@ -44,7 +44,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     private string _archivePath = "";
 
     [ObservableProperty]
-    private string _oneDrivePath = "";
+    private string _cloudStoragePath = "";
 
     // === Suche + Filter ===
 
@@ -202,7 +202,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         _settings = _settingsService.Load();
         BasePath = _settings.BasePath;
         ArchivePath = _settings.ArchivePath;
-        OneDrivePath = _settings.OneDrivePath;
+        CloudStoragePath = _settings.OneDrivePath;
         BuildFolderTree(_settings.FolderTemplate);
     }
 

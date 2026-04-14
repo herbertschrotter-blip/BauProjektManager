@@ -3,9 +3,10 @@
 namespace BauProjektManager.Domain.Models;
 
 /// <summary>
-/// Portabler Projekt-Snapshot als .bpm-manifest Datei im Projektordner.
+/// Portabler Projekt-Snapshot als .bpm/manifest.json im Projektordner.
 /// Enthält alle Metadaten eines Projekts für Import, Übergabe und Backup.
 /// Wird bei jedem Speichern im ProjectEditDialog automatisch aktualisiert.
+/// Der .bpm/ Ordner dient als Projektpassport (ADR-046).
 /// </summary>
 public class BpmManifest
 {

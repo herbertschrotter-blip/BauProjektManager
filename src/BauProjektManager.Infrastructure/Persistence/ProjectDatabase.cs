@@ -175,6 +175,18 @@ public class ProjectDatabase : IDisposable
             cmd.CommandText = "ALTER TABLE projects ADD COLUMN project_type TEXT NOT NULL DEFAULT ''";
             cmd.ExecuteNonQuery();
         }
+        if (!ColumnExists("projects", "use_global_zero_level"))
+        {
+            var cmd = conn.CreateCommand();
+            cmd.CommandText = "ALTER TABLE projects ADD COLUMN use_global_zero_level INTEGER NOT NULL DEFAULT 0";
+            cmd.ExecuteNonQuery();
+        }
+        if (!ColumnExists("projects", "global_zero_level"))
+        {
+            var cmd = conn.CreateCommand();
+            cmd.CommandText = "ALTER TABLE projects ADD COLUMN global_zero_level REAL NOT NULL DEFAULT 0";
+            cmd.ExecuteNonQuery();
+        }
         var verCmd = conn.CreateCommand();
         verCmd.CommandText = "DELETE FROM schema_version; INSERT INTO schema_version (version) VALUES ('1.5');";
         Log.Verbose("Executing SQL: {Operation} on {Table}", "UPDATE", "schema_version");
@@ -250,6 +262,7 @@ public class ProjectDatabase : IDisposable
                 project_start, construction_start, planned_end, actual_end,
                 root_path, plans_path, inbox_path, photos_path,
                 documents_path, protocols_path, invoices_path,
+                use_global_zero_level, global_zero_level,
                 tags, notes, updated_at
             ) VALUES (
                 @id, @project_number, @name, @full_name, @status, @project_type, @client_id,
@@ -260,6 +273,7 @@ public class ProjectDatabase : IDisposable
                 @project_start, @construction_start, @planned_end, @actual_end,
                 @root_path, @plans_path, @inbox_path, @photos_path,
                 @documents_path, @protocols_path, @invoices_path,
+                @use_global_zero_level, @global_zero_level,
                 @tags, @notes, datetime('now')
             )
             ON CONFLICT(id) DO UPDATE SET
@@ -278,6 +292,8 @@ public class ProjectDatabase : IDisposable
                 inbox_path=@inbox_path, photos_path=@photos_path,
                 documents_path=@documents_path, protocols_path=@protocols_path,
                 invoices_path=@invoices_path,
+                use_global_zero_level=@use_global_zero_level,
+                global_zero_level=@global_zero_level,
                 tags=@tags, notes=@notes, updated_at=datetime('now')
             """;
         cmd.Parameters.AddWithValue("@id", project.Id);
@@ -313,6 +329,8 @@ public class ProjectDatabase : IDisposable
         cmd.Parameters.AddWithValue("@invoices_path", project.Paths.Invoices);
         cmd.Parameters.AddWithValue("@tags", project.Tags);
         cmd.Parameters.AddWithValue("@notes", project.Notes);
+        cmd.Parameters.AddWithValue("@use_global_zero_level", project.UseGlobalZeroLevel ? 1 : 0);
+        cmd.Parameters.AddWithValue("@global_zero_level", project.GlobalZeroLevel);
         Log.Verbose("Executing SQL: {Operation} on {Table}", isNew ? "INSERT" : "UPDATE", "projects");
         cmd.ExecuteNonQuery();
 
@@ -686,7 +704,9 @@ public class ProjectDatabase : IDisposable
                 Invoices = reader.GetString(reader.GetOrdinal("invoices_path"))
             },
             Tags = reader.GetString(reader.GetOrdinal("tags")),
-            Notes = reader.GetString(reader.GetOrdinal("notes"))
+            Notes = reader.GetString(reader.GetOrdinal("notes")),
+            UseGlobalZeroLevel = ReadIntOrDefault(reader, "use_global_zero_level") == 1,
+            GlobalZeroLevel = ReadDoubleOrDefault(reader, "global_zero_level")
         };
     }
 
@@ -709,6 +729,34 @@ public class ProjectDatabase : IDisposable
         {
             Log.Warning("Column {Column} not readable: {Error}", column, ex.Message);
             return string.Empty;
+        }
+    }
+
+    private static int ReadIntOrDefault(SqliteDataReader reader, string column)
+    {
+        try
+        {
+            var ordinal = reader.GetOrdinal(column);
+            return reader.IsDBNull(ordinal) ? 0 : reader.GetInt32(ordinal);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning("Column {Column} not readable: {Error}", column, ex.Message);
+            return 0;
+        }
+    }
+
+    private static double ReadDoubleOrDefault(SqliteDataReader reader, string column)
+    {
+        try
+        {
+            var ordinal = reader.GetOrdinal(column);
+            return reader.IsDBNull(ordinal) ? 0.0 : reader.GetDouble(ordinal);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning("Column {Column} not readable: {Error}", column, ex.Message);
+            return 0.0;
         }
     }
 

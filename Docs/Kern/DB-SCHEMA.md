@@ -32,17 +32,15 @@ supersedes: []
   - Kapitel 9 (Naming-Konventionen) bei neuer Tabelle
   - Kapitel 7 (Schema-Migration) bei Schemaänderung
 - Fachliche Invarianten:
-  - ULID als TEXT PRIMARY KEY für ALLE Tabellen — keine INTEGER IDs, keine seq
-  - ID-Generierung NUR über IIdGenerator.NewId() — nie manuell
-  - Fachliche Entitätstabellen haben created_at und updated_at (TEXT, ISO 8601). Hilfstabellen (schema_version, Verknüpfungstabellen, Journal-Details) sind ausgenommen.
-  - FK-Indizes auf alle Fremdschlüssel-Spalten
+  - **Ziel v2.0 (noch nicht implementiert):** ULID als TEXT PRIMARY KEY, IIdGenerator.NewId(), created_at/updated_at auf allen Entitätstabellen, FK-Indizes
+  - **Aktuell implementiert (v1.5):** seq INTEGER PRIMARY KEY + Präfix-IDs (proj_001, bpart_001 etc.), created_at/updated_at nur auf projects, keine FK-Indizes
   - schema_version Tabelle in jeder DB
 
 ---
 
 # BauProjektManager — Datenbank-Schema
 
-**Version:** 2.0 (ULID-Migration geplant)  
+**Version:** 2.0 (Zielschema — aktuell implementiert: v1.5, ULID-Migration Post-V1 geplant)  
 **Datum:** 04.04.2026  
 **DB-Engine:** SQLite  
 **Speicherort:** `%LocalAppData%\BauProjektManager\bpm.db`
@@ -651,9 +649,11 @@ CREATE TABLE project_shares (
 
 ---
 
-## 6. PlanManager-Datenbank (separat)
+## 6. PlanManager-Datenbank (separat — ⬜ GEPLANT, noch nicht implementiert)
 
 Pro Projekt eine eigene SQLite-DB. Liegt in `%LocalAppData%\BauProjektManager\Projects\<ProjektID>\planmanager.db`.
+
+**Status:** Diese DB und alle 6 Tabellen sind **Zielarchitektur**. Im Code existiert aktuell kein `PlanManagerDatabase`. Die Implementierung kommt mit PlanManager V1.
 
 **6 Tabellen:** 3 Plan-Revisions-Cache + 3 Import-Journal (PlanManager.md v2.0, Cross-Review 09.04.2026).
 

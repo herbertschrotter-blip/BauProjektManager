@@ -35,7 +35,7 @@ supersedes: []
   - SQLite ist System of Record — JSON ist generierter Export
   - Dependency-Regel: Domain→NICHTS, Infrastructure→nur Domain, App→alles
   - registry.json ist versionierter Exportvertrag — Felder entfernen ist Breaking Change
-  - Modularer Monolith — feste DI-Registrierung, kein Plugin-System (ADR-001)
+  - Modularer Monolith — feste DI-Registrierung geplant (V1: manuelles new, DI-Container Post-V1), kein Plugin-System (ADR-001)
   - Offline-first — keine Cloud-Services, kein Abo
 
 ---

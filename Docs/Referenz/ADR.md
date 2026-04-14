@@ -1938,7 +1938,7 @@ Verschiedene Nutzerrollen (Polier, Bauleiter, Disponent, Lohnverrechnung) benöt
 
 **Datum:** 2026-04
 **Status:** ✅ Entschieden
-**Implementierung:** Not Started
+**Implementierung:** Not Started — **Post-V1 Zielarchitektur** (V1 verwendet weiterhin gespeicherten root_path)
 **Herkunft:** Docs-Audit Archivierungs-Diskussion (Claude + Herbert, 11.04.2026)
 
 **Kontext:**

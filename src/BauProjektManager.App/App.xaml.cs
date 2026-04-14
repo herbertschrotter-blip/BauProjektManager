@@ -75,13 +75,13 @@ public partial class App : Application
             if (problems.Count > 0)
             {
                 Log.Warning("Path problems detected: {Problems}", string.Join(", ", problems));
-                var result = MessageBox.Show(
-                    $"Pfad-Problem erkannt:\n\n{string.Join("\n", problems)}\n\nEinstellungen öffnen?",
-                    "BauProjektManager",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Warning);
+                var dialog = new BpmConfirmDialog();
+                dialog.Title = "Pfad-Problem erkannt";
+                dialog.TxtMessage.Text = $"{string.Join("\n", problems)}\n\nEinstellungen öffnen?";
+                dialog.TxtIcon.Text = "⚠";
+                dialog.ShowDialog();
 
-                if (result == MessageBoxResult.Yes)
+                if (dialog.DialogResult == true)
                 {
                     var setupDialog = new SetupDialog(settingsService, settings);
                     setupDialog.ShowDialog();

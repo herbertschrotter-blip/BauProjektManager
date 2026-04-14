@@ -9,14 +9,17 @@ using Serilog;
 namespace BauProjektManager.Infrastructure.Persistence;
 
 /// <summary>
-/// Liest und schreibt .bpm-manifest Dateien in Projektordnern.
+/// Liest und schreibt .bpm/manifest.json in Projektordnern.
 /// Das Manifest dient als Ausweis (Ordner-Wiedererkennung) und als
 /// portabler Projekt-Snapshot für Import/Übergabe/Backup.
-/// Hidden + ReadOnly Attribute schützen vor versehentlichem Löschen.
+/// Der .bpm/ Ordner wird als Hidden markiert.
+/// Rückwärts-Fallback: liest auch alte .bpm-manifest Dateien (Migration).
 /// </summary>
 public class BpmManifestService
 {
-    private const string ManifestFileName = ".bpm-manifest";
+    private const string BpmFolderName = ".bpm";
+    private const string ManifestFileName = "manifest.json";
+    private const string LegacyManifestFileName = ".bpm-manifest";
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -40,10 +43,19 @@ public class BpmManifestService
         }
 
         var manifest = ProjectToManifest(project);
-        var manifestPath = Path.Combine(projectRootPath, ManifestFileName);
+        var bpmDir = Path.Combine(projectRootPath, BpmFolderName);
+        var manifestPath = Path.Combine(bpmDir, ManifestFileName);
 
         try
         {
+            // Ensure .bpm/ folder exists and is hidden
+            if (!Directory.Exists(bpmDir))
+            {
+                Directory.CreateDirectory(bpmDir);
+                File.SetAttributes(bpmDir, FileAttributes.Hidden | FileAttributes.Directory);
+                Log.Debug("Created .bpm/ folder at {Path}", bpmDir);
+            }
+
             RemoveReadOnly(manifestPath);
 
             var tempPath = manifestPath + ".tmp";
@@ -56,7 +68,6 @@ public class BpmManifestService
             }
 
             File.Move(tempPath, manifestPath);
-            File.SetAttributes(manifestPath, FileAttributes.Hidden | FileAttributes.ReadOnly);
 
             Log.Information("Manifest written: {Path}", manifestPath);
         }
@@ -74,13 +85,26 @@ public class BpmManifestService
     /// </summary>
     public BpmManifest? ReadManifest(string projectRootPath)
     {
-        var manifestPath = Path.Combine(projectRootPath, ManifestFileName);
-
-        if (!File.Exists(manifestPath))
+        // Try new .bpm/manifest.json first
+        var newPath = Path.Combine(projectRootPath, BpmFolderName, ManifestFileName);
+        if (File.Exists(newPath))
         {
-            return null;
+            return ReadManifestFromPath(newPath);
         }
 
+        // Fallback: legacy .bpm-manifest
+        var legacyPath = Path.Combine(projectRootPath, LegacyManifestFileName);
+        if (File.Exists(legacyPath))
+        {
+            Log.Debug("Reading legacy manifest from {Path}", legacyPath);
+            return ReadManifestFromPath(legacyPath);
+        }
+
+        return null;
+    }
+
+    private BpmManifest? ReadManifestFromPath(string manifestPath)
+    {
         try
         {
             var json = File.ReadAllText(manifestPath);
@@ -100,7 +124,8 @@ public class BpmManifestService
     /// </summary>
     public bool HasManifest(string projectRootPath)
     {
-        return File.Exists(Path.Combine(projectRootPath, ManifestFileName));
+        return File.Exists(Path.Combine(projectRootPath, BpmFolderName, ManifestFileName))
+            || File.Exists(Path.Combine(projectRootPath, LegacyManifestFileName));
     }
 
     // === Import: Manifest → Project ===

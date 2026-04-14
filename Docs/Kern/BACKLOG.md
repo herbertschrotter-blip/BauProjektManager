@@ -273,3 +273,14 @@ schema_version (version)
 ---
 
 *Kernfrage: "Brauche ich das um Pläne zu sortieren?" — Wenn nein → hier notieren, nicht jetzt bauen.*
+
+---
+
+## Docs-Schulden (aus Cross-Review Runde 1–5)
+
+| # | Thema | Betroffene Docs | Aufwand | Status |
+|---|-------|-----------------|---------|--------|
+| 67 | CODING_STANDARDS: Veraltete Beispiele (ILogService, RegistryService, LogManager) auf Serilog/DI modernisieren | CODING_STANDARDS | Groß | ⬜ |
+| 69 | Wording-Vereinheitlichung: Plantyp/Dokumenttyp/RecognitionProfile — Glossar-Regel definieren | GLOSSAR, PlanManager, UI_Navigation | Klein | ⬜ |
+| 71 | Geplante DB-Tabellen ohne "geplant"-Label (work_assignments, material_orders, time_entries in UX_Flows etc.) | UX_Flows, GLOSSAR | Klein | ⬜ |
+| 73 | settings.json zentrales Feld-Schema fehlt — ein Unterkapitel als source_of_truth definieren | Architektur oder DB-SCHEMA | Mittel | ⬜ |

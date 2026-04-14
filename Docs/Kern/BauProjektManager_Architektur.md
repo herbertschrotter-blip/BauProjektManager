@@ -93,6 +93,8 @@ BauProjektManager.exe
 └── 📄 Vorlagen           ← nach V1 (Konzept)
 ```
 
+**V1-Sidebar** zeigt nur Einstellungen + PlanManager. Weitere Module erscheinen erst nach Implementierung in der Sidebar.
+
 ### 1.3 Module und Prioritäten
 
 | Modul | Funktion | Phase | Konzept-Dok |

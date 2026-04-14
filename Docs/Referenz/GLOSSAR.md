@@ -224,7 +224,7 @@ Im Code: `PortalTypes` in `settings.json`, editierbar. Tab 4 im ProjectEditDialo
 | **planmanager.db** | SQLite | Lokal pro Projekt | Import-Journal, Undo, Cache. Syncht NICHT. |
 | **registry.json** | JSON | Cloud-Speicher `.AppData/` | Auto-generierter Export für VBA-Makros. Read-only für VBA. |
 | **settings.json** | JSON | Cloud-Speicher `.AppData/` | App-Einstellungen (Pfade, Ordner-Template, Listen). Syncht zwischen Geräten. |
-| **profiles.json** | JSON | Cloud-Speicher `.bpm/profiles/` im Projektordner | RecognitionProfiles pro Projekt (ADR-046). |
+| **.bpm/profiles/*.json** | JSON | Cloud-Speicher `.bpm/profiles/` im Projektordner | RecognitionProfiles — eine Datei pro Dokumenttyp-Profil (ADR-046). |
 | **pattern-templates.json** | JSON | Cloud-Speicher `.AppData/` | Globale Muster-Bibliothek für Plantyp-Erkennung. |
 | **.bpm/manifest.json** | JSON | Cloud-Speicher Projektordner | Projekt-Identität (schlank: ID, Name, Module-Flags). ADR-046. |
 | **.bpm/project.json** | JSON | Cloud-Speicher Projektordner | Vollständiger Projektexport für Import/Übergabe. ADR-046. |

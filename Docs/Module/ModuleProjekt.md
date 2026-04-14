@@ -453,7 +453,7 @@ Diese Listen sind vom User anpassbar und werden als ComboBox-Quellen im Dialog v
 
 ## 11. Bekannte Einschränkungen
 
-- **Noch kein DI** — SettingsViewModel instanziiert Services manuell (`new ProjectDatabase()`). DI-Migration geplant nach PlanManager V1.
+- **DI ist Architekturstandard** (Architektur Kap. 5). SettingsViewModel instanziiert Services noch manuell (`new ProjectDatabase()`). DI-Migration geplant nach PlanManager V1.
 - **ProjectEditDialog.xaml.cs ist zu groß** (~46 KB, ~1200 Zeilen) — Refactoring/Split geplant aber depriorisiert hinter PlanManager.
 - **Code-Behind statt reines MVVM** — Der ProjectEditDialog verwendet Code-Behind für Tab-Logik. Akzeptabler Kompromiss für die Komplexität des 5-Tab-Dialogs.
 - **FolderTemplateControl Bug** — beim Bearbeiten bestehender Projekte "funktioniert noch nicht ganz so wie gewollt" (Herbert-Feedback, noch nicht debuggt).

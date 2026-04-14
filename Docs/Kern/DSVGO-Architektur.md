@@ -163,7 +163,7 @@ Alle Daten in BPM werden in drei Klassen eingeteilt:
 | `project_participants` (Name, Rolle, Kontakt) | Subunternehmer, Behörden | Art. 6 Abs. 1 lit. f DSGVO | Art. 14 — bei Ersterfassung empfohlen |
 | `employees` Tabelle (Name, Personalnummer) | Eigene Mitarbeiter | Art. 6 Abs. 1 lit. b DSGVO (Arbeitsvertrag) | Art. 13 — PFLICHT (Mitarbeiter-Info) |
 | `tbl_Zeiten` Excel (Arbeitszeiten, Krankenstand) | Eigene Mitarbeiter | Art. 6 Abs. 1 lit. b + § 96 ArbVG | Art. 13 — PFLICHT + ggf. BV |
-| `write_lock` Tabelle (Username, Machine-Name) | BPM-Nutzer | Art. 6 Abs. 1 lit. f DSGVO | Nicht erforderlich (technisch) |
+| `write_lock` Tabelle (Username, Machine-Name) — *geplant, Betriebsmodus B (ADR-020)* | BPM-Nutzer | Art. 6 Abs. 1 lit. f DSGVO | Nicht erforderlich (technisch) |
 | `registry.json` (Ansprechpartner, E-Mails) | Geschäftskontakte | Art. 6 Abs. 1 lit. f DSGVO | Art. 14 — bei Ersterfassung empfohlen |
 
 **Informationspflichten (Art. 13/14 DSGVO):**

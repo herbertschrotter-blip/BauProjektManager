@@ -150,32 +150,22 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     {
         _dialogService = dialogService;
 
-        var appRoot = FindAppRoot();
-        var exportDir = Path.Combine(appRoot, "Export");
+        // Registry-Exportpfad aus Settings (BasePath/.AppData/BauProjektManager/)
+        var settings = _settingsService.Load();
+        var exportDir = !string.IsNullOrEmpty(settings.ExportPath)
+            ? settings.ExportPath
+            : Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "BauProjektManager");
         var registryPath = Path.Combine(exportDir, "registry.json");
 
         _exporter = new RegistryJsonExporter(registryPath);
         _folderService = new ProjectFolderService(_settingsService);
 
-        Log.Information("App root: {Root}", appRoot);
         Log.Information("Registry export path: {Path}", registryPath);
 
         LoadProjects();
         LoadSettings();
-    }
-
-    private static string FindAppRoot()
-    {
-        var dir = AppDomain.CurrentDomain.BaseDirectory;
-        var current = new DirectoryInfo(dir);
-        while (current is not null)
-        {
-            if (current.GetFiles("*.slnx").Length > 0 ||
-                current.GetFiles("*.sln").Length > 0)
-                return current.FullName;
-            current = current.Parent;
-        }
-        return dir;
     }
 
     private void LoadProjects()

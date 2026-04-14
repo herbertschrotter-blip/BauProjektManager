@@ -30,7 +30,7 @@ supersedes: []
 - Fachliche Invarianten:
   - DynamicResource in Custom-Dialog-Windows — StaticResource verursacht XamlParseException
   - Alle Farben über Theme-Tokens aus Colors.xaml — nie hardcoded
-  - 8 ResourceDictionaries: Colors, Typography, Buttons, DataGrid, Dialogs, Icons, TreeView, Inputs
+  - 7 ResourceDictionaries: Colors, Typography, Buttons, DataGrid, Dialogs, Icons, TreeView (TabControl/TabItem Styles in Dialogs.xaml integriert)
   - Icons über Icons.xaml Registry (ADR-044)
 
 ---
@@ -73,10 +73,9 @@ BauProjektManager.App/
 │   ├── Colors.xaml                   ← Farb-Token (bg-base, accent-primary etc.)
 │   ├── Typography.xaml               ← Schriftgrößen, -gewichte
 │   ├── Buttons.xaml                  ← Button-Styles (Primary, Secondary+Border, Danger, Ghost, Nav+Highlight)
-│   ├── Inputs.xaml                   ← TextBox, ComboBox, DatePicker, CheckBox Styles
 │   ├── DataGrid.xaml                 ← Tabellen-Styles (Header, Zeilen, Hover)
-│   ├── Tabs.xaml                     ← TabControl + TabItem Styles
-│   ├── Dialogs.xaml                  ← Dialog-Basis, ContextMenu, Cards, Tooltips
+│   ├── Dialogs.xaml                  ← Dialog-Basis, TabControl/TabItem, ContextMenu, Cards, Tooltips
+│   ├── TreeView.xaml                 ← TreeView Dark-Theme Styling
 │   └── Icons.xaml                    ← Zentrale Icon-Registry (Emoji → Fluent Icons)
 │
 ├── Controls/                         ← Shell-only Basis-Komponenten
@@ -133,20 +132,20 @@ BauProjektManager.PlanManager/
 
 ## 3. Resource Dictionary Architektur
 
-### 3.1 Übersicht: 8 ResourceDictionaries (ADR-028, ADR-044)
+### 3.1 Übersicht: 7 ResourceDictionaries (ADR-028, ADR-044)
 
 | Dictionary | Verantwortung | Abhängigkeiten |
 |---|---|---|
 | **Colors.xaml** | Farb-Token als SolidColorBrush + Color | Keine |
 | **Typography.xaml** | Schriftgrößen, -gewichte als Doubles + Styles | Colors.xaml |
 | **Buttons.xaml** | Button-Varianten (Primary, Secondary mit Border, Danger, Ghost, Nav mit Code-Behind Highlight) | Colors.xaml, Typography.xaml |
-| **Inputs.xaml** | TextBox, ComboBox, DatePicker, CheckBox | Colors.xaml, Typography.xaml |
+| **Inputs.xaml** | TextBox, ComboBox, DatePicker, CheckBox | Colors.xaml, Typography.xaml | ⬜ Geplant (aktuell nicht implementiert) |
 | **DataGrid.xaml** | Header, Row, Cell, Zebra-Variante | Colors.xaml, Typography.xaml |
-| **Tabs.xaml** | TabControl, TabItem mit Unterstrich-Style | Colors.xaml, Typography.xaml |
-| **Dialogs.xaml** | Dialog-Basis (Header/Footer/Overlay), Cards, Tooltips, Separatoren, ContextMenu/MenuItem Styles | Colors.xaml, Typography.xaml |
+| **Dialogs.xaml** | Dialog-Basis (Header/Footer/Overlay), Cards, Tooltips, Separatoren, ContextMenu/MenuItem Styles, TabControl/TabItem Styles | Colors.xaml, Typography.xaml |
+| **TreeView.xaml** | TreeView mit Dark-Theme Styling | Colors.xaml, Typography.xaml |
 | **Icons.xaml** | Zentrale Icon-Registry — alle UI-Icons als `sys:String` Resources. Provisorisch Emoji, später Segoe Fluent Icons. Nutzung: `Content="{StaticResource IconFolder}"` oder `<Run Text="{StaticResource IconFolderOpen}"/>` | Keine |
 
-**Historie:** Ursprünglich 5 Dictionaries (ADR-028 v1). Erweitert um Inputs.xaml und Tabs.xaml (v0.16.0), dann Icons.xaml (v0.23.0) für zentrale Icon-Verwaltung. ADR-028 auf 8 nachgezogen.
+**Historie:** Ursprünglich 5 Dictionaries (ADR-028 v1). Erweitert um TreeView.xaml und Icons.xaml. TabControl/TabItem Styles sind in Dialogs.xaml integriert. Inputs.xaml ist geplant aber noch nicht implementiert. ADR-028 auf 7 nachgezogen.
 
 ### 3.2 Merge-Reihenfolge in App.xaml
 
@@ -162,10 +161,9 @@ BauProjektManager.PlanManager/
             <ResourceDictionary Source="Themes/Typography.xaml"/>
             <!-- 3. Komponenten-Styles (referenzieren Farben + Typo) -->
             <ResourceDictionary Source="Themes/Buttons.xaml"/>
-            <ResourceDictionary Source="Themes/Inputs.xaml"/>
             <ResourceDictionary Source="Themes/DataGrid.xaml"/>
-            <ResourceDictionary Source="Themes/Tabs.xaml"/>
             <ResourceDictionary Source="Themes/Dialogs.xaml"/>
+            <ResourceDictionary Source="Themes/TreeView.xaml"/>
         </ResourceDictionary.MergedDictionaries>
     </ResourceDictionary>
 </Application.Resources>
@@ -272,10 +270,10 @@ Verbindliche Brücke zwischen Design-Token (UI_UX_Guidelines.md) und WPF Resourc
 ├────────┬─────────────────────────────────────────────────────┤
 │ Side-  │ BpmToolbar (34px, nur wenn Modul sie braucht)      │
 │ bar    ├─────────────────────────────────────────────────────┤
-│ (56px) │                                                     │
-│ Icons  │ ContentControl (wechselt pro Modul)                 │
-│        │                                                     │
-│        │                                                     │
+│(220px) │                                                     │
+│ Text+  │ ContentControl (wechselt pro Modul)                 │
+│ Icons  │                                                     │
+│ (V1)   │                                                     │
 ├────────┴─────────────────────────────────────────────────────┤
 │ BpmStatusBar (22px)                                          │
 └──────────────────────────────────────────────────────────────┘
@@ -288,7 +286,7 @@ Verbindliche Brücke zwischen Design-Token (UI_UX_Guidelines.md) und WPF Resourc
 ```xml
 <Grid>
     <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="56"/>   <!-- Sidebar (56px Icon-Leiste) -->
+        <ColumnDefinition Width="220"/>  <!-- Sidebar (220px Text+Icons V1, Post-V1: 56px Icon-Leiste) -->
         <ColumnDefinition Width="*"/>    <!-- Content -->
     </Grid.ColumnDefinitions>
     <Grid.RowDefinitions>
@@ -689,7 +687,7 @@ Technische Umsetzung der Auflösungsregeln aus UI_UX_Guidelines.md Kap. 17.
 
 ### 11.2 Technische Leitplanken
 
-- **Sidebar:** 56px Icon-Leiste, immer sichtbar (UI_Navigation.md). Modul-Unterpunkte in der Toolbar.
+- **Sidebar:** 220px Text+Icons (V1), Post-V1: 56px Icon-Leiste. Immer sichtbar. Modul-Unterpunkte in der Toolbar.
 - **Dialoge:** `MinWidth`/`MinHeight` setzen, `MaxWidth` an Screen binden. Für enge Bildschirme: ScrollViewer um den Content
 - **DataGrids:** Horizontaler Scroll erlaubt in Tabellen, NICHT auf Seitenebene
 - **Fixe Breiten:** Nur für Sidebar, Toolbar, Statusleiste. Content-Bereich immer `Width="*"`

@@ -16,8 +16,8 @@ public class RegistryJsonExporter
     private readonly string _registryPath;
 
     /// <summary>
-    /// Creates exporter. Registry path should be on OneDrive for sync.
-    /// Default: OneDrive/02Arbeit/.AppData/BauProjektManager/registry.json
+    /// Creates exporter. Registry path should be on cloud storage for sync.
+    /// Default: CloudStorage/.AppData/BauProjektManager/registry.json
     /// </summary>
     public RegistryJsonExporter(string registryPath)
     {

@@ -390,31 +390,65 @@ public class AppSettingsService
     /// </summary>
     public static string? DetectCloudStoragePath()
     {
-        // Try OneDrive environment variables
-        var cloudPath = Environment.GetEnvironmentVariable("OneDrive");
-        if (!string.IsNullOrEmpty(cloudPath) && Directory.Exists(cloudPath))
+        // 1. Environment variables
+        var envVars = new[] { "OneDrive", "OneDriveCommercial", "OneDriveConsumer" };
+        foreach (var envVar in envVars)
         {
-            Log.Information("Cloud storage detected via OneDrive env: {Path}", cloudPath);
-            return cloudPath;
+            var path = Environment.GetEnvironmentVariable(envVar);
+            if (!string.IsNullOrEmpty(path) && Directory.Exists(path))
+            {
+                Log.Information("Cloud storage detected via {EnvVar}: {Path}", envVar, path);
+                return path;
+            }
         }
 
-        cloudPath = Environment.GetEnvironmentVariable("OneDriveCommercial");
-        if (!string.IsNullOrEmpty(cloudPath) && Directory.Exists(cloudPath))
+        // 2. Dropbox via info.json (offizielle Methode)
+        var dropboxInfo = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Dropbox", "info.json");
+        if (File.Exists(dropboxInfo))
         {
-            Log.Information("Cloud storage detected via OneDriveCommercial env: {Path}", cloudPath);
-            return cloudPath;
+            try
+            {
+                var json = File.ReadAllText(dropboxInfo);
+                // Simple parse: find "path" value
+                var match = System.Text.RegularExpressions.Regex.Match(json, @"""path""\s*:\s*""([^""]+)""");
+                if (match.Success)
+                {
+                    var dbPath = match.Groups[1].Value.Replace("\\\\", "\\");
+                    if (Directory.Exists(dbPath))
+                    {
+                        Log.Information("Cloud storage detected via Dropbox info.json: {Path}", dbPath);
+                        return dbPath;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Debug("Dropbox info.json parse failed: {Error}", ex.Message);
+            }
         }
 
-        // Try common cloud storage paths
+        // 3. Common filesystem paths
         var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var commonPaths = new[]
         {
+            // OneDrive
             Path.Combine(userProfile, "OneDrive"),
             Path.Combine(userProfile, "OneDrive - Personal"),
+            // Dropbox
             Path.Combine(userProfile, "Dropbox"),
+            // Google Drive
             Path.Combine(userProfile, "Google Drive"),
+            Path.Combine(userProfile, "GoogleDrive"),
+            Path.Combine(userProfile, "My Drive"),
+            // Drive-Mounts (häufig bei OneDrive/Dropbox auf separatem Laufwerk)
             "D:\\OneDrive",
-            "E:\\OneDrive"
+            "E:\\OneDrive",
+            "D:\\Dropbox",
+            "E:\\Dropbox",
+            "D:\\Google Drive",
+            "E:\\Google Drive"
         };
 
         foreach (var path in commonPaths)
@@ -428,6 +462,67 @@ public class AppSettingsService
 
         Log.Warning("Cloud storage not detected");
         return null;
+    }
+
+    /// <summary>
+    /// Detect ALL cloud storage paths on this machine.
+    /// Returns list of found paths (for display in setup dialog).
+    /// </summary>
+    public static List<string> DetectAllCloudStoragePaths()
+    {
+        var found = new List<string>();
+
+        // Environment variables
+        var envVars = new[] { "OneDrive", "OneDriveCommercial", "OneDriveConsumer" };
+        foreach (var envVar in envVars)
+        {
+            var path = Environment.GetEnvironmentVariable(envVar);
+            if (!string.IsNullOrEmpty(path) && Directory.Exists(path) && !found.Contains(path))
+                found.Add(path);
+        }
+
+        // Dropbox via info.json
+        var dropboxInfo = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Dropbox", "info.json");
+        if (File.Exists(dropboxInfo))
+        {
+            try
+            {
+                var json = File.ReadAllText(dropboxInfo);
+                var match = System.Text.RegularExpressions.Regex.Match(json, @"""path""\s*:\s*""([^""]+)""");
+                if (match.Success)
+                {
+                    var dbPath = match.Groups[1].Value.Replace("\\\\", "\\");
+                    if (Directory.Exists(dbPath) && !found.Contains(dbPath))
+                        found.Add(dbPath);
+                }
+            }
+            catch { }
+        }
+
+        // Common filesystem paths
+        var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var commonPaths = new[]
+        {
+            Path.Combine(userProfile, "OneDrive"),
+            Path.Combine(userProfile, "OneDrive - Personal"),
+            Path.Combine(userProfile, "Dropbox"),
+            Path.Combine(userProfile, "Google Drive"),
+            Path.Combine(userProfile, "GoogleDrive"),
+            Path.Combine(userProfile, "My Drive"),
+            "D:\\OneDrive", "E:\\OneDrive",
+            "D:\\Dropbox", "E:\\Dropbox",
+            "D:\\Google Drive", "E:\\Google Drive"
+        };
+
+        foreach (var path in commonPaths)
+        {
+            if (Directory.Exists(path) && !found.Contains(path))
+                found.Add(path);
+        }
+
+        return found;
     }
 
     /// <summary>

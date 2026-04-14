@@ -24,25 +24,29 @@ public partial class SetupDialog : Window
     private void LoadSystemInfo()
     {
         // Show system info
-        var cloudStorage = AppSettingsService.DetectOneDrivePath() ?? "(nicht gefunden)";
+        // Show system info with all detected cloud storages
+        var detectedClouds = AppSettingsService.DetectAllCloudStoragePaths();
+        var cloudInfo = detectedClouds.Count > 0
+            ? "\n   " + string.Join("\n   ", detectedClouds)
+            : "\n   (nicht gefunden)";
         TxtSystemInfo.Text = $"Rechner: {Environment.MachineName}\n" +
                              $"Benutzer: {Environment.UserName}\n" +
-                             $"Cloud-Speicher: {cloudStorage}";
+                             $"Cloud-Speicher: {cloudInfo}";
 
-        // Pre-fill OneDrive
-        var detectedOneDrive = AppSettingsService.DetectOneDrivePath();
-        if (detectedOneDrive is not null)
+        // Pre-fill cloud storage with first detected
+        var detectedCloud = detectedClouds.Count > 0 ? detectedClouds[0] : null;
+        if (detectedCloud is not null)
         {
-            TxtOneDrive.Text = detectedOneDrive;
-            Settings.OneDrivePath = detectedOneDrive;
+            TxtCloudStorage.Text = detectedCloud;
+            Settings.OneDrivePath = detectedCloud;
 
             // Try to find common work folder
             var commonWorkFolders = new[]
             {
-                System.IO.Path.Combine(detectedOneDrive, "Dokumente", "02 Arbeit"),
-                System.IO.Path.Combine(detectedOneDrive, "02 Arbeit"),
-                System.IO.Path.Combine(detectedOneDrive, "Dokumente", "Arbeit"),
-                System.IO.Path.Combine(detectedOneDrive, "Arbeit")
+                System.IO.Path.Combine(detectedCloud, "Dokumente", "02 Arbeit"),
+                System.IO.Path.Combine(detectedCloud, "02 Arbeit"),
+                System.IO.Path.Combine(detectedCloud, "Dokumente", "Arbeit"),
+                System.IO.Path.Combine(detectedCloud, "Arbeit")
             };
 
             foreach (var folder in commonWorkFolders)
@@ -63,19 +67,19 @@ public partial class SetupDialog : Window
             TxtArchivePath.Text = Settings.ArchivePath;
     }
 
-    private void OnBrowseOneDrive(object sender, RoutedEventArgs e)
+    private void OnBrowseCloudStorage(object sender, RoutedEventArgs e)
     {
-        var path = BrowseFolder("Cloud-Speicher-Ordner auswählen", TxtOneDrive.Text);
+        var path = BrowseFolder("Cloud-Speicher-Ordner auswählen", TxtCloudStorage.Text);
         if (path is not null)
         {
-            TxtOneDrive.Text = path;
+            TxtCloudStorage.Text = path;
             Settings.OneDrivePath = path;
         }
     }
 
     private void OnBrowseBasePath(object sender, RoutedEventArgs e)
     {
-        var startPath = !string.IsNullOrEmpty(TxtOneDrive.Text) ? TxtOneDrive.Text : "";
+        var startPath = !string.IsNullOrEmpty(TxtCloudStorage.Text) ? TxtCloudStorage.Text : "";
         var path = BrowseFolder("Arbeitsordner auswählen", startPath);
         if (path is not null)
         {
@@ -109,7 +113,7 @@ public partial class SetupDialog : Window
     private void OnSave(object sender, RoutedEventArgs e)
     {
         // Validate
-        if (string.IsNullOrEmpty(TxtOneDrive.Text))
+        if (string.IsNullOrEmpty(TxtCloudStorage.Text))
         {
             TxtStatus.Text = "Bitte Cloud-Speicher-Pfad angeben!";
             return;
@@ -128,7 +132,7 @@ public partial class SetupDialog : Window
         }
 
         // Save settings
-        Settings.OneDrivePath = TxtOneDrive.Text;
+        Settings.OneDrivePath = TxtCloudStorage.Text;
         Settings.BasePath = TxtBasePath.Text;
         Settings.ArchivePath = TxtArchivePath.Text;
         Settings.MachineName = Environment.MachineName;

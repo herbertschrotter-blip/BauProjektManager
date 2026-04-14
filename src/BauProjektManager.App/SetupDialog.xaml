@@ -47,13 +47,13 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBox x:Name="TxtOneDrive" Grid.Column="0"
+                <TextBox x:Name="TxtCloudStorage" Grid.Column="0"
                          Background="{DynamicResource BpmBgBase}"
                          Foreground="{DynamicResource BpmTextPrimary}"
                          BorderBrush="{DynamicResource BpmBorderDefault}"
                          Padding="6,4" IsReadOnly="True"/>
                 <Button Grid.Column="1" Content="{StaticResource IconActionBrowse}"
-                        Margin="5,0,0,0" Click="OnBrowseOneDrive"
+                        Margin="5,0,0,0" Click="OnBrowseCloudStorage"
                         Style="{DynamicResource BpmButtonGhost}"/>
             </Grid>
 

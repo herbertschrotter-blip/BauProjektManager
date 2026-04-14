@@ -99,6 +99,21 @@ public partial class App : Application
         Log.Information("BasePath: {BasePath}", settings.BasePath);
         Log.Information("ArchivePath: {ArchivePath}", settings.ArchivePath);
 
+        // Validate shared config reachability
+        if (!string.IsNullOrEmpty(settings.BasePath))
+        {
+            var sharedDir = AppSettingsService.GetSharedConfigDir(settings.BasePath);
+            var sharedPath = Path.Combine(sharedDir, "shared-config.json");
+            if (!File.Exists(sharedPath))
+            {
+                Log.Warning("Shared config not reachable at {Path}", sharedPath);
+            }
+            else
+            {
+                Log.Information("Shared config OK at {Path}", sharedPath);
+            }
+        }
+
         // Now show main window and switch shutdown mode
         var db = new ProjectDatabase();
         Log.Debug("Service registered: {Service}", "ProjectDatabase");

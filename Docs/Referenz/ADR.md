@@ -16,7 +16,7 @@ supersedes: []
 - Autorität: source_of_truth
 - Lesen wenn: Neue Architekturentscheidung treffen, bestehende ADR prüfen, Status ändern, Entscheidung nachschlagen
 - Nicht zuständig für: Implementierungs-Details (→ jeweilige Modul-Docs), Code-Standards (→ CODING_STANDARDS.md)
-- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-049)
+- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-051)
 - Pflichtlesen: keine (gezieltes Nachschlagen per ADR-Nummer)
 - Fachliche Invarianten:
   - Statusmodell: Decision Status (Proposed/Accepted/Superseded/Deprecated) getrennt von Implementation Status (Not Started/Partial/Implemented)
@@ -1986,5 +1986,74 @@ string GetProjectPath(Project p)
 - *Nur Manifest-Scan (Option B):* Robust, aber unnötiger Scan-Overhead bei jedem Start wenn der Pfad korrekt ist.
 
 **Betrifft:** ADR-004, ADR-013, ADR-025, ADR-046
+
+---
+
+## ADR-050: Source of Truth je Betriebsmodus
+
+**Datum:** 2026-04-15
+**Status:** ✅ Entschieden
+**Implementierung:** Partial — Sync-Felder-Konvention ab sofort, Server-Implementierung Post-V1
+**Herkunft:** 3-Runden Cross-Review Claude/ChatGPT (ServerArchitektur-Konzept)
+
+**Kontext:**
+
+BPM hat drei Betriebsmodi (ADR-033). Bisher galt pauschal "SQLite ist System of Record" (Architektur-Doc). Mit dem geplanten Server-Modus (Modus C) entsteht ein Widerspruch: Wenn mehrere Benutzer über einen Server arbeiten, kann nicht gleichzeitig die lokale SQLite jedes Clients SoR sein.
+
+**Entscheidung:**
+
+Source of Truth ist kontextabhängig pro Betriebsmodus:
+
+| Modus | SoR | SQLite-Rolle | Server-Rolle |
+|-------|-----|-------------|-------------|
+| A (Solo/Offline) | Lokale SQLite | System of Record | nicht vorhanden |
+| C (Server) | PostgreSQL am Server | Offline-Cache + Pending Changes | SoR + Auth + Fachregeln |
+
+Im Server-Modus gilt: "Server gewinnt" bei Daten-Konflikten. Der Server erzwingt zusätzlich Fachregeln (z.B. keine Änderung freigegebener Buchungen).
+
+**Konsequenzen:**
+
+- Architektur-Doc muss die pauschale Aussage "SQLite ist SoR" auf Modus A einschränken
+- Sync-Felder (created_at, created_by, last_modified_at, last_modified_by, sync_version, is_deleted) ab sofort in jede neue Tabelle
+- ULID als Primary Key, clientseitig erzeugt
+- Zeitstempel immer UTC
+- Soft Delete für sync-relevante Tabellen
+
+**Betrifft:** ADR-033 (3 Modi), Architektur-Doc Kapitel 2 (Speicherstrategie)
+
+---
+
+## ADR-051: Client ist local-first — Server nur Auth + Sync + Autorität
+
+**Datum:** 2026-04-15
+**Status:** ✅ Entschieden
+**Implementierung:** Not Started — Konzeptionell ab sofort gültig, Implementierung Post-V1
+**Herkunft:** 3-Runden Cross-Review Claude/ChatGPT (ServerArchitektur-Konzept)
+
+**Kontext:**
+
+Im Server-Modus könnte der Client entweder direkt den Server für Reads/Writes nutzen (online-first) oder weiterhin lokal arbeiten und nur synchronisieren (local-first). Da Baustellen häufig kein oder schlechtes Internet haben, muss die App jederzeit voll funktionsfähig sein — auch ohne Serververbindung.
+
+**Entscheidung:**
+
+Der Client arbeitet in JEDEM Betriebsmodus local-first:
+
+- **Reads:** Immer aus lokaler SQLite
+- **Writes:** Immer in lokale SQLite
+- **Server-Kontakt nur für:** Login / Token-Refresh, Sync (Push/Pull), Erstsync, Recovery
+- **Keine gemischten Read-Pfade:** UI liest nie direkt vom Server
+
+Offline-Verhalten: JWT abgelaufen → lokales Arbeiten NICHT blockiert. Re-Auth erst vor nächstem Sync erforderlich.
+
+Im Server-Modus werden ALLE Projektdaten lokal gecacht (kein selektiver Sync in V1/V2).
+
+**Konsequenzen:**
+
+- Keine API-Calls in ViewModels oder Application Services für fachliche Reads
+- Sync ist ein eigener Hintergrund-Prozess, nicht Teil der Use-Case-Pipeline
+- Lokaler Benutzerkontext über settings.json ("localUserName") für Modus A, über JWT-Claims für Modus C
+- Writes laufen über Application Services die Metadaten setzen (userId, utcNow, syncVersion)
+
+**Betrifft:** ADR-050 (SoR je Modus), ADR-033 (3 Modi), ADR-035 (IExternalCommunicationService)
 
 *Dokument wird laufend aktualisiert wenn neue Architekturentscheidungen getroffen werden.*

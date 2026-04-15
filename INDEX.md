@@ -26,7 +26,7 @@
 |----|-------------|----------------|
 | Desktop-PC | Desktop_PC | `Dokumente\02 Arbeit\05 Vorlagen - Scripte\05_BauProjekteManager` |
 | Firmenlaptop | Firmenlaptop | `Dokumente\02 Arbeit\05 Vorlagen - Scripte\05_BauProjekteManager` |
-| Surface | (per hostname) | `Dokumente\02 Arbeit\05 Vorlagen - Scripte\05_BauProjekteManager` |
+| Surface | Surface7 | `Dokumente\02 Arbeit\05 Vorlagen - Scripte\05_BauProjekteManager` |
 
 Basispfad = OneDrive-Pfad + `\` + Projekt-Suffix.
 

@@ -31,6 +31,35 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.25.15] — 2026-04-15
+
+### PlanManager V1 — Import-Pipeline komplett
+
+Komplette Import-Pipeline von Scan bis Ausführung implementiert (Cross-Review 15.04.2026).
+
+### Hinzugefuegt
+- 6 Domain-Enums: ParseConfidence, ImportStage, RevisionKind, ImportStatus, ImportWarningCode, ResolutionSource
+- 8 Domain-Records: ScannedFile, FingerprintedFile, ParsedImportFile, ClassifiedImportFile, ImportDecision, ImportWarning, ResolutionEvidence, DocumentTypeDescriptor
+- RecognitionProfile Schema v2: documentTypeId, TokenizationConfig, IndexExtractionConfig, includeInIdentity, GroupingConfig.Mode="identity"
+- v1→v2 Profil-Migration automatisch beim Laden (ProfileManager)
+- FileNameParser: TokenizationConfig, CollapseRepeatedDelimiters, FirstTokenDelimiter
+- 7-Stufen-Analyse-Pipeline: ImportScanService, FileFingerprintService, FileParseService, ImportContextResolver, DocumentKeyBuilder, RevisionDecisionService, ImportPlanBuilder
+- ImportWorkflowService: Orchestrator fuer AnalyzeAsync()
+- PlanManagerDatabase: planmanager.db mit 6 Tabellen (plan_revisions, plan_files, revision_file_links, import_journal, import_actions, import_action_files)
+- ImportExecutionService: Dateien verschieben, _Archiv/ erstellen, Journal, DB-Update
+- Import-Vorschau Dialog (DataGrid, 7 Spalten, 9 Status-Typen)
+- "Import starten" Button verdrahtet in ProjectDetailView
+- AddFileToExistingRevision: DWG+PDF unter gleicher Revision (UNIQUE-Fix)
+- PatternTemplateService: Globale Musterbibliothek (Schema v2)
+- Tools/Move-FilesFlat.ps1: PowerShell-Hilfstool zum Dateien-Zurücklegen
+
+### Geaendert
+- PlanManager.md: Gruppierung nach fachlicher Identity statt Dateinamen-Stamm
+- PlanManager.md: Phase 2 als 7-Stufen-Analyse-Pipeline dokumentiert
+- PlanManager.md: Profil-Schema v2, tokenization, indexExtraction, Stage-Konzept
+- Architektur.md: Import-Eintrag um 7-Stufen-Pipeline-Verweis ergänzt
+- Directory.Build.props: Version 0.25.15
+
 ## [v0.25.1] — 2026-04-15
 
 ### ULID-Migration — Schema v2.0

@@ -22,7 +22,7 @@ supersedes: []
   - 3. Konzeptübersicht
   - 4. IndexSource — Dreistufiges Modell (ADR-045)
   - 5. Entscheidungsmatrix (Import-Versionierung)
-  - 6. Workflow — 5 Phasen
+  - 6. Workflow — 10-Schritte-Gesamtworkflow + 7-Stufen-Analyse-Pipeline
   - 7. Manueller Sortier-Modus
   - 8. DWG-Veraltet-Warnung
   - 9. Bestandsmanifest — .bpm/plan-index.json
@@ -615,37 +615,95 @@ Bauprotokoll: "BB_2026-04-09_003_Baubesprechung.pdf" → [BB][2026-04-09][003][B
 **Bau-spezifisch:** `geschoss`, `haus`, `planart`, `objekt`, `bauteil`, `bauabschnitt`, `stiege`, `achse`, `zone`, `block`
 **Benutzerdefiniert:** User kann neue Feld-Namen erstellen.
 
+### 13.4 Tokenization (v2 — Cross-Review 15.04.2026)
+
+Seit Schema v2 wird die Tokenization pro Profil konfiguriert statt global:
+
+```json
+"tokenization": {
+  "delimiters": ["-", "_"],
+  "collapseRepeatedDelimiters": false,
+  "firstTokenDelimiter": null
+}
+```
+
+| Feld | Zweck | Beispiel |
+|------|-------|---------|
+| `delimiters` | Trennzeichen-Liste | `["-", "_"]` für Standard, `["-", "_", " "]` für Space-Splitting |
+| `collapseRepeatedDelimiters` | `__` und `______` als ein Trenner | `24101__505b` → `[24101][505b]` statt `[24101][][505b]` |
+| `firstTokenDelimiter` | Erstes Token vor separatem Trennzeichen abspalten | `PP01-1 Wohnanlage...` → `[PP01-1][Wohnanlage]` |
+
+### 13.5 IndexExtraction (v2)
+
+Für zusammengeschriebene Indizes wie `002a` (Nummer+Buchstabe ohne Trenner):
+
+```json
+"indexExtraction": {
+  "source": "segment",
+  "segmentSelector": "planNumber",
+  "pattern": "^(?<number>\\d{3})(?<index>[A-Za-z])$",
+  "numberGroup": "number",
+  "indexGroup": "index"
+}
+```
+
+Wird nach dem normalen Segment-Parsing angewendet. Wenn das Regex matcht, werden `planNumber` und `planIndex` aus den Capture Groups extrahiert.
+
+### 13.6 Stage-Konzept (Cross-Review 15.04.2026)
+
+Jedes Dokument hat eine Stage im Review-/Freigabe-Lifecycle:
+
+| Stage | Bedeutung | Erkennung |
+|-------|-----------|-----------|
+| `Unknown` | Keine Stage-Info (Default, NICHT "Final") | Standard |
+| `Draft` | VORABZUG, Vorab, VA | Ordnername oder Dateiname enthält Marker |
+| `Final` | Endgültig freigegeben | Explizit erkannt, nicht Default |
+
+Stage ist NICHT Teil des `document_key` und beeinflusst die Versionierung nicht direkt.
+
 ---
 
 ## 14. Profil-System (ADR-010)
 
-### 14.1 RecognitionProfile JSON-Schema
+### 14.1 RecognitionProfile JSON-Schema (v2 — Cross-Review 15.04.2026)
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "01HV...",
+  "documentTypeId": "polierplan",
   "documentTypeName": "Polierplan",
   "targetFolder": "01 Planunterlagen",
   "indexSource": "FileName",
   "indexMode": "optional",
   "indexPattern": "^[A-Z0-9]{1,3}$",
   "indexComparison": { "mode": "alphabetic", "caseInsensitive": true },
+  "indexExtraction": {
+    "source": "segment",
+    "segmentSelector": "planNumber",
+    "pattern": "^(?<number>\\d{3})(?<index>[A-Za-z])$",
+    "numberGroup": "number",
+    "indexGroup": "index"
+  },
+  "tokenization": {
+    "delimiters": ["-", "_"],
+    "collapseRepeatedDelimiters": false,
+    "firstTokenDelimiter": null
+  },
   "identityFields": ["documentType", "planNumber"],
-  "delimiters": ["-", "_"],
   "segments": [
-    { "position": 0, "fieldType": "projectNumber", "label": "Prefix", "required": false },
-    { "position": 1, "fieldType": "planNumber", "label": "Plannummer", "required": true },
-    { "position": 2, "fieldType": "planIndex", "label": "Index", "required": false },
-    { "position": 3, "fieldType": "geschoss", "label": "Geschoss", "required": false },
-    { "position": 4, "fieldType": "description", "label": "Bezeichnung", "required": false }
+    { "position": 0, "fieldType": "projectNumber", "label": "Prefix", "required": false, "includeInIdentity": false },
+    { "position": 1, "fieldType": "planNumber", "label": "Plannummer", "required": true, "includeInIdentity": true },
+    { "position": 2, "fieldType": "planIndex", "label": "Index", "required": false, "includeInIdentity": false },
+    { "position": 3, "fieldType": "geschoss", "label": "Geschoss", "required": false, "includeInIdentity": false },
+    { "position": 4, "fieldType": "description", "label": "Bezeichnung", "required": false, "includeInIdentity": false }
   ],
   "recognition": [
     { "method": "prefix", "pattern": "S-" }
   ],
   "recognitionPriority": 100,
   "conflictPolicy": "askUser",
-  "grouping": { "mode": "baseFileName" },
+  "grouping": { "mode": "identity" },
   "folderHierarchy": ["geschoss"],
   "renameSchema": "{prefix}-{planNumber}-{planIndex}_{geschoss}",
   "createdAt": "2026-04-09T10:00:00Z",
@@ -701,14 +759,22 @@ BauProjektManager.PlanManager/
 │   ├── ManualSortDialog.xaml
 │   └── ProfileWizardDialog.xaml
 ├── Services/
-│   ├── FileNameParser.cs              ← Segment-Splitting
+│   ├── FileNameParser.cs              ← Segment-Splitting + TokenizationConfig (v2)
 │   ├── DocumentTypeRecognizer.cs      ← Dokumenttyp-Erkennung
 │   ├── DocumentKeyBuilder.cs          ← document_key deterministisch bilden
-│   ├── ImportWorkflowService.cs       ← Workflow-Orchestrierung
-│   ├── ProfileManager.cs             ← .bpm/profiles/ lesen/schreiben (ADR-046) + pattern-templates.json
-│   ├── PlanIndexManifestService.cs   ← .bpm/plan-index.json lesen/schreiben
+│   ├── ImportScanService.cs           ← Eingang rekursiv scannen
+│   ├── FileFingerprintService.cs      ← MD5-Hashing (bounded parallel)
+│   ├── FileParseService.cs            ← Parser + Recognizer + Feld-Extraktion
+│   ├── ImportContextResolver.cs       ← Ordner-Kontext + Stage + Evidence
+│   ├── RevisionDecisionService.cs     ← 9-Status Entscheidungsmatrix
+│   ├── ImportPlanBuilder.cs           ← Zielpfade berechnen
+│   ├── ImportWorkflowService.cs       ← 7-Stufen-Pipeline Orchestrator
+│   ├── ImportExecutionService.cs      ← Dateien verschieben + Journal + DB
+│   ├── ProfileManager.cs             ← .bpm/profiles/ CRUD + v1→v2 Migration
+│   ├── PatternTemplateService.cs     ← Globale Musterbibliothek
+│   ├── PlanIndexManifestService.cs   ← .bpm/plan-index.json (optional V1)
 │   ├── FileRenamer.cs                ← RenameSchemaEngine + FileNameSanitizer
-│   └── PlanManagerDatabase.cs        ← planmanager.db CRUD
+│   └── PlanManagerDatabase.cs        ← planmanager.db 6 Tabellen + CRUD
 └── BauProjektManager.PlanManager.csproj
 ```
 
@@ -719,21 +785,21 @@ BauProjektManager.PlanManager/
 | Prio | # | Feature | Status |
 |------|---|---------|--------|
 | 1 | 18 | Dateinamen-Parser (Segment-Splitting, Domain-Logik) | ✅ v0.24.3 |
-| 2 | 19 | Profil-Wizard GUI (5-Schritt: Datei, Segmente, Index, Zielordner, Erkennung) | ✅ v0.24.10 (UI, Speichern offen) |
-| 3 | 20 | Dokumenttyp-Erkennung (prefix/contains) | |
-| 4 | 21 | PatternTemplates (Vorschlagslogik) | |
-| 5 | 22 | .bpm/profiles/ (Pro Projekt) — ProfileManager Service (ADR-046) | |
-| 6 | 23 | pattern-templates.json (Globale Bibliothek) |
-| 7 | 24 | Import-Workflow Scan→Parse→Classify→Plan |
-| 8 | 25 | Import-Vorschau (9 Status, Rechtsklick) |
-| 9 | 26 | Import-Execute (Verschieben, Journal, .bpm/plan-index.json) |
-| 10 | 27 | Index-Archivierung (_Archiv/) |
-| 11 | 28 | DB-Schema (6 SQLite-Tabellen) |
-| 12 | 29 | Recovery (pending → Reparatur) |
-| 13 | 30 | Undo (letzter Import + Preflight) |
-| 14 | 31 | Backup vor Import |
-| 15 | 32 | Manueller Sortier-Modus + Umbenennung |
-| 16 | 33 | Erkennungs-Konflikt (CONFLICT) |
+| 2 | 19 | Profil-Wizard GUI (5-Schritt: Datei, Segmente, Index, Zielordner, Erkennung) | ✅ v0.24.10 |
+| 3 | 20 | Dokumenttyp-Erkennung (prefix/contains) | ✅ v0.25.5 |
+| 4 | 21 | PatternTemplates (Vorschlagslogik) | ✅ v0.25.5 |
+| 5 | 22 | .bpm/profiles/ (Pro Projekt) — ProfileManager + v1→v2 Migration | ✅ v0.25.8 |
+| 6 | 23 | pattern-templates.json (Globale Bibliothek) | ✅ v0.25.5 |
+| 7 | 24 | Import-Pipeline 7 Services (Scan→Fingerprint→Parse→Resolve→Key→Decision→Plan) | ✅ v0.25.11 |
+| 8 | 25 | Import-Vorschau (DataGrid, 9 Status-Typen) | ✅ v0.25.14 |
+| 9 | 26 | Import-Execute (Verschieben, Journal, DB-Update) | ✅ v0.25.15 |
+| 10 | 27 | Index-Archivierung (_Archiv/) | ✅ v0.25.15 |
+| 11 | 28 | DB-Schema (6 SQLite-Tabellen, planmanager.db) | ✅ v0.25.13 |
+| 12 | 29 | Recovery (pending → Reparatur) | ⬜ |
+| 13 | 30 | Undo (letzter Import + Preflight) | ⬜ |
+| 14 | 31 | Backup vor Import | ⬜ |
+| 15 | 32 | Manueller Sortier-Modus + Umbenennung | ⬜ |
+| 16 | 33 | Erkennungs-Konflikt (CONFLICT) | ⬜ |
 
 ---
 

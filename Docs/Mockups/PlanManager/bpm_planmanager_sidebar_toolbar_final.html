@@ -1,0 +1,214 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.S{background:#1E1E1E;border-radius:var(--border-radius-lg);overflow:hidden;border:.5px solid var(--color-border-tertiary);font-family:'Segoe UI',var(--font-sans);font-size:13px;color:#CCC;display:flex;flex-direction:column}
+.main{display:flex;flex:1;min-height:420px}
+.side{width:56px;background:#252526;border-right:1px solid #2D2D30;display:flex;flex-direction:column;align-items:center;padding-top:6px;gap:2px;flex-shrink:0}
+.si{display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 0;width:48px;border-radius:6px;border:none;background:transparent;color:#858585;cursor:pointer;font-family:inherit;font-size:9px;position:relative}
+.si:hover{background:#37373D;color:#CCC}
+.si.a{background:#04395E;color:#0078D4}
+.si i{font-style:normal;font-size:18px;line-height:1}
+.si .bg{position:absolute;top:2px;right:2px;background:#F0AD4E;color:#1E1E1E;font-size:7px;font-weight:700;padding:1px 4px;border-radius:7px;min-width:14px;text-align:center}
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.tb{display:flex;align-items:center;gap:6px;padding:5px 12px;background:#252526;border-bottom:1px solid #2D2D30;min-height:34px}
+.tb-title{font-size:13px;font-weight:500;color:#FFF;flex:1}
+.V{display:none;flex-direction:column;flex:1}.V.a{display:flex}
+.R{background:#2D2D30;border-radius:6px;padding:10px 12px;margin-bottom:4px;cursor:pointer}
+.R:hover{background:#37373D}
+.D{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+.SB{height:22px;background:#252526;border-top:1px solid #2D2D30;display:flex;align-items:center;padding:0 12px;font-size:10px;color:#858585;flex-shrink:0}
+.P{background:#0078D4;color:#fff;border:none;padding:5px 12px;border-radius:4px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit}
+.O{background:transparent;color:#CCC;border:1px solid #3C3C3C;padding:3px 10px;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit}
+.E{background:transparent;color:#858585;border:1px solid #3C3C3C;padding:2px 8px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit}
+.E:hover{color:#FFF;border-color:#858585}
+.BG{font-size:10px;font-weight:500;padding:2px 6px;border-radius:10px}
+.TG{font-size:9px;color:#858585;background:#1E1E1E;padding:1px 5px;border-radius:3px}
+.CL{font-size:10px;color:#858585;margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;display:flex;align-items:center;gap:5px}
+.CL::after{content:'';flex:1;height:1px;background:#2D2D30}
+.TBR{display:flex;gap:0;border-bottom:1px solid #2D2D30;background:#252526}
+.TBn{background:none;border:none;color:#858585;padding:7px 12px;font-size:11px;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit}
+.TBn.a{color:#0078D4;border-bottom-color:#0078D4}
+.TBn:hover{color:#CCC}
+.TC{display:none}.TC.a{display:block}
+.MO{position:relative;min-height:340px;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:12px;flex:1}
+.MD{background:#1E1E1E;border-radius:10px;border:1px solid #3C3C3C;width:100%;max-width:620px;overflow:hidden}
+.SG{display:inline-flex;flex-direction:column;align-items:center;padding:3px 9px;border-radius:5px;font-size:12px;color:#fff}
+.SG span:last-child{font-size:8px;opacity:.7;margin-top:1px}
+.PR{display:flex;gap:3px;margin-top:5px}.PR div{flex:1;height:3px;border-radius:2px}
+.tb-back{background:none;border:none;color:#858585;cursor:pointer;font-size:14px;font-family:inherit;padding:2px 6px;border-radius:3px}
+.tb-back:hover{color:#FFF;background:#37373D}
+.side-sep{width:32px;height:1px;background:#2D2D30;margin:4px 0}
+.side-bottom{margin-top:auto;padding-bottom:8px;font-size:8px;color:#555;text-align:center}
+</style>
+<h2 class="sr-only">BPM PlanManager mit Sidebar-Navigation, Modul-Badges und kontextueller Toolbar</h2>
+<div class="S">
+<div class="main">
+<div class="side">
+<button class="si a" onclick="mod('plan')" id="s0"><i>&#128193;</i>Pl&#228;ne<span class="bg">18</span></button>
+<button class="si" onclick="mod('set')" id="s1"><i>&#9881;</i>Einstell.</button>
+<div class="side-sep"></div>
+<button class="si" style="opacity:.35;cursor:default"><i>&#128247;</i>Fotos</button>
+<button class="si" style="opacity:.35;cursor:default"><i>&#9202;</i>Zeiten</button>
+<button class="si" style="opacity:.35;cursor:default"><i>&#128214;</i>Tagebuch</button>
+<div class="side-bottom">v0.25</div>
+</div>
+
+<div class="content">
+
+<div class="V a" id="vList">
+<div class="tb"><span class="tb-title">PlanManager</span></div>
+<div style="flex:1;padding:10px 14px;overflow-y:auto">
+<div style="font-size:10px;color:#858585;margin-bottom:8px">3 aktive Projekte &middot; 18 Dateien im Eingang</div>
+<div class="R" style="border-left:3px solid #F0AD4E;border-radius:0 6px 6px 0" onclick="goPrj()"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:500;color:#FFF">202512_&#214;WG-Dobl-Zwaring</div><div style="font-size:10px;color:#858585">6 Dokumenttypen &middot; 2 Sync-Paare</div></div><div style="display:flex;align-items:center;gap:6px"><span class="BG" style="background:#F0AD4E;color:#1E1E1E">15</span><span style="color:#858585">&#8250;</span></div></div></div>
+<div class="R" style="border-left:3px solid #4EC94E;border-radius:0 6px 6px 0"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:500;color:#FFF">202302_Reihenh&#228;user-Kapfenberg</div><div style="font-size:10px;color:#858585">4 Dokumenttypen</div></div><span style="font-size:11px;color:#4EC94E">&#10003; Aktuell</span></div></div>
+<div class="R" style="border-left:3px solid #F0AD4E;border-radius:0 6px 6px 0"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:500;color:#FFF">202201_Sanierung-Leoben</div><div style="font-size:10px;color:#858585">Kein Profil</div></div><div style="display:flex;align-items:center;gap:6px"><span class="BG" style="background:#F0AD4E;color:#1E1E1E">3</span><span style="color:#858585">&#8250;</span></div></div></div>
+</div></div>
+
+<div class="V" id="vPrj">
+<div class="tb"><button class="tb-back" onclick="mod('plan')">&#8592;</button><span class="tb-title">&#214;WG-Dobl-Zwaring</span><button class="O" style="font-size:10px">&#8635; R&#252;ckg&#228;ngig</button><button class="P" onclick="modal('imp')" style="margin-left:4px">Import starten</button></div>
+<div style="padding:4px 14px;background:#2a2418;border-bottom:1px solid #2D2D30;font-size:11px;color:#F0AD4E">&#9889; 15 im Eingang &middot; 3 vom Server-Sync</div>
+<div class="TBR"><button class="TBn a" onclick="dt(0)">Profile</button><button class="TBn" onclick="dt(1)">Manuell sortieren</button><button class="TBn" onclick="dt(2)">Sync</button></div>
+<div style="flex:1;overflow-y:auto">
+
+<div class="TC a" id="t0" style="padding:8px 14px">
+<div class="CL">Pl&#228;ne (01 Planunterlagen)</div>
+<div class="R" style="cursor:default"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:7px;flex:1"><span class="D" style="background:#4EC94E"></span><div><div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><span style="color:#FFF">Polierplan</span><span class="TG">S-</span><span class="TG">FileName</span><span class="TG">opt.Idx</span></div><div style="font-size:10px;color:#858585">47 Pl&#228;ne &middot; Prefix&#8594;Nr&#8594;Idx&#8594;Geschoss&#8594;Bez.</div></div></div><div style="display:flex;align-items:center;gap:4px"><span style="font-size:10px;color:#4EC94E">&#10003;</span><button class="E" onclick="modal('wiz')">&#9998; Profil</button></div></div></div>
+<div class="R" style="cursor:default"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:7px;flex:1"><span class="D" style="background:#F0AD4E"></span><div><div style="display:flex;align-items:center;gap:4px"><span style="color:#FFF">Schalungsplan</span><span class="TG">5998-</span><span class="TG">None</span></div><div style="font-size:10px;color:#858585">23 Pl&#228;ne</div></div></div><div style="display:flex;align-items:center;gap:4px"><span class="BG" style="background:#F0AD4E;color:#1E1E1E;font-size:9px">5</span><button class="E" onclick="modal('wiz')">&#9998; Profil</button></div></div></div>
+<div class="R" style="cursor:default"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:7px;flex:1"><span class="D" style="background:#4EC94E"></span><div><div style="display:flex;align-items:center;gap:4px"><span style="color:#FFF">Bewehrungsplan</span><span class="TG">B-</span><span class="TG">FileName</span></div><div style="font-size:10px;color:#858585">31 Pl&#228;ne</div></div></div><div style="display:flex;align-items:center;gap:4px"><span style="font-size:10px;color:#4EC94E">&#10003;</span><button class="E" onclick="modal('wiz')">&#9998; Profil</button></div></div></div>
+<div style="margin-top:8px"></div><div class="CL">Protokolle (04 Protokolle)</div>
+<div class="R" style="cursor:default"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:7px;flex:1"><span class="D" style="background:#4EC94E"></span><div><div style="display:flex;align-items:center;gap:4px"><span style="color:#FFF">Baubesprechung</span><span class="TG">BB_</span><span class="TG">None</span></div><div style="font-size:10px;color:#858585">8 Protokolle</div></div></div><div><button class="E" onclick="modal('wiz')">&#9998; Profil</button></div></div></div>
+<div style="border:1px dashed #444;border-radius:6px;padding:6px;text-align:center;margin-top:3px;cursor:pointer" onclick="modal('wiz')"><span style="font-size:10px;color:#858585">+ Neuen Dokumenttyp anlernen</span></div>
+</div>
+
+<div class="TC" id="t1" style="padding:8px 14px">
+<div style="display:flex;gap:10px;min-height:200px">
+<div style="flex:1">
+<div style="font-size:10px;color:#858585;margin-bottom:4px;text-transform:uppercase">Nicht zugeordnet (3)</div>
+<div class="R" style="border-left:3px solid #F44747;border-radius:0 6px 6px 0;background:#2a1818;cursor:default"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:11px;color:#FFF;font-family:var(--font-mono)">20260409_143522.pdf</div><div style="font-size:9px;color:#858585">Scan &middot; 2,4 MB</div></div><button class="E" style="color:#0078D4;border-color:#0078D4">Zuweisen &#8594;</button></div></div>
+<div class="R" style="border-left:3px solid #F44747;border-radius:0 6px 6px 0;background:#2a1818;cursor:default"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:11px;color:#FFF;font-family:var(--font-mono)">IMG_20260408.jpg</div><div style="font-size:9px;color:#858585">Foto &middot; 5,1 MB</div></div><button class="E" style="color:#0078D4;border-color:#0078D4">Zuweisen &#8594;</button></div></div>
+</div>
+<div style="width:1px;background:#2D2D30"></div>
+<div style="flex:1">
+<div style="font-size:10px;color:#858585;margin-bottom:4px;text-transform:uppercase">Zuweisung</div>
+<div style="margin-bottom:4px"><div style="font-size:9px;color:#858585;margin-bottom:2px">Dokumenttyp *</div><div style="background:#3C3C3C;border:1px solid #3C3C3C;border-radius:3px;padding:4px 7px;font-size:11px;display:flex;justify-content:space-between"><span>Polierplan</span><span style="color:#858585">&#9662;</span></div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px"><div><div style="font-size:9px;color:#858585;margin-bottom:2px">Plannr *</div><div style="background:#3C3C3C;border:1px solid #3C3C3C;border-radius:3px;padding:4px 7px;font-size:11px;color:#FFF">103</div></div><div><div style="font-size:9px;color:#858585;margin-bottom:2px">Index</div><div style="background:#3C3C3C;border:1px solid #3C3C3C;border-radius:3px;padding:4px 7px;font-size:11px;color:#FFF">D</div></div></div>
+<div style="margin-bottom:4px"><div style="font-size:9px;color:#858585;margin-bottom:2px">Geschoss</div><div style="background:#3C3C3C;border:1px solid #3C3C3C;border-radius:3px;padding:4px 7px;font-size:11px;display:flex;justify-content:space-between"><span>TG</span><span style="color:#858585">&#9662;</span></div></div>
+<div style="display:flex;align-items:center;gap:4px;margin-bottom:3px"><div style="width:24px;height:13px;background:#0078D4;border-radius:7px;position:relative"><div style="position:absolute;top:2px;left:11px;width:9px;height:9px;border-radius:50%;background:#fff"></div></div><span style="font-size:10px">Umbenennen</span></div>
+<div style="background:#1E1E1E;border-radius:3px;padding:3px 6px;font-size:10px;font-family:var(--font-mono);margin-bottom:5px"><span style="color:#858585">&#8594; </span><span style="color:#4EC94E">S-103-D_TG.pdf</span></div>
+<div style="display:flex;justify-content:space-between"><button class="O" style="font-size:10px">&#220;berspringen</button><button class="P" style="font-size:10px">Einsortieren</button></div>
+</div></div>
+</div>
+
+<div class="TC" id="t2" style="padding:8px 14px">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-size:10px;color:#858585;text-transform:uppercase">Sync-Paare</div><button class="P" style="font-size:10px">Alle syncen</button></div>
+<div class="R" style="cursor:default"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="display:flex;align-items:center;gap:4px;font-size:11px"><span style="color:#FFF">01 Planunterlagen</span><span style="color:#0078D4">&#8596;</span><span style="color:#858585;font-family:var(--font-mono);font-size:10px">\\SERVER\&#214;WG\Pl&#228;ne\</span></div><div style="font-size:9px;color:#858585">09.04. &middot; 3 neu &#8594; _Eingang/</div></div><div style="display:flex;gap:3px"><button class="E">Syncen</button><button class="E">&#9998;</button></div></div></div>
+<div class="R" style="cursor:default"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="display:flex;align-items:center;gap:4px;font-size:11px"><span style="color:#FFF">04 Protokolle</span><span style="color:#0078D4">&#8592;</span><span style="color:#858585;font-family:var(--font-mono);font-size:10px">\\SERVER\&#214;WG\Prot.\</span></div><div style="font-size:9px;color:#858585">Aktuell</div></div><div style="display:flex;gap:3px"><button class="E">Syncen</button><button class="E">&#9998;</button></div></div></div>
+<div style="border:1px dashed #444;border-radius:6px;padding:5px;text-align:center;margin-top:3px;cursor:pointer"><span style="font-size:10px;color:#858585">+ Neues Sync-Paar</span></div>
+<div style="margin-top:8px;font-size:9px;color:#858585;margin-bottom:2px;text-transform:uppercase">Sync-Log</div>
+<div style="font-size:10px;color:#858585;line-height:1.6">09.04. &#8592; 3 Dateien (2,1 MB)<br>07.04. &#8594; 5 Dateien (12,3 MB)</div>
+</div>
+</div></div>
+
+<div class="V" id="vSet">
+<div class="tb"><span class="tb-title">Einstellungen</span></div>
+<div style="flex:1;padding:10px 14px">
+<div class="R" style="cursor:default;padding:12px"><div style="color:#FFF;margin-bottom:2px">Allgemein</div><div style="font-size:11px;color:#858585">Sprache, Theme, Pfade</div></div>
+<div class="R" style="cursor:default;padding:12px"><div style="color:#FFF;margin-bottom:2px">Projekte</div><div style="font-size:11px;color:#858585">Projektliste, Stammdaten</div></div>
+<div class="R" style="cursor:default;padding:12px"><div style="color:#FFF;margin-bottom:2px">Sync-Defaults</div><div style="font-size:11px;color:#858585">Serverpfad, Richtung, Max. Gr&#246;&#223;e</div></div>
+<div class="R" style="cursor:default;padding:12px"><div style="color:#FFF;margin-bottom:2px">&#220;ber / Dev-Tools</div><div style="font-size:11px;color:#858585">Version, DB-Reset</div></div>
+</div></div>
+
+<div class="V" id="vImp"><div class="MO"><div class="MD">
+<div style="padding:8px 12px;border-bottom:1px solid #2D2D30;display:flex;align-items:center;justify-content:space-between"><span style="font-size:12px;font-weight:500;color:#FFF">Import-Vorschau &middot; 8 Dateien</span><div style="display:flex;gap:4px"><button class="O" style="font-size:10px" onclick="cls()">Abbrechen</button><button class="P" style="font-size:10px">Import &#9654;</button></div></div>
+<div style="padding:4px 12px;background:#252526;font-size:9px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid #2D2D30"><span style="color:#4EC94E">&#9679; 2 Neu</span><span style="color:#3794FF">&#9679; 2 Rev.</span><span style="color:#F0AD4E">&#9679; 1 Ge&#228;nd.</span><span style="color:#E8A040">&#9679; 1 Gl.Idx</span><span style="color:#858585">&#9679; 1 Skip</span><span style="color:#F44747">&#9679; 1 Unklar</span></div>
+<table style="width:100%;border-collapse:collapse;font-size:10px">
+<thead><tr style="background:#252526;color:#858585"><th style="padding:4px 8px;text-align:left;font-weight:400">Status</th><th style="padding:4px 8px;text-align:left;font-weight:400">Datei</th><th style="padding:4px 8px;text-align:left;font-weight:400">Typ</th><th style="padding:4px 8px;text-align:left;font-weight:400">Ziel</th></tr></thead>
+<tbody>
+<tr style="border-bottom:1px solid #2D2D30"><td style="padding:3px 8px;color:#4EC94E">&#9679; Neu</td><td style="padding:3px 8px;color:#FFF">S-108-A_TG.pdf</td><td>Polier</td><td style="color:#858585">Polierplan/TG/</td></tr>
+<tr style="border-bottom:1px solid #2D2D30"><td style="padding:3px 8px;color:#3794FF">&#8593; Rev.</td><td style="padding:3px 8px;color:#FFF">S-103-D_TG.pdf</td><td>Polier</td><td style="color:#858585">C&#8594;D (Archiv)</td></tr>
+<tr style="border-bottom:1px solid #2D2D30"><td style="padding:3px 8px;color:#F0AD4E">&#9650; Ge&#228;nd.</td><td style="padding:3px 8px;color:#FFF">5998-003_KG.pdf</td><td>Schal.</td><td style="color:#858585">Archiv+TS</td></tr>
+<tr style="border-bottom:1px solid #2D2D30;background:#2a2518"><td style="padding:3px 8px;color:#E8A040">&#8252; Gl.Idx</td><td style="padding:3px 8px;color:#FFF">S-103-C_TG.pdf</td><td>Polier</td><td style="color:#E8A040">&#8800; MD5!</td></tr>
+<tr style="border-bottom:1px solid #2D2D30;opacity:.5"><td style="padding:3px 8px;color:#858585">&#8212; Skip</td><td style="padding:3px 8px">B-201-A_EG.pdf</td><td>Bew.</td><td style="color:#858585">Identisch</td></tr>
+<tr style="border-bottom:1px solid #2D2D30;background:#2a1818"><td style="padding:3px 8px;color:#F44747">? Unklar</td><td style="padding:3px 8px;color:#F44747">Protokoll_neu.pdf</td><td style="color:#858585">&#8212;</td><td style="color:#858585">Manuell</td></tr>
+</tbody></table>
+</div></div></div>
+
+<div class="V" id="vWiz"><div class="MO"><div class="MD">
+<div style="padding:8px 12px;border-bottom:1px solid #2D2D30"><div style="font-size:12px;font-weight:500;color:#FFF">Profil anlernen / bearbeiten</div><div style="font-size:10px;color:#858585">Schritt 1 von 4 &#8212; Segmente zuweisen</div><div class="PR"><div style="background:#0078D4"></div><div style="background:#3C3C3C"></div><div style="background:#3C3C3C"></div><div style="background:#3C3C3C"></div></div></div>
+<div style="padding:8px 12px;background:#252526;border-bottom:1px solid #2D2D30">
+<div style="font-size:9px;color:#858585;margin-bottom:2px">BEISPIEL</div>
+<div style="font-size:10px;color:#666;font-family:var(--font-mono);margin-bottom:5px">S-103-C_TG W&#228;nde-St&#252;tzen.pdf</div>
+<div style="display:flex;gap:2px;flex-wrap:wrap;align-items:center">
+<div class="SG" style="background:#534AB7"><span>S</span><span>Prefix</span></div><span style="font-size:14px;color:#555">-</span>
+<div class="SG" style="background:#0F6E56"><span>103</span><span>Nr *</span></div><span style="font-size:14px;color:#555">-</span>
+<div class="SG" style="background:#993C1D"><span>C</span><span>Index</span></div><span style="font-size:14px;color:#555">_</span>
+<div class="SG" style="background:#185FA5"><span>TG</span><span>Gesch.</span></div><span style="font-size:11px;color:#555;padding:0 2px"> </span>
+<div class="SG" style="background:#444"><span>W&#228;nde-St.</span><span>Bez.</span></div>
+</div></div>
+<div style="padding:8px 12px"><div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px">
+<span style="font-size:9px;color:#858585;background:#2D2D30;padding:2px 6px;border-radius:3px">planNumber *</span>
+<span style="font-size:9px;color:#858585;background:#2D2D30;padding:2px 6px;border-radius:3px">planIndex</span>
+<span style="font-size:9px;color:#858585;background:#2D2D30;padding:2px 6px;border-radius:3px">geschoss</span>
+<span style="font-size:9px;color:#858585;background:#2D2D30;padding:2px 6px;border-radius:3px">haus</span>
+<span style="font-size:9px;color:#858585;background:#2D2D30;padding:2px 6px;border-radius:3px">description</span>
+<span style="font-size:9px;color:#858585;background:#2D2D30;padding:2px 6px;border-radius:3px">ignore</span>
+<span style="font-size:9px;color:#F0AD4E;background:#2D2D30;padding:2px 6px;border-radius:3px;border:1px dashed #F0AD4E">+ Eigenes</span>
+</div>
+<div style="border-top:1px solid #2D2D30;padding-top:6px;display:flex;justify-content:space-between"><button class="O" style="font-size:10px" onclick="cls()">Abbrechen</button><button class="P" style="font-size:10px" onclick="wizN(2)">Weiter &#8594; IndexSource</button></div></div>
+</div></div></div>
+
+<div class="V" id="vW2"><div class="MO"><div class="MD">
+<div style="padding:8px 12px;border-bottom:1px solid #2D2D30"><div style="font-size:12px;font-weight:500;color:#FFF">Profil anlernen / bearbeiten</div><div style="font-size:10px;color:#858585">Schritt 2 von 4 &#8212; IndexSource</div><div class="PR"><div style="background:#0078D4"></div><div style="background:#0078D4"></div><div style="background:#3C3C3C"></div><div style="background:#3C3C3C"></div></div></div>
+<div style="padding:10px 12px">
+<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
+<div class="R" style="border:2px solid #0078D4;padding:7px 10px;cursor:default"><div style="display:flex;align-items:center;gap:7px"><div style="width:14px;height:14px;border-radius:50%;border:2px solid #0078D4;display:flex;align-items:center;justify-content:center"><div style="width:7px;height:7px;border-radius:50%;background:#0078D4"></div></div><div><div style="color:#FFF;font-weight:500;font-size:11px">Im Dateinamen</div><div style="font-size:9px;color:#858585">z.B. S-103-<b style="color:#F0AD4E">D</b>_TG.pdf</div></div></div></div>
+<div class="R" style="border:1px solid #3C3C3C;padding:7px 10px;cursor:default"><div style="display:flex;align-items:center;gap:7px"><div style="width:14px;height:14px;border-radius:50%;border:2px solid #858585"></div><div style="color:#CCC;font-size:11px">Kein Index (MD5)</div></div></div>
+<div class="R" style="border:1px solid #3C3C3C;padding:7px 10px;cursor:default;opacity:.35"><div style="display:flex;align-items:center;gap:7px"><div style="width:14px;height:14px;border-radius:50%;border:2px solid #858585"></div><div style="color:#CCC;font-size:11px">Plankopf (Post-V1)</div></div></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+<div><div style="font-size:9px;color:#858585;margin-bottom:2px">Index-Modus</div><div style="background:#3C3C3C;border-radius:3px;padding:4px 7px;font-size:11px;display:flex;justify-content:space-between"><span>optional</span><span style="color:#858585">&#9662;</span></div></div>
+<div><div style="font-size:9px;color:#858585;margin-bottom:2px">Vergleich</div><div style="background:#3C3C3C;border-radius:3px;padding:4px 7px;font-size:11px;display:flex;justify-content:space-between"><span>alphabetisch</span><span style="color:#858585">&#9662;</span></div></div>
+</div>
+<div style="border-top:1px solid #2D2D30;padding-top:6px;display:flex;justify-content:space-between"><button class="O" style="font-size:10px" onclick="wizN(1)">&#8592; Zur&#252;ck</button><button class="P" style="font-size:10px" onclick="wizN(3)">Weiter &#8594; Zielordner</button></div>
+</div></div></div></div>
+
+<div class="V" id="vW3"><div class="MO"><div class="MD">
+<div style="padding:8px 12px;border-bottom:1px solid #2D2D30"><div style="font-size:12px;font-weight:500;color:#FFF">Profil anlernen / bearbeiten</div><div style="font-size:10px;color:#858585">Schritt 3 von 4 &#8212; Zielordner</div><div class="PR"><div style="background:#0078D4"></div><div style="background:#0078D4"></div><div style="background:#0078D4"></div><div style="background:#3C3C3C"></div></div></div>
+<div style="padding:10px 12px">
+<div style="margin-bottom:6px"><div style="font-size:9px;color:#858585;margin-bottom:2px">Zielordner *</div><div style="background:#3C3C3C;border-radius:3px;padding:4px 7px;font-size:11px;display:flex;justify-content:space-between"><span>01 Planunterlagen</span><span style="color:#858585">&#9662;</span></div></div>
+<div style="font-size:9px;color:#858585;margin-bottom:3px;text-transform:uppercase">Unterordner-Ebenen</div>
+<div style="display:flex;flex-direction:column;gap:2px;margin-bottom:8px">
+<div class="R" style="padding:5px 8px;display:flex;align-items:center;gap:5px;cursor:default"><span style="color:#858585">&#8942;</span><span style="font-size:10px;color:#858585">Ebene 1:</span><span style="font-size:10px;color:#FFF">Dokumenttyp</span><span class="TG">Polierplan/</span></div>
+<div class="R" style="padding:5px 8px;display:flex;align-items:center;gap:5px;cursor:default"><span style="color:#858585">&#8942;</span><div style="width:11px;height:11px;border:1px solid #0078D4;border-radius:2px;background:#0078D4;display:flex;align-items:center;justify-content:center"><span style="color:#fff;font-size:8px">&#10003;</span></div><span style="font-size:10px;color:#FFF">geschoss</span><span class="TG">TG/</span></div>
+<div class="R" style="padding:5px 8px;display:flex;align-items:center;gap:5px;cursor:default"><span style="color:#858585">&#8942;</span><div style="width:11px;height:11px;border:1px solid #3C3C3C;border-radius:2px"></div><span style="font-size:10px;color:#858585">haus</span></div>
+</div>
+<div style="background:#252526;border-radius:4px;padding:6px 8px;margin-bottom:8px"><div style="font-size:9px;color:#858585;margin-bottom:2px">VORSCHAU</div><div style="font-size:10px;color:#CCC;font-family:var(--font-mono);line-height:1.4">01 Planunterlagen/<br>&nbsp;&nbsp;Polierplan/<br>&nbsp;&nbsp;&nbsp;&nbsp;TG/<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;S-103-D_TG.pdf<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_Archiv/</div></div>
+<div style="border-top:1px solid #2D2D30;padding-top:6px;display:flex;justify-content:space-between"><button class="O" style="font-size:10px" onclick="wizN(2)">&#8592; Zur&#252;ck</button><button class="P" style="font-size:10px" onclick="wizN(4)">Weiter &#8594; Erkennung</button></div>
+</div></div></div></div>
+
+<div class="V" id="vW4"><div class="MO"><div class="MD">
+<div style="padding:8px 12px;border-bottom:1px solid #2D2D30"><div style="font-size:12px;font-weight:500;color:#FFF">Profil anlernen / bearbeiten</div><div style="font-size:10px;color:#858585">Schritt 4 von 4 &#8212; Erkennung</div><div class="PR"><div style="background:#0078D4"></div><div style="background:#0078D4"></div><div style="background:#0078D4"></div><div style="background:#0078D4"></div></div></div>
+<div style="padding:10px 12px">
+<div style="margin-bottom:6px"><div style="font-size:9px;color:#858585;margin-bottom:2px">Methode</div><div style="display:flex;gap:3px"><button class="P" style="font-size:10px;padding:3px 8px">Prefix</button><button class="O" style="font-size:10px;padding:3px 8px">Enth&#228;lt</button><button class="O" style="font-size:10px;padding:3px 8px;opacity:.4">Regex</button></div></div>
+<div style="margin-bottom:6px"><div style="font-size:9px;color:#858585;margin-bottom:2px">Muster *</div><div style="background:#3C3C3C;border-radius:3px;padding:4px 7px;font-size:11px;color:#FFF">S-</div></div>
+<div style="background:#252526;border-radius:4px;padding:6px 8px;margin-bottom:8px"><div style="font-size:9px;color:#858585;margin-bottom:2px">TEST</div><div style="font-size:10px;display:flex;flex-direction:column;gap:1px">
+<div><span style="color:#4EC94E">&#10003;</span> <span style="color:#CCC">S-103-D_TG.pdf</span></div>
+<div><span style="color:#4EC94E">&#10003;</span> <span style="color:#CCC">S-205-A_EG.dwg</span></div>
+<div><span style="color:#F44747">&#10007;</span> <span style="color:#858585">5998-003_KG.pdf</span></div>
+</div></div>
+<div style="border-top:1px solid #2D2D30;padding-top:6px;display:flex;justify-content:space-between"><button class="O" style="font-size:10px" onclick="wizN(3)">&#8592; Zur&#252;ck</button><button class="P" style="font-size:10px" onclick="cls()">Profil speichern &#10003;</button></div>
+</div></div></div></div>
+
+</div></div>
+<div class="SB" id="sb"><span>bpm.db &middot; 3 Projekte</span><span style="margin-left:auto">Bereit</span></div>
+</div>
+<script>
+function hide(){document.querySelectorAll('.V').forEach(function(e){e.classList.remove('a')})}
+function mod(m){hide();document.getElementById('s0').classList.remove('a');document.getElementById('s1').classList.remove('a');if(m==='plan'){document.getElementById('vList').classList.add('a');document.getElementById('s0').classList.add('a');sSB('bpm.db \u00b7 3 Projekte','Bereit')}else{document.getElementById('vSet').classList.add('a');document.getElementById('s1').classList.add('a');sSB('Einstellungen','')}}
+function goPrj(){hide();document.getElementById('vPrj').classList.add('a');sSB('\u00d6WG \u00b7 6 Profile \u00b7 119 Dok.','15 im Eingang');dt(0)}
+function dt(i){for(var j=0;j<3;j++){document.getElementById('t'+j).classList.remove('a');document.querySelectorAll('.TBn')[j].classList.remove('a')}document.getElementById('t'+i).classList.add('a');document.querySelectorAll('.TBn')[i].classList.add('a')}
+function modal(t){hide();if(t==='imp')document.getElementById('vImp').classList.add('a');else document.getElementById('vWiz').classList.add('a')}
+function wizN(n){hide();var ids={1:'vWiz',2:'vW2',3:'vW3',4:'vW4'};document.getElementById(ids[n]).classList.add('a')}
+function cls(){goPrj()}
+function sSB(l,r){document.getElementById('sb').innerHTML='<span>'+l+'</span><span style="margin-left:auto">'+r+'</span>'}
+</script>

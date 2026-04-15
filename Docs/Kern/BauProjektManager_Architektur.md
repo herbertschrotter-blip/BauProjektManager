@@ -611,10 +611,10 @@ BauProjektManager.sln
 │   │   │   └── ProjectEditDialog.xaml         ← ✅ 5-Tab-Dialog
 │   │   └── BauProjektManager.Settings.csproj
 │   │
-│   └── BauProjektManager.PlanManager/        ← ⬜ PlanManager Feature (nächste Phase)
+│   └── BauProjektManager.PlanManager/        ← ✅ PlanManager Feature (Import-Pipeline v0.25.15)
 │       ├── ViewModels/
 │       ├── Views/
-│       ├── Services/
+│       ├── Services/                          ← 12 Services implementiert
 │       └── BauProjektManager.PlanManager.csproj
 │
 ├── Tools/

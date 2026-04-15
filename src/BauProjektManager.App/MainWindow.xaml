@@ -25,7 +25,7 @@
                 <Button x:Name="BtnPlans"
                         Click="OnNavigate" Tag="Plans"
                         Style="{StaticResource BpmButtonNav}">
-                    <Button.Content><TextBlock><Run Text="{StaticResource IconNavPlans}"/><Run Text=" Pläne"/></TextBlock></Button.Content>
+                    <Button.Content><TextBlock><Run Text="{StaticResource IconNavPlans}"/><Run Text=" PlanManager"/></TextBlock></Button.Content>
                 </Button>
                 <Button x:Name="BtnSettings"
                         Click="OnNavigate" Tag="Settings"

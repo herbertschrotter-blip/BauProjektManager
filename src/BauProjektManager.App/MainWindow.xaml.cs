@@ -52,7 +52,7 @@ public partial class MainWindow : Window
 
             StatusText.Text = target switch
             {
-                "Plans" => "Pläne | Kein Projekt geladen",
+                "Plans" => "PlanManager | Kein Projekt geladen",
                 "Settings" => "Einstellungen",
                 _ => "Bereit"
             };

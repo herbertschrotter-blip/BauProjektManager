@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>BPM PlanManager — Projektdetail Profile</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#111;display:flex;justify-content:center;padding:40px;font-family:'Segoe UI',sans-serif}
+.shell{background:#1E1E1E;border-radius:10px;overflow:hidden;border:1px solid #2D2D30;font-size:13px;color:#CCC;display:flex;flex-direction:column;width:1100px;min-height:520px}
+</style>
+</head>
+<body>
+<div class="shell">
+<div style="display:flex;flex:1;min-height:0">
+<div style="width:200px;background:#252526;border-right:1px solid #2D2D30;display:flex;flex-direction:column;padding:12px 0;flex-shrink:0">
+<div style="font-size:13px;font-weight:600;color:#FFF;padding:4px 16px 14px">BauProjektManager</div>
+<div style="background:#04395E;color:#0078D4;padding:7px 16px;font-size:12px;display:flex;align-items:center;justify-content:space-between">
+<span>&#128193; PlanManager</span>
+<span style="background:#F0AD4E;color:#1E1E1E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px">15</span>
+</div>
+<div style="color:#858585;padding:7px 16px;font-size:12px">&#9881; Einstellungen</div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+<div style="display:flex;align-items:center;gap:8px;padding:6px 14px;background:#252526;border-bottom:1px solid #2D2D30;min-height:36px">
+<button style="background:none;border:none;color:#858585;cursor:pointer;font-size:14px;font-family:inherit;padding:2px 6px;border-radius:3px">&#8592;</button>
+<span style="font-size:13px;font-weight:500;color:#FFF;flex:1">&#214;WG Dobl-Zwaring</span>
+<button style="background:transparent;color:#CCC;border:1px solid #3C3C3C;padding:4px 10px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit">&#10227; R&#252;ckg&#228;ngig</button>
+<button style="background:#0078D4;color:#fff;border:none;padding:5px 14px;border-radius:4px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit">Import starten</button>
+</div>
+<div style="padding:5px 14px;background:#2a2418;border-bottom:1px solid #2D2D30;font-size:11px;color:#F0AD4E">&#9889; 15 im Eingang &middot; 3 vom Server-Sync</div>
+<div style="display:flex;gap:0;border-bottom:1px solid #2D2D30;background:#252526">
+<button style="background:none;border:none;color:#0078D4;padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px solid #0078D4;font-family:inherit">Profile</button>
+<button style="background:none;border:none;color:#858585;padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit">Manuell sortieren</button>
+<button style="background:none;border:none;color:#858585;padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit">Sync</button>
+</div>
+<div style="flex:1;overflow-y:auto;padding:10px 14px">
+<div style="font-size:10px;color:#858585;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;display:flex;align-items:center;gap:6px">Pl&#228;ne (01 Planunterlagen)<span style="flex:1;height:1px;background:#2D2D30"></span></div>
+<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
+<div style="display:flex;border-radius:6px;overflow:hidden">
+<div style="width:5px;background:#4EC94E;flex-shrink:0;border-radius:6px 0 0 6px"></div>
+<div style="flex:1;background:#2D2D30;padding:8px 12px;display:flex;align-items:center;gap:8px;border-radius:0 6px 6px 0">
+<div style="width:8px;height:8px;border-radius:50%;background:#4EC94E;flex-shrink:0"></div>
+<div style="flex:1">
+<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span style="color:#FFF;font-weight:500">Polierplan</span><span style="font-size:9px;color:#858585;background:#1E1E1E;padding:1px 5px;border-radius:3px">S-</span><span style="font-size:9px;color:#858585;background:#1E1E1E;padding:1px 5px;border-radius:3px">FileName</span><span style="font-size:9px;color:#858585;background:#1E1E1E;padding:1px 5px;border-radius:3px">opt.Idx</span></div>
+<div style="font-size:10px;color:#858585;margin-top:2px">47 Pl&#228;ne &middot; Prefix&#8594;Nr&#8594;Idx&#8594;Geschoss&#8594;Bez.</div>
+</div>
+<span style="font-size:10px;color:#4EC94E">&#10003;</span>
+<button style="background:transparent;color:#858585;border:1px solid #3C3C3C;padding:2px 8px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit">&#9998; Profil</button>
+</div>
+</div>
+<div style="display:flex;border-radius:6px;overflow:hidden">
+<div style="width:5px;background:#F0AD4E;flex-shrink:0;border-radius:6px 0 0 6px"></div>
+<div style="flex:1;background:#2D2D30;padding:8px 12px;display:flex;align-items:center;gap:8px;border-radius:0 6px 6px 0">
+<div style="width:8px;height:8px;border-radius:50%;background:#F0AD4E;flex-shrink:0"></div>
+<div style="flex:1">
+<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span style="color:#FFF;font-weight:500">Schalungsplan</span><span style="font-size:9px;color:#858585;background:#1E1E1E;padding:1px 5px;border-radius:3px">5998-</span><span style="font-size:9px;color:#858585;background:#1E1E1E;padding:1px 5px;border-radius:3px">None</span></div>
+<div style="font-size:10px;color:#858585;margin-top:2px">23 Pl&#228;ne</div>
+</div>
+<span style="background:#F0AD4E;color:#1E1E1E;font-size:9px;font-weight:600;padding:2px 6px;border-radius:8px">5</span>
+<button style="background:transparent;color:#858585;border:1px solid #3C3C3C;padding:2px 8px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit">&#9998; Profil</button>
+</div>
+</div>
+<div style="display:flex;border-radius:6px;overflow:hidden">
+<div style="width:5px;background:#4EC94E;flex-shrink:0;border-radius:6px 0 0 6px"></div>
+<div style="flex:1;background:#2D2D30;padding:8px 12px;display:flex;align-items:center;gap:8px;border-radius:0 6px 6px 0">
+<div style="width:8px;height:8px;border-radius:50%;background:#4EC94E;flex-shrink:0"></div>
+<div style="flex:1">
+<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span style="color:#FFF;font-weight:500">Bewehrungsplan</span><span style="font-size:9px;color:#858585;background:#1E1E1E;padding:1px 5px;border-radius:3px">B-</span><span style="font-size:9px;color:#858585;background:#1E1E1E;padding:1px 5px;border-radius:3px">FileName</span></div>
+<div style="font-size:10px;color:#858585;margin-top:2px">31 Pl&#228;ne</div>
+</div>
+<span style="font-size:10px;color:#4EC94E">&#10003;</span>
+<button style="background:transparent;color:#858585;border:1px solid #3C3C3C;padding:2px 8px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit">&#9998; Profil</button>
+</div>
+</div>
+</div>
+<div style="font-size:10px;color:#858585;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;display:flex;align-items:center;gap:6px">Protokolle (04 Protokolle)<span style="flex:1;height:1px;background:#2D2D30"></span></div>
+<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
+<div style="display:flex;border-radius:6px;overflow:hidden">
+<div style="width:5px;background:#4EC94E;flex-shrink:0;border-radius:6px 0 0 6px"></div>
+<div style="flex:1;background:#2D2D30;padding:8px 12px;display:flex;align-items:center;gap:8px;border-radius:0 6px 6px 0">
+<div style="width:8px;height:8px;border-radius:50%;background:#4EC94E;flex-shrink:0"></div>
+<div style="flex:1">
+<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span style="color:#FFF;font-weight:500">Baubesprechung</span><span style="font-size:9px;color:#858585;background:#1E1E1E;padding:1px 5px;border-radius:3px">BB_</span><span style="font-size:9px;color:#858585;background:#1E1E1E;padding:1px 5px;border-radius:3px">None</span></div>
+<div style="font-size:10px;color:#858585;margin-top:2px">8 Protokolle</div>
+</div>
+<button style="background:transparent;color:#858585;border:1px solid #3C3C3C;padding:2px 8px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit">&#9998; Profil</button>
+</div>
+</div>
+</div>
+<div style="border:1px dashed #444;border-radius:6px;padding:7px;text-align:center;cursor:pointer"><span style="font-size:10px;color:#858585">+ Neuen Dokumenttyp anlernen</span></div>
+</div>
+</div>
+</div>
+<div style="height:24px;background:#0078D4;display:flex;align-items:center;padding:0 12px;font-size:10px;color:#fff;flex-shrink:0">
+<span>&#214;WG &middot; 6 Profile &middot; 119 Dok.</span>
+<span style="margin-left:auto">15 im Eingang</span>
+</div>
+</div>
+</body>
+</html>

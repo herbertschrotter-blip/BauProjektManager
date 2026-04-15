@@ -1,13 +1,17 @@
 using System.Windows.Controls;
 using BauProjektManager.Domain.Models;
+using BauProjektManager.PlanManager.Services;
 using BauProjektManager.PlanManager.ViewModels;
 
 namespace BauProjektManager.PlanManager.Views;
 
 public partial class ProjectDetailView : UserControl
 {
-    public ProjectDetailView(Project project, BoolToVisConverter boolToVis)
+    private readonly ProfileManager _profileManager;
+
+    public ProjectDetailView(Project project, BoolToVisConverter boolToVis, ProfileManager profileManager)
     {
+        _profileManager = profileManager;
         Resources.Add("BoolToVis", boolToVis);
         InitializeComponent();
 
@@ -17,7 +21,7 @@ public partial class ProjectDetailView : UserControl
 
     private void OnNewProfile(object sender, System.Windows.RoutedEventArgs e)
     {
-        var dialog = new ProfileWizardDialog(ViewModel.Project);
+        var dialog = new ProfileWizardDialog(ViewModel.Project, _profileManager);
         dialog.Owner = System.Windows.Window.GetWindow(this);
         dialog.ShowDialog();
     }

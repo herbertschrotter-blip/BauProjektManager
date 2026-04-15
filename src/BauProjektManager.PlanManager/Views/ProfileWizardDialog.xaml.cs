@@ -5,6 +5,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using BauProjektManager.Domain.Models;
 using BauProjektManager.Domain.Models.PlanManager;
+using BauProjektManager.PlanManager.Services;
 using BauProjektManager.PlanManager.ViewModels;
 
 namespace BauProjektManager.PlanManager.Views;
@@ -48,7 +49,7 @@ public partial class ProfileWizardDialog : Window
 {
     private readonly ProfileWizardViewModel _vm;
 
-    public ProfileWizardDialog(Project? project = null)
+    public ProfileWizardDialog(Project? project = null, ProfileManager? profileManager = null)
     {
         Resources.Add("CountToVisInverse", new CountToVisInverseConverter());
         Resources.Add("CountToVisZero", new CountToVisZeroConverter());
@@ -56,7 +57,7 @@ public partial class ProfileWizardDialog : Window
         Resources.Add("BoolToVisInverse2", new InverseBoolConverter());
         InitializeComponent();
 
-        _vm = new ProfileWizardViewModel(project);
+        _vm = new ProfileWizardViewModel(project, profileManager);
         DataContext = _vm;
     }
 
@@ -117,7 +118,8 @@ public partial class ProfileWizardDialog : Window
     {
         if (_vm.CurrentStep >= _vm.TotalSteps)
         {
-            DialogResult = true;
+            _vm.SaveProfileCommand.Execute(null);
+            DialogResult = _vm.ProfileSaved;
             Close();
             return;
         }

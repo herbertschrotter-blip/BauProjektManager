@@ -4,6 +4,8 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using BauProjektManager.Domain.Models;
+using BauProjektManager.Infrastructure.Services;
+using BauProjektManager.PlanManager.Services;
 using BauProjektManager.PlanManager.ViewModels;
 
 namespace BauProjektManager.PlanManager.Views;
@@ -36,6 +38,7 @@ public partial class PlanManagerView : UserControl
 {
     private readonly PlanManagerViewModel _vm;
     private readonly BoolToVisConverter _boolToVis = new();
+    private readonly ProfileManager _profileManager = new(new UlidIdGenerator());
 
     public PlanManagerView()
     {
@@ -56,7 +59,7 @@ public partial class PlanManagerView : UserControl
 
     private void NavigateToDetail(Project project)
     {
-        var detailView = new ProjectDetailView(project, _boolToVis);
+        var detailView = new ProjectDetailView(project, _boolToVis, _profileManager);
         detailView.ViewModel.NavigateBack += NavigateToList;
 
         ProjectListPanel.Visibility = Visibility.Collapsed;

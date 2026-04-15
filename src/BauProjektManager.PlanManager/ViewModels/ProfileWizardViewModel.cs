@@ -159,8 +159,19 @@ public partial class ProfileWizardViewModel : ObservableObject
     public bool HasPlanIndexSegment =>
         Segments.Any(s => s.FieldType == FieldType.PlanIndex);
 
-    public ProfileWizardViewModel(Project? project = null)
+    /// <summary>
+    /// True wenn das Profil erfolgreich gespeichert wurde.
+    /// Wird vom Dialog abgefragt um DialogResult zu setzen.
+    /// </summary>
+    public bool ProfileSaved { get; private set; }
+
+    private readonly ProfileManager? _profileManager;
+    private readonly Project? _project;
+
+    public ProfileWizardViewModel(Project? project = null, ProfileManager? profileManager = null)
     {
+        _project = project;
+        _profileManager = profileManager;
         if (project is not null)
             LoadInboxFiles(project);
     }
@@ -507,6 +518,64 @@ public partial class ProfileWizardViewModel : ObservableObject
 
         PatternTestSuccess = match;
         PatternTestResult = match ? "Treffer" : "Kein Treffer";
+    }
+
+    // === Profil speichern ===
+
+    [RelayCommand]
+    private void SaveProfile()
+    {
+        if (_profileManager is null || _project is null
+            || string.IsNullOrWhiteSpace(_project.Paths.Root))
+        {
+            Log.Warning("SaveProfile: ProfileManager oder Projekt fehlt");
+            return;
+        }
+
+        try
+        {
+            var delimiters = DelimiterText.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .Where(s => s.Length == 1).Select(s => s).ToList();
+
+            var folderHierarchy = AvailableHierarchyLevels
+                .Where(h => h.IsSelected)
+                .Select(h => h.FieldType.ToString().ToLowerInvariant())
+                .ToList();
+
+            var recognition = new List<RecognitionRule>();
+            if (!string.IsNullOrWhiteSpace(RecognitionPattern))
+            {
+                recognition.Add(new RecognitionRule
+                {
+                    Method = SelectedRecognitionMethod,
+                    Pattern = RecognitionPattern
+                });
+            }
+
+            var targetFolder = UseCustomFolder ? CustomFolderName : SelectedTargetFolder;
+
+            var profile = _profileManager.BuildFromWizard(
+                documentTypeName: DocumentTypeName,
+                targetFolder: targetFolder,
+                indexSource: SelectedIndexSource,
+                indexModeOptional: IndexModeOptional,
+                indexCaseInsensitive: IndexCaseInsensitive,
+                segments: Segments.ToList(),
+                delimiters: delimiters,
+                folderHierarchy: folderHierarchy,
+                recognition: recognition,
+                recognitionPriority: RecognitionPriority);
+
+            _profileManager.Save(_project.Paths.Root, profile);
+            ProfileSaved = true;
+
+            Log.Information("Profil gespeichert: {Name} fuer Projekt {Project}",
+                DocumentTypeName, _project.Name);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Fehler beim Speichern des Profils");
+        }
     }
 
     // === Helpers ===

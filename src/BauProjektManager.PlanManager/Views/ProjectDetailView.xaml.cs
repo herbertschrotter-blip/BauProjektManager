@@ -1,7 +1,6 @@
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using BauProjektManager.Domain.Enums.PlanManager;
+using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models;
 using BauProjektManager.PlanManager.Services;
 using BauProjektManager.PlanManager.ViewModels;
@@ -13,13 +12,16 @@ public partial class ProjectDetailView : UserControl
 {
     private readonly ProfileManager _profileManager;
     private readonly PatternTemplateService? _templateService;
+    private readonly IIdGenerator _idGenerator;
     private readonly string? _appDataPath;
 
     public ProjectDetailView(
         Project project, BoolToVisConverter boolToVis, ProfileManager profileManager,
+        IIdGenerator idGenerator,
         PatternTemplateService? templateService = null, string? appDataPath = null)
     {
         _profileManager = profileManager;
+        _idGenerator = idGenerator;
         _templateService = templateService;
         _appDataPath = appDataPath;
         Resources.Add("BoolToVis", boolToVis);
@@ -68,7 +70,29 @@ public partial class ProjectDetailView : UserControl
             dialog.Owner = Window.GetWindow(this);
             dialog.ShowDialog();
 
-            // TODO Phase H: if (dialog.ExecuteRequested) → Import ausführen
+            // Phase H: Execute import if user confirmed
+            if (dialog.ExecuteRequested)
+            {
+                var db = new PlanManagerDatabase(project.Id, _idGenerator);
+                var executor = new ImportExecutionService(db, _idGenerator);
+                var execResult = executor.Execute(
+                    result.Decisions, project.Paths.Root, project.Paths.Inbox);
+
+                var msg = $"Import abgeschlossen:\n\n" +
+                    $"✅ {execResult.Succeeded} sortiert\n" +
+                    $"⏭️ {execResult.Skipped} identisch (entfernt)\n" +
+                    $"❌ {execResult.Failed} fehlgeschlagen";
+
+                if (execResult.Errors.Count > 0)
+                    msg += "\n\nFehler:\n" + string.Join("\n", execResult.Errors.Take(5));
+
+                MessageBox.Show(msg, "Import", MessageBoxButton.OK,
+                    execResult.Failed > 0 ? MessageBoxImage.Warning : MessageBoxImage.Information);
+
+                // Refresh inbox count
+                ViewModel.RefreshInboxCommand.Execute(null);
+                db.Dispose();
+            }
         }
         catch (Exception ex)
         {

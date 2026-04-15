@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models;
 using BauProjektManager.Infrastructure.Services;
 using BauProjektManager.PlanManager.Services;
@@ -39,11 +40,14 @@ public partial class PlanManagerView : UserControl
 {
     private readonly PlanManagerViewModel _vm;
     private readonly BoolToVisConverter _boolToVis = new();
-    private readonly ProfileManager _profileManager = new(new UlidIdGenerator());
-    private readonly PatternTemplateService _templateService = new(new UlidIdGenerator());
+    private readonly IIdGenerator _idGenerator = new UlidIdGenerator();
+    private readonly ProfileManager _profileManager;
+    private readonly PatternTemplateService _templateService;
 
     public PlanManagerView()
     {
+        _profileManager = new ProfileManager(_idGenerator);
+        _templateService = new PatternTemplateService(_idGenerator);
         Resources.Add("BoolToVis", _boolToVis);
         Resources.Add("CountToVis", new CountToVisConverter());
         InitializeComponent();
@@ -67,7 +71,7 @@ public partial class PlanManagerView : UserControl
             : null;
 
         var detailView = new ProjectDetailView(
-            project, _boolToVis, _profileManager, _templateService, appDataPath);
+            project, _boolToVis, _profileManager, _idGenerator, _templateService, appDataPath);
         detailView.ViewModel.NavigateBack += NavigateToList;
 
         ProjectListPanel.Visibility = Visibility.Collapsed;

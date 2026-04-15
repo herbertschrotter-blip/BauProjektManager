@@ -50,6 +50,7 @@ supersedes: []
 - [CODING_STANDARDS.md](CODING_STANDARDS.md) — Kapitel 17 (Datenschutz im Code)
 - [BauProjektManager_Architektur.md](BauProjektManager_Architektur.md) — Speicherstrategie, Solution-Struktur
 - Modul-Konzepte: [ModuleKiAssistent.md](../Konzepte/ModuleKiAssistent.md), [ModuleZeiterfassung.md](../Konzepte/ModuleZeiterfassung.md)
+- [ServerArchitektur.md](../Konzepte/ServerArchitektur.md) — Server-Modus Modus C, Auth/JWT, RBAC, HTTPS (ADR-050/051)
 
 ---
 

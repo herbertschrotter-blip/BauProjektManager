@@ -41,7 +41,7 @@ supersedes: []
 **Erstellt:** 15.04.2026
 **Version:** 1.0
 **Status:** Konzept (Ergebnis 3-Runden Cross-Review Claude/ChatGPT)
-**Relevante ADRs:** ADR-033 (3 Modi), ADR-020 (Write-Lock), ADR-035 (IExternalCommunicationService)
+**Relevante ADRs:** ADR-033 (3 Modi), ADR-020 (Write-Lock), ADR-035 (IExternalCommunicationService), ADR-050 (SoR je Modus), ADR-051 (Local-First)
 **Verwandte Dokumente:**
 - [MultiUserKonzept.md](MultiUserKonzept.md) — Roadmap/Übergang (Phasen 1–3)
 - [DatenarchitekturSync.md](DatenarchitekturSync.md) — Sync-Mechanismus, Outbox/Inbox
@@ -141,8 +141,11 @@ project_id          TEXT NOT NULL,     -- FK auf projects
 user_id             TEXT NOT NULL,     -- FK auf AspNetUsers.Id (Server)
 role                TEXT NOT NULL,     -- Projektrolle
 created_at          TEXT NOT NULL,
+created_by          TEXT,
 last_modified_at    TEXT NOT NULL,
-sync_version        INTEGER NOT NULL DEFAULT 0
+last_modified_by    TEXT,
+sync_version        INTEGER NOT NULL DEFAULT 0,
+is_deleted          INTEGER NOT NULL DEFAULT 0
 ```
 
 ### 2.4 Audit-Log
@@ -156,7 +159,9 @@ entity_id           TEXT NOT NULL,
 action              TEXT NOT NULL,     -- z.B. 'Created', 'Approved', 'Modified'
 changed_by          TEXT NOT NULL,
 changed_at          TEXT NOT NULL,     -- UTC
-payload_json        TEXT               -- optionale Details
+payload_json        TEXT,              -- optionale Details
+sync_version        INTEGER NOT NULL DEFAULT 0,
+is_deleted          INTEGER NOT NULL DEFAULT 0
 ```
 
 Pflicht für: Nachkalkulation, Bestellungen, Freigaben, Statuswechsel.

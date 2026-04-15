@@ -33,8 +33,7 @@ supersedes: []
   - Kapitel 9.3 (Sync-Felder) bei neuer Tabelle (ADR-050)
   - Kapitel 7 (Schema-Migration) bei Schemaänderung
 - Fachliche Invarianten:
-  - **Ziel v2.0 (noch nicht implementiert):** ULID als TEXT PRIMARY KEY, IIdGenerator.NewId(), created_at/updated_at auf allen Entitätstabellen, FK-Indizes
-  - **Aktuell implementiert (v1.5):** seq INTEGER PRIMARY KEY + Präfix-IDs (proj_001, bpart_001 etc.), created_at/updated_at nur auf projects, keine FK-Indizes
+  - **Schema v2.0 (ULID) implementiert ab v0.25.1:** ULID als TEXT PRIMARY KEY, IIdGenerator.NewId(), created_at/updated_at auf allen Entitätstabellen
   - schema_version Tabelle in jeder DB
   - Neue fachliche Tabellen: ULID + 6 Sync-Spalten + UTC + Soft Delete (Kapitel 9.3, ADR-050)
 
@@ -59,7 +58,7 @@ Dieses Dokument ist die **zentrale Referenz** für alle Datenbanktabellen in BPM
 - **PlanManager:** Eigene `planmanager.db` pro Projekt (Cache, Journal, Undo)
 - **ID-Schema (ADR-039 v2):** ULID als `TEXT PRIMARY KEY` für ALLE Tabellen. Keine `seq` Spalte, keine INTEGER IDs, keine Ausnahmen.
 - **ID-Generierung:** Zentral über `IIdGenerator` Interface (Domain), implementiert als `UlidIdGenerator` (Infrastructure). Nie direkt `Ulid.NewUlid()` im Code.
-- **SQLite als System of Record:** JSON-Dateien (registry.json, settings.json) sind generierte Exporte oder Konfiguration (ADR-002)
+- **SQLite als System of Record (Modus A):** JSON-Dateien (registry.json, settings.json) sind generierte Exporte oder Konfiguration (ADR-002). In Modus C (Server): PostgreSQL ist SoR, SQLite = Offline-Cache (ADR-050)
 - **Schema-Migration:** Versioniert, automatisch bei App-Start, rückwärtskompatibel (ADR-040)
 
 ### 1.2 Datenbank-Dateien

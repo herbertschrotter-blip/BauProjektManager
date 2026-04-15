@@ -12,8 +12,8 @@ supersedes: []
 ---
 
 ## AI-Quickload
-- Zweck: Datenarchitektur und Sync-Konzept — Klassifizierung, Outbox/Inbox, Snapshots, Rollen, Phasen
-- Autorität: secondary (Ergebnis aus 4-Runden Cross-Review)
+- Zweck: Datenarchitektur und Sync-Konzept — Klassifizierung, Outbox/Inbox, Snapshots, Rollen, Phasen. **Teilweise superseded durch ServerArchitektur.md + ADR-050/051 (7-Spalten statt 12, kein Outbox/Inbox, Datasync-Spike).**
+- Autorität: secondary (historisches Detailkonzept Phase 2, Sofortregeln gelten aus ServerArchitektur.md)
 - Lesen wenn: Sync-Feature, Multi-User, Change-Tracking, Snapshot, Konflikt-Behandlung
 - Nicht zuständig für: DB-Tabellen-Details (→ DB-SCHEMA.md), Datenschutz (→ DSVGO-Architektur.md)
 - Kapitel:
@@ -39,7 +39,7 @@ supersedes: []
 
 **Erstellt:** 10.04.2026
 **Version:** 1.1 (Refactoring auf DOC-STANDARD)
-**Status:** Entschieden (Claude + ChatGPT Cross-Review, 4 Runden)
+**Status:** Teilweise superseded — Outbox/Inbox, Snapshots und 12-Spalten-Modell durch ServerArchitektur.md + ADR-050/051 ersetzt. Sofort gültig ist die 7-Spalten-Konvention aus CODING_STANDARDS Kap. 19. Dieses Dokument bleibt als historisches Detailkonzept für Phase 2 erhalten.
 **Relevante ADRs:** ADR-002, ADR-004, ADR-033, ADR-037, ADR-039, ADR-046, ADR-050 (SoR je Modus), ADR-051 (Local-First)
 **Verwandte Dokumente:**
 - [MultiUserKonzept.md](MultiUserKonzept.md) — Phasenmodell, Rollen, Server-Architektur

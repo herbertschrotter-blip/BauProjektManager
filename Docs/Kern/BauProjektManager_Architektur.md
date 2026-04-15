@@ -50,13 +50,14 @@ supersedes: []
 **Autor:** Herbert + Claude  
 
 **Verwandte Dokumente:**
-- [ADR.md](../Referenz/ADR.md) — 49 Architecture Decision Records
+- [ADR.md](../Referenz/ADR.md) — 51 Architecture Decision Records (inkl. ADR-050 SoR, ADR-051 Local-First)
 - [VISION.md](../Referenz/VISION.md) — Nordstern, Schmerzpunkte, Zielgruppe
 - [DEPENDENCY-MAP.md](../Referenz/DEPENDENCY-MAP.md) — Solution-Struktur + Ökosystem
 - [CHANGELOG.md](../Referenz/CHANGELOG.md) — Versionshistorie ab v0.0.0
 - [BACKLOG.md](BACKLOG.md) — Feature-Liste mit Status
 - [CODING_STANDARDS.md](CODING_STANDARDS.md) — Code-Richtlinien
 - [DSVGO-Architektur.md](DSVGO-Architektur.md) — Datenschutz, Privacy Engineering, IPrivacyPolicy
+- [ServerArchitektur.md](../Konzepte/ServerArchitektur.md) — Zielarchitektur Modus C (Server, Auth, Sync, PostgreSQL, ADR-050/051)
 - Modul-Konzepte: [Docs/Konzepte/](../Konzepte/) — Detaillierte Konzeptdokumente pro Modul
 
 ---
@@ -181,7 +182,9 @@ Projektnummer wird automatisch aus dem Projektstart-Datum generiert (YYYYMM).
 
 ### 2.1 System of Record: SQLite
 
-SQLite ist die **einzige Wahrheitsquelle** für alle BPM-Kerndaten (Projekte, Pläne, Stammdaten, Kalkulation, Bautagebuch). JSON-Dateien sind generierte Exporte oder selten geänderte Konfiguration. Wenn JSON korrupt wird → aus SQLite neu generiert. Ausnahme: Zeiterfassung — hier bleibt Excel die Single Source of Truth für Roh-Zeitbuchungen (ADR-018). (ADR-002, ADR-004)
+**Modus A (Solo/Offline):** SQLite ist die **einzige Wahrheitsquelle** für alle BPM-Kerndaten (Projekte, Pläne, Stammdaten, Kalkulation, Bautagebuch). JSON-Dateien sind generierte Exporte oder selten geänderte Konfiguration. Wenn JSON korrupt wird → aus SQLite neu generiert. Ausnahme: Zeiterfassung — hier bleibt Excel die Single Source of Truth für Roh-Zeitbuchungen (ADR-018). (ADR-002, ADR-004)
+
+**Modus C (Server):** PostgreSQL am Server ist SoR. Lokale SQLite dient als Offline-Cache + Pending Changes. Siehe [ServerArchitektur.md](../Konzepte/ServerArchitektur.md) und ADR-050.
 
 ### 2.2 Dreistufige Speicherung
 
@@ -302,9 +305,9 @@ Cloud-Speicher/02Arbeit/
 
 ## 3. Zentrale Projekt-Registry
 
-### 3.1 SQLite als System of Record
+### 3.1 SQLite als System of Record (Modus A)
 
-Alle Projektdaten in SQLite (`bpm.db`). Bei jeder Änderung wird `registry.json` automatisch als flacher Export generiert. VBA liest NUR den Export. (ADR-002, ADR-004, ADR-017)
+In Modus A (Solo/Offline): Alle Projektdaten in SQLite (`bpm.db`). Bei jeder Änderung wird `registry.json` automatisch als flacher Export generiert. VBA liest NUR den Export. (ADR-002, ADR-004, ADR-017). In Modus C (Server): PostgreSQL ist SoR, SQLite ist Offline-Cache (ADR-050).
 
 ### 3.2 Internes Domänenmodell (C#)
 

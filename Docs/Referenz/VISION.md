@@ -18,7 +18,7 @@ supersedes: []
 - Nicht zuständig für: Technische Architektur (→ Architektur.md), Feature-Planung (→ BACKLOG.md)
 - Pflichtlesen: keine
 - Fachliche Invarianten:
-  - Offline-first, kein Cloud-Abo — Kernprinzip
+  - Offline-first, kein Cloud-Abo — Kernprinzip. Optional self-hosted Server-Modus für Firmenbetrieb (ADR-050/051)
   - Zielgruppe: Poliere und Bauleiter in Österreich (kleine Firmen)
   - Cloud-Speicher-neutral — nie "OneDrive" in Docs, immer "Cloud-Speicher"
 
@@ -85,7 +85,7 @@ Es gibt Bau-Management-Software (PlanRadar, Dalux, BauMaster etc.). Aber:
 - **Kein Offline:** Auf der Baustelle gibt es oft kein WLAN
 - **Kosten:** Monatliche Abos, pro Nutzer, pro Projekt
 
-BPM ist das Gegenteil: lokal, offline, anpassbar, keine laufenden Kosten, eigene Daten auf dem eigenen Cloud-Speicher (OneDrive, Google Drive, Dropbox etc.) oder komplett ohne Cloud.
+BPM ist das Gegenteil: lokal, offline, anpassbar, keine laufenden Kosten, eigene Daten auf dem eigenen Cloud-Speicher (OneDrive, Google Drive, Dropbox etc.) oder komplett ohne Cloud. Optional: self-hosted Server-Modus für Multi-User-Betrieb im Firmennetz (kein SaaS, kein externer Cloud-Zwang).
 
 ---
 

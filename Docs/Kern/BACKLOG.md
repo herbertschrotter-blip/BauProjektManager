@@ -26,12 +26,12 @@ supersedes: []
 
 ﻿# BauProjektManager — Backlog
 
-**Letzte Aktualisierung:** 10.04.2026  
-**Aktuelle Version:** v0.24.10
+**Letzte Aktualisierung:** 15.04.2026  
+**Aktuelle Version:** v0.25.16
 
 **Verwandte Dokumente:**
 - [VISION.md](../Referenz/VISION.md) — Nordstern, Schmerzpunkte, Zielgruppe
-- [ADR.md](../Referenz/ADR.md) — Architekturentscheidungen (49 ADRs)
+- [ADR.md](../Referenz/ADR.md) — Architekturentscheidungen (51 ADRs)
 - [CHANGELOG.md](../Referenz/CHANGELOG.md) — Versionshistorie ab v0.0.0
 - [DEPENDENCY-MAP.md](../Referenz/DEPENDENCY-MAP.md) — Solution-Struktur + Ökosystem
 - [BauProjektManager_Architektur.md](BauProjektManager_Architektur.md) — Technische Spezifikation v2.0

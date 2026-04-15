@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using BauProjektManager.Domain.Enums;
 using BauProjektManager.Domain.Models;
 using BauProjektManager.Infrastructure.Persistence;
@@ -11,7 +12,7 @@ namespace BauProjektManager.PlanManager.ViewModels;
 
 /// <summary>
 /// ViewModel für die PlanManager-Hauptseite — Projektliste mit Karten-Layout.
-/// Zeigt alle aktiven Projekte mit Eingangs-Badge und Subtext.
+/// Zeigt alle aktiven Projekte mit Eingangs-Badge, Suchfeld und Spalten.
 /// </summary>
 public partial class PlanManagerViewModel : ObservableObject
 {
@@ -21,13 +22,22 @@ public partial class PlanManagerViewModel : ObservableObject
     private ObservableCollection<PlanProjectItem> _projects = [];
 
     [ObservableProperty]
+    private ObservableCollection<PlanProjectItem> _filteredProjects = [];
+
+    [ObservableProperty]
     private PlanProjectItem? _selectedProject;
 
     [ObservableProperty]
     private string _summaryText = string.Empty;
 
     [ObservableProperty]
+    private string _projectCountText = string.Empty;
+
+    [ObservableProperty]
     private int _totalInboxCount;
+
+    [ObservableProperty]
+    private string _searchText = string.Empty;
 
     /// <summary>
     /// Wird vom Code-Behind ausgelöst wenn der User ein Projekt anklickt.
@@ -37,6 +47,11 @@ public partial class PlanManagerViewModel : ObservableObject
     public PlanManagerViewModel()
     {
         LoadProjects();
+    }
+
+    partial void OnSearchTextChanged(string value)
+    {
+        ApplyFilter();
     }
 
     [RelayCommand]
@@ -49,7 +64,9 @@ public partial class PlanManagerViewModel : ObservableObject
     {
         try
         {
-            var loaded = _db.LoadAllProjects();
+            var loaded = _db.LoadAllProjects()
+                .Where(p => p.Status == ProjectStatus.Active)
+                .ToList();
             var items = new ObservableCollection<PlanProjectItem>();
             var totalInbox = 0;
 
@@ -70,6 +87,7 @@ public partial class PlanManagerViewModel : ObservableObject
                 ? $"{loaded.Count} aktive Projekte \u00b7 {totalInbox} Dateien im Eingang"
                 : $"{loaded.Count} aktive Projekte";
 
+            ApplyFilter();
             Log.Information("PlanManager: {Count} Projekte geladen", loaded.Count);
         }
         catch (Exception ex)
@@ -78,13 +96,28 @@ public partial class PlanManagerViewModel : ObservableObject
             Projects = [];
             TotalInboxCount = 0;
             SummaryText = string.Empty;
+            ApplyFilter();
         }
     }
 
-    /// <summary>
-    /// Zählt die Dateien im _Eingang/-Ordner eines Projekts.
-    /// Gibt 0 zurück wenn Ordner nicht existiert oder Pfad fehlt.
-    /// </summary>
+    private void ApplyFilter()
+    {
+        if (string.IsNullOrWhiteSpace(SearchText))
+        {
+            FilteredProjects = new ObservableCollection<PlanProjectItem>(Projects);
+        }
+        else
+        {
+            var search = SearchText.Trim();
+            FilteredProjects = new ObservableCollection<PlanProjectItem>(
+                Projects.Where(p =>
+                    p.Project.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    p.Project.ProjectNumber.Contains(search, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        ProjectCountText = $"{FilteredProjects.Count} Projekte geladen";
+    }
+
     private static int CountInboxFiles(Project project)
     {
         try
@@ -120,5 +153,4 @@ public class PlanProjectItem
     public int InboxCount { get; set; }
     public bool HasInbox => InboxCount > 0;
     public string InboxBadge => InboxCount > 0 ? $"{InboxCount} unsortiert" : "";
-    public string Subtext => HasInbox ? $"{InboxCount} Dateien im Eingang" : "Kein Eingang";
 }

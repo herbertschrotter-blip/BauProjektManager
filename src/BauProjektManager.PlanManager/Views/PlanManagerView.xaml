@@ -10,20 +10,18 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <!-- Header -->
-            <Grid Grid.Row="0" Margin="0,0,0,8">
+            <Grid Grid.Row="0" Margin="0,0,0,4">
                 <TextBlock Style="{DynamicResource BpmHeading1}">
                     <Run Text="{DynamicResource IconNavPlans}"/>
                     <Run Text=" PlanManager"/>
                 </TextBlock>
-                <Button Content="⟳ Aktualisieren"
-                        Style="{DynamicResource BpmButtonSecondary}"
-                        HorizontalAlignment="Right"
-                        Command="{Binding RefreshCommand}"
-                        VerticalAlignment="Center"/>
             </Grid>
 
             <!-- Zusammenfassung -->
@@ -33,9 +31,68 @@
                        FontSize="{DynamicResource BpmFontSizeCaption}"
                        Text="{Binding SummaryText}"/>
 
+            <!-- Suchfeld + Aktualisieren -->
+            <Grid Grid.Row="2" Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Suchfeld mit Platzhalter (wie Einstellungen) -->
+                <Grid Grid.Column="0" Margin="0,0,8,0">
+                    <TextBox x:Name="SearchBox"
+                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=300}"
+                             Background="{DynamicResource BpmBgSurface}"
+                             Foreground="{DynamicResource BpmTextPrimary}"
+                             BorderBrush="{DynamicResource BpmBorderDefault}"
+                             Padding="8,6" FontSize="13"/>
+                    <TextBlock Foreground="{DynamicResource BpmTextSecondary}"
+                               FontSize="13" Padding="10,7"
+                               IsHitTestVisible="False"
+                               Visibility="{Binding SearchText, Converter={StaticResource EmptyToVis}}"><Run Text="{DynamicResource IconActionSearch}"/><Run Text=" Suche in Projekten..."/></TextBlock>
+                </Grid>
+                <Button Grid.Column="1"
+                        Style="{DynamicResource BpmButtonPrimary}"
+                        Command="{Binding RefreshCommand}">
+                    <TextBlock>
+                        <Run Text="⟳"/>
+                        <Run Text=" Aktualisieren"/>
+                    </TextBlock>
+                </Button>
+            </Grid>
+
+            <!-- Spaltenheader -->
+            <Grid Grid.Row="3" Margin="10,0,0,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="80"/>
+                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="80"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0"
+                           Text="Projekt"
+                           Foreground="{DynamicResource BpmTextSecondary}"
+                           FontSize="{DynamicResource BpmFontSizeCaption}"/>
+                <TextBlock Grid.Column="1"
+                           Text="Nr."
+                           Foreground="{DynamicResource BpmTextSecondary}"
+                           FontSize="{DynamicResource BpmFontSizeCaption}"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Grid.Column="2"
+                           Text="Eingang"
+                           Foreground="{DynamicResource BpmTextSecondary}"
+                           FontSize="{DynamicResource BpmFontSizeCaption}"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Grid.Column="3"
+                           Text="Status"
+                           Foreground="{DynamicResource BpmTextSecondary}"
+                           FontSize="{DynamicResource BpmFontSizeCaption}"
+                           HorizontalAlignment="Center"/>
+            </Grid>
+
             <!-- Projektliste als Karten -->
-            <ListBox Grid.Row="2"
-                     ItemsSource="{Binding Projects}"
+            <ListBox Grid.Row="4"
+                     ItemsSource="{Binding FilteredProjects}"
                      SelectedItem="{Binding SelectedProject, Mode=TwoWay}"
                      Background="{DynamicResource BpmBgBase}"
                      BorderThickness="0"
@@ -63,19 +120,28 @@
                         <Setter Property="Background" Value="{DynamicResource BpmBgElevated}"/>
                         <Setter Property="Foreground" Value="{DynamicResource BpmTextPrimary}"/>
                         <Setter Property="BorderBrush" Value="{DynamicResource BpmSuccess}"/>
-                        <Setter Property="BorderThickness" Value="3,0,0,0"/>
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="ListBoxItem">
-                                    <Border x:Name="Card"
-                                            Background="{TemplateBinding Background}"
-                                            BorderBrush="{TemplateBinding BorderBrush}"
-                                            BorderThickness="{TemplateBinding BorderThickness}"
-                                            CornerRadius="0,6,6,0"
-                                            Padding="12,8"
-                                            SnapsToDevicePixels="True">
-                                        <ContentPresenter/>
-                                    </Border>
+                                    <Grid SnapsToDevicePixels="True">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="5"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <!-- Farbstreifen links -->
+                                        <Border x:Name="ColorStripe"
+                                                Grid.Column="0"
+                                                Background="{TemplateBinding BorderBrush}"
+                                                CornerRadius="6,0,0,6"/>
+                                        <!-- Karten-Content -->
+                                        <Border x:Name="Card"
+                                                Grid.Column="1"
+                                                Background="{TemplateBinding Background}"
+                                                CornerRadius="0,6,6,0"
+                                                Padding="10,8">
+                                            <ContentPresenter/>
+                                        </Border>
+                                    </Grid>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
                                             <Setter TargetName="Card"
@@ -104,45 +170,50 @@
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="80"/>
                             </Grid.ColumnDefinitions>
 
-                            <!-- Projektname + Subtext -->
-                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding Project.Name}"
-                                           Foreground="{DynamicResource BpmTextBright}"
-                                           FontSize="{DynamicResource BpmFontSizeBody}"
-                                           FontWeight="SemiBold"/>
-                                <TextBlock Text="{Binding Subtext}"
-                                           Margin="0,4,0,0"
-                                           Foreground="{DynamicResource BpmTextSecondary}"
-                                           FontSize="{DynamicResource BpmFontSizeCaption}"/>
-                            </StackPanel>
+                            <!-- Projektname -->
+                            <TextBlock Grid.Column="0"
+                                       Text="{Binding Project.Name}"
+                                       Foreground="{DynamicResource BpmTextBright}"
+                                       FontSize="{DynamicResource BpmFontSizeBody}"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center"/>
 
-                            <!-- Badge (sichtbar wenn HasInbox) -->
-                            <Border Grid.Column="1"
+                            <!-- Projektnummer -->
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding Project.ProjectNumber}"
+                                       Foreground="{DynamicResource BpmTextSecondary}"
+                                       FontSize="{DynamicResource BpmFontSizeSmall}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+
+                            <!-- Eingang-Badge (unsortiert) -->
+                            <Border Grid.Column="2"
                                     Background="{DynamicResource BpmWarning}"
                                     CornerRadius="8" Padding="6,2"
-                                    Margin="12,0,8,0"
+                                    HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Visibility="{Binding HasInbox, Converter={StaticResource BoolToVis}}">
                                 <TextBlock Text="{Binding InboxBadge}"
                                            Foreground="{DynamicResource BpmTextBright}"
-                                           FontSize="{DynamicResource BpmFontSizeSmall}"
+                                           FontSize="{DynamicResource BpmFontSizeCaption}"
                                            FontWeight="SemiBold"
                                            HorizontalAlignment="Center"/>
                             </Border>
 
-                            <!-- Aktuell-Badge (sichtbar wenn NICHT HasInbox) -->
-                            <Border Grid.Column="1"
+                            <!-- Aktuell-Badge -->
+                            <Border Grid.Column="2"
                                     Background="{DynamicResource BpmSuccess}"
                                     CornerRadius="8" Padding="6,2"
-                                    Margin="12,0,8,0"
+                                    HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Visibility="{Binding HasInbox, Converter={StaticResource InverseBoolToVis}}">
                                 <TextBlock Foreground="{DynamicResource BpmTextBright}"
-                                           FontSize="{DynamicResource BpmFontSizeSmall}"
+                                           FontSize="{DynamicResource BpmFontSizeCaption}"
                                            FontWeight="SemiBold"
                                            HorizontalAlignment="Center">
                                     <Run Text="&#x2713;"/>
@@ -150,22 +221,31 @@
                                 </TextBlock>
                             </Border>
 
-                            <!-- Chevron -->
-                            <TextBlock Grid.Column="2"
-                                       Text="›"
+                            <!-- Status -->
+                            <TextBlock Grid.Column="3"
+                                       HorizontalAlignment="Center"
                                        VerticalAlignment="Center"
-                                       Foreground="{DynamicResource BpmTextSecondary}"
-                                       FontSize="16"
-                                       IsHitTestVisible="False"/>
+                                       Foreground="{DynamicResource BpmSuccess}"
+                                       FontSize="{DynamicResource BpmFontSizeSmall}">
+                                <Run Text="●"/>
+                                <Run Text=" Aktiv"/>
+                            </TextBlock>
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
 
+            <!-- Projektzähler -->
+            <TextBlock Grid.Row="5"
+                       Margin="0,8,0,0"
+                       Foreground="{DynamicResource BpmTextSecondary}"
+                       FontSize="{DynamicResource BpmFontSizeCaption}"
+                       Text="{Binding ProjectCountText}"/>
+
             <!-- Empty State -->
-            <StackPanel Grid.Row="2"
+            <StackPanel Grid.Row="4"
                         VerticalAlignment="Center" HorizontalAlignment="Center"
-                        Visibility="{Binding Projects.Count, Converter={StaticResource CountToVis}}">
+                        Visibility="{Binding FilteredProjects.Count, Converter={StaticResource CountToVis}}">
                 <TextBlock Text="Noch keine Projekte vorhanden."
                            Foreground="{DynamicResource BpmTextSecondary}"
                            FontSize="{DynamicResource BpmFontSizeBody}"

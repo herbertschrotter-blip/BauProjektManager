@@ -47,6 +47,18 @@ public sealed class CountToVisConverter : IValueConverter
         => throw new NotSupportedException();
 }
 
+/// <summary>
+/// String leer/null → Visible (Placeholder sichtbar), sonst Collapsed.
+/// </summary>
+public sealed class EmptyToVisConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => string.IsNullOrEmpty(value as string) ? Visibility.Visible : Visibility.Collapsed;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
 public partial class PlanManagerView : UserControl
 {
     private readonly PlanManagerViewModel _vm;
@@ -62,6 +74,7 @@ public partial class PlanManagerView : UserControl
         Resources.Add("BoolToVis", _boolToVis);
         Resources.Add("InverseBoolToVis", new InverseBoolToVisConverter());
         Resources.Add("CountToVis", new CountToVisConverter());
+        Resources.Add("EmptyToVis", new EmptyToVisConverter());
         InitializeComponent();
 
         _vm = new PlanManagerViewModel();

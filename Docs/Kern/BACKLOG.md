@@ -212,6 +212,11 @@ Gute Ideen, aber erst nach einem funktionierenden PlanManager. Konzepte sind dok
 | Kontextbezogene Hilfe | — | Fragezeichen-Icon pro Modul/Feature → öffnet Hilfe-Website oder Chat-Bot mit Modul-Kontext als Parameter. Support-Bot (RAG) beantwortet Standardfragen aus Endnutzer-Doku |
 | Automatische Fehlerberichte | — | Unbehandelte Exception → Serilog-Logs + Stacktrace + Systeminfo → GitHub Issue via API. Über IExternalCommunicationService, DataClassification ClassA. Explizite User-Zustimmung per Dialog |
 | Sicherheitskonzept | — | Docs/Konzepte/Sicherheitskonzept.md erstellen vor Zeiterfassung/KI-Assistent/Multi-User. Themen: SQLCipher, Code Signing, Obfuscation, registry.json Whitelist |
+| **Server-Architektur** | [ServerArchitektur.md](../Konzepte/ServerArchitektur.md) | ASP.NET Minimal API + PostgreSQL + Identity. Konzept steht (3-Runden Cross-Review), Implementierung Post-V1. ADR-050/051 |
+| **Datasync-Spike** | [ServerArchitektur.md Kap. 7](../Konzepte/ServerArchitektur.md) | Nach PlanManager V1: Prototyp mit Microsoft.Datasync (projects + clients, Login, Push/Pull, Konflikt, Soft Delete). Entscheidet Sync-Strategie |
+| **Nachkalkulation** | — (Konzept noch zu erstellen) | Haupttreiber für Server-Modus. Bestellungen, Lieferscheine, Lohnstunden, Geräte, NU-Rechnungen. Braucht Zeiterfassung + Server |
+| **Auth / RBAC** | [ServerArchitektur.md Kap. 4](../Konzepte/ServerArchitektur.md) | ASP.NET Identity, JWT, Admin-provisioned Users. Systemrolle + Projektrolle. Erst mit Server-Implementierung |
+| **Audit-Trail** | [ServerArchitektur.md Kap. 2.4](../Konzepte/ServerArchitektur.md) | audit_log Tabelle für kritische Operationen (Nachkalkulation, Freigaben). Erst mit Nachkalkulation |
 
 ---
 
@@ -267,8 +272,7 @@ schema_version (version)
 - **Datenschutz:** API-Keys in DPAPI, NIEMALS in settings.json/registry.json/Git/Logs
 - **Datenschutz:** registry.json Whitelist beachten bei neuen Feldern (DSVGO-Architektur Kap. 9.3)
 - **Multi-User-Vorbereitung:** `IProjectDataService` Interface statt direkt ProjectDatabase.cs (MultiUserKonzept Kap. 8)
-- **Multi-User-Vorbereitung:** `version` + `last_modified` + `modified_by` Felder in neuen Tabellen
-- **Multi-User-Vorbereitung:** CRUD-Methoden mit „Änderungen seit Timestamp" Parameter
+- **Sync-Vorbereitung (ADR-050/051):** Neue Tabellen: ULID + `created_at`, `created_by`, `last_modified_at`, `last_modified_by`, `sync_version`, `is_deleted` — UTC, Soft Delete, Writes über Services (CODING_STANDARDS Kap. 19)
 
 ---
 

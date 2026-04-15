@@ -672,7 +672,7 @@ Zusammenfassung der wichtigsten Entscheidungen:
 | **VBA-Export** | registry.json (automatisch, read-only) | ADR-004, ADR-017 |
 | **ID-Schema** | ULID als TEXT PRIMARY KEY für alle Tabellen | ADR-039 |
 | **Plan-Dateien** | 1..n pro Revision | ADR-007 |
-| **Import** | 10-Schritte-Workflow | ADR-008 |
+| **Import** | 10-Schritte-Workflow (davon Phase 2 intern als 7-Stufen-Analyse-Pipeline) | ADR-008 |
 | **Undo** | 3 SQLite-Tabellen (Journal) | ADR-009 |
 | **Profile** | RecognitionProfiles + PatternTemplates | ADR-010 |
 | **Ordner-Naming** | Nummerierte Präfixe mit Leerzeichen | ADR-011 |

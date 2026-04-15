@@ -115,13 +115,23 @@ Bauprotokolle, Prüfberichte, Baubesprechungen etc. Der Zielordner ist frei wäh
 
 Alternativ: Manueller Sortier-Modus für Scans und nicht erkannte Dateien.
 
-### 3.2 Dokument-Dateien (ADR-007)
+### 3.2 Dokument-Dateien (ADR-007, ADR-050)
 
-Ein Dokument (Revision) besteht aus **1 bis n Dateien**. Dateien werden über den gemeinsamen
-Dateinamen-Stamm (ohne Extension) zusammengeführt. Fehlende PDF oder DWG ist kein Fehler.
+Ein Dokument (Revision) besteht aus **1 bis n Dateien**. Dateien werden über die
+**fachliche Identity** (document_key + document_type + Revisionsstand) zusammengeführt,
+NICHT über den Dateinamen-Stamm. Fehlende PDF oder DWG ist kein Fehler.
 
-**Wichtig:** PDF und DWG sind grundsätzlich eigenständige Dateien in der DB. Die Gruppierung
-zu einer Revision ist flexibel: Default = gleicher Stamm → Auto-Link. Aber eine DWG kann
+**Auto-Link Regeln (Cross-Review 15.04.2026):**
+Dateien werden nur automatisch gruppiert wenn ALLE Bedingungen erfüllt sind:
+1. Gleicher `document_key` (aus identityFields)
+2. Gleiche `document_type` (DocumentTypeId)
+3. Gleicher Revisionsstand
+4. Extension-Kombi erlaubt (pdf+dwg, pdf+dxf)
+
+Kein Auto-Link nur weil der Dateiname gleich aussieht — gleiche Dateinamen in
+verschiedenen Ordnern (z.B. Schalung-DWG vs Bewehrung-PDF) sind VERSCHIEDENE Dokumente.
+
+**Wichtig:** PDF und DWG sind grundsätzlich eigenständige Dateien in der DB. Eine DWG kann
 auch mehreren Revisionen zugeordnet sein (Sammel-DWG) oder eigenständig bleiben (standalone).
 
 ### 3.3 Zwei Sortier-Modi
@@ -270,15 +280,22 @@ Ergebnis: RecognitionProfile in `.bpm/profiles/<n>.json` (ADR-046) + PatternTemp
 - Quellen: E-Mail, Portal-Download, USB, Scanner, Explorer
 - Beim App-Start: Alle `_Eingang/`-Ordner prüfen → Badge in Sidebar
 
-### Phase 2 — Import-Analyse (automatisch)
+### Phase 2 — Import-Analyse (automatisch, 7-Stufen-Pipeline)
 
-| Schritt | Was passiert |
-|---------|-------------|
-| 2a. Scan | `_Eingang/` durchsuchen, MD5-Hash + file_size berechnen |
-| 2b. Parse | Dateinamen in Segmente splitten laut Profil |
-| 2c. Classify | Dokumenttyp erkennen, document_key bilden |
-| 2d. Versionierung | Entscheidungsmatrix (Kap. 5.3) pro Datei/Revision |
-| 2e. Plan | Zielpfad berechnen, Dateien gruppieren (Auto-Link) |
+Intern orchestriert durch `ImportWorkflowService.AnalyzeAsync()` (Cross-Review 15.04.2026):
+
+| Stufe | Service | Was passiert |
+|-------|---------|-------------|
+| 1. Scan | `ImportScanService` | `_Eingang/` rekursiv durchsuchen, Dateiliste + Basis-Metadaten |
+| 2. Fingerprint | `FileFingerprintService` | MD5-Hash + file_size berechnen (bounded parallel) |
+| 3. Parse | `FileParseService` | Dateinamen in Segmente splitten laut Profil-Tokenization |
+| 4. Resolve Context | `ImportContextResolver` | Ordner-Kontext + Profil-Match + Extension → ResolutionEvidence |
+| 5. Build Identity | `DocumentKeyBuilder` | document_key deterministisch aus resolved fields bilden |
+| 6. Version Decision | `RevisionDecisionService` | Entscheidungsmatrix (Kap. 5.3) → 9 Status-Typen |
+| 7. Execution Plan | `ImportPlanBuilder` | Zielpfade berechnen, Dateien gruppieren (nach fachlicher Identity) |
+
+**Fehler-/Abbruchstrategie:** Analyse-Fehler pro Datei → Warning/Unknown in Vorschau, kein Gesamtabbruch.
+**CancellationToken:** Durch alle 7 Stufen durchgereicht (async).
 
 ### Phase 3 — Import-Vorschau (User entscheidet)
 

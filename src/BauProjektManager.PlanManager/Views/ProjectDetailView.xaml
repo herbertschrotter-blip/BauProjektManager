@@ -28,8 +28,7 @@
                         Style="{DynamicResource BpmButtonPrimary}"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center"
-                        IsEnabled="False"
-                        ToolTip="Kommt mit #24 Import-Workflow"/>
+                        Click="OnStartImport"/>
             </Grid>
         </Border>
 

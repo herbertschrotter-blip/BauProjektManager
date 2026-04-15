@@ -31,6 +31,36 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.25.1] — 2026-04-15
+
+### ULID-Migration — Schema v2.0
+
+Komplette Migration von seq+Präfix-IDs auf ULID als TEXT PRIMARY KEY für alle Tabellen (ADR-039 v2).
+
+### Hinzugefuegt
+- `IIdGenerator` Interface in Domain/Interfaces (ADR-039 v2)
+- `UlidIdGenerator` Implementierung in Infrastructure/Services
+- NuGet-Paket `Ulid 1.0.0` in Infrastructure
+- `created_at`/`updated_at` auf alle Tabellen (clients, building_parts, building_levels, project_participants, project_links)
+- FK-Indizes: `idx_building_parts_project_id`, `idx_building_levels_part_id`, `idx_participants_project_id`, `idx_links_project_id`
+- `PRAGMA foreign_keys=ON` aktiviert
+- `use_global_zero_level` + `global_zero_level` direkt im Schema (keine Migration nötig)
+
+### Geaendert
+- `ProjectDatabase` Constructor nimmt `IIdGenerator` entgegen (kein parameterloser Constructor mehr)
+- Alle Aufrufer angepasst: `App.xaml.cs`, `SettingsViewModel`, `PlanManagerViewModel`
+- Schema-Version: `1.5` → `2.0`
+- ID-Generierung: `GenerateNextId("prefix", "table")` → `_idGenerator.NewId()`
+- `SaveClient` schreibt jetzt auch `updated_at`
+
+### Entfernt
+- `seq INTEGER PRIMARY KEY AUTOINCREMENT` aus allen Tabellen
+- `GenerateNextId()` Methode (Präfix-IDs: `proj_001`, `client_001` etc.)
+- `ColumnExists()` Hilfsmethode (keine inkrementelle Migration mehr nötig)
+- Inkrementelle `MigrateSchema()` Logik (Schema v2.0 ist Neustart)
+
+---
+
 ## [v0.24.14] — 2026-04-11 / 2026-04-13
 
 ### Docs-Audit: 20 Widersprüche gefunden und gefixt

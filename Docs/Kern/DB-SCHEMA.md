@@ -20,7 +20,7 @@ supersedes: []
   - 1. Überblick
   - 2. Beziehungsdiagramm
   - 3. Modul-Zuordnung
-  - 4. Tabellen-Schema (Ziel: v2.0 ULID)
+  - 4. Tabellen-Schema (v2.0 ULID — implementiert)
   - 5. Geplante Tabellen (nach V1)
   - 6. PlanManager-Datenbank (separat)
   - 7. Schema-Migration
@@ -40,8 +40,8 @@ supersedes: []
 
 # BauProjektManager — Datenbank-Schema
 
-**Version:** 2.0 (Zielschema — aktuell implementiert: v1.5, ULID-Migration Post-V1 geplant)  
-**Datum:** 04.04.2026  
+**Version:** 2.0 (ULID-Migration implementiert, v0.25.1)  
+**Datum:** 15.04.2026  
 **DB-Engine:** SQLite  
 **Speicherort:** `%LocalAppData%\BauProjektManager\bpm.db`
 
@@ -71,7 +71,7 @@ Dieses Dokument ist die **zentrale Referenz** für alle Datenbanktabellen in BPM
 
 ## 2. Beziehungsdiagramm
 
-### 2.1 Implementiert (v1.5 → Migration auf v2.0 ULID ausstehend)
+### 2.1 Implementiert (v2.0 ULID)
 
 ```
 clients ◄──────────── projects
@@ -168,7 +168,7 @@ Welches Modul "besitzt" welche Tabelle (schreibt), und welche Module lesen.
 
 ---
 
-## 4. Tabellen-Schema (Ziel: v2.0 ULID)
+## 4. Tabellen-Schema (v2.0 ULID — implementiert)
 
 Alle Tabellen verwenden `id TEXT PRIMARY KEY` mit ULID. Keine `seq` Spalte.
 
@@ -787,7 +787,7 @@ CREATE INDEX idx_action_files_action ON import_action_files(action_id);
 | 1.3 | März 2026 | (reserviert) |
 | 1.4 | März 2026 | project_participants |
 | 1.5 | März 2026 | project_links |
-| *2.0* | *April 2026* | *ULID-Migration: seq entfernen, id TEXT PRIMARY KEY, created_at/updated_at ergänzen, Indizes* |
+| 2.0 | April 2026 | ULID-Migration: seq entfernt, id TEXT PRIMARY KEY, created_at/updated_at, FK-Indizes, IIdGenerator |
 | *2.1* | *geplant* | *employees, time_entries* |
 | *2.2* | *geplant* | *work_packages, work_assignments* |
 | *2.3* | *geplant* | *lv_positions, performance_catalog, project_difficulty* |

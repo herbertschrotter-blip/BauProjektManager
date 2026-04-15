@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using Microsoft.Data.Sqlite;
 using BauProjektManager.Domain.Enums;
+using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models;
 using Serilog;
 
@@ -8,16 +9,18 @@ namespace BauProjektManager.Infrastructure.Persistence;
 
 /// <summary>
 /// SQLite database service — manages bpm.db in %LocalAppData%\BauProjektManager\.
-/// Schema v1.5: projects, clients, building_parts, building_levels, project_participants, project_links.
-/// IDs are auto-incremented with prefix: proj_001, client_001, bpart_001, blvl_001, ppart_001, plink_001.
+/// Schema v2.0: ULID as TEXT PRIMARY KEY for all tables. No seq columns.
+/// ID generation via IIdGenerator (ADR-039 v2).
 /// </summary>
 public class ProjectDatabase : IDisposable
 {
     private readonly string _dbPath;
+    private readonly IIdGenerator _idGenerator;
     private SqliteConnection? _connection;
 
-    public ProjectDatabase()
+    public ProjectDatabase(IIdGenerator idGenerator)
     {
+        _idGenerator = idGenerator;
         var appData = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "BauProjektManager");
@@ -35,6 +38,9 @@ public class ProjectDatabase : IDisposable
             using var walCmd = _connection.CreateCommand();
             walCmd.CommandText = "PRAGMA journal_mode=WAL;";
             walCmd.ExecuteNonQuery();
+            using var fkCmd = _connection.CreateCommand();
+            fkCmd.CommandText = "PRAGMA foreign_keys=ON;";
+            fkCmd.ExecuteNonQuery();
             EnsureTables();
             MigrateSchema();
         }
@@ -43,23 +49,23 @@ public class ProjectDatabase : IDisposable
 
     private void EnsureTables()
     {
-        Log.Debug("Creating database tables");
+        Log.Debug("Creating database tables (schema v2.0 ULID)");
         var conn = _connection!;
         var cmd = conn.CreateCommand();
         cmd.CommandText = """
             CREATE TABLE IF NOT EXISTS clients (
-                seq INTEGER PRIMARY KEY AUTOINCREMENT,
-                id TEXT UNIQUE NOT NULL,
+                id TEXT PRIMARY KEY,
                 company TEXT NOT NULL DEFAULT '',
                 contact_person TEXT NOT NULL DEFAULT '',
                 phone TEXT NOT NULL DEFAULT '',
                 email TEXT NOT NULL DEFAULT '',
-                notes TEXT NOT NULL DEFAULT ''
+                notes TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
             );
 
             CREATE TABLE IF NOT EXISTS projects (
-                seq INTEGER PRIMARY KEY AUTOINCREMENT,
-                id TEXT UNIQUE NOT NULL,
+                id TEXT PRIMARY KEY,
                 project_number TEXT NOT NULL DEFAULT '',
                 name TEXT NOT NULL DEFAULT '',
                 full_name TEXT NOT NULL DEFAULT '',
@@ -90,6 +96,8 @@ public class ProjectDatabase : IDisposable
                 documents_path TEXT NOT NULL DEFAULT '',
                 protocols_path TEXT NOT NULL DEFAULT '',
                 invoices_path TEXT NOT NULL DEFAULT '',
+                use_global_zero_level INTEGER NOT NULL DEFAULT 0,
+                global_zero_level REAL NOT NULL DEFAULT 0,
                 tags TEXT NOT NULL DEFAULT '',
                 notes TEXT NOT NULL DEFAULT '',
                 created_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -98,8 +106,7 @@ public class ProjectDatabase : IDisposable
             );
 
             CREATE TABLE IF NOT EXISTS buildings (
-                seq INTEGER PRIMARY KEY AUTOINCREMENT,
-                id TEXT UNIQUE NOT NULL,
+                id TEXT PRIMARY KEY,
                 project_id TEXT NOT NULL,
                 name TEXT NOT NULL DEFAULT '',
                 short_name TEXT NOT NULL DEFAULT '',
@@ -109,20 +116,20 @@ public class ProjectDatabase : IDisposable
             );
 
             CREATE TABLE IF NOT EXISTS building_parts (
-                seq INTEGER PRIMARY KEY AUTOINCREMENT,
-                id TEXT UNIQUE NOT NULL,
+                id TEXT PRIMARY KEY,
                 project_id TEXT NOT NULL,
                 short_name TEXT NOT NULL DEFAULT '',
                 description TEXT NOT NULL DEFAULT '',
                 building_type TEXT NOT NULL DEFAULT '',
                 zero_level_absolute REAL NOT NULL DEFAULT 0,
                 sort_order INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now')),
                 FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
             );
 
             CREATE TABLE IF NOT EXISTS building_levels (
-                seq INTEGER PRIMARY KEY AUTOINCREMENT,
-                id TEXT UNIQUE NOT NULL,
+                id TEXT PRIMARY KEY,
                 building_part_id TEXT NOT NULL,
                 prefix INTEGER NOT NULL DEFAULT 0,
                 name TEXT NOT NULL DEFAULT '',
@@ -131,12 +138,13 @@ public class ProjectDatabase : IDisposable
                 fbok REAL NOT NULL DEFAULT 0,
                 rduk REAL,
                 sort_order INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now')),
                 FOREIGN KEY (building_part_id) REFERENCES building_parts(id) ON DELETE CASCADE
             );
 
             CREATE TABLE IF NOT EXISTS project_participants (
-                seq INTEGER PRIMARY KEY AUTOINCREMENT,
-                id TEXT UNIQUE NOT NULL,
+                id TEXT PRIMARY KEY,
                 project_id TEXT NOT NULL,
                 role TEXT NOT NULL DEFAULT '',
                 company TEXT NOT NULL DEFAULT '',
@@ -145,23 +153,32 @@ public class ProjectDatabase : IDisposable
                 email TEXT NOT NULL DEFAULT '',
                 contact_id TEXT NOT NULL DEFAULT '',
                 sort_order INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now')),
                 FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
             );
 
             CREATE TABLE IF NOT EXISTS project_links (
-                seq INTEGER PRIMARY KEY AUTOINCREMENT,
-                id TEXT UNIQUE NOT NULL,
+                id TEXT PRIMARY KEY,
                 project_id TEXT NOT NULL,
                 name TEXT NOT NULL DEFAULT '',
                 url TEXT NOT NULL DEFAULT '',
                 link_type TEXT NOT NULL DEFAULT 'Custom',
                 sort_order INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now')),
                 FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
             );
 
             CREATE TABLE IF NOT EXISTS schema_version (
                 version TEXT NOT NULL
             );
+
+            -- FK-Indizes (ADR-039 v2)
+            CREATE INDEX IF NOT EXISTS idx_building_parts_project_id ON building_parts(project_id);
+            CREATE INDEX IF NOT EXISTS idx_building_levels_part_id ON building_levels(building_part_id);
+            CREATE INDEX IF NOT EXISTS idx_participants_project_id ON project_participants(project_id);
+            CREATE INDEX IF NOT EXISTS idx_links_project_id ON project_links(project_id);
             """;
         cmd.ExecuteNonQuery();
     }
@@ -169,50 +186,10 @@ public class ProjectDatabase : IDisposable
     private void MigrateSchema()
     {
         var conn = _connection!;
-        if (!ColumnExists("projects", "project_type"))
-        {
-            var cmd = conn.CreateCommand();
-            cmd.CommandText = "ALTER TABLE projects ADD COLUMN project_type TEXT NOT NULL DEFAULT ''";
-            cmd.ExecuteNonQuery();
-        }
-        if (!ColumnExists("projects", "use_global_zero_level"))
-        {
-            var cmd = conn.CreateCommand();
-            cmd.CommandText = "ALTER TABLE projects ADD COLUMN use_global_zero_level INTEGER NOT NULL DEFAULT 0";
-            cmd.ExecuteNonQuery();
-        }
-        if (!ColumnExists("projects", "global_zero_level"))
-        {
-            var cmd = conn.CreateCommand();
-            cmd.CommandText = "ALTER TABLE projects ADD COLUMN global_zero_level REAL NOT NULL DEFAULT 0";
-            cmd.ExecuteNonQuery();
-        }
         var verCmd = conn.CreateCommand();
-        verCmd.CommandText = "DELETE FROM schema_version; INSERT INTO schema_version (version) VALUES ('1.5');";
+        verCmd.CommandText = "DELETE FROM schema_version; INSERT INTO schema_version (version) VALUES ('2.0');";
         Log.Verbose("Executing SQL: {Operation} on {Table}", "UPDATE", "schema_version");
         verCmd.ExecuteNonQuery();
-    }
-
-    private bool ColumnExists(string table, string column)
-    {
-        var conn = _connection!;
-        var cmd = conn.CreateCommand();
-        cmd.CommandText = $"PRAGMA table_info({table})";
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read())
-            if (reader.GetString(1) == column) return true;
-        return false;
-    }
-
-    private string GenerateNextId(string prefix, string table)
-    {
-        var conn = GetConnection();
-        var cmd = conn.CreateCommand();
-        cmd.CommandText = $"SELECT MAX(seq) FROM {table}";
-        Log.Verbose("Executing SQL: {Operation} on {Table}", "SELECT", table);
-        var result = cmd.ExecuteScalar();
-        var nextNum = result is DBNull || result is null ? 1 : Convert.ToInt64(result) + 1;
-        return $"{prefix}_{nextNum:D3}";
     }
 
     // === PROJECTS ===
@@ -245,7 +222,7 @@ public class ProjectDatabase : IDisposable
     {
         var conn = GetConnection();
         bool isNew = string.IsNullOrEmpty(project.Id) || !ProjectExists(project.Id);
-        if (isNew) project.Id = GenerateNextId("proj", "projects");
+        if (isNew) project.Id = _idGenerator.NewId();
 
         string? clientId = null;
         if (!string.IsNullOrEmpty(project.Client.Company) || !string.IsNullOrEmpty(project.Client.ContactPerson))
@@ -327,10 +304,10 @@ public class ProjectDatabase : IDisposable
         cmd.Parameters.AddWithValue("@documents_path", project.Paths.Documents);
         cmd.Parameters.AddWithValue("@protocols_path", project.Paths.Protocols);
         cmd.Parameters.AddWithValue("@invoices_path", project.Paths.Invoices);
-        cmd.Parameters.AddWithValue("@tags", project.Tags);
-        cmd.Parameters.AddWithValue("@notes", project.Notes);
         cmd.Parameters.AddWithValue("@use_global_zero_level", project.UseGlobalZeroLevel ? 1 : 0);
         cmd.Parameters.AddWithValue("@global_zero_level", project.GlobalZeroLevel);
+        cmd.Parameters.AddWithValue("@tags", project.Tags);
+        cmd.Parameters.AddWithValue("@notes", project.Notes);
         Log.Verbose("Executing SQL: {Operation} on {Table}", isNew ? "INSERT" : "UPDATE", "projects");
         cmd.ExecuteNonQuery();
 
@@ -341,7 +318,8 @@ public class ProjectDatabase : IDisposable
 
     public bool ProjectExistsByPath(string rootPath)
     {
-        using var cmd = _connection.CreateCommand();
+        var conn = GetConnection();
+        var cmd = conn.CreateCommand();
         cmd.CommandText = "SELECT COUNT(*) FROM projects WHERE root_path = @path";
         cmd.Parameters.AddWithValue("@path", rootPath);
         return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
@@ -408,15 +386,16 @@ public class ProjectDatabase : IDisposable
         checkCmd.Parameters.AddWithValue("@id", projectId);
         Log.Verbose("Executing SQL: {Operation} on {Table}", "SELECT", "projects");
         var existingClientId = checkCmd.ExecuteScalar() as string;
-        string clientId = !string.IsNullOrEmpty(existingClientId) ? existingClientId : GenerateNextId("client", "clients");
+        string clientId = !string.IsNullOrEmpty(existingClientId) ? existingClientId : _idGenerator.NewId();
 
         var cmd = conn.CreateCommand();
         cmd.CommandText = """
-            INSERT INTO clients (id, company, contact_person, phone, email, notes)
-            VALUES (@id, @company, @contact_person, @phone, @email, @notes)
+            INSERT INTO clients (id, company, contact_person, phone, email, notes, updated_at)
+            VALUES (@id, @company, @contact_person, @phone, @email, @notes, datetime('now'))
             ON CONFLICT(id) DO UPDATE SET
                 company=@company, contact_person=@contact_person,
-                phone=@phone, email=@email, notes=@notes
+                phone=@phone, email=@email, notes=@notes,
+                updated_at=datetime('now')
             """;
         cmd.Parameters.AddWithValue("@id", clientId);
         cmd.Parameters.AddWithValue("@company", client.Company);
@@ -508,7 +487,7 @@ public class ProjectDatabase : IDisposable
         for (int i = 0; i < parts.Count; i++)
         {
             var part = parts[i];
-            var partId = string.IsNullOrEmpty(part.Id) ? GenerateNextId("bpart", "building_parts") : part.Id;
+            var partId = string.IsNullOrEmpty(part.Id) ? _idGenerator.NewId() : part.Id;
             var cmd = conn.CreateCommand();
             cmd.CommandText = """
                 INSERT INTO building_parts (id, project_id, short_name, description, building_type, zero_level_absolute, sort_order)
@@ -524,7 +503,7 @@ public class ProjectDatabase : IDisposable
             for (int j = 0; j < part.Levels.Count; j++)
             {
                 var level = part.Levels[j];
-                var levelId = string.IsNullOrEmpty(level.Id) ? GenerateNextId("blvl", "building_levels") : level.Id;
+                var levelId = string.IsNullOrEmpty(level.Id) ? _idGenerator.NewId() : level.Id;
                 var lvlCmd = conn.CreateCommand();
                 lvlCmd.CommandText = """
                     INSERT INTO building_levels (id, building_part_id, prefix, name, description, rdok, fbok, rduk, sort_order)
@@ -581,7 +560,7 @@ public class ProjectDatabase : IDisposable
         for (int i = 0; i < participants.Count; i++)
         {
             var p = participants[i];
-            var pId = string.IsNullOrEmpty(p.Id) ? GenerateNextId("ppart", "project_participants") : p.Id;
+            var pId = string.IsNullOrEmpty(p.Id) ? _idGenerator.NewId() : p.Id;
             var cmd = conn.CreateCommand();
             cmd.CommandText = """
                 INSERT INTO project_participants (id, project_id, role, company, contact_person, phone, email, contact_id, sort_order)
@@ -634,7 +613,7 @@ public class ProjectDatabase : IDisposable
         for (int i = 0; i < links.Count; i++)
         {
             var link = links[i];
-            var linkId = string.IsNullOrEmpty(link.Id) ? GenerateNextId("plink", "project_links") : link.Id;
+            var linkId = string.IsNullOrEmpty(link.Id) ? _idGenerator.NewId() : link.Id;
             var cmd = conn.CreateCommand();
             cmd.CommandText = """
                 INSERT INTO project_links (id, project_id, name, url, link_type, sort_order)

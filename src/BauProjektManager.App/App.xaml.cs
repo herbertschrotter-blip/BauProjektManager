@@ -115,7 +115,7 @@ public partial class App : Application
         }
 
         // Now show main window and switch shutdown mode
-        var db = new ProjectDatabase();
+        var db = new ProjectDatabase(new Infrastructure.Services.UlidIdGenerator());
         Log.Debug("Service registered: {Service}", "ProjectDatabase");
         var logDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),

@@ -76,13 +76,15 @@ public class PatternTemplateService
         return new PatternTemplate
         {
             Id = _idGenerator.NewId(),
+            DocumentTypeId = profile.DocumentTypeId,
             DocumentTypeName = profile.DocumentTypeName,
             TargetFolder = profile.TargetFolder,
-            Delimiters = profile.Delimiters,
+            Tokenization = profile.Tokenization,
             Segments = profile.Segments,
             Recognition = profile.Recognition,
             IndexSource = profile.IndexSource,
             IndexMode = profile.IndexMode,
+            IndexExtraction = profile.IndexExtraction,
             FolderHierarchy = profile.FolderHierarchy,
             SourceProjectName = projectName,
             CreatedAt = DateTime.UtcNow.ToString("o")
@@ -97,7 +99,7 @@ public class PatternTemplateService
     {
         var templates = LoadAll(appDataPath);
         var existing = templates.FindIndex(t =>
-            t.DocumentTypeName.Equals(template.DocumentTypeName,
+            t.DocumentTypeId.Equals(template.DocumentTypeId,
                 StringComparison.OrdinalIgnoreCase));
 
         if (existing >= 0)

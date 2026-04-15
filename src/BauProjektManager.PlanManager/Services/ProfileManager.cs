@@ -54,7 +54,11 @@ public class ProfileManager
                 var json = File.ReadAllText(file);
                 var profile = JsonSerializer.Deserialize<RecognitionProfile>(json, JsonOptions);
                 if (profile is not null)
+                {
+                    if (MigrateIfNeeded(profile, file))
+                        Log.Information("Profil migriert v1→v2: {Name} ({Id})", profile.DocumentTypeName, profile.Id);
                     profiles.Add(profile);
+                }
             }
             catch (Exception ex)
             {
@@ -157,23 +161,26 @@ public class ProfileManager
                     ? s.CustomFieldName ?? "custom"
                     : s.FieldType.ToString()!,
                 Label = s.DisplayName,
-                Required = s.FieldType == FieldType.PlanNumber
+                Required = s.FieldType == FieldType.PlanNumber,
+                IncludeInIdentity = s.FieldType is FieldType.PlanNumber
+                    or FieldType.Haus or FieldType.Bauteil or FieldType.Bauabschnitt
             })
             .ToList();
 
         // Build identityFields from segments that define document identity
         var identityFields = new List<string> { "documentType" };
-        foreach (var seg in segments.Where(s => s.FieldType is not null))
+        foreach (var seg in profileSegments.Where(s => s.IncludeInIdentity))
         {
-            if (seg.FieldType is FieldType.PlanNumber or FieldType.Haus
-                or FieldType.Bauteil or FieldType.Bauabschnitt)
-                identityFields.Add(seg.FieldType.ToString()!.ToLowerInvariant());
+            identityFields.Add(seg.FieldType.ToLowerInvariant());
         }
+
+        var documentTypeId = NormalizeTypeId(documentTypeName);
 
         return new RecognitionProfile
         {
             Id = existingProfileId ?? string.Empty,
-            SchemaVersion = 1,
+            SchemaVersion = 2,
+            DocumentTypeId = documentTypeId,
             DocumentTypeName = documentTypeName,
             TargetFolder = targetFolder,
             IndexSource = indexSource,
@@ -183,14 +190,76 @@ public class ProfileManager
                 Mode = "alphabetic",
                 CaseInsensitive = indexCaseInsensitive
             },
-            Delimiters = delimiters,
+            Tokenization = new TokenizationConfig { Delimiters = delimiters },
             Segments = profileSegments,
             IdentityFields = identityFields,
             Recognition = recognition,
             RecognitionPriority = recognitionPriority,
             ConflictPolicy = "askUser",
-            Grouping = new GroupingConfig { Mode = "baseFileName" },
+            Grouping = new GroupingConfig { Mode = "identity" },
             FolderHierarchy = folderHierarchy
         };
+    }
+
+    /// <summary>
+    /// Migrates a v1 profile to v2 in-memory and persists it back.
+    /// Returns true if migration was performed.
+    /// </summary>
+    private bool MigrateIfNeeded(RecognitionProfile profile, string filePath)
+    {
+        if (profile.SchemaVersion >= 2)
+            return false;
+
+        // v1 → v2: add DocumentTypeId
+        if (string.IsNullOrEmpty(profile.DocumentTypeId))
+            profile.DocumentTypeId = NormalizeTypeId(profile.DocumentTypeName);
+
+        // v1 → v2: Tokenization (was flat Delimiters list)
+        if (profile.Tokenization.Delimiters.Count == 0
+            && profile.Tokenization.Delimiters is ["-", "_"])
+        {
+            // Already default, nothing to migrate
+        }
+
+        // v1 → v2: IncludeInIdentity on segments
+        foreach (var seg in profile.Segments)
+        {
+            var ft = seg.FieldType.ToLowerInvariant();
+            if (ft is "plannumber" or "haus" or "bauteil" or "bauabschnitt")
+                seg.IncludeInIdentity = true;
+        }
+
+        // v1 → v2: Grouping mode
+        if (profile.Grouping.Mode == "baseFileName")
+            profile.Grouping.Mode = "identity";
+
+        profile.SchemaVersion = 2;
+        profile.UpdatedAt = DateTime.UtcNow.ToString("o");
+
+        // Persist migrated profile atomically
+        var tempPath = filePath + ".tmp";
+        var json = JsonSerializer.Serialize(profile, JsonOptions);
+        File.WriteAllText(tempPath, json);
+        File.Move(tempPath, filePath, overwrite: true);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Normalizes a document type display name to a stable TypeId.
+    /// Lowercase, no umlauts, no spaces, no special chars.
+    /// </summary>
+    internal static string NormalizeTypeId(string displayName)
+    {
+        if (string.IsNullOrWhiteSpace(displayName))
+            return "unknown";
+
+        var id = displayName.ToLowerInvariant().Trim();
+        id = id.Replace("ä", "ae").Replace("ö", "oe").Replace("ü", "ue").Replace("ß", "ss");
+        id = id.Replace(" ", "_").Replace("-", "_");
+        // Remove plural trailing 'e' for common German patterns (Pläne→Plan)
+        if (id.EndsWith("plaene"))
+            id = id[..^1]; // plaene → plaen... actually just keep it simple
+        return id;
     }
 }

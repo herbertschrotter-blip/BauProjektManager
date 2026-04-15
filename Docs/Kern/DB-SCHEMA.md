@@ -30,11 +30,13 @@ supersedes: []
 - Pflichtlesen:
   - Kapitel 4 (Tabellen-Schema) bei jeder Tabellen-/Spaltenänderung
   - Kapitel 9 (Naming-Konventionen) bei neuer Tabelle
+  - Kapitel 9.3 (Sync-Felder) bei neuer Tabelle (ADR-050)
   - Kapitel 7 (Schema-Migration) bei Schemaänderung
 - Fachliche Invarianten:
   - **Ziel v2.0 (noch nicht implementiert):** ULID als TEXT PRIMARY KEY, IIdGenerator.NewId(), created_at/updated_at auf allen Entitätstabellen, FK-Indizes
   - **Aktuell implementiert (v1.5):** seq INTEGER PRIMARY KEY + Präfix-IDs (proj_001, bpart_001 etc.), created_at/updated_at nur auf projects, keine FK-Indizes
   - schema_version Tabelle in jeder DB
+  - Neue fachliche Tabellen: ULID + 6 Sync-Spalten + UTC + Soft Delete (Kapitel 9.3, ADR-050)
 
 ---
 
@@ -888,6 +890,27 @@ Jede Tabelle hat genau eine ID-Spalte:
 - ID-Generierung ausschließlich über `IIdGenerator.NewId()`
 - Keine `seq` Spalte, kein `INTEGER PRIMARY KEY`, keine Präfix-IDs
 - `created_at` und `updated_at` auf jede Tabelle (Pflicht)
+
+### 9.3 Sync-Felder-Konvention (ADR-050, ab v0.24.3)
+
+Jede **neue** fachliche Tabelle bekommt folgende Pflicht-Spalten:
+
+```sql
+id                  TEXT PRIMARY KEY,  -- ULID, clientseitig via IIdGenerator
+created_at          TEXT NOT NULL,     -- UTC (DateTime.UtcNow)
+created_by          TEXT,              -- Modus A: settings.localUserName, Modus C: JWT-Claim
+last_modified_at    TEXT NOT NULL,     -- UTC
+last_modified_by    TEXT,
+sync_version        INTEGER NOT NULL DEFAULT 0,
+is_deleted          INTEGER NOT NULL DEFAULT 0
+```
+
+**Regeln:**
+- Zeitstempel immer UTC — nie `DateTime.Now`, nie lokale Zeitzone
+- Soft Delete: `is_deleted = 1` statt `DELETE FROM`
+- `sync_version` wird bei jeder Mutation hochgezählt
+- Bestehende Tabellen werden bei nächster Migration nachgerüstet
+- Identity-Tabellen (ASP.NET, nur Server) folgen eigenen Konventionen
 
 ### 9.2 Lesbarkeit ohne Präfix-IDs
 

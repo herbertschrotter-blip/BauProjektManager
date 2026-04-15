@@ -35,16 +35,19 @@ supersedes: []
   - 16. Performance-Richtlinien
   - 17. Datenschutz im Code (PFLICHT)
   - 18. WPF Code-Behind Dialoge
+  - 19. Sync-Vorbereitung & Datenkonventionen (PFLICHT)
 - Pflichtlesen:
   - Kapitel 7 (MVVM) bei neuem ViewModel oder View
   - Kapitel 10 (XAML) bei neuer XAML-Datei
   - Kapitel 17 (Datenschutz) bei externem API-Call oder Personendaten
+  - Kapitel 19 (Sync-Vorbereitung) bei neuer Tabelle oder neuem Service
 - Fachliche Invarianten:
   - App/Shell-XAML: Farben über Theme-Tokens (StaticResource) — nie hardcoded Hex
   - Modul-XAML + Custom-Dialog-Windows: DynamicResource (Pflicht, da App-Resources erst zur Laufzeit aufgelöst werden)
   - Keine Business-Logik im Code-Behind — nur View-Logik
   - Datenschutz-Entscheidungen nie im ViewModel — immer über IPrivacyPolicy
   - Logging: Keine Personendaten, nur IDs (Serilog Structured Logging)
+  - Neue fachliche Tabellen: ULID + 6 Sync-Spalten + UTC + Soft Delete (Kapitel 19)
 
 ---
 
@@ -1588,6 +1591,94 @@ Für Ja/Nein-Fragen in Code-Behind-Dialogen eigenen Dark-Theme-Dialog verwenden.
 **Regel:** Kein ViewModel, kein Dialog-Code-Behind darf prüfen ob eine Datenklasse erlaubt ist oder ob eine Warnung angezeigt werden soll. Das entscheidet ausschließlich `IPrivacyPolicy`. Das ViewModel visualisiert nur die `PolicyDecision`.
 
 ---
+
+## 19. Sync-Vorbereitung & Datenkonventionen (PFLICHT ab v0.24.3)
+
+> **Gültig ab sofort** für alle neuen Tabellen und Services.
+> Bestehende Tabellen werden bei nächster Migration nachgerüstet.
+> Siehe ADR-050 (SoR je Modus) und ADR-051 (Local-First).
+
+### 19.1 Pflicht-Spalten für neue fachliche Tabellen
+
+Jede neue Tabelle die fachliche Daten speichert bekommt:
+
+```sql
+id                  TEXT PRIMARY KEY,  -- ULID, clientseitig erzeugt
+created_at          TEXT NOT NULL,     -- UTC
+created_by          TEXT,              -- Modus A: settings.json, Modus C: JWT
+last_modified_at    TEXT NOT NULL,     -- UTC
+last_modified_by    TEXT,
+sync_version        INTEGER NOT NULL DEFAULT 0,
+is_deleted          INTEGER NOT NULL DEFAULT 0
+```
+
+### 19.2 Zeitstempel — nur UTC
+
+```csharp
+// RICHTIG
+DateTime.UtcNow
+
+// VERBOTEN
+DateTime.Now
+```
+
+Alle `created_at`, `last_modified_at` und sonstige Zeitstempel
+werden als UTC gespeichert. Anzeige in lokaler Zeit erfolgt
+ausschließlich in der UI-Schicht.
+
+### 19.3 Soft Delete
+
+Sync-relevante Tabellen verwenden Soft Delete:
+
+```csharp
+// RICHTIG
+entity.IsDeleted = true;
+entity.LastModifiedAt = DateTime.UtcNow;
+entity.LastModifiedBy = userId;
+entity.SyncVersion++;
+await _repository.SaveAsync(entity);
+
+// VERBOTEN für sync-relevante Tabellen
+DELETE FROM table WHERE id = @id
+```
+
+### 19.4 IDs — ULID, clientseitig erzeugt
+
+IDs werden immer vom Client erzeugt, nie vom Server.
+ULID statt auto-increment für alle neuen fachlichen Tabellen.
+
+### 19.5 Writes nur über Application Services
+
+ViewModels schreiben nie direkt in die DB.
+Alle Writes laufen über Services die Metadaten setzen:
+
+```csharp
+public async Task UpdateAsync(Entity entity, string userId)
+{
+    entity.LastModifiedBy = userId;
+    entity.LastModifiedAt = DateTime.UtcNow;
+    entity.SyncVersion++;
+    await _repository.SaveAsync(entity);
+}
+```
+
+### 19.6 Lokaler Benutzerkontext
+
+In Modus A (Solo/Offline) wird `created_by`/`last_modified_by`
+aus `settings.json` befüllt:
+
+```json
+{
+  "localUserName": "Herbert"
+}
+```
+
+In Modus C (Server) kommt der Wert aus dem JWT-Claim.
+
+### 19.7 HttpClient
+
+Kein direkter `HttpClient` irgendwo im Code.
+Server-Kommunikation nur über `IExternalCommunicationService` (ADR-035).
 
 ## Zusammenfassung — Die 10 wichtigsten Regeln
 

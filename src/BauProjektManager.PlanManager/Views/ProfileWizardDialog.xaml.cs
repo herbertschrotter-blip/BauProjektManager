@@ -49,7 +49,11 @@ public partial class ProfileWizardDialog : Window
 {
     private readonly ProfileWizardViewModel _vm;
 
-    public ProfileWizardDialog(Project? project = null, ProfileManager? profileManager = null)
+    public ProfileWizardDialog(
+        Project? project = null,
+        ProfileManager? profileManager = null,
+        PatternTemplateService? templateService = null,
+        string? appDataPath = null)
     {
         Resources.Add("CountToVisInverse", new CountToVisInverseConverter());
         Resources.Add("CountToVisZero", new CountToVisZeroConverter());
@@ -57,7 +61,7 @@ public partial class ProfileWizardDialog : Window
         Resources.Add("BoolToVisInverse2", new InverseBoolConverter());
         InitializeComponent();
 
-        _vm = new ProfileWizardViewModel(project, profileManager);
+        _vm = new ProfileWizardViewModel(project, profileManager, templateService, appDataPath);
         DataContext = _vm;
     }
 

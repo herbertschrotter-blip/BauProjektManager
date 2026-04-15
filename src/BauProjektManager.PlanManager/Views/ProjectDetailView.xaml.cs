@@ -8,10 +8,16 @@ namespace BauProjektManager.PlanManager.Views;
 public partial class ProjectDetailView : UserControl
 {
     private readonly ProfileManager _profileManager;
+    private readonly PatternTemplateService? _templateService;
+    private readonly string? _appDataPath;
 
-    public ProjectDetailView(Project project, BoolToVisConverter boolToVis, ProfileManager profileManager)
+    public ProjectDetailView(
+        Project project, BoolToVisConverter boolToVis, ProfileManager profileManager,
+        PatternTemplateService? templateService = null, string? appDataPath = null)
     {
         _profileManager = profileManager;
+        _templateService = templateService;
+        _appDataPath = appDataPath;
         Resources.Add("BoolToVis", boolToVis);
         InitializeComponent();
 
@@ -21,7 +27,8 @@ public partial class ProjectDetailView : UserControl
 
     private void OnNewProfile(object sender, System.Windows.RoutedEventArgs e)
     {
-        var dialog = new ProfileWizardDialog(ViewModel.Project, _profileManager);
+        var dialog = new ProfileWizardDialog(
+            ViewModel.Project, _profileManager, _templateService, _appDataPath);
         dialog.Owner = System.Windows.Window.GetWindow(this);
         dialog.ShowDialog();
     }

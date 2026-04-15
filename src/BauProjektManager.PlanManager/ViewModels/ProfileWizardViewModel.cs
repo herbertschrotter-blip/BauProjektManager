@@ -166,12 +166,20 @@ public partial class ProfileWizardViewModel : ObservableObject
     public bool ProfileSaved { get; private set; }
 
     private readonly ProfileManager? _profileManager;
+    private readonly PatternTemplateService? _templateService;
     private readonly Project? _project;
+    private readonly string? _appDataPath;
 
-    public ProfileWizardViewModel(Project? project = null, ProfileManager? profileManager = null)
+    public ProfileWizardViewModel(
+        Project? project = null,
+        ProfileManager? profileManager = null,
+        PatternTemplateService? templateService = null,
+        string? appDataPath = null)
     {
         _project = project;
         _profileManager = profileManager;
+        _templateService = templateService;
+        _appDataPath = appDataPath;
         if (project is not null)
             LoadInboxFiles(project);
     }
@@ -568,6 +576,13 @@ public partial class ProfileWizardViewModel : ObservableObject
 
             _profileManager.Save(_project.Paths.Root, profile);
             ProfileSaved = true;
+
+            // Save to global pattern library
+            if (_templateService is not null && !string.IsNullOrEmpty(_appDataPath))
+            {
+                var template = _templateService.ExtractFromProfile(profile, _project.Name);
+                _templateService.AddOrUpdate(_appDataPath, template);
+            }
 
             Log.Information("Profil gespeichert: {Name} fuer Projekt {Project}",
                 DocumentTypeName, _project.Name);

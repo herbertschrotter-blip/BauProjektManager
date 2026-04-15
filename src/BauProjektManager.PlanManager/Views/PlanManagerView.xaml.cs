@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -39,6 +40,7 @@ public partial class PlanManagerView : UserControl
     private readonly PlanManagerViewModel _vm;
     private readonly BoolToVisConverter _boolToVis = new();
     private readonly ProfileManager _profileManager = new(new UlidIdGenerator());
+    private readonly PatternTemplateService _templateService = new(new UlidIdGenerator());
 
     public PlanManagerView()
     {
@@ -59,7 +61,13 @@ public partial class PlanManagerView : UserControl
 
     private void NavigateToDetail(Project project)
     {
-        var detailView = new ProjectDetailView(project, _boolToVis, _profileManager);
+        // AppData path for pattern-templates.json: BasePath/.AppData/BauProjektManager/
+        var appDataPath = !string.IsNullOrEmpty(project.Paths.Root)
+            ? Path.Combine(Path.GetDirectoryName(project.Paths.Root) ?? "", ".AppData", "BauProjektManager")
+            : null;
+
+        var detailView = new ProjectDetailView(
+            project, _boolToVis, _profileManager, _templateService, appDataPath);
         detailView.ViewModel.NavigateBack += NavigateToList;
 
         ProjectListPanel.Visibility = Visibility.Collapsed;

@@ -82,7 +82,7 @@ public partial class PlanManagerViewModel : ObservableObject
             if (!Directory.Exists(inboxPath))
                 return 0;
 
-            return Directory.GetFiles(inboxPath).Length;
+            return Directory.GetFiles(inboxPath, "*", SearchOption.AllDirectories).Length;
         }
         catch (Exception ex)
         {

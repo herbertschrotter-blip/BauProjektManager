@@ -227,7 +227,7 @@ public partial class ProfileWizardViewModel : ObservableObject
             if (!Directory.Exists(inboxPath))
                 return;
 
-            var files = Directory.GetFiles(inboxPath)
+            var files = Directory.GetFiles(inboxPath, "*", SearchOption.AllDirectories)
                 .Select(Path.GetFileName)
                 .Where(f => f is not null)
                 .Cast<string>()

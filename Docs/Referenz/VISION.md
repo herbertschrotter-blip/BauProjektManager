@@ -234,7 +234,7 @@ Kollegen in der Firma sollen BPM selbst öffnen und nutzen können — nicht nur
 - **Kein CAD-Programm** (Pläne werden nur sortiert und angezeigt, nicht bearbeitet)
 - **Kein ERP-System** (keine Buchhaltung, keine Angebotserstellung)
 - **Kein Multi-Mandanten-System** (eine Installation, eine Firma)
-- **Kein Cloud-Service** (bewusste Entscheidung, kein Kompromiss)
+- **Kein SaaS, kein externer Cloud-Zwang** (bewusste Entscheidung). Optional self-hosted Server-Modus für Multi-User-Firmenbetrieb.
 
 ---
 

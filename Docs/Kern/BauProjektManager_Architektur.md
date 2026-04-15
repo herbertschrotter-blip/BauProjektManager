@@ -660,7 +660,7 @@ Detailliertes Dependency-Diagramm: siehe [DEPENDENCY-MAP.md](../Referenz/DEPENDE
 
 ## 6. Technische Entscheidungen
 
-Vollständige Liste aller 42 Architekturentscheidungen mit Kontext, Alternativen und Konsequenzen: siehe [ADR.md](../Referenz/ADR.md).
+Vollständige Liste aller 51 Architekturentscheidungen mit Kontext, Alternativen und Konsequenzen: siehe [ADR.md](../Referenz/ADR.md).
 
 Zusammenfassung der wichtigsten Entscheidungen:
 

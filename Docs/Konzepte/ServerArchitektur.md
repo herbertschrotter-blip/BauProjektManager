@@ -166,6 +166,11 @@ is_deleted          INTEGER NOT NULL DEFAULT 0
 
 Pflicht für: Nachkalkulation, Bestellungen, Freigaben, Statuswechsel.
 
+> **Hinweis:** `audit_log` ist eine append-only Tabelle — Einträge werden
+> nie geändert. Deshalb weicht sie bewusst von der 7-Spalten-Konvention ab:
+> `changed_by`/`changed_at` statt `created_by`/`last_modified_by`, und
+> keine `last_modified_at`/`last_modified_by` (unnötig bei append-only).
+
 ---
 
 ## 3. Workflow

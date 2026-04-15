@@ -78,7 +78,7 @@ Ohne diese Features ist V1 nicht brauchbar. Der PlanManager ist das Kernprodukt.
 | 3 | Domain-Modelle (Project, Client, Location, Timeline, Paths) | ✅ v0.5.1 |
 | 4 | Projektliste + Bearbeitungs-Dialog | ✅ v0.7.0 |
 | 5 | SQLite-Datenbank (bpm.db) | ✅ v0.8.0 |
-| 6 | ~~Auto-Increment IDs~~ → ULID (ADR-039 v2) | ✅ v0.8.2 (Legacy-IDs) — ULID-Migration ausstehend |
+| 6 | ~~Auto-Increment IDs~~ → ULID (ADR-039 v2) | ✅ v0.25.1 (ULID-Migration implementiert) |
 | 7 | registry.json Export (flach, für VBA) | ✅ v0.9.0 |
 | 9 | Ersteinrichtung (Cloud-Speicher, Pfade, settings.json) | ✅ v0.10.0 |
 | 10 | Projektordner erstellen (nummeriert, Template, TreeView) | ✅ v0.11.0 |
@@ -144,7 +144,7 @@ Diese Features verbessern V1, sind aber kein Blocker für den Release.
 | external_call_log Tabelle | Audit-Log in bpm.db (DSVGO-Architektur Kap. 11.3) | ⬜ |
 | Einstellungen: Datenschutz-Tab | Toggle pro externem Dienst, Audit-Log-Anzeige, Kill-Switch | ⬜ |
 | Log-Rotation 30 Tage | Serilog retainedFileCountLimit (trivial) | ✅ v0.5.0 |
-| ADR-039 v2 ULID-Schema | Entschieden v0.17.0 — Migration aller Tabellen auf ULID ausstehend | ⬜ |
+| ADR-039 v2 ULID-Schema | ✅ Implementiert v0.25.1 — alle Tabellen auf ULID migriert | ✅ |
 
 ### Sync-Infrastruktur (PFLICHT vor Multi-User — DatenarchitekturSync.md)
 
@@ -233,9 +233,9 @@ Betrifft mehrere Module — hier zentral dokumentiert.
 
 ---
 
-## Aktuelles DB-Schema (v1.5 — ULID v2.0 ausstehend)
+## DB-Schema (v2.0 — ULID implementiert ab v0.25.1)
 
-Code hat noch seq + Präfix-IDs. ULID-Migration entschieden (ADR-039 v2), aber noch nicht implementiert. Details: [DB-SCHEMA.md](DB-SCHEMA.md)
+ULID-Migration implementiert (ADR-039 v2). Sync-Felder-Konvention ab v0.25.16 (ADR-050). Details: [DB-SCHEMA.md](DB-SCHEMA.md)
 
 clients (id, company, contact_person, phone, email, notes, created_at, updated_at)
 projects (id, project_number, name, full_name, status, project_type, client_id,

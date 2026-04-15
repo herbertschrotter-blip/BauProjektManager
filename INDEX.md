@@ -88,6 +88,10 @@ Basispfad = OneDrive-Pfad + `\` + Projekt-Suffix.
 ### Multi-User / Sync
 - Primary: `Docs/Konzepte/MultiUserKonzept.md`
 
+### Server-Architektur / Auth / API
+- Primary: `Docs/Konzepte/ServerArchitektur.md`
+- Secondary: `Docs/Konzepte/MultiUserKonzept.md`, `Docs/Konzepte/DatenarchitekturSync.md`, `Docs/Kern/DSVGO-Architektur.md`
+
 ### Lizenzierung
 - Primary: `Docs/Konzepte/ModuleAktivierungLizenzierung.md`
 

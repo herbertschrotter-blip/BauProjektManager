@@ -190,6 +190,8 @@ Kollegen in der Firma sollen BPM selbst öffnen und nutzen können — nicht nur
 | **Bald** (V1.1) | 2026 | Planlisten Import/Export, Adressbuch, Suche | Vollständiges Planmanagement |
 | **Nächste Welle** | 2026–2027 | Foto, Zeiterfassung, Bautagebuch, Dashboard | Täglichen Arbeitsalltag abdecken |
 | **Danach** | 2027+ | Outlook, Wetter, Vorlagen, Mobile PWA | Ökosystem vervollständigen |
+| **Server-Modus** | 2027+ | Server-Architektur, Auth/RBAC, Datasync-Spike | Multi-User: Polier, Bauleiter, Lohnbüro greifen gleichzeitig zu (ADR-050/051) |
+| **Nachkalkulation** | 2027+ | Bestellungen, Lieferscheine, Geräte, NU-Rechnungen | Haupttreiber für Server-Modus. Soll/Ist-Vergleich nach 5 Kostenarten |
 | **Langfristig** | offen | GIS-Integration, Kalender, Bestellungen, ClickUp | Vision Dashboard mit allem |
 
 ### 5.3 Was jedes Modul löst
@@ -207,6 +209,7 @@ Kollegen in der Firma sollen BPM selbst öffnen und nutzen können — nicht nur
 | **Vorlagen** | Excel/Word manuell befüllen | Projektdaten automatisch in Vorlagen einfügen |
 | **KI-Assistent** | LV-Analyse und Dokumentensuche manuell und langsam | Fach-KI analysiert Projektdokumente, erkennt Risiken, findet Positionen (ChatGPT/Claude API) |
 | **Mobile** | Kein Zugriff auf der Baustelle | Bautagebuch + Pläne am Handy, offline-fähig |
+| **Nachkalkulation** | Kosten manuell in Excel nachrechnen | Soll/Ist-Vergleich: Lohn, Material, Gerät, NU, Sonstige. Bestellungen, Lieferscheine, Geräte-Einsatz. Multi-User über Server |
 
 ---
 

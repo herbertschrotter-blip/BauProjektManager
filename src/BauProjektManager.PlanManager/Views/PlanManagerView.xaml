@@ -1,17 +1,20 @@
 <UserControl x:Class="BauProjektManager.PlanManager.Views.PlanManagerView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="clr-namespace:BauProjektManager.PlanManager.ViewModels">
+             xmlns:vm="clr-namespace:BauProjektManager.PlanManager.ViewModels"
+             UseLayoutRounding="True"
+             SnapsToDevicePixels="True">
     <Grid>
         <!-- Projektliste (sichtbar wenn kein Projekt gewählt) -->
         <Grid x:Name="ProjectListPanel">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
             <!-- Header -->
-            <Grid Grid.Row="0" Margin="0,0,0,16">
+            <Grid Grid.Row="0" Margin="0,0,0,8">
                 <TextBlock Style="{DynamicResource BpmHeading1}">
                     <Run Text="{DynamicResource IconNavPlans}"/>
                     <Run Text=" PlanManager"/>
@@ -23,55 +26,153 @@
                         VerticalAlignment="Center"/>
             </Grid>
 
-            <!-- Projektliste -->
-            <DataGrid Grid.Row="1"
-                      ItemsSource="{Binding Projects}"
-                      SelectedItem="{Binding SelectedProject}"
-                      AutoGenerateColumns="False"
-                      IsReadOnly="True"
-                      SelectionMode="Single"
-                      CanUserAddRows="False"
-                      CanUserDeleteRows="False"
-                      HeadersVisibility="Column"
-                      GridLinesVisibility="None"
-                      Background="{DynamicResource BpmBgBase}"
-                      BorderThickness="0"
-                      RowBackground="{DynamicResource BpmBgBase}"
-                      AlternatingRowBackground="{DynamicResource BpmBgElevated}"
-                      Foreground="{DynamicResource BpmTextPrimary}"
-                      MouseDoubleClick="OnProjectDoubleClick">
-                <DataGrid.Columns>
-                    <DataGridTemplateColumn Header="Eingang" Width="70">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <Border Background="{DynamicResource BpmWarning}"
-                                        CornerRadius="8" Padding="6,2"
-                                        HorizontalAlignment="Center"
-                                        Visibility="{Binding HasInbox, Converter={StaticResource BoolToVis}}">
-                                    <TextBlock Text="{Binding InboxBadge}"
-                                               FontSize="11" FontWeight="SemiBold"
-                                               Foreground="{DynamicResource BpmTextBright}"
-                                               HorizontalAlignment="Center"/>
-                                </Border>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="Projektnr." Binding="{Binding Project.ProjectNumber}" Width="90"/>
-                    <DataGridTextColumn Header="Projektname" Binding="{Binding Project.Name}" Width="*"/>
-                    <DataGridTextColumn Header="Ort" Binding="{Binding Project.Location.City}" Width="150"/>
-                    <DataGridTextColumn Header="Status" Binding="{Binding Project.Status}" Width="100"/>
-                </DataGrid.Columns>
-            </DataGrid>
+            <!-- Zusammenfassung -->
+            <TextBlock Grid.Row="1"
+                       Margin="0,0,0,8"
+                       Foreground="{DynamicResource BpmTextSecondary}"
+                       FontSize="{DynamicResource BpmFontSizeCaption}"
+                       Text="{Binding SummaryText}"/>
+
+            <!-- Projektliste als Karten -->
+            <ListBox Grid.Row="2"
+                     ItemsSource="{Binding Projects}"
+                     SelectedItem="{Binding SelectedProject, Mode=TwoWay}"
+                     Background="{DynamicResource BpmBgBase}"
+                     BorderThickness="0"
+                     SelectionMode="Single"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                     VirtualizingPanel.IsVirtualizing="True"
+                     VirtualizingPanel.VirtualizationMode="Recycling"
+                     ScrollViewer.CanContentScroll="True"
+                     SelectionChanged="OnProjectSelectionChanged">
+
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel/>
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="Margin" Value="0,0,0,4"/>
+                        <Setter Property="Padding" Value="0"/>
+                        <Setter Property="Cursor" Value="Hand"/>
+                        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                        <Setter Property="Background" Value="{DynamicResource BpmBgElevated}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource BpmTextPrimary}"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource BpmSuccess}"/>
+                        <Setter Property="BorderThickness" Value="3,0,0,0"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Border x:Name="Card"
+                                            Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="0,6,6,0"
+                                            Padding="12,8"
+                                            SnapsToDevicePixels="True">
+                                        <ContentPresenter/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Card"
+                                                    Property="Background"
+                                                    Value="{DynamicResource BpmBgHover}"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="Card"
+                                                    Property="Background"
+                                                    Value="{DynamicResource BpmBgHover}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HasInbox}" Value="True">
+                                <Setter Property="BorderBrush" Value="{DynamicResource BpmWarning}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Projektname + Subtext -->
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Project.Name}"
+                                           Foreground="{DynamicResource BpmTextBright}"
+                                           FontSize="{DynamicResource BpmFontSizeBody}"
+                                           FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding Subtext}"
+                                           Margin="0,4,0,0"
+                                           Foreground="{DynamicResource BpmTextSecondary}"
+                                           FontSize="{DynamicResource BpmFontSizeCaption}"/>
+                            </StackPanel>
+
+                            <!-- Badge (sichtbar wenn HasInbox) -->
+                            <Border Grid.Column="1"
+                                    Background="{DynamicResource BpmWarning}"
+                                    CornerRadius="8" Padding="6,2"
+                                    Margin="12,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Visibility="{Binding HasInbox, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Text="{Binding InboxBadge}"
+                                           Foreground="{DynamicResource BpmTextBright}"
+                                           FontSize="{DynamicResource BpmFontSizeSmall}"
+                                           FontWeight="SemiBold"
+                                           HorizontalAlignment="Center"/>
+                            </Border>
+
+                            <!-- Aktuell-Badge (sichtbar wenn NICHT HasInbox) -->
+                            <Border Grid.Column="1"
+                                    Background="{DynamicResource BpmSuccess}"
+                                    CornerRadius="8" Padding="6,2"
+                                    Margin="12,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Visibility="{Binding HasInbox, Converter={StaticResource InverseBoolToVis}}">
+                                <TextBlock Foreground="{DynamicResource BpmTextBright}"
+                                           FontSize="{DynamicResource BpmFontSizeSmall}"
+                                           FontWeight="SemiBold"
+                                           HorizontalAlignment="Center">
+                                    <Run Text="&#x2713;"/>
+                                    <Run Text=" Aktuell"/>
+                                </TextBlock>
+                            </Border>
+
+                            <!-- Chevron -->
+                            <TextBlock Grid.Column="2"
+                                       Text="›"
+                                       VerticalAlignment="Center"
+                                       Foreground="{DynamicResource BpmTextSecondary}"
+                                       FontSize="16"
+                                       IsHitTestVisible="False"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
 
             <!-- Empty State -->
-            <StackPanel Grid.Row="1"
+            <StackPanel Grid.Row="2"
                         VerticalAlignment="Center" HorizontalAlignment="Center"
                         Visibility="{Binding Projects.Count, Converter={StaticResource CountToVis}}">
                 <TextBlock Text="Noch keine Projekte vorhanden."
-                           Foreground="{DynamicResource BpmTextSecondary}" FontSize="13"
+                           Foreground="{DynamicResource BpmTextSecondary}"
+                           FontSize="{DynamicResource BpmFontSizeBody}"
                            HorizontalAlignment="Center"/>
                 <TextBlock Text="Erstelle zuerst ein Projekt in den Einstellungen."
-                           Foreground="{DynamicResource BpmTextSecondary}" FontSize="11"
+                           Foreground="{DynamicResource BpmTextSecondary}"
+                           FontSize="{DynamicResource BpmFontSizeSmall}"
                            HorizontalAlignment="Center" Margin="0,8,0,0"/>
             </StackPanel>
         </Grid>

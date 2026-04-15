@@ -24,6 +24,8 @@ public partial class MainWindow : Window
         var dialogService = new BpmDialogService();
         _settingsView = new SettingsView(dialogService);
 
+        UpdateSidebarBadge();
+
 #if DEBUG
         BtnDevTools.Visibility = Visibility.Visible;
 #endif
@@ -57,7 +59,22 @@ public partial class MainWindow : Window
                 _ => "Bereit"
             };
 
+            UpdateSidebarBadge();
             HighlightNavButton(button);
+        }
+    }
+
+    private void UpdateSidebarBadge()
+    {
+        var count = _planManagerView.TotalInboxCount;
+        if (count > 0)
+        {
+            SidebarBadgeText.Text = count.ToString();
+            SidebarBadge.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            SidebarBadge.Visibility = Visibility.Collapsed;
         }
     }
 

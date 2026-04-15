@@ -3,7 +3,6 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Input;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models;
 using BauProjektManager.Infrastructure.Services;
@@ -15,25 +14,37 @@ namespace BauProjektManager.PlanManager.Views;
 /// <summary>
 /// BoolToVisibility — true=Visible, false=Collapsed.
 /// </summary>
-public class BoolToVisConverter : IValueConverter
+public sealed class BoolToVisConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         => value is true ? Visibility.Visible : Visibility.Collapsed;
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        => throw new NotImplementedException();
+        => throw new NotSupportedException();
+}
+
+/// <summary>
+/// Inverse BoolToVisibility — true=Collapsed, false=Visible.
+/// </summary>
+public sealed class InverseBoolToVisConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is true ? Visibility.Collapsed : Visibility.Visible;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
 }
 
 /// <summary>
 /// Count==0 → Visible (Empty State), Count>0 → Collapsed.
 /// </summary>
-public class CountToVisConverter : IValueConverter
+public sealed class CountToVisConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         => value is int count && count == 0 ? Visibility.Visible : Visibility.Collapsed;
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        => throw new NotImplementedException();
+        => throw new NotSupportedException();
 }
 
 public partial class PlanManagerView : UserControl
@@ -49,6 +60,7 @@ public partial class PlanManagerView : UserControl
         _profileManager = new ProfileManager(_idGenerator);
         _templateService = new PatternTemplateService(_idGenerator);
         Resources.Add("BoolToVis", _boolToVis);
+        Resources.Add("InverseBoolToVis", new InverseBoolToVisConverter());
         Resources.Add("CountToVis", new CountToVisConverter());
         InitializeComponent();
 
@@ -57,15 +69,25 @@ public partial class PlanManagerView : UserControl
         DataContext = _vm;
     }
 
-    private void OnProjectDoubleClick(object sender, MouseButtonEventArgs e)
+    /// <summary>
+    /// Gesamtzahl unsortierter Dateien über alle Projekte — für Sidebar-Badge.
+    /// </summary>
+    public int TotalInboxCount => _vm.TotalInboxCount;
+
+    private void OnProjectSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_vm.SelectedProject is not null)
-            _vm.OnProjectDoubleClicked(_vm.SelectedProject);
+        if (e.AddedItems.Count == 0)
+            return;
+
+        if (e.AddedItems[0] is not PlanProjectItem item)
+            return;
+
+        _vm.SelectedProject = null;
+        _vm.OnProjectDoubleClicked(item);
     }
 
     private void NavigateToDetail(Project project)
     {
-        // AppData path for pattern-templates.json: BasePath/.AppData/BauProjektManager/
         var appDataPath = !string.IsNullOrEmpty(project.Paths.Root)
             ? Path.Combine(Path.GetDirectoryName(project.Paths.Root) ?? "", ".AppData", "BauProjektManager")
             : null;

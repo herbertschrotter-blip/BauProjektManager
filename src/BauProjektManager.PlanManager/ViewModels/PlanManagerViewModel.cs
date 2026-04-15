@@ -10,8 +10,8 @@ using Serilog;
 namespace BauProjektManager.PlanManager.ViewModels;
 
 /// <summary>
-/// ViewModel für die PlanManager-Hauptseite — Projektliste mit Eingangs-Badge.
-/// Zeigt alle aktiven Projekte und die Anzahl der Dateien im _Eingang/-Ordner.
+/// ViewModel für die PlanManager-Hauptseite — Projektliste mit Karten-Layout.
+/// Zeigt alle aktiven Projekte mit Eingangs-Badge und Subtext.
 /// </summary>
 public partial class PlanManagerViewModel : ObservableObject
 {
@@ -23,9 +23,14 @@ public partial class PlanManagerViewModel : ObservableObject
     [ObservableProperty]
     private PlanProjectItem? _selectedProject;
 
+    [ObservableProperty]
+    private string _summaryText = string.Empty;
+
+    [ObservableProperty]
+    private int _totalInboxCount;
+
     /// <summary>
     /// Wird vom Code-Behind ausgelöst wenn der User ein Projekt anklickt.
-    /// Navigiert zum Projektdetail (kommt in 19b).
     /// </summary>
     public event Action<Project>? ProjectSelected;
 
@@ -46,10 +51,12 @@ public partial class PlanManagerViewModel : ObservableObject
         {
             var loaded = _db.LoadAllProjects();
             var items = new ObservableCollection<PlanProjectItem>();
+            var totalInbox = 0;
 
             foreach (var project in loaded)
             {
                 var inboxCount = CountInboxFiles(project);
+                totalInbox += inboxCount;
                 items.Add(new PlanProjectItem
                 {
                     Project = project,
@@ -58,12 +65,19 @@ public partial class PlanManagerViewModel : ObservableObject
             }
 
             Projects = items;
+            TotalInboxCount = totalInbox;
+            SummaryText = totalInbox > 0
+                ? $"{loaded.Count} aktive Projekte \u00b7 {totalInbox} Dateien im Eingang"
+                : $"{loaded.Count} aktive Projekte";
+
             Log.Information("PlanManager: {Count} Projekte geladen", loaded.Count);
         }
         catch (Exception ex)
         {
             Log.Error(ex, "PlanManager: Projekte konnten nicht geladen werden");
             Projects = [];
+            TotalInboxCount = 0;
+            SummaryText = string.Empty;
         }
     }
 
@@ -98,12 +112,13 @@ public partial class PlanManagerViewModel : ObservableObject
 }
 
 /// <summary>
-/// Wrapper um Project mit Eingangs-Zähler für die Anzeige.
+/// Wrapper um Project mit Eingangs-Zähler für die Kartenanzeige.
 /// </summary>
 public class PlanProjectItem
 {
     public Project Project { get; set; } = new();
     public int InboxCount { get; set; }
     public bool HasInbox => InboxCount > 0;
-    public string InboxBadge => InboxCount > 0 ? $"{InboxCount}" : "";
+    public string InboxBadge => InboxCount > 0 ? $"{InboxCount} unsortiert" : "";
+    public string Subtext => HasInbox ? $"{InboxCount} Dateien im Eingang" : "Kein Eingang";
 }

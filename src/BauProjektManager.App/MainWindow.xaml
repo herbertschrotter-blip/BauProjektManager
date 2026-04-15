@@ -25,7 +25,27 @@
                 <Button x:Name="BtnPlans"
                         Click="OnNavigate" Tag="Plans"
                         Style="{StaticResource BpmButtonNav}">
-                    <Button.Content><TextBlock><Run Text="{StaticResource IconNavPlans}"/><Run Text=" PlanManager"/></TextBlock></Button.Content>
+                    <Button.Content>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"><Run Text="{StaticResource IconNavPlans}"/><Run Text=" PlanManager"/></TextBlock>
+                            <Border x:Name="SidebarBadge"
+                                    Grid.Column="1"
+                                    Background="{StaticResource BpmWarning}"
+                                    CornerRadius="8" Padding="5,1"
+                                    VerticalAlignment="Center"
+                                    Margin="6,0,0,0"
+                                    Visibility="Collapsed">
+                                <TextBlock x:Name="SidebarBadgeText"
+                                           Foreground="{StaticResource BpmTextBright}"
+                                           FontSize="10" FontWeight="SemiBold"
+                                           HorizontalAlignment="Center"/>
+                            </Border>
+                        </Grid>
+                    </Button.Content>
                 </Button>
                 <Button x:Name="BtnSettings"
                         Click="OnNavigate" Tag="Settings"

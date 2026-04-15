@@ -158,21 +158,37 @@ public class ImportExecutionService
             }
 
             // Update plan cache in DB
-            _db.InsertRevisionWithFile(
-                decision.DocumentKey!,
-                decision.File.DocumentTypeId ?? "",
-                decision.File.PlanNumber ?? "",
-                decision.File.RevisionToken,
-                decision.File.DocumentTypeDisplayName ?? "unknown",
-                profile?.TargetFolder ?? "",
-                Path.GetDirectoryName(targetRelPath) ?? "",
-                decision.File.RevisionSource.ToString(),
-                importId,
-                decision.File.Parsed.FileName,
-                targetRelPath,
-                decision.File.Parsed.Extension,
-                decision.File.Parsed.Md5,
-                decision.File.Parsed.FileSize);
+            // Check if revision already exists for this key (e.g. DWG after PDF)
+            var existingRev = _db.GetCurrentRevision(decision.DocumentKey!);
+            if (existingRev is not null)
+            {
+                // Add as additional file to existing revision
+                _db.AddFileToExistingRevision(
+                    decision.DocumentKey!,
+                    decision.File.Parsed.FileName,
+                    targetRelPath,
+                    decision.File.Parsed.Extension,
+                    decision.File.Parsed.Md5,
+                    decision.File.Parsed.FileSize);
+            }
+            else
+            {
+                _db.InsertRevisionWithFile(
+                    decision.DocumentKey!,
+                    decision.File.DocumentTypeId ?? "",
+                    decision.File.PlanNumber ?? "",
+                    decision.File.RevisionToken,
+                    decision.File.DocumentTypeDisplayName ?? "unknown",
+                    profile?.TargetFolder ?? "",
+                    Path.GetDirectoryName(targetRelPath) ?? "",
+                    decision.File.RevisionSource.ToString(),
+                    importId,
+                    decision.File.Parsed.FileName,
+                    targetRelPath,
+                    decision.File.Parsed.Extension,
+                    decision.File.Parsed.Md5,
+                    decision.File.Parsed.FileSize);
+            }
 
             _db.CompleteImportAction(actionId, true);
             return new ActionResult(true, null);

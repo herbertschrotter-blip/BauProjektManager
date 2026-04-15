@@ -294,6 +294,56 @@ public class PlanManagerDatabase : IDisposable
         cmd.ExecuteNonQuery();
     }
 
+    /// <summary>
+    /// Adds a file to an existing current revision (e.g. DWG to existing PDF revision).
+    /// Used when document_key already has a 'current' revision.
+    /// </summary>
+    public void AddFileToExistingRevision(
+        string documentKey,
+        string fileName, string relativePath, string fileType,
+        string md5Hash, long fileSize)
+    {
+        var conn = GetConnection();
+        var now = DateTime.UtcNow.ToString("o");
+        var fileId = _idGenerator.NewId();
+
+        // Find existing revision
+        var findCmd = conn.CreateCommand();
+        findCmd.CommandText = "SELECT id FROM plan_revisions WHERE document_key = @dk AND revision_status = 'current'";
+        findCmd.Parameters.AddWithValue("@dk", documentKey);
+        var revId = findCmd.ExecuteScalar() as string;
+        if (revId is null) return;
+
+        // Insert file
+        var fileCmd = conn.CreateCommand();
+        fileCmd.CommandText = """
+            INSERT INTO plan_files (id, file_name, relative_path, file_type,
+                md5_hash, file_size, origin_mode, created_at, updated_at)
+            VALUES (@id, @fn, @rp, @ft, @md5, @fs, 'autoGrouped', @ca, @ua)
+            """;
+        fileCmd.Parameters.AddWithValue("@id", fileId);
+        fileCmd.Parameters.AddWithValue("@fn", fileName);
+        fileCmd.Parameters.AddWithValue("@rp", relativePath);
+        fileCmd.Parameters.AddWithValue("@ft", fileType);
+        fileCmd.Parameters.AddWithValue("@md5", md5Hash);
+        fileCmd.Parameters.AddWithValue("@fs", fileSize);
+        fileCmd.Parameters.AddWithValue("@ca", now);
+        fileCmd.Parameters.AddWithValue("@ua", now);
+        fileCmd.ExecuteNonQuery();
+
+        // Link to revision (not primary — primary is the first file)
+        var linkCmd = conn.CreateCommand();
+        linkCmd.CommandText = """
+            INSERT INTO revision_file_links (revision_id, file_id, link_mode, is_primary)
+            VALUES (@rid, @fid, 'auto', 0)
+            """;
+        linkCmd.Parameters.AddWithValue("@rid", revId);
+        linkCmd.Parameters.AddWithValue("@fid", fileId);
+        linkCmd.ExecuteNonQuery();
+
+        Log.Information("Datei zu bestehender Revision gelinkt: {File} → {Key}", fileName, documentKey);
+    }
+
     // === IMPORT JOURNAL ===
 
     /// <summary>

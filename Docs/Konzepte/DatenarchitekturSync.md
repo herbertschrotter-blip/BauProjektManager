@@ -40,9 +40,10 @@ supersedes: []
 **Erstellt:** 10.04.2026
 **Version:** 1.1 (Refactoring auf DOC-STANDARD)
 **Status:** Entschieden (Claude + ChatGPT Cross-Review, 4 Runden)
-**Relevante ADRs:** ADR-002, ADR-004, ADR-033, ADR-037, ADR-039, ADR-046
+**Relevante ADRs:** ADR-002, ADR-004, ADR-033, ADR-037, ADR-039, ADR-046, ADR-050 (SoR je Modus), ADR-051 (Local-First)
 **Verwandte Dokumente:**
 - [MultiUserKonzept.md](MultiUserKonzept.md) — Phasenmodell, Rollen, Server-Architektur
+- [ServerArchitektur.md](ServerArchitektur.md) — Zielarchitektur Modus C, Auth, Sync, PostgreSQL
 - [DB-SCHEMA.md](../Kern/DB-SCHEMA.md) — Tabellen-Definitionen
 - [DSVGO-Architektur.md](../Kern/DSVGO-Architektur.md) — Datenschutz-Klassifizierung
 - [BauProjektManager_Architektur.md](../Kern/BauProjektManager_Architektur.md) — Gesamtarchitektur

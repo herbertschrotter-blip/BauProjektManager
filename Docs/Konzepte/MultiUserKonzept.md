@@ -31,12 +31,13 @@ supersedes: []
 **Version:** 2.0  
 **Status:** Konzept (Won't have V1)  
 **Abhängigkeiten:** Keine (kann unabhängig von anderen Modulen implementiert werden)  
-**Relevante ADRs:** ADR-016 (Single-Writer Mutex), ADR-020 (Write-Lock mit Heartbeat), ADR-033 (3 Modi), ADR-035 (IExternalCommunicationService), ADR-036 (IPrivacyPolicy), ADR-037 (ISyncTransport — geplant), ADR-038 (IAccessControlService — geplant)  
+**Relevante ADRs:** ADR-016 (Single-Writer Mutex), ADR-020 (Write-Lock mit Heartbeat), ADR-033 (3 Modi), ADR-035 (IExternalCommunicationService), ADR-036 (IPrivacyPolicy), ADR-037 (ISyncTransport — geplant), ADR-038 (IAccessControlService — geplant), ADR-050 (SoR je Modus), ADR-051 (Local-First)  
 **Verwandte Dokumente:**
 - [DatenarchitekturSync.md](DatenarchitekturSync.md) — **Konkretisierung:** Datenklassifizierung, Sync-Mechanismus, User/Rollen-Schema, Outbox/Inbox, Snapshots (4-Runden Cross-Review, 10.04.2026)
 - [DSVGO-Architektur.md](../Kern/DSVGO-Architektur.md) — Rollenmatrix, Datenschutz-Klassifizierung
 - [BPM-Mobile-Konzept.md](BPM-Mobile-Konzept.md) — PWA nutzt Server-Modus
 - [ModuleAktivierungLizenzierung.md](ModuleAktivierungLizenzierung.md) — Lizenz steuert IPrivacyPolicy
+- [ServerArchitektur.md](ServerArchitektur.md) — **Zielarchitektur Modus C:** ASP.NET API, Auth/RBAC, Sync, PostgreSQL (3-Runden Cross-Review, 15.04.2026)
 
 ---
 

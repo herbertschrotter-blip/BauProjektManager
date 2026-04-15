@@ -99,6 +99,8 @@ Jedes wird ein eigenes WPF Class Library Projekt, referenziert Domain + Infrastr
 - `BauProjektManager.Outlook` — COM Interop, Anhänge
 - `BauProjektManager.Wetter` — API pro Baustelle
 - `BauProjektManager.KiAssistent` — LV-Analyse, Dokumentensuche, ChatGPT/Claude API
+- `BauProjektManager.Contracts` — API-DTOs, Sync-Envelopes, Fehlercodes (referenziert: nichts)
+- `BauProjektManager.Server` — ASP.NET Minimal API, Identity, PostgreSQL (referenziert: Application + Contracts + Infrastructure). Siehe [ServerArchitektur.md](../Konzepte/ServerArchitektur.md)
 
 ---
 

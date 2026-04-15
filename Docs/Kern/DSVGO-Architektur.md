@@ -32,6 +32,7 @@ supersedes: []
   - Kein direkter HttpClient — alles über IExternalCommunicationService (ADR-035)
   - DataClassification (ClassA/B/C) bei jedem externen Call
   - registry.json nur Whitelist-Felder
+  - Server-Modus (Modus C): JWT, HTTPS-Pflicht, Login-Audit, Token-Revoke — Details in ServerArchitektur.md, DSGVO-Erweiterung bei Server-Implementierung
   - IPrivacyPolicy über Lizenz gesteuert, nicht settings.json (ADR-036)
 
 ---

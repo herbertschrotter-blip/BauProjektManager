@@ -32,11 +32,11 @@ supersedes: []
   - Kapitel 5 (Solution-Struktur) bei neuem Service/Interface/Projekt
   - Kapitel 3.4 (VBA-Kompatibilitäts-Regeln) bei registry.json-Änderung
 - Fachliche Invarianten:
-  - SQLite ist System of Record — JSON ist generierter Export
+  - SQLite ist System of Record in Modus A (Solo) — in Modus C (Server) ist PostgreSQL SoR, SQLite = Offline-Cache (ADR-050)
   - Dependency-Regel: Domain→NICHTS, Infrastructure→nur Domain, App→alles
   - registry.json ist versionierter Exportvertrag — Felder entfernen ist Breaking Change
   - Modularer Monolith — feste DI-Registrierung geplant (V1: manuelles new, DI-Container Post-V1), kein Plugin-System (ADR-001)
-  - Offline-first — keine Cloud-Services, kein Abo
+  - Offline-first — Client arbeitet immer local-first, Server nur für Auth + Sync (ADR-051). Kein Abo, kein SaaS.
 
 ---
 

@@ -31,6 +31,27 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.25.16] — 2026-04-15
+
+### Server-Architektur Konzept (3-Runden Cross-Review Claude/ChatGPT)
+
+### Hinzugefuegt
+- Docs/Konzepte/ServerArchitektur.md — Zielarchitektur Modus C (7 Kapitel, Frontmatter, Quickload)
+- ADR-050: Source of Truth je Betriebsmodus (Modus A: SQLite, Modus C: PostgreSQL)
+- ADR-051: Client ist local-first — Server nur Auth + Sync + Autoritaet
+- CODING_STANDARDS Kapitel 19: Sync-Felder, UTC, Soft Delete, localUserName, Writes ueber Services
+- DB-SCHEMA Kapitel 9.3: Sync-Felder-Konvention (ULID + 6 Spalten)
+- BACKLOG: Server/Nachkalkulation/Auth/Datasync-Spike Items
+- VISION: Server-Modus + Nachkalkulation in Roadmap
+- DEPENDENCY-MAP: BauProjektManager.Contracts + .Server (geplant)
+- INDEX.md: Routing fuer ServerArchitektur, Surface7 PC-Registrierung
+
+### Geaendert
+- BauProjektManager_Architektur.md: Invariante "SQLite ist SoR" auf Modus A eingeschraenkt (ADR-050)
+- DSVGO-Architektur.md: Server-Hinweis in Invarianten (JWT, HTTPS, Login-Audit)
+- MultiUserKonzept.md: ADR-050/051 + Verweis ServerArchitektur.md
+- DatenarchitekturSync.md: ADR-050/051 + Verweis ServerArchitektur.md
+
 ## [v0.25.15] — 2026-04-15
 
 ### PlanManager V1 — Import-Pipeline komplett

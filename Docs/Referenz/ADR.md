@@ -16,7 +16,7 @@ supersedes: []
 - Autorität: source_of_truth
 - Lesen wenn: Neue Architekturentscheidung treffen, bestehende ADR prüfen, Status ändern, Entscheidung nachschlagen
 - Nicht zuständig für: Implementierungs-Details (→ jeweilige Modul-Docs), Code-Standards (→ CODING_STANDARDS.md)
-- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-051)
+- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-052)
 - Pflichtlesen: keine (gezieltes Nachschlagen per ADR-Nummer)
 - Fachliche Invarianten:
   - Statusmodell: Decision Status (Proposed/Accepted/Superseded/Deprecated) getrennt von Implementation Status (Not Started/Partial/Implemented)
@@ -2055,5 +2055,54 @@ Im Server-Modus werden ALLE Projektdaten lokal gecacht (kein selektiver Sync in 
 - Writes laufen über Application Services die Metadaten setzen (userId, utcNow, syncVersion)
 
 **Betrifft:** ADR-050 (SoR je Modus), ADR-033 (3 Modi), ADR-035 (IExternalCommunicationService)
+
+---
+
+## ADR-052: Lokaler Benutzerkontext über IUserContext statt lokaler Authentifizierung
+
+**Datum:** 2026-04-16
+**Status:** ✅ Entschieden
+**Implementierung:** Not Started
+**Herkunft:** 2-Runden Cross-Review Claude/ChatGPT (Auth-Strategie)
+
+**Kontext:**
+
+BPM braucht ab sofort eine Benutzeridentität für `created_by`/`last_modified_by` in Sync-fähigen Tabellen (ADR-050). Drei Optionen wurden evaluiert: A) localUserName in settings.json, B) lokale User-Tabelle mit Passwort/Login, C) Windows-Login (`Environment.UserName`).
+
+Option B (lokale Auth) wurde verworfen: Ohne Server schützt ein lokales Passwort nichts — die SQLite liegt unverschlüsselt auf der Platte. Der Aufwand (User-Tabelle, Passwort-Hashing, Login-Dialog, Reset-Logik) steht in keinem Verhältnis zum Nutzen. Zudem entsteht Legacy-Code der bei Server-Einführung entsorgt werden muss.
+
+**Entscheidung:**
+
+Lokaler Benutzerkontext über `IUserContext`-Interface (Domain-Projekt):
+
+```csharp
+public interface IUserContext
+{
+    string UserId { get; }
+    string DisplayName { get; }
+    UserContextSource Source { get; }
+}
+
+public enum UserContextSource { Local, Server }
+```
+
+- **Modus A:** `LocalUserContext` (Infrastructure) liest aus settings.json:
+  - `localUserId` = `MachineName\UserName` (automatisch, technisch, nur intern)
+  - `localUserName` = lesbarer Anzeigename (manuell pflegbar in Einstellungen)
+- **Modus C:** `JwtUserContext` (Infrastructure) liest aus JWT-Claims
+- `created_by`/`last_modified_by` = immer `IUserContext.DisplayName`
+- Kein `IsAuthenticated` in Modus A, keine E-Mail, keine lokale User-Tabelle
+
+**Konsequenzen:**
+
+- `IUserContext` + `UserContextSource` ins Domain-Projekt
+- `LocalUserContext` ins Infrastructure-Projekt
+- `localUserId` + `localUserName` als neue Felder in `AppSettings` + settings.json
+- `localUserName` Default: `Environment.UserName`, änderbar in Einstellungen
+- `localUserId` Default: `Environment.MachineName\Environment.UserName`
+- Services setzen `created_by`/`last_modified_by` über `IUserContext.DisplayName`
+- `created_by`/`last_modified_by` sind Anzeige-/Auditnamen, keine Authentitätsnachweise
+
+**Betrifft:** ADR-050 (SoR je Modus), ADR-051 (Local-First), CODING_STANDARDS Kap. 19.6
 
 *Dokument wird laufend aktualisiert wenn neue Architekturentscheidungen getroffen werden.*

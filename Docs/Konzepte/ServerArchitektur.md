@@ -81,7 +81,11 @@ is_deleted          INTEGER NOT NULL DEFAULT 0
 - IDs immer clientseitig erzeugen (ULID)
 - Writes nur über Application Services, nie direkt aus ViewModels
 - Kein direkter HttpClient — nur über IExternalCommunicationService
-- `localUserName` in settings.json als Benutzerkontext für Modus A
+- Lokaler Benutzerkontext über `IUserContext` (Domain-Interface):
+  - `localUserName` in settings.json = lesbarer Anzeigename (z.B. "Herbert"), steht in `created_by`/`last_modified_by`
+  - `localUserId` in settings.json = technischer Identifier (z.B. "Surface7\herbe"), automatisch aus Windows-Kontext
+  - In Modus C: beide Werte aus JWT-Claims statt settings.json
+  - `created_by`/`last_modified_by` sind Anzeige-/Auditnamen, keine belastbaren Authentitätsnachweise
 
 ### 1.3 Betriebsmodi — Source of Truth
 

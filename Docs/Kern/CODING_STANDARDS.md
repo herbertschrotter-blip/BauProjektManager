@@ -1662,18 +1662,45 @@ public async Task UpdateAsync(Entity entity, string userId)
 }
 ```
 
-### 19.6 Lokaler Benutzerkontext
+### 19.6 Lokaler Benutzerkontext (IUserContext)
 
-In Modus A (Solo/Offline) wird `created_by`/`last_modified_by`
-aus `settings.json` befüllt:
+Benutzeridentität läuft über `IUserContext` (Domain-Interface):
+
+```csharp
+public interface IUserContext
+{
+    string UserId { get; }
+    string DisplayName { get; }
+    UserContextSource Source { get; }
+}
+
+public enum UserContextSource { Local, Server }
+```
+
+**Modus A:** `LocalUserContext` liest aus `settings.json`:
 
 ```json
 {
+  "localUserId": "Surface7\\herbe",
   "localUserName": "Herbert"
 }
 ```
 
-In Modus C (Server) kommt der Wert aus dem JWT-Claim.
+- `localUserId`: automatisch aus `Environment.MachineName\Environment.UserName`, nur intern/Debug
+- `localUserName`: lesbarer Anzeigename, vom User in den Einstellungen pflegbar
+- `created_by` / `last_modified_by` = immer `IUserContext.DisplayName` (lesbarer Name)
+
+**Modus C:** `JwtUserContext` liest aus JWT-Claims.
+
+> **Wichtig:** `created_by`/`last_modified_by` sind Anzeige-/Auditnamen,
+> keine belastbaren Authentitätsnachweise. Echte Authentifizierung
+> existiert erst in Modus C (Server).
+
+**NICHT einführen in Modus A:**
+- `IsAuthenticated` (semantisch schief ohne echte Auth)
+- `localUserId` als Pflicht-Spalte in DB-Tabellen
+- E-Mail in settings.json
+- Lokale User-Tabelle / Login-Dialog / Passwort
 
 ### 19.7 HttpClient
 

@@ -58,6 +58,7 @@ Basispfad = OneDrive-Pfad + `\` + Projekt-Suffix.
 ### SQLite / Repository / Datenbankänderung
 - Primary: `Docs/Kern/DB-SCHEMA.md`
 - Secondary: `Docs/Kern/BauProjektManager_Architektur.md`
+- Beachte: CODING_STANDARDS Kap. 19 (Sync-Felder, UTC, Soft Delete, IUserContext)
 
 ### Neuer Dialog / UI-Element
 - Primary: `Docs/Referenz/UI_UX_Guidelines.md`

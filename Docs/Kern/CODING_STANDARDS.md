@@ -48,6 +48,7 @@ supersedes: []
   - Datenschutz-Entscheidungen nie im ViewModel — immer über IPrivacyPolicy
   - Logging: Keine Personendaten, nur IDs (Serilog Structured Logging)
   - Neue fachliche Tabellen: ULID + 6 Sync-Spalten + UTC + Soft Delete (Kapitel 19)
+  - Writes über Services mit IUserContext.DisplayName für created_by/last_modified_by (Kapitel 19.5/19.6, ADR-052)
 
 ---
 

@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.PlanManager.Views;
@@ -8,20 +8,22 @@ namespace BauProjektManager.App;
 
 /// <summary>
 /// Shell window with sidebar navigation and content area.
+/// Services werden via DI-Container injiziert.
 /// </summary>
 public partial class MainWindow : Window
 {
-    private readonly PlanManagerView _planManagerView = new();
+    private readonly PlanManagerView _planManagerView;
     private readonly SettingsView _settingsView;
     private readonly IDeveloperToolsService? _devTools;
 
-    public MainWindow(IDeveloperToolsService? devTools = null)
+    public MainWindow(
+        IDialogService dialogService,
+        IDeveloperToolsService? devTools = null)
     {
         InitializeComponent();
         _devTools = devTools;
 
-        // DialogService erstellen und an SettingsView übergeben
-        var dialogService = new BpmDialogService();
+        _planManagerView = new PlanManagerView();
         _settingsView = new SettingsView(dialogService);
 
         UpdateSidebarBadge();
@@ -31,7 +33,7 @@ public partial class MainWindow : Window
 #endif
     }
 
-    #if DEBUG
+#if DEBUG
     private void OnOpenDevTools(object sender, RoutedEventArgs e)
     {
         if (_devTools is null) return;

@@ -1,24 +1,31 @@
-﻿using System.IO;
+using System.IO;
 using System.Windows;
+using BauProjektManager.Domain.Interfaces;
+using BauProjektManager.Domain.Models;
 using BauProjektManager.Infrastructure.Dev;
 using BauProjektManager.Infrastructure.Persistence;
+using BauProjektManager.Infrastructure.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
 namespace BauProjektManager.App;
 
 /// <summary>
-/// Application startup with Serilog logging and first-run setup.
+/// Application startup with Serilog logging, DI container, and first-run setup.
 /// </summary>
 public partial class App : Application
 {
+    /// <summary>
+    /// Zentraler DI-Container — für alle Services und ViewModels.
+    /// </summary>
+    public static ServiceProvider Services { get; private set; } = null!;
+
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-
-        // Prevent app from closing when setup dialog closes
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
-        // Log-Ordner: %LocalAppData%\BauProjektManager\Logs\
+        // --- Serilog ---
         string logPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "BauProjektManager", "Logs", "BPM_.log");
@@ -34,7 +41,6 @@ public partial class App : Application
             .CreateLogger();
 
         Log.Debug("Serilog configured — MinimumLevel: Verbose");
-
         Log.Information("=== BauProjektManager gestartet ===");
         var version = System.Reflection.Assembly.GetExecutingAssembly()
             .GetName().Version?.ToString() ?? "unknown";
@@ -42,19 +48,13 @@ public partial class App : Application
         Log.Information("OS: {OS}", Environment.OSVersion);
         Log.Information("Machine: {Machine}", Environment.MachineName);
 
-        // Check if setup is needed
+        // --- Settings laden ---
         var settingsService = new AppSettingsService();
-        Log.Debug("Service registered: {Service}", "AppSettingsService");
-
-        var settingsPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "BauProjektManager", "settings.json");
-        Log.Debug("Loading settings from {Path}", settingsPath);
         var settings = settingsService.Load();
 
+        // --- First-Run / Setup ---
         if (settings.IsFirstRun)
         {
-            Log.Debug("First run detected — showing setup dialog");
             Log.Information("First run detected — showing setup dialog");
             var setupDialog = new SetupDialog(settingsService, settings);
             setupDialog.ShowDialog();
@@ -66,11 +66,10 @@ public partial class App : Application
                 return;
             }
 
-            settings = settingsService.Load(); // Reload after save
+            settings = settingsService.Load();
         }
         else
         {
-            // Validate paths on every start
             var problems = AppSettingsService.ValidatePaths(settings);
             if (problems.Count > 0)
             {
@@ -99,38 +98,56 @@ public partial class App : Application
         Log.Information("BasePath: {BasePath}", settings.BasePath);
         Log.Information("ArchivePath: {ArchivePath}", settings.ArchivePath);
 
-        // Validate shared config reachability
+        // Validate shared config
         if (!string.IsNullOrEmpty(settings.BasePath))
         {
             var sharedDir = AppSettingsService.GetSharedConfigDir(settings.BasePath);
             var sharedPath = Path.Combine(sharedDir, "shared-config.json");
             if (!File.Exists(sharedPath))
-            {
                 Log.Warning("Shared config not reachable at {Path}", sharedPath);
-            }
             else
-            {
                 Log.Information("Shared config OK at {Path}", sharedPath);
-            }
         }
 
-        // Now show main window and switch shutdown mode
-        var userContext = new Infrastructure.Services.LocalUserContext(settings);
-        var db = new ProjectDatabase(new Infrastructure.Services.UlidIdGenerator(), userContext);
-        Log.Debug("Service registered: {Service}", "ProjectDatabase");
+        // --- DI Container aufbauen ---
+        var sc = new ServiceCollection();
+
+        // Singleton: einmalig erstellt, überall dieselbe Instanz
+        sc.AddSingleton(settings);
+        sc.AddSingleton(settingsService);
+        sc.AddSingleton<IIdGenerator, UlidIdGenerator>();
+        sc.AddSingleton<IUserContext>(sp => new LocalUserContext(sp.GetRequiredService<AppSettings>()));
+        sc.AddSingleton<IDialogService, BpmDialogService>();
+        sc.AddSingleton<ProjectDatabase>();
+
         var logDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "BauProjektManager", "Logs");
 
 #if DEBUG
-        var devTools = new DeveloperToolsService(db.GetDatabasePath(), logDir);
-        Log.Debug("Service registered: {Service}", "DeveloperToolsService");
-        Log.Debug("Creating MainWindow");
-        var mainWindow = new MainWindow(devTools);
-#else
-        Log.Debug("Creating MainWindow");
-        var mainWindow = new MainWindow(null);
+        sc.AddSingleton<IDeveloperToolsService>(sp =>
+            new DeveloperToolsService(
+                sp.GetRequiredService<ProjectDatabase>().GetDatabasePath(),
+                logDir));
 #endif
+
+        // MainWindow
+        sc.AddSingleton(sp =>
+        {
+            var dialog = sp.GetRequiredService<IDialogService>();
+#if DEBUG
+            var devTools = sp.GetService<IDeveloperToolsService>();
+            return new MainWindow(dialog, devTools);
+#else
+            return new MainWindow(dialog);
+#endif
+        });
+
+        Services = sc.BuildServiceProvider();
+        Log.Information("DI Container aufgebaut — {Count} Services registriert", sc.Count);
+
+        // --- MainWindow anzeigen ---
+        var mainWindow = Services.GetRequiredService<MainWindow>();
         MainWindow = mainWindow;
         ShutdownMode = ShutdownMode.OnMainWindowClose;
         mainWindow.Show();
@@ -140,6 +157,10 @@ public partial class App : Application
     {
         Log.Information("=== BauProjektManager beendet ===");
         Log.CloseAndFlush();
+
+        if (Services is IDisposable disposable)
+            disposable.Dispose();
+
         base.OnExit(e);
     }
 }

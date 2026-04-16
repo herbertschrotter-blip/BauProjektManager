@@ -20,7 +20,9 @@ namespace BauProjektManager.Settings.ViewModels;
 /// </summary>
 public partial class SettingsViewModel : ObservableObject, IDisposable
 {
-    private readonly ProjectDatabase _db = new(new Infrastructure.Services.UlidIdGenerator());
+    private readonly ProjectDatabase _db = new(
+        new Infrastructure.Services.UlidIdGenerator(),
+        new Infrastructure.Services.LocalUserContext(new Domain.Models.AppSettings()));
     private readonly RegistryJsonExporter _exporter;
     private readonly AppSettingsService _settingsService = new();
     private readonly ProjectFolderService _folderService;

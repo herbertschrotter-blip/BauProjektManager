@@ -16,11 +16,13 @@ public class ProjectDatabase : IDisposable
 {
     private readonly string _dbPath;
     private readonly IIdGenerator _idGenerator;
+    private readonly IUserContext _userContext;
     private SqliteConnection? _connection;
 
-    public ProjectDatabase(IIdGenerator idGenerator)
+    public ProjectDatabase(IIdGenerator idGenerator, IUserContext userContext)
     {
         _idGenerator = idGenerator;
+        _userContext = userContext;
         var appData = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "BauProjektManager");
@@ -301,7 +303,7 @@ public class ProjectDatabase : IDisposable
             """;
         var utcNow = DateTime.UtcNow.ToString("o");
         cmd.Parameters.AddWithValue("@now", utcNow);
-        cmd.Parameters.AddWithValue("@user", ""); // TODO: IUserContext.DisplayName nach DI-Verdrahtung
+        cmd.Parameters.AddWithValue("@user", _userContext.DisplayName);
         cmd.Parameters.AddWithValue("@id", project.Id);
         cmd.Parameters.AddWithValue("@project_number", project.ProjectNumber);
         cmd.Parameters.AddWithValue("@name", project.Name);
@@ -429,7 +431,7 @@ public class ProjectDatabase : IDisposable
             """;
         var utcNow = DateTime.UtcNow.ToString("o");
         cmd.Parameters.AddWithValue("@now", utcNow);
-        cmd.Parameters.AddWithValue("@user", ""); // TODO: IUserContext.DisplayName
+        cmd.Parameters.AddWithValue("@user", _userContext.DisplayName);
         cmd.Parameters.AddWithValue("@id", clientId);
         cmd.Parameters.AddWithValue("@company", client.Company);
         cmd.Parameters.AddWithValue("@contact_person", client.ContactPerson);
@@ -528,7 +530,7 @@ public class ProjectDatabase : IDisposable
                 VALUES (@id, @pid, @sn, @desc, @bt, @zla, @so, @now, @user, @now, @user, 0)
                 """;
             cmd.Parameters.AddWithValue("@now", utcNow);
-            cmd.Parameters.AddWithValue("@user", "");
+            cmd.Parameters.AddWithValue("@user", _userContext.DisplayName);
             cmd.Parameters.AddWithValue("@id", partId); cmd.Parameters.AddWithValue("@pid", projectId);
             cmd.Parameters.AddWithValue("@sn", part.ShortName); cmd.Parameters.AddWithValue("@desc", part.Description);
             cmd.Parameters.AddWithValue("@bt", part.BuildingType); cmd.Parameters.AddWithValue("@zla", part.ZeroLevelAbsolute);
@@ -547,7 +549,7 @@ public class ProjectDatabase : IDisposable
                     VALUES (@id, @bpid, @prefix, @name, @desc, @rdok, @fbok, @rduk, @so, @now, @user, @now, @user, 0)
                     """;
                 lvlCmd.Parameters.AddWithValue("@now", lvlNow);
-                lvlCmd.Parameters.AddWithValue("@user", "");
+                lvlCmd.Parameters.AddWithValue("@user", _userContext.DisplayName);
                 lvlCmd.Parameters.AddWithValue("@id", levelId); lvlCmd.Parameters.AddWithValue("@bpid", partId);
                 lvlCmd.Parameters.AddWithValue("@prefix", level.Prefix); lvlCmd.Parameters.AddWithValue("@name", level.Name);
                 lvlCmd.Parameters.AddWithValue("@desc", level.Description); lvlCmd.Parameters.AddWithValue("@rdok", level.Rdok);
@@ -607,7 +609,7 @@ public class ProjectDatabase : IDisposable
                 VALUES (@id, @pid, @role, @company, @cp, @phone, @email, @cid, @so, @now, @user, @now, @user, 0)
                 """;
             cmd.Parameters.AddWithValue("@now", utcNow);
-            cmd.Parameters.AddWithValue("@user", "");
+            cmd.Parameters.AddWithValue("@user", _userContext.DisplayName);
             cmd.Parameters.AddWithValue("@id", pId); cmd.Parameters.AddWithValue("@pid", projectId);
             cmd.Parameters.AddWithValue("@role", p.Role); cmd.Parameters.AddWithValue("@company", p.Company);
             cmd.Parameters.AddWithValue("@cp", p.ContactPerson); cmd.Parameters.AddWithValue("@phone", p.Phone);
@@ -663,7 +665,7 @@ public class ProjectDatabase : IDisposable
                 VALUES (@id, @pid, @name, @url, @lt, @so, @now, @user, @now, @user, 0)
                 """;
             cmd.Parameters.AddWithValue("@now", utcNow);
-            cmd.Parameters.AddWithValue("@user", "");
+            cmd.Parameters.AddWithValue("@user", _userContext.DisplayName);
             cmd.Parameters.AddWithValue("@id", linkId); cmd.Parameters.AddWithValue("@pid", projectId);
             cmd.Parameters.AddWithValue("@name", link.Name); cmd.Parameters.AddWithValue("@url", link.Url);
             cmd.Parameters.AddWithValue("@lt", link.LinkType); cmd.Parameters.AddWithValue("@so", i);

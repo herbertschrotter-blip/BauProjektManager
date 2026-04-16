@@ -32,6 +32,26 @@ Basispfad = OneDrive-Pfad + `\` + Projekt-Suffix.
 
 ---
 
+## 0. Global Mandatory Reads (IMMER laden — Quickload reicht)
+
+Diese Docs werden bei JEDER Code-Änderung mindestens als Quickload gelesen.
+Ihre Fachlichen Invarianten gelten immer.
+
+| Doc | Quickload-Zweck | Pfad |
+|-----|----------------|------|
+| Architektur | Schichtgrenzen, Dependency-Regel, SoR je Modus, Offline-First | `Docs/Kern/BauProjektManager_Architektur.md` |
+| CODING_STANDARDS | Naming, MVVM, Sync-Felder, UTC, Soft Delete, IUserContext, Icons | `Docs/Kern/CODING_STANDARDS.md` |
+| DSGVO-Architektur | Logging-Regeln, HttpClient-Verbot, DataClassification | `Docs/Kern/DSVGO-Architektur.md` |
+
+Bei UI-Änderungen zusätzlich:
+
+| Doc | Quickload-Zweck | Pfad |
+|-----|----------------|------|
+| UI_UX_Guidelines | Screen States, Button-Regel, Sprache | `Docs/Referenz/UI_UX_Guidelines.md` |
+| WPF_UI_Architecture | Theme-Tokens, ResourceDictionaries, DynamicResource-Regel | `Docs/Referenz/WPF_UI_Architecture.md` |
+
+---
+
 ## 1. Task-to-Doc Routing
 
 ### Plan-Management

@@ -15,6 +15,19 @@ public class AppSettings
     public DateTime? SetupCompletedAt { get; set; }
 
     /// <summary>
+    /// Technische User-ID für Modus A (Offline).
+    /// Default: "MachineName\UserName" — automatisch beim ersten Start gesetzt.
+    /// Wird in Modus C durch Server-User-ID ersetzt.
+    /// </summary>
+    public string LocalUserId { get; set; } = $"{Environment.MachineName}\\{Environment.UserName}";
+
+    /// <summary>
+    /// Lesbarer Anzeigename für created_by/last_modified_by.
+    /// Default: Windows-Benutzername. Änderbar in Einstellungen.
+    /// </summary>
+    public string LocalUserName { get; set; } = Environment.UserName;
+
+    /// <summary>
     /// Ordner-Template für neue Projekte.
     /// Reihenfolge bestimmt die Nummerierung (00, 01, 02...).
     /// Änderbar vom User beim Projekt-Anlegen und in den Einstellungen.

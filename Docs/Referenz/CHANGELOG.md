@@ -31,6 +31,58 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.25.23] — 2026-04-16
+
+### DB Schema v2.1 — Sync-Spalten + IUserContext (ADR-050, ADR-052)
+
+### Hinzugefuegt
+- Domain/Interfaces/IUserContext.cs — Benutzerkontext-Interface (UserId, DisplayName, Source)
+- Domain/Enums/UserContextSource.cs — Local/Server Enum
+- Infrastructure/Services/LocalUserContext.cs — liest aus AppSettings (Modus A)
+- AppSettings: LocalUserId + LocalUserName Properties
+- DB Schema v2.1: Sync-Spalten (created_by, last_modified_at, last_modified_by, sync_version, is_deleted) auf allen 6 Entitaetstabellen
+- Alle Timestamps jetzt UTC (DateTime.UtcNow, ISO 8601)
+- sync_version inkrementiert bei jedem Update
+
+### Geaendert
+- ProjectDatabase: updated_at → last_modified_at in allen CREATE TABLE + INSERT/UPDATE Statements
+- ProjectDatabase: SaveProject/SaveClient/SaveParts/SaveLevels/SaveParticipants/SaveLinks mit UTC + User-Parameter
+
+## [v0.25.21] — 2026-04-16
+
+### Docs: ModuleDashboard + ADR-052
+
+### Hinzugefuegt
+- ModuleDashboard.md v2.0 — Widget-Host, Layout-Persistenz, Baulotse-Modus
+- ADR-052: IUserContext + Auth-Strategie (Local vs Server)
+
+## [v0.25.18] — 2026-04-16
+
+### PlanManager: Karten-Layout + Sidebar-Badge + Active-Filter
+
+### Hinzugefuegt
+- PlanManagerView: DataGrid ersetzt durch ListBox Karten-Layout (ChatGPT 2-Runden Cross-Review)
+- Sidebar-Badge: Gesamtzahl unsortierter Dateien neben PlanManager in Sidebar
+- Suchfeld in PlanManagerView (gleicher Stil wie Einstellungen)
+- InverseBoolToVisConverter, EmptyToVisConverter
+- FilteredProjects mit Echtzeit-Suche (Delay=300ms)
+- Mockups: 01_Projektuebersicht.html, 02_Projektdetail_Profile.html
+
+### Geaendert
+- PlanManagerView: Aktualisieren-Button jetzt blau (BpmButtonPrimary)
+- PlanManagerViewModel: Nur aktive Projekte laden (ProjectStatus.Active Filter)
+- MainWindow: UpdateSidebarBadge() bei Start und Navigation
+- Mockup-Konvention: NN_Blatt[_Untermenue].html
+
+## [v0.25.17] — 2026-04-15
+
+### Sidebar Umbenennung
+
+### Geaendert
+- Sidebar: "Plaene" umbenannt in "PlanManager"
+
+---
+
 ## [v0.25.16] — 2026-04-15
 
 ### Server-Architektur Konzept (3-Runden Cross-Review Claude/ChatGPT)

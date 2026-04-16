@@ -20,7 +20,7 @@ supersedes: []
   - 1. Überblick
   - 2. Beziehungsdiagramm
   - 3. Modul-Zuordnung
-  - 4. Tabellen-Schema (v2.0 ULID — implementiert)
+  - 4. Tabellen-Schema (v2.1 Sync — implementiert)
   - 5. Geplante Tabellen (nach V1)
   - 6. PlanManager-Datenbank (separat)
   - 7. Schema-Migration
@@ -33,7 +33,7 @@ supersedes: []
   - Kapitel 9.3 (Sync-Felder) bei neuer Tabelle (ADR-050)
   - Kapitel 7 (Schema-Migration) bei Schemaänderung
 - Fachliche Invarianten:
-  - **Schema v2.0 (ULID) implementiert ab v0.25.1:** ULID als TEXT PRIMARY KEY, IIdGenerator.NewId(), created_at/updated_at auf allen Entitätstabellen
+  - **Schema v2.1 (Sync) implementiert ab v0.25.23:** ULID als TEXT PRIMARY KEY, Sync-Spalten (created_by, last_modified_at, last_modified_by, sync_version, is_deleted) auf allen Entitätstabellen, UTC-Timestamps
   - schema_version Tabelle in jeder DB
   - Neue fachliche Tabellen: ULID + 6 Sync-Spalten + UTC + Soft Delete (Kapitel 9.3, ADR-050)
 
@@ -41,8 +41,8 @@ supersedes: []
 
 # BauProjektManager — Datenbank-Schema
 
-**Version:** 2.0 (ULID-Migration implementiert, v0.25.1)  
-**Datum:** 15.04.2026  
+**Version:** 2.1 (Sync-Spalten implementiert, v0.25.23)  
+**Datum:** 16.04.2026  
 **DB-Engine:** SQLite  
 **Speicherort:** `%LocalAppData%\BauProjektManager\bpm.db`
 
@@ -169,7 +169,7 @@ Welches Modul "besitzt" welche Tabelle (schreibt), und welche Module lesen.
 
 ---
 
-## 4. Tabellen-Schema (v2.0 ULID — implementiert)
+## 4. Tabellen-Schema (v2.1 Sync — implementiert)
 
 Alle Tabellen verwenden `id TEXT PRIMARY KEY` mit ULID. Keine `seq` Spalte.
 
@@ -185,8 +185,12 @@ CREATE TABLE clients (
     phone TEXT NOT NULL DEFAULT '',
     email TEXT NOT NULL DEFAULT '',
     notes TEXT NOT NULL DEFAULT '',
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    created_at TEXT NOT NULL,              -- UTC (ISO 8601)
+    created_by TEXT NOT NULL DEFAULT '',   -- IUserContext.DisplayName
+    last_modified_at TEXT NOT NULL,        -- UTC (ISO 8601)
+    last_modified_by TEXT NOT NULL DEFAULT '',
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    is_deleted INTEGER NOT NULL DEFAULT 0
 );
 ```
 
@@ -238,8 +242,12 @@ CREATE TABLE projects (
     -- Sonstiges
     tags TEXT NOT NULL DEFAULT '',
     notes TEXT NOT NULL DEFAULT '',
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    created_at TEXT NOT NULL,              -- UTC (ISO 8601)
+    created_by TEXT NOT NULL DEFAULT '',   -- IUserContext.DisplayName
+    last_modified_at TEXT NOT NULL,        -- UTC (ISO 8601)
+    last_modified_by TEXT NOT NULL DEFAULT '',
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    is_deleted INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (client_id) REFERENCES clients(id)
 );
 ```
@@ -273,8 +281,12 @@ CREATE TABLE building_parts (
     building_type TEXT NOT NULL DEFAULT '',
     zero_level_absolute REAL NOT NULL DEFAULT 0,
     sort_order INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    created_at TEXT NOT NULL,
+    created_by TEXT NOT NULL DEFAULT '',
+    last_modified_at TEXT NOT NULL,
+    last_modified_by TEXT NOT NULL DEFAULT '',
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    is_deleted INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
 
@@ -298,8 +310,12 @@ CREATE TABLE building_levels (
     fbok REAL NOT NULL DEFAULT 0,
     rduk REAL,
     sort_order INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    created_at TEXT NOT NULL,
+    created_by TEXT NOT NULL DEFAULT '',
+    last_modified_at TEXT NOT NULL,
+    last_modified_by TEXT NOT NULL DEFAULT '',
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    is_deleted INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (building_part_id) REFERENCES building_parts(id) ON DELETE CASCADE
 );
 
@@ -328,8 +344,12 @@ CREATE TABLE project_participants (
     email TEXT NOT NULL DEFAULT '',
     contact_id TEXT NOT NULL DEFAULT '',
     sort_order INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    created_at TEXT NOT NULL,
+    created_by TEXT NOT NULL DEFAULT '',
+    last_modified_at TEXT NOT NULL,
+    last_modified_by TEXT NOT NULL DEFAULT '',
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    is_deleted INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
 
@@ -350,8 +370,12 @@ CREATE TABLE project_links (
     url TEXT NOT NULL DEFAULT '',
     link_type TEXT NOT NULL DEFAULT 'Custom',
     sort_order INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    created_at TEXT NOT NULL,
+    created_by TEXT NOT NULL DEFAULT '',
+    last_modified_at TEXT NOT NULL,
+    last_modified_by TEXT NOT NULL DEFAULT '',
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    is_deleted INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
 
@@ -789,6 +813,7 @@ CREATE INDEX idx_action_files_action ON import_action_files(action_id);
 | 1.4 | März 2026 | project_participants |
 | 1.5 | März 2026 | project_links |
 | 2.0 | April 2026 | ULID-Migration: seq entfernt, id TEXT PRIMARY KEY, created_at/updated_at, FK-Indizes, IIdGenerator |
+| 2.1 | April 2026 | Sync-Spalten: updated_at→last_modified_at, +created_by, +last_modified_by, +sync_version, +is_deleted, UTC-Timestamps (ADR-050) |
 | *2.1* | *geplant* | *employees, time_entries* |
 | *2.2* | *geplant* | *work_packages, work_assignments* |
 | *2.3* | *geplant* | *lv_positions, performance_catalog, project_difficulty* |

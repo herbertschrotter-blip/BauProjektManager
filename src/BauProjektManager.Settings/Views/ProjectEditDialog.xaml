@@ -749,7 +749,7 @@
             </TabItem>
 
             <!-- ═══ TAB 5: ORDNERSTRUKTUR ═══ -->
-            <TabItem Header="Ordnerstruktur" Style="{StaticResource BpmTabItem}">
+            <TabItem Header="Ordnerstruktur" Style="{DynamicResource BpmTabItem}">
                 <views:FolderTemplateControl x:Name="ProjectFolderTemplate"
                                               Margin="0,8,0,0" />
             </TabItem>

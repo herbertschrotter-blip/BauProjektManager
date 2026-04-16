@@ -104,10 +104,10 @@
                     HorizontalAlignment="Right" Margin="0,15,0,0">
             <Button Content="Speichern und starten" x:Name="BtnSave" Click="OnSave"
                     Style="{DynamicResource BpmButtonPrimary}"
-                    Padding="20,10" Margin="0,0,10,0" FontSize="14"/>
+                    Padding="20,10" Margin="0,0,10,0" FontSize="{StaticResource BpmFontSizeBody}"/>
             <Button Content="Abbrechen" Click="OnCancel"
                     Style="{DynamicResource BpmButtonSecondary}"
-                    Padding="20,10" FontSize="14"/>
+                    Padding="20,10" FontSize="{StaticResource BpmFontSizeBody}"/>
         </StackPanel>
     </Grid>
 </Window>

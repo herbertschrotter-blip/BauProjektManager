@@ -193,8 +193,8 @@ public partial class ProjectEditDialog : Window
                 levels[i].StoryHeight = Math.Round(levels[i + 1].Fbok - levels[i].Fbok, 3);
                 levels[i].RawHeight = Math.Round(levels[i + 1].Rdok - levels[i].Rdok, 3);
                 // Deckenstärke = RDOK(darüber) − RDUK(aktuell)
-                levels[i].DeckThickness = levels[i].Rduk.HasValue
-                    ? Math.Round(levels[i + 1].Rdok - levels[i].Rduk.Value, 3)
+                levels[i].DeckThickness = levels[i].Rduk is { } rduk
+                    ? Math.Round(levels[i + 1].Rdok - rduk, 3)
                     : null;
             }
             else

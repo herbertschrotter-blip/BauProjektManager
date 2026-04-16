@@ -2062,7 +2062,7 @@ Im Server-Modus werden ALLE Projektdaten lokal gecacht (kein selektiver Sync in 
 
 **Datum:** 2026-04-16
 **Status:** ✅ Entschieden
-**Implementierung:** Not Started
+**Implementierung:** Partial (IUserContext + LocalUserContext implementiert, DI-Verdrahtung ausstehend)
 **Herkunft:** 2-Runden Cross-Review Claude/ChatGPT (Auth-Strategie)
 
 **Kontext:**

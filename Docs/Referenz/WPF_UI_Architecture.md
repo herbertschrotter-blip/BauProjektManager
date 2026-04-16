@@ -817,7 +817,7 @@ Die Datenschutz-Entscheidung trifft die Policy, nicht das ViewModel. Das ViewMod
 | 4 | Dialogs.xaml | ✅ Implementiert |
 | 5 | App.xaml Merge (7 Dictionaries) | ✅ Implementiert |
 | 6 | MainWindow Migration → Token | ✅ Implementiert |
-| 7 | PlanManagerView (neu, direkt mit Token) | ⬜ Mit PlanManager |
+| 7 | PlanManagerView (neu, direkt mit Token) | ✅ Implementiert (v0.25.18) |
 | 8 | SettingsView + ProjectEditDialog Migration | ⬜ Nach PlanManager |
 | 9 | BpmStatusBar | ✅ Vorhanden (einfach) |
 | 10 | BpmBreadcrumb, BpmToolbar | 🎯 Mit UI-Refresh |

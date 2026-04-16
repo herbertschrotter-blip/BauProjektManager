@@ -9,7 +9,7 @@ namespace BauProjektManager.Infrastructure.Persistence;
 
 /// <summary>
 /// SQLite database service — manages bpm.db in %LocalAppData%\BauProjektManager\.
-/// Schema v2.0: ULID as TEXT PRIMARY KEY for all tables. No seq columns.
+/// Schema v2.1: ULID + Sync-Spalten (created_by, last_modified_at/by, sync_version, is_deleted) auf allen Tabellen.
 /// ID generation via IIdGenerator (ADR-039 v2).
 /// </summary>
 public class ProjectDatabase : IDisposable
@@ -49,7 +49,7 @@ public class ProjectDatabase : IDisposable
 
     private void EnsureTables()
     {
-        Log.Debug("Creating database tables (schema v2.0 ULID)");
+        Log.Debug("Creating database tables (schema v2.1 Sync)");
         var conn = _connection!;
         var cmd = conn.CreateCommand();
         cmd.CommandText = """

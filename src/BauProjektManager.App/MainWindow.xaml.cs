@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using BauProjektManager.Domain.Interfaces;
+using BauProjektManager.Infrastructure.Persistence;
 using BauProjektManager.PlanManager.Views;
 using BauProjektManager.Settings.Views;
 
@@ -17,14 +18,16 @@ public partial class MainWindow : Window
     private readonly IDeveloperToolsService? _devTools;
 
     public MainWindow(
+        ProjectDatabase db,
+        IIdGenerator idGenerator,
         IDialogService dialogService,
         IDeveloperToolsService? devTools = null)
     {
         InitializeComponent();
         _devTools = devTools;
 
-        _planManagerView = new PlanManagerView();
-        _settingsView = new SettingsView(dialogService);
+        _planManagerView = new PlanManagerView(db, idGenerator);
+        _settingsView = new SettingsView(db, dialogService);
 
         UpdateSidebarBadge();
 

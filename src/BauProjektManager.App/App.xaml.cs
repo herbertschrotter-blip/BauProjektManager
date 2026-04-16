@@ -134,12 +134,14 @@ public partial class App : Application
         // MainWindow
         sc.AddSingleton(sp =>
         {
+            var db = sp.GetRequiredService<ProjectDatabase>();
+            var idGen = sp.GetRequiredService<IIdGenerator>();
             var dialog = sp.GetRequiredService<IDialogService>();
 #if DEBUG
             var devTools = sp.GetService<IDeveloperToolsService>();
-            return new MainWindow(dialog, devTools);
+            return new MainWindow(db, idGen, dialog, devTools);
 #else
-            return new MainWindow(dialog);
+            return new MainWindow(db, idGen, dialog);
 #endif
         });
 

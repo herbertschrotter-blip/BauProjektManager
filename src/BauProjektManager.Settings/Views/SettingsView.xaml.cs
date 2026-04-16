@@ -6,6 +6,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Diagnostics;
 using BauProjektManager.Domain.Enums;
+using BauProjektManager.Infrastructure.Persistence;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Settings.ViewModels;
 
@@ -87,9 +88,7 @@ public partial class SettingsView : UserControl
     private static readonly SolidColorBrush InactiveFilterBg = new(Colors.Transparent);
     private static readonly SolidColorBrush InactiveFilterFg = new(Color.FromRgb(0x99, 0x99, 0x99));
 
-    public SettingsView() : this(null) { }
-
-    public SettingsView(IDialogService? dialogService)
+    public SettingsView(ProjectDatabase db, IDialogService dialogService)
     {
         // Register converters before InitializeComponent
         Resources.Add("StatusConverter", new StatusConverter());
@@ -97,10 +96,8 @@ public partial class SettingsView : UserControl
         Resources.Add("PlaceholderVisibilityConverter", new PlaceholderVisibilityConverter());
         InitializeComponent();
 
-        // ViewModel mit DialogService erstellen
-        var vm = dialogService is not null
-            ? new SettingsViewModel(dialogService)
-            : new SettingsViewModel();
+        // ViewModel mit DI-Services erstellen
+        var vm = new SettingsViewModel(db, dialogService);
         DataContext = vm;
 
         // Ordnerstruktur-Control initialisieren

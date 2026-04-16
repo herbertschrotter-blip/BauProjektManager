@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models;
+using BauProjektManager.Infrastructure.Persistence;
 using BauProjektManager.Infrastructure.Services;
 using BauProjektManager.PlanManager.Services;
 using BauProjektManager.PlanManager.ViewModels;
@@ -63,12 +64,13 @@ public partial class PlanManagerView : UserControl
 {
     private readonly PlanManagerViewModel _vm;
     private readonly BoolToVisConverter _boolToVis = new();
-    private readonly IIdGenerator _idGenerator = new UlidIdGenerator();
+    private readonly IIdGenerator _idGenerator;
     private readonly ProfileManager _profileManager;
     private readonly PatternTemplateService _templateService;
 
-    public PlanManagerView()
+    public PlanManagerView(ProjectDatabase db, IIdGenerator idGenerator)
     {
+        _idGenerator = idGenerator;
         _profileManager = new ProfileManager(_idGenerator);
         _templateService = new PatternTemplateService(_idGenerator);
         Resources.Add("BoolToVis", _boolToVis);
@@ -77,7 +79,7 @@ public partial class PlanManagerView : UserControl
         Resources.Add("EmptyToVis", new EmptyToVisConverter());
         InitializeComponent();
 
-        _vm = new PlanManagerViewModel();
+        _vm = new PlanManagerViewModel(db);
         _vm.ProjectSelected += NavigateToDetail;
         DataContext = _vm;
     }

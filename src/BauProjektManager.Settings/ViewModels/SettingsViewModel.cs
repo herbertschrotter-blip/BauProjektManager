@@ -20,9 +20,7 @@ namespace BauProjektManager.Settings.ViewModels;
 /// </summary>
 public partial class SettingsViewModel : ObservableObject, IDisposable
 {
-    private readonly ProjectDatabase _db = new(
-        new Infrastructure.Services.UlidIdGenerator(),
-        new Infrastructure.Services.LocalUserContext(new Domain.Models.AppSettings()));
+    private readonly ProjectDatabase _db;
     private readonly RegistryJsonExporter _exporter;
     private readonly AppSettingsService _settingsService = new();
     private readonly ProjectFolderService _folderService;
@@ -146,10 +144,9 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     // Selected item in TreeView (set from code-behind)
     public FolderTreeItem? SelectedTreeItem { get; set; }
 
-    public SettingsViewModel() : this(new DefaultDialogService()) { }
-
-    public SettingsViewModel(IDialogService dialogService)
+    public SettingsViewModel(ProjectDatabase db, IDialogService dialogService)
     {
+        _db = db;
         _dialogService = dialogService;
 
         // Registry-Exportpfad aus Settings (BasePath/.AppData/BauProjektManager/)

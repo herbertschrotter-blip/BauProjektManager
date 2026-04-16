@@ -16,9 +16,7 @@ namespace BauProjektManager.PlanManager.ViewModels;
 /// </summary>
 public partial class PlanManagerViewModel : ObservableObject
 {
-    private readonly ProjectDatabase _db = new(
-        new Infrastructure.Services.UlidIdGenerator(),
-        new Infrastructure.Services.LocalUserContext(new Domain.Models.AppSettings()));
+    private readonly ProjectDatabase _db;
 
     [ObservableProperty]
     private ObservableCollection<PlanProjectItem> _projects = [];
@@ -46,8 +44,9 @@ public partial class PlanManagerViewModel : ObservableObject
     /// </summary>
     public event Action<Project>? ProjectSelected;
 
-    public PlanManagerViewModel()
+    public PlanManagerViewModel(ProjectDatabase db)
     {
+        _db = db;
         LoadProjects();
     }
 

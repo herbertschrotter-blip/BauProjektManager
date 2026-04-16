@@ -22,7 +22,7 @@ supersedes: []
   - 3. Modul-Zuordnung
   - 4. Tabellen-Schema (v2.1 Sync — implementiert)
   - 5. Geplante Tabellen (nach V1)
-  - 6. PlanManager-Datenbank (separat)
+  - 6. PlanManager-Datenbank (separat, implementiert)
   - 7. Schema-Migration
   - 8. Datenfluss zwischen Modulen
   - 9. Naming-Konventionen
@@ -674,11 +674,11 @@ CREATE TABLE project_shares (
 
 ---
 
-## 6. PlanManager-Datenbank (separat — ⬜ GEPLANT, noch nicht implementiert)
+## 6. PlanManager-Datenbank (separat — ✅ implementiert)
 
 Pro Projekt eine eigene SQLite-DB. Liegt in `%LocalAppData%\BauProjektManager\Projects\<ProjektID>\planmanager.db`.
 
-**Status:** Diese DB und alle 6 Tabellen sind **Zielarchitektur**. Im Code existiert aktuell kein `PlanManagerDatabase`. Die Implementierung kommt mit PlanManager V1.
+**Status:** `PlanManagerDatabase.cs` implementiert (v0.25.15). Schema v1.0, 6 Tabellen + schema_version.
 
 **6 Tabellen:** 3 Plan-Revisions-Cache + 3 Import-Journal (PlanManager.md v2.0, Cross-Review 09.04.2026).
 
@@ -688,6 +688,7 @@ Pro Projekt eine eigene SQLite-DB. Liegt in `%LocalAppData%\BauProjektManager\Pr
 CREATE TABLE plan_revisions (
     id TEXT PRIMARY KEY,                -- ULID
     document_key TEXT NOT NULL,         -- aus identityFields: "Polierplan_103_H5"
+    document_type_id TEXT,             -- FK → Profil-ID (welches Profil hat diesen Plan erkannt)
     plan_number TEXT NOT NULL,
     plan_index TEXT,                    -- NULL bei Erstausgabe / IndexSource=None
     document_type TEXT NOT NULL,

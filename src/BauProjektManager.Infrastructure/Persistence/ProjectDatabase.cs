@@ -60,8 +60,12 @@ public class ProjectDatabase : IDisposable
                 phone TEXT NOT NULL DEFAULT '',
                 email TEXT NOT NULL DEFAULT '',
                 notes TEXT NOT NULL DEFAULT '',
-                created_at TEXT NOT NULL DEFAULT (datetime('now')),
-                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+                created_at TEXT NOT NULL,
+                created_by TEXT NOT NULL DEFAULT '',
+                last_modified_at TEXT NOT NULL,
+                last_modified_by TEXT NOT NULL DEFAULT '',
+                sync_version INTEGER NOT NULL DEFAULT 0,
+                is_deleted INTEGER NOT NULL DEFAULT 0
             );
 
             CREATE TABLE IF NOT EXISTS projects (
@@ -100,8 +104,12 @@ public class ProjectDatabase : IDisposable
                 global_zero_level REAL NOT NULL DEFAULT 0,
                 tags TEXT NOT NULL DEFAULT '',
                 notes TEXT NOT NULL DEFAULT '',
-                created_at TEXT NOT NULL DEFAULT (datetime('now')),
-                updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+                created_at TEXT NOT NULL,
+                created_by TEXT NOT NULL DEFAULT '',
+                last_modified_at TEXT NOT NULL,
+                last_modified_by TEXT NOT NULL DEFAULT '',
+                sync_version INTEGER NOT NULL DEFAULT 0,
+                is_deleted INTEGER NOT NULL DEFAULT 0,
                 FOREIGN KEY (client_id) REFERENCES clients(id)
             );
 
@@ -123,8 +131,12 @@ public class ProjectDatabase : IDisposable
                 building_type TEXT NOT NULL DEFAULT '',
                 zero_level_absolute REAL NOT NULL DEFAULT 0,
                 sort_order INTEGER NOT NULL DEFAULT 0,
-                created_at TEXT NOT NULL DEFAULT (datetime('now')),
-                updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+                created_at TEXT NOT NULL,
+                created_by TEXT NOT NULL DEFAULT '',
+                last_modified_at TEXT NOT NULL,
+                last_modified_by TEXT NOT NULL DEFAULT '',
+                sync_version INTEGER NOT NULL DEFAULT 0,
+                is_deleted INTEGER NOT NULL DEFAULT 0,
                 FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
             );
 
@@ -138,8 +150,12 @@ public class ProjectDatabase : IDisposable
                 fbok REAL NOT NULL DEFAULT 0,
                 rduk REAL,
                 sort_order INTEGER NOT NULL DEFAULT 0,
-                created_at TEXT NOT NULL DEFAULT (datetime('now')),
-                updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+                created_at TEXT NOT NULL,
+                created_by TEXT NOT NULL DEFAULT '',
+                last_modified_at TEXT NOT NULL,
+                last_modified_by TEXT NOT NULL DEFAULT '',
+                sync_version INTEGER NOT NULL DEFAULT 0,
+                is_deleted INTEGER NOT NULL DEFAULT 0,
                 FOREIGN KEY (building_part_id) REFERENCES building_parts(id) ON DELETE CASCADE
             );
 
@@ -153,8 +169,12 @@ public class ProjectDatabase : IDisposable
                 email TEXT NOT NULL DEFAULT '',
                 contact_id TEXT NOT NULL DEFAULT '',
                 sort_order INTEGER NOT NULL DEFAULT 0,
-                created_at TEXT NOT NULL DEFAULT (datetime('now')),
-                updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+                created_at TEXT NOT NULL,
+                created_by TEXT NOT NULL DEFAULT '',
+                last_modified_at TEXT NOT NULL,
+                last_modified_by TEXT NOT NULL DEFAULT '',
+                sync_version INTEGER NOT NULL DEFAULT 0,
+                is_deleted INTEGER NOT NULL DEFAULT 0,
                 FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
             );
 
@@ -165,8 +185,12 @@ public class ProjectDatabase : IDisposable
                 url TEXT NOT NULL DEFAULT '',
                 link_type TEXT NOT NULL DEFAULT 'Custom',
                 sort_order INTEGER NOT NULL DEFAULT 0,
-                created_at TEXT NOT NULL DEFAULT (datetime('now')),
-                updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+                created_at TEXT NOT NULL,
+                created_by TEXT NOT NULL DEFAULT '',
+                last_modified_at TEXT NOT NULL,
+                last_modified_by TEXT NOT NULL DEFAULT '',
+                sync_version INTEGER NOT NULL DEFAULT 0,
+                is_deleted INTEGER NOT NULL DEFAULT 0,
                 FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
             );
 
@@ -187,7 +211,7 @@ public class ProjectDatabase : IDisposable
     {
         var conn = _connection!;
         var verCmd = conn.CreateCommand();
-        verCmd.CommandText = "DELETE FROM schema_version; INSERT INTO schema_version (version) VALUES ('2.0');";
+        verCmd.CommandText = "DELETE FROM schema_version; INSERT INTO schema_version (version) VALUES ('2.1');";
         Log.Verbose("Executing SQL: {Operation} on {Table}", "UPDATE", "schema_version");
         verCmd.ExecuteNonQuery();
     }
@@ -240,7 +264,7 @@ public class ProjectDatabase : IDisposable
                 root_path, plans_path, inbox_path, photos_path,
                 documents_path, protocols_path, invoices_path,
                 use_global_zero_level, global_zero_level,
-                tags, notes, updated_at
+                tags, notes, created_at, created_by, last_modified_at, last_modified_by, sync_version
             ) VALUES (
                 @id, @project_number, @name, @full_name, @status, @project_type, @client_id,
                 @street, @house_number, @postal_code, @city,
@@ -251,7 +275,7 @@ public class ProjectDatabase : IDisposable
                 @root_path, @plans_path, @inbox_path, @photos_path,
                 @documents_path, @protocols_path, @invoices_path,
                 @use_global_zero_level, @global_zero_level,
-                @tags, @notes, datetime('now')
+                @tags, @notes, @now, @user, @now, @user, 0
             )
             ON CONFLICT(id) DO UPDATE SET
                 project_number=@project_number, name=@name, full_name=@full_name,
@@ -271,8 +295,13 @@ public class ProjectDatabase : IDisposable
                 invoices_path=@invoices_path,
                 use_global_zero_level=@use_global_zero_level,
                 global_zero_level=@global_zero_level,
-                tags=@tags, notes=@notes, updated_at=datetime('now')
+                tags=@tags, notes=@notes,
+                last_modified_at=@now, last_modified_by=@user,
+                sync_version=sync_version+1
             """;
+        var utcNow = DateTime.UtcNow.ToString("o");
+        cmd.Parameters.AddWithValue("@now", utcNow);
+        cmd.Parameters.AddWithValue("@user", ""); // TODO: IUserContext.DisplayName nach DI-Verdrahtung
         cmd.Parameters.AddWithValue("@id", project.Id);
         cmd.Parameters.AddWithValue("@project_number", project.ProjectNumber);
         cmd.Parameters.AddWithValue("@name", project.Name);
@@ -390,13 +419,17 @@ public class ProjectDatabase : IDisposable
 
         var cmd = conn.CreateCommand();
         cmd.CommandText = """
-            INSERT INTO clients (id, company, contact_person, phone, email, notes, updated_at)
-            VALUES (@id, @company, @contact_person, @phone, @email, @notes, datetime('now'))
+            INSERT INTO clients (id, company, contact_person, phone, email, notes, created_at, created_by, last_modified_at, last_modified_by, sync_version)
+            VALUES (@id, @company, @contact_person, @phone, @email, @notes, @now, @user, @now, @user, 0)
             ON CONFLICT(id) DO UPDATE SET
                 company=@company, contact_person=@contact_person,
                 phone=@phone, email=@email, notes=@notes,
-                updated_at=datetime('now')
+                last_modified_at=@now, last_modified_by=@user,
+                sync_version=sync_version+1
             """;
+        var utcNow = DateTime.UtcNow.ToString("o");
+        cmd.Parameters.AddWithValue("@now", utcNow);
+        cmd.Parameters.AddWithValue("@user", ""); // TODO: IUserContext.DisplayName
         cmd.Parameters.AddWithValue("@id", clientId);
         cmd.Parameters.AddWithValue("@company", client.Company);
         cmd.Parameters.AddWithValue("@contact_person", client.ContactPerson);
@@ -488,11 +521,14 @@ public class ProjectDatabase : IDisposable
         {
             var part = parts[i];
             var partId = string.IsNullOrEmpty(part.Id) ? _idGenerator.NewId() : part.Id;
+            var utcNow = DateTime.UtcNow.ToString("o");
             var cmd = conn.CreateCommand();
             cmd.CommandText = """
-                INSERT INTO building_parts (id, project_id, short_name, description, building_type, zero_level_absolute, sort_order)
-                VALUES (@id, @pid, @sn, @desc, @bt, @zla, @so)
+                INSERT INTO building_parts (id, project_id, short_name, description, building_type, zero_level_absolute, sort_order, created_at, created_by, last_modified_at, last_modified_by, sync_version)
+                VALUES (@id, @pid, @sn, @desc, @bt, @zla, @so, @now, @user, @now, @user, 0)
                 """;
+            cmd.Parameters.AddWithValue("@now", utcNow);
+            cmd.Parameters.AddWithValue("@user", "");
             cmd.Parameters.AddWithValue("@id", partId); cmd.Parameters.AddWithValue("@pid", projectId);
             cmd.Parameters.AddWithValue("@sn", part.ShortName); cmd.Parameters.AddWithValue("@desc", part.Description);
             cmd.Parameters.AddWithValue("@bt", part.BuildingType); cmd.Parameters.AddWithValue("@zla", part.ZeroLevelAbsolute);
@@ -504,11 +540,14 @@ public class ProjectDatabase : IDisposable
             {
                 var level = part.Levels[j];
                 var levelId = string.IsNullOrEmpty(level.Id) ? _idGenerator.NewId() : level.Id;
+                var lvlNow = DateTime.UtcNow.ToString("o");
                 var lvlCmd = conn.CreateCommand();
                 lvlCmd.CommandText = """
-                    INSERT INTO building_levels (id, building_part_id, prefix, name, description, rdok, fbok, rduk, sort_order)
-                    VALUES (@id, @bpid, @prefix, @name, @desc, @rdok, @fbok, @rduk, @so)
+                    INSERT INTO building_levels (id, building_part_id, prefix, name, description, rdok, fbok, rduk, sort_order, created_at, created_by, last_modified_at, last_modified_by, sync_version)
+                    VALUES (@id, @bpid, @prefix, @name, @desc, @rdok, @fbok, @rduk, @so, @now, @user, @now, @user, 0)
                     """;
+                lvlCmd.Parameters.AddWithValue("@now", lvlNow);
+                lvlCmd.Parameters.AddWithValue("@user", "");
                 lvlCmd.Parameters.AddWithValue("@id", levelId); lvlCmd.Parameters.AddWithValue("@bpid", partId);
                 lvlCmd.Parameters.AddWithValue("@prefix", level.Prefix); lvlCmd.Parameters.AddWithValue("@name", level.Name);
                 lvlCmd.Parameters.AddWithValue("@desc", level.Description); lvlCmd.Parameters.AddWithValue("@rdok", level.Rdok);
@@ -561,11 +600,14 @@ public class ProjectDatabase : IDisposable
         {
             var p = participants[i];
             var pId = string.IsNullOrEmpty(p.Id) ? _idGenerator.NewId() : p.Id;
+            var utcNow = DateTime.UtcNow.ToString("o");
             var cmd = conn.CreateCommand();
             cmd.CommandText = """
-                INSERT INTO project_participants (id, project_id, role, company, contact_person, phone, email, contact_id, sort_order)
-                VALUES (@id, @pid, @role, @company, @cp, @phone, @email, @cid, @so)
+                INSERT INTO project_participants (id, project_id, role, company, contact_person, phone, email, contact_id, sort_order, created_at, created_by, last_modified_at, last_modified_by, sync_version)
+                VALUES (@id, @pid, @role, @company, @cp, @phone, @email, @cid, @so, @now, @user, @now, @user, 0)
                 """;
+            cmd.Parameters.AddWithValue("@now", utcNow);
+            cmd.Parameters.AddWithValue("@user", "");
             cmd.Parameters.AddWithValue("@id", pId); cmd.Parameters.AddWithValue("@pid", projectId);
             cmd.Parameters.AddWithValue("@role", p.Role); cmd.Parameters.AddWithValue("@company", p.Company);
             cmd.Parameters.AddWithValue("@cp", p.ContactPerson); cmd.Parameters.AddWithValue("@phone", p.Phone);
@@ -614,11 +656,14 @@ public class ProjectDatabase : IDisposable
         {
             var link = links[i];
             var linkId = string.IsNullOrEmpty(link.Id) ? _idGenerator.NewId() : link.Id;
+            var utcNow = DateTime.UtcNow.ToString("o");
             var cmd = conn.CreateCommand();
             cmd.CommandText = """
-                INSERT INTO project_links (id, project_id, name, url, link_type, sort_order)
-                VALUES (@id, @pid, @name, @url, @lt, @so)
+                INSERT INTO project_links (id, project_id, name, url, link_type, sort_order, created_at, created_by, last_modified_at, last_modified_by, sync_version)
+                VALUES (@id, @pid, @name, @url, @lt, @so, @now, @user, @now, @user, 0)
                 """;
+            cmd.Parameters.AddWithValue("@now", utcNow);
+            cmd.Parameters.AddWithValue("@user", "");
             cmd.Parameters.AddWithValue("@id", linkId); cmd.Parameters.AddWithValue("@pid", projectId);
             cmd.Parameters.AddWithValue("@name", link.Name); cmd.Parameters.AddWithValue("@url", link.Url);
             cmd.Parameters.AddWithValue("@lt", link.LinkType); cmd.Parameters.AddWithValue("@so", i);

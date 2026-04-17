@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using BauProjektManager.Domain.Models.PlanManager;
 using Serilog;
 
@@ -98,7 +99,7 @@ public class DocumentTypeRecognizer
 
     /// <summary>
     /// Checks a single recognition rule against a file name.
-    /// Supports "prefix" and "contains" methods.
+    /// Supports "prefix", "contains" and "regex" methods.
     /// </summary>
     private static bool MatchesRule(string fileName, RecognitionRule rule)
     {
@@ -111,7 +112,37 @@ public class DocumentTypeRecognizer
                 StringComparison.OrdinalIgnoreCase),
             "contains" => fileName.Contains(rule.Pattern,
                 StringComparison.OrdinalIgnoreCase),
+            "regex" => MatchesRegex(fileName, rule.Pattern),
             _ => false
         };
+    }
+
+    /// <summary>
+    /// Checks a file name against a regex pattern.
+    /// Invalid patterns and timeouts are logged and treated as no-match (no crash).
+    /// Timeout protects against ReDoS attacks from user-supplied patterns.
+    /// </summary>
+    private static bool MatchesRegex(string fileName, string pattern)
+    {
+        try
+        {
+            return Regex.IsMatch(
+                fileName,
+                pattern,
+                RegexOptions.IgnoreCase,
+                TimeSpan.FromMilliseconds(100));
+        }
+        catch (ArgumentException ex)
+        {
+            Log.Warning("Ungueltiges Regex-Pattern {Pattern}: {Message}",
+                pattern, ex.Message);
+            return false;
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            Log.Warning("Regex-Timeout bei Pattern {Pattern} auf Datei {File}",
+                pattern, fileName);
+            return false;
+        }
     }
 }

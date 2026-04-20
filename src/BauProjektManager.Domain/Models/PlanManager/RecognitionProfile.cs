@@ -4,10 +4,11 @@ namespace BauProjektManager.Domain.Models.PlanManager;
 /// Anlernbares Profil fuer einen Dokumenttyp (z.B. Polierplan, Schalungsplan, Bauprotokoll).
 /// Wird als JSON in .bpm/profiles/{id}.json pro Projekt gespeichert (ADR-010, ADR-046).
 /// Schema v2 (Cross-Review 15.04.2026): documentTypeId, tokenization, indexExtraction, includeInIdentity.
+/// Schema v3 (BPM-082, 2026-04-17): segment-basierte Erkennung via RecognitionRule.SegmentPosition.
 /// </summary>
 public class RecognitionProfile
 {
-    public int SchemaVersion { get; set; } = 2;
+    public int SchemaVersion { get; set; } = 3;
     public string Id { get; set; } = string.Empty;
 
     // --- Dokumenttyp (v2: TypeId + DisplayName getrennt) ---
@@ -102,12 +103,60 @@ public class ProfileSegment
 }
 
 /// <summary>
-/// Erkennungsregel: prefix oder contains mit Muster.
+/// Erkennungsregel: segment (Default) oder regex (Fallback fuer Sonderfaelle).
+/// Schema v3 (BPM-082): SegmentPosition ergaenzt fuer positionsgenaue Erkennung.
+/// Alte Methoden prefix/contains wurden entfernt (Fruehphase, keine Produktivdaten).
 /// </summary>
 public class RecognitionRule
 {
-    public string Method { get; set; } = "contains";
+    /// <summary>Erkennungsmethode: "segment" (Default) oder "regex" (Fallback).</summary>
+    public string Method { get; set; } = "segment";
+
+    /// <summary>Das Muster bzw. der erwartete Wert. Bei segment: Token-Wert. Bei regex: Pattern.</summary>
     public string Pattern { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Nur bei method="segment": 0-basierte Position des Tokens im tokenisierten Dateinamen.
+    /// Muss gesetzt sein wenn Method=segment. Bei regex null.
+    /// </summary>
+    public int? SegmentPosition { get; set; }
+
+    /// <summary>
+    /// Prueft ob die Regel fachlich valide ist. Wird beim Laden (ProfileManager)
+    /// und defensiv im Recognizer verwendet.
+    /// </summary>
+    /// <param name="reason">Begruendung bei Invalid, leer bei Valid.</param>
+    /// <returns>true wenn Regel vollstaendig und konsistent.</returns>
+    public bool IsValid(out string reason)
+    {
+        if (string.IsNullOrWhiteSpace(Pattern))
+        {
+            reason = "Pattern fehlt.";
+            return false;
+        }
+
+        switch (Method?.ToLowerInvariant())
+        {
+            case "segment":
+                if (SegmentPosition is null || SegmentPosition < 0)
+                {
+                    reason = "segment-Regel braucht SegmentPosition >= 0.";
+                    return false;
+                }
+                break;
+
+            case "regex":
+                // Pattern-Syntax wird erst zur Match-Zeit geprueft (ReDoS-Schutz dort)
+                break;
+
+            default:
+                reason = $"Unbekannte Methode: {Method}";
+                return false;
+        }
+
+        reason = "";
+        return true;
+    }
 }
 
 /// <summary>

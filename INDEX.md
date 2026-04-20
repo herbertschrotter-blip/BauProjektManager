@@ -32,6 +32,28 @@ Basispfad = OneDrive-Pfad + `\` + Projekt-Suffix.
 
 ---
 
+## Projekt-Phase (VERBINDLICH)
+
+BPM befindet sich in früher Entwicklung ohne Produktivdaten.
+
+Konsequenzen für Code und Architektur:
+- Bei Schema-/Config-/DB-Änderungen wird NIE automatisch eine Migration gebaut
+- Kein Backward-Compatibility-Code für alte Datenformate
+- Keine Legacy-Tolerance in Parsern / Loadern / Deserializern
+- Stattdessen: Claude listet welche Datei(en)/DB-Tabelle(n) betroffen sind
+  → User löscht sie → BPM erstellt sie beim nächsten Start neu
+
+Ausnahmen:
+- Nur wenn der User explizit "Migration bauen" sagt
+- Oder dieses Kapitel offiziell entfernt/umgeschrieben wird
+  (= Übergang in Produktivphase)
+
+Für KI (Claude, ChatGPT): Dieses Kapitel ist beim Quickload IMMER zu beachten.
+Vorschläge zu Migrations-Logik, Backward-Compatibility oder Legacy-Tolerance
+sind ohne explizite User-Freigabe abzulehnen.
+
+---
+
 ## 0. Global Mandatory Reads (IMMER laden — Quickload reicht)
 
 Diese Docs werden bei JEDER Code-Änderung mindestens als Quickload gelesen.

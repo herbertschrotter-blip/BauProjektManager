@@ -32,6 +32,38 @@ Basispfad = OneDrive-Pfad + `\` + Projekt-Suffix.
 
 ---
 
+## Skill-Repo (separat vom BPM-Repo)
+
+Die Claude-Skills liegen in einem eigenen GitHub-Repo und werden **nicht** im BPM-Repo gepflegt.
+
+- **Repo:** `github.com/herbertschrotter-blip/claude-skills-bpm`
+- **Zweck:** Versionshistorie für SKILL.md-Dateien, Cross-Review-Zugriff für ChatGPT
+- **Struktur:** `skills/<name>/SKILL.md` + optional `scripts/` + `references/`
+- **Branch:** `main` (keine Feature-Branches nötig)
+
+### Lokale Pfade pro PC
+
+| PC | COMPUTERNAME | Skill-Repo-Suffix |
+|----|-------------|-------------------|
+| Desktop-PC | Desktop_PC | `Dokumente\02 Arbeit\05 Vorlagen - Scripte\00_claude-skills-bpm` |
+| Firmenlaptop | Firmenlaptop | `Dokumente\02 Arbeit\05 Vorlagen - Scripte\00_claude-skills-bpm` |
+| Surface | Surface7 | `Dokumente\02 Arbeit\05 Vorlagen - Scripte\00_claude-skills-bpm` |
+
+Basispfad = OneDrive-Pfad + `\` + Skill-Repo-Suffix.
+
+### Sync-Regel
+
+Skills existieren an **zwei Orten**:
+1. `/mnt/skills/user/<name>/SKILL.md` — Claude-Projekt-Upload (aktiv im Chat)
+2. `claude-skills-bpm/skills/<name>/SKILL.md` — GitHub-Repo (versioniert)
+
+Bei jeder Skill-Änderung müssen **beide** gepflegt werden:
+- Claude erstellt die neue SKILL.md in `/mnt/user-data/outputs/`
+- User klickt "Skill speichern" (aktualisiert Claude-Projekt)
+- Dann Commit + Push ins `claude-skills-bpm`-Repo (Versionsgeschichte)
+
+---
+
 ## Projekt-Phase (VERBINDLICH)
 
 BPM befindet sich in früher Entwicklung ohne Produktivdaten.

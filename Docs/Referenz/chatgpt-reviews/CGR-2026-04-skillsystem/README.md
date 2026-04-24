@@ -4,7 +4,7 @@
 
 **Zeitraum:** April 2026
 **Ursprungs-Chat:** "Bauprojektmanager (Phase 1) Teil 22" ff.
-**Status:** Runde 6 offen (Vertiefung nach Runde-5-Audit)
+**Status:** Abgeschlossen (Runden 1–6 done, keine Runde 7 nötig)
 
 ---
 
@@ -70,16 +70,53 @@
 ### Runde 6 — Vertiefung nach Audit
 - **Artefakte:**
   - ✅ [r6/01-claude-prompt.md](./r6/01-claude-prompt.md) — Folgeprompt (5 Vertiefungsfragen)
-  - ⏳ r6/02-chatgpt-response.md — offen
-  - ⏳ r6/03-claude-analysis.md — offen
-  - ⏳ r6/04-user-decisions.md — offen
+  - ✅ [r6/02-chatgpt-response.md](./r6/02-chatgpt-response.md) — ChatGPTs Antwort
+  - ✅ [r6/03-claude-analysis.md](./r6/03-claude-analysis.md) — Claudes Einschätzung
+  - ✅ [r6/04-user-decisions.md](./r6/04-user-decisions.md) — User-Entscheidungen
 - **Fokus:** Konkretisierung vor Go-Entscheidung
-  - cc-steuerung Multi-Trigger objektiv testen (Variante B+C aus r5)
-  - README-Refactor konkretisieren (Onboarding/Verweis-Pattern)
-  - Smoke-Eval-Inhalt 11 Skills konkretisieren
-  - Versteckte Fragilitäten Risiko-Priorisierung
-  - Fresh-Model-API-Eval Aufwand-Schätzung
-- **Kernergebnis:** offen (in progress)
+- **Kernergebnis:**
+  - **Q5–Q10 cc-steuerung Test-Cases** ergänzt (Q5 präzisiert: inhaltliche INDEX-Frage statt "lies INDEX.md")
+  - **INDEX §9-Formulierung** finalisiert mit Smoke-Test-Pflicht + Exit-Kriterium
+  - **README-Refactor-Plan kapitelweise** (Kapitel 9 raus, Two-Place/Memory/Eval auf Verweise)
+  - **Smoke-Eval-Verteilung** asymmetrisch nach Konfliktträchtigkeit (~75–85 Cases gesamt)
+  - **2 kritischste Fragilitäten:** cc-steuerung-Modalität + Tracker-Anker-Disziplin
+  - **API-Eval kein Vorab-Blocker** — manueller 80%-Run reicht initial
+  - **Weg 2 gewählt:** P0 in dieser Sitzung, Smoke-Eval als eigene nächste Sitzung
+
+---
+
+## Serie-Abschluss
+
+**Status: Abgeschlossen (2026-04-25)**
+
+Die Serie hat das Skill-System nach dem Komplett-Refactor (v0.18.0) extern validiert
+und eine Stabilisierungs-Roadmap erzeugt. Alle Reviewer-Einigkeit, kein offener Streitpunkt.
+
+### Resultierende ClickUp-Roadmap
+
+14 Tasks in ClickUp-Liste `901522935159` (ClaudeSkills-Refactor-Plan):
+
+- **P0 Stabilisierung** (`86c9gmj5t`) — 4 Subtasks, P0.1 done (`59c7d21` v0.18.1), P0.2–P0.4 offen
+- **P1 Smoke-Eval-Komplex** (`86c9gmjyd`) — 4 Subtasks, alle offen, eigene Sitzung
+- **P2 Fresh-Model-API-Eval** (`86c9gmk2m`) — 3 Subtasks, bedingt aktiviert
+- **P3 Doku-Hygiene** (`86c9gmkbz`) — 2 Subtasks (Memory-Eskalation + Frühwarn-Indikatoren)
+- **P4.1 Skill-Lade-Indikatoren** (`86c9gmkdt`) — Beobachtungstask
+- **P4.2 Golden-Cases laufend** (`86c9gmkea`) — laufender Beobachtungstask
+
+### Versions-Roadmap
+
+| Version | Inhalt |
+|---------|--------|
+| v0.18.1 ✅ | P0.1 CHANGELOG-Drift |
+| v0.19.0 | P0.2/P0.3/P0.4 + P3.1/P3.2 |
+| v0.20.0 | P1 Smoke-Eval-Komplex |
+| v0.21.0 | P2.1/P2.2 (bedingt) |
+| v0.22.0 | P2.3 Variante-A (sehr bedingt) |
+
+### BPM-Feature-Arbeit
+
+Blockiert bis P0 abgeschlossen. Smoke-Eval (P1) folgt parallel oder vorher
+in eigener Stabilisierungs-Sitzung. P2/P3/P4 laufen begleitend ohne Blocker.
 
 ---
 
@@ -121,5 +158,5 @@ Arbeitsnahe Extrakt-Version: `claude-skills-bpm/docs/skill-refactor-phases.md`
 
 ## Offene Punkte
 
-- Runde 6 (Vertiefung nach Audit) läuft — Ergebnis offen
-- BPM-Feature-Arbeit-Freigabe blockiert bis nach Runde 6
+Keine — Serie ist abgeschlossen. Folge-Arbeit läuft als ClickUp-Tasks (P0–P4)
+und braucht kein weiteres ChatGPT-Review.

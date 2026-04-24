@@ -4,7 +4,7 @@
 
 **Zeitraum:** April 2026
 **Ursprungs-Chat:** "Bauprojektmanager (Phase 1) Teil 22" ff.
-**Status:** Runde 5 offen (Nachtrag-Audit nach Refactor-Abschluss)
+**Status:** Runde 6 offen (Vertiefung nach Runde-5-Audit)
 
 ---
 
@@ -67,6 +67,20 @@
   - Versteckte Fragilitäten unter Dauer-Last?
 - **Kernergebnis:** offen (in progress)
 
+### Runde 6 — Vertiefung nach Audit
+- **Artefakte:**
+  - ✅ [r6/01-claude-prompt.md](./r6/01-claude-prompt.md) — Folgeprompt (5 Vertiefungsfragen)
+  - ⏳ r6/02-chatgpt-response.md — offen
+  - ⏳ r6/03-claude-analysis.md — offen
+  - ⏳ r6/04-user-decisions.md — offen
+- **Fokus:** Konkretisierung vor Go-Entscheidung
+  - cc-steuerung Multi-Trigger objektiv testen (Variante B+C aus r5)
+  - README-Refactor konkretisieren (Onboarding/Verweis-Pattern)
+  - Smoke-Eval-Inhalt 11 Skills konkretisieren
+  - Versteckte Fragilitäten Risiko-Priorisierung
+  - Fresh-Model-API-Eval Aufwand-Schätzung
+- **Kernergebnis:** offen (in progress)
+
 ---
 
 ## Finale Phasenstruktur (aus r4)
@@ -107,5 +121,5 @@ Arbeitsnahe Extrakt-Version: `claude-skills-bpm/docs/skill-refactor-phases.md`
 
 ## Offene Punkte
 
-- Runde 5 (Abschluss-Audit) läuft — Ergebnis offen
-- Bei weiteren Erkenntnissen aus Runde 5: ggf. Description-Schärfungen oder neue Konfliktpaare
+- Runde 6 (Vertiefung nach Audit) läuft — Ergebnis offen
+- BPM-Feature-Arbeit-Freigabe blockiert bis nach Runde 6

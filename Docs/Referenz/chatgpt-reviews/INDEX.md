@@ -35,7 +35,7 @@ Pro Serie ein Ordner `CGR-<YYYY-MM>-<thema>/` mit:
 
 | CGR-ID | Thema | Runden | Status | Ursprungs-Chat | Kernergebnis |
 |--------|-------|--------|--------|----------------|--------------|
-| CGR-2026-04-skillsystem | Skill-System-Refactor | r1–r4 | r4 partiell (nur ChatGPT-Antwort), r1–r3 on-demand | Teil 22 ff. | Phase 1–5 Refactor-Plan, 4 Memory-Rubriken, tracker-Zerlegung |
+| CGR-2026-04-skillsystem | Skill-System-Refactor | r1–r5 | r5 offen (Audit-Prompt erstellt), r4 partiell, r1–r3 on-demand | Teil 22 ff. | Phase 1–6 Refactor done (v0.18.0), r5 = Reife-Audit vor BPM-Feature-Arbeit |
 | CGR-2026-04-docs-refactor | Docs-System-Refactor | r1–r3 | on-demand | "Docs und Skill refactoring (Teil 1)" | Frontmatter + INDEX-Router + AI-Quickload statt separate Briefs |
 | CGR-2026-04-bpm-architektur | PlanImport-Architektur | mind. r2 | on-demand | "Architektur-Dokumentation analysieren" | SQLite-Wahrheit auflösen, ProjectPaths.Root relativ, PlanImportFacade |
 | CGR-2026-04-datenschutz-dbschema | DSGVO + DB-Schema | r2–r3 | on-demand | "Skills für Kern-Dokumentation" | ADR-037 einheitliches ID-Schema TEXT mit Präfix, Whitelist registry.json |

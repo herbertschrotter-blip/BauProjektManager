@@ -4,7 +4,7 @@
 
 **Zeitraum:** April 2026
 **Ursprungs-Chat:** "Bauprojektmanager (Phase 1) Teil 22" ff.
-**Status:** Runde 4 abgeschlossen, keine Runde 5 geplant (laut r4-Fazit: "Ab hier ist es Abarbeitung, nicht Analyse")
+**Status:** Runde 5 offen (Nachtrag-Audit nach Refactor-Abschluss)
 
 ---
 
@@ -53,6 +53,20 @@
   - **Zwei-Orte-Pflege zweistufig:** Datei-Verifikation sofort + Verhaltens-Verifikation im nächsten Chat
   - **4. betroffener Skill:** tracker (Memory→ClickUp-Eskalation)
 
+### Runde 5 — Abschluss-Audit nach Refactor-Komplettierung
+- **Artefakte:**
+  - ✅ [r5/01-claude-prompt.md](./r5/01-claude-prompt.md) — Audit-Prompt (5 Fokus-Punkte)
+  - ⏳ r5/02-chatgpt-response.md — offen
+  - ⏳ r5/03-claude-analysis.md — offen
+  - ⏳ r5/04-user-decisions.md — offen
+- **Fokus:** Reife-Einschätzung als Go/No-Go vor BPM-Feature-Arbeit
+  - 7 Konfliktpaar-Delegationen objektiv scharf?
+  - 3 Blind-Misses heilbar oder strukturell?
+  - Meta-Doku (README/INDEX/CHANGELOG) Redundanz/Lücken?
+  - skill-pflege-007 am richtigen Ort (skill-pflege vs. Meta-Stelle)?
+  - Versteckte Fragilitäten unter Dauer-Last?
+- **Kernergebnis:** offen (in progress)
+
 ---
 
 ## Finale Phasenstruktur (aus r4)
@@ -93,5 +107,5 @@ Arbeitsnahe Extrakt-Version: `claude-skills-bpm/docs/skill-refactor-phases.md`
 
 ## Offene Punkte
 
-- Keine Runde 5 geplant — r4-Fazit: Analyse abgeschlossen
-- Bei neuen Erkenntnissen während Phase 4 / 5 ggf. CGR-2026-MM-skillsystem-r5 als Nachtrag
+- Runde 5 (Abschluss-Audit) läuft — Ergebnis offen
+- Bei weiteren Erkenntnissen aus Runde 5: ggf. Description-Schärfungen oder neue Konfliktpaare

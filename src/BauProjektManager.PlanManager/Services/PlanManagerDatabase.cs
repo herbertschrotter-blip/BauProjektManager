@@ -167,7 +167,7 @@ public class PlanManagerDatabase : IDisposable
         var conn = GetConnection();
         var cmd = conn.CreateCommand();
         cmd.CommandText = """
-            SELECT id, plan_index, md5_hash FROM plan_revisions pr
+            SELECT pr.id, pr.plan_index, pf.md5_hash FROM plan_revisions pr
             JOIN plan_files pf ON pf.id = (
                 SELECT file_id FROM revision_file_links
                 WHERE revision_id = pr.id AND is_primary = 1

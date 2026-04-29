@@ -20,10 +20,12 @@ public class ImportWorkflowService
     private readonly RevisionDecisionService _decision = new();
     private readonly ImportPlanBuilder _planBuilder = new();
     private readonly ProfileManager _profileManager;
+    private readonly PlanManagerDatabase _db;
 
-    public ImportWorkflowService(ProfileManager profileManager)
+    public ImportWorkflowService(ProfileManager profileManager, PlanManagerDatabase db)
     {
         _profileManager = profileManager;
+        _db = db;
     }
 
     /// <summary>
@@ -91,8 +93,7 @@ public class ImportWorkflowService
         }
 
         // 6. Version Decision — apply 9-status decision matrix
-        // V1: no existing revisions yet (empty DB) — all files are NEW or UNKNOWN
-        var existingRevisions = new Dictionary<string, ExistingRevision>();
+        var existingRevisions = _db.GetAllCurrentRevisions();
         var decisions = _decision.Decide(classified, existingRevisions);
 
         // 7. Execution Plan — calculate target paths

@@ -790,7 +790,7 @@ BauProjektManager.PlanManager/
 | 4 | 21 | PatternTemplates (Vorschlagslogik) | ✅ v0.25.5 |
 | 5 | 22 | .bpm/profiles/ (Pro Projekt) — ProfileManager + v1→v2 Migration | ✅ v0.25.8 |
 | 6 | 23 | pattern-templates.json (Globale Bibliothek) | ✅ v0.25.5 |
-| 7 | 24 | Import-Pipeline 7 Services (Scan→Fingerprint→Parse→Resolve→Key→Decision→Plan) | ✅ v0.25.11 |
+| 7 | 24 | Import-Pipeline 7 Services (Scan→Fingerprint→Parse→Resolve→Key→Decision→Plan) | ✅ v0.25.11 + v0.27.5 (BPM-001 DB-Anbindung) |
 | 8 | 25 | Import-Vorschau (DataGrid, 9 Status-Typen) | ✅ v0.25.14 |
 | 9 | 26 | Import-Execute (Verschieben, Journal, DB-Update) | ✅ v0.25.15 |
 | 10 | 27 | Index-Archivierung (_Archiv/) | ✅ v0.25.15 |

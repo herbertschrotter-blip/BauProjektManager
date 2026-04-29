@@ -51,7 +51,9 @@ public partial class ProjectDetailView : UserControl
 
         try
         {
-            var workflow = new ImportWorkflowService(_profileManager);
+            using var db = new PlanManagerDatabase(project.Id, _idGenerator);
+
+            var workflow = new ImportWorkflowService(_profileManager, db);
             var result = await workflow.AnalyzeAsync(
                 project.Paths.Root,
                 project.Paths.Inbox,
@@ -73,7 +75,6 @@ public partial class ProjectDetailView : UserControl
             // Phase H: Execute import if user confirmed
             if (dialog.ExecuteRequested)
             {
-                var db = new PlanManagerDatabase(project.Id, _idGenerator);
                 var executor = new ImportExecutionService(db, _idGenerator);
                 var execResult = executor.Execute(
                     result.Decisions, project.Paths.Root, project.Paths.Inbox);
@@ -91,7 +92,6 @@ public partial class ProjectDetailView : UserControl
 
                 // Refresh inbox count
                 ViewModel.RefreshInboxCommand.Execute(null);
-                db.Dispose();
             }
         }
         catch (Exception ex)

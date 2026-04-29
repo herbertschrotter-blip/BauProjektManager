@@ -31,6 +31,23 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.27.5] — 2026-04-29
+
+### PlanManager: DB-Anbindung Orchestrator (BPM-001) + SQL-Ambiguity-Fix
+
+### Geaendert
+- ImportWorkflowService nutzt jetzt PlanManagerDatabase.GetAllCurrentRevisions() statt leerem Dictionary-Stub. 9-Status-Decision-Matrix funktioniert vollstaendig (NEW, SkipIdentical, UpdateNewerIndex, ChangedSameIndex, ChangedNoIndex, OlderRevision, Conflict, LearnIndex, Unknown).
+- ImportWorkflowService Constructor erweitert um PlanManagerDatabase-Dependency.
+- ProjectDetailView.OnStartImport: PlanManagerDatabase wird jetzt VOR der Analyse erstellt (using-Pattern), Workflow + Executor teilen eine Instanz statt doppelter Connections.
+
+### Behoben
+- PlanManagerDatabase.GetCurrentRevision: SQL-Bug "ambiguous column 'id'" behoben (Spalten qualifiziert auf pr.id und pf.md5_hash). Bug existierte seit v0.25.13 latent — wurde nach BPM-001 sichtbar, weil Erst-Imports vor BPM-001 nie ueber Stub hinaus kamen. Blockierte alle DB-Inserts beim Execute.
+
+### Audit-Erkenntnis
+- Code-Audit gegen ClickUp-Tracker: BPM-009 (ProfileManager), BPM-011 (Import-Workflow 1-5), BPM-012 (Import-Vorschau GUI), BPM-013 (Import-Execute), BPM-014 (Index-Archivierung) sind faktisch erledigt seit v0.25.8-15, ClickUp-Status war veraltet.
+
+---
+
 ## [v0.25.23] — 2026-04-16
 
 ### DB Schema v2.1 — Sync-Spalten + IUserContext (ADR-050, ADR-052)

@@ -40,7 +40,7 @@ Pro Serie ein Ordner `CGR-<YYYY-MM-DD>-<thema>/` mit:
 | CGR-2026-04-22-docs-refactor | Docs-System-Refactor | r1–r3 | on-demand | "Docs und Skill refactoring (Teil 1)" | Frontmatter + INDEX-Router + AI-Quickload statt separate Briefs |
 | CGR-2026-04-22-bpm-architektur | PlanImport-Architektur | mind. r2 | on-demand | "Architektur-Dokumentation analysieren" | SQLite-Wahrheit auflösen, ProjectPaths.Root relativ, PlanImportFacade |
 | CGR-2026-04-22-datenschutz-dbschema | DSGVO + DB-Schema | r2–r3 | on-demand | "Skills für Kern-Dokumentation" | ADR-037 einheitliches ID-Schema TEXT mit Präfix, Whitelist registry.json |
-| CGR-2026-04-29-cc-vs-dc | CC vs DC Workflow + Skill-Aufteilung | r1 | Runde 1 offen | Teil 34 | _Runde 1 läuft_ |
+| CGR-2026-04-29-cc-vs-dc | CC vs DC Workflow + Skill-Aufteilung | r1–r2 | Runde 2 abgeschlossen | Teil 34 | _Implementierung offen_ |
 
 ## Verweis-Konventionen
 

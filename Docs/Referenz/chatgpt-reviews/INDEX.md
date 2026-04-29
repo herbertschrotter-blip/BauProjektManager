@@ -5,11 +5,11 @@
 ## ID-Schema
 
 ```
-CGR-<YYYY-MM>-<thema>-r<runde>
+CGR-<YYYY-MM-DD>-<thema>-r<runde>
 ```
 
 - `CGR` = ChatGPT-Review
-- `YYYY-MM` = Jahr + Monat der Serie (Startdatum)
+- `YYYY-MM-DD` = Vollständiges Startdatum der Serie (Tag der ersten Runde)
 - `<thema>` = Kurzbezeichnung (kebab-case)
 - `r<runde>` = Rundennummer (r1, r2, r3, …)
 
@@ -18,10 +18,11 @@ Themenbezeichnungen (Enum):
 - `docs-refactor` — Dokumentationsstruktur, Frontmatter, INDEX, Quickloads
 - `bpm-architektur` — BPM-Code-Architektur (PlanImport, SQLite-Wahrheit, Domain/Infra)
 - `datenschutz-dbschema` — DSGVO, DB-Schema, IDs, Whitelist, external_call_log
+- `cc-vs-dc` — Trennung Claude Code (CC) vs Desktop Commander (DC), Workflow-Schwellen, Skill-Aufteilung
 
 ## Ablage-Konvention
 
-Pro Serie ein Ordner `CGR-<YYYY-MM>-<thema>/` mit:
+Pro Serie ein Ordner `CGR-<YYYY-MM-DD>-<thema>/` mit:
 - `README.md` — Serie-Übersicht, Runden-Zusammenfassung, finale Entscheidungen
 - Pro Runde ein Unterordner `r<N>/` mit 4 nummerierten Dateien:
   - `01-claude-prompt.md` — Claudes Prompt an ChatGPT
@@ -35,21 +36,22 @@ Pro Serie ein Ordner `CGR-<YYYY-MM>-<thema>/` mit:
 
 | CGR-ID | Thema | Runden | Status | Ursprungs-Chat | Kernergebnis |
 |--------|-------|--------|--------|----------------|--------------|
-| CGR-2026-04-skillsystem | Skill-System-Refactor | r1–r6 | Abgeschlossen | Teil 22 ff. | Phase 1–6 Refactor done (v0.18.0). r5+r6 Audit erzeugte 14 ClickUp-Tasks (P0–P4) als Stabilisierungs-Roadmap. P0.1 done v0.18.1. |
-| CGR-2026-04-docs-refactor | Docs-System-Refactor | r1–r3 | on-demand | "Docs und Skill refactoring (Teil 1)" | Frontmatter + INDEX-Router + AI-Quickload statt separate Briefs |
-| CGR-2026-04-bpm-architektur | PlanImport-Architektur | mind. r2 | on-demand | "Architektur-Dokumentation analysieren" | SQLite-Wahrheit auflösen, ProjectPaths.Root relativ, PlanImportFacade |
-| CGR-2026-04-datenschutz-dbschema | DSGVO + DB-Schema | r2–r3 | on-demand | "Skills für Kern-Dokumentation" | ADR-037 einheitliches ID-Schema TEXT mit Präfix, Whitelist registry.json |
+| CGR-2026-04-22-skillsystem | Skill-System-Refactor | r1–r6 | Abgeschlossen | Teil 22 ff. | Phase 1–6 Refactor done (v0.18.0). r5+r6 Audit erzeugte 14 ClickUp-Tasks (P0–P4) als Stabilisierungs-Roadmap. P0.1 done v0.18.1. |
+| CGR-2026-04-22-docs-refactor | Docs-System-Refactor | r1–r3 | on-demand | "Docs und Skill refactoring (Teil 1)" | Frontmatter + INDEX-Router + AI-Quickload statt separate Briefs |
+| CGR-2026-04-22-bpm-architektur | PlanImport-Architektur | mind. r2 | on-demand | "Architektur-Dokumentation analysieren" | SQLite-Wahrheit auflösen, ProjectPaths.Root relativ, PlanImportFacade |
+| CGR-2026-04-22-datenschutz-dbschema | DSGVO + DB-Schema | r2–r3 | on-demand | "Skills für Kern-Dokumentation" | ADR-037 einheitliches ID-Schema TEXT mit Präfix, Whitelist registry.json |
+| CGR-2026-04-29-cc-vs-dc | CC vs DC Workflow + Skill-Aufteilung | r1 | Runde 1 offen | Teil 34 | _Runde 1 läuft_ |
 
 ## Verweis-Konventionen
 
 **Aus anderen Dokumenten auf ein Review verweisen:**
 ```
-Siehe CGR-2026-04-skillsystem-r4 (Memory-Integration)
+Siehe CGR-2026-04-22-skillsystem-r4 (Memory-Integration)
 ```
 
 **Aus Memory-Einträgen (`[REVIEW-PENDING]`-Rubrik):**
 ```
-[REVIEW-PENDING] CGR-2026-04-skillsystem — offen: Runde 5 nötig?
+[REVIEW-PENDING] CGR-2026-04-22-skillsystem — offen: Runde 5 nötig?
 ```
 
 **Aus ClickUp-Tasks:** inline im Task-Text als Referenz, kein eigenes Custom-Field.

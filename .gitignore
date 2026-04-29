@@ -17,3 +17,6 @@ Hilfsmodule/
 
 ## Generierte Exporte
 Export/registry.json
+
+## Claude Code lokale Settings + Worktrees
+.claude/

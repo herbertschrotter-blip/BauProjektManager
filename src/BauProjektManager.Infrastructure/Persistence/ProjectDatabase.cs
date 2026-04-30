@@ -117,16 +117,6 @@ public class ProjectDatabase : IDisposable
                 FOREIGN KEY (client_id) REFERENCES clients(id)
             );
 
-            CREATE TABLE IF NOT EXISTS buildings (
-                id TEXT PRIMARY KEY,
-                project_id TEXT NOT NULL,
-                name TEXT NOT NULL DEFAULT '',
-                short_name TEXT NOT NULL DEFAULT '',
-                type TEXT NOT NULL DEFAULT '',
-                levels TEXT NOT NULL DEFAULT '',
-                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
-            );
-
             CREATE TABLE IF NOT EXISTS building_parts (
                 id TEXT PRIMARY KEY,
                 project_id TEXT NOT NULL,

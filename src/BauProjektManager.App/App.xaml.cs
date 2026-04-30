@@ -116,8 +116,10 @@ public partial class App : Application
         // Singleton: einmalig erstellt, überall dieselbe Instanz
         sc.AddSingleton(settings);
         sc.AddSingleton(settingsService);
+        sc.AddSingleton<DeviceSettings>(sp => sp.GetRequiredService<AppSettingsService>().LoadDevice());
         sc.AddSingleton<IIdGenerator, UlidIdGenerator>();
         sc.AddSingleton<IUserContext>(sp => new LocalUserContext(sp.GetRequiredService<AppSettings>()));
+        sc.AddSingleton<IDeviceContext>(sp => new LocalDeviceContext(sp.GetRequiredService<DeviceSettings>()));
         sc.AddSingleton<IDialogService, BpmDialogService>();
         sc.AddSingleton<ProjectDatabase>();
         sc.AddSingleton<IProfileManager, ProfileManager>();

@@ -220,6 +220,57 @@ public class ProjectDatabase : IDisposable
         verCmd.ExecuteNonQuery();
     }
 
+    // === SYNC HELPERS (ADR-053) ===
+    // Soft-Delete und Diff-basierte Save-Operationen für Server-Sync.
+
+    /// <summary>
+    /// Soft-Delete für einen Datensatz per ID: setzt is_deleted=1 + Sync-Metadaten.
+    /// Wirkt nur auf nicht bereits gelöschte Zeilen (idempotent).
+    /// </summary>
+    private void SoftDeleteById(string table, string id, string utcNow, string user)
+    {
+        var conn = GetConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = $"UPDATE {table} SET is_deleted = 1, last_modified_at = @now, last_modified_by = @user, sync_version = sync_version + 1 WHERE id = @id AND is_deleted = 0";
+        cmd.Parameters.AddWithValue("@now", utcNow);
+        cmd.Parameters.AddWithValue("@user", user);
+        cmd.Parameters.AddWithValue("@id", id);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "SOFT-DELETE", table);
+        cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>
+    /// Soft-Delete kaskadierend per Foreign Key: alle Kindzeilen einer Parent-ID.
+    /// </summary>
+    private void SoftDeleteByForeignKey(string table, string fkCol, string fkVal, string utcNow, string user)
+    {
+        var conn = GetConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = $"UPDATE {table} SET is_deleted = 1, last_modified_at = @now, last_modified_by = @user, sync_version = sync_version + 1 WHERE {fkCol} = @fk AND is_deleted = 0";
+        cmd.Parameters.AddWithValue("@now", utcNow);
+        cmd.Parameters.AddWithValue("@user", user);
+        cmd.Parameters.AddWithValue("@fk", fkVal);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "SOFT-DELETE-CASCADE", table);
+        cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>
+    /// Lädt IDs existierender (nicht gelöschter) Datensätze einer Tabelle nach Foreign Key.
+    /// Basis für Diff-basierte Save-Operationen.
+    /// </summary>
+    private HashSet<string> LoadExistingIds(string table, string fkCol, string fkVal)
+    {
+        var conn = GetConnection();
+        var existing = new HashSet<string>();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = $"SELECT id FROM {table} WHERE {fkCol} = @fk AND is_deleted = 0";
+        cmd.Parameters.AddWithValue("@fk", fkVal);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+            existing.Add(reader.GetString(0));
+        return existing;
+    }
+
     // === PROJECTS ===
 
     public List<Project> LoadAllProjects()
@@ -230,7 +281,8 @@ public class ProjectDatabase : IDisposable
         cmd.CommandText = """
             SELECT p.*, c.company, c.contact_person, c.phone, c.email, c.notes as client_notes
             FROM projects p
-            LEFT JOIN clients c ON p.client_id = c.id
+            LEFT JOIN clients c ON p.client_id = c.id AND c.is_deleted = 0
+            WHERE p.is_deleted = 0
             ORDER BY p.project_number DESC
             """;
         Log.Verbose("Executing SQL: {Operation} on {Table}", "SELECT", "projects");
@@ -353,7 +405,7 @@ public class ProjectDatabase : IDisposable
     {
         var conn = GetConnection();
         var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT COUNT(*) FROM projects WHERE root_path = @path";
+        cmd.CommandText = "SELECT COUNT(*) FROM projects WHERE root_path = @path AND is_deleted = 0";
         cmd.Parameters.AddWithValue("@path", rootPath);
         return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
     }
@@ -362,7 +414,7 @@ public class ProjectDatabase : IDisposable
     {
         var conn = GetConnection();
         var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT COUNT(*) FROM projects WHERE id = @id";
+        cmd.CommandText = "SELECT COUNT(*) FROM projects WHERE id = @id AND is_deleted = 0";
         cmd.Parameters.AddWithValue("@id", projectId);
         Log.Verbose("Executing SQL: {Operation} on {Table}", "SELECT", "projects");
         return Convert.ToInt64(cmd.ExecuteScalar()) > 0;
@@ -370,43 +422,31 @@ public class ProjectDatabase : IDisposable
 
     public void DeleteProject(string projectId)
     {
+        // ADR-053: Soft-Delete mit Cascade. is_deleted=1 + Sync-Metadaten,
+        // statt physischem DELETE — sonst kann der Server keine Tombstones syncen.
         var conn = GetConnection();
+        var utcNow = DateTime.UtcNow.ToString("o");
+        var user = _userContext.DisplayName;
 
-        var linkCmd = conn.CreateCommand();
-        linkCmd.CommandText = "DELETE FROM project_links WHERE project_id = @id";
-        linkCmd.Parameters.AddWithValue("@id", projectId);
-        Log.Verbose("Executing SQL: {Operation} on {Table}", "DELETE", "project_links");
-        linkCmd.ExecuteNonQuery();
+        SoftDeleteByForeignKey("project_links", "project_id", projectId, utcNow, user);
+        SoftDeleteByForeignKey("project_participants", "project_id", projectId, utcNow, user);
 
-        var ppartCmd = conn.CreateCommand();
-        ppartCmd.CommandText = "DELETE FROM project_participants WHERE project_id = @id";
-        ppartCmd.Parameters.AddWithValue("@id", projectId);
-        Log.Verbose("Executing SQL: {Operation} on {Table}", "DELETE", "project_participants");
-        ppartCmd.ExecuteNonQuery();
-
+        // building_levels: kaskadiert über building_parts (kein direkter FK auf project)
         var lvlCmd = conn.CreateCommand();
-        lvlCmd.CommandText = "DELETE FROM building_levels WHERE building_part_id IN (SELECT id FROM building_parts WHERE project_id = @id)";
+        lvlCmd.CommandText = """
+            UPDATE building_levels
+            SET is_deleted = 1, last_modified_at = @now, last_modified_by = @user, sync_version = sync_version + 1
+            WHERE building_part_id IN (SELECT id FROM building_parts WHERE project_id = @id)
+              AND is_deleted = 0
+            """;
+        lvlCmd.Parameters.AddWithValue("@now", utcNow);
+        lvlCmd.Parameters.AddWithValue("@user", user);
         lvlCmd.Parameters.AddWithValue("@id", projectId);
-        Log.Verbose("Executing SQL: {Operation} on {Table}", "DELETE", "building_levels");
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "SOFT-DELETE-CASCADE", "building_levels");
         lvlCmd.ExecuteNonQuery();
 
-        var partCmd = conn.CreateCommand();
-        partCmd.CommandText = "DELETE FROM building_parts WHERE project_id = @id";
-        partCmd.Parameters.AddWithValue("@id", projectId);
-        Log.Verbose("Executing SQL: {Operation} on {Table}", "DELETE", "building_parts");
-        partCmd.ExecuteNonQuery();
-
-        var bldgCmd = conn.CreateCommand();
-        bldgCmd.CommandText = "DELETE FROM buildings WHERE project_id = @id";
-        bldgCmd.Parameters.AddWithValue("@id", projectId);
-        Log.Verbose("Executing SQL: {Operation} on {Table}", "DELETE", "buildings");
-        bldgCmd.ExecuteNonQuery();
-
-        var projCmd = conn.CreateCommand();
-        projCmd.CommandText = "DELETE FROM projects WHERE id = @id";
-        projCmd.Parameters.AddWithValue("@id", projectId);
-        Log.Verbose("Executing SQL: {Operation} on {Table}", "DELETE", "projects");
-        projCmd.ExecuteNonQuery();
+        SoftDeleteByForeignKey("building_parts", "project_id", projectId, utcNow, user);
+        SoftDeleteById("projects", projectId, utcNow, user);
     }
 
     // === CLIENTS ===
@@ -415,7 +455,7 @@ public class ProjectDatabase : IDisposable
     {
         var conn = GetConnection();
         var checkCmd = conn.CreateCommand();
-        checkCmd.CommandText = "SELECT client_id FROM projects WHERE id = @id";
+        checkCmd.CommandText = "SELECT client_id FROM projects WHERE id = @id AND is_deleted = 0";
         checkCmd.Parameters.AddWithValue("@id", projectId);
         Log.Verbose("Executing SQL: {Operation} on {Table}", "SELECT", "projects");
         var existingClientId = checkCmd.ExecuteScalar() as string;
@@ -452,7 +492,7 @@ public class ProjectDatabase : IDisposable
         var conn = GetConnection();
         var parts = new List<BuildingPart>();
         var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT * FROM building_parts WHERE project_id = @pid ORDER BY sort_order";
+        cmd.CommandText = "SELECT * FROM building_parts WHERE project_id = @pid AND is_deleted = 0 ORDER BY sort_order";
         cmd.Parameters.AddWithValue("@pid", projectId);
         Log.Verbose("Executing SQL: {Operation} on {Table}", "SELECT", "building_parts");
         using var reader = cmd.ExecuteReader();
@@ -478,7 +518,7 @@ public class ProjectDatabase : IDisposable
         var conn = GetConnection();
         var levels = new List<BuildingLevel>();
         var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT * FROM building_levels WHERE building_part_id = @bpid ORDER BY sort_order";
+        cmd.CommandText = "SELECT * FROM building_levels WHERE building_part_id = @bpid AND is_deleted = 0 ORDER BY sort_order";
         cmd.Parameters.AddWithValue("@bpid", buildingPartId);
         Log.Verbose("Executing SQL: {Operation} on {Table}", "SELECT", "building_levels");
         using var reader = cmd.ExecuteReader();
@@ -509,57 +549,101 @@ public class ProjectDatabase : IDisposable
 
     private void SaveBuildingParts(string projectId, List<BuildingPart> parts)
     {
+        // ADR-053: Diff-basierte Save-Operation. Statt DELETE+INSERT ALL
+        // (was sync_version aller Datensätze auf 0 zurücksetzen würde),
+        // wird zwischen entfernten/geänderten/neuen Datensätzen unterschieden:
+        //   - entfernt -> SOFT-DELETE (mit Cascade auf Levels)
+        //   - geändert -> UPSERT (sync_version+=1)
+        //   - neu      -> INSERT (sync_version=0)
         var conn = GetConnection();
-        var delLvlCmd = conn.CreateCommand();
-        delLvlCmd.CommandText = "DELETE FROM building_levels WHERE building_part_id IN (SELECT id FROM building_parts WHERE project_id = @pid)";
-        delLvlCmd.Parameters.AddWithValue("@pid", projectId);
-        Log.Verbose("Executing SQL: {Operation} on {Table}", "DELETE", "building_levels");
-        delLvlCmd.ExecuteNonQuery();
-        var delPartCmd = conn.CreateCommand();
-        delPartCmd.CommandText = "DELETE FROM building_parts WHERE project_id = @pid";
-        delPartCmd.Parameters.AddWithValue("@pid", projectId);
-        Log.Verbose("Executing SQL: {Operation} on {Table}", "DELETE", "building_parts");
-        delPartCmd.ExecuteNonQuery();
+        var utcNow = DateTime.UtcNow.ToString("o");
+        var user = _userContext.DisplayName;
 
+        // 1. Existierende Part-IDs laden
+        var existingPartIds = LoadExistingIds("building_parts", "project_id", projectId);
+
+        // 2. IDs für neue Parts generieren
+        for (int i = 0; i < parts.Count; i++)
+        {
+            if (string.IsNullOrEmpty(parts[i].Id))
+                parts[i].Id = _idGenerator.NewId();
+        }
+        var newPartIds = parts.Select(p => p.Id).ToHashSet();
+
+        // 3. Soft-Delete: Parts die in DB sind aber nicht mehr in der Liste
+        //    Cascade: zugehörige Levels ebenfalls soft-löschen
+        foreach (var deletedId in existingPartIds.Except(newPartIds))
+        {
+            SoftDeleteByForeignKey("building_levels", "building_part_id", deletedId, utcNow, user);
+            SoftDeleteById("building_parts", deletedId, utcNow, user);
+        }
+
+        // 4. UPSERT: alle Parts in der Liste (INSERT für neue, UPDATE für bestehende)
         for (int i = 0; i < parts.Count; i++)
         {
             var part = parts[i];
-            var partId = string.IsNullOrEmpty(part.Id) ? _idGenerator.NewId() : part.Id;
-            var utcNow = DateTime.UtcNow.ToString("o");
             var cmd = conn.CreateCommand();
             cmd.CommandText = """
                 INSERT INTO building_parts (id, project_id, short_name, description, building_type, zero_level_absolute, sort_order, created_at, created_by, last_modified_at, last_modified_by, sync_version)
                 VALUES (@id, @pid, @sn, @desc, @bt, @zla, @so, @now, @user, @now, @user, 0)
+                ON CONFLICT(id) DO UPDATE SET
+                    short_name = @sn, description = @desc, building_type = @bt,
+                    zero_level_absolute = @zla, sort_order = @so,
+                    last_modified_at = @now, last_modified_by = @user,
+                    sync_version = sync_version + 1
                 """;
             cmd.Parameters.AddWithValue("@now", utcNow);
-            cmd.Parameters.AddWithValue("@user", _userContext.DisplayName);
-            cmd.Parameters.AddWithValue("@id", partId); cmd.Parameters.AddWithValue("@pid", projectId);
+            cmd.Parameters.AddWithValue("@user", user);
+            cmd.Parameters.AddWithValue("@id", part.Id); cmd.Parameters.AddWithValue("@pid", projectId);
             cmd.Parameters.AddWithValue("@sn", part.ShortName); cmd.Parameters.AddWithValue("@desc", part.Description);
             cmd.Parameters.AddWithValue("@bt", part.BuildingType); cmd.Parameters.AddWithValue("@zla", part.ZeroLevelAbsolute);
             cmd.Parameters.AddWithValue("@so", i);
-            Log.Verbose("Executing SQL: {Operation} on {Table}", "INSERT", "building_parts");
+            Log.Verbose("Executing SQL: {Operation} on {Table}", "UPSERT", "building_parts");
             cmd.ExecuteNonQuery();
 
-            for (int j = 0; j < part.Levels.Count; j++)
-            {
-                var level = part.Levels[j];
-                var levelId = string.IsNullOrEmpty(level.Id) ? _idGenerator.NewId() : level.Id;
-                var lvlNow = DateTime.UtcNow.ToString("o");
-                var lvlCmd = conn.CreateCommand();
-                lvlCmd.CommandText = """
-                    INSERT INTO building_levels (id, building_part_id, prefix, name, description, rdok, fbok, rduk, sort_order, created_at, created_by, last_modified_at, last_modified_by, sync_version)
-                    VALUES (@id, @bpid, @prefix, @name, @desc, @rdok, @fbok, @rduk, @so, @now, @user, @now, @user, 0)
-                    """;
-                lvlCmd.Parameters.AddWithValue("@now", lvlNow);
-                lvlCmd.Parameters.AddWithValue("@user", _userContext.DisplayName);
-                lvlCmd.Parameters.AddWithValue("@id", levelId); lvlCmd.Parameters.AddWithValue("@bpid", partId);
-                lvlCmd.Parameters.AddWithValue("@prefix", level.Prefix); lvlCmd.Parameters.AddWithValue("@name", level.Name);
-                lvlCmd.Parameters.AddWithValue("@desc", level.Description); lvlCmd.Parameters.AddWithValue("@rdok", level.Rdok);
-                lvlCmd.Parameters.AddWithValue("@fbok", level.Fbok); lvlCmd.Parameters.AddWithValue("@rduk", (object?)level.Rduk ?? DBNull.Value);
-                lvlCmd.Parameters.AddWithValue("@so", j);
-                Log.Verbose("Executing SQL: {Operation} on {Table}", "INSERT", "building_levels");
-                lvlCmd.ExecuteNonQuery();
-            }
+            // Levels für diesen Part diff-basiert speichern
+            SaveBuildingLevels(part.Id, part.Levels, utcNow, user);
+        }
+    }
+
+    private void SaveBuildingLevels(string buildingPartId, List<BuildingLevel> levels, string utcNow, string user)
+    {
+        var conn = GetConnection();
+
+        var existingLvlIds = LoadExistingIds("building_levels", "building_part_id", buildingPartId);
+
+        for (int i = 0; i < levels.Count; i++)
+        {
+            if (string.IsNullOrEmpty(levels[i].Id))
+                levels[i].Id = _idGenerator.NewId();
+        }
+        var newLvlIds = levels.Select(l => l.Id).ToHashSet();
+
+        foreach (var deletedId in existingLvlIds.Except(newLvlIds))
+            SoftDeleteById("building_levels", deletedId, utcNow, user);
+
+        for (int j = 0; j < levels.Count; j++)
+        {
+            var level = levels[j];
+            var lvlCmd = conn.CreateCommand();
+            lvlCmd.CommandText = """
+                INSERT INTO building_levels (id, building_part_id, prefix, name, description, rdok, fbok, rduk, sort_order, created_at, created_by, last_modified_at, last_modified_by, sync_version)
+                VALUES (@id, @bpid, @prefix, @name, @desc, @rdok, @fbok, @rduk, @so, @now, @user, @now, @user, 0)
+                ON CONFLICT(id) DO UPDATE SET
+                    prefix = @prefix, name = @name, description = @desc,
+                    rdok = @rdok, fbok = @fbok, rduk = @rduk, sort_order = @so,
+                    last_modified_at = @now, last_modified_by = @user,
+                    sync_version = sync_version + 1
+                """;
+            lvlCmd.Parameters.AddWithValue("@now", utcNow);
+            lvlCmd.Parameters.AddWithValue("@user", user);
+            lvlCmd.Parameters.AddWithValue("@id", level.Id); lvlCmd.Parameters.AddWithValue("@bpid", buildingPartId);
+            lvlCmd.Parameters.AddWithValue("@prefix", level.Prefix); lvlCmd.Parameters.AddWithValue("@name", level.Name);
+            lvlCmd.Parameters.AddWithValue("@desc", level.Description); lvlCmd.Parameters.AddWithValue("@rdok", level.Rdok);
+            lvlCmd.Parameters.AddWithValue("@fbok", level.Fbok); lvlCmd.Parameters.AddWithValue("@rduk", (object?)level.Rduk ?? DBNull.Value);
+            lvlCmd.Parameters.AddWithValue("@so", j);
+            Log.Verbose("Executing SQL: {Operation} on {Table}", "UPSERT", "building_levels");
+            lvlCmd.ExecuteNonQuery();
         }
     }
 
@@ -570,7 +654,7 @@ public class ProjectDatabase : IDisposable
         var conn = GetConnection();
         var list = new List<ProjectParticipant>();
         var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT * FROM project_participants WHERE project_id = @pid ORDER BY sort_order";
+        cmd.CommandText = "SELECT * FROM project_participants WHERE project_id = @pid AND is_deleted = 0 ORDER BY sort_order";
         cmd.Parameters.AddWithValue("@pid", projectId);
         Log.Verbose("Executing SQL: {Operation} on {Table}", "SELECT", "project_participants");
         using var reader = cmd.ExecuteReader();
@@ -593,31 +677,44 @@ public class ProjectDatabase : IDisposable
 
     private void SaveParticipants(string projectId, List<ProjectParticipant> participants)
     {
+        // ADR-053: Diff-basiert (siehe SaveBuildingParts).
         var conn = GetConnection();
-        var delCmd = conn.CreateCommand();
-        delCmd.CommandText = "DELETE FROM project_participants WHERE project_id = @pid";
-        delCmd.Parameters.AddWithValue("@pid", projectId);
-        Log.Verbose("Executing SQL: {Operation} on {Table}", "DELETE", "project_participants");
-        delCmd.ExecuteNonQuery();
+        var utcNow = DateTime.UtcNow.ToString("o");
+        var user = _userContext.DisplayName;
+
+        var existingIds = LoadExistingIds("project_participants", "project_id", projectId);
+
+        for (int i = 0; i < participants.Count; i++)
+        {
+            if (string.IsNullOrEmpty(participants[i].Id))
+                participants[i].Id = _idGenerator.NewId();
+        }
+        var newIds = participants.Select(p => p.Id).ToHashSet();
+
+        foreach (var deletedId in existingIds.Except(newIds))
+            SoftDeleteById("project_participants", deletedId, utcNow, user);
 
         for (int i = 0; i < participants.Count; i++)
         {
             var p = participants[i];
-            var pId = string.IsNullOrEmpty(p.Id) ? _idGenerator.NewId() : p.Id;
-            var utcNow = DateTime.UtcNow.ToString("o");
             var cmd = conn.CreateCommand();
             cmd.CommandText = """
                 INSERT INTO project_participants (id, project_id, role, company, contact_person, phone, email, contact_id, sort_order, created_at, created_by, last_modified_at, last_modified_by, sync_version)
                 VALUES (@id, @pid, @role, @company, @cp, @phone, @email, @cid, @so, @now, @user, @now, @user, 0)
+                ON CONFLICT(id) DO UPDATE SET
+                    role = @role, company = @company, contact_person = @cp,
+                    phone = @phone, email = @email, contact_id = @cid, sort_order = @so,
+                    last_modified_at = @now, last_modified_by = @user,
+                    sync_version = sync_version + 1
                 """;
             cmd.Parameters.AddWithValue("@now", utcNow);
-            cmd.Parameters.AddWithValue("@user", _userContext.DisplayName);
-            cmd.Parameters.AddWithValue("@id", pId); cmd.Parameters.AddWithValue("@pid", projectId);
+            cmd.Parameters.AddWithValue("@user", user);
+            cmd.Parameters.AddWithValue("@id", p.Id); cmd.Parameters.AddWithValue("@pid", projectId);
             cmd.Parameters.AddWithValue("@role", p.Role); cmd.Parameters.AddWithValue("@company", p.Company);
             cmd.Parameters.AddWithValue("@cp", p.ContactPerson); cmd.Parameters.AddWithValue("@phone", p.Phone);
             cmd.Parameters.AddWithValue("@email", p.Email); cmd.Parameters.AddWithValue("@cid", p.ContactId);
             cmd.Parameters.AddWithValue("@so", i);
-            Log.Verbose("Executing SQL: {Operation} on {Table}", "INSERT", "project_participants");
+            Log.Verbose("Executing SQL: {Operation} on {Table}", "UPSERT", "project_participants");
             cmd.ExecuteNonQuery();
         }
     }
@@ -629,7 +726,7 @@ public class ProjectDatabase : IDisposable
         var conn = GetConnection();
         var list = new List<ProjectLink>();
         var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT * FROM project_links WHERE project_id = @pid ORDER BY sort_order";
+        cmd.CommandText = "SELECT * FROM project_links WHERE project_id = @pid AND is_deleted = 0 ORDER BY sort_order";
         cmd.Parameters.AddWithValue("@pid", projectId);
         Log.Verbose("Executing SQL: {Operation} on {Table}", "SELECT", "project_links");
         using var reader = cmd.ExecuteReader();
@@ -649,29 +746,41 @@ public class ProjectDatabase : IDisposable
 
     private void SaveLinks(string projectId, List<ProjectLink> links)
     {
+        // ADR-053: Diff-basiert (siehe SaveBuildingParts).
         var conn = GetConnection();
-        var delCmd = conn.CreateCommand();
-        delCmd.CommandText = "DELETE FROM project_links WHERE project_id = @pid";
-        delCmd.Parameters.AddWithValue("@pid", projectId);
-        Log.Verbose("Executing SQL: {Operation} on {Table}", "DELETE", "project_links");
-        delCmd.ExecuteNonQuery();
+        var utcNow = DateTime.UtcNow.ToString("o");
+        var user = _userContext.DisplayName;
+
+        var existingIds = LoadExistingIds("project_links", "project_id", projectId);
+
+        for (int i = 0; i < links.Count; i++)
+        {
+            if (string.IsNullOrEmpty(links[i].Id))
+                links[i].Id = _idGenerator.NewId();
+        }
+        var newIds = links.Select(l => l.Id).ToHashSet();
+
+        foreach (var deletedId in existingIds.Except(newIds))
+            SoftDeleteById("project_links", deletedId, utcNow, user);
 
         for (int i = 0; i < links.Count; i++)
         {
             var link = links[i];
-            var linkId = string.IsNullOrEmpty(link.Id) ? _idGenerator.NewId() : link.Id;
-            var utcNow = DateTime.UtcNow.ToString("o");
             var cmd = conn.CreateCommand();
             cmd.CommandText = """
                 INSERT INTO project_links (id, project_id, name, url, link_type, sort_order, created_at, created_by, last_modified_at, last_modified_by, sync_version)
                 VALUES (@id, @pid, @name, @url, @lt, @so, @now, @user, @now, @user, 0)
+                ON CONFLICT(id) DO UPDATE SET
+                    name = @name, url = @url, link_type = @lt, sort_order = @so,
+                    last_modified_at = @now, last_modified_by = @user,
+                    sync_version = sync_version + 1
                 """;
             cmd.Parameters.AddWithValue("@now", utcNow);
-            cmd.Parameters.AddWithValue("@user", _userContext.DisplayName);
-            cmd.Parameters.AddWithValue("@id", linkId); cmd.Parameters.AddWithValue("@pid", projectId);
+            cmd.Parameters.AddWithValue("@user", user);
+            cmd.Parameters.AddWithValue("@id", link.Id); cmd.Parameters.AddWithValue("@pid", projectId);
             cmd.Parameters.AddWithValue("@name", link.Name); cmd.Parameters.AddWithValue("@url", link.Url);
             cmd.Parameters.AddWithValue("@lt", link.LinkType); cmd.Parameters.AddWithValue("@so", i);
-            Log.Verbose("Executing SQL: {Operation} on {Table}", "INSERT", "project_links");
+            Log.Verbose("Executing SQL: {Operation} on {Table}", "UPSERT", "project_links");
             cmd.ExecuteNonQuery();
         }
     }

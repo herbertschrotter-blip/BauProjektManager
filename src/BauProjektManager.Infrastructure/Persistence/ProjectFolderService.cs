@@ -99,7 +99,8 @@ public class ProjectFolderService
 
     /// <summary>
     /// Syncs new folders to an existing project root.
-    /// Only creates folders that don't exist yet — never deletes.
+    /// Idempotent: matched bestehende Ordner per Name (ohne Prefix), legt nur fehlende
+    /// Template-Einträge an. Bestehende Ordner-Prefixes werden NICHT umnummeriert.
     /// </summary>
     public void SyncNewFolders(Project project, List<FolderTemplateEntry> template)
     {
@@ -112,14 +113,29 @@ public class ProjectFolderService
 
         Log.Debug("Syncing new folders for project {Id} at {Path}", project.Id, root);
 
+        // Existierende Hauptordner einmalig sammeln (Name ohne Prefix als Match-Key)
+        var existingMains = Directory.GetDirectories(root)
+            .Select(p => new DirectoryInfo(p).Name)
+            .ToList();
+
         int mainPos = 0;
         foreach (var entry in template)
         {
-            var mainName = $"{mainPos:D2} {entry.Name}";
-            var mainPath = Path.Combine(root, mainName);
+            // Match per Namens-Vergleich (ohne Prefix), nicht per Prefix-Position.
+            // So werden vorhandene Ordner mit alten Prefixes wiedergefunden, statt
+            // unter neuer Prefix-Nummer doppelt anzulegen (BPM-094).
+            var existingName = existingMains.FirstOrDefault(n =>
+                StripFolderPrefix(n).Equals(entry.Name, StringComparison.OrdinalIgnoreCase));
 
-            if (!Directory.Exists(mainPath))
+            string mainPath;
+            if (existingName is not null)
             {
+                mainPath = Path.Combine(root, existingName);
+            }
+            else
+            {
+                var newName = $"{mainPos:D2} {entry.Name}";
+                mainPath = Path.Combine(root, newName);
                 Directory.CreateDirectory(mainPath);
                 Log.Debug("Created main folder: {Path}", mainPath);
             }
@@ -141,14 +157,29 @@ public class ProjectFolderService
 
     private void SyncSubFolders(string parentPath, List<SubFolderEntry> subs)
     {
+        if (!Directory.Exists(parentPath))
+            return;
+
+        var existingSubs = Directory.GetDirectories(parentPath)
+            .Select(p => new DirectoryInfo(p).Name)
+            .ToList();
+
         int subPos = 0;
         foreach (var sub in subs)
         {
-            var subName = sub.HasPrefix ? $"{subPos:D2} {sub.Name}" : sub.Name;
-            var subPath = Path.Combine(parentPath, subName);
+            // Match per Name (ohne Prefix) — analog zu SyncNewFolders.
+            var existingName = existingSubs.FirstOrDefault(n =>
+                StripFolderPrefix(n).Equals(sub.Name, StringComparison.OrdinalIgnoreCase));
 
-            if (!Directory.Exists(subPath))
+            string subPath;
+            if (existingName is not null)
             {
+                subPath = Path.Combine(parentPath, existingName);
+            }
+            else
+            {
+                var newName = sub.HasPrefix ? $"{subPos:D2} {sub.Name}" : sub.Name;
+                subPath = Path.Combine(parentPath, newName);
                 Directory.CreateDirectory(subPath);
                 Log.Debug("Created subfolder: {Path}", subPath);
             }
@@ -158,6 +189,24 @@ public class ProjectFolderService
 
             if (sub.HasPrefix) subPos++;
         }
+    }
+
+    /// <summary>
+    /// Entfernt Prefix-Pattern "NN " (zwei Ziffern + Leerzeichen) vom Anfang eines
+    /// Ordnernamens für Name-basiertes Matching beim Sync. "01 Sonstiges" -> "Sonstiges".
+    /// "Baustelleneinrichtung" (kein Prefix) -> "Baustelleneinrichtung".
+    /// ".bpm" -> ".bpm".
+    /// </summary>
+    private static string StripFolderPrefix(string folderName)
+    {
+        if (folderName.Length >= 3
+            && char.IsDigit(folderName[0])
+            && char.IsDigit(folderName[1])
+            && folderName[2] == ' ')
+        {
+            return folderName.Substring(3);
+        }
+        return folderName;
     }
 
     /// <summary>

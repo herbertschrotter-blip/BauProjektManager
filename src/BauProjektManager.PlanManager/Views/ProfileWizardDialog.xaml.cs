@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models;
 using BauProjektManager.Domain.Models.PlanManager;
 using BauProjektManager.PlanManager.Services;
@@ -51,7 +52,7 @@ public partial class ProfileWizardDialog : Window
 
     public ProfileWizardDialog(
         Project? project = null,
-        ProfileManager? profileManager = null,
+        IProfileManager? profileManager = null,
         PatternTemplateService? templateService = null,
         string? appDataPath = null)
     {

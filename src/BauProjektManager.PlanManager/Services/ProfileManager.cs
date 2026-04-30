@@ -11,7 +11,7 @@ namespace BauProjektManager.PlanManager.Services;
 /// Manages RecognitionProfiles per project.
 /// Profiles are stored as individual JSON files in .bpm/profiles/ (ADR-046).
 /// </summary>
-public class ProfileManager
+public class ProfileManager : IProfileManager
 {
     private readonly IIdGenerator _idGenerator;
 

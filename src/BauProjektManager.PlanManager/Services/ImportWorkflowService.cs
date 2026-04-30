@@ -19,10 +19,10 @@ public class ImportWorkflowService
     private readonly DocumentKeyBuilder _keyBuilder = new();
     private readonly RevisionDecisionService _decision = new();
     private readonly ImportPlanBuilder _planBuilder = new();
-    private readonly ProfileManager _profileManager;
+    private readonly IProfileManager _profileManager;
     private readonly PlanManagerDatabase _db;
 
-    public ImportWorkflowService(ProfileManager profileManager, PlanManagerDatabase db)
+    public ImportWorkflowService(IProfileManager profileManager, PlanManagerDatabase db)
     {
         _profileManager = profileManager;
         _db = db;

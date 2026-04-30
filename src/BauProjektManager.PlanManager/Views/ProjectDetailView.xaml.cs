@@ -10,13 +10,13 @@ namespace BauProjektManager.PlanManager.Views;
 
 public partial class ProjectDetailView : UserControl
 {
-    private readonly ProfileManager _profileManager;
+    private readonly IProfileManager _profileManager;
     private readonly PatternTemplateService? _templateService;
     private readonly IIdGenerator _idGenerator;
     private readonly string? _appDataPath;
 
     public ProjectDetailView(
-        Project project, BoolToVisConverter boolToVis, ProfileManager profileManager,
+        Project project, BoolToVisConverter boolToVis, IProfileManager profileManager,
         IIdGenerator idGenerator,
         PatternTemplateService? templateService = null, string? appDataPath = null)
     {

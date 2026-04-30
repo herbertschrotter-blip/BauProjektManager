@@ -31,6 +31,35 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.27.7] — 2026-04-30
+
+### PlanManager: IProfileManager Interface + DI-Registrierung (BPM-009 F1+F2+F3)
+
+### Hinzugefuegt
+- Domain/Interfaces/IProfileManager.cs — Service-Vertrag mit 5 Public-Methoden (LoadAll, LoadById, Save, Delete, BuildFromWizard)
+- App.xaml.cs DI-Registrierung: AddSingleton<IProfileManager, ProfileManager>() — eine Instanz pro App-Lebenszeit
+
+### Geaendert
+- ProfileManager implementiert jetzt IProfileManager
+- MainWindow Konstruktor erweitert um IProfileManager profileManager Parameter (aus DI)
+- PlanManagerView nutzt IProfileManager via Constructor Injection statt new ProfileManager() — letzter new()-Aufruf eines Services in einer View entfernt
+- ProjectDetailView, ProfileWizardDialog, ProfileWizardViewModel, ImportWorkflowService: Field- und Parameter-Typen auf IProfileManager geaendert
+
+### Audit-Erkenntnis (BPM-009 Tief-Audit)
+- Funktional war ProfileManager seit v0.25.8 vollstaendig (CRUD, atomares Schreiben, ULID, v1-v2 Migration). Die strukturellen Luecken (kein Interface, kein DI) sind mit v0.27.7 geschlossen.
+- Verbleibende post-v1 Folge-Tasks: Schema-v3-Migration, ProfileValidator, BuildFromWizard-Extraktion in ProfileBuilder.
+
+---
+
+## [v0.27.6] — 2026-04-29
+
+### Build: .claude/ in gitignore (Worktree-Files + lokale Settings)
+
+### Geaendert
+- .gitignore: .claude/ aufgenommen (lokale Claude Code Settings + Worktrees-Artefakte)
+
+---
+
 ## [v0.27.5] — 2026-04-29
 
 ### PlanManager: DB-Anbindung Orchestrator (BPM-001) + SQL-Ambiguity-Fix

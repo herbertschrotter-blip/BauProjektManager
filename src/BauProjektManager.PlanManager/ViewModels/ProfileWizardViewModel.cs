@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.IO;
+using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models;
 using BauProjektManager.Domain.Models.PlanManager;
 using BauProjektManager.PlanManager.Services;
@@ -165,14 +166,14 @@ public partial class ProfileWizardViewModel : ObservableObject
     /// </summary>
     public bool ProfileSaved { get; private set; }
 
-    private readonly ProfileManager? _profileManager;
+    private readonly IProfileManager? _profileManager;
     private readonly PatternTemplateService? _templateService;
     private readonly Project? _project;
     private readonly string? _appDataPath;
 
     public ProfileWizardViewModel(
         Project? project = null,
-        ProfileManager? profileManager = null,
+        IProfileManager? profileManager = null,
         PatternTemplateService? templateService = null,
         string? appDataPath = null)
     {

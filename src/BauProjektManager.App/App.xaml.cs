@@ -5,6 +5,7 @@ using BauProjektManager.Domain.Models;
 using BauProjektManager.Infrastructure.Dev;
 using BauProjektManager.Infrastructure.Persistence;
 using BauProjektManager.Infrastructure.Services;
+using BauProjektManager.PlanManager.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
@@ -119,6 +120,7 @@ public partial class App : Application
         sc.AddSingleton<IUserContext>(sp => new LocalUserContext(sp.GetRequiredService<AppSettings>()));
         sc.AddSingleton<IDialogService, BpmDialogService>();
         sc.AddSingleton<ProjectDatabase>();
+        sc.AddSingleton<IProfileManager, ProfileManager>();
 
         var logDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -137,11 +139,12 @@ public partial class App : Application
             var db = sp.GetRequiredService<ProjectDatabase>();
             var idGen = sp.GetRequiredService<IIdGenerator>();
             var dialog = sp.GetRequiredService<IDialogService>();
+            var profileManager = sp.GetRequiredService<IProfileManager>();
 #if DEBUG
             var devTools = sp.GetService<IDeveloperToolsService>();
-            return new MainWindow(db, idGen, dialog, devTools);
+            return new MainWindow(db, idGen, dialog, profileManager, devTools);
 #else
-            return new MainWindow(db, idGen, dialog);
+            return new MainWindow(db, idGen, dialog, profileManager);
 #endif
         });
 

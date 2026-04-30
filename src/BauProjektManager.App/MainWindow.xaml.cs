@@ -21,12 +21,13 @@ public partial class MainWindow : Window
         ProjectDatabase db,
         IIdGenerator idGenerator,
         IDialogService dialogService,
+        IProfileManager profileManager,
         IDeveloperToolsService? devTools = null)
     {
         InitializeComponent();
         _devTools = devTools;
 
-        _planManagerView = new PlanManagerView(db, idGenerator);
+        _planManagerView = new PlanManagerView(db, idGenerator, profileManager);
         _settingsView = new SettingsView(db, dialogService);
 
         UpdateSidebarBadge();

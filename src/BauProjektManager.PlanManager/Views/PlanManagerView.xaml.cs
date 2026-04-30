@@ -65,13 +65,13 @@ public partial class PlanManagerView : UserControl
     private readonly PlanManagerViewModel _vm;
     private readonly BoolToVisConverter _boolToVis = new();
     private readonly IIdGenerator _idGenerator;
-    private readonly ProfileManager _profileManager;
+    private readonly IProfileManager _profileManager;
     private readonly PatternTemplateService _templateService;
 
-    public PlanManagerView(ProjectDatabase db, IIdGenerator idGenerator)
+    public PlanManagerView(ProjectDatabase db, IIdGenerator idGenerator, IProfileManager profileManager)
     {
         _idGenerator = idGenerator;
-        _profileManager = new ProfileManager(_idGenerator);
+        _profileManager = profileManager;
         _templateService = new PatternTemplateService(_idGenerator);
         Resources.Add("BoolToVis", _boolToVis);
         Resources.Add("InverseBoolToVis", new InverseBoolToVisConverter());

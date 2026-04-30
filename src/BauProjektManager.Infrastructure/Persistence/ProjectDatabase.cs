@@ -17,12 +17,14 @@ public class ProjectDatabase : IDisposable
     private readonly string _dbPath;
     private readonly IIdGenerator _idGenerator;
     private readonly IUserContext _userContext;
+    private readonly IDeviceContext _deviceContext;
     private SqliteConnection? _connection;
 
-    public ProjectDatabase(IIdGenerator idGenerator, IUserContext userContext)
+    public ProjectDatabase(IIdGenerator idGenerator, IUserContext userContext, IDeviceContext deviceContext)
     {
         _idGenerator = idGenerator;
         _userContext = userContext;
+        _deviceContext = deviceContext;
         var appData = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "BauProjektManager");

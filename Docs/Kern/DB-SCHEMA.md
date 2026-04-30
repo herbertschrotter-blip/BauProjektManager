@@ -963,36 +963,55 @@ ULIDs sind nicht menschenlesbar. Die Lesbarkeit wird über fachliche Felder sich
 | `.bpm/manifest.json` | Cloud Projektordner `.bpm/` (ADR-046) | Schlanker Projekt-Ausweis | ManifestService |
 | `.bpm/project.json` | Cloud Projektordner `.bpm/` (ADR-046) | Vollständiger Projektexport | ProjectExportService |
 
-### Neue Datenarchitektur (DatenarchitekturSync.md)
+### Geplante Schema-Erweiterungen (gemäß ADR-053)
 
-Folgende Tabellen und Konzepte sind im Cross-Review (10.04.2026) entschieden und werden bei der nächsten Schema-Migration umgesetzt:
+> **Hinweis:** Die frühere "Neue Datenarchitektur" mit 12 Sync-Spalten + Outbox/Inbox-Tabellen aus DatenarchitekturSync.md ist durch **ADR-053** (2026-04-30) **superseded**. Stattdessen: 7-Spalten-Sync-Modell (bereits implementiert in v0.25.23, ADR-050) + Pull/Push-Sync mit Server-Authority.
 
-**Neue Tabellen (bpm.db):**
+#### Aktuell implementiert (v0.25.x)
 
-| Tabelle | Zweck | Sync-Klasse |
-|---------|-------|-------------|
-| `users` | Benutzer-Identitäten | B (shared) |
-| `user_devices` | Geräte pro Benutzer | B (shared) |
-| `roles` | Fachliche Rollen (bauleiter, polier etc.) | C (reference) |
-| `user_roles` | User ↔ Rolle Zuordnung | B (shared) |
-| `project_memberships` | User ↔ Projekt Zugriff | B (shared) |
-| `change_log` | Lokales Änderungsprotokoll | A (local-only) |
-| `sync_outbox` | Ausstehende Sync-Events | A (local-only) |
-| `sync_applied_events` | Verarbeitete Events | A (local-only) |
-| `sync_conflicts` | Konflikte zur Auflösung | A (local-only) |
-| `diary_days` | Bautagebuch Tageskopf (Wetter, Bestätigung) | B (shared) |
-| `diary_notes` | Bautagebuch Notizen (viele pro Tag pro User) | B (shared) |
-| `employee_compensation` | Lohnsätze, Überstundensätze | D (restricted) |
-| `lv_pricing` | Einheitspreise | D (restricted) |
-| `material_order_prices` | Einkaufspreise | D (restricted) |
+✅ **7 Sync-Metadaten-Spalten** auf allen Shared-Tabellen (ADR-050, v0.25.23):
+- `created_by`, `last_modified_at`, `last_modified_by`, `sync_version`, `is_deleted` (+ implizit `created_at`, `updated_at` als Vorgänger)
+- Alle Timestamps UTC (ISO 8601), `sync_version` inkrementiert bei jedem Update
 
-**Schema-Änderungen an bestehenden Tabellen:**
+✅ **settings.json Split:** `device-settings.json` (lokal) + `shared-config.json` (Cloud)
 
-Alle Shared-Tabellen (Klasse B+D) bekommen 12 Sync-Metadaten-Spalten: `created_by_user_id`, `updated_by_user_id`, `entity_version`, `is_deleted`, `deleted_at_utc`, `deleted_by_user_id`, `origin_device_id`, `last_change_id`. Soft Deletes statt Hard Deletes.
+✅ **IUserContext + LocalUserContext** (ADR-052, v0.25.22) für `created_by`/`last_modified_by`
 
-**Datenklassifizierung:** Siehe [DatenarchitekturSync.md](../Konzepte/DatenarchitekturSync.md) Kapitel 2.
+#### Geplante Erweiterungen für Server-Sync (Phase 0/1, post Spike 0)
 
-**settings.json Split:** `device-settings.json` (lokal) + `shared-config.json` (Cloud). Siehe DatenarchitekturSync.md Kapitel 9.
+**Neue Server-Tabelle (PostgreSQL):**
+- `server_change_log` — monotone server_version pro Mutation, BIGSERIAL PK, scope-fähig (global vs project:id)
+
+**Neue Spalten auf bestehenden Server-Tabellen:**
+- `server_version BIGINT NOT NULL` — pro synchronisierter Tabelle
+- `server_modified_at TEXT NOT NULL`
+- `server_modified_by_user_id TEXT NOT NULL`
+
+**Neue lokale Tabellen (SQLite-Client):**
+- `sync_state_local` — pro Entity nur wenn `pending|rejected|conflict` (kein "synced"-Eintrag, "no row" = clean)
+- `sync_checkpoints` — pro Tabelle/Scope `highest_server_version`, `last_pull_at`, `last_successful_push_at`
+- `sync_history` — Audit-Log mit Retention (30 Tage / 1000 Einträge)
+
+**Neue ASP.NET Identity-Tabellen (Server, post Spike 2):**
+- ASP.NET Core Identity Standard: `AspNetUsers`, `AspNetRoles`, `AspNetUserRoles`, `AspNetUserClaims`, `AspNetUserLogins`, `AspNetUserTokens`, `AspNetRoleClaims`
+- Plus: `project_memberships` (project_id, user_id, project_role) für Projekt-Zuordnung
+
+**Schema-Änderungen für Profile (post Spike 0):**
+- Neue Tabelle `recognition_profiles` (id, project_id FK, name, document_type, profile_json, + 7 Sync-Spalten)
+- `.bpm/profiles/*.json` wird zu Export/Backup, nicht mehr SoR im Servermodus
+
+#### Verworfene Tabellen (durch ADR-053)
+
+❌ Folgende Tabellen aus DatenarchitekturSync.md werden **nicht implementiert**:
+- `change_log`, `sync_outbox`, `sync_applied_events`, `sync_conflicts` (waren für FolderSync/Outbox-Pattern)
+- `users`, `user_devices`, `roles`, `user_roles` als eigene Tabellen (durch ASP.NET Identity ersetzt)
+- `diary_days` + `diary_notes` als Konflikt-Vermeidungs-Aggregate (Server-Authority macht das überflüssig)
+
+❌ **12-Sync-Spalten-Modell** ist überholt — 7 Spalten reichen (ADR-050 + ADR-053)
+
+**Cross-Review-Quelle:** [CGR-2026-04-30-datenarchitektur-sync](../Referenz/chatgpt-reviews/CGR-2026-04-30-datenarchitektur-sync/) (7 Runden mit ChatGPT GPT-5.4)
+
+**Datenklassifizierung:** Siehe [DSVGO-Architektur.md](DSVGO-Architektur.md) + [ADR-047](../Referenz/ADR.md) (4-Klassen-Modell bleibt gültig: A local-only, B shared domain, C shared reference, D restricted)
 
 ---
 

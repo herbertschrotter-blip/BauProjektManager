@@ -160,12 +160,11 @@ Bei UI-Änderungen zusätzlich:
 ### Mobile / PWA
 - Primary: `Docs/Konzepte/BPM-Mobile-Konzept.md`
 
-### Multi-User / Sync
-- Primary: `Docs/Konzepte/MultiUserKonzept.md`
-
-### Server-Architektur / Auth / API
-- Primary: `Docs/Konzepte/ServerArchitektur.md`
-- Secondary: `Docs/Konzepte/MultiUserKonzept.md`, `Docs/Konzepte/DatenarchitekturSync.md`, `Docs/Kern/DSVGO-Architektur.md`
+### Multi-User / Sync / Server-Architektur / Auth / API
+- Primary: **`Docs/Referenz/ADR.md` ADR-053** (Server-Sync-Architektur — Windows-only Stack, Phase 0/1 VPS, Phase Verkauf On-Premise)
+- Secondary für Auth/RBAC-Details Phase Verkauf: `Docs/Konzepte/ServerArchitektur.md` (Hosting-Sektion superseded, Auth/RBAC-Inhalte gültig)
+- Cross-Review: `Docs/Referenz/chatgpt-reviews/CGR-2026-04-30-datenarchitektur-sync/` (7 Runden, 28 Files)
+- ⚠️ Historisch / superseded: `Docs/Konzepte/MultiUserKonzept.md` (3-Phasen-Modell), `Docs/Konzepte/DatenarchitekturSync.md` (Outbox/Inbox/FolderSync) — nicht mehr als gültiges Konzept laden
 
 ### Lizenzierung
 - Primary: `Docs/Konzepte/ModuleAktivierungLizenzierung.md`

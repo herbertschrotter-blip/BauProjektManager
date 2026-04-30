@@ -31,6 +31,21 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.27.9] — 2026-04-30
+
+### Docs: ADR-053 Konsistenz-Pflege Phase A (Authority Docs)
+
+### Geaendert
+- INDEX.md Z. 163-168: Routing fuer "Multi-User/Sync/Server-Architektur/Auth/API" auf ADR-053 als Primary umgestellt. MultiUserKonzept.md + DatenarchitekturSync.md als historisch/superseded markiert.
+- Docs/Kern/BACKLOG.md "Sync-Infrastruktur"-Block (Z. 149-164): obsolete 12-Tabellen-Liste durch ADR-053-Spike-Reihenfolge ersetzt (Spike 0-5, BPM-088 bis 092). Verworfene Ansaetze explizit aufgelistet (change_log, Outbox/Inbox, FolderSyncTransport, etc.). "Won't have"-Sektion: ServerArchitektur/Datasync/Auth/RBAC-Eintraege auf ADR-053 umgestellt (Microsoft.Datasync raus, IBpmSyncClient rein).
+- Docs/Kern/DB-SCHEMA.md "Neue Datenarchitektur" (Z. 966-995): obsolete Tabellen (change_log, sync_outbox, users, user_devices, diary_aggregate-Split) gestrichen. 12-Sync-Spalten-Aussage auf 7 Spalten korrigiert. Geplante Server-Sync-Erweiterungen ergaenzt (server_change_log, sync_state_local, sync_checkpoints, sync_history, recognition_profiles, ASP.NET Identity-Tabellen).
+- Docs/Kern/CODING_STANDARDS.md Kap. 19.8 neu: "Server-Sync-Konvention (ADR-053)" mit Pull/Push-Vorgaben, IBpmSyncClient-Pattern, IDeviceContext, Auth-Konvention, Soft-Delete-Pflicht, verworfene Patterns.
+
+### Hintergrund
+Phase A der Doc-Pflege nach Architektur-Pivot (CGR-2026-04-30-datenarchitektur-sync, 7 Runden). Verhindert dass Claude bei kuenftigen Code-Aufgaben obsolete Konzepte (Outbox/Inbox, FolderSync, Multi-Tenant-RLS, Linux-Stack) aus Authority-Docs laedt. Phase B (Konzepte stillegen) + Phase C (ADR-Status-Updates) folgen separat.
+
+---
+
 ## [v0.27.8] — 2026-04-30
 
 ### Docs: ADR-053 Server-Sync-Architektur + CGR-2026-04-30-datenarchitektur-sync abgeschlossen

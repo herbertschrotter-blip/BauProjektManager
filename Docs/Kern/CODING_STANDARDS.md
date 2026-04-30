@@ -1708,6 +1708,62 @@ public enum UserContextSource { Local, Server }
 Kein direkter `HttpClient` irgendwo im Code.
 Server-Kommunikation nur über `IExternalCommunicationService` (ADR-035).
 
+### 19.8 Server-Sync-Konvention (ADR-053)
+
+**Verbindlich ab Phase 0.5 / Server-Modus C:**
+
+#### Sync-Protokoll
+
+- **`IBpmSyncClient`** ist BPM-eigenes Sync-Interface — kein Vendor-Lock-in zu Supabase/CommunityToolkit.Datasync/Library X
+- **Pull/Push** mit `server_version` (BIGINT) als monotone Server-Authority
+- **Konflikt-Strategie:** Server gewinnt. Lokale rejected Änderungen → Sync-Status-Anzeige, keine Merge-UI in Phase 0/1
+- **DataClassification-Whitelist** pro Sync-DTO: Klasse C (Restricted, z.B. Lohn) bleibt bis Phase Verkauf gesperrt
+
+#### Code-Disziplin für plattformneutrale Server-App
+
+- **Keine hardcoded Windows-Pfade** im Server-Code (kein `C:\Program Files\...`)
+- **Keine PowerShell-Calls** aus dem Server
+- **Keine COM-Objekte** im Server-Code
+- **Konfiguration externalisiert:** appsettings.json + Environment Variables, NIE im Code
+- **WPF-Client:** `ServerUrl` aus Config, nie hardcoded — funktioniert mit `http://server:5000`, `https://bpm.firma.at`, beliebige URLs
+- **HTTP/HTTPS topologieneutral:** keine Annahme über Netzwerk-Topologie im Code
+
+#### Lokale Sync-State-Tabellen (Client)
+
+- `sync_state_local` — pro Entity nur wenn `pending|rejected|conflict`. **Kein "synced"-Eintrag** ("no row" = clean)
+- `sync_checkpoints` — pro Tabelle/Scope `highest_server_version`, `last_pull_at`
+- `sync_history` — Audit mit Retention (30 Tage / 1000 Einträge)
+
+#### IDeviceContext (zusätzlich zu IUserContext aus ADR-052)
+
+- `device_id` (ULID) in `device-settings.json` — wird beim ersten App-Start generiert
+- `IDeviceContext` ist eigene Abstraktion neben `IUserContext` — beide werden in `created_by`/`last_modified_by` plus `device_id`-Spalten verwendet
+- Sync-History speichert `user_id` UND `device_id` getrennt
+
+#### Auth (Server-Modus)
+
+- **ASP.NET Core Identity** in PostgreSQL für Server-User-Verwaltung
+- **JWT Access Token** (15-30 min) + **Refresh Token** pro Gerät (30 Tage)
+- **Rollen Phase 0/1:** `admin`, `bauleiter`, `polier`, `gast`. `disponent`/`lohnbüro` erst mit zugehörigen Modulen
+- **WPF-Client:** Token sicher lokal speichern (DPAPI für Refresh Token)
+- **Modus A** (Solo lokal) bleibt Login-frei mit `LocalUserContext` (ADR-052)
+- **Modus C** (Server) erzwingt Login
+
+#### Soft Delete + Upserts (Spike 0)
+
+- **Hard Delete verboten** in Shared-Tabellen — nur `is_deleted=1` setzen
+- **Kindlisten dürfen nicht** als "DELETE FROM children WHERE parent=X; INSERT all" geschrieben werden — sonst sterben stabile IDs und sync_version-Historie
+- **Stattdessen:** gezielte Upsert-Diff-Logik je Kind-ID
+- `sync_version` nur erhöhen bei **echter Wertänderung** (sonst künstliche Konflikte)
+
+#### Verworfene Patterns (NICHT verwenden)
+
+❌ Outbox/Inbox-Pattern (war für FolderSync, durch ADR-053 verworfen)
+❌ JSON-Event-Files in OneDrive-Ordner als Sync-Bus
+❌ change_log + sync_outbox + sync_applied_events Tabellen
+❌ `DELETE FROM children WHERE parent=X; INSERT all` in Save-Methoden
+❌ Multi-Tenant-RLS (BPM ist Single-Tenant pro Installation)
+
 ## Zusammenfassung — Die 10 wichtigsten Regeln
 
 1. **PascalCase** für Klassen/Methoden, **camelCase** für Variablen, **_camelCase** für private Felder

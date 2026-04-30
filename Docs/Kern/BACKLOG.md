@@ -146,22 +146,40 @@ Diese Features verbessern V1, sind aber kein Blocker für den Release.
 | Log-Rotation 30 Tage | Serilog retainedFileCountLimit (trivial) | ✅ v0.5.0 |
 | ADR-039 v2 ULID-Schema | ✅ Implementiert v0.25.1 — alle Tabellen auf ULID migriert | ✅ |
 
-### Sync-Infrastruktur (PFLICHT vor Multi-User — DatenarchitekturSync.md)
+### Sync-Infrastruktur (gemäß ADR-053 — Server-Sync-Architektur)
 
-| Feature | Beschreibung | Status |
-|---------|-------------|--------|
-| ULID-Migration (v2.0) | Bestehende 8 Tabellen von seq+TEXT auf ULID PRIMARY KEY | ⬜ |
-| users + user_devices Tabellen | Stabile Benutzer-Identitäten für Audit/Sync | ⬜ |
-| roles + project_memberships | RBAC-ready Schema (fachliche Rollen) | ⬜ |
-| Sync-Metadaten auf Shared-Tabellen | 12 Spalten (entity_version, is_deleted, origin_device_id etc.) | ⬜ |
-| Soft Deletes | is_deleted + Tombstone-Events statt Hard Delete | ⬜ |
-| settings.json Split | device-settings.json (lokal) + shared-config.json (Cloud) | ⬜ |
-| IChangeTracker + Mutation Boundary | Transaktionale Konsistenz: Domain + change_log + sync_outbox | ⬜ |
-| change_log + sync_outbox Tabellen | Grundlage für Outbox/Inbox Sync | ⬜ |
-| diary_days + diary_notes | Bautagebuch-Aggregate aufsplitten (Konflikte vermeiden) | ⬜ |
-| employee_compensation, lv_pricing | Sensitive Tabellen separieren (restricted) | ⬜ |
-| ISyncExporter + ISyncImporter | Transport-Logik (Export/Import Events) | ⬜ |
-| FolderSyncTransport | Phase 2 Cloud-Ordner-Sync (bewusst temporär) | ⬜ |
+> **Hinweis:** Der frühere Plan mit Outbox/Inbox + FolderSync (DatenarchitekturSync.md, ADR-037) ist durch ADR-053 (2026-04-30) **superseded**. Stattdessen: BPM-eigenes Pull/Push-Sync-Protokoll (`IBpmSyncClient`) mit Server-Authority + ASP.NET Core 10 Worker Service + PostgreSQL 17 auf Windows-VPS. Dokumentiert in CGR-2026-04-30-datenarchitektur-sync (7 Runden).
+
+**Status der Vorarbeit (✅ implementiert):**
+
+| Feature | Status |
+|---------|--------|
+| ULID PRIMARY KEY für alle Tabellen (ADR-039 v2) | ✅ v0.25.1 |
+| Sync-Metadaten v2.1 (7 Spalten: created_by, last_modified_at, last_modified_by, sync_version, is_deleted, ADR-050) | ✅ v0.25.23 |
+| settings.json Split: device-settings.json + shared-config.json | ✅ implementiert |
+| IUserContext + LocalUserContext (ADR-052) | ✅ v0.25.22 + DI v0.25.25 |
+
+**Spike-Reihenfolge (laut ADR-053, alle Tasks im Tracker als BPM-088 ff):**
+
+| Spike | Beschreibung | Tracker-ID | Status |
+|-------|-------------|------------|--------|
+| Spike 0 | ProjectDatabase syncfähig (Soft Delete + gezielte Upserts statt Replace-All-Listen) | bestehender Backlog (siehe BPM-016 etc.) | ⬜ |
+| Spike 1 | ASP.NET Core 10 Worker Service Skelett + PostgreSQL 17 lokal + /health | BPM-088 | ⬜ |
+| Spike 2 | ASP.NET Identity + JWT + Refresh Token | BPM-089 | ⬜ |
+| Spike 3 | Sync-Endpoints Pull/Push für `clients` + `projects` | BPM-090 | ⬜ |
+| Spike 4 | Windows-VPS Setup (Strato VC 2-8) + Domain + Caddy + HTTPS | BPM-091 | ⬜ |
+| Spike 5 | Multi-Client-Test mit 2 lokalen SQLite-Instanzen + Server | (Sub-Task von Spike 3) | ⬜ |
+| Schema | recognition_profiles wandert in DB-Tabelle (post Spike 0) | BPM-092 | ⬜ |
+
+**Verworfene Ansätze (nicht mehr im Backlog, durch ADR-053 obsolet):**
+
+- ❌ change_log + sync_outbox + sync_inbox Tabellen (war für FolderSync)
+- ❌ IChangeTracker + Mutation Boundary mit Outbox/Inbox
+- ❌ ISyncExporter + ISyncImporter
+- ❌ FolderSyncTransport (Phase 2 Cloud-Ordner-Sync)
+- ❌ HttpSyncTransport (durch IBpmSyncClient ersetzt)
+- ❌ Diary-Aggregate-Split (war Konflikt-Vermeidung für Multi-Writer-Cloud-Sync — entfällt mit Server-Authority)
+- ❌ users + user_devices als eigene Tabellen (durch ASP.NET Identity ersetzt)
 
 ---
 
@@ -212,11 +230,11 @@ Gute Ideen, aber erst nach einem funktionierenden PlanManager. Konzepte sind dok
 | Kontextbezogene Hilfe | — | Fragezeichen-Icon pro Modul/Feature → öffnet Hilfe-Website oder Chat-Bot mit Modul-Kontext als Parameter. Support-Bot (RAG) beantwortet Standardfragen aus Endnutzer-Doku |
 | Automatische Fehlerberichte | — | Unbehandelte Exception → Serilog-Logs + Stacktrace + Systeminfo → GitHub Issue via API. Über IExternalCommunicationService, DataClassification ClassA. Explizite User-Zustimmung per Dialog |
 | Sicherheitskonzept | — | Docs/Konzepte/Sicherheitskonzept.md erstellen vor Zeiterfassung/KI-Assistent/Multi-User. Themen: SQLCipher, Code Signing, Obfuscation, registry.json Whitelist |
-| **Server-Architektur** | [ServerArchitektur.md](../Konzepte/ServerArchitektur.md) | ASP.NET Minimal API + PostgreSQL + Identity. Konzept steht (3-Runden Cross-Review), Implementierung Post-V1. ADR-050/051 |
-| **Datasync-Spike** | [ServerArchitektur.md Kap. 7](../Konzepte/ServerArchitektur.md) | Nach PlanManager V1: Prototyp mit Microsoft.Datasync (projects + clients, Login, Push/Pull, Konflikt, Soft Delete). Entscheidet Sync-Strategie |
+| **Server-Architektur** | **ADR-053** + [CGR-2026-04-30-datenarchitektur-sync](../Referenz/chatgpt-reviews/CGR-2026-04-30-datenarchitektur-sync/) | Windows-only Stack: ASP.NET Core 10 Worker Service + PostgreSQL 17 + Caddy auf Windows-VPS (Strato VC 2-8 ~12€/Mo). Phase 0/1 = eigene Firma 2 Jahre, Phase Verkauf = On-Premise bei Bauunternehmen. Tracker-Tasks: BPM-088 bis BPM-092 |
+| **Server-Sync-Spike** | [ADR-053 Punkte 4-13](../Referenz/ADR.md) | IBpmSyncClient + Pull/Push + server_version + Server-gewinnt. Spike 0-5 (siehe oben). Microsoft.Datasync NICHT — eigenes Sync-Protokoll |
 | **Nachkalkulation** | — (Konzept noch zu erstellen) | Haupttreiber für Server-Modus. Bestellungen, Lieferscheine, Lohnstunden, Geräte, NU-Rechnungen. Braucht Zeiterfassung + Server |
-| **Auth / RBAC** | [ServerArchitektur.md Kap. 4](../Konzepte/ServerArchitektur.md) | ASP.NET Identity, JWT, Admin-provisioned Users. Systemrolle + Projektrolle. Erst mit Server-Implementierung |
-| **Audit-Trail** | [ServerArchitektur.md Kap. 2.4](../Konzepte/ServerArchitektur.md) | audit_log Tabelle für kritische Operationen (Nachkalkulation, Freigaben). Erst mit Nachkalkulation |
+| **Auth / RBAC** | [ADR-053 Punkte 7-10](../Referenz/ADR.md) | ASP.NET Identity + JWT + Refresh Tokens. Rollen Phase 0/1: admin, bauleiter, polier, gast. AD/LDAP optional in Phase Verkauf |
+| **Audit-Trail** | [ADR-053](../Referenz/ADR.md) | audit_log Tabelle für kritische Operationen (Nachkalkulation, Freigaben). Erst mit Nachkalkulation |
 
 ---
 

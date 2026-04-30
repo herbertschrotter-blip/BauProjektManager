@@ -80,12 +80,12 @@ Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheid
 | 030 | Abschluss-Erfassung statt Tages-Aufmaß | ✅ Entschieden | 2026-03 |
 | 031 | DB-SCHEMA.md als zentrales Leitdokument | ✅ Entschieden | 2026-03 |
 | 032 | ITaskManagementService — nicht an ClickUp gebunden | ✅ Accepted / Not Started | 2026-03 |
-| 033 | Multi-User: 3 Modi (eigene DB, geteilte DB, Server) | 🟡 Konzept | 2026-03 |
+| 033 | Multi-User: 3 Modi (eigene DB, geteilte DB, Server) | ⬅️ Superseded by ADR-053 | 2026-03 |
 | 034 | Modul-Aktivierung + Offline-Lizenzierung | 🟡 Konzept | 2026-03 |
 | 035 | IExternalCommunicationService — zentrales Privacy Gate | ✅ Entschieden | 2026-04 |
 | 036 | IPrivacyPolicy — austauschbare Policy für Internal/Commercial | ✅ Entschieden | 2026-04 |
-| 037 | ISyncTransport — austauschbarer Sync-Transport (Folder/HTTP) | ✅ Accepted / Not Started | 2026-04 |
-| 038 | IAccessControlService — rollenbasierte Projektfreigabe | 🟡 Konzept | 2026-04 |
+| 037 | ISyncTransport — austauschbarer Sync-Transport (Folder/HTTP) | ⬅️ Superseded by ADR-053 | 2026-04 |
+| 038 | IAccessControlService — rollenbasierte Projektfreigabe | 🟡 Partially superseded by ADR-053 | 2026-04 |
 | 039 | Einheitliches ID-Schema — ULID als Primärschlüssel | ✅ Accepted / Not Started | 2026-04 |
 | 040 | Migrations- und Versionierungsstrategie (DB + JSON) | ✅ Accepted / Not Started | 2026-04 |
 | 041 | Recovery / Degraded Mode | ✅ Accepted / Not Started | 2026-04 |
@@ -94,7 +94,7 @@ Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheid
 | 044 | Icons.xaml — Zentrale Icon-Registry | ✅ Entschieden / Implemented | 2026-04 |
 | 045 | IndexSource — Dreistufiges Modell für Plan-Index-Erkennung | ✅ Entschieden | 2026-04 |
 | 046 | .bpm/ Ordner — Manifest-Split und Profilablage im Projektordner | ✅ Entschieden | 2026-04 |
-| 047 | Datenarchitektur + Sync — State-based lokal, change-based sync | ✅ Entschieden | 2026-04 |
+| 047 | Datenarchitektur + Sync — State-based lokal, change-based sync | 🟡 Partially superseded by ADR-053 | 2026-04 |
 | 048 | Ansichtsprofile als UI-Sichtschicht über Modul-Aktivierung | ✅ Accepted / Not Started | 2026-04 |
 | 049 | Pfad-Resolution Option C — relativer folder_name + Manifest-Fallback | ✅ Entschieden | 2026-04 |
 | 050 | Source of Truth je Betriebsmodus (DB-Schema v2.1 mit Sync-Spalten) | ✅ Entschieden | 2026-04 |
@@ -1038,8 +1038,10 @@ Geplante Implementierungen:
 ## ADR-033: Multi-User — 3 Modi (eigene DB, geteilte DB, Server)
 
 **Datum:** 2026-03
-**Status:** 🟡 Konzept
+**Status:** ⬅️ **Superseded by ADR-053** (2026-04-30)
 **Herkunft:** Phase 1 Teil 2
+
+> **Hinweis:** Modus B (LAN Shared SQLite mit Write-Lock) wurde nie implementiert und ist durch direkten Sprung zu Modus C überflüssig. ADR-053 reduziert die Modi auf A (Solo lokal) + C (Server), wobei C als Windows-VPS in Phase 0/1 + On-Premise beim Kunden in Phase Verkauf realisiert wird. Der Inhalt unten ist historische Referenz.
 
 **Kontext:**
 
@@ -1257,8 +1259,10 @@ else
 ## ADR-037: ISyncTransport — austauschbarer Sync-Transport (Folder/HTTP)
 
 **Datum:** 2026-04
-**Status:** ✅ Accepted / Not Started
+**Status:** ⬅️ **Superseded by ADR-053** (2026-04-30)
 **Herkunft:** Multi-User Architektur-Diskussion (Claude + ChatGPT), Analyse von PlanRadar/Procore/Dalux
+
+> **Hinweis:** `FolderSyncTransport` ist verworfen (Cloud-Drive ist kein Message-Bus, Wegwerf-Engineering). `HttpSyncTransport` wird durch BPM-eigenes `IBpmSyncClient` ersetzt — kein generisches Transport-Interface mehr, sondern domänenspezifisches Sync-Interface mit Pull/Push-Vertrag. Der Inhalt unten ist historische Referenz.
 
 **Kontext:**
 
@@ -1285,8 +1289,10 @@ Beide verwenden dasselbe `SyncEnvelope`-Format mit `eventId`, `entityType`, `bas
 ## ADR-038: IAccessControlService — rollenbasierte Projektfreigabe
 
 **Datum:** 2026-04
-**Status:** 🟡 Konzept
+**Status:** 🟡 **Partially superseded by ADR-053** (2026-04-30)
 **Herkunft:** Multi-User Architektur-Diskussion (Claude + ChatGPT)
+
+> **Hinweis:** Phase-2-Modell mit `project_shares` Tabelle und Pseudo-RBAC ist verworfen. Phase-3-RBAC bleibt im Kern gültig, aber wird durch ADR-053 konkretisiert: ASP.NET Core Identity + JWT + `project_memberships`-Tabelle, Rollen V1 reduziert auf `admin`, `bauleiter`, `polier`, `gast`. `disponent` und `lohnbüro` erst mit zugehörigen Modulen. Kein Multi-Tenant-RLS (Single-Tenant pro Installation).
 
 **Kontext:**
 
@@ -1836,9 +1842,23 @@ Beim Öffnen eines Projekts prüft die App:
 ## ADR-047: Datenarchitektur + Sync — State-based lokal, change-based sync
 
 **Datum:** 2026-04
-**Status:** ✅ Entschieden
+**Status:** 🟡 **Partially superseded by ADR-053** (2026-04-30)
 **Herkunft:** Claude + ChatGPT Cross-Review (4 Runden, 10.04.2026)
-**Konzeptdokument:** [DatenarchitekturSync.md](../Konzepte/DatenarchitekturSync.md)
+**Konzeptdokument:** [DatenarchitekturSync.md](../Konzepte/DatenarchitekturSync.md) (vollständig superseded)
+
+> **Hinweis:** Folgende Punkte aus ADR-047 sind durch ADR-053 ersetzt:
+> - **Punkt 4** (Outbox/Inbox Pattern) — durch IBpmSyncClient Pull/Push ersetzt
+> - **Punkt 5** (Snapshots + Events Initial-Sync) — durch klassisches Pull mit server_version-Checkpoint ersetzt
+> - **Punkt 6** (12 Sync-Metadaten-Spalten) — durch 7-Spalten-Modell ersetzt (ADR-050)
+> - **Punkt 9** (Phase 2 als bewusst temporäre Übergangsarchitektur) — Phase-Modell entfällt (Modell B On-Premise)
+> - **Punkt 11** (Aggregate `diary_days`/`diary_notes` für Multi-Writer-Cloud-Sync) — überflüssig durch Server-Authority
+>
+> **Was bleibt gültig (explizit bestätigt durch ADR-053):**
+> - **Punkt 1** (state-based lokal, change-based zwischen Clients)
+> - **Punkt 2** (4-Klassen-Datenmodell A/B/C/D)
+> - **Punkt 3** (sensitive Daten in eigenen Tabellen)
+> - **Punkt 7** (User-Modell jetzt — durch ASP.NET Identity in ADR-053 konkretisiert)
+> - **Punkt 10** (Phase 3: PostgreSQL serverseitig — bestätigt)
 
 **Kontext:**
 

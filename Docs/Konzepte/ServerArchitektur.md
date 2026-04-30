@@ -1,18 +1,48 @@
 ---
 doc_id: konzept-server-architektur
 doc_type: concept
-authority: secondary
-status: active
+authority: partially-superseded
+status: partially-superseded
+superseded_by: [adr-053]
 owner: herbert
-topics: [server, api, auth, sync, offline-first, postgresql, jwt, rbac, nachkalkulation]
-read_when: [server-modus, multi-user, auth, sync, api-design, nachkalkulation]
-related_docs: [architektur, db-schema, dsvgo-architektur, konzept-multi-user, konzept-datenarchitektur-sync]
+topics: [server, auth, rbac, postgresql, jwt, nachkalkulation]
+read_when: [server-auth-rbac-details-phase-verkauf]
+related_docs: [adr-053]
 related_code: []
 supersedes: []
 ---
 
-## AI-Quickload
-- Zweck: Zielarchitektur für Server-Modus (Modus C) — ASP.NET API, Auth, Sync, PostgreSQL
+> # ⚠️ TEILWEISE SUPERSEDED durch ADR-053 (2026-04-30)
+>
+> Dieses Dokument ist **partially superseded**. Die meisten Inhalte sind gültig oder nutzbar, aber **Hosting-/Sync-Mechanik wurde anders entschieden**.
+>
+> **Was OBSOLET ist (durch ADR-053 ersetzt):**
+> - **Hosting:** Linux-VPS (Hetzner ~4€/Monat) + Docker → ersetzt durch **Windows-VPS** (Strato VC 2-8 ~12€/Monat) + native Windows-Services. User-Vorgabe: kein Linux.
+> - **Sync-Bibliothek:** Microsoft.Datasync als First Choice → ersetzt durch **BPM-eigenes IBpmSyncClient** (kein Vendor-Lock-in). Microsoft.Datasync ist 2024 archiviert; Nachfolger CommunityToolkit.Datasync wird höchstens als Spike geprüft, nicht als Architekturanker
+> - **Spike-Plan:** Datasync-Spike-Reihenfolge → ersetzt durch ADR-053 Spike 0-5 (ProjectDatabase syncfähig → Server-Skelett → Auth → Sync-Endpoints → VPS-Setup → Multi-Client-Test)
+> - **Multi-Tenant + Postgres RLS** → entfällt (ADR-053: Single-Tenant pro Installation, On-Premise-Modell)
+> - **SaaS-Hosting für Endkunden** → entfällt (ADR-053 Modell B: Kunde installiert auf eigenem Server)
+>
+> **Was GÜLTIG bleibt (für Phase Verkauf relevant):**
+> - **PostgreSQL als Server-DB** — bestätigt durch ADR-053
+> - **ASP.NET Core als Server-Framework** — bestätigt
+> - **JWT-basierte Auth** — bestätigt durch ADR-053 Punkt 8
+> - **ASP.NET Core Identity** für User-Verwaltung — bestätigt
+> - **RBAC mit Rollen** (Bauleiter/Polier/Disponent/Lohnbüro) — bleibt gültig, in V1 reduziert auf admin/bauleiter/polier/gast
+> - **Audit-Trail-Konzept** (audit_log für kritische Operationen) — bleibt
+> - **Nachkalkulation** als Server-Modus-Treiber — bleibt
+>
+> **Was gilt jetzt für Hosting/Sync:**
+> - **[ADR-053](../Referenz/ADR.md)** — verbindliche Server-Sync-Architektur
+> - **[CGR-2026-04-30-datenarchitektur-sync](../Referenz/chatgpt-reviews/CGR-2026-04-30-datenarchitektur-sync/)** — vollständige Diskussion
+> - **`Docs/Kern/CODING_STANDARDS.md` Kap. 19.8** — verbindliche Sync-Konvention
+>
+> **Datum der Superseden-Markierung:** 2026-04-30
+
+---
+
+## AI-Quickload (Auth/RBAC bleibt gültig, Hosting/Sync superseded)
+- Zweck: ⚠️ Hosting + Sync-Mechanik durch ADR-053 ersetzt. Auth/RBAC/Nachkalkulation/Audit-Trail-Inhalte bleiben gültig für Phase Verkauf.
 - Autorität: secondary (Ergebnis aus 3-Runden Cross-Review Claude/ChatGPT)
 - Lesen wenn: Server-Modus, Multi-User, Auth, Sync, API-Design, Nachkalkulation
 - Nicht zuständig für: Sync-Tabellen/Events (→ DatenarchitekturSync.md), Mobile-App (→ BPM-Mobile-Konzept.md)

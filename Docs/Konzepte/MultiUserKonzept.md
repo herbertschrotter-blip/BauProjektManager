@@ -1,28 +1,48 @@
 ---
 doc_id: konzept-multi-user
 doc_type: concept
-authority: secondary
-status: active
+authority: deprecated
+status: superseded
+superseded_by: [adr-053]
 owner: herbert
 topics: [multi-user, write-lock, heartbeat, phasen-modell, server, rbac]
-read_when: [multi-user-feature, write-lock, sync-architektur, server-modus]
-related_docs: [architektur, dsvgo-architektur, konzept-datenarchitektur-sync, konzept-mobile]
+read_when: [historische-referenz]
+related_docs: [adr-053, konzept-server-architektur]
 related_code: []
 supersedes: []
 ---
 
-## AI-Quickload
-- Zweck: Konzept für Multi-User Support — 3 Phasen (Solo, Event-Sync, Server), Write-Lock, RBAC
-- Autorität: secondary (DatenarchitekturSync.md hat detaillierteres Sync-Modell)
-- Lesen wenn: Multi-User-Feature, Write-Lock, Sync-Architektur, Server-Modus
-- Nicht zuständig für: Sync-Tabellen/Events (→ DatenarchitekturSync.md), Mobile-App (→ BPM-Mobile-Konzept.md)
-- Pflichtlesen: keine
-- Fachliche Invarianten:
-  - Phase 1 (Solo): Single Active Operator, Write-Lock mit 60s Heartbeat (ADR-020)
-  - Phase 2 (Event-Sync): Bewusst temporär, nur für 2-3 User
-  - Phase 3 (Server): PostgreSQL + ASP.NET, RBAC Pflicht
+> # ⚠️ SUPERSEDED durch ADR-053 (2026-04-30)
+>
+> Dieses Dokument ist **historisch** und wird **nicht mehr als gültiges Konzept** geladen.
+>
+> **Was war hier:** 3-Phasen-Modell (Phase 1 Solo Write-Lock, Phase 2 Event-Sync via Cloud-Ordner, Phase 3 PostgreSQL-Server)
+>
+> **Warum verworfen:** Cross-Review CGR-2026-04-30-datenarchitektur-sync (7 Runden mit ChatGPT) hat ergeben:
+> - **Phase 2 Event-Sync** (Outbox/Inbox + JSON-Events über OneDrive) ist Wegwerf-Engineering — wird durch direkten Server-Sprung ersetzt
+> - **Modus B "LAN Shared SQLite mit Write-Lock"** entfällt — wurde nie umgesetzt und ist durch direkten Servermodus überflüssig
+> - **Phase-Modell mit SaaS-Annahmen** passt nicht zum gewählten On-Premise-Verkaufsmodell (Modell B)
+>
+> **Was gilt jetzt:**
+> - **[ADR-053](../Referenz/ADR.md)** — Server-Sync-Architektur: Windows-only Stack, ASP.NET Core 10 + PostgreSQL 17 auf Windows-VPS für Phase 0/1, On-Premise bei Kunden für Phase Verkauf
+> - **[CGR-2026-04-30-datenarchitektur-sync](../Referenz/chatgpt-reviews/CGR-2026-04-30-datenarchitektur-sync/)** — vollständige Diskussion über 7 Runden
+> - **`Docs/Kern/CODING_STANDARDS.md` Kap. 19.8** — verbindliche Sync-Konvention
+>
+> **Was bleibt nutzbar:** Kapitel zu Rollen-Konzept (Bauleiter/Polier/Disponent/Lohnbüro) bleibt fachlich relevant — wird aber in ADR-053 Punkt 9 vereinfacht (V1: admin/bauleiter/polier/gast).
+>
+> **Datum der Superseden-Markierung:** 2026-04-30
 
 ---
+
+## AI-Quickload (HISTORISCH)
+- Zweck: ⚠️ SUPERSEDED durch ADR-053. Nicht mehr als gültiges Konzept laden.
+- Autorität: deprecated
+- Lesen wenn: Nur als historische Referenz für Verlauf der Architektur-Entscheidungen
+- Nicht zuständig für: alles — gilt durch ADR-053 nicht mehr
+
+---
+
+## Inhalt unten ist HISTORISCH
 
 ﻿# BauProjektManager — Konzept: Multi-User Support
 

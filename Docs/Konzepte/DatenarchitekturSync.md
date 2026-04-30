@@ -1,18 +1,52 @@
 ---
 doc_id: konzept-datenarchitektur-sync
 doc_type: concept
-authority: secondary
-status: active
+authority: deprecated
+status: superseded
+superseded_by: [adr-053]
 owner: herbert
-topics: [sync, datenarchitektur, outbox-inbox, snapshots, konflikte, rollen, change-log, phasen-modell]
-read_when: [sync-feature, multi-user, change-tracking, snapshot, konflikt-behandlung]
-related_docs: [architektur, db-schema, dsvgo-architektur, konzept-multi-user]
+topics: [historisch, sync, datenarchitektur, outbox-inbox]
+read_when: [historische-referenz]
+related_docs: [adr-053]
 related_code: []
 supersedes: []
 ---
 
-## AI-Quickload
-- Zweck: Datenarchitektur und Sync-Konzept — Klassifizierung, Outbox/Inbox, Snapshots, Rollen, Phasen. **Teilweise superseded durch ServerArchitektur.md + ADR-050/051 (7-Spalten statt 12, kein Outbox/Inbox, Datasync-Spike).**
+> # ⚠️ SUPERSEDED durch ADR-053 (2026-04-30)
+>
+> Dieses Dokument ist **historisch** und wird **nicht mehr als gültiges Konzept** geladen.
+>
+> **Was war hier:**
+> - Outbox/Inbox-Pattern mit `change_log` + `sync_outbox` + `sync_applied_events` + `sync_conflicts`
+> - JSON-Event-Files in OneDrive-Ordner als Sync-Bus
+> - Snapshots (root + diary + work + plans) mit 100-Events-ODER-7-Tage-Trigger
+> - 12-Sync-Metadaten-Spalten
+> - 12-Schritte-Code-Reihenfolge für Phase-2-Implementation
+> - FolderSyncTransport / HttpSyncTransport
+>
+> **Warum verworfen (CGR-2026-04-30-datenarchitektur-sync):**
+> - Cloud-Drive (OneDrive/Dropbox) ist kein Message-Bus — keine atomischen Multi-File-Transaktionen, keine Reihenfolgegarantien
+> - Wegwerf-Engineering: alles was hier steht würde im Servermodus wieder ersetzt
+> - 12-Spalten-Modell durch 7-Spalten-Konvention (CODING_STANDARDS Kap. 19, ADR-050) ersetzt — bereits seit v0.25.23 implementiert
+> - Outbox/Inbox-Pattern für Solo-Multi-Device + 5-10 User unrealistisch komplex
+>
+> **Was gilt jetzt:**
+> - **[ADR-053](../Referenz/ADR.md)** — Server-Sync mit `IBpmSyncClient` Pull/Push-Protokoll, Server-Authority via `server_version`, Server-gewinnt-Konfliktstrategie
+> - **[CGR-2026-04-30-datenarchitektur-sync](../Referenz/chatgpt-reviews/CGR-2026-04-30-datenarchitektur-sync/)** — Cross-Review mit 7 Runden Diskussion
+> - **`Docs/Kern/CODING_STANDARDS.md` Kap. 19.8** — verbindliche Server-Sync-Konvention
+> - **`Docs/Kern/DB-SCHEMA.md`** — geplante Sync-Tabellen (sync_state_local, sync_checkpoints, sync_history) + recognition_profiles in DB
+>
+> **Was nutzbar bleibt (gültig):**
+> - **4-Klassen-Datenmodell** (A: local-only, B: shared domain, C: shared reference, D: restricted) — bleibt gültig laut ADR-047
+> - **Local-First-Prinzip** (SQLite ist einzige lokale Wahrheit) — bleibt gültig laut ADR-051
+> - **Shared vs. restricted physisch trennen** — bleibt gültig
+>
+> **Datum der Superseden-Markierung:** 2026-04-30
+
+---
+
+## AI-Quickload (HISTORISCH)
+- Zweck: ⚠️ SUPERSEDED durch ADR-053. Nicht mehr als gültiges Konzept laden.
 - Autorität: secondary (historisches Detailkonzept Phase 2, Sofortregeln gelten aus ServerArchitektur.md)
 - Lesen wenn: Sync-Feature, Multi-User, Change-Tracking, Snapshot, Konflikt-Behandlung
 - Nicht zuständig für: DB-Tabellen-Details (→ DB-SCHEMA.md), Datenschutz (→ DSVGO-Architektur.md)

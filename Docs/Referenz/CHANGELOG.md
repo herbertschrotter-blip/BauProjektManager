@@ -31,6 +31,25 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.27.10] — 2026-04-30
+
+### Docs: ADR-053 Konsistenz-Pflege Phase B+C (Konzepte stillgelegt + ADR-Status)
+
+### Geaendert
+- Docs/Konzepte/MultiUserKonzept.md: Frontmatter status auf "superseded", grosser Banner oben mit Verweis auf ADR-053. 3-Phasen-Modell + Modus-B-Write-Lock werden als historisch markiert.
+- Docs/Konzepte/DatenarchitekturSync.md: Frontmatter status auf "superseded", grosser Banner. Outbox/Inbox/Snapshots/12-Spalten/12-Schritte-Code-Reihenfolge alle als historisch markiert. 4-Klassen-Datenmodell + Local-First-Prinzip explizit als bleibend genannt.
+- Docs/Konzepte/ServerArchitektur.md: Frontmatter authority auf "partially-superseded". Banner: Hosting (Linux-VPS+Docker) + Sync-Library (Microsoft.Datasync) + Multi-Tenant durch ADR-053 ersetzt. Auth/RBAC/PostgreSQL/Nachkalkulation/Audit-Trail bleiben gueltig.
+- Docs/Referenz/ADR.md: Status-Updates fuer 4 ADRs in Detailsektionen UND Uebersichtstabelle:
+  - ADR-033 "Multi-User 3 Modi": Superseded by ADR-053 (Modus B nie implementiert)
+  - ADR-037 "ISyncTransport (Folder/HTTP)": Superseded by ADR-053 (FolderSyncTransport raus, IBpmSyncClient ersetzt HttpSyncTransport)
+  - ADR-038 "IAccessControlService": Partially superseded (Phase-3-RBAC bleibt, Phase-2 raus)
+  - ADR-047 "Datenarchitektur + Sync": Partially superseded (Punkte 4/5/6/9/11 obsolet, 1/2/3/7/10 bleiben)
+
+### Hintergrund
+Phase B+C der Doc-Pflege nach ADR-053-Architektur-Pivot. Verhindert dass Claude bei Server/Sync-Aufgaben obsolete Konzepte aus den Detail-Docs laedt — selbst wenn er sie direkt referenziert findet. Phase D (Tracker-Tasks aufraeumen) folgt separat via tracker-Skill.
+
+---
+
 ## [v0.27.9] — 2026-04-30
 
 ### Docs: ADR-053 Konsistenz-Pflege Phase A (Authority Docs)

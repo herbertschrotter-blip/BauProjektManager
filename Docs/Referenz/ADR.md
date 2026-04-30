@@ -97,6 +97,10 @@ Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheid
 | 047 | Datenarchitektur + Sync — State-based lokal, change-based sync | ✅ Entschieden | 2026-04 |
 | 048 | Ansichtsprofile als UI-Sichtschicht über Modul-Aktivierung | ✅ Accepted / Not Started | 2026-04 |
 | 049 | Pfad-Resolution Option C — relativer folder_name + Manifest-Fallback | ✅ Entschieden | 2026-04 |
+| 050 | Source of Truth je Betriebsmodus (DB-Schema v2.1 mit Sync-Spalten) | ✅ Entschieden | 2026-04 |
+| 051 | Client ist local-first — Server nur Auth + Sync + Autorität | ✅ Entschieden | 2026-04 |
+| 052 | Lokaler Benutzerkontext über IUserContext statt lokaler Authentifizierung | ✅ Entschieden | 2026-04 |
+| 053 | Server-Sync-Architektur — Windows-only Stack, Phase 0/1 VPS, Phase Verkauf On-Premise | ✅ Entschieden | 2026-04 |
 
 ---
 
@@ -2104,5 +2108,108 @@ public enum UserContextSource { Local, Server }
 - `created_by`/`last_modified_by` sind Anzeige-/Auditnamen, keine Authentitätsnachweise
 
 **Betrifft:** ADR-050 (SoR je Modus), ADR-051 (Local-First), CODING_STANDARDS Kap. 19.6
+
+---
+
+## ADR-053: Server-Sync-Architektur — Windows-only Stack, Phase 0/1 VPS, Phase Verkauf On-Premise
+
+**Datum:** 2026-04-30
+**Status:** ✅ Entschieden
+**Implementierung:** Not Started — Spike 0 (ProjectDatabase syncfähig) als erster Code-Schritt
+**Herkunft:** 7-Runden Cross-Review Claude/ChatGPT (CGR-2026-04-30-datenarchitektur-sync)
+
+**Kontext:**
+
+BPM hat heute keine Server-Sync-Architektur. Lokale `bpm.db` läuft gerätelokal, `project.json` wird zwar geschrieben aber nur als Manuell-Import-Tool genutzt. Mit der Anforderung "5-10 User parallel arbeitend in Herberts Firma + Live-Sync zwischen Büro und Baustelle" und der Roadmap "spätere Verkaufbarkeit als On-Premise-Software" wurde eine Architektur-Entscheidung in 7 Cross-Review-Runden mit ChatGPT erarbeitet.
+
+Drei fundamentale Pivots im Lauf der Diskussion:
+1. **Geschäftsmodell B** statt A: Kunde installiert auf eigenem Server (On-Premise) statt Herbert hostet zentral SaaS
+2. **Windows-only komplett:** kein Linux für Entwicklung, Test oder Produktion
+3. **Multi-User Live-Sync ab Phase 0/1** statt Solo-Einzelnutzer: 5-10 User parallel arbeitend, 24/7-Server nötig
+
+**Entscheidung:**
+
+### Code-Stack (gilt für Phase 0/1 + Phase Verkauf)
+
+1. **Windows-only** für Entwicklung, Test, Produktion
+2. **Server-Stack:** PostgreSQL 17 als Windows-Service + ASP.NET Core 10 Worker Service (`UseWindowsService()`) + Caddy for Windows als optionaler Reverse-Proxy für HTTPS
+3. **WPF-Client** topologieneutral mit konfigurierbarer `ServerUrl` (HTTP und HTTPS, beliebige Server-URLs)
+4. **`IBpmSyncClient`** als BPM-eigenes Sync-Interface mit austauschbaren Adaptern (kein Vendor-Lock-in zu Supabase/Datasync/Library X)
+5. **Sync-Protokoll:** Pull/Push mit `server_version`, Server-gewinnt-Konflikt-Strategie, keine Merge-UI in Phase 0/1
+6. **Single-Tenant** pro Installation — keine Multi-Tenant-Architektur, keine Postgres RLS
+
+### Auth (ab Phase 0.5 nötig wegen Multi-User)
+
+7. **ASP.NET Core Identity** in PostgreSQL für User-Verwaltung
+8. **JWT** Access Token (15-30 min) + **Refresh Token** pro Gerät (30 Tage)
+9. **Rollen Phase 0/1:** `admin`, `bauleiter`, `polier`, `gast`. `disponent`/`lohnbüro` erst mit zugehörigen Modulen.
+10. **Servermodus zwingend Login-pflichtig**, Modus A (lokal-Solo) bleibt ohne Login
+
+### Daten
+
+11. **DataClassification + Whitelist** pro Sync-DTO (Klasse-A/B/C laut ADR-047)
+12. **`device_id`** in `device-settings.json` + separater `IDeviceContext` für Sync-History/Audit (zusätzlich zu `IUserContext` aus ADR-052)
+13. **`recognition_profiles`** wandert in DB-Tabelle (post Spike 0). `.bpm/profiles/*.json` bleibt im Servermodus Export/Backup, nicht Source of Truth.
+
+### Hosting Phase 0/1 (Solo + Herberts eigene Firma, 24 Monate, 5-10 User)
+
+14. **Windows-VPS in EU** als Phase-0/1-Server (Strato VC 2-8 oder vergleichbar, ~12€/Monat, Windows Server 2025, 2 vCores, 8 GB RAM, 120 GB SSD)
+15. **Domain** (z.B. `bpm.firma.at`) mit DNS A-Record auf VPS-IP
+16. **HTTPS via Caddy + Let's Encrypt** automatisch
+17. **PostgreSQL 17 + ASP.NET Core 10 als Windows-Services** auf VPS
+18. **Backup:** PowerShell `pg_dump` als Scheduled Task + Provider-Snapshots
+19. **Connectivity:** Direkte HTTPS-URL — kein VPN, kein Tailscale, kein Cloudflare Tunnel pro User
+20. **Verworfene Hosting-Alternativen:** Hauptrechner-24/7, Synology DS124/DS224+, Linux-VPS, Hetzner Cloud (kein Windows), Tailscale-Premium (zu teuer ab 7+ User), Cloudflare Tunnel (DSGVO/Auth-Komplexität)
+
+### Hosting Phase Verkauf (24+ Monate, On-Premise bei Kunden)
+
+21. **Windows Server beim Kunden:** Windows 11 Pro für Kleinst-Kunden (1-5 User), Windows Server 2022/2025 ab 10 User
+22. **Inno Setup Installer** für Server + Client (kostenlos, scriptbar, etabliert in KMU-Markt)
+23. **Signierte Lizenzdatei** (Ed25519/RSA, offline-fähig, kein harter Stopp bei Wartungsablauf — Software läuft weiter, Updates/Support gesperrt)
+24. **AD/LDAP-Integration optional** (Bauunternehmen mit AD)
+25. **Auto-Update** für WPF-Client (Velopack) + manueller Server-Update durch Admin
+
+### Frühphasen-Konformität
+
+26. **Keine Migration** für Schema-Änderungen — DB-Reset bei Schema-Update
+27. **Keine Backward-Compatibility** in Loadern/Deserializern
+28. Single-Tenant heute reicht — Multi-Tenant nur falls in 5+ Jahren SaaS-Modell zusätzlich gewünscht
+
+**Spike-Reihenfolge:**
+
+1. **Spike 0:** ProjectDatabase syncfähig machen (Soft Delete + gezielte Upserts statt Replace-All-Listen) — bereits im Tracker (post-v1)
+2. **Spike 1:** ASP.NET Core 10 Worker Service Skelett + PostgreSQL lokal + erste `/health`-Endpoint
+3. **Spike 2:** ASP.NET Identity + JWT + erster Login-Flow
+4. **Spike 3:** Sync-Endpoints für `clients` + `projects` (Pull/Push, server_version)
+5. **Spike 4:** VPS-Setup mit Domain + Caddy + HTTPS
+6. **Spike 5:** Multi-Client-Test mit 2 lokalen SQLite-Instanzen + Server
+
+**Konsequenzen:**
+
+- WPF-Client braucht von Anfang an `ServerUrl`-Konfiguration (kein Hardcode auf localhost o.ä.)
+- ASP.NET-Code muss plattformneutral bleiben (keine Windows-Pfade hardcoded, keine PowerShell-Calls, keine COM)
+- DB-Schema bleibt gleich für Phase 0/1 + Phase Verkauf — nur Hosting unterscheidet sich
+- Keine Mobile-App in Phase 0/1 (BPM-Mobile bleibt post-v1, BACKLOG-Eintrag)
+- Recognition Profiles werden mittelfristig von `.bpm/profiles/*.json` in DB-Tabelle migriert (Frühphase: Reset, kein Migration-Code)
+- `DatenarchitekturSync.md` wird nicht komplett superseded, aber FolderSync/Event-Outbox-Pfad wird durch ADR-053 superseded. 4-Klassen-Datenmodell (ADR-047) und Local-First-Prinzip (ADR-051) bleiben gültig.
+
+**Alternativen:**
+
+Verworfene Optionen mit Begründung:
+- *Eigenbau β3 (OneDrive-JSON-Events):* Wegwerf-Engineering, Cloud-Drive ist kein Message-Bus
+- *CouchDB + PouchDB.NET:* Datenmodell-Wechsel von relational zu dokumentorientiert, schlechter BPM-Fit
+- *Supabase Hosted:* Vendor-Lock-in, Realtime ist Notification nicht Sync, US-Anbieter
+- *Linux-VPS + Docker:* User-Vorgabe (will keine Linux-Erfahrung), Kosten-Ersparnis rechtfertigt Lernaufwand für Solo-Entwickler nicht
+- *Synology DS224+:* 600-800€ Anschaffung wirtschaftlich schlechter als VPS bei reinem BPM-Hosting
+- *Hauptrechner als 24/7-Server:* unrealistisch für 5-10 User Multi-User Live-Sync (Updates, Reboots, Strom, Verfügbarkeit)
+- *Tailscale Premium für 7+ User:* teurer als Windows-VPS
+- *Multi-Tenant + RLS:* nicht nötig für On-Premise-Modell, Komplexität ohne Nutzen
+
+**Dokumentation:**
+
+- Vollständige Diskussion in [Docs/Referenz/chatgpt-reviews/CGR-2026-04-30-datenarchitektur-sync/](chatgpt-reviews/CGR-2026-04-30-datenarchitektur-sync/) mit 7 Runden + 28 archivierten Dateien
+- Kernergebnisse in [README.md](chatgpt-reviews/CGR-2026-04-30-datenarchitektur-sync/README.md) der Serie
+
+**Betrifft:** ADR-046 (.bpm/), ADR-047 (4-Klassen-Datenmodell), ADR-050 (DB-Schema v2.1), ADR-051 (Local-First), ADR-052 (IUserContext), `Docs/Konzepte/DatenarchitekturSync.md` (FolderSync-Pfad superseded), `Docs/Konzepte/ServerArchitektur.md` (bleibt relevant für Phase Verkauf)
 
 *Dokument wird laufend aktualisiert wenn neue Architekturentscheidungen getroffen werden.*

@@ -19,6 +19,7 @@ Themenbezeichnungen (Enum):
 - `bpm-architektur` — BPM-Code-Architektur (PlanImport, SQLite-Wahrheit, Domain/Infra)
 - `datenschutz-dbschema` — DSGVO, DB-Schema, IDs, Whitelist, external_call_log
 - `cc-vs-dc` — Trennung Claude Code (CC) vs Desktop Commander (DC), Workflow-Schwellen, Skill-Aufteilung
+- `datenarchitektur-sync` — Sync-Mechanismus für Solo-Multi-Device + Multi-User Phase 3, Industrie-Standard vs Eigenbau
 
 ## Ablage-Konvention
 
@@ -41,6 +42,7 @@ Pro Serie ein Ordner `CGR-<YYYY-MM-DD>-<thema>/` mit:
 | CGR-2026-04-22-bpm-architektur | PlanImport-Architektur | mind. r2 | on-demand | "Architektur-Dokumentation analysieren" | SQLite-Wahrheit auflösen, ProjectPaths.Root relativ, PlanImportFacade |
 | CGR-2026-04-22-datenschutz-dbschema | DSGVO + DB-Schema | r2–r3 | on-demand | "Skills für Kern-Dokumentation" | ADR-037 einheitliches ID-Schema TEXT mit Präfix, Whitelist registry.json |
 | CGR-2026-04-29-cc-vs-dc | CC vs DC Workflow + Skill-Aufteilung | r1–r2 | Runde 2 abgeschlossen | Teil 34 | _Implementierung offen_ |
+| CGR-2026-04-30-datenarchitektur-sync | Datenarchitektur & Sync-Strategie (Windows-only Multi-User) | r1–r7 | Abgeschlossen | Session BPM-009 Tief-Audit | **Resultat:** Windows-only Stack (PostgreSQL 17 + ASP.NET Core 10 + Caddy) auf Windows-VPS für Phase 0/1 (5-6 User in eigener Firma, ~12€/Monat Strato VC 2-8). IBpmSyncClient + Pull/Push + ASP.NET Identity. Spike 0 (ProjectDatabase syncfähig) als erster Code-Schritt. Drei Pivots: R5 Modell-A→B, R6 Linux→Windows, R7 Solo→Multi-User Live-Sync. Resultiert in ADR-053. |
 
 ## Verweis-Konventionen
 

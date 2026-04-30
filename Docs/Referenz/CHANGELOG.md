@@ -31,6 +31,29 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.27.8] — 2026-04-30
+
+### Docs: ADR-053 Server-Sync-Architektur + CGR-2026-04-30-datenarchitektur-sync abgeschlossen
+
+### Hinzugefuegt
+- ADR-053: Server-Sync-Architektur (Windows-only Stack, Phase 0/1 VPS, Phase Verkauf On-Premise) — 28 verbindliche Punkte
+- CGR-2026-04-30-datenarchitektur-sync — komplette 7-Runden Cross-Review-Serie mit ChatGPT GPT-5.4 archiviert (28 Dateien: README + 4 Dateien pro Runde r1-r7)
+- 5 neue Backlog-Tasks im ClickUp-Tracker: BPM-088 (ASP.NET Worker Service), BPM-089 (ASP.NET Identity + JWT), BPM-090 (Sync-Endpoints Pull/Push), BPM-091 (Windows-VPS Setup), BPM-092 (recognition_profiles in DB)
+
+### Geaendert
+- Docs/Referenz/ADR.md: Uebersichtstabelle um ADR-050/051/052/053 ergaenzt (waren vorher nicht aktuell)
+- Docs/Referenz/chatgpt-reviews/INDEX.md: CGR-2026-04-30 auf Status "Abgeschlossen" mit Kernergebnis
+- Themen-Enum erweitert um "datenarchitektur-sync"
+
+### Architektur-Resultat
+- Windows-only Stack: PostgreSQL 17 + ASP.NET Core 10 Worker Service + Caddy for Windows
+- Phase 0/1 (5-6 User eigene Firma, 2 Jahre): Windows-VPS in EU (~12 EUR/Monat Strato VC 2-8)
+- Phase Verkauf (24+ Monate): On-Premise bei Bauunternehmen, gleiche Architektur, Inno Setup + Lizenz-System
+- IBpmSyncClient + Pull/Push + ASP.NET Identity + JWT
+- Verworfene Optionen: Eigenbau OneDrive-Sync, CouchDB, Linux-VPS, Synology, Hauptrechner-24/7, Tailscale Premium, Cloudflare Tunnel, Multi-Tenant
+
+---
+
 ## [v0.27.7] — 2026-04-30
 
 ### PlanManager: IProfileManager Interface + DI-Registrierung (BPM-009 F1+F2+F3)

@@ -348,9 +348,16 @@ public class AppSettingsService
     /// </summary>
     public void Save(AppSettings settings)
     {
+        // BPM-096: DeviceId und WorkspaceId aus bestehenden DeviceSettings übernehmen.
+        // AppSettings hat diese Felder nicht — ohne Preservation würde jeder Save()
+        // sie auf "" zurücksetzen und beim nächsten LoadDevice() neu generieren.
+        var existing = LoadDevice();
+
         var device = new DeviceSettings
         {
             SchemaVersion = settings.SchemaVersion,
+            DeviceId = existing.DeviceId,
+            WorkspaceId = existing.WorkspaceId,
             MachineName = settings.MachineName,
             CloudStoragePath = settings.OneDrivePath,
             BasePath = settings.BasePath,

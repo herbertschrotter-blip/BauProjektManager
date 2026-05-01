@@ -1,0 +1,85 @@
+<Window x:Class="BauProjektManager.PlanManager.Views.RecoveryDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Nicht abgeschlossener Import"
+        Width="600" Height="450"
+        MinWidth="500" MinHeight="380"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="{DynamicResource BpmBgBase}">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="⚠ Nicht abgeschlossener Import gefunden"
+                       FontSize="18" FontWeight="SemiBold"
+                       Foreground="{DynamicResource BpmTextBright}"/>
+            <TextBlock Text="Ein vorheriger Import-Vorgang wurde unterbrochen (App-Crash, Power-Off oder ähnliches)."
+                       Margin="0,6,0,0" TextWrapping="Wrap"
+                       FontSize="12" Foreground="{DynamicResource BpmTextSecondary}"/>
+        </StackPanel>
+
+        <!-- Detail-Block -->
+        <Border Grid.Row="1" Background="{DynamicResource BpmBgSurface}"
+                Padding="16,12" CornerRadius="4" Margin="0,0,0,12">
+            <StackPanel>
+                <TextBlock x:Name="TxtTimestamp" FontSize="13"
+                           Foreground="{DynamicResource BpmTextPrimary}"/>
+                <TextBlock x:Name="TxtSource" Margin="0,4,0,0" FontSize="13"
+                           Foreground="{DynamicResource BpmTextPrimary}"/>
+                <TextBlock x:Name="TxtMachine" Margin="0,4,0,0" FontSize="13"
+                           Foreground="{DynamicResource BpmTextPrimary}"/>
+                <TextBlock x:Name="TxtCounts" Margin="0,8,0,0" FontSize="13"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource BpmTextBright}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Recommendation Block -->
+        <Border Grid.Row="2" Background="{DynamicResource BpmBgSurface}"
+                Padding="16,12" CornerRadius="4" Margin="0,0,0,16">
+            <StackPanel>
+                <TextBlock x:Name="TxtRecommendationTitle" FontSize="14" FontWeight="SemiBold"
+                           Foreground="{DynamicResource BpmAccentPrimary}"/>
+                <TextBlock x:Name="TxtRecommendationReason" Margin="0,6,0,0"
+                           TextWrapping="Wrap" FontSize="13"
+                           Foreground="{DynamicResource BpmTextPrimary}"/>
+                <TextBlock x:Name="TxtAutoHint" Margin="0,8,0,0"
+                           TextWrapping="Wrap" FontSize="12" FontStyle="Italic"
+                           Foreground="{DynamicResource BpmTextSecondary}"
+                           Visibility="Collapsed"
+                           Text="✓ Diese Empfehlung kann sicher automatisch ausgeführt werden."/>
+            </StackPanel>
+        </Border>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Später"
+                    Click="OnLater"
+                    Style="{DynamicResource BpmButtonSecondary}"
+                    Padding="14,8" Margin="0,0,8,0"
+                    FontSize="{DynamicResource BpmFontSizeBody}"/>
+            <Button Content="Verwerfen"
+                    Click="OnCleanup"
+                    Style="{DynamicResource BpmButtonSecondary}"
+                    Padding="14,8" Margin="0,0,8,0"
+                    FontSize="{DynamicResource BpmFontSizeBody}"/>
+            <Button Content="Rückgängig"
+                    Click="OnRollback"
+                    Style="{DynamicResource BpmButtonSecondary}"
+                    Padding="14,8" Margin="0,0,8,0"
+                    FontSize="{DynamicResource BpmFontSizeBody}"/>
+            <Button Content="Fortsetzen"
+                    Click="OnForward"
+                    Style="{DynamicResource BpmButtonPrimary}"
+                    Padding="14,8"
+                    FontSize="{DynamicResource BpmFontSizeBody}"/>
+        </StackPanel>
+    </Grid>
+</Window>

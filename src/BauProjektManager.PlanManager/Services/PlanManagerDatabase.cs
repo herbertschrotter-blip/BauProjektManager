@@ -1,6 +1,7 @@
 using System.IO;
 using Microsoft.Data.Sqlite;
 using BauProjektManager.Domain.Interfaces;
+using BauProjektManager.Domain.Models.PlanManager;
 using Serilog;
 
 namespace BauProjektManager.PlanManager.Services;
@@ -442,6 +443,8 @@ public class PlanManagerDatabase : IDisposable
 
     /// <summary>
     /// Checks for pending import journals (for recovery on app start).
+    /// Lightweight COUNT-Variante — verwendet keinen JOIN auf import_actions.
+    /// Für Detail-Info (Action-Counts, Source-Path, etc.) <see cref="GetPendingImports"/> verwenden.
     /// </summary>
     public bool HasPendingImports()
     {
@@ -449,6 +452,60 @@ public class PlanManagerDatabase : IDisposable
         var cmd = conn.CreateCommand();
         cmd.CommandText = "SELECT COUNT(*) FROM import_journal WHERE status = 'pending'";
         return Convert.ToInt64(cmd.ExecuteScalar()) > 0;
+    }
+
+    /// <summary>
+    /// Liefert Detail-Infos zu allen Imports mit Status 'pending' (für Recovery-Dialog).
+    /// Aggregiert Action-Status-Counts (completed/failed/pending) per Import via JOIN
+    /// auf import_actions. Sortiert nach Start-Timestamp absteigend (neueste zuerst).
+    /// Siehe BPM-016 / 016.01.
+    /// </summary>
+    public List<PendingImportInfo> GetPendingImports()
+    {
+        var conn = GetConnection();
+        var result = new List<PendingImportInfo>();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT
+                j.id,
+                j.timestamp,
+                j.source_path,
+                j.file_count,
+                j.profile_id,
+                j.machine_name,
+                COALESCE(SUM(CASE WHEN a.action_status = 'completed' THEN 1 ELSE 0 END), 0) AS completed_actions,
+                COALESCE(SUM(CASE WHEN a.action_status = 'failed' THEN 1 ELSE 0 END), 0) AS failed_actions,
+                COALESCE(SUM(CASE WHEN a.action_status = 'pending' THEN 1 ELSE 0 END), 0) AS pending_actions
+            FROM import_journal j
+            LEFT JOIN import_actions a ON a.import_id = j.id
+            WHERE j.status = 'pending'
+            GROUP BY j.id, j.timestamp, j.source_path, j.file_count, j.profile_id, j.machine_name
+            ORDER BY j.timestamp DESC
+            """;
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "SELECT-PENDING", "import_journal");
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var timestampStr = reader.GetString(reader.GetOrdinal("timestamp"));
+            var timestamp = DateTime.TryParse(timestampStr,
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.RoundtripKind,
+                out var ts) ? ts : DateTime.MinValue;
+
+            result.Add(new PendingImportInfo(
+                Id: reader.GetString(reader.GetOrdinal("id")),
+                Timestamp: timestamp,
+                SourcePath: reader.GetString(reader.GetOrdinal("source_path")),
+                FileCount: reader.GetInt32(reader.GetOrdinal("file_count")),
+                ProfileId: reader.IsDBNull(reader.GetOrdinal("profile_id")) ? null : reader.GetString(reader.GetOrdinal("profile_id")),
+                MachineName: reader.IsDBNull(reader.GetOrdinal("machine_name")) ? null : reader.GetString(reader.GetOrdinal("machine_name")),
+                CompletedActions: Convert.ToInt32(reader.GetValue(reader.GetOrdinal("completed_actions"))),
+                FailedActions: Convert.ToInt32(reader.GetValue(reader.GetOrdinal("failed_actions"))),
+                PendingActions: Convert.ToInt32(reader.GetValue(reader.GetOrdinal("pending_actions")))));
+        }
+
+        return result;
     }
 
     public string GetDatabasePath() => _dbPath;

@@ -442,6 +442,53 @@ public class PlanManagerDatabase : IDisposable
     }
 
     /// <summary>
+    /// Lädt alle Import-Actions zu einem Import. Optional gefiltert nach action_status
+    /// ('pending', 'completed', 'failed'). Sortiert nach action_order — wichtig für
+    /// Recovery: Forward in Original-Reihenfolge, Rollback in umgekehrter.
+    /// Siehe BPM-016 / 016.03.
+    /// </summary>
+    public List<ImportActionRow> GetImportActions(string importId, string? statusFilter = null)
+    {
+        var conn = GetConnection();
+        var result = new List<ImportActionRow>();
+        var cmd = conn.CreateCommand();
+        if (statusFilter is null)
+        {
+            cmd.CommandText = """
+                SELECT id, action_type, action_status, source_path, destination_path, archive_path
+                FROM import_actions WHERE import_id = @iid
+                ORDER BY action_order ASC
+                """;
+        }
+        else
+        {
+            cmd.CommandText = """
+                SELECT id, action_type, action_status, source_path, destination_path, archive_path
+                FROM import_actions WHERE import_id = @iid AND action_status = @st
+                ORDER BY action_order ASC
+                """;
+            cmd.Parameters.AddWithValue("@st", statusFilter);
+        }
+        cmd.Parameters.AddWithValue("@iid", importId);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "SELECT-ACTIONS", "import_actions");
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            result.Add(new ImportActionRow(
+                Id: reader.GetString(reader.GetOrdinal("id")),
+                ActionType: reader.GetString(reader.GetOrdinal("action_type")),
+                ActionStatus: reader.GetString(reader.GetOrdinal("action_status")),
+                SourcePath: reader.GetString(reader.GetOrdinal("source_path")),
+                DestinationPath: reader.GetString(reader.GetOrdinal("destination_path")),
+                ArchivePath: reader.IsDBNull(reader.GetOrdinal("archive_path"))
+                    ? null
+                    : reader.GetString(reader.GetOrdinal("archive_path"))));
+        }
+        return result;
+    }
+
+    /// <summary>
     /// Checks for pending import journals (for recovery on app start).
     /// Lightweight COUNT-Variante — verwendet keinen JOIN auf import_actions.
     /// Für Detail-Info (Action-Counts, Source-Path, etc.) <see cref="GetPendingImports"/> verwenden.

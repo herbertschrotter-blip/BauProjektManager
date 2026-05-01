@@ -142,11 +142,12 @@ public partial class App : Application
             var idGen = sp.GetRequiredService<IIdGenerator>();
             var dialog = sp.GetRequiredService<IDialogService>();
             var profileManager = sp.GetRequiredService<IProfileManager>();
+            var settingsService = sp.GetRequiredService<AppSettingsService>();
 #if DEBUG
             var devTools = sp.GetService<IDeveloperToolsService>();
-            return new MainWindow(db, idGen, dialog, profileManager, devTools);
+            return new MainWindow(db, idGen, dialog, profileManager, settingsService, devTools);
 #else
-            return new MainWindow(db, idGen, dialog, profileManager);
+            return new MainWindow(db, idGen, dialog, profileManager, settingsService);
 #endif
         });
 

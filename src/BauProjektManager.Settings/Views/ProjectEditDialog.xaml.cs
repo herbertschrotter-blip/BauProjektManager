@@ -16,7 +16,7 @@ public partial class ProjectEditDialog : Window
     public List<FolderTemplateEntry>? FolderTemplate { get; private set; }
 
     private readonly bool _isNewProject;
-    private readonly AppSettingsService _settingsService = new();
+    private readonly AppSettingsService _settingsService;
     private ObservableCollection<BuildingPart> _buildingParts = [];
     private ObservableCollection<ProjectParticipant> _participants = [];
     private ObservableCollection<ProjectLink> _portalLinks = [];
@@ -24,12 +24,14 @@ public partial class ProjectEditDialog : Window
     private FileSystemWatcher? _folderWatcher;
     private bool _isGlobalZeroActive;
 
-    public ProjectEditDialog(Project project) : this(project, null) { }
+    public ProjectEditDialog(Project project, AppSettingsService settingsService)
+        : this(project, null, settingsService) { }
 
-    public ProjectEditDialog(Project project, List<FolderTemplateEntry>? folderTemplate)
+    public ProjectEditDialog(Project project, List<FolderTemplateEntry>? folderTemplate, AppSettingsService settingsService)
     {
         InitializeComponent();
         Project = project;
+        _settingsService = settingsService;
         _isNewProject = folderTemplate is not null;
 
         ProjectFolderTemplate.IsProjectMode = !_isNewProject;

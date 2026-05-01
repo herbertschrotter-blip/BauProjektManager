@@ -22,7 +22,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
 {
     private readonly ProjectDatabase _db;
     private readonly RegistryJsonExporter _exporter;
-    private readonly AppSettingsService _settingsService = new();
+    private readonly AppSettingsService _settingsService;
     private readonly ProjectFolderService _folderService;
     private readonly BpmManifestService _manifestService = new();
     private readonly IDialogService _dialogService;
@@ -144,10 +144,11 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     // Selected item in TreeView (set from code-behind)
     public FolderTreeItem? SelectedTreeItem { get; set; }
 
-    public SettingsViewModel(ProjectDatabase db, IDialogService dialogService)
+    public SettingsViewModel(ProjectDatabase db, IDialogService dialogService, AppSettingsService settingsService)
     {
         _db = db;
         _dialogService = dialogService;
+        _settingsService = settingsService;
 
         // Registry-Exportpfad aus Settings (BasePath/.AppData/BauProjektManager/)
         var settings = _settingsService.Load();
@@ -540,7 +541,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         };
         newProject.UpdateProjectNumberFromStart();
 
-        var dialog = new ProjectEditDialog(newProject, settings.FolderTemplate);
+        var dialog = new ProjectEditDialog(newProject, settings.FolderTemplate, _settingsService);
         dialog.Owner = Application.Current.MainWindow;
         if (dialog.ShowDialog() == true)
         {
@@ -577,7 +578,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             return;
         }
 
-        var dialog = new ProjectEditDialog(SelectedProject);
+        var dialog = new ProjectEditDialog(SelectedProject, _settingsService);
         dialog.Owner = Application.Current.MainWindow;
         if (dialog.ShowDialog() == true)
         {
@@ -741,7 +742,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
 
         var project = _manifestService.ManifestToProject(manifest, folderPath);
 
-        var confirmDialog = new ProjectEditDialog(project);
+        var confirmDialog = new ProjectEditDialog(project, _settingsService);
         confirmDialog.Owner = Application.Current.MainWindow;
         if (confirmDialog.ShowDialog() == true)
         {
@@ -774,7 +775,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
 
         var project = _manifestService.ScanFolder(folderPath);
 
-        var editDialog = new ProjectEditDialog(project);
+        var editDialog = new ProjectEditDialog(project, _settingsService);
         editDialog.Owner = Application.Current.MainWindow;
         if (editDialog.ShowDialog() == true)
         {

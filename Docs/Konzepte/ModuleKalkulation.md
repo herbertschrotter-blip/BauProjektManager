@@ -517,6 +517,10 @@ Dependency-Regel bleibt gleich: Kalkulation → Domain + Infrastructure. Kein be
 
 ## 11. DB-Schema (Entwurf)
 
+> ⬜ **Geplant (post-V1)** — Alle in dieser Sektion gezeigten Tabellen (`employees`, `work_packages`, `lv_positions`, `work_assignments`, `time_entries`, `performance_catalog`, `project_difficulty`) sind **noch nicht implementiert**. Source-of-Truth für Schema und Implementierungsstand: [DB-SCHEMA.md Kap. 5](../Kern/DB-SCHEMA.md#5-geplante-tabellen-nach-v1).
+>
+> ⚠️ **Hinweis:** Die SQL-Statements unten zeigen einen **frühen Entwurf** mit `INTEGER PRIMARY KEY AUTOINCREMENT`. Das verbindliche Schema in DB-SCHEMA.md verwendet inzwischen ULID (`TEXT PRIMARY KEY`, ADR-039 v2) und 7 Sync-Spalten (ADR-050). Bei Implementierung gilt DB-SCHEMA.md.
+
 ```sql
 -- Mitarbeiter (auch für Zeiterfassung relevant)
 CREATE TABLE employees (

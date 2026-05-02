@@ -267,6 +267,10 @@ In den BPM-Einstellungen: "Welches Projektmanagement-Tool verwendest du?"
 
 ## 5. DB-Schema
 
+> ⬜ **Geplant (post-V1)** — Tabelle `material_orders` ist **noch nicht implementiert**. Source-of-Truth für Schema und Implementierungsstand: [DB-SCHEMA.md Kap. 5.10](../Kern/DB-SCHEMA.md#5-geplante-tabellen-nach-v1).
+>
+> ⚠️ **Hinweis:** Das SQL-Statement unten zeigt einen **frühen Entwurf** mit `INTEGER PRIMARY KEY AUTOINCREMENT`. Das verbindliche Schema in DB-SCHEMA.md verwendet ULID (`TEXT PRIMARY KEY`, ADR-039 v2) und 7 Sync-Spalten (ADR-050). Bei Implementierung gilt DB-SCHEMA.md.
+
 ### 5.1 material_orders
 
 Siehe DB-SCHEMA.md Kapitel 5.10. Zusammenfassung:

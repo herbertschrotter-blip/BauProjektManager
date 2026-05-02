@@ -61,6 +61,8 @@ Bautagebuch-Eintrag wird befüllt aus:
 
 ## 2. Datenmodell (geplant)
 
+> ⬜ **Geplant (post-V1)** — Tabellen `diary_days` und `diary_notes` (ADR-047) sind **noch nicht implementiert**. Source-of-Truth für das verbindliche SQL-Schema: [DB-SCHEMA.md Kap. 5.8](../Kern/DB-SCHEMA.md#5-geplante-tabellen-nach-v1). Die JSON-Struktur unten ist konzeptionell — die persistierten Spalten ergeben sich aus den dortigen `CREATE TABLE`-Definitionen.
+
 Tageseinträge in SQLite (lokal). Nicht in JSON-Dateien — weil über Monate viele Einträge entstehen und Abfragen nötig sind (z.B. "alle Tage mit Betonage", "Gesamtstunden Firma Müller").
 
 ### Tageseintrag-Struktur

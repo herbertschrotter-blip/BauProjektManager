@@ -35,6 +35,8 @@ supersedes: []
 
 Dieses Dokument beschreibt die **Hauptworkflows** die ein User in BPM durchläuft. Jeder Flow zeigt: Was will der User erreichen, welche Schritte durchläuft er, welche Screens sieht er, was kann schiefgehen.
 
+> ⬜ **Hinweis zu geplanten Sections** — Sections mit „(Zukunft)" im Titel beschreiben Workflows die auf **noch nicht implementierten DB-Tabellen** beruhen (z.B. `time_entries`, `work_assignments`, `material_orders`, `diary_days`). Source-of-Truth für den Implementierungsstand: [DB-SCHEMA.md Kap. 5](../Kern/DB-SCHEMA.md#5-geplante-tabellen-nach-v1). Die Flowcharts dort sind Konzept-Vorschau, nicht Live-Verhalten.
+
 ---
 
 ## 2. App-Start
@@ -343,6 +345,8 @@ Statusleiste: "Ordnerstruktur aktualisiert"
 
 ## 9. Zeiterfassung (Zukunft)
 
+> ⬜ **Geplant (post-V1)** — Tabellen `employees`, `time_entries` sind noch nicht implementiert. Source-of-Truth: [DB-SCHEMA.md Kap. 5.1, 5.2](../Kern/DB-SCHEMA.md#5-geplante-tabellen-nach-v1).
+
 ### 9.1 Täglicher Flow
 
 ```
@@ -358,7 +362,7 @@ Mitarbeiterliste anzeigen
     ▼
 [Speichern]
     │
-    ├── time_entries in bpm.db schreiben
+    ├── time_entries in bpm.db schreiben          ⬜ geplant (DB-SCHEMA Kap. 5.2)
     ├── Excel-Datei aktualisieren (ClosedXML)
     │
     ▼
@@ -368,6 +372,8 @@ Toast: "Zeiterfassung für 05.11. gespeichert ✓"
 ---
 
 ## 10. Arbeitseinteilung (Zukunft)
+
+> ⬜ **Geplant (post-V1)** — Tabelle `work_assignments` ist noch nicht implementiert (FK-Abhängigkeit zu `work_packages` und `employees`, beide ebenfalls geplant). Source-of-Truth: [DB-SCHEMA.md Kap. 5.4](../Kern/DB-SCHEMA.md#5-geplante-tabellen-nach-v1).
 
 ### 10.1 Täglicher Flow (2 Minuten morgens)
 
@@ -384,7 +390,7 @@ Matrix: Mitarbeiter (Zeilen) × Arbeitspakete (Spalten)
     ▼
 [Speichern]
     │
-    ├── work_assignments in bpm.db schreiben
+    ├── work_assignments in bpm.db schreiben      ⬜ geplant (DB-SCHEMA Kap. 5.4)
     │
     ▼
 Toast: "Arbeitseinteilung gespeichert ✓"
@@ -393,6 +399,8 @@ Toast: "Arbeitseinteilung gespeichert ✓"
 ---
 
 ## 11. Arbeitspaket abschließen (Zukunft)
+
+> ⬜ **Geplant (post-V1)** — Tabellen `work_packages` und `performance_catalog` sind noch nicht implementiert. Source-of-Truth: [DB-SCHEMA.md Kap. 5.3, 5.6](../Kern/DB-SCHEMA.md#5-geplante-tabellen-nach-v1).
 
 ### 11.1 Fertigmeldung
 
@@ -416,8 +424,8 @@ Fertigmeldungs-Dialog:
     ▼
 [Abschließen & in Leistungskatalog übernehmen]
     │
-    ├── work_package Status → "completed"
-    ├── performance_catalog Eintrag erstellen
+    ├── work_package Status → "completed"          ⬜ geplant (DB-SCHEMA Kap. 5.3)
+    ├── performance_catalog Eintrag erstellen      ⬜ geplant (DB-SCHEMA Kap. 5.6)
     │
     ▼
 Toast: "Mauerwerk H5/EG abgeschlossen — 1,61 m²/Ah ✓"
@@ -426,6 +434,8 @@ Toast: "Mauerwerk H5/EG abgeschlossen — 1,61 m²/Ah ✓"
 ---
 
 ## 12. Materialbestellung (Zukunft)
+
+> ⬜ **Geplant (post-V1)** — Tabelle `material_orders` ist noch nicht implementiert. Source-of-Truth: [DB-SCHEMA.md Kap. 5.10](../Kern/DB-SCHEMA.md#5-geplante-tabellen-nach-v1).
 
 ### 12.1 Bestellung aus BPM
 
@@ -447,7 +457,7 @@ Bestelldialog:
     ▼
 [Bestellen & Task erstellen]
     │
-    ├── material_orders in bpm.db schreiben
+    ├── material_orders in bpm.db schreiben       ⬜ geplant (DB-SCHEMA Kap. 5.10)
     ├── Task in ClickUp/Asana erstellen (ITaskManagementService)
     │
     ▼
@@ -457,6 +467,8 @@ Toast: "Bestellung angelegt — ClickUp Task erstellt ✓"
 ---
 
 ## 13. Bautagebuch (Zukunft)
+
+> ⬜ **Geplant (post-V1)** — Tabellen `diary_days` und `diary_notes` (ADR-047) sind noch nicht implementiert. Source-of-Truth: [DB-SCHEMA.md Kap. 5.8](../Kern/DB-SCHEMA.md#5-geplante-tabellen-nach-v1).
 
 ### 13.1 Täglicher Flow (1 Minute abends)
 
@@ -477,7 +489,7 @@ Auto-Vorschlag wird angezeigt:
     ▼
 [✓ Bestätigen]
     │
-    ├── diary_days + diary_notes in bpm.db schreiben (ADR-047)
+    ├── diary_days + diary_notes in bpm.db schreiben (ADR-047)   ⬜ geplant (DB-SCHEMA Kap. 5.8)
     │
     ▼
 Toast: "Bautagebuch 05.11. bestätigt ✓"

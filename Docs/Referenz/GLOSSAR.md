@@ -4,8 +4,8 @@ doc_type: reference
 authority: secondary
 status: active
 owner: herbert
-topics: [glossar, fachbegriffe, bauwesen, österreich, abkürzungen, bpm-codebasis]
-read_when: [fachbegriff-unklar, österreichische-bau-terminologie, codebasis-begriffe]
+topics: [glossar, fachbegriffe, bauwesen, österreich, abkürzungen, bpm-codebasis, wording-regel, dokumenttyp]
+read_when: [fachbegriff-unklar, österreichische-bau-terminologie, codebasis-begriffe, wording-regel-pruefen]
 related_docs: [architektur, planmanager]
 related_code: []
 supersedes: []
@@ -20,6 +20,7 @@ supersedes: []
 - Fachliche Invarianten:
   - Österreichische Terminologie verwenden (Polier, Geschoß, RDOK)
   - Begriffe alphabetisch innerhalb jeder Kategorie
+  - Wording-Regel (Section 3): Dokumenttyp = Oberbegriff, Plantyp = Synonym im engeren Sinn, RecognitionProfile = Konfigurationsdatei pro Dokumenttyp/Projekt
 
 ---
 
@@ -108,17 +109,44 @@ Im Code: `LevelNameEntry` mit `ShortName` + `LongName`, editierbar in `settings.
 
 ## 3. Planmanagement
 
+### Wording-Regel (verbindlich)
+
+In Code, Docs und UI gilt diese Hierarchie:
+
+- **Dokumenttyp** ist der **Oberbegriff** für jede fachliche Dokumentkategorie
+  (Polierplan, Schalungsplan, Bauprotokoll, Prüfbericht, Baubesprechung etc.).
+  Im Code: `documentTypeId`, `documentTypeName`, `IDocumentTypeRecognizer`.
+  Verbindlich seit PlanManager.md v2.0 ("Nicht nur Pläne") und ADR-054.
+- **Plantyp** ist ein **Synonym im engeren Sinn** — nur wenn der Dokumenttyp
+  ein Plan ist (Polierplan, Einreichplan, Bewehrungsplan). Umgangssprachlich
+  in Gesprächen mit Herbert üblich. In neuem Code/Doc bitte „Dokumenttyp"
+  verwenden, „Plantyp" als Begriff vermeiden.
+- **RecognitionProfile** ist die **Konfigurationsdatei** pro Dokumenttyp pro
+  Projekt. Es definiert WIE Dateien dieses Typs erkannt und einsortiert
+  werden (Tokenization, Segmente, Identity-Felder, Zielordner).
+  Pro Dokumenttyp genau ein Profil pro Projekt unter `.bpm/profiles/<n>.json`.
+
+Ein RecognitionProfile **ist nicht** ein Dokumenttyp — es ist die Bauanleitung
+zum Erkennen eines Dokumenttyps.
+
+### Begriffe
+
 | Begriff | Erklärung | Im Code / Docs |
 |---------|-----------|----------------|
-| **Plantyp** | Kategorie eines Plans: Einreichplan, Polierplan, Schalplan, Bewehrungsplan, Installationsplan etc. | `RecognitionProfile` |
-| **Planindex** / **Revision** | Versionsstand eines Plans. Typisch: A, B, C oder 00, 01, 02. Neuer Index = aktualisierter Plan. | Segment im Dateinamen |
-| **Plannummer** | Eindeutige Kennung eines Plans innerhalb eines Projekts. Kommt vom Planer (Architekt, Statiker). | Segment im Dateinamen |
-| **_Eingang** | Inbox-Ordner pro Plantyp. Neue Pläne werden hier abgelegt (per E-Mail, Download, USB). BPM sortiert von hier in die Zielordner. | `FolderTemplateEntry.HasInbox` |
-| **_Archiv** | Ordner für alte Planversionen. Wenn ein Plan einen neuen Index bekommt, wird der alte Index hierhin verschoben. |
-| **RecognitionProfile** | Erlerntes Muster pro Projekt/Plantyp. Definiert welches Segment im Dateinamen was bedeutet (Nummer, Index, Geschoss etc.). Pro Projekt in `.bpm/profiles/*.json` (ADR-046). | `.bpm/profiles/` |
+| **Dokumenttyp** | Fachliche Kategorie eines Dokuments — Oberbegriff. Beispiele: Polierplan, Schalungsplan, Bauprotokoll, Prüfbericht, Baubesprechung. | `documentTypeId`, `documentTypeName` (Profil-Feld), `IDocumentTypeRecognizer` (Service), ADR-054 |
+| **Plantyp** | Synonym für Dokumenttyp im engeren Sinn — wenn das Dokument ein Plan ist (Polierplan, Einreichplan, Bewehrungsplan, Schalungsplan). Umgangssprachlich; in neuem Code/Doc bitte „Dokumenttyp" verwenden. | (nicht im aktuellen Code) |
+| **RecognitionProfile** | Konfigurationsdatei pro Dokumenttyp pro Projekt. Definiert Tokenization, Segmente, Identity-Felder, Zielordner, IndexSource. Pro Projekt eine Datei unter `.bpm/profiles/<n>.json` (ADR-046). | `.bpm/profiles/`, ADR-010, ADR-022, ADR-045 |
 | **PatternTemplate** | Vorschlag aus der globalen Musterbibliothek. Wenn ein neues Profil angelegt wird, schlägt BPM ähnliche bestehende Templates vor. | `pattern-templates.json` |
+| **document_key** | Fachliche Identity eines Dokuments. Wird deterministisch aus den `identityFields` des Profils gebildet. Beispiel: `Polierplan_103_H64`. | `DocumentKeyBuilder`-Service, ADR-054 |
+| **identityFields** | Liste der Profil-Felder die in den `document_key` einfließen. Beispiel: `["documentType", "planNumber", "haus"]`. | RecognitionProfile, ADR-054 |
+| **Tokenization** | Segmentierung des Dateinamens an Trennzeichen, profilgebunden konfiguriert. Voraussetzung für die `document_key`-Bildung. | `tokenization`-Block im Profil, ADR-022, ADR-054 |
+| **Stage** | Lebenszyklus-Phase eines Dokuments: `Unknown` (Default), `Draft` (VORABZUG/Vorab), `Final`. Eigenes Feld, **nicht** Teil des `document_key`. | RecognitionProfile + Erkennung, ADR-054 |
+| **Plannummer** | Eindeutige Kennung eines Dokuments innerhalb eines Dokumenttyps. Kommt vom Planer (Architekt, Statiker). | Segment im Dateinamen (`planNumber`) |
+| **Planindex** / **Revision** | Versionsstand eines Dokuments. Typisch: A, B, C oder 00, 01, 02. Neuer Index = aktualisiertes Dokument. | Segment im Dateinamen (`planIndex`) |
+| **_Eingang** | Inbox-Ordner pro Dokumenttyp. Neue Dateien werden hier abgelegt (per E-Mail, Download, USB). BPM sortiert von hier in die Zielordner. | `FolderTemplateEntry.HasInbox` |
+| **_Archiv** | Ordner für alte Dokumentversionen. Wenn ein Dokument einen neuen Index bekommt, wird der alte Index hierhin verschoben. | |
 | **Segment** | Teil eines Dateinamens, gesplittet an Trennzeichen (-, _, .). Z.B. `AR-H64-EG-GR-01.pdf` → 5 Segmente. | ADR-022 |
-| **Import-Workflow** | 10-Schritte-Prozess: Scan → Parse → Validate → Classify → Plan → Preview → Execute → Finalize → Recover → Undo. | ADR-008 |
+| **Import-Workflow** | 5-Phasen-Prozess: Profil anlernen → Dateien im Eingang → Analyse-Pipeline → Vorschau → Ausführung. Innerhalb davon eine 7-Stufen-Analyse-Pipeline. | ADR-008, PlanManager.md Kap. 6 |
 
 ---
 

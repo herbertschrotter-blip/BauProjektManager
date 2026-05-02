@@ -27,11 +27,20 @@ supersedes: []
   - 8. Datenfluss zwischen Modulen
   - 9. Naming-Konventionen
   - 10. JSON-Konfigurationsdateien (kein SQLite)
+    - 10.1 Übersicht aller JSON-Konfig-Dateien
+    - 10.2 device-settings.json — Feldschema
+    - 10.3 shared-config.json — Feldschema
+    - 10.4 settings.json (legacy) — Feldschema
+    - 10.5 Hilfsklassen für strukturierte Listen
+    - 10.6 Default-Werte für SharedConfig
+    - 10.7 Migration von settings.json (legacy) zu Split-Format
+    - 10.8 Geplante Schema-Erweiterungen (gemäß ADR-053)
 - Pflichtlesen:
   - Kapitel 4 (Tabellen-Schema) bei jeder Tabellen-/Spaltenänderung
   - Kapitel 9 (Naming-Konventionen) bei neuer Tabelle
   - Kapitel 9.3 (Sync-Felder) bei neuer Tabelle (ADR-050)
   - Kapitel 7 (Schema-Migration) bei Schemaänderung
+  - Kapitel 10.2/10.3 (settings-Feldschema) bei Änderung an `DeviceSettings` oder `SharedConfig`
 - Fachliche Invarianten:
   - **Schema v2.1 (Sync) implementiert ab v0.25.23:** ULID als TEXT PRIMARY KEY, Sync-Spalten (created_by, last_modified_at, last_modified_by, sync_version, is_deleted) auf allen Entitätstabellen, UTC-Timestamps
   - schema_version Tabelle in jeder DB
@@ -954,16 +963,170 @@ ULIDs sind nicht menschenlesbar. Die Lesbarkeit wird über fachliche Felder sich
 
 ## 10. JSON-Konfigurationsdateien (kein SQLite)
 
-| Datei | Speicherort | Beschreibung | Geschrieben von |
-|-------|------------|-------------|----------------|
-| `settings.json` | Cloud .AppData/ | App-Einstellungen, Pfade, Listen | AppSettingsService |
-| `registry.json` | Cloud .AppData/ | Generierter VBA-Export (read-only für VBA) | RegistryJsonExporter |
-| `profiles/*.json` | Cloud Projektordner `.bpm/profiles/` (ADR-046) | Plantyp-Profile pro Projekt | PlanManager |
-| `pattern-templates.json` | Cloud .AppData/ | Globale Musterbibliothek | PlanManager |
-| `.bpm/manifest.json` | Cloud Projektordner `.bpm/` (ADR-046) | Schlanker Projekt-Ausweis | ManifestService |
-| `.bpm/project.json` | Cloud Projektordner `.bpm/` (ADR-046) | Vollständiger Projektexport | ProjectExportService |
+### 10.1 Übersicht aller JSON-Konfig-Dateien
 
-### Geplante Schema-Erweiterungen (gemäß ADR-053)
+| Datei | Speicherort | Synct? | Beschreibung | Schreiber |
+|-------|------------|--------|-------------|-----------|
+| `device-settings.json` | Lokal `%LocalAppData%\BauProjektManager\` | **Nein** | Geräte-spezifische Einstellungen (Pfade, DeviceId, MachineName) — ADR-052 | `AppSettingsService` |
+| `shared-config.json` | Cloud `<basePath>/.AppData/BauProjektManager/` | **Ja** | Geteilte Konfiguration (FolderTemplate, Listen, Rollen) — ADR-052 | `AppSettingsService` |
+| `settings.json` *(legacy)* | Lokal `%LocalAppData%\BauProjektManager\` | Nein | **Veraltet** — wird beim ersten Start nach Update automatisch in `device-settings.json` + `shared-config.json` migriert | `AppSettingsService` (nur Migration-Lesen) |
+| `registry.json` | Cloud `<basePath>/.AppData/BauProjektManager/` | Ja | Generierter VBA-Export (read-only für VBA) | `RegistryJsonExporter` |
+| `pattern-templates.json` | Cloud `<basePath>/.AppData/BauProjektManager/` | Ja | Globale Musterbibliothek für Plan-Profile | PlanManager |
+| `.bpm/manifest.json` | Cloud Projektordner `.bpm/` (ADR-046) | Ja | Schlanker Projekt-Ausweis | `BpmManifestService` |
+| `.bpm/project.json` | Cloud Projektordner `.bpm/` (ADR-046) | Ja | Vollständiger Projektexport | `ProjectExportService` |
+| `.bpm/profiles/*.json` | Cloud Projektordner `.bpm/profiles/` (ADR-046) | Ja | RecognitionProfile pro Dokumenttyp pro Projekt | PlanManager |
+
+> **Status `settings.json` Split:** ✅ Implementiert ab v0.25.x (ADR-052). Der `AppSettingsService` lädt zuerst `device-settings.json`, im Fehlerfall einer Migration aus `settings.json` (legacy). `shared-config.json` wird beim ersten Bind eines Workspaces erstellt (oder aus Legacy migriert).
+
+### 10.2 device-settings.json — Feldschema
+
+**Klasse:** `BauProjektManager.Domain.Models.DeviceSettings` 
+**Speicherort:** `%LocalAppData%\BauProjektManager\device-settings.json` 
+**Sync:** Nein (gerätespezifisch) 
+**JSON-Naming:** camelCase
+
+| Feld | Typ | Default | Pflicht | Zweck |
+|------|-----|---------|---------|-------|
+| `schemaVersion` | string | `"1.1"` | ja | Migrations-Anker für Schema-Änderungen |
+| `deviceId` | string | (Guid 12 Zeichen, einmalig generiert) | ja (auto) | Stabile Geräte-ID. Wird beim Erststart einmalig generiert und nie geändert. Identifiziert das Gerät im Multi-Device-Betrieb. |
+| `machineName` | string | `Environment.MachineName` | ja (auto) | Aktueller Windows-Computername. Wird bei jedem Laden überschrieben. |
+| `workspaceId` | string | `""` | nein | WorkspaceId des zuletzt gebundenen `shared-config.json`. Ermöglicht Erkennung ob sich der Datenbestand geändert hat (Rebind). Wird beim ersten Bind gesetzt. |
+| `cloudStoragePath` | string | `""` | ja (Setup) | Pfad zum Cloud-Speicher-Root (z.B. OneDrive, Dropbox, Google Drive). Cloud-neutral — kein bestimmter Anbieter vorausgesetzt. |
+| `basePath` | string | `""` | ja (Setup) | Stammverzeichnis für alle Projektordner (z.B. `D:\OneDrive\Projekte\`). |
+| `archivePath` | string | `""` | nein | Stammverzeichnis für archivierte Projekte. Optional. |
+| `exportPath` | string | `""` | nein | Default-Zielordner für Exporte. Optional. |
+| `isFirstRun` | bool | `true` | ja (auto) | Wird nach erfolgreichem Erst-Setup auf `false` gesetzt. Steuert ob der Ersteinrichtungs-Dialog erscheint. |
+| `setupCompletedAt` | DateTime? | `null` | nein | UTC-Zeitstempel des abgeschlossenen Erst-Setups. |
+
+### 10.3 shared-config.json — Feldschema
+
+**Klasse:** `BauProjektManager.Domain.Models.SharedConfig` 
+**Speicherort:** `<basePath>/.AppData/BauProjektManager/shared-config.json` 
+**Sync:** Ja (über Cloud-Speicher) 
+**JSON-Naming:** camelCase
+
+| Feld | Typ | Default | Pflicht | Zweck |
+|------|-----|---------|---------|-------|
+| `schemaVersion` | string | `"1.1"` | ja | Migrations-Anker |
+| `workspaceId` | string | (Guid 12 Zeichen, einmalig generiert) | ja (auto) | Stabile Workspace-ID. Identifiziert den gemeinsamen Datenbestand. Wird beim ersten `SaveShared()` generiert. |
+| `revision` | int | `0` | ja (auto) | Revisionsnummer. Wird bei jedem `SaveShared()` inkrementiert. Basis für Optimistic Concurrency bei Multi-Device-Zugriff. |
+| `updatedAtUtc` | DateTime? | `null` | nein (auto) | UTC-Zeitstempel der letzten Änderung. |
+| `updatedByDeviceId` | string | `""` | nein (auto) | DeviceId des Geräts das zuletzt geschrieben hat. |
+| `folderTemplate` | List&lt;FolderTemplateEntry&gt; | siehe 10.5 | ja | Ordner-Template für neue Projekte. Reihenfolge bestimmt die Nummerierung (00, 01, 02...). |
+| `projectTypes` | List&lt;string&gt; | siehe 10.6 | ja | Editierbare Liste der Projektarten (Dropdown im Projekt-Dialog). |
+| `buildingTypes` | List&lt;string&gt; | siehe 10.6 | ja | Editierbare Liste der Bauwerkstypen (Dropdown pro Bauteil). |
+| `levelNames` | List&lt;LevelNameEntry&gt; | siehe 10.6 | ja | Editierbare Geschoss-Bezeichnungen: Kurz (EG) + Lang (Erdgeschoss). |
+| `participantRoles` | List&lt;string&gt; | siehe 10.6 | ja | Editierbare Rollen-Liste für Projekt-Beteiligte. |
+| `portalTypes` | List&lt;string&gt; | siehe 10.6 | ja | Editierbare Liste der Bauherren-Portal-Typen. |
+
+### 10.4 settings.json (legacy) — Feldschema
+
+**Klasse:** `BauProjektManager.Domain.Models.AppSettings` 
+**Status:** ⚠️ **Veraltet ab v0.25.x.** Wird nur noch von der Migration in `AppSettingsService.MigrateFromLegacy()` gelesen. Neuer Code verwendet `DeviceSettings` + `SharedConfig`. 
+**Speicherort:** `%LocalAppData%\BauProjektManager\settings.json` *(falls vorhanden — wird nach Migration nicht mehr beschrieben)*
+
+Felder die aus `AppSettings` migrieren:
+
+| Feld | Wandert nach | Anmerkung |
+|------|--------------|-----------|
+| `machineName` | `device-settings.json` → `machineName` | unverändert |
+| `oneDrivePath` | `device-settings.json` → `cloudStoragePath` | umbenannt (cloud-neutral) |
+| `basePath` | `device-settings.json` → `basePath` | unverändert |
+| `archivePath` | `device-settings.json` → `archivePath` | unverändert |
+| `exportPath` | `device-settings.json` → `exportPath` | unverändert |
+| `isFirstRun` | `device-settings.json` → `isFirstRun` | unverändert |
+| `setupCompletedAt` | `device-settings.json` → `setupCompletedAt` | unverändert |
+| `localUserId` | (entfernt) | Wandert in `IUserContext` (ADR-052), nicht mehr in JSON |
+| `localUserName` | (entfernt) | Wandert in `IUserContext` (ADR-052), nicht mehr in JSON |
+| `folderTemplate` | `shared-config.json` → `folderTemplate` | unverändert |
+| `projectTypes` | `shared-config.json` → `projectTypes` | unverändert |
+| `buildingTypes` | `shared-config.json` → `buildingTypes` | unverändert |
+| `levelNames` | `shared-config.json` → `levelNames` | unverändert |
+| `participantRoles` | `shared-config.json` → `participantRoles` | unverändert |
+| `portalTypes` | `shared-config.json` → `portalTypes` | unverändert |
+
+### 10.5 Hilfsklassen für strukturierte Listen
+
+**`LevelNameEntry`** — Geschoss-Bezeichnung mit Kurz- und Langform.
+
+| Feld | Typ | Beispiel |
+|------|-----|----------|
+| `shortName` | string | `"EG"` |
+| `longName` | string | `"Erdgeschoss"` |
+
+**`FolderTemplateEntry`** — Hauptordner im Ordner-Template. Die Nummer wird NICHT gespeichert — sie entsteht aus der Position in der Liste (`{Position:D2} {Name}` z.B. `02 Fotos`).
+
+| Feld | Typ | Default | Beispiel |
+|------|-----|---------|----------|
+| `name` | string | `""` | `"Planunterlagen"` |
+| `hasInbox` | bool | `false` | `true` für Ordner mit `_Eingang/`-Unterordner (PlanManager-Import) |
+| `subFolders` | List&lt;SubFolderEntry&gt; | `[]` | Optionale Unterordner |
+
+**`SubFolderEntry`** — Unterordner innerhalb eines Hauptordners. Rekursiv (kann selbst weitere `SubFolders` haben).
+
+| Feld | Typ | Default | Beispiel |
+|------|-----|---------|----------|
+| `name` | string | `""` | `"Polierpläne"` |
+| `hasPrefix` | bool | `true` | `true` → `01 Polierpläne` (mit Nummer), `false` → `Baustelleneinrichtung` (ohne Nummer) |
+| `subFolders` | List&lt;SubFolderEntry&gt; | `[]` | Verschachtelte Unterordner |
+
+### 10.6 Default-Werte für SharedConfig
+
+Definiert in `BauProjektManager.Domain.Models.SharedConfigDefaults`. Bei Reset oder Erstinitialisierung werden diese Listen verwendet.
+
+**`projectTypes` (6 Defaults):**
+`Neubau`, `Sanierung`, `Umbau`, `Zubau`, `Abbruch`, `Sonstiges`
+
+**`buildingTypes` (7 Defaults):**
+`EFH`, `MFH`, `Wohnanlage`, `Gewerbe`, `Industrie`, `Infrastruktur`, `Sonstiges`
+
+**`participantRoles` (13 Defaults):**
+`Bauherr`, `Architekt`, `Statiker`, `Haustechnik`, `Bauphysik`, `ÖBA`, `Vermessung`, `Elektro`, `HKLS`, `Bodengutachter`, `Brandschutz`, `Geotechnik`, `Sonstiges`
+
+**`portalTypes` (5 Defaults):**
+`InfoRaum`, `PlanRadar`, `PlanFred`, `Bau-Master`, `Dalux`
+
+**`levelNames` (11 Defaults):**
+
+| ShortName | LongName |
+|-----------|----------|
+| `FU` | Fundament |
+| `UG3` | 3. Untergeschoss |
+| `UG2` | 2. Untergeschoss |
+| `UG` | Untergeschoss |
+| `EG` | Erdgeschoss |
+| `OG1` | 1. Obergeschoss |
+| `OG2` | 2. Obergeschoss |
+| `OG3` | 3. Obergeschoss |
+| `OG4` | 4. Obergeschoss |
+| `OG5` | 5. Obergeschoss |
+| `DG` | Dachgeschoss |
+
+**`folderTemplate` (7 Hauptordner):**
+
+| Pos | Name | HasInbox | Unterordner |
+|-----|------|----------|-------------|
+| 00 | `Sonstiges` | nein | — |
+| 01 | `Planunterlagen` | **ja** | `Ausschreibungspläne` (mit Präfix), `Polierpläne` (mit Präfix), `Statikpläne - Schalung` (mit Präfix), `Statikpläne - Bewehrung` (mit Präfix), `Fertigteilpläne` (mit Präfix), `Baustelleneinrichtung` (ohne Präfix) |
+| 02 | `Fotos` | nein | — |
+| 03 | `Leica` | nein | `Absteckpläne` (ohne Präfix), `Aufmaß` (ohne Präfix) |
+| 04 | `DOKA` | nein | — |
+| 05 | `LV` | nein | — |
+| 06 | `Protokolle` | nein | — |
+
+### 10.7 Migration von settings.json (legacy) zu Split-Format
+
+`AppSettingsService.LoadDevice()` führt die Migration automatisch beim ersten Start nach Update durch:
+
+1. Wenn `device-settings.json` **nicht** existiert UND `settings.json` (legacy) **existiert** → Migration triggern
+2. Aus Legacy-`AppSettings` werden Felder in `DeviceSettings` und `SharedConfig` aufgeteilt (siehe 10.4)
+3. `device-settings.json` wird sofort geschrieben
+4. `shared-config.json` wird beim ersten `LoadShared()` geschrieben (sobald `basePath` bekannt ist)
+5. Legacy `settings.json` bleibt liegen, wird aber nicht mehr beschrieben
+
+**Schreib-Strategie:** Beide Dateien werden atomisch geschrieben (Write-to-Temp → File.Move overwrite). Bei `shared-config.json` wird vor jedem Schreiben `revision++` und `updatedAtUtc = DateTime.UtcNow` gesetzt.
+
+### 10.8 Geplante Schema-Erweiterungen (gemäß ADR-053)
 
 > **Hinweis:** Die frühere "Neue Datenarchitektur" mit 12 Sync-Spalten + Outbox/Inbox-Tabellen aus DatenarchitekturSync.md ist durch **ADR-053** (2026-04-30) **superseded**. Stattdessen: 7-Spalten-Sync-Modell (bereits implementiert in v0.25.23, ADR-050) + Pull/Push-Sync mit Server-Authority.
 

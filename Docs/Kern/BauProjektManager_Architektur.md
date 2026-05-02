@@ -191,7 +191,8 @@ Projektnummer wird automatisch aus dem Projektstart-Datum generiert (YYYYMM).
 | Kategorie | Speicherort | Inhalt | Synct? |
 |-----------|-------------|--------|--------|
 | **Nutzdaten** | Cloud-Speicher (Projektordner) | Pläne, Fotos, Dokumente, `_Eingang`, `_Archiv` | Ja |
-| **Konfiguration** | Cloud-Speicher (`.AppData/`) | `registry.json`, `settings.json`, `profiles.json`, `pattern-templates.json`, `templates.json` | Ja |
+| **Konfiguration (lokal)** | Lokal (`%LocalAppData%\BauProjektManager\`) | `device-settings.json` (Pfade, DeviceId) | Nein |
+| **Konfiguration (geteilt)** | Cloud-Speicher (`.AppData/`) | `shared-config.json`, `registry.json`, `pattern-templates.json`, `templates.json` | Ja |
 | **Operativer State** | Lokal (`%LocalAppData%\BauProjektManager\`) | SQLite-DBs, Logs, Cache, Undo-Journal, Temp | Nein |
 
 ### 2.3 Speicher-Matrix (komplett)
@@ -200,7 +201,9 @@ Projektnummer wird automatisch aus dem Projektstart-Datum generiert (YYYYMM).
 |-------------|--------|-----|--------|-----------|-------|----------|
 | Projekt-Stammdaten | SQLite | Lokal `bpm.db` | Nein | C# | C# | Selten |
 | `registry.json` | JSON | Cloud-Speicher `.AppData/` | Ja | C# (auto) | VBA, C# | Bei Projekt-Änderung |
-| `settings.json` | JSON | Cloud-Speicher `.AppData/` | Ja | C# | C# | Selten | Post-V1: Split in `device-settings.json` (lokal) + `shared-config.json` (Cloud) — ADR-047 |
+| `device-settings.json` | JSON | Lokal `%LocalAppData%\BauProjektManager\` | Nein | C# | C# | Selten | Geräte-spezifische Einstellungen (Pfade, DeviceId) — ADR-052. Schema: DB-SCHEMA Kap. 10.2 |
+| `shared-config.json` | JSON | Cloud-Speicher `.AppData/` | Ja | C# | C# | Selten | Geteilte Konfiguration (FolderTemplate, Listen) — ADR-052. Schema: DB-SCHEMA Kap. 10.3 |
+| ~~`settings.json`~~ *(legacy)* | JSON | Lokal `%LocalAppData%\` | Nein | — | C# (nur Migration) | — | Veraltet — wird beim ersten Start automatisch in `device-settings.json` + `shared-config.json` migriert (DB-SCHEMA Kap. 10.7) |
 | ~~`profiles.json`~~ | — | ~~`.AppData/Projects/<P>/`~~ → `.bpm/profiles/*.json` im Projektordner (ADR-046) | Ja | C# | C# | Beim Anlernen |
 | `pattern-templates.json` | JSON | Cloud-Speicher `.AppData/` | Ja | C# | C# | Beim Anlernen |
 | `templates.json` | JSON | Cloud-Speicher `.AppData/` | Ja | C# | C# | Selten |

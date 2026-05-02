@@ -16,7 +16,7 @@ supersedes: []
 - Autorität: source_of_truth
 - Lesen wenn: Neue Architekturentscheidung treffen, bestehende ADR prüfen, Status ändern, Entscheidung nachschlagen
 - Nicht zuständig für: Implementierungs-Details (→ jeweilige Modul-Docs), Code-Standards (→ CODING_STANDARDS.md)
-- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-052)
+- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-054)
 - Pflichtlesen: keine (gezieltes Nachschlagen per ADR-Nummer)
 - Fachliche Invarianten:
   - Statusmodell: Decision Status (Proposed/Accepted/Superseded/Deprecated) getrennt von Implementation Status (Not Started/Partial/Implemented)
@@ -101,6 +101,7 @@ Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheid
 | 051 | Client ist local-first — Server nur Auth + Sync + Autorität | ✅ Entschieden | 2026-04 |
 | 052 | Lokaler Benutzerkontext über IUserContext statt lokaler Authentifizierung | ✅ Entschieden | 2026-04 |
 | 053 | Server-Sync-Architektur — Windows-only Stack, Phase 0/1 VPS, Phase Verkauf On-Premise | ✅ Entschieden | 2026-04 |
+| 054 | PlanManager Import Identity & Gruppierung | ✅ Entschieden | 2026-04 |
 
 ---
 
@@ -2231,5 +2232,210 @@ Verworfene Optionen mit Begründung:
 - Kernergebnisse in [README.md](chatgpt-reviews/CGR-2026-04-30-datenarchitektur-sync/README.md) der Serie
 
 **Betrifft:** ADR-046 (.bpm/), ADR-047 (4-Klassen-Datenmodell), ADR-050 (DB-Schema v2.1), ADR-051 (Local-First), ADR-052 (IUserContext), `Docs/Konzepte/DatenarchitekturSync.md` (FolderSync-Pfad superseded), `Docs/Konzepte/ServerArchitektur.md` (bleibt relevant für Phase Verkauf)
+
+## ADR-054: PlanManager Import Identity & Gruppierung
+
+**Datum:** 2026-04 (rückwirkend dokumentiert 2026-05)
+**Status:** ✅ Entschieden
+**Implementierung:** Partial — Schema und Pipeline implementiert (Phase F, v0.25.13). Recovery-Logik offen (BPM-016).
+**Herkunft:** 3-Runden Cross-Review Claude/ChatGPT (10.04.2026, Teil 10), Praxis-Pipeline-Konzept (15.04.2026, Teil 17), Auto-Link-Regeln und Stage-Konzept (15.04.2026, Cross-Review-Konsens)
+
+**Hinweis zur Nummer:** Diese ADR war ursprünglich als ADR-050 reserviert (siehe Teil 17, 15.04.2026). Am gleichen Tag wurde ADR-050 jedoch im Konzept-Serverstruktur-Chat für „Source of Truth je Betriebsmodus" vergeben, ohne dass die ursprüngliche Reservierung berücksichtigt wurde. Da ADR-Nummern nicht wiederverwendet werden (Statusmodell-Regel im Kopf der ADR.md), erhält diese ADR jetzt die nächste freie Nummer (ADR-053 wurde inzwischen ebenfalls für die Server-Sync-Architektur vergeben).
+
+**Kontext:**
+
+Der PlanManager muss beim Import von Plänen entscheiden, welche Datei welcher fachlichen Identität entspricht: Ist das ein neuer Plan, eine neue Revision eines bestehenden Plans, eine geänderte Datei zu derselben Revision, oder ein zu archivierender Vorgänger? Diese Entscheidung ist die Grundlage für die gesamte Import-Pipeline (Versionierung, Archivierung, Auto-Link, Undo, Recovery).
+
+Im Zuge des PlanManager-Konzepts wurden mehrere konkrete Strukturen im Schema und Code etabliert, die in keiner ADR begründet sind:
+
+1. Drei-Tabellen-Identity-Hierarchie für den Import (`import_journal` → `import_actions` → `import_action_files`)
+2. `document_key` als fachliche Identity statt Dateipfad oder Plannummer allein
+3. n:m-Verknüpfung zwischen `plan_revisions` und `plan_files` über `revision_file_links`
+4. `md5_hash` als universeller Pflicht-Fingerabdruck auf allen Dateien (auch bei IndexSource=FileName)
+5. `action_status` (pending/completed/failed) auf Action-Ebene als Recovery-Anker
+6. `origin_mode` mit drei Werten als Herkunfts-Audit
+7. Stage-Konzept (Unknown/Draft/Final) als separater Aspekt, bewusst NICHT Teil des `document_key`
+8. `tokenization` als profilgebundene Vorbedingung der document_key-Bildung
+9. `includeInIdentity`-Flag für Custom-Felder
+10. `MultiplePlanNumbers → ReviewRequired` als V1-Strategie
+
+Diese Entscheidungen wurden in mehreren Cross-Review-Runden mit ChatGPT (Runden 1-3 am 10.04.2026, weitere am 15.04.2026) abgestimmt und sind bereits im Code (PlanManagerDatabase v0.25.13, 7-Stufen-Pipeline) und in `Docs/Module/PlanManager.md` v2.0 implementiert. Die ADR holt die fehlende Architekturbegründung nach.
+
+**Entscheidung:**
+
+### 1. Drei-Tabellen-Identity-Hierarchie für Import
+
+Der Import wird über drei aufeinander aufbauende Tabellen abgebildet, jede mit eigenem ULID-Primärschlüssel:
+
+| Tabelle | Verantwortung | Beziehung |
+|---------|---------------|-----------|
+| `import_journal` | Ein Import-Vorgang (Batch) — Zeitpunkt, Status, Quellpfad, Profil, Maschine | 1 Journal hat n Actions |
+| `import_actions` | Eine fachliche Aktion pro Plan-Revision — Action-Typ, Status, document_key, Plannummer/Index | 1 Action hat 1..n Files |
+| `import_action_files` | Eine physische Datei pro Aktion — Name, Pfade, Hash, Größe | n:1 zu Action |
+
+**Begründung:** Eine Revision besteht aus 1..n Dateien (ADR-007), daher reicht eine 2-Tabellen-Lösung mit Datei-pro-Action nicht. Die dritte Tabelle ermöglicht sauberes Rückwärts-Undo (über `action_order`) und Teilfehler-Handling (über `action_status` pro Aktion). Der separate `import_journal`-Eintrag erlaubt das Tracking der gesamten Batch-Operation unabhängig von Einzelaktionen.
+
+Verworfene Alternativen:
+- 2-Tabellen-Lösung mit festem PDF/DWG-Paar (in der Praxis nicht haltbar — siehe ADR-007)
+- INTEGER-IDs (durch ADR-039 ohnehin ausgeschlossen)
+
+### 2. document_key als fachliche Identity
+
+`document_key` ist eine deterministisch aus `identityFields` des RecognitionProfile gebildete Zeichenkette, die ein Dokument fachlich identifiziert.
+
+```
+document_key := join("_", values_of(identityFields_in_resolution_order))
+Beispiel: identityFields = ["documentType", "planNumber", "haus"]
+       → document_key = "Polierplan_103_H64"
+```
+
+Die Bildung erfolgt im `DocumentKeyBuilder`-Service (Stufe 5 der 7-Stufen-Pipeline) auf Basis der vom `ImportContextResolver` (Stufe 4) gelieferten Felder.
+
+**Begründung:** Dateiname und Dateipfad sind keine zuverlässigen Identity-Indikatoren. Praxis-Beispiel aus Teil 17: gleiche Dateinamen in verschiedenen Ordnern können verschiedene Dokumente sein (z.B. `Wand_01.pdf` als Schalungsplan-Dokument vs. Bewehrungsplan-Dokument). Identity muss aus fachlichen Feldern (Plannummer, Geschoss, Bauteil etc.) gebildet werden, nicht aus Dateinamen-Stamm.
+
+### 3. Auto-Link über vier Bedingungen
+
+Dateien werden nur dann automatisch zu einer Revision gruppiert, wenn ALLE vier Bedingungen erfüllt sind:
+
+1. Gleicher `document_key`
+2. Gleiche `document_type` (DocumentTypeId)
+3. Gleicher Revisionsstand
+4. Erlaubte Extension-Kombination (z.B. pdf+dwg, pdf+dxf)
+
+Kein Auto-Link nur wegen gleichem Dateinamen-Stamm. Verletzungen einer Bedingung führen zu separaten Revisionen oder zu manueller Verknüpfung durch den Benutzer.
+
+### 4. n:m zwischen plan_revisions ↔ plan_files
+
+Die Verknüpfung zwischen Revisionen und physischen Dateien erfolgt über die Tabelle `revision_file_links` als n:m-Beziehung mit den Feldern `link_mode` (auto|manual) und `is_primary`.
+
+**Begründung:** In der Baupraxis enthält eine einzelne DWG häufig die Geometrie für mehrere Pläne (Sammel-DWG für ein ganzes Bauteil), während die zugehörigen PDFs für jede Revision einzeln geliefert werden. Eine 1:n-Beziehung mit nullable `revision_id` würde diesen Fall nicht abbilden, da eine Datei mehreren Revisionen zugeordnet sein kann.
+
+Eine Datei ohne Eintrag in `revision_file_links` ist standalone (taucht als „nicht zugeordnet" auf). Sobald ein Link existiert, gilt die Datei als zugeordnet und verschwindet aus der Standalone-Liste. Der Rückweg ist explizit (Link entfernen).
+
+### 5. origin_mode als Herkunfts-Audit
+
+`plan_files.origin_mode` mit drei Werten dokumentiert die ursprüngliche Verknüpfungsherkunft:
+
+| Wert | Bedeutung |
+|------|-----------|
+| `autoGrouped` | Beim Import automatisch über die vier Auto-Link-Bedingungen verknüpft |
+| `manualLinked` | Vom Benutzer manuell verknüpft |
+| `standalone` | Initial keine Verknüpfung |
+
+`origin_mode` ist ein historisches Audit-Feld — der **aktuelle Zustand** „hat Links oder nicht" ergibt sich ausschließlich aus der Tabelle `revision_file_links`, nicht aus diesem Feld. Das Feld wird beim ersten Import gesetzt und nicht nachträglich umgeschrieben, wenn der Verknüpfungsstatus später durch manuelle Aktionen ändert.
+
+### 6. md5_hash als universeller Pflicht-Fingerabdruck
+
+`plan_files.md5_hash` ist `NOT NULL` für ALLE Dateien, unabhängig von der `IndexSource` des zugehörigen Profils. Zusätzlich wird `file_size` als Sekundär-Prüfwert gespeichert (Doppel-Fingerabdruck).
+
+**Begründung:** Der Hash hat mehrere Verwendungen jenseits der reinen Änderungserkennung bei IndexSource=None:
+
+- SKIP_IDENTICAL-Erkennung (Datei am Zielort bereits identisch vorhanden)
+- Wiedererkennung nach Umbenennung (Pfad ändert, Hash bleibt)
+- Cache-Rebuild auf zweitem Gerät (bekannte Dateien wiederfinden)
+- DWG-Veraltet-Warnung über die Link-Tabelle (Hash-Vergleich der verknüpften Dateien)
+
+Daher ist der Hash auch bei IndexSource=FileName Pflicht. Eine ältere Schema-Version hatte den Hash optional — diese Lockerung wurde im Cross-Review (10.04.2026, Teil 10) bewusst zurückgenommen.
+
+Verworfene Alternativen:
+- `file_size` allein (zu unspezifisch)
+- Stärkere Hashes (SHA-256) für V1 nicht nötig — Hash dient nicht der Sicherheit sondern der Identität (siehe Konzeptdoc PlanManager.md Kap. 12.2)
+
+### 7. action_status als Recovery-Anker auf zwei Ebenen
+
+Der Import-Status wird auf zwei Ebenen geführt:
+
+| Ebene | Spalte | Werte | Funktion |
+|-------|--------|-------|----------|
+| Batch | `import_journal.status` | pending, completed, failed, undone | Recovery-Trigger („gibt es offene Batches?") |
+| Aktion | `import_actions.action_status` | pending, completed, failed | Recovery-Detail („welche Aktion war wo abgebrochen?") |
+
+**Begründung:** Bei Absturz während eines Imports (Stromausfall, App-Crash, Datei-Lock) muss der nächste App-Start unterscheiden können zwischen „kein Import läuft" und „Import war mittendrin". Der Journal-Status liefert den Trigger, der Action-Status liefert das Detail für eine punktgenaue Wiederaufnahme oder Reparatur.
+
+**Implementierungsstand:** `HasPendingImports()` ist in `PlanManagerDatabase.cs` implementiert (Vorarbeit). Die eigentliche Recovery-Logik (App-Start-Hook, Reparatur-Dialog, Wiederaufnahme bzw. Rückabwicklung pro Action-Status) ist als ClickUp-Task **BPM-016** offen und wird in einer eigenen Implementation-Phase umgesetzt. Diese ADR dokumentiert das Datenmodell-Konzept; die UI- und Workflow-Details der Recovery folgen mit BPM-016.
+
+### 8. Stage-Konzept als separater Aspekt
+
+Jedes Dokument hat eine Stage im Review-/Freigabe-Lifecycle, gespeichert als eigenes Feld (nicht in `document_key`):
+
+| Stage | Bedeutung | Erkennung |
+|-------|-----------|-----------|
+| `Unknown` | Default — keine Stage-Information vorhanden | Standardwert wenn keine Marker gefunden |
+| `Draft` | VORABZUG, Vorab, VA | Ordnername (z.B. `_VORABZUG`) oder Dateiname enthält Marker |
+| `Final` | Endgültig freigegeben | Hauptordner + expliziter Index ohne Draft-Marker |
+
+**Wichtig:** Default ist `Unknown`, NICHT `Final`. Die ausdrückliche Trennung verhindert, dass undeklarierte Dokumente fälschlich als final eingestuft werden.
+
+Stage ist **bewusst nicht Teil des `document_key`**. Begründung: Ein Dokument behält seine fachliche Identität auch wenn es vom Vorabzug zur finalen Version wird. Würde Stage in den Schlüssel einfließen, würde derselbe Plan in Draft- und Final-Phase als zwei verschiedene Dokumente erscheinen, was die Versionierung und Archivierung sabotieren würde.
+
+### 9. tokenization als profilgebundene Vorbedingung
+
+Die Bildung des `document_key` setzt eine korrekte Segmentierung des Dateinamens voraus. Diese ist im RecognitionProfile-Schema v2 als `tokenization`-Block konfigurierbar:
+
+```json
+"tokenization": {
+  "delimiters": ["-", "_"],
+  "collapseRepeatedDelimiters": false,
+  "firstTokenDelimiter": null
+}
+```
+
+| Feld | Zweck |
+|------|-------|
+| `delimiters` | Liste der Trennzeichen (profilgebunden, nicht global) |
+| `collapseRepeatedDelimiters` | Mehrere aufeinanderfolgende Trenner als ein Trennblock behandeln |
+| `firstTokenDelimiter` | Sondertrenner für das erste Token (z.B. Leerzeichen nach Plan-Code) |
+
+Punkt (`.`) ist als Trenner profilgebunden zulässig, nicht global. Leerzeichen als globaler Splitter ist verboten — ausschließlich als `firstTokenDelimiter` erlaubt (kontrollierter Sonderfall).
+
+**Begründung:** Verschiedene Büros/Statiker liefern Pläne mit unterschiedlichen Dateinamen-Konventionen (Polierplan-Format ≠ Statikplan-Format ≠ Architekt-Format). Eine globale Tokenization würde Profile gegenseitig stören. Profilgebundene Tokenization ist Voraussetzung dafür, dass `identityFields` aus den richtigen Segmenten gelesen werden — und damit dafür, dass `document_key` deterministisch wird.
+
+### 10. includeInIdentity-Flag für Custom-Felder
+
+Custom-FieldType-Felder im RecognitionProfile sind nur dann Teil des `document_key`, wenn das Profil sie explizit mit `includeInIdentity = true` markiert. Default ist `false`.
+
+**Begründung:** Custom-Felder dienen oft nur der Anzeige oder Sortierung (z.B. Bauabschnitt-Bezeichnung), sind aber nicht identitätsbildend. Eine pauschale Aufnahme aller Custom-Felder in den Schlüssel würde fachlich gleiche Dokumente in unterschiedliche Identitäten zerteilen.
+
+### 11. MultiplePlanNumbers → ReviewRequired in V1
+
+Wenn der Parser im Dateinamen mehr als eine Plannummer erkennt, wird der Import für diese Datei nicht automatisch fortgesetzt:
+
+- `Warnings += MultiplePlanNumbers`
+- Status: `Unknown` oder `ReviewRequired`
+- Kein Auto-Linking, kein Auto-Rename
+- Kein Wizard zur Auswahl der „primären Nummer" in V1
+
+Der Benutzer entscheidet manuell in der Import-Vorschau. V2+ kann hier eine geführte Wahl ergänzen.
+
+**Begründung:** Mehrfach-Plannummern sind in der Praxis selten und uneindeutig. Eine Heuristik („nimm die erste") wäre falsch oft genug, um Vertrauen in die automatische Zuordnung zu untergraben. Manuelle Review ist in V1 die ehrliche Lösung.
+
+**Konsequenzen:**
+
+- 6 Tabellen in `planmanager.db`: `plan_revisions`, `plan_files`, `revision_file_links` (Cache-Schicht) + `import_journal`, `import_actions`, `import_action_files` (Journal-Schicht). Implementiert in `PlanManagerDatabase.cs` (v0.25.13, Phase F).
+- 7-Stufen-Analyse-Pipeline ist die einzige Quelle der `document_key`-Bildung: Scan → Fingerprint → Parse → Resolve Context → Build Identity → Version Decision → Execution Plan.
+- RecognitionProfile-Schema v2 (Pflicht) mit `tokenization`, `indexExtraction`, `documentTypeId`, `includeInIdentity`. Migration v1→v2 erfolgt beim Laden alter Profile.
+- `md5_hash NOT NULL` auf allen Dateien — Migration bestehender Profile/Imports muss Hashes nachpflegen.
+- Recovery-Logik (BPM-016) baut auf der zweistufigen Status-Struktur auf — diese ADR friert das Datenmodell ein, die Workflow-Implementierung folgt.
+- Stage und Custom-Identity-Felder sind eigenständige Aspekte, die orthogonal zur `document_key`-Bildung wirken — keine versteckten Kopplungen.
+- DocumentKey-Format („`A_B_C`") ist ein Implementation Detail des `DocumentKeyBuilder`. Wenn `planIndex` leer/null ist, wird das Feld NICHT angehängt (kein leerer Trenner-Tail).
+
+**Verworfene Alternativen (zusammengefasst):**
+
+- 2-Tabellen-Import-Hierarchie ohne separate Datei-Ebene → ADR-007 widerspricht
+- Dateiname/Pfad als Identity → in der Praxis nicht eindeutig
+- 1:n Verknüpfung mit nullable revision_id → bildet Sammel-DWG nicht ab
+- md5_hash optional bei IndexSource=FileName → unterläuft SKIP/Cache/Veraltet-Warnung
+- Stage als Bestandteil des document_key → bricht Versionierung über den Lifecycle
+- Globale Tokenization → stört Profile gegenseitig
+- Auto-Wahl bei MultiplePlanNumbers → Heuristik-Risiko zu hoch für V1
+
+**Betrifft:** ADR-007 (1..n Dateien pro Revision), ADR-008 (10-Schritte Import-Workflow), ADR-009 (Undo-Journal), ADR-010 (RecognitionProfile/PatternTemplate), ADR-022 (Segment-Parsing), ADR-039 (ULID), ADR-045 (IndexSource), ADR-046 (.bpm/-Ordner)
+
+**Offen / spätere ADRs:**
+
+- IndexSource=PlanHeader und document_key-Bildung bei nachträglich erkanntem Index (Post-V1, mit Plankopf-Modul)
+- Recovery-Workflow-Details (BPM-016, eigene ADR oder Konzept-Doc bei Implementation)
+
+---
 
 *Dokument wird laufend aktualisiert wenn neue Architekturentscheidungen getroffen werden.*

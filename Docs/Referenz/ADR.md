@@ -2237,7 +2237,7 @@ Verworfene Optionen mit Begründung:
 
 **Datum:** 2026-04 (rückwirkend dokumentiert 2026-05)
 **Status:** ✅ Entschieden
-**Implementierung:** Partial — Schema und Pipeline implementiert (Phase F, v0.25.13). Recovery-Logik offen (BPM-016).
+**Implementierung:** ✅ Implemented — Schema + 7-Stufen-Pipeline (v0.25.13, Phase F), Recovery-Workflow (v0.27.23–v0.27.24, RecoveryDecisionService + RecoveryExecutorService mit 10 Tests, BPM-016 done)
 **Herkunft:** 3-Runden Cross-Review Claude/ChatGPT (10.04.2026, Teil 10), Praxis-Pipeline-Konzept (15.04.2026, Teil 17), Auto-Link-Regeln und Stage-Konzept (15.04.2026, Cross-Review-Konsens)
 
 **Hinweis zur Nummer:** Diese ADR war ursprünglich als ADR-050 reserviert (siehe Teil 17, 15.04.2026). Am gleichen Tag wurde ADR-050 jedoch im Konzept-Serverstruktur-Chat für „Source of Truth je Betriebsmodus" vergeben, ohne dass die ursprüngliche Reservierung berücksichtigt wurde. Da ADR-Nummern nicht wiederverwendet werden (Statusmodell-Regel im Kopf der ADR.md), erhält diese ADR jetzt die nächste freie Nummer (ADR-053 wurde inzwischen ebenfalls für die Server-Sync-Architektur vergeben).
@@ -2352,7 +2352,7 @@ Der Import-Status wird auf zwei Ebenen geführt:
 
 **Begründung:** Bei Absturz während eines Imports (Stromausfall, App-Crash, Datei-Lock) muss der nächste App-Start unterscheiden können zwischen „kein Import läuft" und „Import war mittendrin". Der Journal-Status liefert den Trigger, der Action-Status liefert das Detail für eine punktgenaue Wiederaufnahme oder Reparatur.
 
-**Implementierungsstand:** `HasPendingImports()` ist in `PlanManagerDatabase.cs` implementiert (Vorarbeit). Die eigentliche Recovery-Logik (App-Start-Hook, Reparatur-Dialog, Wiederaufnahme bzw. Rückabwicklung pro Action-Status) ist als ClickUp-Task **BPM-016** offen und wird in einer eigenen Implementation-Phase umgesetzt. Diese ADR dokumentiert das Datenmodell-Konzept; die UI- und Workflow-Details der Recovery folgen mit BPM-016.
+**Implementierungsstand (Stand 2026-05):** Recovery ist vollständig implementiert. `RecoveryDecisionService` (pure Funktion, 5 Unit-Tests) entscheidet auf Basis der Action-Status-Verteilung über Forward / Rollback / Cleanup. `RecoveryExecutorService` (Disk + DB, 5 Integration-Tests) führt die gewählte Strategie aus. Die Recovery-Szenarien sind als manueller Smoketest unter `Docs/Test/Recovery-Szenarien.md` dokumentiert. Diese ADR friert das Datenmodell-Konzept ein, BPM-016 ist done (v0.27.23–v0.27.24, Branch `feature/bugfixing`).
 
 ### 8. Stage-Konzept als separater Aspekt
 
@@ -2415,7 +2415,7 @@ Der Benutzer entscheidet manuell in der Import-Vorschau. V2+ kann hier eine gef�
 - 7-Stufen-Analyse-Pipeline ist die einzige Quelle der `document_key`-Bildung: Scan → Fingerprint → Parse → Resolve Context → Build Identity → Version Decision → Execution Plan.
 - RecognitionProfile-Schema v2 (Pflicht) mit `tokenization`, `indexExtraction`, `documentTypeId`, `includeInIdentity`. Migration v1→v2 erfolgt beim Laden alter Profile.
 - `md5_hash NOT NULL` auf allen Dateien — Migration bestehender Profile/Imports muss Hashes nachpflegen.
-- Recovery-Logik (BPM-016) baut auf der zweistufigen Status-Struktur auf — diese ADR friert das Datenmodell ein, die Workflow-Implementierung folgt.
+- Recovery-Logik (BPM-016) baut auf der zweistufigen Status-Struktur auf — implementiert in `RecoveryDecisionService` + `RecoveryExecutorService` (v0.27.23–v0.27.24, 10 automatisierte Tests).
 - Stage und Custom-Identity-Felder sind eigenständige Aspekte, die orthogonal zur `document_key`-Bildung wirken — keine versteckten Kopplungen.
 - DocumentKey-Format („`A_B_C`") ist ein Implementation Detail des `DocumentKeyBuilder`. Wenn `planIndex` leer/null ist, wird das Feld NICHT angehängt (kein leerer Trenner-Tail).
 
@@ -2434,7 +2434,6 @@ Der Benutzer entscheidet manuell in der Import-Vorschau. V2+ kann hier eine gef�
 **Offen / spätere ADRs:**
 
 - IndexSource=PlanHeader und document_key-Bildung bei nachträglich erkanntem Index (Post-V1, mit Plankopf-Modul)
-- Recovery-Workflow-Details (BPM-016, eigene ADR oder Konzept-Doc bei Implementation)
 
 ---
 

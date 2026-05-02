@@ -69,14 +69,14 @@ supersedes: []
 |---------|-------------|---------|--------|
 | Klassen | PascalCase | `PlanImportService` | `planImportService` |
 | Methoden | PascalCase | `ImportPlans()` | `importPlans()` |
-| Interfaces | IPascalCase | `IRegistryService` | `RegistryService` |
+| Interfaces | IPascalCase | `IExportService` | `ExportService` |
 | Properties | PascalCase | `PlanCount` | `planCount` |
 | Events | PascalCase | `ImportCompleted` | `importCompleted` |
 | Enums | PascalCase (Singular) | `PlanStatus` | `PlanStatuses` |
 | Enum-Werte | PascalCase | `PlanStatus.Active` | `PlanStatus.ACTIVE` |
 | Lokale Variablen | camelCase | `planCount` | `PlanCount` |
 | Parameter | camelCase | `fileName` | `FileName` |
-| Private Felder | _camelCase | `_registry` | `registry` |
+| Private Felder | _camelCase | `_database` | `database` |
 | Konstanten | PascalCase | `MaxRetryCount` | `MAX_RETRY_COUNT` |
 | Namespaces | PascalCase | `BauProjektManager.Services` | `bauprojektmanager.services` |
 | Dateien | Wie die Klasse | `PlanImportService.cs` | `planImportService.cs` |
@@ -310,19 +310,24 @@ public class PlanImportService : IImportService
     private const int MaxRetryCount = 3;
     private const string ArchiveFolderName = "_Archiv";
 
-    // 2. Statische Felder
-    private static readonly ILogger Logger = LogManager.GetLogger();
+    // 2. Statische Felder (sparsam — nur für echte konstante Daten, nie für Services)
+    private static readonly Encoding Utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 
-    // 3. Private Felder
-    private readonly IRegistryService _registry;
-    private readonly IFileParser _parser;
+    // 3. Private Felder (alle Abhängigkeiten per Constructor Injection)
+    private readonly ILogger<PlanImportService> _logger;
+    private readonly ProjectDatabase _database;
+    private readonly IDocumentTypeRecognizer _recognizer;
     private int _importCount;
 
-    // 4. Konstruktoren
-    public PlanImportService(IRegistryService registry, IFileParser parser)
+    // 4. Konstruktoren — alle Dependencies per Constructor (kein Service-Locator)
+    public PlanImportService(
+        ILogger<PlanImportService> logger,
+        ProjectDatabase database,
+        IDocumentTypeRecognizer recognizer)
     {
-        _registry = registry ?? throw new ArgumentNullException(nameof(registry));
-        _parser = parser ?? throw new ArgumentNullException(nameof(parser));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _database = database ?? throw new ArgumentNullException(nameof(database));
+        _recognizer = recognizer ?? throw new ArgumentNullException(nameof(recognizer));
     }
 
     // 5. Properties
@@ -339,7 +344,7 @@ public class PlanImportService : IImportService
     }
 
     // 8. Internal/Protected Methoden
-    internal void ValidateProfile(TypeProfile profile)
+    internal void ValidateProfile(RecognitionProfile profile)
     {
         // ...
     }
@@ -367,7 +372,7 @@ PlanImportService.cs     → enthält class PlanImportService
 IImportService.cs        → enthält interface IImportService
 
 // FALSCH — mehrere Klassen in einer Datei
-Models.cs                → enthält Plan, Project, TypeProfile
+Models.cs                → enthält Plan, Project, RecognitionProfile
 ```
 
 **Ausnahme:** Kleine zusammengehörige Records/Enums dürfen zusammen:
@@ -399,7 +404,7 @@ public record PlanStatusInfo(PlanStatus Status, string Description);
 ```csharp
 // RICHTIG — Typ ist aus der rechten Seite offensichtlich
 var plans = new List<Plan>();
-var registry = new RegistryService();
+var db = new ProjectDatabase();
 var result = await ImportAsync();
 var stream = File.Create(path);
 
@@ -790,6 +795,7 @@ ViewModel erbt von `ObservableObject` (CommunityToolkit.Mvvm) und nutzt `[Observ
 ```csharp
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 
 namespace BauProjektManager.PlanManager.ViewModels;
 
@@ -799,7 +805,17 @@ namespace BauProjektManager.PlanManager.ViewModels;
 /// </summary>
 public partial class PlanManagerViewModel : ObservableObject
 {
-    private readonly ProjectDatabase _db = new();
+    // Abhängigkeiten per Constructor Injection — kein direktes new im ViewModel
+    private readonly ProjectDatabase _database;
+    private readonly ILogger<PlanManagerViewModel> _logger;
+
+    public PlanManagerViewModel(
+        ProjectDatabase database,
+        ILogger<PlanManagerViewModel> logger)
+    {
+        _database = database ?? throw new ArgumentNullException(nameof(database));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
 
     // [ObservableProperty] generiert automatisch:
     // - public Property "Projects" (PascalCase)
@@ -820,13 +836,14 @@ public partial class PlanManagerViewModel : ObservableObject
     [RelayCommand]
     private async Task LoadProjectsAsync()
     {
-        var projects = _db.LoadAllProjects();
+        var projects = _database.LoadAllProjects();
         Projects.Clear();
         foreach (var p in projects)
         {
             Projects.Add(new PlanProjectItem(p));
         }
         StatusText = $"{Projects.Count} Projekte geladen";
+        _logger.LogDebug("Loaded {Count} projects", Projects.Count);
     }
 }
 ```
@@ -976,36 +993,44 @@ Jeder Service hat ein Interface — das ermöglicht Testing und Austauschbarkeit
 namespace BauProjektManager.PlanManager.Services;
 
 /// <summary>
-/// Liest und schreibt die zentrale Projekt-Registry.
+/// Erkennt den Plantyp einer Datei anhand ihres Dateinamens und Profils.
 /// </summary>
-public interface IRegistryService
+public interface IDocumentTypeRecognizer
 {
-    Task<List<Project>> GetProjectsAsync();
-    Task<Project?> GetProjectByIdAsync(string projectId);
-    Task SaveProjectAsync(Project project);
-    Task<string> GetRegistryPathAsync();
+    DocumentTypeMatch Recognize(string fileName, RecognitionProfile profile);
+    bool IsSupported(string extension);
 }
 
 // Implementation
-public class RegistryService : IRegistryService
-{
-    private readonly string _registryPath;
-    private readonly ILogService _logger;
+namespace BauProjektManager.PlanManager.Services;
 
-    public RegistryService(string registryPath, ILogService logger)
+public class DocumentTypeRecognizer : IDocumentTypeRecognizer
+{
+    private readonly ILogger<DocumentTypeRecognizer> _logger;
+
+    public DocumentTypeRecognizer(ILogger<DocumentTypeRecognizer> logger)
     {
-        _registryPath = registryPath;
-        _logger = logger;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<List<Project>> GetProjectsAsync()
+    public DocumentTypeMatch Recognize(string fileName, RecognitionProfile profile)
     {
+        _logger.LogDebug("Recognizing document type for {FileName}", fileName);
         // Implementation...
     }
 
-    // ...
+    public bool IsSupported(string extension) =>
+        extension is ".pdf" or ".dwg" or ".dxf";
 }
 ```
+
+**Regeln zum Service-Pattern:**
+
+- Interface in Domain oder im Feature-Modul, Implementation in Infrastructure oder im Modul
+- Abhängigkeiten ausschließlich per Constructor Injection (keine Property-Injection, kein Service-Locator)
+- `ILogger<T>` per Constructor — nie statisch, nie über `LogManager.GetLogger()`
+- `Microsoft.Extensions.Logging.ILogger<T>` ist die API; Serilog ist nur der Provider dahinter
+- Synchrone Signaturen sind erlaubt — BPM ist Desktop, `ProjectDatabase` ist synchron, async nur wo es echte I/O-Latenz gibt
 
 ### 8.2 Dependency Injection Setup
 
@@ -1019,17 +1044,21 @@ public partial class App : Application
     {
         var services = new ServiceCollection();
 
-        // Services registrieren
-        services.AddSingleton<IRegistryService, RegistryService>();
-        services.AddSingleton<IFileParserService, FileParserService>();
-        services.AddSingleton<IPlanCompareService, PlanCompareService>();
-        services.AddSingleton<ILogService, LogService>();
+        // Logging (Serilog als Provider hinter Microsoft.Extensions.Logging)
+        services.AddLogging(builder => builder.AddSerilog());
 
-        // ViewModels registrieren
-        services.AddTransient<MainViewModel>();
+        // Datenzugriff (zentrale Klasse, kein Interface in V1)
+        services.AddSingleton<ProjectDatabase>();
+
+        // Domain-Services
+        services.AddSingleton<IDocumentTypeRecognizer, DocumentTypeRecognizer>();
+        services.AddSingleton<IUserContext, LocalUserContext>();   // ADR-052
+
+        // ViewModels (Transient — neuer Zustand pro Aufruf)
+        services.AddTransient<PlanManagerViewModel>();
         services.AddTransient<ProjectDetailViewModel>();
 
-        // Views registrieren
+        // Views (Transient)
         services.AddTransient<MainWindow>();
 
         _serviceProvider = services.BuildServiceProvider();
@@ -1042,6 +1071,13 @@ public partial class App : Application
     }
 }
 ```
+
+**Regeln zum DI-Setup:**
+
+- `Singleton` für Services und Datenklassen — eine Instanz pro App-Lebenszeit
+- `Transient` für ViewModels und Windows — neuer Zustand bei jedem Auflösen
+- `serviceProvider.GetRequiredService<T>()` ausschließlich im App-Bootstrap (App.xaml.cs) — sonst wird das wieder Service-Locator
+- `IUserContext` per Compliance-Modus austauschbar (ADR-052) — `LocalUserContext` für Modus A, `JwtUserContext` für Modus C
 
 ---
 
@@ -1200,10 +1236,10 @@ Alle Farben, Styles und Templates in zentralen Resource Dictionaries:
 
 ```csharp
 // RICHTIG — async/await für I/O Operationen
-public async Task<Registry> LoadRegistryAsync()
+public async Task<BpmManifest> LoadManifestAsync()
 {
-    var json = await File.ReadAllTextAsync(_registryPath);
-    return JsonSerializer.Deserialize<Registry>(json)!;
+    var json = await File.ReadAllTextAsync(_manifestPath);
+    return JsonSerializer.Deserialize<BpmManifest>(json)!;
 }
 
 // RICHTIG — ConfigureAwait(false) in Library-Code (nicht in ViewModel!)
@@ -1216,8 +1252,8 @@ public async Task<string> ComputeHashAsync(string filePath)
 }
 
 // FALSCH — .Result oder .Wait() verwenden (Deadlock-Gefahr!)
-var registry = LoadRegistryAsync().Result;  // DEADLOCK!
-LoadRegistryAsync().Wait();                 // DEADLOCK!
+var manifest = LoadManifestAsync().Result;  // DEADLOCK!
+LoadManifestAsync().Wait();                 // DEADLOCK!
 
 // FALSCH — async void (außer Event-Handler)
 public async void ImportPlans() { }         // FALSCH — Exceptions gehen verloren
@@ -1255,51 +1291,66 @@ public async Task ImportAsync()
 
 ### 12.1 Test-Projektstruktur
 
+Tests liegen in einem eigenen xUnit-Projekt parallel zur `src/`-Struktur. TargetFramework ist `net10.0-windows` falls WPF-Abhängigkeiten getestet werden:
+
 ```
-PlanManager.Tests/
-├── Services/
-│   ├── FileParserServiceTests.cs
-│   ├── PlanCompareServiceTests.cs
-│   └── RegistryServiceTests.cs
-├── ViewModels/
-│   ├── MainViewModelTests.cs
-│   └── ImportPreviewViewModelTests.cs
-└── TestData/
-    ├── sample-registry.json
-    └── sample-plans/
+tests/
+└── BauProjektManager.Tests/
+    ├── BauProjektManager.Tests.csproj   ← xUnit, net10.0-windows
+    ├── PlanManager/
+    │   ├── RecoveryDecisionServiceTests.cs   ← Unit-Tests (pure Funktion)
+    │   └── RecoveryExecutorServiceTests.cs   ← Integration (Disk + DB)
+    ├── Fixtures/
+    │   └── RecoveryTestFixture.cs            ← Temp-ProjectRoot + eigene PlanManagerDatabase
+    └── TestData/
+        └── sample-profile.json
 ```
+
+**Konventionen:**
+
+- Eine Test-Klasse pro getestete Klasse, gleicher Name + Suffix `Tests`
+- Pure Funktionen ohne Disk/DB → Unit-Test (xUnit `[Fact]` oder `[Theory]`)
+- Disk- oder DB-abhängige Logik → Integration-Test mit Fixture, eigene Temp-Pfade pro Test
+- Fixtures räumen in `Dispose()` auf — keine globalen Test-Reste
 
 ### 12.2 Test-Namensgebung
 
 ```csharp
 // Format: MethodName_Scenario_ExpectedResult
 [Fact]
-public void ParseFileName_ValidPolierplan_ReturnsCorrectPlanNumber()
+public void Decide_AllPending_ReturnsForwardWithAuto()
 {
     // Arrange
-    var parser = new FileParserService();
+    var counts = new ActionStatusCounts(Pending: 5, Completed: 0, Failed: 0);
 
     // Act
-    var result = parser.ParseFileName("S-103-C_TG Wämde.pdf", polierProfile);
+    var decision = RecoveryDecisionService.Decide(counts);
 
     // Assert
-    Assert.Equal("103", result.PlanNumber);
-    Assert.Equal("C", result.PlanIndex);
+    Assert.Equal(RecoveryStrategy.Forward, decision.Strategy);
+    Assert.True(decision.IsRollbackTrivial);
 }
 
 [Fact]
-public void ParseFileName_UnknownFormat_ThrowsPlanParseException()
+public void Decide_WithFailedActions_RequiresCleanup()
 {
-    var parser = new FileParserService();
+    var counts = new ActionStatusCounts(Pending: 2, Completed: 3, Failed: 1);
 
-    Assert.Throws<PlanParseException>(() =>
-        parser.ParseFileName("random_file.pdf", polierProfile));
+    var decision = RecoveryDecisionService.Decide(counts);
+
+    Assert.Equal(RecoveryStrategy.Cleanup, decision.Strategy);
 }
 
 [Fact]
-public async Task ImportAsync_NewPlan_CreatesInTargetFolder()
+public async Task Forward_AllPending_RestoresFiles()
 {
-    // ...
+    // Integration-Test mit Fixture — eigener Temp-ProjectRoot + PlanManagerDatabase
+    using var fixture = new RecoveryTestFixture();
+    fixture.SeedPendingActions(count: 3);
+
+    await fixture.Executor.ForwardAsync(fixture.JournalId);
+
+    Assert.True(fixture.AllFilesAtTarget());
 }
 ```
 
@@ -1307,20 +1358,18 @@ public async Task ImportAsync_NewPlan_CreatesInTargetFolder()
 
 ```csharp
 [Fact]
-public void ComparePlans_NewerIndex_ReturnsUpdated()
+public void Decide_MixState_RequiresManualChoice()
 {
     // Arrange — Setup
-    var existingPlan = new Plan { PlanNumber = "103", PlanIndex = "C" };
-    var newPlan = new Plan { PlanNumber = "103", PlanIndex = "D" };
-    var comparer = new PlanCompareService();
+    var counts = new ActionStatusCounts(Pending: 3, Completed: 5, Failed: 0);
 
     // Act — Eine Aktion ausführen
-    var result = comparer.Compare(existingPlan, newPlan);
+    var decision = RecoveryDecisionService.Decide(counts);
 
     // Assert — Ergebnis prüfen
-    Assert.Equal(PlanStatus.Updated, result.Status);
-    Assert.Equal("C", result.OldIndex);
-    Assert.Equal("D", result.NewIndex);
+    Assert.Equal(RecoveryStrategy.Forward, decision.Strategy);
+    Assert.False(decision.IsRollbackTrivial);
+    Assert.False(decision.IsForwardTrivial);
 }
 ```
 
@@ -1402,18 +1451,53 @@ File.Delete(sourcePath);
 
 ## 15. Git Commit Standards
 
-Siehe separates Dokument: `GIT-COMMIT-RULES.txt`
+### 15.1 Commit-Format
 
-Format:
+Im BPM-Projekt wird ein einheitliches single-line-Format verwendet:
+
 ```
-[vX.Y.Z] Modul/Lib
-Typ: Kurztitel (max 50 Zeichen, Englisch)
+[vX.Y.Z] Modul, Typ: Kurztitel
+```
 
-2-4 Zeilen Kontext (WARUM, nicht WAS)
+**Beispiele:**
 
-Dateien:
-- Datei1.cs
-- Datei2.cs
+```
+[v0.27.5] PlanManager, Feature: DB-Anbindung Orchestrator (BPM-001)
+[v0.27.24] INF+Docs, Feature: Test-Projekt mit xUnit + Recovery-Tests (BPM-098)
+[v0.27.25] Docs, Docs: ADR-054 PlanManager Import Identity und Gruppierung
+[v0.27.26] Docs, Fix: ADR-054 Recovery-Status auf Implemented (BPM-016 done)
+```
+
+### 15.2 Bestandteile
+
+| Element | Inhalt | Beispiele |
+|---------|--------|-----------|
+| `vX.Y.Z` | Semantic Version aus `Directory.Build.props` | `v0.27.25` |
+| Modul | Betroffenes Projekt oder Komponente | `App`, `Domain`, `INF` (Infrastructure), `PlanManager`, `Settings`, `Docs`, `Tests`, `INF+Docs` (kombiniert) |
+| Typ | Art der Änderung | `Feature`, `Fix`, `Refactor`, `Perf`, `Docs`, `Test`, `Chore`, `Konzept` |
+| Kurztitel | Was wurde getan, optional ClickUp-ID in Klammern | `Recovery-Tests (BPM-098)` |
+
+### 15.3 Versionsbump-Regeln (SemVer)
+
+- **PATCH** (`0.27.25 → 0.27.26`): Bugfix, kleine Doc-Korrektur, kein Verhaltens-Change für User
+- **MINOR** (`0.27.x → 0.28.0`): neues Feature, neue Tabelle, Modul-Erweiterung — abwärtskompatibel
+- **MAJOR** (`0.x.x → 1.0.0`): Breaking Change, V1-Release, inkompatible API-Änderung
+
+### 15.4 Längere Commit-Bodies
+
+Bei umfangreichen Änderungen ist ein mehrzeiliger Body erlaubt — Header bleibt single-line:
+
+```
+[v0.27.24] INF+Docs, Feature: Test-Projekt mit xUnit + Recovery-Tests (BPM-098)
+
+Erstes automatisiertes Test-Projekt im Repo + manuelle UI-Smoketest-Anleitung.
+
+BPM-098 (Test-Projekt):
+- tests/BauProjektManager.Tests/ mit xUnit (net10.0-windows)
+- 5 Unit-Tests für RecoveryDecisionService
+- 5 Integration-Tests für RecoveryExecutorService
+
+Basis für künftige Tests (BPM-090 Sync-Endpoints werden Tests brauchen).
 ```
 
 ---

@@ -286,9 +286,9 @@ Inverse Variante. Farb-Token bleiben gleich, nur Werte ändern sich.
 | `heading-1` | 24px | SemiBold (600) | Seitenüberschriften |
 | `heading-2` | 18px | SemiBold (600) | Abschnittsüberschriften |
 | `heading-3` | 15px | Medium (500) | Gruppenüberschriften, Dialog-Titel |
-| `body` | 13px | Regular (400) | Standard-Text, Tabellenzellen |
-| `body-bold` | 13px | SemiBold (600) | Hervorgehobene Werte, Spaltenüberschriften |
-| `label` | 12px | Medium (500) | Feld-Labels, Tabs, Sidebar-Einträge |
+| `body` | 13px | Regular (400) / Medium (500) bei Tabs | Standard-Text, Tabellenzellen, Tabs (siehe Kap. 8.6) |
+| `body-bold` | 13px | SemiBold (600) | Hervorgehobene Werte, Spaltenüberschriften, aktive Tabs |
+| `label` | 12px | Medium (500) | Feld-Labels, Sidebar-Einträge |
 | `small` | 11px | Regular (400) | Statusleiste, Tooltips |
 | `caption` | 10px | Regular (400) | Fußnoten, Version |
 
@@ -461,7 +461,29 @@ Inverse Variante. Farb-Token bleiben gleich, nur Werte ändern sich.
 
 ### 8.6 Tabs
 
-- Unterstrich-Tabs, aktiv = `accent-primary` Linie unten (2px)
+**Standard:** Unterstrich-Tabs mit Background-Differenzierung (Variante 4 aus BPM-079).
+
+| Bereich | Token | Wert |
+|---------|-------|------|
+| Tab-Bar (Container) | `bg-surface` + Border-Bottom `border-default` 1px | #252526 + #3E3E42 |
+| Inaktiver Tab | `text-secondary`, transparent | #858585 |
+| Inaktiver Tab — Hover | `text-primary`, `bg-hover` | #CCCCCC + #37373D |
+| Aktiver Tab | `text-bright`, `bg-base` (visuell ausgewählt) | #FFFFFF + #1E1E1E |
+| Aktiver Tab — Underline | `accent-primary` 3px | #0078D4 |
+| Padding | 12px vertikal × 20px horizontal | — |
+| FontSize | `body` (13px) | — |
+| FontWeight inaktiv / aktiv | Medium (500) / SemiBold (600) | — |
+
+**Verhalten:**
+- Aktiver Tab visuell „aus der Tab-Bar gehoben" durch BG-Differenzierung
+- Underline 3px reicht über die Border-Bottom-Linie der Tab-Bar (Margin -1px)
+- Hover nur auf inaktiven Tabs
+- Cursor: Hand
+
+**Referenz-Implementierung:** `SettingsView.xaml` (lokales Style, BPM-079.03+)
+**Zentrales Style (Dialoge):** `Dialogs.xaml` → `BpmTabItem` (TODO: auf Variante 4 nachziehen, eigener Task)
+
+**Mockup-Vergleich:** `Docs/Mockups/Settings/01_TabLeiste_Variante1-4_*.html`
 
 ### 8.7 Icons
 

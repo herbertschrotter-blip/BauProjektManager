@@ -43,10 +43,8 @@
                        FontSize="12" FontWeight="SemiBold"/>
         </Border>
 
-        <!-- 3 Tabs -->
+        <!-- 3 Tabs (Style via Default aus Dialogs.xaml: BpmTabControl + BpmTabItem) -->
         <TabControl Grid.Row="2"
-                    Background="Transparent"
-                    BorderThickness="0"
                     Foreground="{DynamicResource BpmTextPrimary}">
 
             <!-- Tab 1: Profile -->

@@ -14,12 +14,11 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TabControl Grid.Row="0"
-                    Background="{StaticResource BpmBgBase}"
-                    BorderBrush="{StaticResource BpmBorderDefault}">
+        <!-- Tab-Style via Default aus Dialogs.xaml (BpmTabControl + BpmTabItem) -->
+        <TabControl Grid.Row="0">
 
             <!-- TAB 1: SYSTEM-INFO -->
-            <TabItem Style="{StaticResource BpmTabItem}"><TabItem.Header><TextBlock><Run Text="{StaticResource IconActionCopy}"/><Run Text=" System-Info"/></TextBlock></TabItem.Header>
+            <TabItem><TabItem.Header><TextBlock><Run Text="{StaticResource IconActionCopy}"/><Run Text=" System-Info"/></TextBlock></TabItem.Header>
                 <Grid Margin="20">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
@@ -89,7 +88,7 @@
             </TabItem>
 
             <!-- TAB 2: LOG -->
-            <TabItem Style="{StaticResource BpmTabItem}"><TabItem.Header><TextBlock><Run Text="{StaticResource IconFile}"/><Run Text=" Log"/></TextBlock></TabItem.Header>
+            <TabItem><TabItem.Header><TextBlock><Run Text="{StaticResource IconFile}"/><Run Text=" Log"/></TextBlock></TabItem.Header>
                 <Grid Margin="20">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -123,7 +122,7 @@
             </TabItem>
 
             <!-- TAB 3: RESET -->
-            <TabItem Style="{StaticResource BpmTabItem}"><TabItem.Header><TextBlock><Run Text="{StaticResource IconActionDelete}"/><Run Text=" Reset"/></TextBlock></TabItem.Header>
+            <TabItem><TabItem.Header><TextBlock><Run Text="{StaticResource IconActionDelete}"/><Run Text=" Reset"/></TextBlock></TabItem.Header>
                 <Grid Margin="20">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>

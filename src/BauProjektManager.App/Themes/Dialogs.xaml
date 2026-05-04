@@ -44,21 +44,47 @@
         <Setter Property="HorizontalAlignment" Value="Right"/>
     </Style>
 
-    <!-- ── TabControl Style ────────────────────────────────────── -->
+    <!-- ── TabControl Style — Variante 4 (UI_UX_Guidelines Kap. 8.6) ─ -->
     <Style x:Key="BpmTabControl" TargetType="TabControl">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Padding" Value="0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TabControl">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <!-- Tab-Header-Bar mit BgSurface + Bottom-Border -->
+                        <Border Grid.Row="0"
+                                Background="{DynamicResource BpmBgSurface}"
+                                BorderBrush="{DynamicResource BpmBorderDefault}"
+                                BorderThickness="0,0,0,1">
+                            <TabPanel x:Name="HeaderPanel"
+                                      Panel.ZIndex="1"
+                                      IsItemsHost="True"
+                                      Background="Transparent"/>
+                        </Border>
+                        <!-- Content-Bereich -->
+                        <ContentPresenter Grid.Row="1"
+                                          ContentSource="SelectedContent"
+                                          Margin="0"/>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
-    <!-- ── TabItem Style (Unterstrich-Tabs) ────────────────────── -->
+    <!-- ── TabItem Style — Variante 4 (UI_UX_Guidelines Kap. 8.6) ─── -->
     <Style x:Key="BpmTabItem" TargetType="TabItem">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Foreground" Value="{StaticResource BpmTextSecondary}"/>
         <Setter Property="FontFamily" Value="{StaticResource BpmFontFamily}"/>
-        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontSize" Value="{StaticResource BpmFontSizeBody}"/>
         <Setter Property="FontWeight" Value="Medium"/>
-        <Setter Property="Padding" Value="16,8"/>
+        <Setter Property="Padding" Value="20,12"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -67,26 +93,41 @@
                             Padding="{TemplateBinding Padding}"
                             Background="Transparent"
                             BorderBrush="Transparent"
-                            BorderThickness="0,0,0,2">
-                        <ContentPresenter ContentSource="Header"/>
+                            BorderThickness="0,0,0,3"
+                            Margin="0,0,0,-1">
+                        <ContentPresenter ContentSource="Header"
+                                          VerticalAlignment="Center"
+                                          HorizontalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="TabBorder" Property="Background"
+                                    Value="{StaticResource BpmBgBase}"/>
                             <Setter TargetName="TabBorder" Property="BorderBrush"
                                     Value="{StaticResource BpmAccentPrimary}"/>
                             <Setter Property="Foreground"
                                     Value="{StaticResource BpmTextBright}"/>
                             <Setter Property="FontWeight" Value="SemiBold"/>
                         </Trigger>
-                        <Trigger Property="IsMouseOver" Value="True">
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsMouseOver" Value="True"/>
+                                <Condition Property="IsSelected" Value="False"/>
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="TabBorder" Property="Background"
+                                    Value="{StaticResource BpmBgHover}"/>
                             <Setter Property="Foreground"
                                     Value="{StaticResource BpmTextPrimary}"/>
-                        </Trigger>
+                        </MultiTrigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
+
+    <!-- Default-Style Aktivierung: BpmTabItem als Default fuer ALLE TabItem-Controls -->
+    <Style TargetType="TabItem" BasedOn="{StaticResource BpmTabItem}"/>
+    <Style TargetType="TabControl" BasedOn="{StaticResource BpmTabControl}"/>
 
     <!-- ── Separator (vertikale Trennlinie, z.B. in Toolbar) ──── -->
     <Style x:Key="BpmSeparatorVertical" TargetType="Separator">

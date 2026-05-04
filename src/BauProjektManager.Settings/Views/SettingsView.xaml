@@ -3,82 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:BauProjektManager.Settings.ViewModels"
              xmlns:views="clr-namespace:BauProjektManager.Settings.Views">
-    <UserControl.Resources>
-        <!-- Tab-Leiste Variante 4 (UI_UX_Guidelines Kap. 8.6): Underline 3px + Background-Differenzierung -->
-        <Style TargetType="TabControl">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TabControl">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-                            <!-- Tab-Header-Bar mit BgSurface + Bottom-Border -->
-                            <Border Grid.Row="0"
-                                    Background="{DynamicResource BpmBgSurface}"
-                                    BorderBrush="{DynamicResource BpmBorderDefault}"
-                                    BorderThickness="0,0,0,1">
-                                <TabPanel x:Name="HeaderPanel"
-                                          Panel.ZIndex="1"
-                                          IsItemsHost="True"
-                                          Background="Transparent"/>
-                            </Border>
-                            <!-- Content-Bereich -->
-                            <ContentPresenter Grid.Row="1"
-                                              ContentSource="SelectedContent"
-                                              Margin="0"/>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style TargetType="TabItem">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{DynamicResource BpmTextSecondary}"/>
-            <Setter Property="Padding" Value="20,12"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="FontFamily" Value="{DynamicResource BpmFontFamily}"/>
-            <Setter Property="FontSize" Value="{DynamicResource BpmFontSizeBody}"/>
-            <Setter Property="FontWeight" Value="Medium"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TabItem">
-                        <Border x:Name="TabBorder"
-                                Padding="{TemplateBinding Padding}"
-                                Background="Transparent"
-                                BorderBrush="Transparent"
-                                BorderThickness="0,0,0,3"
-                                Margin="0,0,0,-1">
-                            <ContentPresenter ContentSource="Header"
-                                              VerticalAlignment="Center"
-                                              HorizontalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource BpmBgBase}"/>
-                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="{DynamicResource BpmAccentPrimary}"/>
-                                <Setter Property="Foreground" Value="{DynamicResource BpmTextBright}"/>
-                                <Setter Property="FontWeight" Value="SemiBold"/>
-                            </Trigger>
-                            <MultiTrigger>
-                                <MultiTrigger.Conditions>
-                                    <Condition Property="IsMouseOver" Value="True"/>
-                                    <Condition Property="IsSelected" Value="False"/>
-                                </MultiTrigger.Conditions>
-                                <Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource BpmBgHover}"/>
-                                <Setter Property="Foreground" Value="{DynamicResource BpmTextPrimary}"/>
-                            </MultiTrigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </UserControl.Resources>
+    <!-- Tab-Styles via Default-Styles aus Dialogs.xaml (BpmTabControl + BpmTabItem) -->
+
 
     <Grid Margin="0">
         <Grid.RowDefinitions>

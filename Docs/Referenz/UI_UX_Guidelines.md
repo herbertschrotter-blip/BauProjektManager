@@ -480,8 +480,8 @@ Inverse Variante. Farb-Token bleiben gleich, nur Werte ändern sich.
 - Hover nur auf inaktiven Tabs
 - Cursor: Hand
 
-**Referenz-Implementierung:** `SettingsView.xaml` (lokales Style, BPM-079.03+)
-**Zentrales Style (Dialoge):** `Dialogs.xaml` → `BpmTabItem` (TODO: auf Variante 4 nachziehen, eigener Task)
+**Zentral (projektweit, Default-Style):** `Dialogs.xaml` → `BpmTabControl` + `BpmTabItem` mit `BasedOn`-Default-Style. Gilt automatisch für ALLE TabControl/TabItem ohne explizit gesetzten Style.
+**Konsumenten ohne lokale Tab-Styles:** `SettingsView.xaml`, `ProjectEditDialog.xaml`, `ProjectDetailView.xaml`, `DevToolsDialog.xaml`
 
 **Mockup-Vergleich:** `Docs/Mockups/Settings/01_TabLeiste_Variante1-4_*.html`
 

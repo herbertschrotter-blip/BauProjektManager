@@ -102,6 +102,7 @@ Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheid
 | 052 | Lokaler Benutzerkontext über IUserContext statt lokaler Authentifizierung | ✅ Entschieden | 2026-04 |
 | 053 | Server-Sync-Architektur — Windows-only Stack, Phase 0/1 VPS, Phase Verkauf On-Premise | ✅ Entschieden | 2026-04 |
 | 054 | PlanManager Import Identity & Gruppierung | ✅ Entschieden | 2026-04 |
+| 055 | IPersistenceRegistry — dynamisches Persistenz-Inventar als Single Source of Truth | ✅ Entschieden | 2026-05 |
 
 ---
 
@@ -2434,6 +2435,44 @@ Der Benutzer entscheidet manuell in der Import-Vorschau. V2+ kann hier eine gef�
 **Offen / spätere ADRs:**
 
 - IndexSource=PlanHeader und document_key-Bildung bei nachträglich erkanntem Index (Post-V1, mit Plankopf-Modul)
+
+---
+
+## ADR-055: IPersistenceRegistry — dynamisches Persistenz-Inventar als Single Source of Truth
+
+**Datum:** 2026-05-04
+**Status:** ✅ Entschieden
+**Implementierung:** ✅ Implemented (v0.28.13–v0.28.16)
+**Herkunft:** BPM-104 — DevTools-Reset deckte nur 2 von 11 Persistenz-Punkten ab; statische Doku-Tabelle in DB-SCHEMA.md driftet von Code-Realität ab.
+
+**Kontext:**
+
+BPM persistiert in mindestens 11 verschiedenen Files (DBs, Configs, Logs, Projekt-spezifische Files). Bisher gab es nur eine statische Auflistung in `DB-SCHEMA.md` Kap. 10.1, die nicht alle Files (z.B. Logs, planmanager.db, profiles) abdeckte. DevTools-Reset operierte hartkodiert auf 2 Pfaden. Folge: User konnte nicht granular reset, Doku driftete vom Code ab.
+
+**Entscheidung:**
+
+Hybrid-Persistenz-Inventar:
+
+1. **In-Memory Registry** (`IPersistenceRegistry`, Singleton via DI): Services registrieren ihre Persistenz-Files beim Init mit `Register(PersistenceEntry)`.
+2. **Filesystem-Scan** (`RescanFilesystem`): ergänzt nicht-registrierte / verwaiste Files (z.B. alte Logs, Profiles aus inaktiven Projekten) durch Scan bekannter Patterns:
+   - `%LocalAppData%\BauProjektManager\*` (Configs, DBs)
+   - `%LocalAppData%\BauProjektManager\Logs\BPM_*.log`
+   - `%LocalAppData%\BauProjektManager\Projects\*\planmanager.db`
+   - `<BasePath>\.AppData\BauProjektManager\*` (CloudShared)
+   - `<ProjectRoot>\.bpm\` rekursiv (ProjectLocal)
+
+`PersistenceEntry` enthält DisplayName, AbsolutePath, Type (Database/Config/Log/ProjectData/Cache/Other) und Scope (Local/CloudShared/ProjectLocal).
+
+DevTools liest Inventar dynamisch im Reset-Tab und zeigt es mit Multi-Select-Checkboxen + Pro-Item Aktions-Buttons (Ordner öffnen / Datei öffnen mit Standard-App / Im Explorer markieren).
+
+**Konsequenzen:**
+
+- Code = Single Source of Truth. Doku driftet nicht mehr.
+- Neue persistierende Services müssen `Register()` aufrufen ODER ihr Pfad-Pattern muss vom FS-Scan abgedeckt sein.
+- DB-SCHEMA.md Kap. 10.1 listet nur die wichtigsten Patterns als Übersicht — konkrete Liste kommt zur Laufzeit aus Registry.
+- FS-Scan-Patterns müssen bei neuen Persistenz-Zonen (z.B. wenn .bpm/cache/ eingeführt wird) erweitert werden.
+
+**Betrifft:** ADR-013 (.bpm-manifest), ADR-046 (.bpm/-Ordner), ADR-052 (Settings-Split), DB-SCHEMA.md Kap. 10.1
 
 ---
 

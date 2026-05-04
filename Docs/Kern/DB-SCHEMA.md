@@ -963,6 +963,8 @@ ULIDs sind nicht menschenlesbar. Die Lesbarkeit wird über fachliche Felder sich
 
 ## 10. JSON-Konfigurationsdateien (kein SQLite)
 
+> **Hinweis (BPM-104, ADR-055):** Diese Liste ist die historische Doku-Sicht. Die **vollständige Persistenz-Übersicht zur Laufzeit** liefert `IPersistenceRegistry` (Domain) + Filesystem-Scan im DevTools-Reset-Tab. Auch SQLite-DBs (`bpm.db`, `planmanager.db`) und Logs (`BPM_*.log`) sind dort gelistet — die Tabelle hier zeigt nur die JSON-Konfig-Dateien.
+
 ### 10.1 Übersicht aller JSON-Konfig-Dateien
 
 | Datei | Speicherort | Synct? | Beschreibung | Schreiber |

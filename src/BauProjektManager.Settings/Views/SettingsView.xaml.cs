@@ -126,6 +126,12 @@ public partial class SettingsView : UserControl
                 UpdateFilterButtonStyles(vm.StatusFilter);
             }
         };
+
+        // Über-Tab: App-Version dynamisch aus Assembly-Version
+        var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        TxtAboutVersion.Text = version is not null
+            ? $"Version {version.ToString(3)}"
+            : "Version unbekannt";
     }
 
     private void UpdateFilterButtonStyles(string activeFilter)

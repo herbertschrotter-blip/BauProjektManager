@@ -308,15 +308,29 @@
 
             <!-- ═══ TAB 5: ÜBER ═══ -->
             <TabItem Header="Über">
-                <StackPanel Margin="0,10,0,0">
-                    <TextBlock Text="── Über &amp; Dev-Tools ──"
+                <StackPanel Margin="0,16,0,0">
+                    <TextBlock Text="── Über ──"
                                Foreground="{DynamicResource BpmAccentPrimary}"
                                FontWeight="Bold" FontSize="{DynamicResource BpmFontSizeBody}"
-                               Margin="0,0,0,8"/>
-                    <TextBlock Text="Version und DB-Reset — Inhalt kommt in 079.07"
+                               Margin="0,0,0,12"/>
+                    <TextBlock Text="BauProjektManager"
+                               Foreground="{DynamicResource BpmTextBright}"
+                               FontWeight="SemiBold" FontSize="{DynamicResource BpmFontSizeBody}"
+                               Margin="0,0,0,4"/>
+                    <TextBlock x:Name="TxtAboutVersion"
+                               Text="Version ?"
+                               Foreground="{DynamicResource BpmTextPrimary}"
+                               FontSize="{DynamicResource BpmFontSizeBody}"
+                               Margin="0,0,0,16"/>
+                    <TextBlock Text="© 2026 Herbert Schrotter"
                                Foreground="{DynamicResource BpmTextSecondary}"
                                FontSize="{DynamicResource BpmFontSizeLabel}"
-                               FontStyle="Italic"/>
+                               Margin="0,0,0,20"/>
+                    <TextBlock Text="Dev-Tools (System-Info, Log, Reset) sind über den Sidebar-Eintrag 'Dev Tools' erreichbar."
+                               Foreground="{DynamicResource BpmTextSecondary}"
+                               FontSize="{DynamicResource BpmFontSizeLabel}"
+                               FontStyle="Italic"
+                               TextWrapping="Wrap"/>
                 </StackPanel>
             </TabItem>
 

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>BPM Dev Tools — Reset-Tab mit Persistenz-Inventar (BPM-104)</title>
+<style>
+  /* BPM Dark Theme Tokens (Colors.xaml) */
+  body{margin:0;background:#1E1E1E;font-family:'Segoe UI',sans-serif;color:#CCCCCC;font-size:13px;padding:24px}
+
+  /* Dialog-Frame */
+  .dialog{max-width:700px;background:#1E1E1E;border:1px solid #3C3C3C;border-radius:4px;overflow:hidden;margin-bottom:32px;display:flex;flex-direction:column;min-height:600px}
+  .dialog-title{background:#252526;padding:10px 16px;border-bottom:1px solid #3C3C3C;display:flex;justify-content:space-between;align-items:center}
+  .dialog-title-text{color:#FFFFFF;font-size:13px;font-weight:600}
+  .win-controls{display:flex;gap:8px}
+  .win-btn{width:12px;height:12px;border-radius:50%;background:#3C3C3C}
+  .win-btn.close{background:#F44747}
+
+  /* Tab-Bar (Variante 4 — BPM-079 Standard) */
+  .tabs-bar{background:#252526;border-bottom:1px solid #3C3C3C;padding:0 16px;display:flex;gap:0}
+  .tab{padding:12px 20px;font-size:13px;color:#858585;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;font-weight:500}
+  .tab:hover{color:#CCCCCC;background:#37373D}
+  .tab.act{color:#FFFFFF;font-weight:600;border-bottom-color:#0078D4;background:#1E1E1E}
+
+  /* Content */
+  .content{padding:18px 20px;flex:1;overflow-y:auto}
+
+  /* Section Header */
+  .sec-title{color:#0078D4;font-weight:bold;font-size:13px;margin:0 0 8px;text-transform:uppercase;letter-spacing:0.5px}
+  .sec-desc{color:#858585;font-size:11px;margin:0 0 12px}
+
+  /* Quick-Reset Cards Grid */
+  .quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:24px}
+  .quick-card{background:#252526;border:1px solid #3C3C3C;border-radius:4px;padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:border-color 0.15s}
+  .quick-card:hover{border-color:#0078D4}
+  .quick-card.danger:hover{border-color:#F44747}
+  .quick-icon{font-size:16px;color:#F44747}
+  .quick-card-text{flex:1;display:flex;flex-direction:column;gap:2px}
+  .quick-name{color:#FFFFFF;font-size:12px;font-weight:500}
+  .quick-info{color:#858585;font-size:10px}
+
+  /* Divider */
+  .divider{height:1px;background:#3C3C3C;margin:0 0 16px}
+
+  /* Inventar-Tabelle */
+  .inv-header{display:flex;align-items:center;justify-content:space-between;margin:0 0 8px;padding:0 2px}
+  .check-all{display:flex;align-items:center;gap:6px;font-size:11px;color:#858585;cursor:pointer}
+  .group-count{color:#858585;font-size:11px}
+
+  /* Gruppe als zusammenhaengende Card mit Header + Items vereint */
+  .inv-group{margin-bottom:14px;background:#252526;border:1px solid #3C3C3C;border-radius:3px;overflow:hidden}
+  .inv-group > summary{color:#0078D4;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;list-style:none;user-select:none}
+  .inv-group > summary:hover{background:#2D2D30}
+  .inv-group > summary::-webkit-details-marker{display:none}
+  .inv-group[open] > summary{border-bottom:1px solid #3C3C3C}
+  .group-chevron{color:#858585;font-size:9px;width:10px;display:inline-block}
+  .inv-group:not([open]) .group-chevron::before{content:'▸'}
+  .inv-group[open] .group-chevron::before{content:'▾'}
+  .group-title-text{flex:1;color:#0078D4}
+  .group-meta{color:#858585;font-size:10px;font-weight:400;text-transform:none;letter-spacing:0}
+
+  /* Items innerhalb der Gruppe — vereint mit Header, nur dezente Trennstriche */
+  .inv-row{background:transparent;border:none;border-bottom:1px solid #3C3C3C;border-radius:0;padding:8px 10px 8px 26px;display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center}
+  .inv-row:last-child{border-bottom:none}
+  .inv-row:hover{background:#2D2D30}
+  .inv-checkbox{width:14px;height:14px;border:1.5px solid #858585;border-radius:2px;background:transparent;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+  .inv-checkbox.checked{background:#0078D4;border-color:#0078D4;color:#FFFFFF;font-size:10px;font-weight:bold}
+  .inv-info{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .inv-name{color:#FFFFFF;font-size:12px;font-weight:500}
+  .inv-path{color:#858585;font-size:10px;font-family:Consolas,monospace;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
+  .inv-meta{color:#858585;font-size:10px;text-align:right;white-space:nowrap}
+  .inv-actions{display:flex;gap:2px}
+
+  /* Action-Buttons (klein) */
+  .act-btn{background:transparent;border:1px solid #3C3C3C;border-radius:3px;padding:3px 6px;color:#CCCCCC;font-size:10px;cursor:pointer;font-family:'Segoe UI'}
+  .act-btn:hover{background:#37373D;border-color:#0078D4;color:#FFFFFF}
+
+  /* Scope-Badge */
+  .scope-badge{display:inline-block;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:600;margin-left:6px;vertical-align:middle}
+  .scope-local{background:#37373D;color:#CCCCCC}
+  .scope-cloud{background:#04395E;color:#3794FF}
+  .scope-project{background:#0F6E56;color:#4EC94E}
+
+  /* Sammel-Aktion am Ende */
+  .bulk-action{background:#2a1818;border:1px solid #F44747;border-radius:4px;padding:12px 14px;margin-top:8px;display:flex;align-items:center;justify-content:space-between}
+  .bulk-info{color:#CCCCCC;font-size:12px}
+  .bulk-info-count{color:#F44747;font-weight:600}
+  .btn-danger{background:#F44747;border:none;border-radius:3px;padding:8px 16px;color:#FFFFFF;font-size:12px;font-weight:500;cursor:pointer;font-family:'Segoe UI'}
+  .btn-danger:hover{background:#FF5757}
+  .btn-danger:disabled{background:#3C3C3C;color:#858585;cursor:not-allowed}
+
+  /* Footer */
+  .footer{background:#252526;padding:10px 16px;border-top:1px solid #3C3C3C;display:flex;justify-content:flex-end}
+  .btn-secondary{background:transparent;border:1px solid #3C3C3C;border-radius:3px;padding:6px 16px;color:#CCCCCC;font-size:12px;cursor:pointer;font-family:'Segoe UI'}
+  .btn-secondary:hover{background:#37373D}
+
+  /* Variant label */
+  .variant-label{color:#0078D4;font-weight:bold;font-size:13px;margin:0 0 10px}
+  .variant-desc{color:#858585;font-size:11px;font-style:italic;margin:0 0 16px;max-width:700px}
+</style>
+</head>
+<body>
+
+<div class="variant-label">── DevTools Reset-Tab — Persistenz-Inventar (BPM-104) ──</div>
+<div class="variant-desc">Quick-Reset-Karten oben (5 Sammel-Aktionen) + Detail-Auswahl unten (Inventar gruppiert nach Typ, Checkboxen fuer Bulk-Reset, Aktions-Buttons pro Eintrag fuer Ordner oeffnen / Datei oeffnen mit Standard-App / Im Explorer markieren). Inventar wird dynamisch aus IPersistenceRegistry + Filesystem-Scan zusammengestellt.</div>
+
+<div class="dialog">
+
+  <!-- Window-Title -->
+  <div class="dialog-title">
+    <span class="dialog-title-text">🔧 Dev Tools [DEBUG]</span>
+    <div class="win-controls">
+      <div class="win-btn"></div>
+      <div class="win-btn"></div>
+      <div class="win-btn close"></div>
+    </div>
+  </div>
+
+  <!-- Tab-Bar (Variante 4) -->
+  <div class="tabs-bar">
+    <div class="tab">⧉ System-Info</div>
+    <div class="tab">📄 Log</div>
+    <div class="tab act">🗑 Reset</div>
+  </div>
+
+  <!-- Content: Reset-Tab -->
+  <div class="content">
+
+    <!-- ═══ QUICK-RESETS ═══ -->
+    <div class="sec-title">Quick-Resets</div>
+    <div class="sec-desc">Vordefinierte Sammel-Aktionen. App startet danach neu.</div>
+
+    <div class="quick-grid">
+      <div class="quick-card danger">
+        <div class="quick-icon">🗑</div>
+        <div class="quick-card-text">
+          <div class="quick-name">Datenbank zuruecksetzen</div>
+          <div class="quick-info">bpm.db + WAL/SHM</div>
+        </div>
+      </div>
+      <div class="quick-card danger">
+        <div class="quick-icon">🗑</div>
+        <div class="quick-card-text">
+          <div class="quick-name">Einstellungen zuruecksetzen</div>
+          <div class="quick-info">device-settings.json</div>
+        </div>
+      </div>
+      <div class="quick-card danger">
+        <div class="quick-icon">🗑</div>
+        <div class="quick-card-text">
+          <div class="quick-name">Logs loeschen</div>
+          <div class="quick-info">12 Logfiles · 4.7 MB</div>
+        </div>
+      </div>
+      <div class="quick-card danger">
+        <div class="quick-icon">🗑</div>
+        <div class="quick-card-text">
+          <div class="quick-name">Aktuelles Projekt zuruecksetzen</div>
+          <div class="quick-info">.bpm/ in OEWG Dobl</div>
+        </div>
+      </div>
+      <div class="quick-card danger">
+        <div class="quick-icon">⟳</div>
+        <div class="quick-card-text">
+          <div class="quick-name">Ersteinrichtung erneut</div>
+          <div class="quick-info">IsFirstRun = true</div>
+        </div>
+      </div>
+      <div class="quick-card danger" style="border-color:#F44747">
+        <div class="quick-icon">⚠</div>
+        <div class="quick-card-text">
+          <div class="quick-name" style="color:#F44747">Komplett-Reset</div>
+          <div class="quick-info">DB + Settings + Logs</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ═══ DETAIL-AUSWAHL ═══ -->
+    <div class="inv-header">
+      <div class="sec-title" style="margin:0">Detail-Auswahl</div>
+      <div class="check-all">
+        <div class="inv-checkbox"></div>
+        <span>Alle auswaehlen</span>
+      </div>
+    </div>
+    <div class="sec-desc" style="margin-bottom:16px">Aus IPersistenceRegistry + Filesystem-Scan. Lokal / Cloud / Projekt-spezifisch sind farblich markiert.</div>
+
+    <!-- Gruppe: DATENBANKEN -->
+    <details open class="inv-group">
+      <summary>
+        <span class="group-chevron"></span>
+        <span class="inv-checkbox checked" onclick="event.stopPropagation();event.preventDefault()" title="Alle in dieser Gruppe auswaehlen">✓</span>
+        <span class="group-title-text">Datenbanken (2)</span>
+        <span class="group-meta">12.85 MB gesamt</span>
+      </summary>
+
+      <div class="inv-row">
+        <div class="inv-checkbox checked">✓</div>
+        <div class="inv-info">
+          <div class="inv-name">Hauptdatenbank<span class="scope-badge scope-local">LOKAL</span></div>
+          <div class="inv-path">C:\Users\herbe\AppData\Local\BauProjektManager\bpm.db</div>
+        </div>
+        <div class="inv-meta">12.4 MB<br>04.05. 14:22</div>
+        <div class="inv-actions">
+          <button class="act-btn" title="Ordner oeffnen">📁</button>
+          <button class="act-btn" title="Mit Standard-App oeffnen">📄</button>
+          <button class="act-btn" title="Im Explorer markieren">🎯</button>
+        </div>
+      </div>
+
+      <div class="inv-row">
+        <div class="inv-checkbox"></div>
+        <div class="inv-info">
+          <div class="inv-name">PlanManager-DB · Projekt OEWG Dobl<span class="scope-badge scope-project">PROJEKT</span></div>
+          <div class="inv-path">D:\OneDrive\...\OEWG Dobl-Zwaring\.bpm\planmanager.db</div>
+        </div>
+        <div class="inv-meta">450 KB<br>04.05. 13:55</div>
+        <div class="inv-actions">
+          <button class="act-btn" title="Ordner oeffnen">📁</button>
+          <button class="act-btn" title="Mit Standard-App oeffnen">📄</button>
+          <button class="act-btn" title="Im Explorer markieren">🎯</button>
+        </div>
+      </div>
+    </details>
+
+    <!-- Gruppe: KONFIG -->
+    <details open class="inv-group">
+      <summary>
+        <span class="group-chevron"></span>
+        <span class="inv-checkbox" onclick="event.stopPropagation();event.preventDefault()" title="Alle in dieser Gruppe auswaehlen"></span>
+        <span class="group-title-text">Konfiguration (4)</span>
+        <span class="group-meta">14 KB gesamt</span>
+      </summary>
+
+      <div class="inv-row">
+        <div class="inv-checkbox"></div>
+        <div class="inv-info">
+          <div class="inv-name">device-settings.json<span class="scope-badge scope-local">LOKAL</span></div>
+          <div class="inv-path">C:\Users\herbe\AppData\Local\BauProjektManager\device-settings.json</div>
+        </div>
+        <div class="inv-meta">3.1 KB<br>04.05. 15:18</div>
+        <div class="inv-actions">
+          <button class="act-btn" title="Ordner oeffnen">📁</button>
+          <button class="act-btn" title="Mit Standard-App oeffnen">📄</button>
+          <button class="act-btn" title="Im Explorer markieren">🎯</button>
+        </div>
+      </div>
+
+      <div class="inv-row">
+        <div class="inv-checkbox"></div>
+        <div class="inv-info">
+          <div class="inv-name">shared-config.json<span class="scope-badge scope-cloud">CLOUD</span></div>
+          <div class="inv-path">D:\OneDrive\...\16_Testlaeufe\.AppData\BauProjektManager\shared-config.json</div>
+        </div>
+        <div class="inv-meta">5.2 KB<br>04.05. 14:30</div>
+        <div class="inv-actions">
+          <button class="act-btn" title="Ordner oeffnen">📁</button>
+          <button class="act-btn" title="Mit Standard-App oeffnen">📄</button>
+          <button class="act-btn" title="Im Explorer markieren">🎯</button>
+        </div>
+      </div>
+
+      <div class="inv-row">
+        <div class="inv-checkbox"></div>
+        <div class="inv-info">
+          <div class="inv-name">.bpm/manifest.json · OEWG Dobl<span class="scope-badge scope-project">PROJEKT</span></div>
+          <div class="inv-path">D:\OneDrive\...\OEWG Dobl-Zwaring\.bpm\manifest.json</div>
+        </div>
+        <div class="inv-meta">1.8 KB<br>04.05. 13:55</div>
+        <div class="inv-actions">
+          <button class="act-btn" title="Ordner oeffnen">📁</button>
+          <button class="act-btn" title="Mit Standard-App oeffnen">📄</button>
+          <button class="act-btn" title="Im Explorer markieren">🎯</button>
+        </div>
+      </div>
+
+      <div class="inv-row">
+        <div class="inv-checkbox"></div>
+        <div class="inv-info">
+          <div class="inv-name">.bpm/profiles/polier.json · OEWG Dobl<span class="scope-badge scope-project">PROJEKT</span></div>
+          <div class="inv-path">D:\OneDrive\...\OEWG Dobl-Zwaring\.bpm\profiles\polier.json</div>
+        </div>
+        <div class="inv-meta">3.9 KB<br>04.05. 13:58</div>
+        <div class="inv-actions">
+          <button class="act-btn" title="Ordner oeffnen">📁</button>
+          <button class="act-btn" title="Mit Standard-App oeffnen">📄</button>
+          <button class="act-btn" title="Im Explorer markieren">🎯</button>
+        </div>
+      </div>
+    </details>
+
+    <!-- Gruppe: LOGS (initial eingeklappt als Beispiel) -->
+    <details class="inv-group">
+      <summary>
+        <span class="group-chevron"></span>
+        <span class="inv-checkbox checked" style="background:#0078D4;border-color:#0078D4;color:#FFFFFF;font-size:9px" onclick="event.stopPropagation();event.preventDefault()" title="Teilauswahl (2 von 12)">−</span>
+        <span class="group-title-text">Logs (12 Files)</span>
+        <span class="group-meta">4.7 MB gesamt · 2 ausgewaehlt</span>
+      </summary>
+
+      <div class="inv-row">
+        <div class="inv-checkbox checked">✓</div>
+        <div class="inv-info">
+          <div class="inv-name">BPM_20260504.log · heute<span class="scope-badge scope-local">LOKAL</span></div>
+          <div class="inv-path">C:\Users\herbe\AppData\Local\BauProjektManager\Logs\BPM_20260504.log</div>
+        </div>
+        <div class="inv-meta">1.2 MB<br>15:18</div>
+        <div class="inv-actions">
+          <button class="act-btn" title="Ordner oeffnen">📁</button>
+          <button class="act-btn" title="Mit Standard-App oeffnen">📄</button>
+          <button class="act-btn" title="Im Explorer markieren">🎯</button>
+        </div>
+      </div>
+
+      <div class="inv-row">
+        <div class="inv-checkbox checked">✓</div>
+        <div class="inv-info">
+          <div class="inv-name">BPM_20260503.log<span class="scope-badge scope-local">LOKAL</span></div>
+          <div class="inv-path">C:\Users\herbe\AppData\Local\BauProjektManager\Logs\BPM_20260503.log</div>
+        </div>
+        <div class="inv-meta">820 KB<br>03.05. 18:42</div>
+        <div class="inv-actions">
+          <button class="act-btn" title="Ordner oeffnen">📁</button>
+          <button class="act-btn" title="Mit Standard-App oeffnen">📄</button>
+          <button class="act-btn" title="Im Explorer markieren">🎯</button>
+        </div>
+      </div>
+
+      <div class="inv-row" style="opacity:0.6">
+        <div class="inv-checkbox"></div>
+        <div class="inv-info">
+          <div class="inv-name" style="color:#858585">+ 10 weitere Logfiles ...</div>
+          <div class="inv-path">scrollbar in der echten Liste</div>
+        </div>
+        <div class="inv-meta">2.7 MB</div>
+        <div class="inv-actions"></div>
+      </div>
+    </details>
+
+    <!-- Sammel-Aktion -->
+    <div class="bulk-action">
+      <div class="bulk-info">
+        <span class="bulk-info-count">3 von 9</span> Eintraegen ausgewaehlt
+        <span style="color:#858585;font-size:11px"> · 13.6 MB werden geloescht</span>
+      </div>
+      <button class="btn-danger">🗑 Ausgewaehlte zuruecksetzen</button>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <button class="btn-secondary">Schliessen</button>
+  </div>
+
+</div>
+
+</body>
+</html>

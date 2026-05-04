@@ -20,6 +20,7 @@ Themenbezeichnungen (Enum):
 - `datenschutz-dbschema` — DSGVO, DB-Schema, IDs, Whitelist, external_call_log
 - `cc-vs-dc` — Trennung Claude Code (CC) vs Desktop Commander (DC), Workflow-Schwellen, Skill-Aufteilung
 - `datenarchitektur-sync` — Sync-Mechanismus für Solo-Multi-Device + Multi-User Phase 3, Industrie-Standard vs Eigenbau
+- `bpm-082-segment-recognition` — Segment-basierte Plantyp-Erkennung im PlanManager, Refactor des DocumentTypeRecognizer
 
 ## Ablage-Konvention
 
@@ -37,6 +38,7 @@ Pro Serie ein Ordner `CGR-<YYYY-MM-DD>-<thema>/` mit:
 
 | CGR-ID | Thema | Runden | Status | Ursprungs-Chat | Kernergebnis |
 |--------|-------|--------|--------|----------------|--------------|
+| CGR-2026-04-17-bpm-082-segment-recognition | Segment-basierte Plantyp-Erkennung | r1–r3 | Abgeschlossen (nachträglich archiviert) | Teil 20 | Refactor des `DocumentTypeRecognizer`: neue `segment`-Methode mit `SegmentPosition`, `prefix`/`contains` entfallen, `regex` als Fallback. Resultiert in BPM-082 mit 9 Subs. ADR-010 wird erweitert (kein neuer ADR). Inkl. 10 Test-Szenarien aus realen Baustellen. |
 | CGR-2026-04-22-skillsystem | Skill-System-Refactor | r1–r6 | Abgeschlossen | Teil 22 ff. | Phase 1–6 Refactor done (v0.18.0). r5+r6 Audit erzeugte 14 ClickUp-Tasks (P0–P4) als Stabilisierungs-Roadmap. P0.1 done v0.18.1. |
 | CGR-2026-04-22-docs-refactor | Docs-System-Refactor | r1–r3 | on-demand | "Docs und Skill refactoring (Teil 1)" | Frontmatter + INDEX-Router + AI-Quickload statt separate Briefs |
 | CGR-2026-04-22-bpm-architektur | PlanImport-Architektur | mind. r2 | on-demand | "Architektur-Dokumentation analysieren" | SQLite-Wahrheit auflösen, ProjectPaths.Root relativ, PlanImportFacade |

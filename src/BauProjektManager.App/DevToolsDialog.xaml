@@ -116,6 +116,7 @@
                                 <ComboBoxItem Content="Aktuelle Session" Tag="currentSession"/>
                                 <ComboBoxItem Content="Letzte Session" Tag="previousSession"/>
                                 <ComboBoxItem Content="Komplettes Logfile" Tag="entireFile"/>
+                                <ComboBoxItem Content="Bestimmte Session..." Tag="specificSession"/>
                             </ComboBox>
                             <TextBox x:Name="TxtCustomLineCount"
                                      Width="70" MinHeight="28"
@@ -136,6 +137,12 @@
                                        VerticalAlignment="Center"
                                        Margin="6,0,0,0"
                                        Visibility="Collapsed"/>
+                            <ComboBox x:Name="CmbSession"
+                                      Width="180" MinHeight="28"
+                                      Margin="8,0,0,0"
+                                      VerticalContentAlignment="Center"
+                                      Visibility="Collapsed"
+                                      SelectionChanged="OnSessionChanged"/>
                         </StackPanel>
                     </DockPanel>
                     <!-- Status-Hinweis -->

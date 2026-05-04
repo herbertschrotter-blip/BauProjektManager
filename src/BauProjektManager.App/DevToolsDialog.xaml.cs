@@ -215,37 +215,21 @@ public partial class DevToolsDialog : Window
     {
         var (mode, lineCount, selectedSession) = GetCurrentFilter();
 
-        // Verfuegbare Sessions als zusaetzliche ComboBox-Items anhaengen (nach Separator).
-        var sessions = _devTools.GetAvailableSessionNumbers();
-        if (sessions.Count > 0)
+        // Sub-ComboBox CmbSession mit verfuegbaren Sessions befuellen (sortiert: neueste oben).
+        CmbSession.Items.Clear();
+        var sessions = _devTools.GetAvailableSessionNumbers(); // bereits absteigend sortiert
+        var current = _devTools.GetCurrentSessionNumber();
+        foreach (var n in sessions)
         {
-            CmbLogFilter.Items.Add(new Separator());
-            var current = _devTools.GetCurrentSessionNumber();
-            foreach (var n in sessions)
-            {
-                var label = n == current
-                    ? $"Session #{n} (aktuell)"
-                    : $"Session #{n}";
-                CmbLogFilter.Items.Add(new ComboBoxItem
-                {
-                    Content = label,
-                    Tag = $"session:{n}"
-                });
-            }
+            var label = n == current ? $"Session #{n} (aktuell)" : $"Session #{n}";
+            CmbSession.Items.Add(new ComboBoxItem { Content = label, Tag = n });
         }
 
-        // Selection setzen
+        // Haupt-Mode setzen
         ComboBoxItem? toSelect = null;
         foreach (var item in CmbLogFilter.Items)
         {
-            if (item is not ComboBoxItem cbi) continue;
-            var tag = cbi.Tag?.ToString();
-            if (mode == "specificSession" && tag == $"session:{selectedSession}")
-            {
-                toSelect = cbi;
-                break;
-            }
-            if (mode != "specificSession" && tag == mode)
+            if (item is ComboBoxItem cbi && cbi.Tag?.ToString() == mode)
             {
                 toSelect = cbi;
                 break;
@@ -253,16 +237,34 @@ public partial class DevToolsDialog : Window
         }
         CmbLogFilter.SelectedItem = toSelect ?? CmbLogFilter.Items[0];
 
+        // Sub-Session in CmbSession vorwaehlen
+        if (mode == "specificSession" && selectedSession > 0)
+        {
+            foreach (ComboBoxItem item in CmbSession.Items)
+            {
+                if (item.Tag is int n && n == selectedSession)
+                {
+                    CmbSession.SelectedItem = item;
+                    break;
+                }
+            }
+        }
+        if (CmbSession.SelectedItem is null && CmbSession.Items.Count > 0)
+            CmbSession.SelectedIndex = 0; // Default: aktuelle Session
+
         // Custom-Line-Count-Eingabe
         TxtCustomLineCount.Text = lineCount.ToString();
-        UpdateCustomLineCountVisibility(mode);
+        UpdateOptionalControlsVisibility(mode);
     }
 
-    private void UpdateCustomLineCountVisibility(string mode)
+    private void UpdateOptionalControlsVisibility(string mode)
     {
-        bool show = mode == "lastNLines";
-        TxtCustomLineCount.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
-        TxtLineRange.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        bool showLineCount = mode == "lastNLines";
+        TxtCustomLineCount.Visibility = showLineCount ? Visibility.Visible : Visibility.Collapsed;
+        TxtLineRange.Visibility = showLineCount ? Visibility.Visible : Visibility.Collapsed;
+
+        bool showSession = mode == "specificSession";
+        CmbSession.Visibility = showSession ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void UpdateStatusHint(string mode, int lineCount, int selectedSession, int loadedLines)
@@ -333,22 +335,30 @@ public partial class DevToolsDialog : Window
         if (_isInitializing) return;
         if (CmbLogFilter.SelectedItem is not ComboBoxItem item) return;
 
-        var tag = item.Tag?.ToString() ?? "last200Lines";
-        string mode;
+        var mode = item.Tag?.ToString() ?? "last200Lines";
+        UpdateOptionalControlsVisibility(mode);
+
+        // Bei specificSession: Falls noch keine Session ausgewaehlt → erste (aktuelle) waehlen.
         int sessionNumber = 0;
-
-        if (tag.StartsWith("session:"))
+        if (mode == "specificSession")
         {
-            mode = "specificSession";
-            int.TryParse(tag.AsSpan("session:".Length), out sessionNumber);
-        }
-        else
-        {
-            mode = tag;
+            if (CmbSession.SelectedItem is null && CmbSession.Items.Count > 0)
+                CmbSession.SelectedIndex = 0;
+            if (CmbSession.SelectedItem is ComboBoxItem si && si.Tag is int n)
+                sessionNumber = n;
         }
 
-        UpdateCustomLineCountVisibility(mode);
         SaveFilterSettings(mode, GetCurrentLineCountFromInput(), sessionNumber);
+        LoadLog();
+    }
+
+    private void OnSessionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isInitializing) return;
+        if (CmbSession.SelectedItem is not ComboBoxItem item) return;
+        if (item.Tag is not int sessionNumber) return;
+
+        SaveFilterSettings("specificSession", GetCurrentLineCountFromInput(), sessionNumber);
         LoadLog();
     }
 
@@ -397,9 +407,7 @@ public partial class DevToolsDialog : Window
     private string GetCurrentMode()
     {
         if (CmbLogFilter.SelectedItem is ComboBoxItem item && item.Tag is string tag)
-        {
-            return tag.StartsWith("session:") ? "specificSession" : tag;
-        }
+            return tag;
         return "last200Lines";
     }
 

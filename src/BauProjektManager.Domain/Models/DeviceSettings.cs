@@ -34,4 +34,39 @@ public class DeviceSettings
     public string ExportPath { get; set; } = string.Empty;
     public bool IsFirstRun { get; set; } = true;
     public DateTime? SetupCompletedAt { get; set; }
+
+    /// <summary>
+    /// DevTools-Einstellungen — Filter und Diagnose-Optionen.
+    /// Device-spezifisch; nicht ins shared-config übernehmen.
+    /// </summary>
+    public DevToolsSettings DevTools { get; set; } = new();
+}
+
+/// <summary>
+/// DevTools-Konfiguration — wird in device-settings.json unter "devTools" persistiert.
+/// </summary>
+public class DevToolsSettings
+{
+    public LogFilterSettings LogFilter { get; set; } = new();
+}
+
+/// <summary>
+/// Log-Filter-Auswahl im DevToolsDialog. Wird beim Wechsel sofort persistiert.
+/// </summary>
+public class LogFilterSettings
+{
+    /// <summary>
+    /// Filtermodus: last200Lines | lastNLines | currentSession | previousSession | entireFile | specificSession
+    /// </summary>
+    public string Mode { get; set; } = "last200Lines";
+
+    /// <summary>
+    /// Zeilenanzahl für mode = "lastNLines". Range 10-10000.
+    /// </summary>
+    public int CustomLineCount { get; set; } = 200;
+
+    /// <summary>
+    /// Session-Nummer für mode = "specificSession". 0 = keine ausgewählt.
+    /// </summary>
+    public int SelectedSessionNumber { get; set; } = 0;
 }

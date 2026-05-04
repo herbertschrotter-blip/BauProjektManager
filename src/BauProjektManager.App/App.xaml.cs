@@ -42,10 +42,18 @@ public partial class App : Application
             .CreateLogger();
 
         Log.Debug("Serilog configured — MinimumLevel: Verbose");
-        Log.Information("=== BauProjektManager gestartet ===");
+
+        // App-Start-Marker für DevTools-Session-Erkennung (BPM-101).
+        // Format: "═══ APP START · v{version} · {timestamp} · PID {pid} · Session #{n} ═══"
+        // Session-Nummer = max(Session #N in allen BPM_*.log) + 1.
         var version = System.Reflection.Assembly.GetExecutingAssembly()
             .GetName().Version?.ToString() ?? "unknown";
-        Log.Information("Version: {Version}", version);
+        var pid = Environment.ProcessId;
+        var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+        var sessionNumber = DetermineNextSessionNumber(Path.GetDirectoryName(logPath) ?? "");
+        Log.Information("═══ APP START · v{Version} · {Timestamp} · PID {Pid} · Session #{Session} ═══",
+            version, timestamp, pid, sessionNumber);
+
         Log.Information("OS: {OS}", Environment.OSVersion);
         Log.Information("Machine: {Machine}", Environment.MachineName);
 
@@ -159,6 +167,47 @@ public partial class App : Application
         MainWindow = mainWindow;
         ShutdownMode = ShutdownMode.OnMainWindowClose;
         mainWindow.Show();
+    }
+
+    /// <summary>
+    /// Bestimmt die nächste Session-Nummer für den App-Start-Marker.
+    /// Scannt alle BPM_*.log Files nach "Session #N" Mustern und liefert max+1.
+    /// Wenn kein Marker gefunden: startet bei 1.
+    /// </summary>
+    private static int DetermineNextSessionNumber(string logDir)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(logDir) || !Directory.Exists(logDir))
+                return 1;
+
+            var pattern = new System.Text.RegularExpressions.Regex(
+                @"Session #(\d+)",
+                System.Text.RegularExpressions.RegexOptions.Compiled);
+
+            int maxSession = 0;
+            foreach (var file in Directory.GetFiles(logDir, "BPM_*.log"))
+            {
+                try
+                {
+                    using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                    using var reader = new StreamReader(stream);
+                    string? line;
+                    while ((line = reader.ReadLine()) is not null)
+                    {
+                        var match = pattern.Match(line);
+                        if (match.Success && int.TryParse(match.Groups[1].Value, out var n) && n > maxSession)
+                            maxSession = n;
+                    }
+                }
+                catch { /* skip locked / unreadable files */ }
+            }
+            return maxSession + 1;
+        }
+        catch
+        {
+            return 1;
+        }
     }
 
     protected override void OnExit(ExitEventArgs e)

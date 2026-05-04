@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>BPM Dev Tools — Log-Tab mit Filter-Dropdown</title>
+<style>
+  body{margin:0;background:#1E1E1E;font-family:'Segoe UI',sans-serif;color:#CCCCCC;font-size:13px;padding:24px}
+  .dialog{max-width:680px;background:#1E1E1E;border:1px solid #3C3C3C;border-radius:4px;overflow:hidden;margin-bottom:32px}
+  .dialog-title{background:#252526;padding:10px 16px;border-bottom:1px solid #3C3C3C;display:flex;justify-content:space-between;align-items:center}
+  .dialog-title-text{color:#FFFFFF;font-size:13px;font-weight:600}
+  .win-controls{display:flex;gap:8px}
+  .win-btn{width:12px;height:12px;border-radius:50%;background:#3C3C3C}
+  .win-btn.close{background:#F44747}
+  .tabs{background:#1E1E1E;padding:0 16px;border-bottom:1px solid #3C3C3C;display:flex;gap:0}
+  .tab{padding:11px 18px;font-size:13px;color:#858585;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px}
+  .tab:hover{color:#CCCCCC;background:#2D2D30}
+  .tab.act{color:#FFFFFF;font-weight:600;border-bottom-color:#0078D4;background:#1E1E1E}
+  .content{padding:18px}
+
+  /* Header row: filter left, actions right */
+  .log-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+  .filter-group{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+  .filter-label{color:#858585;font-size:12px;white-space:nowrap}
+  .filter-select{background:#3C3C3C;border:1px solid #3C3C3C;border-radius:3px;padding:6px 28px 6px 10px;color:#CCCCCC;font-size:12px;cursor:pointer;min-width:200px;position:relative;font-family:'Segoe UI'}
+  .filter-select::after{content:'▼';position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#858585;font-size:9px;pointer-events:none}
+  .filter-input{background:#3C3C3C;border:1px solid #0078D4;border-radius:3px;padding:6px 8px;color:#CCCCCC;font-size:12px;width:70px;font-family:Consolas,monospace;outline:none}
+  .filter-range{color:#858585;font-size:11px;white-space:nowrap}
+  .actions{display:flex;gap:8px;flex-shrink:0}
+  .btn-secondary{background:transparent;border:1px solid #3C3C3C;border-radius:3px;padding:6px 12px;color:#CCCCCC;font-size:12px;cursor:pointer;font-family:'Segoe UI'}
+  .btn-secondary:hover{background:#37373D}
+
+  /* Status hint */
+  .status-hint{display:flex;align-items:center;gap:6px;margin-bottom:10px;padding:0 2px}
+  .status-dot{color:#4EC94E;font-size:11px}
+  .status-text{color:#858585;font-size:11px}
+
+  /* Log content */
+  .log-area{background:#252526;border:1px solid #3C3C3C;border-radius:3px;padding:12px;font-family:Consolas,monospace;font-size:11px;line-height:1.5;color:#CCCCCC;height:240px;overflow:auto;white-space:pre}
+  .log-time{color:#858585}
+  .log-inf{color:#3794FF}
+  .log-wrn{color:#F0AD4E}
+  .log-err{color:#F44747}
+  .log-marker{color:#0078D4;font-weight:600}
+
+  /* Footer */
+  .footer{background:#1E1E1E;padding:12px 18px;border-top:1px solid #3C3C3C;display:flex;justify-content:flex-end}
+
+  /* Dropdown panel (open state in Variant 2) */
+  .dd-panel{background:#3C3C3C;border:1px solid #3C3C3C;border-radius:3px;padding:0;min-width:240px;margin-left:80px;margin-top:-2px}
+  .dd-item{padding:8px 12px;color:#CCCCCC;font-size:12px;cursor:pointer;border-left:2px solid transparent}
+  .dd-item:hover{background:#37373D}
+  .dd-item.act{background:#04395E;border-left-color:#0078D4;color:#FFFFFF}
+  .dd-hint{color:#858585;font-size:10px;margin-left:4px}
+  .dd-warn{color:#F0AD4E;font-size:10px;margin-left:4px}
+
+  /* Warning banner */
+  .warn-banner{background:#22F0AD4E;border:1px solid #F0AD4E;border-radius:3px;padding:10px 12px;color:#F0AD4E;font-size:12px}
+
+  /* Variant labels */
+  .variant-label{color:#0078D4;font-weight:bold;font-size:13px;margin:24px 0 10px}
+  .variant-desc{color:#858585;font-size:11px;font-style:italic;margin:0 0 12px}
+
+  /* device-settings.json snippet */
+  .json-snippet{background:#252526;border:1px solid #3C3C3C;border-radius:3px;padding:12px;font-family:Consolas,monospace;font-size:11px;color:#CCCCCC;line-height:1.6;max-width:680px;white-space:pre}
+  .json-key{color:#3794FF}
+  .json-string{color:#F0AD4E}
+  .json-number{color:#4EC94E}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     VARIANTE 1 — Hauptansicht: "Letzte N Zeilen (eigene)" gewählt
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="variant-label">── Variante 1 — Hauptansicht mit aktiver Eigene-Zahl-Eingabe ──</div>
+<div class="variant-desc">Default-Zustand wenn User "Letzte N Zeilen (eigene)" gewählt hat. Zahleneingabe nur sichtbar wenn diese Option aktiv ist.</div>
+
+<div class="dialog">
+  <div class="dialog-title">
+    <span class="dialog-title-text">🔧 Dev Tools [DEBUG]</span>
+    <div class="win-controls">
+      <div class="win-btn"></div>
+      <div class="win-btn"></div>
+      <div class="win-btn close"></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab">⧉ System-Info</div>
+    <div class="tab act">📄 Log</div>
+    <div class="tab">🗑 Reset</div>
+  </div>
+
+  <div class="content">
+    <div class="log-header">
+      <div class="filter-group">
+        <span class="filter-label">Anzeigen:</span>
+        <div class="filter-select">Letzte N Zeilen (eigene)</div>
+        <input type="text" class="filter-input" value="500">
+        <span class="filter-range">(10-10000)</span>
+      </div>
+      <div class="actions">
+        <button class="btn-secondary">⧉ Kopieren</button>
+        <button class="btn-secondary">↻ Aktualisieren</button>
+      </div>
+    </div>
+
+    <div class="status-hint">
+      <span class="status-dot">●</span>
+      <span class="status-text">500 Zeilen geladen aus bpm-20260504.log (4.7 MB)</span>
+    </div>
+
+    <div class="log-area"><span class="log-time">2026-05-04 14:22:15.847</span> <span class="log-marker">═══ APP START · v0.28.4 · 2026-05-04 14:22:15 · PID 18432 ═══</span>
+<span class="log-time">2026-05-04 14:22:16.103</span> <span class="log-inf">[INF]</span> Application starting up
+<span class="log-time">2026-05-04 14:22:16.241</span> <span class="log-inf">[INF]</span> Settings loaded from D:\OneDrive\AppData\BPM\settings.json
+<span class="log-time">2026-05-04 14:22:16.512</span> <span class="log-inf">[INF]</span> Database opened: bpm.db (12.4 MB, 1247 plans)
+<span class="log-time">2026-05-04 14:22:16.788</span> <span class="log-inf">[INF]</span> ProfileManager loaded 14 profiles from .bpm/profiles/
+<span class="log-time">2026-05-04 14:22:17.024</span> <span class="log-wrn">[WRN]</span> Profil 'Statik-Old' verworfen: keine Recognition-Regeln vorhanden
+<span class="log-time">2026-05-04 14:22:17.198</span> <span class="log-inf">[INF]</span> Main window opened
+<span class="log-time">2026-05-04 14:23:42.581</span> <span class="log-inf">[INF]</span> User opened PlanManager for project 'ÖWG Dobl'
+<span class="log-time">2026-05-04 14:24:18.331</span> <span class="log-inf">[INF]</span> Profile 'Polier' matched 14 of 28 candidate files
+<span class="log-time">2026-05-04 14:24:18.502</span> <span class="log-inf">[INF]</span> Import preview opened
+<span class="log-time">...</span></div>
+  </div>
+
+  <div class="footer">
+    <button class="btn-secondary">Schließen</button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     VARIANTE 2 — Dropdown geöffnet (alle 5 Optionen)
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="variant-label">── Variante 2 — Dropdown geöffnet ──</div>
+<div class="variant-desc">Alle 5 Auswahlpunkte. "Letzte 200 Zeilen" ist der Default beim allerersten Öffnen. "Komplettes Logfile" zeigt Warn-Hinweis bei großen Dateien.</div>
+
+<div class="dialog">
+  <div class="dialog-title">
+    <span class="dialog-title-text">🔧 Dev Tools [DEBUG]</span>
+    <div class="win-controls">
+      <div class="win-btn"></div>
+      <div class="win-btn"></div>
+      <div class="win-btn close"></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab">⧉ System-Info</div>
+    <div class="tab act">📄 Log</div>
+    <div class="tab">🗑 Reset</div>
+  </div>
+
+  <div class="content">
+    <div class="log-header">
+      <div class="filter-group">
+        <span class="filter-label">Anzeigen:</span>
+        <div class="filter-select">Letzte 200 Zeilen</div>
+      </div>
+      <div class="actions">
+        <button class="btn-secondary">⧉ Kopieren</button>
+        <button class="btn-secondary">↻ Aktualisieren</button>
+      </div>
+    </div>
+
+    <div class="dd-panel">
+      <div class="dd-item act">Letzte 200 Zeilen<span class="dd-hint">(Standard)</span></div>
+      <div class="dd-item">Letzte N Zeilen (eigene)</div>
+      <div class="dd-item">Aktuelle Session</div>
+      <div class="dd-item">Letzte Session</div>
+      <div class="dd-item">Komplettes Logfile<span class="dd-warn">⚠ groß</span></div>
+    </div>
+
+    <div style="height:200px"></div>
+  </div>
+
+  <div class="footer">
+    <button class="btn-secondary">Schließen</button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     VARIANTE 3 — Edge Case "Letzte Session" mit Hinweis-Banner
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="variant-label">── Variante 3 — Edge Case: keine vorherige Session im Logfile ──</div>
+<div class="variant-desc">Wenn nur ein App-Start-Marker im aktuellen Logfile gefunden wird, wird das Vortags-Logfile geprüft. Während dieser Suche zeigt das Banner Status. Kopieren-Button bleibt disabled bis Inhalt geladen.</div>
+
+<div class="dialog">
+  <div class="dialog-title">
+    <span class="dialog-title-text">🔧 Dev Tools [DEBUG]</span>
+    <div class="win-controls">
+      <div class="win-btn"></div>
+      <div class="win-btn"></div>
+      <div class="win-btn close"></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab">⧉ System-Info</div>
+    <div class="tab act">📄 Log</div>
+    <div class="tab">🗑 Reset</div>
+  </div>
+
+  <div class="content">
+    <div class="log-header">
+      <div class="filter-group">
+        <span class="filter-label">Anzeigen:</span>
+        <div class="filter-select">Letzte Session</div>
+      </div>
+      <div class="actions">
+        <button class="btn-secondary" style="opacity:0.4;cursor:not-allowed">⧉ Kopieren</button>
+        <button class="btn-secondary">↻ Aktualisieren</button>
+      </div>
+    </div>
+
+    <div class="warn-banner">⚠ Keine vorherige Session im aktuellen Logfile gefunden. Vortags-Logfile bpm-20260503.log wird geprüft…</div>
+
+    <div style="height:8px"></div>
+
+    <div class="log-area" style="opacity:0.4"><span class="log-time">…</span> <span class="status-text">Suche läuft, bitte warten</span></div>
+  </div>
+
+  <div class="footer">
+    <button class="btn-secondary">Schließen</button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PERSISTIERUNG — device-settings.json Schema-Erweiterung
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="variant-label">── Persistierung — device-settings.json (neuer Bereich) ──</div>
+<div class="variant-desc">Auswahl wird sofort beim Wechsel persistiert (kein Speichern-Button). Beim App-Neustart wiederhergestellt. Device-spezifisch — nicht über OneDrive synchronisiert.</div>
+
+<div class="json-snippet">{
+  <span class="json-key">"deviceId"</span>: <span class="json-string">"firmenlaptop-..."</span>,
+  <span class="json-key">"localUserId"</span>: <span class="json-string">"hs-001"</span>,
+  ...
+  <span class="json-key">"devTools"</span>: {
+    <span class="json-key">"logFilter"</span>: {
+      <span class="json-key">"mode"</span>: <span class="json-string">"lastNLines"</span>,
+      <span class="json-key">"customLineCount"</span>: <span class="json-number">500</span>
+    }
+  }
+}
+
+<span class="status-text">Mode-Werte (Enum):</span>
+  <span class="json-string">"last200Lines"</span>     → Letzte 200 Zeilen (Default)
+  <span class="json-string">"lastNLines"</span>       → Letzte N Zeilen (nutzt customLineCount)
+  <span class="json-string">"currentSession"</span>   → Aktuelle Session
+  <span class="json-string">"previousSession"</span>  → Letzte Session
+  <span class="json-string">"entireFile"</span>       → Komplettes Logfile</div>
+
+</body>
+</html>

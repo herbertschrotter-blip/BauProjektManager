@@ -110,6 +110,264 @@ public sealed class DeveloperToolsService : IDeveloperToolsService
         }
     }
 
+    /// <summary>
+    /// App-Start-Marker zur Session-Erkennung.
+    /// Format: "═══ APP START · v{version} · {timestamp} · PID {pid} · Session #{n} ═══"
+    /// </summary>
+    private const string AppStartMarker = "═══ APP START";
+
+    private static readonly System.Text.RegularExpressions.Regex SessionNumberPattern =
+        new(@"Session #(\d+)", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    public string ReadEntireLog()
+    {
+        try
+        {
+            var files = Directory.GetFiles(_logDirectory, "BPM_*.log")
+                                 .OrderByDescending(f => f)
+                                 .ToArray();
+            if (files.Length == 0) return "(Keine Log-Datei gefunden)";
+
+            using var stream = new FileStream(files[0], FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var reader = new StreamReader(stream, Encoding.UTF8);
+            return reader.ReadToEnd();
+        }
+        catch (Exception ex)
+        {
+            Log.Warning("DevTools: Komplettes Log lesen fehlgeschlagen: {Error}", ex.Message);
+            return $"(Fehler beim Lesen: {ex.Message})";
+        }
+    }
+
+    public string ReadCurrentSession()
+    {
+        try
+        {
+            var files = Directory.GetFiles(_logDirectory, "BPM_*.log")
+                                 .OrderByDescending(f => f)
+                                 .ToArray();
+            if (files.Length == 0) return "(Keine Log-Datei gefunden)";
+
+            var lines = ReadAllLines(files[0]);
+            var lastMarkerIndex = FindLastMarkerIndex(lines);
+            if (lastMarkerIndex < 0)
+                return "(Kein App-Start-Marker im aktuellen Logfile gefunden)";
+
+            return string.Join(Environment.NewLine, lines.GetRange(lastMarkerIndex, lines.Count - lastMarkerIndex));
+        }
+        catch (Exception ex)
+        {
+            Log.Warning("DevTools: Aktuelle Session lesen fehlgeschlagen: {Error}", ex.Message);
+            return $"(Fehler beim Lesen: {ex.Message})";
+        }
+    }
+
+    public string ReadPreviousSession()
+    {
+        var current = GetCurrentSessionNumber();
+        if (current <= 1)
+            return "(Keine vorherige Session vorhanden — aktuelle Session ist die erste)";
+        return ReadSessionByNumber(current - 1);
+    }
+
+    public int GetCurrentSessionNumber()
+    {
+        try
+        {
+            var files = Directory.GetFiles(_logDirectory, "BPM_*.log")
+                                 .OrderByDescending(f => f)
+                                 .ToArray();
+            if (files.Length == 0) return 0;
+
+            var lines = ReadAllLines(files[0]);
+            for (int i = lines.Count - 1; i >= 0; i--)
+            {
+                if (!lines[i].Contains(AppStartMarker)) continue;
+                var n = ExtractSessionNumber(lines[i]);
+                if (n.HasValue) return n.Value;
+            }
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            Log.Warning("DevTools: Aktuelle Session-Nummer ermitteln fehlgeschlagen: {Error}", ex.Message);
+            return 0;
+        }
+    }
+
+    public IReadOnlyList<int> GetAvailableSessionNumbers()
+    {
+        try
+        {
+            var files = Directory.GetFiles(_logDirectory, "BPM_*.log")
+                                 .OrderByDescending(f => f)
+                                 .ToArray();
+            if (files.Length == 0) return Array.Empty<int>();
+
+            var sessions = new SortedSet<int>();
+            foreach (var file in files)
+            {
+                try
+                {
+                    using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                    using var reader = new StreamReader(stream, Encoding.UTF8);
+                    string? line;
+                    while ((line = reader.ReadLine()) is not null)
+                    {
+                        if (!line.Contains(AppStartMarker)) continue;
+                        var n = ExtractSessionNumber(line);
+                        if (n.HasValue) sessions.Add(n.Value);
+                    }
+                }
+                catch { /* skip unreadable */ }
+            }
+            return sessions.Reverse().ToList();
+        }
+        catch (Exception ex)
+        {
+            Log.Warning("DevTools: Verfuegbare Sessions ermitteln fehlgeschlagen: {Error}", ex.Message);
+            return Array.Empty<int>();
+        }
+    }
+
+    public string ReadSessionByNumber(int sessionNumber)
+    {
+        if (sessionNumber <= 0) return "(Ungueltige Session-Nummer)";
+        try
+        {
+            var files = Directory.GetFiles(_logDirectory, "BPM_*.log")
+                                 .OrderBy(f => f) // aufsteigend = chronologisch
+                                 .ToArray();
+            if (files.Length == 0) return "(Keine Log-Datei gefunden)";
+
+            // Sammle alle Marker (sessionNumber, file, lineIndex) chronologisch
+            var allMarkers = new List<(int Session, string File, int LineIndex)>();
+            foreach (var file in files)
+            {
+                List<string> lines;
+                try { lines = ReadAllLines(file); } catch { continue; }
+                for (int i = 0; i < lines.Count; i++)
+                {
+                    if (!lines[i].Contains(AppStartMarker)) continue;
+                    var n = ExtractSessionNumber(lines[i]);
+                    if (n.HasValue) allMarkers.Add((n.Value, file, i));
+                }
+            }
+
+            var startIdx = allMarkers.FindIndex(m => m.Session == sessionNumber);
+            if (startIdx < 0)
+                return $"(Session #{sessionNumber} nicht gefunden)";
+
+            var startMarker = allMarkers[startIdx];
+            var startLines = ReadAllLines(startMarker.File);
+
+            // Wenn naechste Session im selben File ist: bis dorthin (exklusiv)
+            if (startIdx + 1 < allMarkers.Count && allMarkers[startIdx + 1].File == startMarker.File)
+            {
+                var endIdx = allMarkers[startIdx + 1].LineIndex;
+                return string.Join(Environment.NewLine,
+                    startLines.GetRange(startMarker.LineIndex, endIdx - startMarker.LineIndex));
+            }
+
+            // Sonst: bis Ende des aktuellen Files
+            var sb = new StringBuilder();
+            sb.AppendLine(string.Join(Environment.NewLine,
+                startLines.GetRange(startMarker.LineIndex, startLines.Count - startMarker.LineIndex)));
+
+            // Plus Anfang aller folgenden Files bis zum naechsten Marker
+            for (int fi = Array.IndexOf(files, startMarker.File) + 1; fi < files.Length; fi++)
+            {
+                List<string> lines;
+                try { lines = ReadAllLines(files[fi]); } catch { continue; }
+                var nextMarker = lines.FindIndex(l => l.Contains(AppStartMarker));
+                if (nextMarker < 0)
+                {
+                    sb.AppendLine(string.Join(Environment.NewLine, lines));
+                }
+                else
+                {
+                    if (nextMarker > 0)
+                        sb.AppendLine(string.Join(Environment.NewLine, lines.GetRange(0, nextMarker)));
+                    break;
+                }
+            }
+            return sb.ToString().TrimEnd();
+        }
+        catch (Exception ex)
+        {
+            Log.Warning("DevTools: Session #{n} lesen fehlgeschlagen: {Error}", sessionNumber, ex.Message);
+            return $"(Fehler beim Lesen: {ex.Message})";
+        }
+    }
+
+    private static int? ExtractSessionNumber(string line)
+    {
+        var match = SessionNumberPattern.Match(line);
+        return match.Success && int.TryParse(match.Groups[1].Value, out var n) ? n : null;
+    }
+
+    public long GetCurrentLogFileSize()
+    {
+        try
+        {
+            var files = Directory.GetFiles(_logDirectory, "BPM_*.log")
+                                 .OrderByDescending(f => f)
+                                 .ToArray();
+            return files.Length == 0 ? 0L : new FileInfo(files[0]).Length;
+        }
+        catch
+        {
+            return 0L;
+        }
+    }
+
+    public string GetCurrentLogFileName()
+    {
+        try
+        {
+            var files = Directory.GetFiles(_logDirectory, "BPM_*.log")
+                                 .OrderByDescending(f => f)
+                                 .ToArray();
+            return files.Length == 0 ? string.Empty : Path.GetFileName(files[0]);
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
+    private static List<string> ReadAllLines(string filePath)
+    {
+        using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        using var reader = new StreamReader(stream, Encoding.UTF8);
+        var lines = new List<string>();
+        string? line;
+        while ((line = reader.ReadLine()) is not null)
+            lines.Add(line);
+        return lines;
+    }
+
+    private static int FindLastMarkerIndex(List<string> lines)
+    {
+        for (int i = lines.Count - 1; i >= 0; i--)
+        {
+            if (lines[i].Contains(AppStartMarker))
+                return i;
+        }
+        return -1;
+    }
+
+    private static List<int> FindAllMarkerIndices(List<string> lines)
+    {
+        var indices = new List<int>();
+        for (int i = 0; i < lines.Count; i++)
+        {
+            if (lines[i].Contains(AppStartMarker))
+                indices.Add(i);
+        }
+        return indices;
+    }
+
     public string GetSystemInfo()
     {
         var sb = new System.Text.StringBuilder();

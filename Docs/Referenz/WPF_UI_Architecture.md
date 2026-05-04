@@ -139,7 +139,7 @@ BauProjektManager.PlanManager/
 | **Colors.xaml** | Farb-Token als SolidColorBrush + Color | Keine |
 | **Typography.xaml** | Schriftgrößen, -gewichte als Doubles + Styles | Colors.xaml |
 | **Buttons.xaml** | Button-Varianten (Primary, Secondary mit Border, Danger, Ghost, Nav mit Code-Behind Highlight) | Colors.xaml, Typography.xaml |
-| **Inputs.xaml** | TextBox, ComboBox, DatePicker, CheckBox | Colors.xaml, Typography.xaml | ⬜ Geplant (aktuell nicht implementiert) |
+| **Inputs.xaml** | ComboBox (implementiert), TextBox/DatePicker/CheckBox (folgen bei Bedarf) | Colors.xaml, Typography.xaml | 🟡 Partial (ComboBox seit v0.28.6, BPM-101) |
 | **DataGrid.xaml** | Header, Row, Cell, Zebra-Variante | Colors.xaml, Typography.xaml |
 | **Dialogs.xaml** | Dialog-Basis (Header/Footer/Overlay), Cards, Tooltips, Separatoren, ContextMenu/MenuItem Styles, TabControl/TabItem Styles | Colors.xaml, Typography.xaml |
 | **TreeView.xaml** | TreeView mit Dark-Theme Styling | Colors.xaml, Typography.xaml |

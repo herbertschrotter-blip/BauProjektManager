@@ -92,18 +92,74 @@
                 <Grid Margin="20">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <DockPanel Grid.Row="0" Margin="0,0,0,8">
-                        <TextBlock Text="Letzte 200 Zeilen" Style="{StaticResource BpmLabel}" VerticalAlignment="Center"/>
-                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-                            <Button Style="{StaticResource BpmButtonSecondary}" Click="OnCopyLog" Margin="0,0,8,0">
+                    <DockPanel Grid.Row="0" Margin="0,0,0,8" LastChildFill="True">
+                        <!-- Aktions-Buttons rechts (zuerst gedockt, damit sie am rechten Rand kleben) -->
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                            <Button Style="{StaticResource BpmButtonSecondary}" Click="OnCopyLog" Margin="8,0,0,0">
                                 <Button.Content><TextBlock><Run Text="{StaticResource IconActionCopy}"/><Run Text=" Kopieren"/></TextBlock></Button.Content>
                             </Button>
-                            <Button Content="↻ Aktualisieren" Style="{StaticResource BpmButtonSecondary}" Click="OnRefreshLog"/>
+                            <Button Content="↻ Aktualisieren" Style="{StaticResource BpmButtonSecondary}" Click="OnRefreshLog" Margin="8,0,0,0"/>
+                        </StackPanel>
+                        <!-- Filter-Gruppe links (fuellt den Restplatz dynamisch bei Resize) -->
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Anzeigen:" Style="{StaticResource BpmLabel}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ComboBox x:Name="CmbLogFilter"
+                                      Width="200" MinHeight="28"
+                                      VerticalContentAlignment="Center"
+                                      SelectionChanged="OnLogFilterChanged">
+                                <ComboBoxItem Content="Letzte 200 Zeilen" Tag="last200Lines"/>
+                                <ComboBoxItem Content="Letzte N Zeilen (eigene)" Tag="lastNLines"/>
+                                <ComboBoxItem Content="Aktuelle Session" Tag="currentSession"/>
+                                <ComboBoxItem Content="Letzte Session" Tag="previousSession"/>
+                                <ComboBoxItem Content="Komplettes Logfile" Tag="entireFile"/>
+                            </ComboBox>
+                            <TextBox x:Name="TxtCustomLineCount"
+                                     Width="70" MinHeight="28"
+                                     Margin="8,0,0,0"
+                                     Background="{StaticResource BpmBgInput}"
+                                     Foreground="{StaticResource BpmTextPrimary}"
+                                     BorderBrush="{StaticResource BpmAccentPrimary}"
+                                     FontFamily="Consolas"
+                                     VerticalContentAlignment="Center"
+                                     Padding="6,0"
+                                     Visibility="Collapsed"
+                                     LostFocus="OnCustomLineCountChanged"
+                                     KeyDown="OnCustomLineCountKeyDown"/>
+                            <TextBlock x:Name="TxtLineRange"
+                                       Text="(10-10000)"
+                                       Style="{StaticResource BpmSmallText}"
+                                       Foreground="{StaticResource BpmTextSecondary}"
+                                       VerticalAlignment="Center"
+                                       Margin="6,0,0,0"
+                                       Visibility="Collapsed"/>
                         </StackPanel>
                     </DockPanel>
-                    <Border Grid.Row="1"
+                    <!-- Status-Hinweis -->
+                    <TextBlock Grid.Row="1"
+                               x:Name="TxtLogStatus"
+                               Style="{StaticResource BpmSmallText}"
+                               Foreground="{StaticResource BpmTextSecondary}"
+                               Margin="0,0,0,8"
+                               Text=""/>
+                    <!-- Warnung bei großen Files / fehlenden Sessions -->
+                    <Border Grid.Row="2"
+                            x:Name="BorderLogWarning"
+                            Background="{StaticResource BpmBadgeBgWarning}"
+                            BorderBrush="{StaticResource BpmWarning}"
+                            BorderThickness="1" CornerRadius="4"
+                            Padding="10,6"
+                            Margin="0,0,0,8"
+                            Visibility="Collapsed">
+                        <TextBlock x:Name="TxtLogWarning"
+                                   Style="{StaticResource BpmSmallText}"
+                                   Foreground="{StaticResource BpmWarning}"
+                                   TextWrapping="Wrap"/>
+                    </Border>
+                    <Border Grid.Row="3"
                             Background="{StaticResource BpmBgElevated}"
                             CornerRadius="4"
                             BorderBrush="{StaticResource BpmBorderDefault}"
@@ -113,7 +169,6 @@
                                       HorizontalScrollBarVisibility="Auto">
                             <TextBlock x:Name="TxtLogContent"
                                        FontFamily="Consolas" FontSize="11"
-                                       Foreground="{StaticResource BpmTextPrimary}"
                                        Background="Transparent"
                                        Padding="12" TextWrapping="NoWrap"/>
                         </ScrollViewer>

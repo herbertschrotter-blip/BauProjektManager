@@ -16,6 +16,7 @@ public partial class MainWindow : Window
     private readonly PlanManagerView _planManagerView;
     private readonly SettingsView _settingsView;
     private readonly IDeveloperToolsService? _devTools;
+    private readonly AppSettingsService _settingsService;
 
     public MainWindow(
         ProjectDatabase db,
@@ -27,6 +28,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         _devTools = devTools;
+        _settingsService = settingsService;
 
         _planManagerView = new PlanManagerView(db, idGenerator, profileManager);
         _settingsView = new SettingsView(db, dialogService, settingsService);
@@ -42,7 +44,7 @@ public partial class MainWindow : Window
     private void OnOpenDevTools(object sender, RoutedEventArgs e)
     {
         if (_devTools is null) return;
-        var dialog = new DevToolsDialog(_devTools);
+        var dialog = new DevToolsDialog(_devTools, _settingsService);
         dialog.Owner = this;
         dialog.ShowDialog();
     }

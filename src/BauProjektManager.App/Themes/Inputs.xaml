@@ -1,0 +1,95 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ═══════════════════════════════════════════════════════════
+         BauProjektManager — Inputs.xaml
+         TextBox / ComboBox / DatePicker / CheckBox Dark-Theme-Styles.
+         ComboBox als ProjektStandard etabliert (BPM-101, v0.28.6).
+         TextBox / DatePicker / CheckBox folgen bei Bedarf.
+         Referenz: Docs/Referenz/WPF_UI_Architecture.md Kap. 3
+         ═══════════════════════════════════════════════════════════ -->
+
+    <!-- ── ComboBox Style (Dark Theme, Custom-Template) ─────────── -->
+    <Style x:Key="BpmComboBox" TargetType="ComboBox">
+        <Setter Property="Background" Value="{DynamicResource BpmBgBase}"/>
+        <Setter Property="Foreground" Value="{DynamicResource BpmTextBright}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BpmBorderDefault}"/>
+        <Setter Property="Padding" Value="5,3"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBox">
+                    <Grid>
+                        <ToggleButton x:Name="ToggleButton"
+                                      Background="{DynamicResource BpmBgBase}"
+                                      BorderBrush="{DynamicResource BpmBorderDefault}"
+                                      BorderThickness="1" Padding="5,3"
+                                      IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                      ClickMode="Press">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border Background="{DynamicResource BpmBgBase}"
+                                            BorderBrush="{DynamicResource BpmBorderDefault}"
+                                            BorderThickness="1" Padding="5,3">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="20"/>
+                                            </Grid.ColumnDefinitions>
+                                            <ContentPresenter Grid.Column="0"/>
+                                            <Path Grid.Column="1" Data="M0,0 L4,4 L8,0"
+                                                  Stroke="{DynamicResource BpmTextPrimary}"
+                                                  StrokeThickness="1.5"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+                        <ContentPresenter x:Name="ContentSite"
+                                          Content="{TemplateBinding SelectionBoxItem}"
+                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                          Margin="8,3,25,3"
+                                          VerticalAlignment="Center"
+                                          HorizontalAlignment="Left"
+                                          IsHitTestVisible="False"/>
+                        <Popup x:Name="Popup" Placement="Bottom"
+                               IsOpen="{TemplateBinding IsDropDownOpen}"
+                               AllowsTransparency="True"
+                               PopupAnimation="Slide">
+                            <Border Background="{DynamicResource BpmBgBase}"
+                                    BorderBrush="{DynamicResource BpmBorderDefault}"
+                                    BorderThickness="1"
+                                    MinWidth="{TemplateBinding ActualWidth}">
+                                <ScrollViewer MaxHeight="200">
+                                    <StackPanel IsItemsHost="True"/>
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ── ComboBoxItem Style (Hover/Selected) ──────────────────── -->
+    <Style x:Key="BpmComboBoxItem" TargetType="ComboBoxItem">
+        <Setter Property="Background" Value="{DynamicResource BpmBgBase}"/>
+        <Setter Property="Foreground" Value="{DynamicResource BpmTextPrimary}"/>
+        <Setter Property="Padding" Value="8,5"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{DynamicResource BpmAccentPrimary}"/>
+                <Setter Property="Foreground" Value="{DynamicResource BpmTextBright}"/>
+            </Trigger>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="{DynamicResource BpmAccentPressed}"/>
+                <Setter Property="Foreground" Value="{DynamicResource BpmTextBright}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- ── Default-Style Aktivierung (gilt projektweit) ─────────── -->
+    <Style TargetType="ComboBox" BasedOn="{StaticResource BpmComboBox}"/>
+    <Style TargetType="ComboBoxItem" BasedOn="{StaticResource BpmComboBoxItem}"/>
+
+</ResourceDictionary>

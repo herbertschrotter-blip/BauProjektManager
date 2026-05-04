@@ -1,18 +1,32 @@
 ﻿using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using BauProjektManager.Domain.Interfaces;
+using BauProjektManager.Domain.Models;
+using BauProjektManager.Infrastructure.Persistence;
+using Serilog;
 
 namespace BauProjektManager.App;
 
 public partial class DevToolsDialog : Window
 {
     private readonly IDeveloperToolsService _devTools;
+    private readonly AppSettingsService? _settingsService;
     private string _selectedReset = "DbOnly";
+    private bool _isInitializing = true;
+    private string _lastLogContent = string.Empty;
+
+    private static readonly Regex LogLinePattern = new(
+        @"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?)\s+(\[\w+\])\s+(.*)$",
+        RegexOptions.Compiled);
 
     private const string DeleteIcon = "🗑";
+    private const long LargeFileWarningThresholdBytes = 2 * 1024 * 1024; // 2 MB
 
     private readonly Dictionary<string, string> _resetLabels = new()
     {
@@ -22,12 +36,15 @@ public partial class DevToolsDialog : Window
         { "All",          $"{DeleteIcon} Alles zurücksetzen und neu starten" }
     };
 
-    public DevToolsDialog(IDeveloperToolsService devTools)
+    public DevToolsDialog(IDeveloperToolsService devTools, AppSettingsService? settingsService = null)
     {
         InitializeComponent();
         _devTools = devTools;
+        _settingsService = settingsService;
         LoadSystemInfo();
+        InitLogFilter();
         LoadLog();
+        _isInitializing = false;
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -90,8 +107,320 @@ public partial class DevToolsDialog : Window
 
     private void LoadLog()
     {
-        TxtLogContent.Text = _devTools.ReadLogTail(200);
+        var (mode, lineCount, selectedSession) = GetCurrentFilter();
+        var content = ReadLogByMode(mode, lineCount, selectedSession, out var loadedLineCount);
+
+        _lastLogContent = content;
+        TxtLogContent.Inlines.Clear();
+        foreach (var inline in BuildColoredLogInlines(content))
+            TxtLogContent.Inlines.Add(inline);
+
+        UpdateStatusHint(mode, lineCount, selectedSession, loadedLineCount);
+        UpdateWarning(mode);
         LogScroller.ScrollToBottom();
+    }
+
+    /// <summary>
+    /// Parst Log-Content zeilenweise und erzeugt farbige Inline-Runs.
+    /// Format: "yyyy-MM-dd HH:mm:ss.fff [LVL] Message" + APP-START-Marker.
+    /// Level-Mapping: VRB/DBG grau, INF blau-bold, WRN orange-bold, ERR/FTL rot-bold.
+    /// </summary>
+    private IEnumerable<Inline> BuildColoredLogInlines(string content)
+    {
+        if (string.IsNullOrEmpty(content))
+            yield break;
+
+        var brushSecondary = (Brush)FindResource("BpmTextSecondary");
+        var brushPrimary = (Brush)FindResource("BpmTextPrimary");
+        var brushAccent = (Brush)FindResource("BpmAccentPrimary");
+        var brushInfo = (Brush)FindResource("BpmInfo");
+        var brushWarning = (Brush)FindResource("BpmWarning");
+        var brushError = (Brush)FindResource("BpmError");
+
+        var lines = content.Split('\n');
+        for (int i = 0; i < lines.Length; i++)
+        {
+            var line = lines[i].TrimEnd('\r');
+
+            // App-Start-Marker: ganze Zeile blau bold
+            if (line.Contains("═══ APP START"))
+            {
+                yield return new Run(line) { Foreground = brushAccent, FontWeight = FontWeights.Bold };
+                yield return new LineBreak();
+                continue;
+            }
+
+            // Standard Serilog-Format
+            var match = LogLinePattern.Match(line);
+            if (match.Success)
+            {
+                var levelTag = match.Groups[2].Value;
+                var (levelBrush, levelBold) = levelTag switch
+                {
+                    "[VRB]" or "[Verbose]"     => (brushSecondary, FontWeights.Normal),
+                    "[DBG]" or "[Debug]"       => (brushSecondary, FontWeights.Normal),
+                    "[INF]" or "[Information]" => (brushInfo,      FontWeights.Bold),
+                    "[WRN]" or "[Warning]"     => (brushWarning,   FontWeights.Bold),
+                    "[ERR]" or "[Error]"       => (brushError,     FontWeights.Bold),
+                    "[FTL]" or "[Fatal]"       => (brushError,     FontWeights.Bold),
+                    _                          => (brushPrimary,   FontWeights.Normal),
+                };
+
+                yield return new Run(match.Groups[1].Value) { Foreground = brushSecondary };
+                yield return new Run(" ") { Foreground = brushPrimary };
+                yield return new Run(levelTag) { Foreground = levelBrush, FontWeight = levelBold };
+                yield return new Run(" " + match.Groups[3].Value) { Foreground = brushPrimary };
+                yield return new LineBreak();
+                continue;
+            }
+
+            // Fallback: ganze Zeile als Standardtext
+            yield return new Run(line) { Foreground = brushPrimary };
+            yield return new LineBreak();
+        }
+    }
+
+    private (string mode, int lineCount, int selectedSession) GetCurrentFilter()
+    {
+        if (_settingsService is null)
+            return ("last200Lines", 200, 0);
+
+        var device = _settingsService.LoadDevice();
+        var filter = device.DevTools?.LogFilter ?? new LogFilterSettings();
+        var mode = string.IsNullOrEmpty(filter.Mode) ? "last200Lines" : filter.Mode;
+        var count = ClampLineCount(filter.CustomLineCount);
+        return (mode, count, filter.SelectedSessionNumber);
+    }
+
+    private string ReadLogByMode(string mode, int customLineCount, int selectedSession, out int loadedLineCount)
+    {
+        string content = mode switch
+        {
+            "last200Lines"    => _devTools.ReadLogTail(200),
+            "lastNLines"      => _devTools.ReadLogTail(customLineCount),
+            "currentSession"  => _devTools.ReadCurrentSession(),
+            "previousSession" => _devTools.ReadPreviousSession(),
+            "entireFile"      => _devTools.ReadEntireLog(),
+            "specificSession" => _devTools.ReadSessionByNumber(selectedSession),
+            _                 => _devTools.ReadLogTail(200)
+        };
+
+        loadedLineCount = string.IsNullOrEmpty(content)
+            ? 0
+            : content.Count(c => c == '\n') + 1;
+        return content;
+    }
+
+    private void InitLogFilter()
+    {
+        var (mode, lineCount, selectedSession) = GetCurrentFilter();
+
+        // Verfuegbare Sessions als zusaetzliche ComboBox-Items anhaengen (nach Separator).
+        var sessions = _devTools.GetAvailableSessionNumbers();
+        if (sessions.Count > 0)
+        {
+            CmbLogFilter.Items.Add(new Separator());
+            var current = _devTools.GetCurrentSessionNumber();
+            foreach (var n in sessions)
+            {
+                var label = n == current
+                    ? $"Session #{n} (aktuell)"
+                    : $"Session #{n}";
+                CmbLogFilter.Items.Add(new ComboBoxItem
+                {
+                    Content = label,
+                    Tag = $"session:{n}"
+                });
+            }
+        }
+
+        // Selection setzen
+        ComboBoxItem? toSelect = null;
+        foreach (var item in CmbLogFilter.Items)
+        {
+            if (item is not ComboBoxItem cbi) continue;
+            var tag = cbi.Tag?.ToString();
+            if (mode == "specificSession" && tag == $"session:{selectedSession}")
+            {
+                toSelect = cbi;
+                break;
+            }
+            if (mode != "specificSession" && tag == mode)
+            {
+                toSelect = cbi;
+                break;
+            }
+        }
+        CmbLogFilter.SelectedItem = toSelect ?? CmbLogFilter.Items[0];
+
+        // Custom-Line-Count-Eingabe
+        TxtCustomLineCount.Text = lineCount.ToString();
+        UpdateCustomLineCountVisibility(mode);
+    }
+
+    private void UpdateCustomLineCountVisibility(string mode)
+    {
+        bool show = mode == "lastNLines";
+        TxtCustomLineCount.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        TxtLineRange.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void UpdateStatusHint(string mode, int lineCount, int selectedSession, int loadedLines)
+    {
+        var fileName = _devTools.GetCurrentLogFileName();
+        var sizeBytes = _devTools.GetCurrentLogFileSize();
+        var sizeText = FormatBytes(sizeBytes);
+
+        var modeLabel = mode switch
+        {
+            "last200Lines"    => "letzte 200 Zeilen",
+            "lastNLines"      => $"letzte {lineCount} Zeilen",
+            "currentSession"  => "aktuelle Session",
+            "previousSession" => "letzte Session",
+            "entireFile"      => "komplettes Logfile",
+            "specificSession" => $"Session #{selectedSession}",
+            _                 => "letzte 200 Zeilen"
+        };
+
+        TxtLogStatus.Text = string.IsNullOrEmpty(fileName)
+            ? $"{loadedLines} Zeilen ({modeLabel})"
+            : $"{loadedLines} Zeilen geladen aus {fileName} ({sizeText}) - {modeLabel}";
+    }
+
+    private void UpdateWarning(string mode)
+    {
+        BorderLogWarning.Visibility = Visibility.Collapsed;
+
+        if (mode == "entireFile")
+        {
+            var size = _devTools.GetCurrentLogFileSize();
+            if (size > LargeFileWarningThresholdBytes)
+            {
+                TxtLogWarning.Text = $"⚠ Komplettes Logfile ist {FormatBytes(size)} groß — UI kann beim Wechsel kurz blockieren.";
+                BorderLogWarning.Visibility = Visibility.Visible;
+            }
+        }
+        else if (mode == "previousSession")
+        {
+            var content = TxtLogContent.Text;
+            if (content.StartsWith("(Keine vorherige Session"))
+            {
+                TxtLogWarning.Text = "⚠ Keine vorherige Session gefunden — App wurde noch nicht zweimal gestartet, oder Logs sind älter als die letzten 2 Tage.";
+                BorderLogWarning.Visibility = Visibility.Visible;
+            }
+        }
+    }
+
+    private static string FormatBytes(long bytes)
+    {
+        if (bytes <= 0) return "0 B";
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+        return $"{bytes / 1024.0 / 1024.0:F1} MB";
+    }
+
+    private static int ClampLineCount(int value)
+    {
+        if (value < 10) return 10;
+        if (value > 10000) return 10000;
+        return value;
+    }
+
+    private static bool IsLineCountInRange(int value) => value >= 10 && value <= 10000;
+
+    private void OnLogFilterChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isInitializing) return;
+        if (CmbLogFilter.SelectedItem is not ComboBoxItem item) return;
+
+        var tag = item.Tag?.ToString() ?? "last200Lines";
+        string mode;
+        int sessionNumber = 0;
+
+        if (tag.StartsWith("session:"))
+        {
+            mode = "specificSession";
+            int.TryParse(tag.AsSpan("session:".Length), out sessionNumber);
+        }
+        else
+        {
+            mode = tag;
+        }
+
+        UpdateCustomLineCountVisibility(mode);
+        SaveFilterSettings(mode, GetCurrentLineCountFromInput(), sessionNumber);
+        LoadLog();
+    }
+
+    private void OnCustomLineCountChanged(object sender, RoutedEventArgs e)
+    {
+        if (_isInitializing) return;
+        ApplyCustomLineCount();
+    }
+
+    private void OnCustomLineCountKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter && !_isInitializing)
+        {
+            ApplyCustomLineCount();
+        }
+    }
+
+    private void ApplyCustomLineCount()
+    {
+        var current = GetCurrentFilter();
+        if (!int.TryParse(TxtCustomLineCount.Text, out var parsed))
+        {
+            BpmInfoDialog.ShowWarning("Bitte eine ganze Zahl eingeben.", "Ungueltige Eingabe");
+            TxtCustomLineCount.Text = current.lineCount.ToString();
+            return;
+        }
+        if (!IsLineCountInRange(parsed))
+        {
+            BpmInfoDialog.ShowWarning(
+                $"Werte zwischen 10 und 10000 erlaubt. Eingegeben: {parsed}",
+                "Ungueltiger Wert");
+            TxtCustomLineCount.Text = current.lineCount.ToString();
+            return;
+        }
+        SaveFilterSettings(GetCurrentMode(), parsed, current.selectedSession);
+        LoadLog();
+    }
+
+    private int GetCurrentLineCountFromInput()
+    {
+        if (int.TryParse(TxtCustomLineCount.Text, out var parsed))
+            return ClampLineCount(parsed);
+        return 200;
+    }
+
+    private string GetCurrentMode()
+    {
+        if (CmbLogFilter.SelectedItem is ComboBoxItem item && item.Tag is string tag)
+        {
+            return tag.StartsWith("session:") ? "specificSession" : tag;
+        }
+        return "last200Lines";
+    }
+
+    private void SaveFilterSettings(string mode, int lineCount, int sessionNumber)
+    {
+        if (_settingsService is null) return;
+
+        try
+        {
+            var device = _settingsService.LoadDevice();
+            device.DevTools ??= new DevToolsSettings();
+            device.DevTools.LogFilter ??= new LogFilterSettings();
+            device.DevTools.LogFilter.Mode = mode;
+            device.DevTools.LogFilter.CustomLineCount = lineCount;
+            device.DevTools.LogFilter.SelectedSessionNumber = sessionNumber;
+            _settingsService.SaveDevice(device);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning("DevTools: LogFilter-Settings speichern fehlgeschlagen: {Error}", ex.Message);
+        }
     }
 
     private void OnSelectReset(object sender, MouseButtonEventArgs e)
@@ -188,8 +517,8 @@ public partial class DevToolsDialog : Window
 
     private void OnCopyLog(object sender, RoutedEventArgs e)
     {
-        Clipboard.SetText(TxtLogContent.Text);
-        MessageBox.Show("Log in Zwischenablage kopiert.", "Kopiert", MessageBoxButton.OK, MessageBoxImage.Information);
+        Clipboard.SetText(_lastLogContent);
+        BpmInfoDialog.ShowInfo("Log in Zwischenablage kopiert.", "Kopiert");
     }
 
     private void OnOpenLogs(object sender, RoutedEventArgs e) => _devTools.OpenLogDirectory();

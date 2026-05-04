@@ -396,18 +396,13 @@
                                Style="{StaticResource BpmHeading3}"
                                Margin="0,16,0,8"/>
 
-                    <Border Grid.Row="3"
-                            Background="{StaticResource BpmBgElevated}"
-                            BorderBrush="{StaticResource BpmBorderDefault}"
-                            BorderThickness="1" CornerRadius="4"
-                            Margin="0,0,0,12">
-                        <StackPanel>
+                    <StackPanel Grid.Row="3" Margin="0,0,0,12">
                             <TextBlock x:Name="TxtInventoryStatus"
                                        Style="{StaticResource BpmSmallText}"
                                        Foreground="{StaticResource BpmTextSecondary}"
-                                       Margin="12,8,12,4"
+                                       Margin="0,0,0,8"
                                        Text="Inventar wird geladen ..."/>
-                            <ItemsControl x:Name="LstInventory" Margin="0,0,0,8">
+                            <ItemsControl x:Name="LstInventory">
                                 <ItemsControl.GroupStyle>
                                     <GroupStyle>
                                         <GroupStyle.ContainerStyle>
@@ -415,33 +410,44 @@
                                                 <Setter Property="Template">
                                                     <Setter.Value>
                                                         <ControlTemplate TargetType="GroupItem">
-                                                            <StackPanel>
-                                                                <ToggleButton x:Name="ToggleHeader"
-                                                                              IsChecked="True"
-                                                                              Background="{DynamicResource BpmBgSurface}"
-                                                                              BorderBrush="{DynamicResource BpmBorderSubtle}"
-                                                                              BorderThickness="0,0,0,1"
-                                                                              Padding="8,6"
-                                                                              HorizontalContentAlignment="Stretch"
-                                                                              Cursor="Hand">
-                                                                    <ToggleButton.Template>
-                                                                        <ControlTemplate TargetType="ToggleButton">
-                                                                            <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
-                                                                                <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
-                                                                            </Border>
-                                                                        </ControlTemplate>
-                                                                    </ToggleButton.Template>
-                                                                    <DockPanel LastChildFill="True">
-                                                                        <TextBlock x:Name="Chevron" DockPanel.Dock="Left" Text="▾" Foreground="{DynamicResource BpmTextSecondary}" FontSize="11" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                                        <CheckBox DockPanel.Dock="Left" IsThreeState="False" Click="OnGroupCheckClicked" Tag="{Binding Name}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                                                        <TextBlock DockPanel.Dock="Left" Text="{Binding Name}" Foreground="{DynamicResource BpmAccentPrimary}" FontWeight="Bold" FontSize="13" VerticalAlignment="Center"/>
-                                                                        <TextBlock Foreground="{DynamicResource BpmTextSecondary}" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0">
-                                                                            <Run Text="("/><Run Text="{Binding ItemCount, Mode=OneWay}"/><Run Text=" Eintraege)"/>
-                                                                        </TextBlock>
-                                                                    </DockPanel>
-                                                                </ToggleButton>
-                                                                <ItemsPresenter x:Name="ItemsHost"/>
-                                                            </StackPanel>
+                                                            <Border Background="{DynamicResource BpmBgElevated}"
+                                                                    BorderBrush="{DynamicResource BpmBorderDefault}"
+                                                                    BorderThickness="1"
+                                                                    CornerRadius="4"
+                                                                    Margin="0,0,0,10">
+                                                                <StackPanel>
+                                                                    <ToggleButton x:Name="ToggleHeader"
+                                                                                  IsChecked="True"
+                                                                                  Background="Transparent"
+                                                                                  BorderBrush="{DynamicResource BpmBorderSubtle}"
+                                                                                  BorderThickness="0,0,0,1"
+                                                                                  Padding="10,8"
+                                                                                  HorizontalContentAlignment="Stretch"
+                                                                                  Cursor="Hand">
+                                                                        <ToggleButton.Template>
+                                                                            <ControlTemplate TargetType="ToggleButton">
+                                                                                <Border x:Name="HeaderBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
+                                                                                    <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+                                                                                </Border>
+                                                                                <ControlTemplate.Triggers>
+                                                                                    <Trigger Property="IsChecked" Value="False">
+                                                                                        <Setter TargetName="HeaderBorder" Property="BorderThickness" Value="0"/>
+                                                                                    </Trigger>
+                                                                                </ControlTemplate.Triggers>
+                                                                            </ControlTemplate>
+                                                                        </ToggleButton.Template>
+                                                                        <DockPanel LastChildFill="True">
+                                                                            <TextBlock x:Name="Chevron" DockPanel.Dock="Left" Text="▾" Foreground="{DynamicResource BpmTextSecondary}" FontSize="11" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                                                            <CheckBox DockPanel.Dock="Left" IsThreeState="False" Click="OnGroupCheckClicked" Tag="{Binding Name}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                                            <TextBlock DockPanel.Dock="Left" Text="{Binding Name}" Foreground="{DynamicResource BpmAccentPrimary}" FontWeight="Bold" FontSize="13" VerticalAlignment="Center"/>
+                                                                            <TextBlock Foreground="{DynamicResource BpmTextSecondary}" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0">
+                                                                                <Run Text="("/><Run Text="{Binding ItemCount, Mode=OneWay}"/><Run Text=" Eintraege)"/>
+                                                                            </TextBlock>
+                                                                        </DockPanel>
+                                                                    </ToggleButton>
+                                                                    <ItemsPresenter x:Name="ItemsHost" Margin="0,4,0,8"/>
+                                                                </StackPanel>
+                                                            </Border>
                                                             <ControlTemplate.Triggers>
                                                                 <Trigger SourceName="ToggleHeader" Property="IsChecked" Value="False">
                                                                     <Setter TargetName="ItemsHost" Property="Visibility" Value="Collapsed"/>
@@ -487,8 +493,7 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                        </StackPanel>
-                    </Border>
+                    </StackPanel>
 
                     <!-- Warnung -->
                     <Border Grid.Row="4"

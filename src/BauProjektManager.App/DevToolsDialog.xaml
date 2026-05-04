@@ -408,9 +408,53 @@
                                        Margin="12,8,12,4"
                                        Text="Inventar wird geladen ..."/>
                             <ItemsControl x:Name="LstInventory" Margin="0,0,0,8">
+                                <ItemsControl.GroupStyle>
+                                    <GroupStyle>
+                                        <GroupStyle.ContainerStyle>
+                                            <Style TargetType="GroupItem">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="GroupItem">
+                                                            <Expander IsExpanded="True"
+                                                                      Background="Transparent"
+                                                                      Foreground="{DynamicResource BpmTextBright}"
+                                                                      BorderBrush="{DynamicResource BpmBorderSubtle}"
+                                                                      BorderThickness="0,0,0,1"
+                                                                      Margin="0,4,0,0">
+                                                                <Expander.Header>
+                                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                        <CheckBox IsThreeState="False"
+                                                                                  Click="OnGroupCheckClicked"
+                                                                                  Tag="{Binding Name}"
+                                                                                  VerticalAlignment="Center"
+                                                                                  Margin="4,0,8,0"/>
+                                                                        <TextBlock Text="{Binding Name}"
+                                                                                   Foreground="{DynamicResource BpmAccentPrimary}"
+                                                                                   FontWeight="Bold"
+                                                                                   FontSize="11"
+                                                                                   VerticalAlignment="Center"/>
+                                                                        <TextBlock Foreground="{DynamicResource BpmTextSecondary}"
+                                                                                   FontSize="10"
+                                                                                   VerticalAlignment="Center"
+                                                                                   Margin="6,0,0,0">
+                                                                            <Run Text="("/>
+                                                                            <Run Text="{Binding ItemCount, Mode=OneWay}"/>
+                                                                            <Run Text=" Eintraege)"/>
+                                                                        </TextBlock>
+                                                                    </StackPanel>
+                                                                </Expander.Header>
+                                                                <ItemsPresenter/>
+                                                            </Expander>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </GroupStyle.ContainerStyle>
+                                    </GroupStyle>
+                                </ItemsControl.GroupStyle>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Grid Margin="12,4,12,4">
+                                        <Grid Margin="24,4,12,4">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="*"/>

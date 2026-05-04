@@ -63,6 +63,7 @@ public partial class DevToolsDialog : Window
 
     /// <summary>
     /// BPM-104.04: Laedt Persistenz-Inventar fuer Detail-Auswahl im Reset-Tab.
+    /// Gruppiert per CollectionViewSource nach Type (Database/Config/Log/...).
     /// </summary>
     private void LoadInventory()
     {
@@ -84,14 +85,46 @@ public partial class DevToolsDialog : Window
             {
                 DisplayName = entry.DisplayName,
                 AbsolutePath = entry.AbsolutePath,
-                Type = entry.Type.ToString(),
+                Type = MapTypeLabel(entry.Type),
                 Scope = entry.Scope.ToString(),
                 IsSelected = false
             });
         }
 
-        LstInventory.ItemsSource = _inventoryItems;
-        TxtInventoryStatus.Text = $"{entries.Count} Eintraege gefunden — Files mit Checkbox auswaehlen, dann 'Ausgewaehlte loeschen' rechts unten.";
+        // Gruppierung nach Type-Label
+        var view = new System.Windows.Data.CollectionViewSource { Source = _inventoryItems };
+        view.GroupDescriptions.Add(new System.Windows.Data.PropertyGroupDescription("Type"));
+        LstInventory.ItemsSource = view.View;
+
+        TxtInventoryStatus.Text = $"{entries.Count} Eintraege gefunden, gruppiert nach Typ. Group-Checkbox markiert/entmarkiert alle Items in der Gruppe.";
+    }
+
+    /// <summary>
+    /// Mappt PersistenceType auf benutzerfreundlichen Gruppen-Header.
+    /// </summary>
+    private static string MapTypeLabel(BauProjektManager.Domain.Enums.PersistenceType type) => type switch
+    {
+        BauProjektManager.Domain.Enums.PersistenceType.Database    => "Datenbanken",
+        BauProjektManager.Domain.Enums.PersistenceType.Config      => "Konfiguration",
+        BauProjektManager.Domain.Enums.PersistenceType.Log         => "Logs",
+        BauProjektManager.Domain.Enums.PersistenceType.ProjectData => "Projekt-Daten",
+        BauProjektManager.Domain.Enums.PersistenceType.Cache       => "Cache",
+        _                                                          => "Sonstige"
+    };
+
+    /// <summary>
+    /// BPM-104.04: Group-Checkbox toggelt alle Items in der Gruppe an/aus.
+    /// </summary>
+    private void OnGroupCheckClicked(object sender, RoutedEventArgs e)
+    {
+        if (sender is not CheckBox cb) return;
+        if (cb.Tag is not string groupName) return;
+
+        var newState = cb.IsChecked == true;
+        foreach (var item in _inventoryItems.Where(i => i.Type == groupName))
+        {
+            item.IsSelected = newState;
+        }
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)

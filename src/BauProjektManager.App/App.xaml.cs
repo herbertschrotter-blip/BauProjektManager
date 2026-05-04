@@ -129,6 +129,7 @@ public partial class App : Application
         sc.AddSingleton<IUserContext>(sp => new LocalUserContext(sp.GetRequiredService<AppSettings>()));
         sc.AddSingleton<IDeviceContext>(sp => new LocalDeviceContext(sp.GetRequiredService<DeviceSettings>()));
         sc.AddSingleton<IDialogService, BpmDialogService>();
+        sc.AddSingleton<IPersistenceRegistry, PersistenceRegistry>();
         sc.AddSingleton<ProjectDatabase>();
         sc.AddSingleton<IProfileManager, ProfileManager>();
 

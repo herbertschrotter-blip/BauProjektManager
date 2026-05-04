@@ -576,10 +576,43 @@ public partial class DevToolsDialog : Window
         PersistFilterSettingsIfChanged();
     }
 
-    private void OnSelectReset(object sender, MouseButtonEventArgs e)
+    /// <summary>
+    /// BPM-104.04 Polish: Quick-Reset-Card-Klick markiert Items im Detail-Inventar
+    /// (statt direkter Reset-Aktion). Loeschen erfolgt einheitlich ueber Bulk-Delete-Button.
+    /// </summary>
+    private void OnQuickSelect(object sender, MouseButtonEventArgs e)
     {
         if (sender is not System.Windows.Controls.Border border) return;
         var tag = border.Tag?.ToString() ?? "DbOnly";
+
+        // Erst alle deselect, dann je nach Tag selektieren
+        foreach (var item in _inventoryItems) item.IsSelected = false;
+
+        switch (tag)
+        {
+            case "DbOnly":
+                foreach (var i in _inventoryItems.Where(x => x.Type == "Datenbanken")) i.IsSelected = true;
+                break;
+            case "SettingsOnly":
+                foreach (var i in _inventoryItems.Where(x => x.Type == "Konfiguration"
+                                                            && x.AbsolutePath.EndsWith("device-settings.json", StringComparison.OrdinalIgnoreCase)))
+                    i.IsSelected = true;
+                break;
+            case "Logs":
+                foreach (var i in _inventoryItems.Where(x => x.Type == "Logs")) i.IsSelected = true;
+                break;
+            case "All":
+                foreach (var i in _inventoryItems) i.IsSelected = true;
+                break;
+            case "FirstRun":
+                // Spezial: kein File-Loesch — markiert nichts, FirstRun-Reset ist Toggle (nicht Delete).
+                MessageBox.Show(
+                    "Ersteinrichtung-Reset setzt nur isFirstRun=true in device-settings.json.\n\nKein Datei-Löschen — wähle den Eintrag manuell aus oder nutze einen anderen Quick-Reset.",
+                    "FirstRun ist ein Toggle",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+        }
+
         SelectReset(tag);
     }
 
@@ -604,10 +637,10 @@ public partial class DevToolsDialog : Window
                 ? FindResource("BpmAccentPrimary") as System.Windows.Media.Brush
                 : FindResource("BpmTextSecondary") as System.Windows.Media.Brush;
         }
-
-        BtnReset.Content = _resetLabels[tag];
     }
 
+    // Hinweis (BPM-104.04 Polish, v0.28.22): OnReset wird nicht mehr aus dem UI aufgerufen
+    // (BtnReset entfernt). Methode bleibt nur als Fallback fuer kuenftige Quick-Action-Buttons.
     private void OnReset(object sender, RoutedEventArgs e)
     {
         var db = _devTools.DatabasePath;
@@ -662,6 +695,8 @@ public partial class DevToolsDialog : Window
 
     /// <summary>
     /// BPM-104.04: Bulk-Delete der ausgewaehlten Inventar-Eintraege.
+    /// Wenn bpm.db oder device-settings.json in Auswahl: nutzt RequestXxxReset (mit Restart),
+    /// sonst direktes DeleteFiles ohne Restart.
     /// </summary>
     private void OnBulkDelete(object sender, RoutedEventArgs e)
     {
@@ -673,18 +708,42 @@ public partial class DevToolsDialog : Window
         }
 
         var paths = selected.Select(s => s.AbsolutePath).ToList();
+        bool hasDb = paths.Any(p => p.EndsWith("bpm.db", StringComparison.OrdinalIgnoreCase));
+        bool hasSettings = paths.Any(p => p.EndsWith("device-settings.json", StringComparison.OrdinalIgnoreCase));
+
+        string warning = (hasDb || hasSettings)
+            ? "\n\n⚠ Auswahl enthaelt aktive App-Dateien (DB / Settings) — App wird nach Loeschung neu gestartet."
+            : "\n\nKein Restart noetig.";
         var msg = $"Folgende {selected.Count} Files werden gelöscht:\n\n" +
                   string.Join("\n", paths.Take(10)) +
                   (paths.Count > 10 ? $"\n... und {paths.Count - 10} weitere" : "") +
-                  "\n\nUnwiderruflich. Fortfahren?";
+                  warning + "\n\nUnwiderruflich. Fortfahren?";
 
         var result = MessageBox.Show(msg, "Bulk-Delete bestätigen", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
         if (result != MessageBoxResult.OK) return;
 
+        Action shutdown = () => System.Windows.Application.Current.Shutdown();
+
+        if (hasDb && hasSettings)
+        {
+            _devTools.RequestFullReset(shutdown);
+            return;
+        }
+        if (hasDb)
+        {
+            _devTools.RequestDatabaseReset(shutdown);
+            return;
+        }
+        if (hasSettings)
+        {
+            _devTools.RequestSettingsReset(shutdown);
+            return;
+        }
+
+        // Sonst: direkter Delete ohne Restart (Logs, shared-config, etc.)
         var deleted = _devTools.DeleteFiles(paths);
         MessageBox.Show($"{deleted} von {paths.Count} Files gelöscht.", "Bulk-Delete fertig", MessageBoxButton.OK, MessageBoxImage.Information);
 
-        // Inventar refreshen + bei nicht-existierenden Entries entfernen
         foreach (var path in paths)
         {
             if (!System.IO.File.Exists(path))

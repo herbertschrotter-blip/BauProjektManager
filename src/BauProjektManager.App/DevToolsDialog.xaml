@@ -76,14 +76,14 @@
                                 <TextBlock Grid.Row="10" Grid.Column="0" Text="Einstellungen" Style="{StaticResource BpmLabel}" Padding="12,8" Background="{StaticResource BpmBgSurface}"/>
                                 <TextBlock Grid.Row="10" Grid.Column="1" x:Name="TxtSettingsPath" Style="{StaticResource BpmSmallText}" Padding="12,8" FontFamily="Consolas" Foreground="{StaticResource BpmAccentPrimary}" Background="{StaticResource BpmBgSurface}" TextWrapping="Wrap"/>
                                 <StackPanel Grid.Row="10" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Background="{StaticResource BpmBgSurface}" Margin="4,0,8,0">
-                                    <Button Content="📁" Style="{StaticResource BpmButtonGhost}" Padding="6,2" MinWidth="0" ToolTip="Ordner oeffnen" Click="OnPathOpenFolder" Tag="{Binding Text, ElementName=TxtSettingsPath}"/>
-                                    <Button Content="📄" Style="{StaticResource BpmButtonGhost}" Padding="6,2" MinWidth="0" Margin="2,0,0,0" ToolTip="Mit Standard-App oeffnen" Click="OnPathOpenWithDefault" Tag="{Binding Text, ElementName=TxtSettingsPath}"/>
-                                    <Button Content="🎯" Style="{StaticResource BpmButtonGhost}" Padding="6,2" MinWidth="0" Margin="2,0,0,0" ToolTip="Im Explorer markieren" Click="OnPathRevealInExplorer" Tag="{Binding Text, ElementName=TxtSettingsPath}"/>
+                                    <Button Content="📁" FontSize="14" Background="{StaticResource BpmBgInput}" BorderBrush="{StaticResource BpmBorderDefault}" BorderThickness="1" Padding="6,3" MinWidth="32" ToolTip="Ordner oeffnen" Click="OnPathOpenFolder" Tag="{Binding Text, ElementName=TxtSettingsPath}"/>
+                                    <Button Content="📄" FontSize="14" Background="{StaticResource BpmBgInput}" BorderBrush="{StaticResource BpmBorderDefault}" BorderThickness="1" Padding="6,3" MinWidth="32" Margin="3,0,0,0" ToolTip="Mit Standard-App oeffnen" Click="OnPathOpenWithDefault" Tag="{Binding Text, ElementName=TxtSettingsPath}"/>
+                                    <Button Content="🎯" FontSize="14" Background="{StaticResource BpmBgInput}" BorderBrush="{StaticResource BpmBorderDefault}" BorderThickness="1" Padding="6,3" MinWidth="32" Margin="3,0,0,0" ToolTip="Im Explorer markieren" Click="OnPathRevealInExplorer" Tag="{Binding Text, ElementName=TxtSettingsPath}"/>
                                 </StackPanel>
                                 <TextBlock Grid.Row="11" Grid.Column="0" Text="Log-Verzeichnis" Style="{StaticResource BpmLabel}" Padding="12,8"/>
                                 <TextBlock Grid.Row="11" Grid.Column="1" x:Name="TxtLogPath" Style="{StaticResource BpmSmallText}" Padding="12,8" FontFamily="Consolas" Foreground="{StaticResource BpmAccentPrimary}" TextWrapping="Wrap"/>
                                 <StackPanel Grid.Row="11" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="4,0,8,0">
-                                    <Button Content="📁" Style="{StaticResource BpmButtonGhost}" Padding="6,2" MinWidth="0" ToolTip="Ordner oeffnen" Click="OnPathOpenFolder" Tag="{Binding Text, ElementName=TxtLogPath}"/>
+                                    <Button Content="📁" FontSize="14" Background="{StaticResource BpmBgInput}" BorderBrush="{StaticResource BpmBorderDefault}" BorderThickness="1" Padding="6,3" MinWidth="32" ToolTip="Ordner oeffnen" Click="OnPathOpenFolder" Tag="{Binding Text, ElementName=TxtLogPath}"/>
                                 </StackPanel>
                             </Grid>
                         </ScrollViewer>
@@ -209,20 +209,24 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0"
-                               Text="Quick-Resets"
-                               Style="{StaticResource BpmHeading3}"
-                               Margin="0,0,0,12"/>
+                    <StackPanel Grid.Row="0" Margin="0,0,0,8">
+                        <TextBlock Text="Quick-Resets"
+                                   Style="{StaticResource BpmHeading3}"/>
+                        <TextBlock Text="Klick markiert die zugehoerigen Eintraege im Persistenz-Inventar unten. Loeschen via 'Ausgewaehlte loeschen'."
+                                   Style="{StaticResource BpmSmallText}"
+                                   Foreground="{StaticResource BpmTextSecondary}"
+                                   Margin="0,4,0,0"/>
+                    </StackPanel>
 
-                    <StackPanel Grid.Row="1">
+                    <WrapPanel Grid.Row="1" Margin="0,0,0,12">
 
                         <!-- Option 1: Nur Ersteinrichtung — GRÜN -->
                         <Border x:Name="BorderFirstRun"
                                 Background="{StaticResource BpmBgElevated}"
                                 BorderBrush="{StaticResource BpmAccentPrimary}"
                                 BorderThickness="1" CornerRadius="4"
-                                Padding="14,12" Margin="0,0,0,10"
-                                Cursor="Hand" MouseLeftButtonDown="OnSelectReset" Tag="FirstRun">
+                                Padding="14,12" Margin="0,0,8,8" MinWidth="280" MaxWidth="380"
+                                Cursor="Hand" MouseLeftButtonDown="OnQuickSelect" Tag="FirstRun">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="20"/>
@@ -256,8 +260,8 @@
                                 Background="{StaticResource BpmBgElevated}"
                                 BorderBrush="{StaticResource BpmBorderDefault}"
                                 BorderThickness="1" CornerRadius="4"
-                                Padding="14,12" Margin="0,0,0,10"
-                                Cursor="Hand" MouseLeftButtonDown="OnSelectReset" Tag="DbOnly">
+                                Padding="14,12" Margin="0,0,8,8" MinWidth="280" MaxWidth="380"
+                                Cursor="Hand" MouseLeftButtonDown="OnQuickSelect" Tag="DbOnly">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="20"/>
@@ -293,8 +297,8 @@
                                 Background="{StaticResource BpmBgElevated}"
                                 BorderBrush="{StaticResource BpmBorderDefault}"
                                 BorderThickness="1" CornerRadius="4"
-                                Padding="14,12" Margin="0,0,0,10"
-                                Cursor="Hand" MouseLeftButtonDown="OnSelectReset" Tag="SettingsOnly">
+                                Padding="14,12" Margin="0,0,8,8" MinWidth="280" MaxWidth="380"
+                                Cursor="Hand" MouseLeftButtonDown="OnQuickSelect" Tag="SettingsOnly">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="20"/>
@@ -330,8 +334,8 @@
                                 Background="{StaticResource BpmBgElevated}"
                                 BorderBrush="{StaticResource BpmBorderDefault}"
                                 BorderThickness="1" CornerRadius="4"
-                                Padding="14,12" Margin="0,0,0,10"
-                                Cursor="Hand" MouseLeftButtonDown="OnSelectReset" Tag="All">
+                                Padding="14,12" Margin="0,0,8,8" MinWidth="280" MaxWidth="380"
+                                Cursor="Hand" MouseLeftButtonDown="OnQuickSelect" Tag="All">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="20"/>
@@ -366,8 +370,8 @@
                                 Background="{StaticResource BpmBgElevated}"
                                 BorderBrush="{StaticResource BpmBorderDefault}"
                                 BorderThickness="1" CornerRadius="4"
-                                Padding="14,12" Margin="0,0,0,10"
-                                Cursor="Hand" MouseLeftButtonDown="OnSelectReset" Tag="Logs">
+                                Padding="14,12" Margin="0,0,8,8" MinWidth="280" MaxWidth="380"
+                                Cursor="Hand" MouseLeftButtonDown="OnQuickSelect" Tag="Logs">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="20"/>
@@ -388,7 +392,7 @@
                             </Grid>
                         </Border>
 
-                    </StackPanel>
+                    </WrapPanel>
 
                     <!-- Detail-Auswahl: Persistenz-Inventar (BPM-104.04) -->
                     <TextBlock Grid.Row="2"
@@ -485,9 +489,9 @@
                                                 <TextBlock Text="{Binding ModifiedText}" Foreground="{DynamicResource BpmTextSecondary}" FontSize="9" HorizontalAlignment="Right"/>
                                             </StackPanel>
                                             <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
-                                                <Button Content="📁" Background="Transparent" BorderThickness="0" Padding="4,2" MinWidth="0" Cursor="Hand" ToolTip="Ordner oeffnen" Click="OnPathOpenFolder" Tag="{Binding AbsolutePath}"/>
-                                                <Button Content="📄" Background="Transparent" BorderThickness="0" Padding="4,2" MinWidth="0" Margin="2,0,0,0" Cursor="Hand" ToolTip="Mit Standard-App oeffnen" Click="OnPathOpenWithDefault" Tag="{Binding AbsolutePath}"/>
-                                                <Button Content="🎯" Background="Transparent" BorderThickness="0" Padding="4,2" MinWidth="0" Margin="2,0,0,0" Cursor="Hand" ToolTip="Im Explorer markieren" Click="OnPathRevealInExplorer" Tag="{Binding AbsolutePath}"/>
+                                                <Button Content="📁" FontSize="14" Background="{DynamicResource BpmBgInput}" BorderBrush="{DynamicResource BpmBorderDefault}" BorderThickness="1" Padding="6,3" MinWidth="32" Cursor="Hand" ToolTip="Ordner oeffnen" Click="OnPathOpenFolder" Tag="{Binding AbsolutePath}"/>
+                                                <Button Content="📄" FontSize="14" Background="{DynamicResource BpmBgInput}" BorderBrush="{DynamicResource BpmBorderDefault}" BorderThickness="1" Padding="6,3" MinWidth="32" Margin="3,0,0,0" Cursor="Hand" ToolTip="Mit Standard-App oeffnen" Click="OnPathOpenWithDefault" Tag="{Binding AbsolutePath}"/>
+                                                <Button Content="🎯" FontSize="14" Background="{DynamicResource BpmBgInput}" BorderBrush="{DynamicResource BpmBorderDefault}" BorderThickness="1" Padding="6,3" MinWidth="32" Margin="3,0,0,0" Cursor="Hand" ToolTip="Im Explorer markieren" Click="OnPathRevealInExplorer" Tag="{Binding AbsolutePath}"/>
                                             </StackPanel>
                                         </Grid>
                                     </DataTemplate>
@@ -508,12 +512,6 @@
                                 <Run Text="{StaticResource IconStatusWarning}"/><Run Text="  Quick-Reset (oben): App wird nach Aktion neu gestartet. Detail-Bulk-Reset (unten): geloeschte Files gehen unwiderruflich verloren."/>
                             </TextBlock>
                             <StackPanel Orientation="Horizontal">
-                                <Button x:Name="BtnReset"
-                                        Style="{StaticResource BpmButtonDanger}"
-                                        Click="OnReset"
-                                        Margin="0,0,8,0">
-                                    <Button.Content><TextBlock><Run Text="{StaticResource IconActionDelete}"/><Run Text=" Quick-Reset ausfuehren"/></TextBlock></Button.Content>
-                                </Button>
                                 <Button x:Name="BtnBulkDelete"
                                         Style="{StaticResource BpmButtonDanger}"
                                         Click="OnBulkDelete">

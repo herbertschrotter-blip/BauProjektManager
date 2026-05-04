@@ -81,12 +81,18 @@ public partial class DevToolsDialog : Window
         var entries = _persistenceRegistry.GetAll();
         foreach (var entry in entries)
         {
+            var (sizeText, modText) = ReadFileMeta(entry.AbsolutePath);
+            var (scopeLabel, scopeColor) = MapScope(entry.Scope);
             _inventoryItems.Add(new InventoryItemViewModel
             {
                 DisplayName = entry.DisplayName,
                 AbsolutePath = entry.AbsolutePath,
                 Type = MapTypeLabel(entry.Type),
                 Scope = entry.Scope.ToString(),
+                ScopeLabel = scopeLabel,
+                ScopeColor = scopeColor,
+                SizeText = sizeText,
+                ModifiedText = modText,
                 IsSelected = false
             });
         }
@@ -111,6 +117,31 @@ public partial class DevToolsDialog : Window
         BauProjektManager.Domain.Enums.PersistenceType.Cache       => "Cache",
         _                                                          => "Sonstige"
     };
+
+    private static (string label, string color) MapScope(BauProjektManager.Domain.Enums.PersistenceScope scope) => scope switch
+    {
+        BauProjektManager.Domain.Enums.PersistenceScope.Local        => ("LOKAL",   "#37373D"),
+        BauProjektManager.Domain.Enums.PersistenceScope.CloudShared  => ("CLOUD",   "#04395E"),
+        BauProjektManager.Domain.Enums.PersistenceScope.ProjectLocal => ("PROJEKT", "#0F6E56"),
+        _                                                             => ("?",       "#37373D")
+    };
+
+    private static (string size, string modified) ReadFileMeta(string path)
+    {
+        try
+        {
+            if (!System.IO.File.Exists(path)) return ("(fehlt)", "");
+            var fi = new System.IO.FileInfo(path);
+            string size = fi.Length switch
+            {
+                < 1024            => $"{fi.Length} B",
+                < 1024 * 1024     => $"{fi.Length / 1024.0:F1} KB",
+                _                 => $"{fi.Length / 1024.0 / 1024.0:F1} MB"
+            };
+            return (size, fi.LastWriteTime.ToString("dd.MM. HH:mm"));
+        }
+        catch { return ("?", ""); }
+    }
 
     /// <summary>
     /// BPM-104.04: Group-Checkbox toggelt alle Items in der Gruppe an/aus.
@@ -725,6 +756,7 @@ public partial class DevToolsDialog : Window
 
 /// <summary>
 /// BPM-104.04: ViewModel fuer Detail-Auswahl im Reset-Tab Inventar-Liste.
+/// Zeigt: Display-Name + Scope-Badge + Pfad + Groesse + Datum + Aktions-Buttons.
 /// </summary>
 public sealed class InventoryItemViewModel : System.ComponentModel.INotifyPropertyChanged
 {
@@ -733,6 +765,10 @@ public sealed class InventoryItemViewModel : System.ComponentModel.INotifyProper
     public string AbsolutePath { get; set; } = "";
     public string Type { get; set; } = "";
     public string Scope { get; set; } = "";
+    public string ScopeLabel { get; set; } = "";
+    public string ScopeColor { get; set; } = "#37373D";
+    public string SizeText { get; set; } = "";
+    public string ModifiedText { get; set; } = "";
     public bool IsSelected
     {
         get => _isSelected;

@@ -20,7 +20,7 @@ public class ProjectDatabase : IDisposable
     private readonly IDeviceContext _deviceContext;
     private SqliteConnection? _connection;
 
-    public ProjectDatabase(IIdGenerator idGenerator, IUserContext userContext, IDeviceContext deviceContext)
+    public ProjectDatabase(IIdGenerator idGenerator, IUserContext userContext, IDeviceContext deviceContext, IPersistenceRegistry? persistenceRegistry = null)
     {
         _idGenerator = idGenerator;
         _userContext = userContext;
@@ -30,6 +30,14 @@ public class ProjectDatabase : IDisposable
             "BauProjektManager");
         Directory.CreateDirectory(appData);
         _dbPath = Path.Combine(appData, "bpm.db");
+
+        // BPM-104.02: bei IPersistenceRegistry registrieren (optional fuer Tests)
+        persistenceRegistry?.Register(new PersistenceEntry(
+            DisplayName: "Hauptdatenbank",
+            AbsolutePath: _dbPath,
+            Type: PersistenceType.Database,
+            Scope: PersistenceScope.Local,
+            Description: "SQLite, alle Projekte + Clients + Schema v2.1 Sync"));
     }
 
     private SqliteConnection GetConnection()

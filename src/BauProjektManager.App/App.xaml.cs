@@ -163,11 +163,76 @@ public partial class App : Application
         Services = sc.BuildServiceProvider();
         Log.Information("DI Container aufgebaut — {Count} Services registriert", sc.Count);
 
+        // BPM-104.02: zentrale Persistenz-Registrierung nach DI-Build
+        InitializePersistenceRegistry(settings, logDir);
+
         // --- MainWindow anzeigen ---
         var mainWindow = Services.GetRequiredService<MainWindow>();
         MainWindow = mainWindow;
         ShutdownMode = ShutdownMode.OnMainWindowClose;
         mainWindow.Show();
+    }
+
+    /// <summary>
+    /// BPM-104.02: Registriert beim Start die zentralen Persistenz-Pfade
+    /// (device-settings, bpm.db, aktuelles Log-File, shared-config wenn BasePath gesetzt)
+    /// und triggert einen FS-Scan ueber alle bekannten Patterns.
+    /// </summary>
+    private static void InitializePersistenceRegistry(BauProjektManager.Domain.Models.AppSettings settings, string logDir)
+    {
+        try
+        {
+            var registry = Services.GetRequiredService<IPersistenceRegistry>();
+            var localAppData = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "BauProjektManager");
+
+            // device-settings.json
+            var deviceSettingsPath = Path.Combine(localAppData, "device-settings.json");
+            if (File.Exists(deviceSettingsPath))
+            {
+                registry.Register(new BauProjektManager.Domain.Models.PersistenceEntry(
+                    "device-settings.json", deviceSettingsPath,
+                    BauProjektManager.Domain.Enums.PersistenceType.Config,
+                    BauProjektManager.Domain.Enums.PersistenceScope.Local,
+                    "Geraetespezifische Einstellungen (DeviceId, Pfade, DevTools)"));
+            }
+
+            // Aktuelles Log-File (Serilog rolling daily)
+            var todayLog = Path.Combine(logDir, $"BPM_{DateTime.Now:yyyyMMdd}.log");
+            if (File.Exists(todayLog))
+            {
+                registry.Register(new BauProjektManager.Domain.Models.PersistenceEntry(
+                    Path.GetFileName(todayLog), todayLog,
+                    BauProjektManager.Domain.Enums.PersistenceType.Log,
+                    BauProjektManager.Domain.Enums.PersistenceScope.Local,
+                    "Aktuelles Serilog-Logfile"));
+            }
+
+            // shared-config.json (CloudShared)
+            if (!string.IsNullOrEmpty(settings.BasePath))
+            {
+                var sharedDir = AppSettingsService.GetSharedConfigDir(settings.BasePath);
+                var sharedPath = Path.Combine(sharedDir, "shared-config.json");
+                if (File.Exists(sharedPath))
+                {
+                    registry.Register(new BauProjektManager.Domain.Models.PersistenceEntry(
+                        "shared-config.json", sharedPath,
+                        BauProjektManager.Domain.Enums.PersistenceType.Config,
+                        BauProjektManager.Domain.Enums.PersistenceScope.CloudShared,
+                        "Geteilte Konfiguration (FolderTemplate, Listen, Rollen)"));
+                }
+            }
+
+            // FS-Scan: ergaenzt alle nicht-registrierten Files (Logs, .bpm/, etc.)
+            registry.RescanFilesystem(settings.BasePath, Array.Empty<string>());
+
+            Log.Debug("PersistenceRegistry initialisiert: {Count} Eintraege", registry.GetAll().Count);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning("PersistenceRegistry-Initialisierung fehlgeschlagen: {Error}", ex.Message);
+        }
     }
 
     /// <summary>

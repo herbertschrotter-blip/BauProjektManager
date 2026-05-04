@@ -83,7 +83,7 @@ public partial class DevToolsDialog : Window
         {
             var (sizeText, modText) = ReadFileMeta(entry.AbsolutePath);
             var (scopeLabel, scopeColor) = MapScope(entry.Scope);
-            _inventoryItems.Add(new InventoryItemViewModel
+            var vm = new InventoryItemViewModel
             {
                 DisplayName = entry.DisplayName,
                 AbsolutePath = entry.AbsolutePath,
@@ -94,7 +94,9 @@ public partial class DevToolsDialog : Window
                 SizeText = sizeText,
                 ModifiedText = modText,
                 IsSelected = false
-            });
+            };
+            vm.PropertyChanged += OnInventoryItemPropertyChanged;
+            _inventoryItems.Add(vm);
         }
 
         // Gruppierung nach Type-Label
@@ -103,6 +105,17 @@ public partial class DevToolsDialog : Window
         LstInventory.ItemsSource = view.View;
 
         TxtInventoryStatus.Text = $"{entries.Count} Eintraege gefunden, gruppiert nach Typ. Group-Checkbox markiert/entmarkiert alle Items in der Gruppe.";
+
+        // Gruppe-Checkboxes initial setzen, sobald die ItemsControl-Container realisiert sind
+        Dispatcher.BeginInvoke(new Action(UpdateGroupCheckStates), System.Windows.Threading.DispatcherPriority.Loaded);
+    }
+
+    private void OnInventoryItemPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(InventoryItemViewModel.IsSelected)) return;
+        if (_suppressGroupCheckEvent) return;
+        // Coalesce mehrere Aenderungen in einen Update-Call ueber Dispatcher
+        Dispatcher.BeginInvoke(new Action(UpdateGroupCheckStates), System.Windows.Threading.DispatcherPriority.Background);
     }
 
     /// <summary>
@@ -148,14 +161,18 @@ public partial class DevToolsDialog : Window
     /// </summary>
     private void OnGroupCheckClicked(object sender, RoutedEventArgs e)
     {
+        if (_suppressGroupCheckEvent) return;
         if (sender is not CheckBox cb) return;
         if (cb.Tag is not string groupName) return;
 
+        // ThreeState=true: Click toggelt zwischen unchecked/null/checked.
+        // Bei null (indeterminate) interpretieren wir als "alle aktivieren".
         var newState = cb.IsChecked == true;
         foreach (var item in _inventoryItems.Where(i => i.Type == groupName))
         {
             item.IsSelected = newState;
         }
+        UpdateGroupCheckStates();
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -614,6 +631,55 @@ public partial class DevToolsDialog : Window
         }
 
         SelectReset(tag);
+        UpdateGroupCheckStates();
+    }
+
+    /// <summary>
+    /// BPM-104 Polish: Aktualisiert die Group-Header-Checkboxes per Visual-Tree-Walk.
+    /// Three-State: alle Items selektiert -> true, keines -> false, gemischt -> null (indeterminate).
+    /// Wird aufgerufen nach OnQuickSelect, OnGroupCheckClicked, einzelnen Item-Toggles.
+    /// </summary>
+    private void UpdateGroupCheckStates()
+    {
+        if (LstInventory.Items.Groups == null) return;
+
+        // Snapshot um Reentrancy zu vermeiden, falls BindingEngine zwischendurch Items verschiebt
+        var groups = LstInventory.Items.Groups.OfType<System.Windows.Data.CollectionViewGroup>().ToList();
+        var checkBoxes = FindVisualChildren<System.Windows.Controls.CheckBox>(LstInventory)
+            .Where(cb => cb.Name == "GroupCheck")
+            .ToList();
+
+        foreach (var grp in groups)
+        {
+            var groupName = grp.Name?.ToString() ?? "";
+            var items = grp.Items.OfType<InventoryItemViewModel>().ToList();
+            if (items.Count == 0) continue;
+
+            int selected = items.Count(i => i.IsSelected);
+            bool? state = selected == 0 ? false : (selected == items.Count ? true : (bool?)null);
+
+            var cb = checkBoxes.FirstOrDefault(c => string.Equals(c.Tag?.ToString(), groupName, StringComparison.Ordinal));
+            if (cb != null && cb.IsChecked != state)
+            {
+                _suppressGroupCheckEvent = true;
+                try { cb.IsChecked = state; }
+                finally { _suppressGroupCheckEvent = false; }
+            }
+        }
+    }
+
+    private bool _suppressGroupCheckEvent;
+
+    private static IEnumerable<T> FindVisualChildren<T>(DependencyObject? root) where T : DependencyObject
+    {
+        if (root == null) yield break;
+        int count = System.Windows.Media.VisualTreeHelper.GetChildrenCount(root);
+        for (int i = 0; i < count; i++)
+        {
+            var child = System.Windows.Media.VisualTreeHelper.GetChild(root, i);
+            if (child is T tChild) yield return tChild;
+            foreach (var d in FindVisualChildren<T>(child)) yield return d;
+        }
     }
 
     private void SelectReset(string tag)

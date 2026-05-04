@@ -8,6 +8,51 @@
         Background="{StaticResource BpmBgBase}"
         ResizeMode="CanResize"
         Loaded="OnLoaded">
+    <Window.Resources>
+        <!-- Blue Checkbox (Mockup-Stil): leer = transparent mit grauem Rand, checked = blau mit weissem Haken, indeterminate = blau mit weissem Strich -->
+        <Style x:Key="BpmInventoryCheckBox" TargetType="CheckBox">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Grid>
+                            <Border x:Name="Box" Width="15" Height="15"
+                                    Background="Transparent"
+                                    BorderBrush="{DynamicResource BpmTextSecondary}"
+                                    BorderThickness="1.5"
+                                    CornerRadius="2"
+                                    SnapsToDevicePixels="True"
+                                    UseLayoutRounding="True">
+                                <Path x:Name="Mark"
+                                      Stroke="White" StrokeThickness="2"
+                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                      Data="M 3,7 L 6,11 L 12,4"
+                                      Visibility="Collapsed"
+                                      SnapsToDevicePixels="True"/>
+                            </Border>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Box" Property="Background" Value="{DynamicResource BpmAccentPrimary}"/>
+                                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource BpmAccentPrimary}"/>
+                                <Setter TargetName="Mark" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="{x:Null}">
+                                <Setter TargetName="Box" Property="Background" Value="{DynamicResource BpmAccentPrimary}"/>
+                                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource BpmAccentPrimary}"/>
+                                <Setter TargetName="Mark" Property="Data" Value="M 3,7 L 12,7"/>
+                                <Setter TargetName="Mark" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource BpmAccentPrimary}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -200,7 +245,7 @@
             <!-- TAB 3: RESET -->
             <TabItem><TabItem.Header><TextBlock><Run Text="{StaticResource IconActionDelete}"/><Run Text=" Reset"/></TextBlock></TabItem.Header>
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <Grid Margin="20">
+                <Grid Margin="12">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
@@ -400,7 +445,7 @@
                                                                         </ToggleButton.Template>
                                                                         <DockPanel LastChildFill="True">
                                                                             <TextBlock x:Name="Chevron" DockPanel.Dock="Left" Text="▾" Foreground="{DynamicResource BpmTextSecondary}" FontSize="11" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                                                            <CheckBox DockPanel.Dock="Left" IsThreeState="False" Click="OnGroupCheckClicked" Tag="{Binding Name}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                                            <CheckBox x:Name="GroupCheck" DockPanel.Dock="Left" Style="{StaticResource BpmInventoryCheckBox}" IsThreeState="True" Click="OnGroupCheckClicked" Tag="{Binding Name}" VerticalAlignment="Center" Margin="0,0,10,0"/>
                                                                             <TextBlock DockPanel.Dock="Left" Text="{Binding Name}" Foreground="{DynamicResource BpmAccentPrimary}" FontWeight="Bold" FontSize="13" VerticalAlignment="Center"/>
                                                                             <TextBlock Foreground="{DynamicResource BpmTextSecondary}" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0">
                                                                                 <Run Text="("/><Run Text="{Binding ItemCount, Mode=OneWay}"/><Run Text=" Eintraege)"/>
@@ -428,25 +473,24 @@
                                         <Grid Margin="32,5,12,5">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="72"/>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                            <StackPanel Grid.Column="1">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="{Binding DisplayName}" Foreground="{DynamicResource BpmTextBright}" FontSize="12" VerticalAlignment="Center"/>
-                                                    <Border Background="{Binding ScopeColor}" CornerRadius="8" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
-                                                        <TextBlock Text="{Binding ScopeLabel}" Foreground="{DynamicResource BpmTextBright}" FontSize="9" FontWeight="Bold"/>
-                                                    </Border>
-                                                </StackPanel>
+                                            <CheckBox Grid.Column="0" Style="{StaticResource BpmInventoryCheckBox}" IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                            <Border Grid.Column="1" Background="{Binding ScopeColor}" CornerRadius="8" Padding="0,2" VerticalAlignment="Center" HorizontalAlignment="Left" Width="64">
+                                                <TextBlock Text="{Binding ScopeLabel}" Foreground="{DynamicResource BpmTextBright}" FontSize="9" FontWeight="Bold" HorizontalAlignment="Center" TextAlignment="Center"/>
+                                            </Border>
+                                            <StackPanel Grid.Column="2" Margin="8,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding DisplayName}" Foreground="{DynamicResource BpmTextBright}" FontSize="12" FontWeight="SemiBold"/>
                                                 <TextBlock Text="{Binding AbsolutePath}" FontFamily="Consolas" FontSize="10" Foreground="{DynamicResource BpmTextSecondary}" TextTrimming="CharacterEllipsis"/>
                                             </StackPanel>
-                                            <StackPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="12,0,12,0">
+                                            <StackPanel Grid.Column="3" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="12,0,12,0">
                                                 <TextBlock Text="{Binding SizeText}" Foreground="{DynamicResource BpmTextPrimary}" FontSize="10" HorizontalAlignment="Right"/>
                                                 <TextBlock Text="{Binding ModifiedText}" Foreground="{DynamicResource BpmTextSecondary}" FontSize="9" HorizontalAlignment="Right"/>
                                             </StackPanel>
-                                            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
                                                 <Button Content="📁" FontSize="14" Foreground="{DynamicResource BpmWarning}" Background="{DynamicResource BpmBgInput}" BorderBrush="{DynamicResource BpmBorderDefault}" BorderThickness="1" Padding="6,3" MinWidth="32" Cursor="Hand" ToolTip="Ordner oeffnen" Click="OnPathOpenFolder" Tag="{Binding AbsolutePath}"/>
                                                 <Button Content="📄" FontSize="14" Foreground="{DynamicResource BpmTextPrimary}" Background="{DynamicResource BpmBgInput}" BorderBrush="{DynamicResource BpmBorderDefault}" BorderThickness="1" Padding="6,3" MinWidth="32" Margin="3,0,0,0" Cursor="Hand" ToolTip="Mit Standard-App oeffnen" Click="OnPathOpenWithDefault" Tag="{Binding AbsolutePath}"/>
                                                 <Button Content="🎯" FontSize="14" Foreground="{DynamicResource BpmError}" Background="{DynamicResource BpmBgInput}" BorderBrush="{DynamicResource BpmBorderDefault}" BorderThickness="1" Padding="6,3" MinWidth="32" Margin="3,0,0,0" Cursor="Hand" ToolTip="Im Explorer markieren" Click="OnPathRevealInExplorer" Tag="{Binding AbsolutePath}"/>

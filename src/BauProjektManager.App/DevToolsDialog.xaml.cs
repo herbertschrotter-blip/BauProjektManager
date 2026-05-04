@@ -575,4 +575,38 @@ public partial class DevToolsDialog : Window
     private void OnOpenLogs(object sender, RoutedEventArgs e) => _devTools.OpenLogDirectory();
     private void OnRefreshLog(object sender, RoutedEventArgs e) => LoadLog();
     private void OnClose(object sender, RoutedEventArgs e) => Close();
+
+    // BPM-104.03 — Pfad-Aktionen im System-Info-Tab.
+    // Tag des Buttons = Pfad (kann File oder Verzeichnis sein).
+
+    private void OnPathOpenFolder(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button btn || btn.Tag is not string path || string.IsNullOrEmpty(path)) return;
+        var folder = System.IO.File.Exists(path)
+            ? System.IO.Path.GetDirectoryName(path)
+            : path;
+        if (string.IsNullOrEmpty(folder) || !System.IO.Directory.Exists(folder)) return;
+        try { System.Diagnostics.Process.Start("explorer.exe", folder); }
+        catch (Exception ex) { Log.Warning("OpenFolder fehlgeschlagen: {Error}", ex.Message); }
+    }
+
+    private void OnPathOpenWithDefault(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button btn || btn.Tag is not string path || string.IsNullOrEmpty(path)) return;
+        if (!System.IO.File.Exists(path)) return;
+        try
+        {
+            // UseShellExecute=true triggert Windows-Dialog 'Oeffnen mit ...' falls keine App registriert.
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
+        }
+        catch (Exception ex) { Log.Warning("OpenWithDefault fehlgeschlagen: {Error}", ex.Message); }
+    }
+
+    private void OnPathRevealInExplorer(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button btn || btn.Tag is not string path || string.IsNullOrEmpty(path)) return;
+        if (!System.IO.File.Exists(path) && !System.IO.Directory.Exists(path)) return;
+        try { System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{path}\""); }
+        catch (Exception ex) { Log.Warning("RevealInExplorer fehlgeschlagen: {Error}", ex.Message); }
+    }
 }

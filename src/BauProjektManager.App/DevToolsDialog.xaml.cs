@@ -17,6 +17,8 @@ public partial class DevToolsDialog : Window
 {
     private readonly IDeveloperToolsService _devTools;
     private readonly AppSettingsService? _settingsService;
+    private readonly IPersistenceRegistry? _persistenceRegistry;
+    private readonly System.Collections.ObjectModel.ObservableCollection<InventoryItemViewModel> _inventoryItems = new();
     private string _selectedReset = "DbOnly";
     private bool _isInitializing = true;
     private string _lastLogContent = string.Empty;
@@ -42,18 +44,54 @@ public partial class DevToolsDialog : Window
         { "DbOnly",       $"{DeleteIcon} Datenbank zurücksetzen und neu starten" },
         { "SettingsOnly", $"{DeleteIcon} Einstellungen zurücksetzen und neu starten" },
         { "FirstRun",     $"{DeleteIcon} Ersteinrichtung zurücksetzen und neu starten" },
-        { "All",          $"{DeleteIcon} Alles zurücksetzen und neu starten" }
+        { "All",          $"{DeleteIcon} Alles zurücksetzen und neu starten" },
+        { "Logs",         $"{DeleteIcon} Logs löschen (kein Restart)" }
     };
 
-    public DevToolsDialog(IDeveloperToolsService devTools, AppSettingsService? settingsService = null)
+    public DevToolsDialog(IDeveloperToolsService devTools, AppSettingsService? settingsService = null, IPersistenceRegistry? persistenceRegistry = null)
     {
         InitializeComponent();
         _devTools = devTools;
         _settingsService = settingsService;
+        _persistenceRegistry = persistenceRegistry;
         LoadSystemInfo();
         InitLogFilter();
         LoadLog();
+        LoadInventory();
         _isInitializing = false;
+    }
+
+    /// <summary>
+    /// BPM-104.04: Laedt Persistenz-Inventar fuer Detail-Auswahl im Reset-Tab.
+    /// </summary>
+    private void LoadInventory()
+    {
+        _inventoryItems.Clear();
+        if (_persistenceRegistry is null)
+        {
+            TxtInventoryStatus.Text = "Persistenz-Registry nicht verfuegbar.";
+            return;
+        }
+
+        // FS-Scan triggern (zusaetzlich zu in-memory Eintraegen)
+        var basePath = _settingsService?.LoadDevice().BasePath;
+        _persistenceRegistry.RescanFilesystem(basePath, Array.Empty<string>());
+
+        var entries = _persistenceRegistry.GetAll();
+        foreach (var entry in entries)
+        {
+            _inventoryItems.Add(new InventoryItemViewModel
+            {
+                DisplayName = entry.DisplayName,
+                AbsolutePath = entry.AbsolutePath,
+                Type = entry.Type.ToString(),
+                Scope = entry.Scope.ToString(),
+                IsSelected = false
+            });
+        }
+
+        LstInventory.ItemsSource = _inventoryItems;
+        TxtInventoryStatus.Text = $"{entries.Count} Eintraege gefunden — Files mit Checkbox auswaehlen, dann 'Ausgewaehlte loeschen' rechts unten.";
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -485,9 +523,9 @@ public partial class DevToolsDialog : Window
     {
         _selectedReset = tag;
 
-        var borders = new[] { BorderDbOnly, BorderSettingsOnly, BorderFirstRun, BorderAll };
-        var dots    = new[] { DotDbOnly, DotSettingsOnly, DotFirstRun, DotAll };
-        var tags    = new[] { "DbOnly", "SettingsOnly", "FirstRun", "All" };
+        var borders = new[] { BorderDbOnly, BorderSettingsOnly, BorderFirstRun, BorderAll, BorderLogs };
+        var dots    = new[] { DotDbOnly, DotSettingsOnly, DotFirstRun, DotAll, DotLogs };
+        var tags    = new[] { "DbOnly", "SettingsOnly", "FirstRun", "All", "Logs" };
 
         for (int i = 0; i < tags.Length; i++)
         {
@@ -524,6 +562,8 @@ public partial class DevToolsDialog : Window
             "All" =>
                 $"Folgende Dateien werden gelöscht:\n\n  {db}\n  {db}-wal\n  {db}-shm\n  {_devTools.SettingsPath}\n\n" +
                 "Die App startet danach neu — Ersteinrichtung wird angezeigt.\n\nAlle lokalen Daten gehen verloren!",
+            "Logs" =>
+                $"Alle BPM_*.log Files in:\n\n  {_devTools.LogDirectory}\n\nwerden gelöscht.\n\nKein Restart nötig.",
             _ => ""
         };
 
@@ -533,6 +573,7 @@ public partial class DevToolsDialog : Window
             "SettingsOnly" => "Einstellungen zurücksetzen",
             "FirstRun"     => "Ersteinrichtung zurücksetzen",
             "All"          => "Komplett-Reset",
+            "Logs"         => "Logs löschen",
             _ => "Reset"
         };
 
@@ -547,7 +588,45 @@ public partial class DevToolsDialog : Window
             case "SettingsOnly": _devTools.RequestSettingsReset(shutdown); break;
             case "FirstRun":     _devTools.RequestFirstRunReset(shutdown); break;
             case "All":          _devTools.RequestFullReset(shutdown); break;
+            case "Logs":
+                int count = _devTools.DeleteAllLogs();
+                MessageBox.Show($"{count} Logfiles gelöscht.", "Logs gelöscht", MessageBoxButton.OK, MessageBoxImage.Information);
+                LoadInventory(); // Inventar refreshen
+                break;
         }
+    }
+
+    /// <summary>
+    /// BPM-104.04: Bulk-Delete der ausgewaehlten Inventar-Eintraege.
+    /// </summary>
+    private void OnBulkDelete(object sender, RoutedEventArgs e)
+    {
+        var selected = _inventoryItems.Where(i => i.IsSelected).ToList();
+        if (selected.Count == 0)
+        {
+            MessageBox.Show("Keine Files ausgewählt.", "Bulk-Delete", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var paths = selected.Select(s => s.AbsolutePath).ToList();
+        var msg = $"Folgende {selected.Count} Files werden gelöscht:\n\n" +
+                  string.Join("\n", paths.Take(10)) +
+                  (paths.Count > 10 ? $"\n... und {paths.Count - 10} weitere" : "") +
+                  "\n\nUnwiderruflich. Fortfahren?";
+
+        var result = MessageBox.Show(msg, "Bulk-Delete bestätigen", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
+        if (result != MessageBoxResult.OK) return;
+
+        var deleted = _devTools.DeleteFiles(paths);
+        MessageBox.Show($"{deleted} von {paths.Count} Files gelöscht.", "Bulk-Delete fertig", MessageBoxButton.OK, MessageBoxImage.Information);
+
+        // Inventar refreshen + bei nicht-existierenden Entries entfernen
+        foreach (var path in paths)
+        {
+            if (!System.IO.File.Exists(path))
+                _persistenceRegistry?.Unregister(path);
+        }
+        LoadInventory();
     }
 
     private void OnCopyBugReport(object sender, RoutedEventArgs e)
@@ -609,4 +688,22 @@ public partial class DevToolsDialog : Window
         try { System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{path}\""); }
         catch (Exception ex) { Log.Warning("RevealInExplorer fehlgeschlagen: {Error}", ex.Message); }
     }
+}
+
+/// <summary>
+/// BPM-104.04: ViewModel fuer Detail-Auswahl im Reset-Tab Inventar-Liste.
+/// </summary>
+public sealed class InventoryItemViewModel : System.ComponentModel.INotifyPropertyChanged
+{
+    private bool _isSelected;
+    public string DisplayName { get; set; } = "";
+    public string AbsolutePath { get; set; } = "";
+    public string Type { get; set; } = "";
+    public string Scope { get; set; } = "";
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set { _isSelected = value; PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(IsSelected))); }
+    }
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
 }

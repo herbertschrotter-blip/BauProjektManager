@@ -64,4 +64,10 @@ public interface IDeveloperToolsService
     void RequestSettingsReset(Action shutdownAction);
     /// <summary>Setzt IsFirstRun = true und startet neu — Ersteinrichtung neu durchlaufen.</summary>
     void RequestFirstRunReset(Action shutdownAction);
+
+    /// <summary>BPM-104.04: Loescht alle Logfiles in %LocalAppData%\BauProjektManager\Logs\. Kein Restart.</summary>
+    int DeleteAllLogs();
+
+    /// <summary>BPM-104.04: Loescht eine Liste konkreter Files. Liefert Anzahl erfolgreich geloeschter Files.</summary>
+    int DeleteFiles(IEnumerable<string> absolutePaths);
 }

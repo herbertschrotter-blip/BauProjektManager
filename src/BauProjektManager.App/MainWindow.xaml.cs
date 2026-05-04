@@ -17,6 +17,7 @@ public partial class MainWindow : Window
     private readonly SettingsView _settingsView;
     private readonly IDeveloperToolsService? _devTools;
     private readonly AppSettingsService _settingsService;
+    private readonly IPersistenceRegistry? _persistenceRegistry;
 
     public MainWindow(
         ProjectDatabase db,
@@ -24,11 +25,13 @@ public partial class MainWindow : Window
         IDialogService dialogService,
         IProfileManager profileManager,
         AppSettingsService settingsService,
-        IDeveloperToolsService? devTools = null)
+        IDeveloperToolsService? devTools = null,
+        IPersistenceRegistry? persistenceRegistry = null)
     {
         InitializeComponent();
         _devTools = devTools;
         _settingsService = settingsService;
+        _persistenceRegistry = persistenceRegistry;
 
         _planManagerView = new PlanManagerView(db, idGenerator, profileManager);
         _settingsView = new SettingsView(db, dialogService, settingsService);
@@ -44,7 +47,7 @@ public partial class MainWindow : Window
     private void OnOpenDevTools(object sender, RoutedEventArgs e)
     {
         if (_devTools is null) return;
-        var dialog = new DevToolsDialog(_devTools, _settingsService);
+        var dialog = new DevToolsDialog(_devTools, _settingsService, _persistenceRegistry);
         dialog.Owner = this;
         dialog.ShowDialog();
     }

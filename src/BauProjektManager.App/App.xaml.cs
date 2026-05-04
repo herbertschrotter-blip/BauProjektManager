@@ -154,7 +154,8 @@ public partial class App : Application
             var settingsService = sp.GetRequiredService<AppSettingsService>();
 #if DEBUG
             var devTools = sp.GetService<IDeveloperToolsService>();
-            return new MainWindow(db, idGen, dialog, profileManager, settingsService, devTools);
+            var registry = sp.GetService<IPersistenceRegistry>();
+            return new MainWindow(db, idGen, dialog, profileManager, settingsService, devTools, registry);
 #else
             return new MainWindow(db, idGen, dialog, profileManager, settingsService);
 #endif

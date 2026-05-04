@@ -479,6 +479,56 @@ public sealed class DeveloperToolsService : IDeveloperToolsService
         RequestResetInternal(deleteDb: false, deleteSettings: false, firstRunOnly: true, shutdownAction);
     }
 
+    public int DeleteAllLogs()
+    {
+        try
+        {
+            if (!Directory.Exists(_logDirectory)) return 0;
+            int count = 0;
+            foreach (var file in Directory.GetFiles(_logDirectory, "BPM_*.log"))
+            {
+                try
+                {
+                    File.Delete(file);
+                    count++;
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning("DevTools: Log-File konnte nicht geloescht werden: {File} — {Error}", file, ex.Message);
+                }
+            }
+            Log.Information("DevTools: {Count} Logfiles geloescht", count);
+            return count;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "DevTools: DeleteAllLogs fehlgeschlagen");
+            return 0;
+        }
+    }
+
+    public int DeleteFiles(IEnumerable<string> absolutePaths)
+    {
+        int count = 0;
+        foreach (var path in absolutePaths ?? Array.Empty<string>())
+        {
+            try
+            {
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                    count++;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning("DevTools: File konnte nicht geloescht werden: {File} — {Error}", path, ex.Message);
+            }
+        }
+        Log.Information("DevTools: {Count} Files geloescht", count);
+        return count;
+    }
+
     private void RequestResetInternal(bool deleteDb, bool deleteSettings, bool firstRunOnly, Action shutdownAction)
     {
         var exePath = Environment.ProcessPath

@@ -122,7 +122,6 @@ public class AppSettingsService
 
     public void SaveDevice(DeviceSettings device)
     {
-        Log.Debug("Saving device-settings to {Path}", _deviceSettingsPath);
         try
         {
             var json = JsonSerializer.Serialize(device, JsonOptions);
@@ -137,6 +136,23 @@ public class AppSettingsService
             Log.Error(ex, "Failed to save device-settings");
             throw;
         }
+    }
+
+    /// <summary>
+    /// Vergleicht zwei DeviceSettings-Instanzen Feld-fuer-Feld (ohne DeviceId/WorkspaceId/DevTools,
+    /// die werden ohnehin aus existing uebernommen). Wenn alle Felder gleich sind, kann SaveDevice
+    /// uebersprungen werden — verhindert unnoetige device-settings.json Writes (BPM-102).
+    /// </summary>
+    private static bool DeviceFieldsEqual(DeviceSettings a, DeviceSettings b)
+    {
+        return a.SchemaVersion == b.SchemaVersion
+            && a.MachineName == b.MachineName
+            && a.CloudStoragePath == b.CloudStoragePath
+            && a.BasePath == b.BasePath
+            && a.ArchivePath == b.ArchivePath
+            && a.ExportPath == b.ExportPath
+            && a.IsFirstRun == b.IsFirstRun
+            && Nullable.Equals(a.SetupCompletedAt, b.SetupCompletedAt);
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -349,8 +365,8 @@ public class AppSettingsService
     public void Save(AppSettings settings)
     {
         // BPM-096: DeviceId und WorkspaceId aus bestehenden DeviceSettings übernehmen.
-        // AppSettings hat diese Felder nicht — ohne Preservation würde jeder Save()
-        // sie auf "" zurücksetzen und beim nächsten LoadDevice() neu generieren.
+        // BPM-102: DevTools (LogFilter etc.) ebenfalls übernehmen — sonst werden DevTools-Settings
+        // bei jedem Save(AppSettings) auf Defaults zurückgesetzt.
         var existing = LoadDevice();
 
         var device = new DeviceSettings
@@ -364,9 +380,17 @@ public class AppSettingsService
             ArchivePath = settings.ArchivePath,
             ExportPath = settings.ExportPath,
             IsFirstRun = settings.IsFirstRun,
-            SetupCompletedAt = settings.SetupCompletedAt
+            SetupCompletedAt = settings.SetupCompletedAt,
+            DevTools = existing.DevTools
         };
-        SaveDevice(device);
+
+        // BPM-102: Diff-Check — SaveDevice nur wenn sich tatsächlich ein Device-Feld geändert hat.
+        // Verhindert unnötige device-settings.json Writes bei reinen Shared-Aktionen
+        // (z.B. FolderTemplate-Toggle in Settings-Tab "Standard-Ordnerstruktur").
+        if (!DeviceFieldsEqual(existing, device))
+            SaveDevice(device);
+        else
+            _cachedDevice = device;
 
         var shared = new SharedConfig
         {

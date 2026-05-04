@@ -21,6 +21,15 @@ public partial class DevToolsDialog : Window
     private bool _isInitializing = true;
     private string _lastLogContent = string.Empty;
 
+    // BPM-103: LogFilter wird nur beim Window-Close persistiert (nicht bei jedem Combo-Wechsel).
+    // Initial-Werte (beim Dialog-Open) und Current-Werte (laufende Auswahl) getrennt halten.
+    private string _initialMode = "last200Lines";
+    private int _initialLineCount = 200;
+    private int _initialSessionNumber = 0;
+    private string _currentMode = "last200Lines";
+    private int _currentLineCount = 200;
+    private int _currentSessionNumber = 0;
+
     private static readonly Regex LogLinePattern = new(
         @"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?)\s+(\[\w+\])\s+(.*)$",
         RegexOptions.Compiled);
@@ -107,16 +116,16 @@ public partial class DevToolsDialog : Window
 
     private void LoadLog()
     {
-        var (mode, lineCount, selectedSession) = GetCurrentFilter();
-        var content = ReadLogByMode(mode, lineCount, selectedSession, out var loadedLineCount);
+        // BPM-103: nutzt _current* statt GetCurrentFilter() — laufende UI-Auswahl, nicht persistierter Stand
+        var content = ReadLogByMode(_currentMode, _currentLineCount, _currentSessionNumber, out var loadedLineCount);
 
         _lastLogContent = content;
         TxtLogContent.Inlines.Clear();
         foreach (var inline in BuildColoredLogInlines(content))
             TxtLogContent.Inlines.Add(inline);
 
-        UpdateStatusHint(mode, lineCount, selectedSession, loadedLineCount);
-        UpdateWarning(mode);
+        UpdateStatusHint(_currentMode, _currentLineCount, _currentSessionNumber, loadedLineCount);
+        UpdateWarning(_currentMode);
         LogScroller.ScrollToBottom();
     }
 
@@ -214,6 +223,14 @@ public partial class DevToolsDialog : Window
     private void InitLogFilter()
     {
         var (mode, lineCount, selectedSession) = GetCurrentFilter();
+
+        // BPM-103: Initial- und Current-State festhalten fuer Diff-Check beim Close
+        _initialMode = mode;
+        _initialLineCount = lineCount;
+        _initialSessionNumber = selectedSession;
+        _currentMode = mode;
+        _currentLineCount = lineCount;
+        _currentSessionNumber = selectedSession;
 
         // Sub-ComboBox CmbSession mit verfuegbaren Sessions befuellen (sortiert: neueste oben).
         CmbSession.Items.Clear();
@@ -337,18 +354,18 @@ public partial class DevToolsDialog : Window
 
         var mode = item.Tag?.ToString() ?? "last200Lines";
         UpdateOptionalControlsVisibility(mode);
+        _currentMode = mode;
 
         // Bei specificSession: Falls noch keine Session ausgewaehlt → erste (aktuelle) waehlen.
-        int sessionNumber = 0;
         if (mode == "specificSession")
         {
             if (CmbSession.SelectedItem is null && CmbSession.Items.Count > 0)
                 CmbSession.SelectedIndex = 0;
             if (CmbSession.SelectedItem is ComboBoxItem si && si.Tag is int n)
-                sessionNumber = n;
+                _currentSessionNumber = n;
         }
 
-        SaveFilterSettings(mode, GetCurrentLineCountFromInput(), sessionNumber);
+        // BPM-103: kein SaveFilterSettings — wird beim Window-Close persistiert
         LoadLog();
     }
 
@@ -358,7 +375,9 @@ public partial class DevToolsDialog : Window
         if (CmbSession.SelectedItem is not ComboBoxItem item) return;
         if (item.Tag is not int sessionNumber) return;
 
-        SaveFilterSettings("specificSession", GetCurrentLineCountFromInput(), sessionNumber);
+        _currentMode = "specificSession";
+        _currentSessionNumber = sessionNumber;
+        // BPM-103: kein SaveFilterSettings — wird beim Window-Close persistiert
         LoadLog();
     }
 
@@ -378,11 +397,10 @@ public partial class DevToolsDialog : Window
 
     private void ApplyCustomLineCount()
     {
-        var current = GetCurrentFilter();
         if (!int.TryParse(TxtCustomLineCount.Text, out var parsed))
         {
             BpmInfoDialog.ShowWarning("Bitte eine ganze Zahl eingeben.", "Ungueltige Eingabe");
-            TxtCustomLineCount.Text = current.lineCount.ToString();
+            TxtCustomLineCount.Text = _currentLineCount.ToString();
             return;
         }
         if (!IsLineCountInRange(parsed))
@@ -390,10 +408,12 @@ public partial class DevToolsDialog : Window
             BpmInfoDialog.ShowWarning(
                 $"Werte zwischen 10 und 10000 erlaubt. Eingegeben: {parsed}",
                 "Ungueltiger Wert");
-            TxtCustomLineCount.Text = current.lineCount.ToString();
+            TxtCustomLineCount.Text = _currentLineCount.ToString();
             return;
         }
-        SaveFilterSettings(GetCurrentMode(), parsed, current.selectedSession);
+        _currentLineCount = parsed;
+        _currentMode = GetCurrentMode();
+        // BPM-103: kein SaveFilterSettings — wird beim Window-Close persistiert
         LoadLog();
     }
 
@@ -429,6 +449,29 @@ public partial class DevToolsDialog : Window
         {
             Log.Warning("DevTools: LogFilter-Settings speichern fehlgeschlagen: {Error}", ex.Message);
         }
+    }
+
+    /// <summary>
+    /// BPM-103: Persistiert LogFilter-Settings beim Window-Close — genau einmal,
+    /// und nur wenn sich was vs. Initial-Wert geaendert hat.
+    /// </summary>
+    private void PersistFilterSettingsIfChanged()
+    {
+        if (_settingsService is null) return;
+        if (_currentMode == _initialMode
+            && _currentLineCount == _initialLineCount
+            && _currentSessionNumber == _initialSessionNumber)
+        {
+            return; // Nichts geaendert
+        }
+        SaveFilterSettings(_currentMode, _currentLineCount, _currentSessionNumber);
+        Log.Debug("DevTools: LogFilter persisted on close");
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+        PersistFilterSettingsIfChanged();
     }
 
     private void OnSelectReset(object sender, MouseButtonEventArgs e)

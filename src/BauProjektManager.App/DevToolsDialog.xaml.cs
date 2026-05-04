@@ -621,7 +621,6 @@ public partial class DevToolsDialog : Window
         _selectedReset = tag;
 
         var borders = new[] { BorderDbOnly, BorderSettingsOnly, BorderFirstRun, BorderAll, BorderLogs };
-        var dots    = new[] { DotDbOnly, DotSettingsOnly, DotFirstRun, DotAll, DotLogs };
         var tags    = new[] { "DbOnly", "SettingsOnly", "FirstRun", "All", "Logs" };
 
         for (int i = 0; i < tags.Length; i++)
@@ -630,12 +629,9 @@ public partial class DevToolsDialog : Window
             borders[i].BorderBrush = active
                 ? FindResource("BpmAccentPrimary") as System.Windows.Media.Brush
                 : FindResource("BpmBorderDefault") as System.Windows.Media.Brush;
-            dots[i].Fill = active
-                ? FindResource("BpmAccentPrimary") as System.Windows.Media.Brush
-                : System.Windows.Media.Brushes.Transparent;
-            dots[i].Stroke = active
-                ? FindResource("BpmAccentPrimary") as System.Windows.Media.Brush
-                : FindResource("BpmTextSecondary") as System.Windows.Media.Brush;
+            borders[i].BorderThickness = active
+                ? new Thickness(2)
+                : new Thickness(1);
         }
     }
 

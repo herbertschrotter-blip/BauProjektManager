@@ -220,175 +220,133 @@
 
                     <WrapPanel Grid.Row="1" Margin="0,0,0,12">
 
-                        <!-- Option 1: Nur Ersteinrichtung — GRÜN -->
+                        <!-- Option 1: Nur Ersteinrichtung — GRÜN (sicher) -->
                         <Border x:Name="BorderFirstRun"
                                 Background="{StaticResource BpmBgElevated}"
-                                BorderBrush="{StaticResource BpmAccentPrimary}"
+                                BorderBrush="{StaticResource BpmBorderDefault}"
                                 BorderThickness="1" CornerRadius="4"
-                                Padding="14,12" Margin="0,0,8,8" MinWidth="280" MaxWidth="380"
+                                Padding="12,10" Margin="0,0,8,8" Width="320"
                                 Cursor="Hand" MouseLeftButtonDown="OnQuickSelect" Tag="FirstRun">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="120"/>
                                 </Grid.ColumnDefinitions>
-                                <Ellipse x:Name="DotFirstRun" Grid.Column="0"
-                                         Width="12" Height="12"
-                                         Fill="{StaticResource BpmAccentPrimary}"
-                                         VerticalAlignment="Center"/>
-                                <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                                    <TextBlock Text="Nur Ersteinrichtung" Style="{StaticResource BpmBodyBold}"/>
-                                    <TextBlock Text="Ersteinrichtungs-Dialog erscheint beim nächsten Start. Daten und Pfade bleiben erhalten."
-                                               Style="{StaticResource BpmSmallText}" Margin="0,2,0,4" TextWrapping="Wrap"/>
-                                    <TextBlock Text="settings.json → isFirstRun: true"
-                                               FontFamily="Consolas" FontSize="10" Foreground="{StaticResource BpmTextSecondary}"/>
+                                <TextBlock Grid.Column="0" Text="⟳" FontSize="18"
+                                           Foreground="{StaticResource BpmSuccess}"
+                                           VerticalAlignment="Center"
+                                           Margin="2,0,12,0"/>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="Nur Ersteinrichtung" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{StaticResource BpmTextPrimary}"/>
+                                    <TextBlock Text="Ersteinrichtungs-Dialog beim nächsten Start. Daten und Pfade bleiben erhalten."
+                                               FontSize="11" Foreground="{StaticResource BpmTextSecondary}"
+                                               Margin="0,2,0,0" TextWrapping="Wrap"/>
                                 </StackPanel>
-                                <Border Grid.Column="2"
-                                        Background="{StaticResource BpmBadgeBgSuccess}"
-                                        BorderBrush="{StaticResource BpmSuccess}"
-                                        BorderThickness="1" CornerRadius="10" Padding="8,4">
-                                    <TextBlock Text="sicher" FontSize="10"
-                                               Foreground="{StaticResource BpmSuccess}"
-                                               HorizontalAlignment="Center"/>
-                                </Border>
                             </Grid>
                         </Border>
 
-                        <!-- Option 2: Nur Datenbank — GELB -->
+                        <!-- Option 2: Nur Datenbank — GELB (Warnung) -->
                         <Border x:Name="BorderDbOnly"
                                 Background="{StaticResource BpmBgElevated}"
                                 BorderBrush="{StaticResource BpmBorderDefault}"
                                 BorderThickness="1" CornerRadius="4"
-                                Padding="14,12" Margin="0,0,8,8" MinWidth="280" MaxWidth="380"
+                                Padding="12,10" Margin="0,0,8,8" Width="320"
                                 Cursor="Hand" MouseLeftButtonDown="OnQuickSelect" Tag="DbOnly">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="120"/>
                                 </Grid.ColumnDefinitions>
-                                <Ellipse x:Name="DotDbOnly" Grid.Column="0"
-                                         Width="12" Height="12"
-                                         Fill="Transparent"
-                                         Stroke="{StaticResource BpmTextSecondary}" StrokeThickness="2"
-                                         VerticalAlignment="Center"/>
-                                <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                                    <TextBlock Text="Nur Datenbank" Style="{StaticResource BpmBodyBold}"/>
-                                    <TextBlock Text="Löscht alle Projektdaten. Einstellungen und Pfade bleiben erhalten."
-                                               Style="{StaticResource BpmSmallText}" Margin="0,2,0,4" TextWrapping="Wrap"/>
-                                    <TextBlock Text="bpm.db · bpm.db-wal · bpm.db-shm"
-                                               FontFamily="Consolas" FontSize="10" Foreground="{StaticResource BpmTextSecondary}"/>
+                                <TextBlock Grid.Column="0" Text="🗑" FontSize="18"
+                                           Foreground="{StaticResource BpmWarning}"
+                                           VerticalAlignment="Center"
+                                           Margin="2,0,12,0"/>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="Nur Datenbank" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{StaticResource BpmTextPrimary}"/>
+                                    <TextBlock Text="Löscht alle Projektdaten (bpm.db + WAL/SHM). Einstellungen und Pfade bleiben erhalten."
+                                               FontSize="11" Foreground="{StaticResource BpmTextSecondary}"
+                                               Margin="0,2,0,0" TextWrapping="Wrap"/>
                                 </StackPanel>
-                                <Border Grid.Column="2"
-                                        Background="{StaticResource BpmBadgeBgWarning}"
-                                        BorderBrush="{StaticResource BpmWarning}"
-                                        BorderThickness="1" CornerRadius="10" Padding="8,4">
-                                    <TextBlock Text="Daten gehen verloren" FontSize="10"
-                                               Foreground="{StaticResource BpmWarning}"
-                                               HorizontalAlignment="Center"
-                                               TextWrapping="Wrap" TextAlignment="Center"/>
-                                </Border>
                             </Grid>
                         </Border>
 
-                        <!-- Option 3: Nur Einstellungen — GELB -->
+                        <!-- Option 3: Nur Einstellungen — GELB (Warnung) -->
                         <Border x:Name="BorderSettingsOnly"
                                 Background="{StaticResource BpmBgElevated}"
                                 BorderBrush="{StaticResource BpmBorderDefault}"
                                 BorderThickness="1" CornerRadius="4"
-                                Padding="14,12" Margin="0,0,8,8" MinWidth="280" MaxWidth="380"
+                                Padding="12,10" Margin="0,0,8,8" Width="320"
                                 Cursor="Hand" MouseLeftButtonDown="OnQuickSelect" Tag="SettingsOnly">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="120"/>
                                 </Grid.ColumnDefinitions>
-                                <Ellipse x:Name="DotSettingsOnly" Grid.Column="0"
-                                         Width="12" Height="12"
-                                         Fill="Transparent"
-                                         Stroke="{StaticResource BpmTextSecondary}" StrokeThickness="2"
-                                         VerticalAlignment="Center"/>
-                                <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                                    <TextBlock Text="Nur Einstellungen" Style="{StaticResource BpmBodyBold}"/>
-                                    <TextBlock Text="Löscht Pfade und Konfiguration. Projektdaten bleiben erhalten."
-                                               Style="{StaticResource BpmSmallText}" Margin="0,2,0,4" TextWrapping="Wrap"/>
-                                    <TextBlock Text="settings.json"
-                                               FontFamily="Consolas" FontSize="10" Foreground="{StaticResource BpmTextSecondary}"/>
+                                <TextBlock Grid.Column="0" Text="🗑" FontSize="18"
+                                           Foreground="{StaticResource BpmWarning}"
+                                           VerticalAlignment="Center"
+                                           Margin="2,0,12,0"/>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="Nur Einstellungen" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{StaticResource BpmTextPrimary}"/>
+                                    <TextBlock Text="Löscht Pfade und Konfiguration (settings.json). Projektdaten bleiben erhalten."
+                                               FontSize="11" Foreground="{StaticResource BpmTextSecondary}"
+                                               Margin="0,2,0,0" TextWrapping="Wrap"/>
                                 </StackPanel>
-                                <Border Grid.Column="2"
-                                        Background="{StaticResource BpmBadgeBgWarning}"
-                                        BorderBrush="{StaticResource BpmWarning}"
-                                        BorderThickness="1" CornerRadius="10" Padding="8,4">
-                                    <TextBlock Text="Pfade gehen verloren" FontSize="10"
-                                               Foreground="{StaticResource BpmWarning}"
-                                               HorizontalAlignment="Center"
-                                               TextWrapping="Wrap" TextAlignment="Center"/>
-                                </Border>
                             </Grid>
                         </Border>
 
-                        <!-- Option 4: Alles — ROT -->
+                        <!-- Option 4: Alles — ROT (Gefahr) -->
                         <Border x:Name="BorderAll"
                                 Background="{StaticResource BpmBgElevated}"
                                 BorderBrush="{StaticResource BpmBorderDefault}"
                                 BorderThickness="1" CornerRadius="4"
-                                Padding="14,12" Margin="0,0,8,8" MinWidth="280" MaxWidth="380"
+                                Padding="12,10" Margin="0,0,8,8" Width="320"
                                 Cursor="Hand" MouseLeftButtonDown="OnQuickSelect" Tag="All">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="120"/>
                                 </Grid.ColumnDefinitions>
-                                <Ellipse x:Name="DotAll" Grid.Column="0"
-                                         Width="12" Height="12"
-                                         Fill="Transparent"
-                                         Stroke="{StaticResource BpmTextSecondary}" StrokeThickness="2"
-                                         VerticalAlignment="Center"/>
-                                <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                                    <TextBlock Text="Alles — Kompletter Neustart" Style="{StaticResource BpmBodyBold}"/>
+                                <TextBlock Grid.Column="0" Text="⚠" FontSize="18"
+                                           Foreground="{StaticResource BpmError}"
+                                           VerticalAlignment="Center"
+                                           Margin="2,0,12,0"/>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="Alles — Kompletter Neustart" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{StaticResource BpmTextPrimary}"/>
                                     <TextBlock Text="Löscht Datenbank und alle Einstellungen. App startet wie beim allerersten Mal."
-                                               Style="{StaticResource BpmSmallText}" Margin="0,2,0,4" TextWrapping="Wrap"/>
-                                    <TextBlock Text="bpm.db · bpm.db-wal · bpm.db-shm · settings.json"
-                                               FontFamily="Consolas" FontSize="10" Foreground="{StaticResource BpmTextSecondary}"/>
+                                               FontSize="11" Foreground="{StaticResource BpmTextSecondary}"
+                                               Margin="0,2,0,0" TextWrapping="Wrap"/>
                                 </StackPanel>
-                                <Border Grid.Column="2"
-                                        Background="{StaticResource BpmBadgeBgError}"
-                                        BorderBrush="{StaticResource BpmError}"
-                                        BorderThickness="1" CornerRadius="10" Padding="8,4">
-                                    <TextBlock Text="alles weg" FontSize="10"
-                                               Foreground="{StaticResource BpmError}"
-                                               HorizontalAlignment="Center"/>
-                                </Border>
                             </Grid>
                         </Border>
 
-                        <!-- Option 5: Logs loeschen — GELB (BPM-104.04) -->
+                        <!-- Option 5: Logs loeschen — GRÜN (kein Restart) -->
                         <Border x:Name="BorderLogs"
                                 Background="{StaticResource BpmBgElevated}"
                                 BorderBrush="{StaticResource BpmBorderDefault}"
                                 BorderThickness="1" CornerRadius="4"
-                                Padding="14,12" Margin="0,0,8,8" MinWidth="280" MaxWidth="380"
+                                Padding="12,10" Margin="0,0,8,8" Width="320"
                                 Cursor="Hand" MouseLeftButtonDown="OnQuickSelect" Tag="Logs">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="120"/>
                                 </Grid.ColumnDefinitions>
-                                <Ellipse x:Name="DotLogs" Grid.Column="0" Width="12" Height="12" Fill="Transparent" Stroke="{StaticResource BpmTextSecondary}" StrokeThickness="2" VerticalAlignment="Center"/>
-                                <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                                    <TextBlock Text="Nur Logs" Style="{StaticResource BpmBodyBold}"/>
-                                    <TextBlock Text="Loescht alle Serilog-Logfiles. Kein Restart noetig."
-                                               Style="{StaticResource BpmSmallText}" Margin="0,2,0,4" TextWrapping="Wrap"/>
-                                    <TextBlock Text="Logs/BPM_*.log"
-                                               FontFamily="Consolas" FontSize="10" Foreground="{StaticResource BpmTextSecondary}"/>
+                                <TextBlock Grid.Column="0" Text="🗑" FontSize="18"
+                                           Foreground="{StaticResource BpmSuccess}"
+                                           VerticalAlignment="Center"
+                                           Margin="2,0,12,0"/>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="Nur Logs" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{StaticResource BpmTextPrimary}"/>
+                                    <TextBlock Text="Löscht alle Serilog-Logfiles (Logs/BPM_*.log). Kein Restart nötig."
+                                               FontSize="11" Foreground="{StaticResource BpmTextSecondary}"
+                                               Margin="0,2,0,0" TextWrapping="Wrap"/>
                                 </StackPanel>
-                                <Border Grid.Column="2" Background="{StaticResource BpmBadgeBgSuccess}" BorderBrush="{StaticResource BpmSuccess}" BorderThickness="1" CornerRadius="10" Padding="8,4">
-                                    <TextBlock Text="kein Restart" FontSize="10" Foreground="{StaticResource BpmSuccess}" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
-                                </Border>
                             </Grid>
                         </Border>
 

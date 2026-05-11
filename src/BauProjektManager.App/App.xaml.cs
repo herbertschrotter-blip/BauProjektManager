@@ -225,10 +225,28 @@ public partial class App : Application
                 }
             }
 
-            // FS-Scan: ergaenzt alle nicht-registrierten Files (Logs, .bpm/, etc.)
-            registry.RescanFilesystem(settings.BasePath, Array.Empty<string>());
+            // BPM-106: Projekt-Roots aus DB laden, damit RescanFilesystem
+            // jedes <projectRoot>\.bpm\ scannt (manifest.json, project.json,
+            // profiles/*.json sichtbar im DevTools-Reset-Tab).
+            var projectRoots = Array.Empty<string>();
+            try
+            {
+                var projectDb = Services.GetRequiredService<ProjectDatabase>();
+                projectRoots = projectDb.LoadAllProjects()
+                    .Where(p => !string.IsNullOrWhiteSpace(p.Paths.Root))
+                    .Select(p => p.Paths.Root)
+                    .ToArray();
+            }
+            catch (Exception ex)
+            {
+                Log.Warning("PersistenceRegistry: Projekt-Roots laden fehlgeschlagen: {Error}", ex.Message);
+            }
 
-            Log.Debug("PersistenceRegistry initialisiert: {Count} Eintraege", registry.GetAll().Count);
+            // FS-Scan: ergaenzt alle nicht-registrierten Files (Logs, .bpm/, etc.)
+            registry.RescanFilesystem(settings.BasePath, projectRoots);
+
+            Log.Debug("PersistenceRegistry initialisiert: {Count} Eintraege ({Roots} Projekt-Roots gescannt)",
+                registry.GetAll().Count, projectRoots.Length);
         }
         catch (Exception ex)
         {

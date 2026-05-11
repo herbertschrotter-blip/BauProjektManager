@@ -74,9 +74,27 @@ public partial class DevToolsDialog : Window
             return;
         }
 
-        // FS-Scan triggern (zusaetzlich zu in-memory Eintraegen)
+        // BPM-106: Projekt-Roots aus DB laden, damit RescanFilesystem auch
+        // <projectRoot>\.bpm\ scannt (manifest.json, profiles/*.json sichtbar).
         var basePath = _settingsService?.LoadDevice().BasePath;
-        _persistenceRegistry.RescanFilesystem(basePath, Array.Empty<string>());
+        var projectRoots = Array.Empty<string>();
+        try
+        {
+            var projectDb = App.Services.GetService(typeof(ProjectDatabase)) as ProjectDatabase;
+            if (projectDb is not null)
+            {
+                projectRoots = projectDb.LoadAllProjects()
+                    .Where(p => !string.IsNullOrWhiteSpace(p.Paths.Root))
+                    .Select(p => p.Paths.Root)
+                    .ToArray();
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning("DevTools: Projekt-Roots laden fehlgeschlagen: {Error}", ex.Message);
+        }
+
+        _persistenceRegistry.RescanFilesystem(basePath, projectRoots);
 
         var entries = _persistenceRegistry.GetAll();
         foreach (var entry in entries)

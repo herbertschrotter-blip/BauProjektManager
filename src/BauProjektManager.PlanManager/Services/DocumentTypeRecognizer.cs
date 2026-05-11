@@ -149,8 +149,6 @@ public class DocumentTypeRecognizer
     /// bereits verworfen haben (ADR-010, Konsens R3 Punkt 10). Defensiver
     /// Debug-Log dokumentiert, falls trotzdem etwas durchrutscht.
     /// Methoden: "segment" (Default, positionsgenau), "regex" (Fallback).
-    /// Legacy "prefix"/"contains" werden in 082.05 entfernt; sie sind hier
-    /// effektiv dead code, weil IsValid sie als unbekannte Methode abweist.
     /// </summary>
     private static bool MatchesRule(RecognitionContext ctx, RecognitionRule rule)
     {
@@ -164,10 +162,6 @@ public class DocumentTypeRecognizer
         {
             "segment" => MatchesSegment(ctx, rule),
             "regex" => MatchesRegex(ctx.FileName, rule.Pattern),
-            "prefix" => ctx.FileName.StartsWith(rule.Pattern,
-                StringComparison.OrdinalIgnoreCase),
-            "contains" => ctx.FileName.Contains(rule.Pattern,
-                StringComparison.OrdinalIgnoreCase),
             _ => false
         };
     }

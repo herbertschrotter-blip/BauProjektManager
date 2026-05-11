@@ -10,6 +10,10 @@ namespace BauProjektManager.PlanManager.Services;
 /// <summary>
 /// Manages RecognitionProfiles per project.
 /// Profiles are stored as individual JSON files in .bpm/profiles/ (ADR-046).
+/// BPM-082: Schema v3, Methoden segment (Default) und regex (Fallback).
+/// Load(All|ById) verwirft Profile mit invalider Identitaet, fehlender
+/// Tokenization, leerer Recognition oder ungueltigen Rules — der Recognizer
+/// sieht somit nie kaputte Profile (Konsens R3 Punkt 10+12).
 /// </summary>
 public class ProfileManager : IProfileManager
 {
@@ -41,6 +45,9 @@ public class ProfileManager : IProfileManager
 
     /// <summary>
     /// Loads all profiles for a project from .bpm/profiles/*.json.
+    /// BPM-082.05: Profile mit invalider Identitaet, fehlender Tokenization,
+    /// leerer Recognition oder ungueltigen Rules werden komplett verworfen
+    /// (Konsens R3 Punkt 10+12). Der Recognizer sieht somit nie kaputte Profile.
     /// </summary>
     public List<RecognitionProfile> LoadAll(string projectRootPath)
     {
@@ -53,12 +60,20 @@ public class ProfileManager : IProfileManager
             {
                 var json = File.ReadAllText(file);
                 var profile = JsonSerializer.Deserialize<RecognitionProfile>(json, JsonOptions);
-                if (profile is not null)
+                if (profile is null)
+                    continue;
+
+                if (MigrateIfNeeded(profile, file))
+                    Log.Information("Profil migriert v1→v2: {Name} ({Id})",
+                        profile.DocumentTypeName, profile.Id);
+
+                if (!IsProfileLoadable(profile, out var reason))
                 {
-                    if (MigrateIfNeeded(profile, file))
-                        Log.Information("Profil migriert v1→v2: {Name} ({Id})", profile.DocumentTypeName, profile.Id);
-                    profiles.Add(profile);
+                    Log.Error("Profil verworfen: {File} — {Reason}", file, reason);
+                    continue;
                 }
+
+                profiles.Add(profile);
             }
             catch (Exception ex)
             {
@@ -73,6 +88,7 @@ public class ProfileManager : IProfileManager
 
     /// <summary>
     /// Loads a single profile by ID.
+    /// BPM-082.05: Validiert via IsProfileLoadable wie LoadAll.
     /// </summary>
     public RecognitionProfile? LoadById(string projectRootPath, string profileId)
     {
@@ -86,7 +102,55 @@ public class ProfileManager : IProfileManager
         }
 
         var json = File.ReadAllText(filePath);
-        return JsonSerializer.Deserialize<RecognitionProfile>(json, JsonOptions);
+        var profile = JsonSerializer.Deserialize<RecognitionProfile>(json, JsonOptions);
+        if (profile is null)
+            return null;
+
+        if (!IsProfileLoadable(profile, out var reason))
+        {
+            Log.Error("Profil verworfen (LoadById): {Id} — {Reason}", profileId, reason);
+            return null;
+        }
+
+        return profile;
+    }
+
+    /// <summary>
+    /// Profil-Minimum-Validierung (BPM-082.05, Konsens R3 Punkt 12).
+    /// Prueft Identitaet (Id, DocumentTypeName), Tokenization-Vorhandensein,
+    /// Recognition-Count und alle Rule.IsValid()-Checks. Liefert false und
+    /// einen menschenlesbaren Grund bei jedem Verstoss.
+    /// </summary>
+    private static bool IsProfileLoadable(RecognitionProfile profile, out string reason)
+    {
+        if (string.IsNullOrWhiteSpace(profile.Id))
+        {
+            reason = "Id fehlt.";
+            return false;
+        }
+        if (string.IsNullOrWhiteSpace(profile.DocumentTypeName))
+        {
+            reason = "DocumentTypeName fehlt.";
+            return false;
+        }
+        if (profile.Tokenization is null)
+        {
+            reason = "Tokenization fehlt.";
+            return false;
+        }
+        if (profile.Recognition.Count == 0)
+        {
+            reason = "Keine Recognition-Regeln vorhanden.";
+            return false;
+        }
+        foreach (var rule in profile.Recognition)
+        {
+            if (!rule.IsValid(out reason))
+                return false;
+        }
+
+        reason = "";
+        return true;
     }
 
     /// <summary>
@@ -179,7 +243,7 @@ public class ProfileManager : IProfileManager
         return new RecognitionProfile
         {
             Id = existingProfileId ?? string.Empty,
-            SchemaVersion = 2,
+            SchemaVersion = 3, // BPM-082, Konsens R3 Punkt 5
             DocumentTypeId = documentTypeId,
             DocumentTypeName = documentTypeName,
             TargetFolder = targetFolder,

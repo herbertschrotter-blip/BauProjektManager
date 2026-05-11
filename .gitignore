@@ -6,6 +6,7 @@
 ## Build
 bin/
 obj/
+*_wpftmp.csproj   # WPF MarkupCompile temp project files (sollte automatisch geloescht werden, bleibt manchmal bei File-Lock liegen)
 
 ## OS
 Thumbs.db

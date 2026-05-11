@@ -118,7 +118,34 @@ public sealed class RecoveryTestFixture : IDisposable
     public void Dispose()
     {
         Db.Dispose();
-        try { if (Directory.Exists(ProjectRoot)) Directory.Delete(ProjectRoot, recursive: true); } catch { }
-        try { if (Directory.Exists(_localAppDataProjectFolder)) Directory.Delete(_localAppDataProjectFolder, recursive: true); } catch { }
+
+        // Microsoft.Data.Sqlite hat Connection-Pooling — Db.Dispose() schliesst
+        // nur die Connection-Instanz, nicht den Pool. Ohne ClearAllPools haelt
+        // der Pool das DB-File offen und Directory.Delete schlaegt mit
+        // IOException fehl (File-Lock). Frueher wurde der Fehler vom try/catch
+        // verschluckt — Resultat: Muell-Ordner unter %LocalAppData%\Projects\.
+        SqliteConnection.ClearAllPools();
+
+        try
+        {
+            if (Directory.Exists(ProjectRoot))
+                Directory.Delete(ProjectRoot, recursive: true);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(
+                $"RecoveryTestFixture: ProjectRoot cleanup fehlgeschlagen ({ProjectRoot}): {ex.Message}");
+        }
+
+        try
+        {
+            if (Directory.Exists(_localAppDataProjectFolder))
+                Directory.Delete(_localAppDataProjectFolder, recursive: true);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(
+                $"RecoveryTestFixture: LocalAppData cleanup fehlgeschlagen ({_localAppDataProjectFolder}): {ex.Message}");
+        }
     }
 }

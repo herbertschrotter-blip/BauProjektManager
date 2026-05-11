@@ -102,7 +102,7 @@ Details: [BauProjektManager_Architektur.md](BauProjektManager_Architektur.md) Ka
 |---|---------|-------------|
 | 18 | Dateinamen-Parser | Segmente splitten an Trennzeichen (ADR-022) ✅ v0.24.3 |
 | 19 | Segment-Zuweiser GUI | 5-Schritt-Wizard: Datei, Segmente, Index, Zielordner, Erkennung ✅ v0.24.10 (UI fertig, Speichern offen) |
-| 20 | Plantyp-Erkennung | prefix/contains/regex Muster |
+| 20 | Plantyp-Erkennung | Segment-basierte Erkennung (positionsgenau) + regex-Fallback ✅ v0.28.32 (BPM-082, ADR-010 erweitert, SchemaVersion 3) |
 | 21 | PatternTemplates | Vorschlagslogik (ADR-010) |
 | 22 | .bpm/profiles/*.json | Pro Projekt im .bpm/-Ordner (ADR-046) — ProfileManager Service |
 | 23 | pattern-templates.json | Globale Musterbibliothek |

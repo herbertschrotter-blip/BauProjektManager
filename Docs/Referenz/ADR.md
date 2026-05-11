@@ -373,17 +373,18 @@ Undo war ursprünglich als JSON geplant. Die Review forderte SQLite für Transak
 
 ## ADR-010: RecognitionProfiles und PatternTemplates getrennt
 
-**Datum:** 2026-03
+**Datum:** 2026-03 (Erweiterung BPM-082: 2026-05)
 **Status:** ✅ Entschieden
 **Herkunft:** Architektur-Session
+**Erweitert durch:** BPM-082 Cross-Review 17.04.2026 ([CGR-2026-04-17-bpm-082-segment-recognition](chatgpt-reviews/CGR-2026-04-17-bpm-082-segment-recognition/README.md))
 
 **Kontext:**
 
 Beim Anlernen von Plantyp-Mustern gibt es zwei Konzepte: Das verbindliche Profil für ein Projekt, und der Vorschlag aus einer Musterbibliothek.
 
-**Entscheidung:**
+**Entscheidung (Grundlage):**
 
-- **RecognitionProfile** = verbindlich pro Projekt/Plantyp, gespeichert in `profiles.json` (Cloud-Speicher, pro Projekt)
+- **RecognitionProfile** = verbindlich pro Projekt/Plantyp, gespeichert in `.bpm/profiles/<id>.json` (Cloud-Speicher, pro Projekt — ADR-046)
 - **PatternTemplate** = Vorschlag aus Musterbibliothek, gespeichert in `pattern-templates.json` (Cloud-Speicher, global)
 
 Beim Anlegen eines neuen Profils vergleicht das System mit bestehenden Templates und schlägt Übernahme vor. Neues Profil wird automatisch als Template gespeichert.
@@ -393,6 +394,74 @@ Beim Anlegen eines neuen Profils vergleicht das System mit bestehenden Templates
 - Kein Machine Learning, keine Blackbox — immer User-Bestätigung
 - Templates synchen über Cloud-Speicher (auf beiden Geräten gleiche Vorschläge)
 - Sync-Konfliktrisiko gering (Templates werden selten bearbeitet)
+
+### Erweiterung BPM-082: Segment-basierte Erkennung (2026-05, SchemaVersion 3)
+
+**Anlass:** Das urspruengliche Modell speicherte beim Profil-Wizard nur
+`Method` (prefix/contains/regex) und `Pattern`, **aber keine Segment-Position**.
+Dadurch matchte z.B. eine `contains: "PROT"`-Regel sowohl `PROJ-PROT-2025-01.pdf`
+(gewollt) als auch `RK-PROTOKOLL-EG.pdf` (nicht gewollt). UI-Versprechen
+(positionsgenaue Erkennung im Wizard Schritt 5) und Code-Verhalten (lose
+Substring-Suche) waren entkoppelt.
+
+**Entscheidungen (Konsens R3, 15 Punkte):**
+
+1. **`segment` als Default-Methode** (positionsgenauer Token-Vergleich).
+2. **`regex` als Fallback** fuer Spezialfaelle (Statiknummernkreise wie
+   `^5998-2\d{2}_`, Dateien ohne saubere Delimiter).
+3. **`prefix` und `contains` werden komplett entfernt** — keine Legacy-
+   Toleranz (Fruehphasen-Prinzip in INDEX.md).
+4. **`RecognitionRule.SegmentPosition: int?`** als persistiertes Feld.
+   Pflicht bei `Method=segment`, ignoriert bei `Method=regex`.
+5. **AND-Semantik bei Multi-Rules** eines Profils — alle Rules muessen
+   matchen. Kein Operator-Layer (KISS).
+6. **`SchemaVersion = 3`** fuer alle neu gespeicherten Profile.
+7. **`RecognitionContext`** als Hilfstyp im Recognizer mit `FileName`,
+   `FileStem`, `Tokens` (IReadOnlyList<string>).
+8. **`FileNameParser` als gemeinsame Tokenisierungsquelle** fuer Wizard
+   und Recognizer — kein zusaetzlicher Tokenizer-Service. Verhindert
+   Drift zwischen Lern- und Laufzeitpfad.
+9. **Variable-Segment-Warnung im Wizard Schritt 5** — UI-Hinweis bei
+   markierten PlanNumber/PlanIndex/Datum/numerischen Segmenten. Kein
+   Hard-Fail, Speichern bleibt erlaubt.
+10. **ADR-010 wird erweitert**, kein neuer ADR (dieser Abschnitt).
+11. **`ProfileManager.Load`/`LoadById` verwirft Profile** mit
+    invalider Identitaet (Id leer, DocumentTypeName leer), fehlender
+    Tokenization, leerer Recognition oder ungueltigen Rules. Loggt mit
+    `Log.Error`. Der Recognizer sieht somit nie kaputte Profile.
+12. **`MatchesSegment` schlank halten** — Position-Check + Token-Vergleich
+    `OrdinalIgnoreCase`, keine Sonderlogik (kein Trim/Strip).
+13. **Profil-Minimum-Validierung** (`IsProfileLoadable`): `Id`,
+    `DocumentTypeName`, `Tokenization != null`, `Recognition.Count > 0`,
+    alle `Rule.IsValid()`-Checks.
+14. **Lokaler RecognitionContext-Cache pro `Recognize(...)`-Aufruf** mit
+    Schluessel `(fileName, profile.Id)`. Kein langlebiger Feldcache.
+15. **Doc-Pflege als eigener Sub 082.07** (dieser Eintrag, BACKLOG #20,
+    GLOSSAR, PlanManager Kap. 14).
+
+**Test-Szenarien aus Review R3:** 10 reale Baustellen-Beispiele aus
+[CGR-2026-04-17-bpm-082-segment-recognition/r3/02-chatgpt-response.md](chatgpt-reviews/CGR-2026-04-17-bpm-082-segment-recognition/r3/02-chatgpt-response.md)
+sind als Unit-Tests in `DocumentTypeRecognizerTests` und
+`FileNameParserTests` umgesetzt.
+
+**Implementierung:**
+
+- 082.01 — Datenmodell + IsValid + SchemaVersion 3 (v0.27.0, `d82b05f`)
+- 082.02 — Recognizer + RecognitionContext + segment + Cache (v0.28.27, `11fb3ca`)
+- 082.06a — Core-Tests (v0.28.28, `e1b1db1`, 82 Tests)
+- 082.03 — Wizard speichert segment-Rules (v0.28.29, `3f5f2af`)
+- 082.04 — Wizard-UI Cleanup + Variable-Warnung + Tests (v0.28.30, `742300e`)
+- 082.05 — Legacy raus + ProfileManager.Load-Validation (v0.28.31, `d4c1f17`)
+- 082.06b + 082.06c — Wizard-/Persistence-Tests + Load-Toleranz (v0.28.32, `468bf56`)
+- 082.07 — Doc-Pflege (dieser Eintrag)
+
+**Reset-Anweisung fuer Fruehphasen-Setups:**
+
+Profile aus dem alten Schema (mit `Method=prefix` oder `contains`) werden
+beim Laden mit `Log.Error` verworfen und sind nicht mehr matchbar. Aktion
+fuer Tester: betroffene `.bpm/profiles/*.json`-Dateien loeschen, im Wizard
+neu anlegen. Disk-Reset via DevTools → Reset-Tab → Quick-Reset "All" oder
+manuell pro Projekt.
 
 ---
 

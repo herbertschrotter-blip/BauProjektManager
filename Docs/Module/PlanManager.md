@@ -665,11 +665,17 @@ Stage ist NICHT Teil des `document_key` und beeinflusst die Versionierung nicht 
 
 ## 14. Profil-System (ADR-010)
 
-### 14.1 RecognitionProfile JSON-Schema (v2 — Cross-Review 15.04.2026)
+### 14.1 RecognitionProfile JSON-Schema (v3 — BPM-082, 2026-05)
+
+**Aenderungen zu v2:** `recognition[].method` ist jetzt `"segment"` (Default) oder
+`"regex"` (Fallback). `segment`-Rules tragen zusaetzlich `segmentPosition: int?`
+(0-basierte Token-Position). Alte Methoden `prefix`/`contains` sind entfernt —
+Profile mit diesen Methoden werden von `ProfileManager.Load` mit `Log.Error`
+verworfen. Details: [ADR-010](../Referenz/ADR.md#adr-010-recognitionprofiles-und-patterntemplates-getrennt).
 
 ```json
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "01HV...",
   "documentTypeId": "polierplan",
   "documentTypeName": "Polierplan",
@@ -699,7 +705,7 @@ Stage ist NICHT Teil des `document_key` und beeinflusst die Versionierung nicht 
     { "position": 4, "fieldType": "description", "label": "Bezeichnung", "required": false, "includeInIdentity": false }
   ],
   "recognition": [
-    { "method": "prefix", "pattern": "S-" }
+    { "method": "segment", "pattern": "S", "segmentPosition": 0 }
   ],
   "recognitionPriority": 100,
   "conflictPolicy": "askUser",
@@ -710,6 +716,19 @@ Stage ist NICHT Teil des `document_key` und beeinflusst die Versionierung nicht 
   "updatedAt": "2026-04-09T10:00:00Z"
 }
 ```
+
+**Recognition-Methoden (BPM-082):**
+
+| Methode | Pflichtfelder | Zweck |
+|---------|---------------|-------|
+| `segment` (Default) | `pattern`, `segmentPosition` | Positionsgenauer Token-Vergleich. Datei wird via `FileNameParser` tokenisiert, Token an `segmentPosition` muss `pattern` matchen (OrdinalIgnoreCase). |
+| `regex` (Fallback) | `pattern` | Voll-Filename-Regex fuer Sonderfaelle (Statiknummernkreise wie `^5998-2\d{2}_`, Dateien ohne saubere Delimiter). ReDoS-Schutz via Timeout (100 ms). |
+
+**AND-Semantik bei Multi-Rules:** alle Rules eines Profils muessen matchen.
+
+**Reset bei Schema-Wechsel (Fruehphase):** Profile aus dem alten Schema
+(`method=prefix`/`contains`) werden beim Laden verworfen. Aktion fuer Tester:
+betroffene `.bpm/profiles/*.json`-Dateien loeschen, im Wizard neu anlegen.
 
 ### 14.2 Wichtige Profil-Felder (Review-Ergebnis)
 

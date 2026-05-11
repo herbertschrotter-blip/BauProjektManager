@@ -549,7 +549,7 @@ Profilen und manuellem Sortier-Modus.
 Dort dokumentiert:
 - Workflow (5 Phasen), Import-Analyse, Entscheidungsmatrix (9 Status-Typen)
 - Dateinamen-Parsing (Segment-basiert, ADR-022), Feldtypen, Ordner-Hierarchie
-- Profil-System (RecognitionProfiles + PatternTemplates, ADR-010)
+- Profil-System (RecognitionProfiles + PatternTemplates, ADR-010 erweitert um BPM-082: segment-Methode positionsgenau, regex-Fallback, SchemaVersion 3)
 - IndexSource-Modell (FileName / None / PlanHeader, ADR-045)
 - Undo-Journal (3 SQLite-Tabellen), Recovery, Preflight
 - Manueller Sortier-Modus + Umbenennung

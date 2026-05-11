@@ -1164,6 +1164,7 @@ Definiert in `BauProjektManager.Domain.Models.SharedConfigDefaults`. Bei Reset o
 **Schema-Änderungen für Profile (post Spike 0):**
 - Neue Tabelle `recognition_profiles` (id, project_id FK, name, document_type, profile_json, + 7 Sync-Spalten)
 - `.bpm/profiles/*.json` wird zu Export/Backup, nicht mehr SoR im Servermodus
+- JSON-Schema fuer `profile_json`: siehe [PlanManager.md §14.1](../Module/PlanManager.md#141-recognitionprofile-json-schema-v3--bpm-082-2026-05). Aktuell **SchemaVersion 3** (BPM-082): `recognition[].method` = `"segment"` (Default) oder `"regex"` (Fallback); `segment`-Rules tragen `segmentPosition: int?`. Validierung via `ProfileManager.IsProfileLoadable` (ADR-010 erweitert).
 
 #### Verworfene Tabellen (durch ADR-053)
 

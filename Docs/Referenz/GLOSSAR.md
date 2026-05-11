@@ -146,6 +146,10 @@ zum Erkennen eines Dokumenttyps.
 | **_Eingang** | Inbox-Ordner pro Dokumenttyp. Neue Dateien werden hier abgelegt (per E-Mail, Download, USB). BPM sortiert von hier in die Zielordner. | `FolderTemplateEntry.HasInbox` |
 | **_Archiv** | Ordner für alte Dokumentversionen. Wenn ein Dokument einen neuen Index bekommt, wird der alte Index hierhin verschoben. | |
 | **Segment** | Teil eines Dateinamens, gesplittet an Trennzeichen (-, _, .). Z.B. `AR-H64-EG-GR-01.pdf` → 5 Segmente. | ADR-022 |
+| **SegmentPosition** | 0-basierte Position eines Segments im tokenisierten Dateinamen. Persistiert in `RecognitionRule.SegmentPosition: int?` bei `method=segment`. Beim Wizard zeigt die UI Pos 1, intern wird 0-basiert gespeichert (kein Off-by-one). | BPM-082, ADR-010 (erweitert), `RecognitionRule` |
+| **RecognitionContext** | Tokenisierungs-Snapshot einer Datei fuer ein Profil. Privater Record im Recognizer mit `FileName`, `FileStem`, `Tokens` (IReadOnlyList<string>). Lokaler Cache pro `Recognize(...)`-Aufruf mit Schluessel `(fileName, profile.Id)`. | BPM-082.02, `DocumentTypeRecognizer` |
+| **FileStem** | Dateiname **ohne Extension**. Output von `Path.GetFileNameWithoutExtension(fileName)`. Im `RecognitionContext` als Anker fuer Tokens. Beispiel: `PROJ-PROT-2025-01.pdf` → FileStem = `PROJ-PROT-2025-01`. | BPM-082.02, `FileNameParser.Parse(...).BaseName` |
+| **Tokens** | Liste der Segment-Werte nach `FileNameParser.Parse`, in Position-Reihenfolge materialisiert. Recognizer und Wizard nutzen dieselbe Tokenisierung — verhindert Drift zwischen Lern- und Laufzeitpfad. | BPM-082.02, `RecognitionContext.Tokens` |
 | **Import-Workflow** | 5-Phasen-Prozess: Profil anlernen → Dateien im Eingang → Analyse-Pipeline → Vorschau → Ausführung. Innerhalb davon eine 7-Stufen-Analyse-Pipeline. | ADR-008, PlanManager.md Kap. 6 |
 
 ---

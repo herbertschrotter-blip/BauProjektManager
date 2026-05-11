@@ -6,7 +6,8 @@ namespace BauProjektManager.PlanManager.Services;
 
 /// <summary>
 /// Matches file names against RecognitionProfiles to determine document type.
-/// Uses prefix/contains rules from profile recognition config.
+/// BPM-082: segment (Default, positionsgenau via FileNameParser) + regex (Fallback).
+/// Tokenisiert pro (Datei, Profil) ueber lokalen Cache; AND-Semantik fuer Multi-Rule-Profile.
 /// Returns matched profiles sorted by priority (highest first).
 /// </summary>
 public class DocumentTypeRecognizer
@@ -24,17 +25,31 @@ public class DocumentTypeRecognizer
     }
 
     /// <summary>
+    /// Tokenisierungs-Snapshot einer Datei fuer ein Profil (BPM-082).
+    /// Wird in Recognize(...) lokal gecached, einmal pro Datei+Profil.
+    /// Wizard und Recognizer teilen sich die Tokenlogik via FileNameParser.
+    /// </summary>
+    private sealed record RecognitionContext(
+        string FileName,
+        string FileStem,
+        IReadOnlyList<string> Tokens);
+
+    /// <summary>
     /// Recognizes the document type for a single file name.
     /// Checks all profiles, returns best match by priority.
     /// Multiple matches with same priority → CONFLICT.
+    /// BPM-082: Lokaler RecognitionContext-Cache pro Recognize-Aufruf
+    /// — vermeidet mehrfache Tokenisierung derselben Datei ueber Profile hinweg.
+    /// Kein langlebiger Feldcache (kein Threading-/Memory-Thema).
     /// </summary>
     public RecognitionResult Recognize(string fileName, List<RecognitionProfile> profiles)
     {
+        var contextCache = new Dictionary<(string FileName, string ProfileId), RecognitionContext>();
         var matches = new List<RecognitionProfile>();
 
         foreach (var profile in profiles)
         {
-            if (MatchesProfile(fileName, profile))
+            if (MatchesProfile(fileName, profile, contextCache))
                 matches.Add(profile);
         }
 
@@ -81,40 +96,96 @@ public class DocumentTypeRecognizer
     }
 
     /// <summary>
-    /// Checks if a file name matches a profile's recognition rules.
-    /// All rules must match (AND logic).
+    /// Erstellt den Tokenisierungs-Snapshot fuer eine Datei + Profil (BPM-082).
+    /// Nutzt denselben FileNameParser wie der Wizard, damit Lern- und Laufzeit-
+    /// pfad nicht driften (zentrale Tokenisierungsquelle).
     /// </summary>
-    private static bool MatchesProfile(string fileName, RecognitionProfile profile)
+    private static RecognitionContext BuildRecognitionContext(
+        string fileName,
+        RecognitionProfile profile)
+    {
+        var parsed = FileNameParser.Parse(fileName, profile.Tokenization);
+
+        return new RecognitionContext(
+            FileName: fileName,
+            FileStem: parsed.BaseName,
+            Tokens: parsed.Segments
+                .OrderBy(s => s.Position)
+                .Select(s => s.RawValue)
+                .ToList());
+    }
+
+    /// <summary>
+    /// Checks if a file name matches a profile's recognition rules (BPM-082).
+    /// All rules must match (AND logic). RecognitionContext wird via Cache
+    /// wiederverwendet — Tokenisierung einmal pro (fileName, profile.Id).
+    /// </summary>
+    private static bool MatchesProfile(
+        string fileName,
+        RecognitionProfile profile,
+        Dictionary<(string FileName, string ProfileId), RecognitionContext> contextCache)
     {
         if (profile.Recognition.Count == 0)
             return false;
 
+        var key = (fileName, profile.Id);
+        if (!contextCache.TryGetValue(key, out var ctx))
+        {
+            ctx = BuildRecognitionContext(fileName, profile);
+            contextCache[key] = ctx;
+        }
+
         foreach (var rule in profile.Recognition)
         {
-            if (!MatchesRule(fileName, rule))
+            if (!MatchesRule(ctx, rule))
                 return false;
         }
         return true;
     }
 
     /// <summary>
-    /// Checks a single recognition rule against a file name.
-    /// Supports "prefix", "contains" and "regex" methods.
+    /// Checks a single recognition rule against the file context (BPM-082).
+    /// IsValid() ist Safety-Net — ProfileManager.Load sollte invalide Profile
+    /// bereits verworfen haben (ADR-010, Konsens R3 Punkt 10). Defensiver
+    /// Debug-Log dokumentiert, falls trotzdem etwas durchrutscht.
+    /// Methoden: "segment" (Default, positionsgenau), "regex" (Fallback).
+    /// Legacy "prefix"/"contains" werden in 082.05 entfernt; sie sind hier
+    /// effektiv dead code, weil IsValid sie als unbekannte Methode abweist.
     /// </summary>
-    private static bool MatchesRule(string fileName, RecognitionRule rule)
+    private static bool MatchesRule(RecognitionContext ctx, RecognitionRule rule)
     {
-        if (string.IsNullOrEmpty(rule.Pattern))
+        if (!rule.IsValid(out var reason))
+        {
+            Log.Debug("Ungueltige Rule im Recognizer verworfen: {Reason}", reason);
             return false;
+        }
 
         return rule.Method.ToLowerInvariant() switch
         {
-            "prefix" => fileName.StartsWith(rule.Pattern,
+            "segment" => MatchesSegment(ctx, rule),
+            "regex" => MatchesRegex(ctx.FileName, rule.Pattern),
+            "prefix" => ctx.FileName.StartsWith(rule.Pattern,
                 StringComparison.OrdinalIgnoreCase),
-            "contains" => fileName.Contains(rule.Pattern,
+            "contains" => ctx.FileName.Contains(rule.Pattern,
                 StringComparison.OrdinalIgnoreCase),
-            "regex" => MatchesRegex(fileName, rule.Pattern),
             _ => false
         };
+    }
+
+    /// <summary>
+    /// Position-genauer Token-Vergleich (BPM-082, segment-Methode).
+    /// Schlank gehalten: kein Trim, kein Strip, keine Sonderlogik.
+    /// IsValid() wird in MatchesRule vorgelagert — daher SegmentPosition!.Value sicher.
+    /// </summary>
+    private static bool MatchesSegment(RecognitionContext ctx, RecognitionRule rule)
+    {
+        var pos = rule.SegmentPosition!.Value;
+        return pos >= 0
+            && pos < ctx.Tokens.Count
+            && string.Equals(
+                ctx.Tokens[pos],
+                rule.Pattern,
+                StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>

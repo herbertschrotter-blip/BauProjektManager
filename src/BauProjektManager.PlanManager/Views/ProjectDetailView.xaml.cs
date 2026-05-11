@@ -16,16 +16,19 @@ public partial class ProjectDetailView : UserControl
     private readonly PatternTemplateService? _templateService;
     private readonly IIdGenerator _idGenerator;
     private readonly string? _appDataPath;
+    private readonly IPersistenceRegistry? _persistenceRegistry;
 
     public ProjectDetailView(
         Project project, BoolToVisConverter boolToVis, IProfileManager profileManager,
         IIdGenerator idGenerator,
-        PatternTemplateService? templateService = null, string? appDataPath = null)
+        PatternTemplateService? templateService = null, string? appDataPath = null,
+        IPersistenceRegistry? persistenceRegistry = null)
     {
         _profileManager = profileManager;
         _idGenerator = idGenerator;
         _templateService = templateService;
         _appDataPath = appDataPath;
+        _persistenceRegistry = persistenceRegistry;
         Resources.Add("BoolToVis", boolToVis);
         InitializeComponent();
 
@@ -53,7 +56,7 @@ public partial class ProjectDetailView : UserControl
 
         try
         {
-            using var db = new PlanManagerDatabase(project.Id, _idGenerator);
+            using var db = new PlanManagerDatabase(project.Id, _idGenerator, _persistenceRegistry);
 
             // BPM-016 / 016.04: Recovery-Check vor neuem Import.
             // Nicht abgeschlossene Vorgänge (App-Crash, Power-Off etc.) müssen erst

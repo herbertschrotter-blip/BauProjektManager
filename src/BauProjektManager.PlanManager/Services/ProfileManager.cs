@@ -1,7 +1,9 @@
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using BauProjektManager.Domain.Enums;
 using BauProjektManager.Domain.Interfaces;
+using BauProjektManager.Domain.Models;
 using BauProjektManager.Domain.Models.PlanManager;
 using Serilog;
 
@@ -18,6 +20,7 @@ namespace BauProjektManager.PlanManager.Services;
 public class ProfileManager : IProfileManager
 {
     private readonly IIdGenerator _idGenerator;
+    private readonly IPersistenceRegistry? _persistenceRegistry;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -27,9 +30,10 @@ public class ProfileManager : IProfileManager
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
     };
 
-    public ProfileManager(IIdGenerator idGenerator)
+    public ProfileManager(IIdGenerator idGenerator, IPersistenceRegistry? persistenceRegistry = null)
     {
         _idGenerator = idGenerator;
+        _persistenceRegistry = persistenceRegistry;
     }
 
     /// <summary>
@@ -176,6 +180,14 @@ public class ProfileManager : IProfileManager
         File.WriteAllText(tempPath, json);
         File.Move(tempPath, filePath, overwrite: true);
 
+        // BPM-107: registriere bei IPersistenceRegistry
+        _persistenceRegistry?.Register(new PersistenceEntry(
+            DisplayName: $".bpm/profiles/{profile.DocumentTypeName}",
+            AbsolutePath: filePath,
+            Type: PersistenceType.Config,
+            Scope: PersistenceScope.ProjectLocal,
+            Description: $"RecognitionProfile fuer Dokumenttyp '{profile.DocumentTypeName}' (ADR-010)"));
+
         Log.Information("Profil gespeichert: {Name} ({Id}) → {Path}",
             profile.DocumentTypeName, profile.Id, filePath);
     }
@@ -195,6 +207,7 @@ public class ProfileManager : IProfileManager
         }
 
         File.Delete(filePath);
+        _persistenceRegistry?.Unregister(filePath);
         Log.Information("Profil geloescht: {Id}", profileId);
         return true;
     }

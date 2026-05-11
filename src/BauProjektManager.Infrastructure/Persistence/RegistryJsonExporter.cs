@@ -1,6 +1,8 @@
 ﻿using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using BauProjektManager.Domain.Enums;
+using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models;
 using Serilog;
 
@@ -10,18 +12,21 @@ namespace BauProjektManager.Infrastructure.Persistence;
 /// Exports project data from SQLite to registry.json for VBA/Excel consumption.
 /// The JSON is flat (no nested objects) for VBA compatibility.
 /// Written atomically (temp file → rename) to prevent corruption.
+/// BPM-107: Registriert registry.json bei IPersistenceRegistry.
 /// </summary>
 public class RegistryJsonExporter
 {
     private readonly string _registryPath;
+    private readonly IPersistenceRegistry? _persistenceRegistry;
 
     /// <summary>
     /// Creates exporter. Registry path should be on cloud storage for sync.
     /// Default: CloudStorage/.AppData/BauProjektManager/registry.json
     /// </summary>
-    public RegistryJsonExporter(string registryPath)
+    public RegistryJsonExporter(string registryPath, IPersistenceRegistry? persistenceRegistry = null)
     {
         _registryPath = registryPath;
+        _persistenceRegistry = persistenceRegistry;
     }
 
     /// <summary>
@@ -64,6 +69,14 @@ public class RegistryJsonExporter
         var tempPath = _registryPath + ".tmp";
         File.WriteAllText(tempPath, json);
         File.Move(tempPath, _registryPath, overwrite: true);
+
+        // BPM-107: registriere bei IPersistenceRegistry
+        _persistenceRegistry?.Register(new PersistenceEntry(
+            DisplayName: "registry.json",
+            AbsolutePath: _registryPath,
+            Type: PersistenceType.Cache,
+            Scope: PersistenceScope.CloudShared,
+            Description: "Projekt-Registry-Export (flach fuer VBA/Excel)"));
 
         Log.Information("Registry exported: {Count} projects → {Path}", projects.Count, _registryPath);
         Log.Debug("Registry exported — {Count} projects", projects.Count);

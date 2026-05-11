@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models;
 using BauProjektManager.Domain.Enums;
 using Serilog;
@@ -14,12 +15,20 @@ namespace BauProjektManager.Infrastructure.Persistence;
 /// portabler Projekt-Snapshot für Import/Übergabe/Backup.
 /// Der .bpm/ Ordner wird als Hidden markiert.
 /// Rückwärts-Fallback: liest auch alte .bpm-manifest Dateien (Migration).
+/// BPM-107: Registriert geschriebene Manifeste bei IPersistenceRegistry.
 /// </summary>
 public class BpmManifestService
 {
     private const string BpmFolderName = ".bpm";
     private const string ManifestFileName = "manifest.json";
     private const string LegacyManifestFileName = ".bpm-manifest";
+
+    private readonly IPersistenceRegistry? _persistenceRegistry;
+
+    public BpmManifestService(IPersistenceRegistry? persistenceRegistry = null)
+    {
+        _persistenceRegistry = persistenceRegistry;
+    }
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -68,6 +77,14 @@ public class BpmManifestService
             }
 
             File.Move(tempPath, manifestPath);
+
+            // BPM-107: registriere bei IPersistenceRegistry
+            _persistenceRegistry?.Register(new PersistenceEntry(
+                DisplayName: ".bpm/manifest.json",
+                AbsolutePath: manifestPath,
+                Type: PersistenceType.Config,
+                Scope: PersistenceScope.ProjectLocal,
+                Description: "Projekt-Identitaet + Stammdaten (ADR-046)"));
 
             Log.Information("Manifest written: {Path}", manifestPath);
         }

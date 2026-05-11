@@ -1,6 +1,8 @@
 using System.IO;
 using Microsoft.Data.Sqlite;
+using BauProjektManager.Domain.Enums;
 using BauProjektManager.Domain.Interfaces;
+using BauProjektManager.Domain.Models;
 using BauProjektManager.Domain.Models.PlanManager;
 using Serilog;
 
@@ -11,16 +13,19 @@ namespace BauProjektManager.PlanManager.Services;
 /// Manages plan cache (revisions, files, links) and import journal.
 /// Created lazily when PlanManager module opens a project.
 /// Schema based on DB-SCHEMA.md Kap. 6 + Cross-Review 15.04.2026.
+/// BPM-107: Registriert sich bei IPersistenceRegistry beim ersten Connection-Open.
 /// </summary>
 public class PlanManagerDatabase : IDisposable
 {
     private readonly string _dbPath;
     private readonly IIdGenerator _idGenerator;
+    private readonly IPersistenceRegistry? _persistenceRegistry;
     private SqliteConnection? _connection;
 
-    public PlanManagerDatabase(string projectId, IIdGenerator idGenerator)
+    public PlanManagerDatabase(string projectId, IIdGenerator idGenerator, IPersistenceRegistry? persistenceRegistry = null)
     {
         _idGenerator = idGenerator;
+        _persistenceRegistry = persistenceRegistry;
         var projectDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "BauProjektManager", "Projects", projectId);
@@ -42,6 +47,14 @@ public class PlanManagerDatabase : IDisposable
             fkCmd.CommandText = "PRAGMA foreign_keys=ON;";
             fkCmd.ExecuteNonQuery();
             EnsureTables();
+
+            // BPM-107: bei IPersistenceRegistry registrieren (optional fuer Tests)
+            _persistenceRegistry?.Register(new PersistenceEntry(
+                DisplayName: "PlanManager-DB",
+                AbsolutePath: _dbPath,
+                Type: PersistenceType.Database,
+                Scope: PersistenceScope.Local,
+                Description: "SQLite — plan-Revisionen, Files, Journal pro Projekt"));
         }
         return _connection;
     }

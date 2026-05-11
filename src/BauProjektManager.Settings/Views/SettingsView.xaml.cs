@@ -88,7 +88,11 @@ public partial class SettingsView : UserControl
     private static readonly SolidColorBrush InactiveFilterBg = new(Colors.Transparent);
     private static readonly SolidColorBrush InactiveFilterFg = new(Color.FromRgb(0x99, 0x99, 0x99));
 
-    public SettingsView(ProjectDatabase db, IDialogService dialogService, AppSettingsService settingsService)
+    public SettingsView(
+        ProjectDatabase db,
+        IDialogService dialogService,
+        AppSettingsService settingsService,
+        IPersistenceRegistry? persistenceRegistry = null)
     {
         // Register converters before InitializeComponent
         Resources.Add("StatusConverter", new StatusConverter());
@@ -97,7 +101,7 @@ public partial class SettingsView : UserControl
         InitializeComponent();
 
         // ViewModel mit DI-Services erstellen
-        var vm = new SettingsViewModel(db, dialogService, settingsService);
+        var vm = new SettingsViewModel(db, dialogService, settingsService, persistenceRegistry);
         DataContext = vm;
 
         // Ordnerstruktur-Control initialisieren

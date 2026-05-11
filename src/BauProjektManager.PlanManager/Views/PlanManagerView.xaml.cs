@@ -67,12 +67,18 @@ public partial class PlanManagerView : UserControl
     private readonly IIdGenerator _idGenerator;
     private readonly IProfileManager _profileManager;
     private readonly PatternTemplateService _templateService;
+    private readonly IPersistenceRegistry? _persistenceRegistry;
 
-    public PlanManagerView(ProjectDatabase db, IIdGenerator idGenerator, IProfileManager profileManager)
+    public PlanManagerView(
+        ProjectDatabase db,
+        IIdGenerator idGenerator,
+        IProfileManager profileManager,
+        IPersistenceRegistry? persistenceRegistry = null)
     {
         _idGenerator = idGenerator;
         _profileManager = profileManager;
-        _templateService = new PatternTemplateService(_idGenerator);
+        _persistenceRegistry = persistenceRegistry;
+        _templateService = new PatternTemplateService(_idGenerator, persistenceRegistry);
         Resources.Add("BoolToVis", _boolToVis);
         Resources.Add("InverseBoolToVis", new InverseBoolToVisConverter());
         Resources.Add("CountToVis", new CountToVisConverter());
@@ -108,7 +114,7 @@ public partial class PlanManagerView : UserControl
             : null;
 
         var detailView = new ProjectDetailView(
-            project, _boolToVis, _profileManager, _idGenerator, _templateService, appDataPath);
+            project, _boolToVis, _profileManager, _idGenerator, _templateService, appDataPath, _persistenceRegistry);
         detailView.ViewModel.NavigateBack += NavigateToList;
 
         ProjectListPanel.Visibility = Visibility.Collapsed;

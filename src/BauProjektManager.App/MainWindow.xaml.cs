@@ -33,8 +33,8 @@ public partial class MainWindow : Window
         _settingsService = settingsService;
         _persistenceRegistry = persistenceRegistry;
 
-        _planManagerView = new PlanManagerView(db, idGenerator, profileManager);
-        _settingsView = new SettingsView(db, dialogService, settingsService);
+        _planManagerView = new PlanManagerView(db, idGenerator, profileManager, persistenceRegistry);
+        _settingsView = new SettingsView(db, dialogService, settingsService, persistenceRegistry);
 
         UpdateSidebarBadge();
 

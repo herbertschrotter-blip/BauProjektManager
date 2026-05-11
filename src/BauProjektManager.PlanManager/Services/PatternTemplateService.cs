@@ -1,7 +1,9 @@
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using BauProjektManager.Domain.Enums;
 using BauProjektManager.Domain.Interfaces;
+using BauProjektManager.Domain.Models;
 using BauProjektManager.Domain.Models.PlanManager;
 using Serilog;
 
@@ -10,10 +12,12 @@ namespace BauProjektManager.PlanManager.Services;
 /// <summary>
 /// Manages the global pattern-templates.json in Cloud .AppData/.
 /// Extracts reusable templates from profiles and suggests them for new projects.
+/// BPM-107: Registriert pattern-templates.json bei IPersistenceRegistry.
 /// </summary>
 public class PatternTemplateService
 {
     private readonly IIdGenerator _idGenerator;
+    private readonly IPersistenceRegistry? _persistenceRegistry;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -23,9 +27,10 @@ public class PatternTemplateService
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
     };
 
-    public PatternTemplateService(IIdGenerator idGenerator)
+    public PatternTemplateService(IIdGenerator idGenerator, IPersistenceRegistry? persistenceRegistry = null)
     {
         _idGenerator = idGenerator;
+        _persistenceRegistry = persistenceRegistry;
     }
 
     /// <summary>
@@ -62,6 +67,14 @@ public class PatternTemplateService
         var json = JsonSerializer.Serialize(templates, JsonOptions);
         File.WriteAllText(tempPath, json);
         File.Move(tempPath, filePath, overwrite: true);
+
+        // BPM-107: registriere bei IPersistenceRegistry
+        _persistenceRegistry?.Register(new PersistenceEntry(
+            DisplayName: "pattern-templates.json",
+            AbsolutePath: filePath,
+            Type: PersistenceType.Cache,
+            Scope: PersistenceScope.CloudShared,
+            Description: "Globale Plan-Pattern-Bibliothek (PatternTemplate-Vorschlaege)"));
 
         Log.Information("PatternTemplates: {Count} Templates gespeichert → {Path}",
             templates.Count, filePath);

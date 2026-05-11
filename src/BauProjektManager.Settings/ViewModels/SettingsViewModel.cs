@@ -24,8 +24,9 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     private readonly RegistryJsonExporter _exporter;
     private readonly AppSettingsService _settingsService;
     private readonly ProjectFolderService _folderService;
-    private readonly BpmManifestService _manifestService = new();
+    private readonly BpmManifestService _manifestService;
     private readonly IDialogService _dialogService;
+    private readonly IPersistenceRegistry? _persistenceRegistry;
     private AppSettings? _settings;
 
     [ObservableProperty]
@@ -144,11 +145,17 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     // Selected item in TreeView (set from code-behind)
     public FolderTreeItem? SelectedTreeItem { get; set; }
 
-    public SettingsViewModel(ProjectDatabase db, IDialogService dialogService, AppSettingsService settingsService)
+    public SettingsViewModel(
+        ProjectDatabase db,
+        IDialogService dialogService,
+        AppSettingsService settingsService,
+        IPersistenceRegistry? persistenceRegistry = null)
     {
         _db = db;
         _dialogService = dialogService;
         _settingsService = settingsService;
+        _persistenceRegistry = persistenceRegistry;
+        _manifestService = new BpmManifestService(persistenceRegistry);
 
         // Registry-Exportpfad aus Settings (BasePath/.AppData/BauProjektManager/)
         var settings = _settingsService.Load();
@@ -159,7 +166,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
                 "BauProjektManager");
         var registryPath = Path.Combine(exportDir, "registry.json");
 
-        _exporter = new RegistryJsonExporter(registryPath);
+        _exporter = new RegistryJsonExporter(registryPath, persistenceRegistry);
         _folderService = new ProjectFolderService(_settingsService);
 
         Log.Information("Registry export path: {Path}", registryPath);

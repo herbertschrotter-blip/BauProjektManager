@@ -428,14 +428,11 @@
                                            FontWeight="SemiBold"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                <TextBlock Text="Methode: "
+                                <TextBlock Text="Erkennung: "
                                            Foreground="{DynamicResource BpmTextSecondary}"
                                            FontSize="11"/>
-                                <TextBlock Text="{Binding SelectedRecognitionMethod}"
+                                <TextBlock Text="Position-genauer Token-Vergleich"
                                            Foreground="{DynamicResource BpmTextPrimary}"
-                                           FontSize="11"/>
-                                <TextBlock Text=" (automatisch erkannt)"
-                                           Foreground="{DynamicResource BpmTextSecondary}"
                                            FontSize="11"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
@@ -457,6 +454,25 @@
                                                          Value="True">
                                                 <Setter Property="Foreground"
                                                         Value="{DynamicResource BpmSuccess}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+
+                            <!-- BPM-082.04 U3: Variable-Segment-Warnung -->
+                            <TextBlock Text="{Binding RecognitionWarning}"
+                                       Foreground="{DynamicResource BpmWarning}"
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Margin="0,8,0,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding RecognitionWarning}"
+                                                         Value="">
+                                                <Setter Property="Visibility"
+                                                        Value="Collapsed"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>

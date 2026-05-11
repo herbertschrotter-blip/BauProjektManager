@@ -147,15 +147,14 @@ public partial class ProfileWizardViewModel : ObservableObject
     [ObservableProperty]
     private bool _patternTestSuccess;
 
-    public bool IsPrefix
-    {
-        get => SelectedRecognitionMethod == "prefix";
-        set
-        {
-            SelectedRecognitionMethod = value ? "prefix" : "contains";
-            OnPropertyChanged();
-        }
-    }
+    /// <summary>
+    /// BPM-082.04: Warnung im Wizard-Schritt 5 wenn ein als Erkennungsmuster
+    /// markiertes Segment typischerweise variabel ist (PlanNummer, Index, Datum,
+    /// rein numerisch). Kein Hard-Fail — User darf weiter speichern.
+    /// Leerer String = keine Warnung anzeigen (Style-Trigger im XAML).
+    /// </summary>
+    [ObservableProperty]
+    private string _recognitionWarning = "";
 
     public bool HasPlanIndexSegment =>
         Segments.Any(s => s.FieldType == FieldType.PlanIndex);
@@ -489,6 +488,7 @@ public partial class ProfileWizardViewModel : ObservableObject
             RecognitionPattern = "";
             PatternTestResult = "";
             PatternTestSuccess = false;
+            RecognitionWarning = "";
             return;
         }
 
@@ -498,7 +498,15 @@ public partial class ProfileWizardViewModel : ObservableObject
             selected.Select(s => $"Pos {s.Position}={s.RawValue}"));
 
         SelectedRecognitionMethod = "segment";
-        OnPropertyChanged(nameof(IsPrefix));
+
+        // BPM-082.04 (U3): Warnung wenn markierte Segmente typischerweise
+        // variabel sind (PlanNummer/Index/Datum/numerisch). Kein Hard-Fail.
+        var variable = selected.Where(IsLikelyVariableSegment).ToList();
+        RecognitionWarning = variable.Count == 0
+            ? ""
+            : "⚠ Variabel: "
+              + string.Join(", ", variable.Select(s => $"Pos {s.Position}"))
+              + " — Profil matcht nur Dateien mit genau diesem Wert.";
 
         // Test gegen Beispieldatei: gleiche Tokenisierung wie spaeter im
         // Recognizer (FileNameParser + OrdinalIgnoreCase). Damit ist die
@@ -595,6 +603,30 @@ public partial class ProfileWizardViewModel : ObservableObject
     }
 
     // === Helpers ===
+
+    /// <summary>
+    /// BPM-082.04 (U3): Heuristik aus Review R2-Konsens — Segment ist mit hoher
+    /// Wahrscheinlichkeit variabel (waechst pro Datei mit) und damit als
+    /// Erkennungs-Kriterium riskant. Warnung im Wizard, kein Hard-Fail.
+    /// Trigger: FieldType=PlanNumber/PlanIndex/Datum, oder rein numerisch,
+    /// oder als Datum parsbar.
+    /// </summary>
+    internal bool IsLikelyVariableSegment(RecognitionSegment seg)
+    {
+        var fieldType = Segments
+            .FirstOrDefault(s => s.Position == seg.Position)
+            ?.FieldType;
+        if (fieldType is FieldType.PlanNumber
+                      or FieldType.PlanIndex
+                      or FieldType.Datum)
+            return true;
+
+        var value = seg.RawValue?.Trim() ?? "";
+        if (string.IsNullOrEmpty(value)) return false;
+        if (value.All(char.IsDigit)) return true;
+        if (DateTime.TryParse(value, out _)) return true;
+        return false;
+    }
 
     private static char[] ParseDelimiters(string text)
     {

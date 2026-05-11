@@ -136,7 +136,7 @@ public partial class ProfileWizardViewModel : ObservableObject
     private string _recognitionPattern = "";
 
     [ObservableProperty]
-    private string _selectedRecognitionMethod = "contains";
+    private string _selectedRecognitionMethod = "segment";
 
     [ObservableProperty]
     private int _recognitionPriority = 100;
@@ -475,6 +475,10 @@ public partial class ProfileWizardViewModel : ObservableObject
 
     private void UpdateRecognitionPattern()
     {
+        // BPM-082.03: Pattern-Test-Logik auf Segment-Match umgestellt.
+        // Pro markiertem Segment wird (Position, RawValue) einzeln gegen den
+        // FileNameParser-Output der Beispieldatei geprueft (OrdinalIgnoreCase).
+        // AND-Semantik: alle markierten Segmente muessen matchen.
         var selected = RecognitionSegments
             .Where(s => s.IsSelected)
             .OrderBy(s => s.Position)
@@ -488,45 +492,37 @@ public partial class ProfileWizardViewModel : ObservableObject
             return;
         }
 
-        // Muster aus gewaehlten Segmenten bauen
-        // Trennzeichen zwischen Segmenten mitnehmen
-        var pattern = string.Join("", selected.Select(s => s.RawValue));
-        // Wenn benachbarte Segmente: Trennzeichen dazwischen
-        var delimiters = ParseDelimiters(DelimiterText);
-        if (selected.Count >= 1)
-        {
-            var parts = new List<string>();
-            for (int i = 0; i < selected.Count; i++)
-            {
-                parts.Add(selected[i].RawValue);
-                if (i < selected.Count - 1)
-                {
-                    // Trennzeichen zwischen Segmenten
-                    int gap = selected[i + 1].Position
-                              - selected[i].Position;
-                    if (gap == 1 && delimiters.Length > 0)
-                        parts.Add(delimiters[0].ToString());
-                }
-            }
-            pattern = string.Join("", parts);
-        }
+        // Anzeige fuer UI: "Pos N=Wert, Pos M=Wert" — macht klar dass
+        // Position-basiert verglichen wird, nicht Substring.
+        RecognitionPattern = string.Join(", ",
+            selected.Select(s => $"Pos {s.Position}={s.RawValue}"));
 
-        RecognitionPattern = pattern;
-
-        // Auto-Methode: erstes Segment = prefix, sonst contains
-        bool isFirst = selected[0].Position == 0;
-        SelectedRecognitionMethod = isFirst ? "prefix" : "contains";
+        SelectedRecognitionMethod = "segment";
         OnPropertyChanged(nameof(IsPrefix));
 
-        // Test gegen Beispieldatei
-        bool match = isFirst
-            ? SampleFileName.StartsWith(pattern,
-                StringComparison.OrdinalIgnoreCase)
-            : SampleFileName.Contains(pattern,
-                StringComparison.OrdinalIgnoreCase);
+        // Test gegen Beispieldatei: gleiche Tokenisierung wie spaeter im
+        // Recognizer (FileNameParser + OrdinalIgnoreCase). Damit ist die
+        // Wizard-Vorschau konsistent zur Save-Logik (W1) und zum Recognizer.
+        try
+        {
+            var delimiters = ParseDelimiters(DelimiterText);
+            var parsed = FileNameParser.Parse(SampleFileName, delimiters);
 
-        PatternTestSuccess = match;
-        PatternTestResult = match ? "Treffer" : "Kein Treffer";
+            bool allMatch = selected.All(sel =>
+                sel.Position < parsed.Segments.Count
+                && string.Equals(
+                    parsed.Segments[sel.Position].RawValue,
+                    sel.RawValue,
+                    StringComparison.OrdinalIgnoreCase));
+
+            PatternTestSuccess = allMatch;
+            PatternTestResult = allMatch ? "Treffer" : "Kein Treffer";
+        }
+        catch
+        {
+            PatternTestSuccess = false;
+            PatternTestResult = "Test fehlgeschlagen";
+        }
     }
 
     // === Profil speichern ===
@@ -551,15 +547,19 @@ public partial class ProfileWizardViewModel : ObservableObject
                 .Select(h => h.FieldType.ToString().ToLowerInvariant())
                 .ToList();
 
-            var recognition = new List<RecognitionRule>();
-            if (!string.IsNullOrWhiteSpace(RecognitionPattern))
-            {
-                recognition.Add(new RecognitionRule
+            // BPM-082.03: Pro markiertem Segment eine eigene segment-Rule.
+            // AND-Semantik im Recognizer matcht alle Rules gemeinsam.
+            // Method=segment, Pattern=Token-Wert, SegmentPosition=0-basiert.
+            var recognition = RecognitionSegments
+                .Where(s => s.IsSelected && !string.IsNullOrWhiteSpace(s.RawValue))
+                .OrderBy(s => s.Position)
+                .Select(s => new RecognitionRule
                 {
-                    Method = SelectedRecognitionMethod,
-                    Pattern = RecognitionPattern
-                });
-            }
+                    Method = "segment",
+                    Pattern = s.RawValue,
+                    SegmentPosition = s.Position
+                })
+                .ToList();
 
             var targetFolder = UseCustomFolder ? CustomFolderName : SelectedTargetFolder;
 

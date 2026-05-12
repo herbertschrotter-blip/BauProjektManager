@@ -46,6 +46,101 @@ public class InverseBoolConverter : IValueConverter
         => value is bool b ? !b : true;
 }
 
+/// <summary>
+/// FieldType -> Brush fuer farbige Segment-Tokens (Wizard Schritt 2).
+/// null/unbekannt -> BpmBgElevated (neutral grau).
+/// </summary>
+public class FieldTypeToBrushConverter : IValueConverter
+{
+    public object? Convert(object value, Type targetType,
+        object parameter, CultureInfo culture)
+    {
+        var key = value is FieldType ft
+            ? ft switch
+            {
+                FieldType.PlanNumber => "BpmFieldPlanNumber",
+                FieldType.PlanIndex => "BpmFieldPlanIndex",
+                FieldType.ProjectNumber => "BpmFieldProjectNumber",
+                FieldType.Geschoss => "BpmFieldGeschoss",
+                FieldType.Planart => "BpmFieldPlanart",
+                FieldType.Description => "BpmFieldDescription",
+                FieldType.Ignore => "BpmFieldIgnore",
+                _ => "BpmFieldDefault"
+            }
+            : "BpmBgElevated";
+        return Application.Current.TryFindResource(key);
+    }
+
+    public object ConvertBack(object value, Type targetType,
+        object parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}
+
+/// <summary>
+/// FieldType -> true wenn nicht zugewiesen. Triggert dashed border + unset-Label.
+/// </summary>
+public class FieldTypeIsUnsetConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType,
+        object parameter, CultureInfo culture)
+        => value is not FieldType;
+
+    public object ConvertBack(object value, Type targetType,
+        object parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}
+
+/// <summary>
+/// FieldType -> kurzes UI-Label fuer Token-Unterzeile.
+/// Pflicht-Marker (★) bei PlanNumber. null -> "? Typ waehlen".
+/// </summary>
+public class FieldTypeToLabelConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType,
+        object parameter, CultureInfo culture)
+        => value is FieldType ft
+            ? ft switch
+            {
+                FieldType.PlanNumber => "Plannr. ★",
+                FieldType.PlanIndex => "Index",
+                FieldType.ProjectNumber => "Projektnr.",
+                FieldType.Description => "Bezeichnung",
+                FieldType.Datum => "Datum",
+                FieldType.Geschoss => "Geschoss",
+                FieldType.Haus => "Haus",
+                FieldType.Planart => "Planart",
+                FieldType.Objekt => "Objekt",
+                FieldType.Bauteil => "Bauteil",
+                FieldType.Bauabschnitt => "Bauabschnitt",
+                FieldType.Stiege => "Stiege",
+                FieldType.Achse => "Achse",
+                FieldType.Zone => "Zone",
+                FieldType.Block => "Block",
+                FieldType.Ignore => "Ignorieren",
+                FieldType.Custom => "Eigener Typ",
+                _ => ft.ToString()
+            }
+            : "? Typ waehlen";
+
+    public object ConvertBack(object value, Type targetType,
+        object parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}
+
+/// <summary>
+/// FieldType -> Opacity. Ignore-Felder sind gedaempft (0.55).
+/// </summary>
+public class FieldTypeToOpacityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType,
+        object parameter, CultureInfo culture)
+        => value is FieldType.Ignore ? 0.55 : 1.0;
+
+    public object ConvertBack(object value, Type targetType,
+        object parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}
+
 public partial class ProfileWizardDialog : Window
 {
     private readonly ProfileWizardViewModel _vm;
@@ -60,6 +155,10 @@ public partial class ProfileWizardDialog : Window
         Resources.Add("CountToVisZero", new CountToVisZeroConverter());
         Resources.Add("BoolToVis", new BoolToVisConverter());
         Resources.Add("BoolToVisInverse2", new InverseBoolConverter());
+        Resources.Add("FieldTypeToBrush", new FieldTypeToBrushConverter());
+        Resources.Add("FieldTypeIsUnset", new FieldTypeIsUnsetConverter());
+        Resources.Add("FieldTypeToLabel", new FieldTypeToLabelConverter());
+        Resources.Add("FieldTypeToOpacity", new FieldTypeToOpacityConverter());
         InitializeComponent();
 
         _vm = new ProfileWizardViewModel(project, profileManager, templateService, appDataPath);
@@ -80,6 +179,36 @@ public partial class ProfileWizardDialog : Window
         if (sender is ComboBox combo
             && combo.DataContext is FileNameSegment segment
             && combo.SelectedItem is FieldTypeOption option)
+        {
+            _vm.OnFieldTypeChanged(segment, option);
+        }
+    }
+
+    // ── Schritt 2: Drag&Drop Token-Zuweisung (BPM-080.05) ──
+
+    private void OnFieldChipMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is FrameworkElement fe
+            && fe.DataContext is FieldTypeOption option
+            && option.Value.HasValue)
+        {
+            DragDrop.DoDragDrop(fe, option, DragDropEffects.Copy);
+        }
+    }
+
+    private void OnSegmentDragOver(object sender, DragEventArgs e)
+    {
+        e.Effects = e.Data.GetDataPresent(typeof(FieldTypeOption))
+            ? DragDropEffects.Copy
+            : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private void OnSegmentDrop(object sender, DragEventArgs e)
+    {
+        if (sender is FrameworkElement fe
+            && fe.DataContext is FileNameSegment segment
+            && e.Data.GetData(typeof(FieldTypeOption)) is FieldTypeOption option)
         {
             _vm.OnFieldTypeChanged(segment, option);
         }

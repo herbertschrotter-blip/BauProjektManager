@@ -70,4 +70,25 @@
     <!-- ── Transparent ─────────────────────────────────────────── -->
     <SolidColorBrush x:Key="BpmTransparent" Color="Transparent"/>
 
+    <!-- ── Field-Type-Tokens (PlanManager Profile-Wizard Schritt 2) ──
+         Farbig kodierte Segment-Klassifizierung im Wizard.
+         Konvention: BpmField<TypeName> als SolidColorBrush + BpmColorField<TypeName> als Color. -->
+    <Color x:Key="BpmColorFieldPlanNumber">#0F6E56</Color>     <!-- gruen -->
+    <Color x:Key="BpmColorFieldPlanIndex">#993C1D</Color>      <!-- rot -->
+    <Color x:Key="BpmColorFieldProjectNumber">#534AB7</Color>  <!-- lila -->
+    <Color x:Key="BpmColorFieldGeschoss">#185FA5</Color>       <!-- blau -->
+    <Color x:Key="BpmColorFieldPlanart">#1F7280</Color>        <!-- cyan -->
+    <Color x:Key="BpmColorFieldDescription">#555555</Color>    <!-- grau -->
+    <Color x:Key="BpmColorFieldIgnore">#3C3C3C</Color>         <!-- dunkelgrau (mit Opacity 0.55) -->
+    <Color x:Key="BpmColorFieldDefault">#555555</Color>        <!-- Fallback fuer nicht explizit gefaerbte Field-Types -->
+
+    <SolidColorBrush x:Key="BpmFieldPlanNumber"    Color="{StaticResource BpmColorFieldPlanNumber}"/>
+    <SolidColorBrush x:Key="BpmFieldPlanIndex"     Color="{StaticResource BpmColorFieldPlanIndex}"/>
+    <SolidColorBrush x:Key="BpmFieldProjectNumber" Color="{StaticResource BpmColorFieldProjectNumber}"/>
+    <SolidColorBrush x:Key="BpmFieldGeschoss"      Color="{StaticResource BpmColorFieldGeschoss}"/>
+    <SolidColorBrush x:Key="BpmFieldPlanart"       Color="{StaticResource BpmColorFieldPlanart}"/>
+    <SolidColorBrush x:Key="BpmFieldDescription"   Color="{StaticResource BpmColorFieldDescription}"/>
+    <SolidColorBrush x:Key="BpmFieldIgnore"        Color="{StaticResource BpmColorFieldIgnore}"/>
+    <SolidColorBrush x:Key="BpmFieldDefault"       Color="{StaticResource BpmColorFieldDefault}"/>
+
 </ResourceDictionary>

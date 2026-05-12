@@ -147,52 +147,121 @@
                 </StackPanel>
             </ScrollViewer>
 
-            <!-- === SCHRITT 2: Segmente zuweisen === -->
+            <!-- === SCHRITT 2: Segmente zuweisen (Token-Drag&Drop nach Mockup 02_Segmente.html) === -->
             <ScrollViewer x:Name="Step2Panel" VerticalScrollBarVisibility="Auto" Padding="16"
                           Visibility="Collapsed">
                 <StackPanel>
-                    <TextBlock Text="Jedem Segment einen Feldtyp zuweisen:"
+                    <TextBlock Text="Welcher Teil des Dateinamens ist was?"
                                Foreground="{DynamicResource BpmTextBright}"
-                               FontSize="14" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                               FontSize="14" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                    <TextBlock Text="Ziehe einen Feldtyp aus der Liste unten auf ein Segment, um es zuzuweisen."
+                               Foreground="{DynamicResource BpmTextSecondary}"
+                               FontSize="11" Margin="0,0,0,12"
+                               TextWrapping="Wrap"/>
 
-                    <ItemsControl ItemsSource="{Binding Segments}">
+                    <!-- Beispiel-Block mit farbigen Tokens (Drop-Targets) -->
+                    <Border Background="{DynamicResource BpmBgSurface}"
+                            BorderBrush="{DynamicResource BpmBorderDefault}"
+                            BorderThickness="1" CornerRadius="4"
+                            Padding="12" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="BEISPIEL-DATEI"
+                                       Foreground="{DynamicResource BpmTextSecondary}"
+                                       FontSize="10" FontWeight="SemiBold"
+                                       Margin="0,0,0,4"/>
+                            <TextBlock Text="{Binding SampleFileName, Mode=OneWay}"
+                                       Foreground="{DynamicResource BpmTextSecondary}"
+                                       FontSize="11" FontFamily="Consolas"
+                                       Margin="0,0,0,10"/>
+                            <ItemsControl ItemsSource="{Binding Segments}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border AllowDrop="True"
+                                                Drop="OnSegmentDrop"
+                                                DragOver="OnSegmentDragOver"
+                                                BorderThickness="1"
+                                                CornerRadius="4"
+                                                Padding="10,5"
+                                                MinWidth="64"
+                                                Margin="0,0,4,4"
+                                                Opacity="{Binding FieldType, Converter={StaticResource FieldTypeToOpacity}}">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="{Binding FieldType, Converter={StaticResource FieldTypeToBrush}}"/>
+                                                    <Setter Property="BorderBrush" Value="{Binding FieldType, Converter={StaticResource FieldTypeToBrush}}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding FieldType, Converter={StaticResource FieldTypeIsUnset}}" Value="True">
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource BpmTextSecondary}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="{Binding RawValue}"
+                                                           Foreground="{DynamicResource BpmTextBright}"
+                                                           FontSize="13" FontFamily="Consolas"
+                                                           FontWeight="SemiBold"
+                                                           HorizontalAlignment="Center"/>
+                                                <TextBlock Text="{Binding FieldType, Converter={StaticResource FieldTypeToLabel}}"
+                                                           Foreground="{DynamicResource BpmTextOnAccent}"
+                                                           FontSize="9"
+                                                           HorizontalAlignment="Center"
+                                                           Opacity="0.85"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Drop-Hint -->
+                    <TextBlock Foreground="{DynamicResource BpmAccentPrimary}"
+                               FontSize="11" Margin="0,0,0,8"
+                               TextWrapping="Wrap"
+                               Text="Drop-Ziel: ein Segment-Token oben — Feldtyp wird sofort uebernommen"/>
+
+                    <!-- Feldtyp-Chips als Drag-Quellen -->
+                    <TextBlock Text="Feldtypen (ziehen):"
+                               Foreground="{DynamicResource BpmTextSecondary}"
+                               FontSize="12" Margin="0,0,0,6"/>
+                    <ItemsControl ItemsSource="{Binding FieldTypeOptions}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Background="{DynamicResource BpmBgSurface}"
+                                <Border Background="{DynamicResource BpmBgElevated}"
                                         BorderBrush="{DynamicResource BpmBorderDefault}"
                                         BorderThickness="1" CornerRadius="3"
-                                        Padding="10,8" Margin="0,0,0,6">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="30"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="180"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0"
-                                                   Text="{Binding Position}"
-                                                   Foreground="{DynamicResource BpmTextSecondary}"
-                                                   FontSize="12" FontWeight="SemiBold"
-                                                   VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1"
-                                                   Text="{Binding RawValue}"
-                                                   Foreground="{DynamicResource BpmTextBright}"
-                                                   FontSize="14" FontFamily="Consolas"
-                                                   VerticalAlignment="Center"/>
-                                        <ComboBox Grid.Column="2"
-                                                  ItemsSource="{Binding DataContext.FieldTypeOptions, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                  DisplayMemberPath="DisplayName"
-                                                  SelectionChanged="OnFieldTypeSelectionChanged"
-                                                  Background="{DynamicResource BpmBgInput}"
-                                                  Foreground="{DynamicResource BpmTextPrimary}"
-                                                  BorderBrush="{DynamicResource BpmBorderDefault}"
-                                                  FontSize="12"/>
-                                    </Grid>
+                                        Padding="7,3" Margin="0,0,4,4"
+                                        Cursor="Hand"
+                                        PreviewMouseLeftButtonDown="OnFieldChipMouseDown">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Value}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Text="{Binding DisplayName}"
+                                               Foreground="{DynamicResource BpmTextPrimary}"
+                                               FontSize="11"/>
                                 </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
 
-                    <TextBlock Text="Pflicht: Mindestens Plannummer muss zugewiesen werden."
+                    <TextBlock Text="⚠ Pflicht: Mindestens Plannummer (★) muss zugewiesen werden."
                                Foreground="{DynamicResource BpmWarning}"
                                FontSize="11" Margin="0,12,0,0"/>
                 </StackPanel>

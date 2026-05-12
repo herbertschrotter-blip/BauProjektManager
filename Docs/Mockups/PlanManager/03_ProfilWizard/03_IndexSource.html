@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>BPM ProfilWizard — Schritt 3: Index-Erkennung</title>
+<style>
+  body{margin:0;background:#111;font-family:'Segoe UI',sans-serif;color:#CCCCCC;font-size:13px;padding:40px;display:flex;justify-content:center}
+  .dialog{width:750px;background:#1E1E1E;border:1px solid #3C3C3C;border-radius:4px;overflow:hidden;display:flex;flex-direction:column;min-height:580px}
+
+  /* Window-Title */
+  .dialog-title{background:#252526;padding:10px 16px;border-bottom:1px solid #3C3C3C;display:flex;justify-content:space-between;align-items:center}
+  .dialog-title-text{color:#FFFFFF;font-size:13px;font-weight:600}
+  .win-controls{display:flex;gap:8px}
+  .win-btn{width:12px;height:12px;border-radius:50%;background:#3C3C3C}
+  .win-btn.close{background:#F44747;cursor:pointer}
+
+  /* Header */
+  .header{background:#252526;padding:14px 16px;border-bottom:1px solid #2D2D30}
+  .step-title{color:#FFFFFF;font-size:15px;font-weight:600;margin:0 0 8px}
+  .dots{display:flex;align-items:center;gap:6px}
+  .dot{width:10px;height:10px;border-radius:50%;background:#3C3C3C}
+  .dot.done{background:#04395E}
+  .dot.act{background:#0078D4}
+  .step-counter{color:#858585;font-size:11px;margin-left:6px}
+
+  /* Body */
+  .content{padding:16px;flex:1;overflow-y:auto}
+  .body-title{color:#FFFFFF;font-size:14px;font-weight:600;margin:0 0 16px}
+
+  /* Radio-Option */
+  .radio-row{margin-bottom:12px;cursor:pointer}
+  .radio-row.disabled{cursor:not-allowed;opacity:0.45}
+  .radio-line{display:flex;align-items:center;gap:8px}
+  .radio-circle{width:16px;height:16px;border-radius:50%;border:2px solid #858585;background:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .radio-row:hover:not(.disabled) .radio-circle{border-color:#0078D4}
+  .radio-circle.checked{border-color:#0078D4}
+  .radio-circle.checked::after{content:'';width:8px;height:8px;border-radius:50%;background:#0078D4}
+  .radio-label{color:#FFFFFF;font-size:13px;font-weight:600}
+  .radio-desc{color:#858585;font-size:11px;margin:2px 0 0 26px;line-height:1.5}
+  .radio-badge{background:#2D2D30;color:#858585;font-size:9px;padding:1px 6px;border-radius:8px;margin-left:6px;font-weight:500;letter-spacing:0.3px}
+
+  /* Sub-Box: Index-Modus + Case */
+  .sub-box{background:#252526;border:1px solid #3C3C3C;border-radius:4px;padding:12px 14px;margin:8px 0 0}
+  .sub-title{color:#FFFFFF;font-size:13px;font-weight:600;margin:0 0 10px}
+  .sub-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer}
+  .sub-row:last-of-type{margin-bottom:0}
+  .sub-row .radio-circle, .sub-row .check-box{width:14px;height:14px;border-width:1.5px}
+  .sub-row .radio-circle.checked::after{width:7px;height:7px}
+  .sub-text{color:#CCCCCC;font-size:12px}
+  .sub-divider{height:1px;background:#3C3C3C;margin:10px 0}
+  .check-box{width:14px;height:14px;border:1.5px solid #858585;border-radius:2px;background:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .check-box.checked{background:#0078D4;border-color:#0078D4}
+  .check-box.checked::after{content:'✓';color:#FFFFFF;font-size:10px;font-weight:bold;line-height:1}
+
+  /* Warn-Box */
+  .warn-box{background:#252526;border:1px solid #F0AD4E;border-radius:4px;padding:10px 12px;margin-top:14px;display:flex;gap:8px}
+  .warn-icon{color:#F0AD4E;font-size:14px;line-height:1.4;flex-shrink:0}
+  .warn-text{color:#F0AD4E;font-size:12px;line-height:1.5}
+
+  /* Footer */
+  .footer{background:#252526;padding:12px 16px;border-top:1px solid #3C3C3C;display:flex;justify-content:space-between;align-items:center}
+  .footer-left{display:flex;gap:8px}
+  .footer-right{display:flex;gap:8px}
+  .btn{background:transparent;border:1px solid #3C3C3C;border-radius:3px;color:#CCCCCC;font-size:12px;cursor:pointer;font-family:'Segoe UI';padding:6px 14px}
+  .btn:hover{background:#37373D;border-color:#0078D4}
+  .btn-primary{background:#0078D4;border:none;color:#FFFFFF;font-weight:500}
+  .btn-primary:hover{background:#1A8AE0}
+</style>
+</head>
+<body>
+
+<div class="dialog">
+
+  <!-- Window-Title -->
+  <div class="dialog-title">
+    <span class="dialog-title-text">Profil erstellen</span>
+    <div class="win-controls">
+      <div class="win-btn"></div>
+      <div class="win-btn"></div>
+      <div class="win-btn close" onclick="location.href='../02_Projektdetail/01_Profile.html'" title="Schließen"></div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="step-title">Schritt 3: Index-Erkennung</div>
+    <div class="dots">
+      <div class="dot done"></div>
+      <div class="dot done"></div>
+      <div class="dot act"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <span class="step-counter">Schritt 3 von 5</span>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+    <div class="body-title">Wie wird der Index (Revision) erkannt?</div>
+
+    <!-- Option 1: Aus Dateiname -->
+    <div class="radio-row">
+      <div class="radio-line">
+        <div class="radio-circle checked"></div>
+        <span class="radio-label">Aus Dateiname</span>
+      </div>
+      <div class="radio-desc">Index wird aus einem Segment im Dateinamen gelesen (z.B. A, B, C)</div>
+    </div>
+
+    <!-- Option 2: Kein Index -->
+    <div class="radio-row">
+      <div class="radio-line">
+        <div class="radio-circle"></div>
+        <span class="radio-label">Kein Index</span>
+      </div>
+      <div class="radio-desc">Dokument hat keinen Index. Versionen werden per MD5-Hash erkannt.</div>
+    </div>
+
+    <!-- Option 3: Aus Plankopf (disabled) -->
+    <div class="radio-row disabled">
+      <div class="radio-line">
+        <div class="radio-circle"></div>
+        <span class="radio-label">Aus Plankopf</span>
+        <span class="radio-badge">POST-V1</span>
+      </div>
+      <div class="radio-desc">Index wird aus dem PDF-Plankopf gelesen. Noch nicht verfügbar.</div>
+    </div>
+
+    <!-- Sub-Box: Index-Modus + Case -->
+    <div class="sub-box">
+      <div class="sub-title">Index-Modus</div>
+      <div class="sub-row">
+        <div class="radio-circle checked"></div>
+        <span class="sub-text">Optional (Erstausgabe kann ohne Index sein)</span>
+      </div>
+      <div class="sub-row">
+        <div class="radio-circle"></div>
+        <span class="sub-text">Pflicht (Jedes Dokument muss einen Index haben)</span>
+      </div>
+      <div class="sub-divider"></div>
+      <div class="sub-row">
+        <div class="check-box checked"></div>
+        <span class="sub-text">Gross-/Kleinschreibung ignorieren (A = a)</span>
+      </div>
+    </div>
+
+    <!-- Warn (weil in Schritt 2 kein Index zugewiesen) -->
+    <div class="warn-box">
+      <span class="warn-icon">⚠</span>
+      <span class="warn-text">In Schritt 2 wurde kein Index-Segment zugewiesen. Gehe zurück und weise einem Segment den Typ <b>Index</b> zu, oder wähle <b>Kein Index</b>.</span>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-left">
+      <button class="btn" onclick="location.href='../02_Projektdetail/01_Profile.html'">Abbrechen</button>
+    </div>
+    <div class="footer-right">
+      <button class="btn" onclick="location.href='./02_Segmente.html'">← Zurück</button>
+      <button class="btn btn-primary" onclick="location.href='./04_Zielordner.html'">Weiter →</button>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

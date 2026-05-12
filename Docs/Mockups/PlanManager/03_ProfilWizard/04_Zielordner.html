@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>BPM ProfilWizard — Schritt 4: Zielordner</title>
+<style>
+  body{margin:0;background:#111;font-family:'Segoe UI',sans-serif;color:#CCCCCC;font-size:13px;padding:40px;display:flex;justify-content:center}
+  .dialog{width:750px;background:#1E1E1E;border:1px solid #3C3C3C;border-radius:4px;overflow:hidden;display:flex;flex-direction:column;min-height:580px}
+
+  /* Window-Title */
+  .dialog-title{background:#252526;padding:10px 16px;border-bottom:1px solid #3C3C3C;display:flex;justify-content:space-between;align-items:center}
+  .dialog-title-text{color:#FFFFFF;font-size:13px;font-weight:600}
+  .win-controls{display:flex;gap:8px}
+  .win-btn{width:12px;height:12px;border-radius:50%;background:#3C3C3C}
+  .win-btn.close{background:#F44747;cursor:pointer}
+
+  /* Header */
+  .header{background:#252526;padding:14px 16px;border-bottom:1px solid #2D2D30}
+  .step-title{color:#FFFFFF;font-size:15px;font-weight:600;margin:0 0 8px}
+  .dots{display:flex;align-items:center;gap:6px}
+  .dot{width:10px;height:10px;border-radius:50%;background:#3C3C3C}
+  .dot.done{background:#04395E}
+  .dot.act{background:#0078D4}
+  .step-counter{color:#858585;font-size:11px;margin-left:6px}
+
+  /* Body */
+  .content{padding:16px;flex:1;overflow-y:auto}
+  .body-title{color:#FFFFFF;font-size:14px;font-weight:600;margin:0 0 14px}
+
+  /* Section */
+  .section{margin-bottom:18px}
+  .sec-label{color:#858585;font-size:12px;margin:0 0 6px;display:flex;align-items:center;gap:6px}
+  .sec-hint{color:#666;font-size:10px;font-style:italic}
+
+  /* Hauptordner-Dropdown + New-Button */
+  .folder-row{display:flex;gap:8px;align-items:stretch}
+  .folder-dd{flex:1;background:#1E1E1E;border:1px solid #3E3E42;border-radius:3px;padding:7px 10px;font-size:13px;color:#FFFFFF;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-family:'Segoe UI'}
+  .folder-dd:hover{border-color:#0078D4}
+  .dd-caret{color:#858585;font-size:10px}
+  .folder-new{background:transparent;border:1px solid #3C3C3C;border-radius:3px;color:#CCCCCC;font-size:12px;padding:6px 12px;cursor:pointer;font-family:'Segoe UI';white-space:nowrap}
+  .folder-new:hover{background:#37373D;border-color:#0078D4;color:#FFFFFF}
+
+  /* Chip-Quelle */
+  .chips{display:flex;flex-wrap:wrap;gap:4px}
+  .chip{background:#2D2D30;color:#CCCCCC;font-size:11px;padding:4px 10px;border-radius:3px;cursor:grab;font-family:'Segoe UI';border:1px solid transparent;user-select:none}
+  .chip:hover{background:#37373D;border-color:#0078D4}
+  .chip:active{cursor:grabbing}
+  .chip.active{background:#04395E;color:#FFFFFF;border-color:#04395E}
+  .chip.custom{color:#F0AD4E;border:1px dashed #F0AD4E;background:transparent}
+  .chip.custom:hover{background:rgba(240,173,78,0.1)}
+
+  /* Custom-Folder Inline */
+  .custom-row{display:flex;align-items:center;gap:8px;margin-top:8px}
+  .check-box{width:14px;height:14px;border:1.5px solid #858585;border-radius:2px;background:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer}
+  .check-box.checked{background:#0078D4;border-color:#0078D4}
+  .check-box.checked::after{content:'✓';color:#FFFFFF;font-size:10px;font-weight:bold;line-height:1}
+  .custom-text{color:#CCCCCC;font-size:12px}
+
+  /* Hierarchie-Liste */
+  .hier-list{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;border:1px dashed #3C3C3C;border-radius:4px;padding:8px;min-height:50px}
+  .hier-row{display:grid;grid-template-columns:14px 90px 1fr auto;align-items:center;gap:8px;background:#252526;border:1px solid #3C3C3C;border-radius:3px;padding:6px 10px;cursor:grab}
+  .hier-row:hover{border-color:#0078D4}
+  .hier-row:active{cursor:grabbing}
+  .hier-grip{color:#858585;font-size:14px;line-height:1;user-select:none}
+  .hier-level{color:#858585;font-size:11px}
+  .hier-field{display:flex;align-items:center;gap:6px}
+  .hier-field-name{color:#FFFFFF;font-size:12px;font-weight:500}
+  .hier-arrow{color:#666;font-size:10px}
+  .hier-sample{color:#0078D4;font-size:12px;font-family:Consolas,monospace}
+  .hier-x{background:transparent;border:none;color:#858585;cursor:pointer;font-size:13px;padding:0 4px}
+  .hier-x:hover{color:#F44747}
+  .hier-empty{color:#666;font-size:11px;font-style:italic;text-align:center;padding:8px}
+
+  /* Field-Chips (Drag-Quelle) */
+  .field-chip{background:#2D2D30;color:#CCCCCC;font-size:11px;padding:4px 9px;border-radius:3px;cursor:grab;font-family:'Segoe UI';border:1px solid transparent;display:inline-flex;align-items:center;gap:5px;user-select:none}
+  .field-chip:hover{background:#37373D;border-color:#0078D4}
+  .field-chip:active{cursor:grabbing}
+  .field-chip.used{opacity:0.4;cursor:not-allowed;border-color:transparent}
+  .field-chip.used:hover{background:#2D2D30;border-color:transparent}
+  .field-sample{color:#0078D4;font-family:Consolas,monospace;font-size:10px}
+
+  /* Vorschau */
+  .preview-box{background:#252526;border:1px solid #3C3C3C;border-radius:4px;padding:10px 14px;margin-top:6px}
+  .preview-label{color:#858585;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px}
+  .preview-path{color:#CCCCCC;font-size:12px;font-family:Consolas,monospace;line-height:1.6;white-space:pre}
+  .preview-file{color:#FFFFFF}
+
+  /* Footer */
+  .footer{background:#252526;padding:12px 16px;border-top:1px solid #3C3C3C;display:flex;justify-content:space-between;align-items:center}
+  .footer-left{display:flex;gap:8px}
+  .footer-right{display:flex;gap:8px}
+  .btn{background:transparent;border:1px solid #3C3C3C;border-radius:3px;color:#CCCCCC;font-size:12px;cursor:pointer;font-family:'Segoe UI';padding:6px 14px}
+  .btn:hover{background:#37373D;border-color:#0078D4}
+  .btn-primary{background:#0078D4;border:none;color:#FFFFFF;font-weight:500}
+  .btn-primary:hover{background:#1A8AE0}
+</style>
+</head>
+<body>
+
+<div class="dialog">
+
+  <!-- Window-Title -->
+  <div class="dialog-title">
+    <span class="dialog-title-text">Profil erstellen</span>
+    <div class="win-controls">
+      <div class="win-btn"></div>
+      <div class="win-btn"></div>
+      <div class="win-btn close" onclick="location.href='../02_Projektdetail/01_Profile.html'" title="Schließen"></div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="step-title">Schritt 4: Zielordner</div>
+    <div class="dots">
+      <div class="dot done"></div>
+      <div class="dot done"></div>
+      <div class="dot done"></div>
+      <div class="dot act"></div>
+      <div class="dot"></div>
+      <span class="step-counter">Schritt 4 von 5</span>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+    <div class="body-title">Wohin sollen die Dokumente sortiert werden?</div>
+
+    <!-- ─── Hauptordner ─── -->
+    <div class="section">
+      <div class="sec-label">Hauptordner *</div>
+      <div class="folder-row">
+        <div class="folder-dd" title="Ordner auswählen">
+          <span>01 Planunterlagen</span>
+          <span class="dd-caret">▾</span>
+        </div>
+        <button class="folder-new" title="Neuen Ordner erstellen">+ Neuer Ordner</button>
+      </div>
+    </div>
+
+    <!-- ─── Unterordner-Ebenen ─── -->
+    <div class="section">
+      <div class="sec-label">Unterordner-Ebenen <span class="sec-hint">— optional, Reihenfolge per Drag&Drop</span></div>
+
+      <div class="hier-list">
+        <div class="hier-row">
+          <span class="hier-grip" title="Ziehen zum Verschieben">⋮⋮</span>
+          <span class="hier-level">Ebene 1:</span>
+          <div class="hier-field">
+            <span class="hier-field-name">Planart</span>
+            <span class="hier-arrow">→</span>
+            <span class="hier-sample">Polierplan/</span>
+          </div>
+          <button class="hier-x" title="Aus Hierarchie entfernen">✕</button>
+        </div>
+        <div class="hier-row">
+          <span class="hier-grip" title="Ziehen zum Verschieben">⋮⋮</span>
+          <span class="hier-level">Ebene 2:</span>
+          <div class="hier-field">
+            <span class="hier-field-name">Geschoss</span>
+            <span class="hier-arrow">→</span>
+            <span class="hier-sample">OG1/</span>
+          </div>
+          <button class="hier-x" title="Aus Hierarchie entfernen">✕</button>
+        </div>
+      </div>
+
+      <div class="sec-label" style="margin-top:8px">Verfügbare Felder <span class="sec-hint">— in Schritt 2 zugewiesen, hier rein ziehen</span></div>
+      <div class="chips">
+        <div class="field-chip used"><span>Planart</span><span class="field-sample">Polierplan</span></div>
+        <div class="field-chip used"><span>Geschoss</span><span class="field-sample">OG1</span></div>
+        <div class="field-chip"><span>Projektnummer</span><span class="field-sample">5998</span></div>
+        <div class="field-chip"><span>Plannummer</span><span class="field-sample">201</span></div>
+      </div>
+    </div>
+
+    <!-- ─── Vorschau ─── -->
+    <div class="preview-box">
+      <div class="preview-label">Vorschau Zielpfad</div>
+      <div class="preview-path">01 Planunterlagen/
+  Polierplan/
+    OG1/
+      <span class="preview-file">5998-201_OG1_Polierplan.dwg</span></div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-left">
+      <button class="btn" onclick="location.href='../02_Projektdetail/01_Profile.html'">Abbrechen</button>
+    </div>
+    <div class="footer-right">
+      <button class="btn" onclick="location.href='./03_IndexSource.html'">← Zurück</button>
+      <button class="btn btn-primary" onclick="location.href='./05_Erkennung.html'">Weiter →</button>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

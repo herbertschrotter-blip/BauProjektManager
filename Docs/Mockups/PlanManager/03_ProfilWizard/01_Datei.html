@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>BPM ProfilWizard — Schritt 1: Datei auswählen</title>
+<style>
+  body{margin:0;background:#111;font-family:'Segoe UI',sans-serif;color:#CCCCCC;font-size:13px;padding:40px;display:flex;justify-content:center}
+  .dialog{width:750px;background:#1E1E1E;border:1px solid #3C3C3C;border-radius:4px;overflow:hidden;display:flex;flex-direction:column;min-height:580px}
+
+  /* Window-Title */
+  .dialog-title{background:#252526;padding:10px 16px;border-bottom:1px solid #3C3C3C;display:flex;justify-content:space-between;align-items:center}
+  .dialog-title-text{color:#FFFFFF;font-size:13px;font-weight:600}
+  .win-controls{display:flex;gap:8px}
+  .win-btn{width:12px;height:12px;border-radius:50%;background:#3C3C3C}
+  .win-btn.close{background:#F44747;cursor:pointer}
+
+  /* Header: Step-Title + Dots */
+  .header{background:#252526;padding:14px 16px;border-bottom:1px solid #2D2D30}
+  .step-title{color:#FFFFFF;font-size:15px;font-weight:600;margin:0 0 8px}
+  .dots{display:flex;align-items:center;gap:6px}
+  .dot{width:10px;height:10px;border-radius:50%;background:#3C3C3C}
+  .dot.act{background:#0078D4}
+  .step-counter{color:#858585;font-size:11px;margin-left:6px}
+
+  /* Body */
+  .content{padding:16px;flex:1;overflow-y:auto}
+  .label{color:#858585;font-size:12px;margin:0 0 4px}
+  .listbox{background:#252526;border:1px solid #3C3C3C;border-radius:3px;max-height:140px;overflow-y:auto;margin-bottom:14px}
+  .lb-item{padding:6px 10px;font-size:12px;font-family:Consolas,monospace;color:#CCCCCC;cursor:pointer;border-bottom:1px solid #2D2D30}
+  .lb-item:last-child{border-bottom:none}
+  .lb-item:hover{background:#2D2D30}
+  .lb-item.sel{background:#04395E;color:#FFFFFF}
+
+  /* File-Input Row */
+  .row{display:flex;gap:8px;align-items:stretch;margin-bottom:14px}
+  .input{background:#1E1E1E;border:1px solid #3E3E42;color:#CCCCCC;padding:6px 10px;font-size:13px;font-family:'Segoe UI',sans-serif;flex:1;outline:none}
+  .input:focus{border-color:#0078D4}
+  .input.mono{font-family:Consolas,monospace}
+  .btn{background:transparent;border:1px solid #3C3C3C;border-radius:3px;color:#CCCCCC;font-size:12px;cursor:pointer;font-family:'Segoe UI';padding:6px 14px}
+  .btn:hover{background:#37373D;border-color:#0078D4}
+  .btn-primary{background:#0078D4;border:none;color:#FFFFFF;font-weight:500}
+  .btn-primary:hover{background:#1A8AE0}
+  .btn-disabled{opacity:0.4;cursor:not-allowed}
+  .btn-disabled:hover{background:transparent;border-color:#3C3C3C}
+
+  /* Delimiter row */
+  .row-inline{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .input-narrow{width:80px;font-family:Consolas,monospace}
+  .hint{color:#858585;font-size:11px}
+  .parse-info{color:#4EC94E;font-size:11px;margin:6px 0 0;padding:0 2px}
+
+  /* Segments preview */
+  .sec-label{color:#858585;font-size:12px;margin:18px 0 8px}
+  .segs{display:flex;flex-wrap:wrap;gap:6px}
+  .seg{background:#2D2D30;border:1px solid #3C3C3C;border-radius:3px;padding:6px 10px;font-size:13px;font-family:Consolas,monospace;color:#FFFFFF}
+
+  /* Footer */
+  .footer{background:#252526;padding:12px 16px;border-top:1px solid #3C3C3C;display:flex;justify-content:space-between;align-items:center}
+  .footer-left{display:flex;gap:8px}
+  .footer-right{display:flex;gap:8px}
+</style>
+</head>
+<body>
+
+<div class="dialog">
+
+  <!-- Window-Title -->
+  <div class="dialog-title">
+    <span class="dialog-title-text">Profil erstellen</span>
+    <div class="win-controls">
+      <div class="win-btn"></div>
+      <div class="win-btn"></div>
+      <div class="win-btn close" onclick="location.href='../02_Projektdetail/01_Profile.html'" title="Schließen"></div>
+    </div>
+  </div>
+
+  <!-- Header: Step + Progress -->
+  <div class="header">
+    <div class="step-title">Schritt 1: Datei auswählen</div>
+    <div class="dots">
+      <div class="dot act"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <span class="step-counter">Schritt 1 von 5</span>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <div class="label">Dateien im Eingang — klicke eine Datei als Vorlage:</div>
+    <div class="listbox">
+      <div class="lb-item">5998-200_EG_Polierplan.dwg</div>
+      <div class="lb-item sel">5998-201_OG1_Polierplan.dwg</div>
+      <div class="lb-item">5998-202_OG2_Polierplan.dwg</div>
+      <div class="lb-item">5998-203_OG3_Polierplan.dwg</div>
+      <div class="lb-item">B-101_Bewehrung.pdf</div>
+      <div class="lb-item">BB_2026-04-15_Baubesprechung.pdf</div>
+      <div class="lb-item">Statik_2026-03_Hauptberechnung.pdf</div>
+    </div>
+
+    <div class="label">Beispiel-Dateiname</div>
+    <div class="row">
+      <input type="text" class="input mono" value="5998-201_OG1_Polierplan.dwg">
+      <button class="btn">Parsen</button>
+    </div>
+
+    <div class="row-inline">
+      <span class="label" style="margin:0">Trennzeichen:</span>
+      <input type="text" class="input input-narrow" value="- _ .">
+      <span class="hint">(Leerzeichen-getrennt, z.B.: - _ .)</span>
+    </div>
+    <div class="parse-info">✓ 5 Segmente erkannt</div>
+
+    <div class="sec-label">Erkannte Segmente:</div>
+    <div class="segs">
+      <div class="seg">5998</div>
+      <div class="seg">201</div>
+      <div class="seg">OG1</div>
+      <div class="seg">Polierplan</div>
+      <div class="seg">dwg</div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-left">
+      <button class="btn" onclick="location.href='../02_Projektdetail/01_Profile.html'">Abbrechen</button>
+    </div>
+    <div class="footer-right">
+      <button class="btn btn-disabled" title="Erster Schritt — kein Zurück">← Zurück</button>
+      <button class="btn btn-primary" onclick="location.href='./02_Segmente.html'">Weiter →</button>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

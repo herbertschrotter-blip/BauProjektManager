@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>BPM ProfilWizard — Schritt 5: Erkennung</title>
+<style>
+  body{margin:0;background:#111;font-family:'Segoe UI',sans-serif;color:#CCCCCC;font-size:13px;padding:40px;display:flex;justify-content:center}
+  .dialog{width:750px;background:#1E1E1E;border:1px solid #3C3C3C;border-radius:4px;overflow:hidden;display:flex;flex-direction:column;min-height:580px}
+
+  /* Window-Title */
+  .dialog-title{background:#252526;padding:10px 16px;border-bottom:1px solid #3C3C3C;display:flex;justify-content:space-between;align-items:center}
+  .dialog-title-text{color:#FFFFFF;font-size:13px;font-weight:600}
+  .win-controls{display:flex;gap:8px}
+  .win-btn{width:12px;height:12px;border-radius:50%;background:#3C3C3C}
+  .win-btn.close{background:#F44747;cursor:pointer}
+
+  /* Header */
+  .header{background:#252526;padding:14px 16px;border-bottom:1px solid #2D2D30}
+  .step-title{color:#FFFFFF;font-size:15px;font-weight:600;margin:0 0 8px}
+  .dots{display:flex;align-items:center;gap:6px}
+  .dot{width:10px;height:10px;border-radius:50%;background:#3C3C3C}
+  .dot.done{background:#04395E}
+  .dot.act{background:#0078D4}
+  .step-counter{color:#858585;font-size:11px;margin-left:6px}
+
+  /* Body */
+  .content{padding:16px;flex:1;overflow-y:auto}
+  .body-title{color:#FFFFFF;font-size:14px;font-weight:600;margin:0 0 14px}
+  .label{color:#858585;font-size:12px;margin:0 0 4px}
+
+  /* Profil-Name */
+  .input{background:#1E1E1E;border:1px solid #3E3E42;color:#FFFFFF;padding:7px 10px;font-size:13px;font-family:'Segoe UI';width:100%;box-sizing:border-box;outline:none;margin-bottom:14px}
+  .input:focus{border-color:#0078D4}
+  .input.mono{font-family:Consolas,monospace}
+
+  /* Modus-Toggle (Pills) */
+  .mode-toggle{display:inline-flex;background:#252526;border:1px solid #3C3C3C;border-radius:4px;padding:2px;margin-bottom:12px}
+  .mode-pill{padding:6px 14px;font-size:12px;color:#858585;cursor:pointer;border-radius:3px;font-weight:500;user-select:none}
+  .mode-pill:hover{color:#CCCCCC}
+  .mode-pill.act{background:#0078D4;color:#FFFFFF}
+
+  /* Segmente-Modus */
+  .body-hint{color:#858585;font-size:11px;margin:0 0 10px}
+  .example-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .example-label{color:#858585;font-size:10px;letter-spacing:0.5px;text-transform:uppercase}
+  .example-filename{color:#666;font-size:11px;font-family:Consolas,monospace}
+  .seg-tokens{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+  .seg-token{padding:8px 14px;border-radius:4px;background:transparent;border:1px solid #3C3C3C;color:#CCCCCC;font-size:13px;font-family:Consolas,monospace;cursor:pointer;font-weight:500;transition:all 0.1s}
+  .seg-token:hover{border-color:#0078D4;color:#FFFFFF}
+  .seg-token.sel{background:#0078D4;border-color:#0078D4;color:#FFFFFF}
+
+  /* Regex-Modus (zur Vorschau, ausgeblendet hier — nur Hint) */
+  .mode-info{display:flex;align-items:center;gap:6px;color:#666;font-size:11px;font-style:italic;margin:0 0 14px;padding:0 2px}
+
+  /* Erkennungsmuster-Preview */
+  .pattern-box{background:#252526;border:1px solid #3C3C3C;border-radius:4px;padding:12px 14px;margin-bottom:10px}
+  .pattern-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+  .pattern-row:last-child{margin-bottom:0}
+  .pattern-label{color:#858585;font-size:11px;min-width:120px}
+  .pattern-value{color:#0078D4;font-size:13px;font-family:Consolas,monospace;font-weight:600}
+  .pattern-method{color:#CCCCCC;font-size:11px}
+
+  /* Footer */
+  .footer{background:#252526;padding:12px 16px;border-top:1px solid #3C3C3C;display:flex;justify-content:space-between;align-items:center}
+  .footer-left{display:flex;gap:8px}
+  .footer-right{display:flex;gap:8px}
+  .btn{background:transparent;border:1px solid #3C3C3C;border-radius:3px;color:#CCCCCC;font-size:12px;cursor:pointer;font-family:'Segoe UI';padding:6px 14px}
+  .btn:hover{background:#37373D;border-color:#0078D4}
+  .btn-primary{background:#0078D4;border:none;color:#FFFFFF;font-weight:500}
+  .btn-primary:hover{background:#1A8AE0}
+  .btn-save{padding:6px 24px}
+</style>
+</head>
+<body>
+
+<div class="dialog">
+
+  <!-- Window-Title -->
+  <div class="dialog-title">
+    <span class="dialog-title-text">Profil erstellen</span>
+    <div class="win-controls">
+      <div class="win-btn"></div>
+      <div class="win-btn"></div>
+      <div class="win-btn close" onclick="location.href='../02_Projektdetail/01_Profile.html'" title="Schließen"></div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="step-title">Schritt 5: Erkennung</div>
+    <div class="dots">
+      <div class="dot done"></div>
+      <div class="dot done"></div>
+      <div class="dot done"></div>
+      <div class="dot done"></div>
+      <div class="dot act"></div>
+      <span class="step-counter">Schritt 5 von 5</span>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+    <div class="body-title">Wie wird dieses Profil erkannt?</div>
+
+    <!-- Profil-Name -->
+    <div class="label">Profil-Name</div>
+    <input type="text" class="input" value="Polierplan">
+
+    <!-- Modus-Toggle -->
+    <div class="label">Erkennungs-Methode</div>
+    <div class="mode-toggle">
+      <div class="mode-pill act">Segmente klicken</div>
+      <div class="mode-pill" onclick="alert('Mockup folgt: 03_ProfilWizard/05_Erkennung_Regex.html (BPM-007.02)')">Regex (für Sonderfälle)</div>
+    </div>
+
+    <!-- Segmente-Modus aktiv -->
+    <div class="body-hint">Klicke auf die Teile, die bei diesem Profil <b>immer gleich</b> sind:</div>
+
+    <div class="example-row">
+      <span class="example-label">Beispiel-Datei:</span>
+      <span class="example-filename">5998-201_OG1_Polierplan.dwg</span>
+    </div>
+
+    <div class="seg-tokens">
+      <div class="seg-token">5998</div>
+      <div class="seg-token">201</div>
+      <div class="seg-token">OG1</div>
+      <div class="seg-token sel">Polierplan</div>
+      <div class="seg-token">dwg</div>
+    </div>
+
+    <!-- Erkennungsmuster-Preview -->
+    <div class="pattern-box">
+      <div class="pattern-row">
+        <span class="pattern-label">Erkennungsmuster:</span>
+        <span class="pattern-value">Polierplan</span>
+      </div>
+      <div class="pattern-row">
+        <span class="pattern-label">Erkennungs-Methode:</span>
+        <span class="pattern-method">Position-genauer Token-Vergleich (Segment 4)</span>
+      </div>
+      <div class="pattern-row">
+        <span class="pattern-label">Priorität:</span>
+        <span class="pattern-method">100 (Standard)</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-left">
+      <button class="btn" onclick="location.href='../02_Projektdetail/01_Profile.html'">Abbrechen</button>
+    </div>
+    <div class="footer-right">
+      <button class="btn" onclick="location.href='./04_Zielordner.html'">← Zurück</button>
+      <button class="btn btn-primary btn-save" onclick="location.href='../02_Projektdetail/01_Profile.html'">Profil speichern</button>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

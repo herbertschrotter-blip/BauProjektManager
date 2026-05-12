@@ -21,7 +21,7 @@
                            Foreground="{DynamicResource BpmTextBright}"
                            Text="{Binding StepTitle}"/>
                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                    <Ellipse Width="10" Height="10" Margin="0,0,6,0"
+                    <Ellipse x:Name="Dot1" Width="10" Height="10" Margin="0,0,6,0"
                              Fill="{DynamicResource BpmAccentPrimary}"/>
                     <Ellipse x:Name="Dot2" Width="10" Height="10" Margin="0,0,6,0"
                              Fill="{DynamicResource BpmBorderDefault}"/>

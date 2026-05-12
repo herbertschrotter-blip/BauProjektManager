@@ -64,6 +64,8 @@ public partial class ProfileWizardDialog : Window
 
         _vm = new ProfileWizardViewModel(project, profileManager, templateService, appDataPath);
         DataContext = _vm;
+
+        Loaded += (_, _) => UpdateStepVisibility();
     }
 
     private void OnFileNameKeyDown(object sender, KeyEventArgs e)
@@ -146,15 +148,21 @@ public partial class ProfileWizardDialog : Window
         Step5Panel.Visibility = _vm.CurrentStep == 5
             ? Visibility.Visible : Visibility.Collapsed;
 
-        // Progress Dots
-        var accent = FindResource("BpmAccentPrimary");
-        var inactive = FindResource("BpmBorderDefault");
-        var a = (System.Windows.Media.Brush)accent;
-        var i = (System.Windows.Media.Brush)inactive;
-        Dot2.Fill = _vm.CurrentStep >= 2 ? a : i;
-        Dot3.Fill = _vm.CurrentStep >= 3 ? a : i;
-        Dot4.Fill = _vm.CurrentStep >= 4 ? a : i;
-        Dot5.Fill = _vm.CurrentStep >= 5 ? a : i;
+        // Progress Dots — 3-stufig: done (vergangen) / active (aktuell) / inactive (zukuenftig)
+        var done = (System.Windows.Media.Brush)FindResource("BpmBgActive");
+        var active = (System.Windows.Media.Brush)FindResource("BpmAccentPrimary");
+        var inactive = (System.Windows.Media.Brush)FindResource("BpmBorderDefault");
+
+        System.Windows.Media.Brush DotBrush(int dotIndex) =>
+            _vm.CurrentStep == dotIndex ? active
+            : _vm.CurrentStep > dotIndex ? done
+            : inactive;
+
+        Dot1.Fill = DotBrush(1);
+        Dot2.Fill = DotBrush(2);
+        Dot3.Fill = DotBrush(3);
+        Dot4.Fill = DotBrush(4);
+        Dot5.Fill = DotBrush(5);
 
         StepCounter.Text =
             $"Schritt {_vm.CurrentStep} von {_vm.TotalSteps}";

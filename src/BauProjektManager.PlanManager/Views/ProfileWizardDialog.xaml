@@ -98,9 +98,26 @@
                                    Margin="8,0,0,0"/>
                     </StackPanel>
 
-                    <TextBlock Text="{Binding ParseInfo}"
-                               Foreground="{DynamicResource BpmTextSecondary}"
-                               FontSize="11" Margin="0,8,0,0"/>
+                    <!-- Parse-Info: gruen + Haken wenn erfolgreich (UI-UX P6 Feedback Always) -->
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <TextBlock Text="&#10003; "
+                                   Foreground="{DynamicResource BpmSuccess}"
+                                   FontSize="11" FontWeight="Bold"
+                                   Visibility="{Binding Segments.Count, Converter={StaticResource CountToVisInverse}}"/>
+                        <TextBlock Text="{Binding ParseInfo}"
+                                   FontSize="11">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{DynamicResource BpmTextSecondary}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Segments.Count, Converter={StaticResource CountToVisInverse}}" Value="Visible">
+                                            <Setter Property="Foreground" Value="{DynamicResource BpmSuccess}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
 
                     <!-- Segment-Vorschau (nur Anzeige, keine Dropdowns) -->
                     <TextBlock Text="Erkannte Segmente:"
@@ -513,8 +530,9 @@
                 <Button Grid.Column="1" Content="Zurueck"
                         Style="{DynamicResource BpmButtonSecondary}"
                         HorizontalAlignment="Right" Margin="0,0,8,0"
-                        Visibility="{Binding CanGoBack, Converter={StaticResource BoolToVis}}"
-                        Click="OnBack"/>
+                        IsEnabled="{Binding CanGoBack}"
+                        Click="OnBack"
+                        ToolTip="Erster Schritt — kein Zurueck"/>
                 <Button x:Name="NextButton" Grid.Column="2" Content="Weiter"
                         Style="{DynamicResource BpmButtonPrimary}"
                         IsEnabled="{Binding CanGoNext}"

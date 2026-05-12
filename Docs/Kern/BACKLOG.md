@@ -101,7 +101,7 @@ Details: [BauProjektManager_Architektur.md](BauProjektManager_Architektur.md) Ka
 | # | Feature | Beschreibung |
 |---|---------|-------------|
 | 18 | Dateinamen-Parser | Segmente splitten an Trennzeichen (ADR-022) ✅ v0.24.3 |
-| 19 | Segment-Zuweiser GUI | 5-Schritt-Wizard: Datei, Segmente, Index, Zielordner, Erkennung ✅ v0.24.10 (UI fertig, Speichern offen) |
+| 19 | Segment-Zuweiser GUI | 5-Schritt-Wizard: Datei, Segmente, Index, Zielordner, Erkennung ✅ v0.24.10 (UI fertig, Speichern offen). **Mockup-Redesign v0.28.37** (Token-Drag&Drop in Schritt 2, Dropdown+Hierarchie in Schritt 4, Toggle Segmente/Regex in Schritt 5) — siehe [PlanManager.md Kap. 15.6](../Module/PlanManager.md). WPF-Umsetzung pending (Tracker BPM-080.05) |
 | 20 | Plantyp-Erkennung | Segment-basierte Erkennung (positionsgenau) + regex-Fallback ✅ v0.28.32 (BPM-082, ADR-010 erweitert, SchemaVersion 3) |
 | 21 | PatternTemplates | Vorschlagslogik (ADR-010) |
 | 22 | .bpm/profiles/*.json | Pro Projekt im .bpm/-Ordner (ADR-046) — ProfileManager Service |
@@ -132,7 +132,7 @@ Diese Features verbessern V1, sind aber kein Blocker für den Release.
 | Bestehende Ordner zuweisen | Existierenden Ordner einem Projekt zuweisen statt neu anlegen. "Projekt importieren" Button mit Auto-Manifest-Erkennung. | ✅ v0.20.0 |
 | Ordner umbenennen auf Disk | Bei Sortierung/Präfix-Änderung Ordner auf Festplatte umbenennen | ⬜ |
 | Plan-Sammler (#34) | Pläne per Checkbox sammeln und nach Schema sortieren | ⬜ |
-| Ordner-Sync (#35) | Bidirektionaler Sync zwischen lokalem Projektordner und Remote (Firmenserver/Netzlaufwerk). Pro Projekt konfigurierbar: welche Ordner, welche Richtung (←→/←/→). Neue Dateien vom Remote landen im _Eingang/ → PlanManager sortiert. Sortierte zurücksynchen. Tab „Sync" im Projektdetail. [ModuleOrdnerSync.md](../Konzepte/ModuleOrdnerSync.md) | ⬜ |
+| Ordner-Sync (#35) | Bidirektionaler Sync zwischen lokalem Projektordner und Remote (Firmenserver/Netzlaufwerk). Pro Projekt konfigurierbar: welche Ordner, welche Richtung (←→/←/→). Neue Dateien vom Remote landen im _Eingang/ → PlanManager sortiert. Sortierte zurücksynchen. Tab „Sync" im Projektdetail. **Sync-Tab-Mockup vertagt nach Spike 0 / ADR-053** (Inhalt ändert sich grundlegend von Cloud-Ordner-Polling zu Server Pull/Push). [ModuleOrdnerSync.md](../Konzepte/ModuleOrdnerSync.md) | ⬜ |
 
 ### Datenschutz-Infrastruktur (PFLICHT vor erstem Online-Modul — DSGVO-Architektur Kap. 15)
 

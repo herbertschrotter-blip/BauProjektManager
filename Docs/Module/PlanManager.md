@@ -22,7 +22,7 @@ supersedes: []
   - 3. Konzeptübersicht
   - 4. IndexSource — Dreistufiges Modell (ADR-045)
   - 5. Entscheidungsmatrix (Import-Versionierung)
-  - 6. Workflow — 10-Schritte-Gesamtworkflow + 7-Stufen-Analyse-Pipeline
+  - 6. Workflow — 6 Phasen (0–5), 10-Schritte-Pipeline (ADR-008), 7-Stufen-Analyse
   - 7. Manueller Sortier-Modus
   - 8. DWG-Veraltet-Warnung
   - 9. Bestandsmanifest — .bpm/plan-index.json
@@ -261,7 +261,7 @@ string BuildDocumentKey(Profile profile, ParsedFile parsed)
 
 ---
 
-## 6. Workflow — 5 Phasen
+## 6. Workflow — 6 Phasen (0–5)
 
 ### Phase 0 — Profil anlernen (einmalig pro Dokumenttyp)
 
@@ -271,7 +271,7 @@ string BuildDocumentKey(Profile profile, ParsedFile parsed)
 2. **Segmente zuweisen** → Feldtypen per Dropdown zuweisen (PlanNumber Pflicht)
 3. **IndexSource** → FileName / None / PlanHeader(Post-V1), indexMode, indexComparison
 4. **Zielordner + Ordner-Hierarchie** → Hauptordner + Unterebenen (Geschoss, Haus etc.)
-5. **Erkennung** → Klickbare Segment-Bloecke (Toggle), auto-Muster + auto-Methode (prefix/contains), Live-Test, Prioritaet
+5. **Erkennung** → Klickbare Segment-Bloecke (Default `Method=segment`, BPM-082) oder Regex-Pattern (Fallback `Method=regex`, BPM-007.02), Live-Test gegen Beispieldatei, Prioritaet. Alte Methoden `prefix`/`contains` sind entfernt (siehe Kap. 14)
 
 Ergebnis: RecognitionProfile in `.bpm/profiles/<n>.json` (ADR-046) + PatternTemplate in `pattern-templates.json`.
 
@@ -746,7 +746,9 @@ betroffene `.bpm/profiles/*.json`-Dateien loeschen, im Wizard neu anlegen.
 
 ---
 
-## 15. UI-Screens (Zusammenfassung)
+## 15. UI-Screens
+
+### 15.1 Überblick
 
 | Screen | Beschreibung |
 |--------|-------------|
@@ -754,10 +756,347 @@ betroffene `.bpm/profiles/*.json`-Dateien loeschen, im Wizard neu anlegen.
 | **Projektdetail** | 3 Tabs: Profile (gruppiert nach Zielordner, ✎ Profil-Button), Manuell sortieren, Sync |
 | **Import-Vorschau** | DataGrid mit 9 Status-Typen, Zusammenfassungszeile, Rechtsklick-Korrekturen |
 | **Profil-Wizard** | 5 Schritte: Datei auswaehlen → Segmente zuweisen → IndexSource → Zielordner → Erkennung (klickbare Segment-Bloecke) |
-| **Manueller Sortier-Dialog** | Links: Dateien, Rechts: Formular + Umbenennung + Vorschau |
+| **Manueller Sortier-Dialog** | Liste mit kontextuellem Radial-Menü beim Klick & Halten |
 
-**UI-Regeln:** Screen States (5 Pflicht), max. 1 Primary/Kontext, BPM Dark Theme Tokens,
-Icons.xaml, Deutsch, de-AT Formate. Interne Status reicher als UI-Begriffe.
+**Mockup-Verzeichnis:** `Docs/Mockups/PlanManager/` — durchklickbarer HTML-Prototyp.
+Quelle der Wahrheit für Navigationskanten: `Docs/Mockups/PlanManager/_SITEMAP.md`.
+
+---
+
+### 15.2 Mockup-Konventionen (ab 2026-05)
+
+Verbindlich für alle PlanManager-UI-Mockups. Skill `mockup-erstellen` v0.23.0+ erzwingt sie.
+
+- **Ordner-pro-Fenster** — flache Struktur direkt unter `Docs/Mockups/PlanManager/`:
+  `01_Projektuebersicht/`, `02_Projektdetail/`, `03_ProfilWizard/`, `_Archiv/`.
+  Varianten/Tabs/Wizard-Schritte als `NN_Variante.html` im Fenster-Ordner.
+  Hierarchie/User-Journey wird **nicht** in Ordnernamen kodiert, sondern in der
+  `Aufrufer`-Spalte von `_SITEMAP.md`.
+- **Klick-Navigation Pflicht** — jedes interaktive Element bekommt
+  `onclick="location.href='…'"` mit relativem Pfad. Mockups sind als
+  Durchklick-Prototyp ausgelegt, nicht als Standbild.
+- **Tote Pfade** — Ziel-Mockup existiert geplant, aber noch nicht gebaut:
+  `onclick="alert('Mockup folgt: <Pfad>')"` + gestrichelter Rand + opacity:0.7.
+  In Sitemap als `🟡 tot` markiert.
+- **`_SITEMAP.md` pro Modul** — zentrale Wahrheit für Navigationskanten.
+  Spalten: Quelle, Ziel, Trigger, Status (`✅ aktiv` / `🟡 tot` / `❌ kaputt`).
+  Bei jedem neuen Mockup gelesen und gepflegt.
+
+**Sprachregelung "Profil" statt "Dokumenttyp":**
+Im UI heißt es konsequent **Profil** — der Wizard erstellt ein Profil, der Tab
+zeigt Profile, der Button heißt "+ Neues Profil anlernen", das Wizard-Feld
+heißt "Profil-Name". Die interne Code-Property `DocumentTypeName` bleibt
+Implementation-Detail; im XAML-Label wird "Profil-Name" angezeigt
+(WPF-Umsetzung BPM-080.05).
+
+---
+
+### 15.3 Hauptseite — Projektübersicht
+
+**Mockup:** `Docs/Mockups/PlanManager/01_Projektuebersicht/01_Projektuebersicht.html`
+
+App-Shell mit Sidebar links (BauProjektManager-Header, 📁 PlanManager aktiv,
+⚙ Einstellungen), Statusbar unten (BPM-Akzent #0078D4 — "PlanManager · 3 aktive Projekte").
+
+**Aufbau:**
+- Header: Modul-Titel + Aktive-Projekte-Zähler + 🔍 Suche-Input + ⟳ Aktualisieren-Button
+- Projekt-Tabelle (Karten-Style):
+  - Farbstreifen links pro Karte (amber #F0AD4E = unsortierte Files / grün #4EC94E = aktuell)
+  - Spalten: Projekt, Nr., Eingang-Status-Badge ("50 unsortiert" / "✓ Aktuell"), Aktiv-Indikator
+- Footer-Hinweis: "3 Projekte geladen"
+
+**Klick-Verhalten:**
+- Projekt-Karte → Projektdetail (`02_Projektdetail/01_Profile.html`)
+- Sidebar "⚙ Einstellungen" → Cross-Modul `../../Settings/01_Einstellungen/01_Allgemein.html`
+
+---
+
+### 15.4 Projektdetail — Profile-Tab
+
+**Mockup:** `Docs/Mockups/PlanManager/02_Projektdetail/01_Profile.html`
+
+Selbe App-Shell. Project-Header oben mit `← Zurück`-Pfeil, Projektname,
+[↻ Rückgängig] und [Import starten]-Buttons. Eingang-Bar darunter:
+"⚡ 15 im Eingang · 3 vom Server-Sync".
+
+**Tabs:** `Profile` (aktiv) — `Manuell sortieren` — `Sync` (tot, BPM-005 vertagt).
+
+**Profile-Tab-Inhalt:**
+- Profil-Karten gruppiert nach Zielordner (Pläne (01 Planunterlagen), Protokolle (04 Protokolle), …)
+- Pro Profil-Karte: farbiger Status-Streifen + Name (Polierplan, Schalungsplan, …) +
+  Pattern-Chips (`S-`, `FileName`, `opt.Idx`) + Plan-Anzahl + ✎ Profil-Button
+- Statusbar unten: Projektkürzel + Profil-Anzahl + Dokument-Anzahl + Eingang-Counter
+
+**Klick-Verhalten:**
+- `← Zurück` und Sidebar "📁 PlanManager" → Projektübersicht
+- Sidebar "⚙ Einstellungen" → Cross-Modul Settings
+- Tab "Manuell sortieren" → `02_ManuellSortieren.html` (aktiv)
+- Tab "Sync" → `alert('Mockup folgt nach Spike 0 / ADR-053')` (tot)
+- ✎ Profil-Button (4×) → ProfilWizard Schritt 1
+- `+ Neues Profil anlernen` (gestrichelter Plus-Button am Ende) → ProfilWizard Schritt 1
+
+---
+
+### 15.5 Projektdetail — Manuell sortieren
+
+**Mockup:** `Docs/Mockups/PlanManager/02_Projektdetail/02_ManuellSortieren.html`
+
+Selbe App-Shell + Tab-Bar. Tab `Manuell sortieren` aktiv.
+
+**Kern-UX-Konzept: Radial-Menü beim Klicken & Halten.**
+
+Der manuelle Sortier-Modus löst das Problem, dass nicht jede Datei profilgerecht
+benannt ist (Scans, Fremdformate, Foto-Uploads). Statt eines klassischen
+Drag-and-Drop-Trees nutzt das Mockup ein **kontextuelles Radial-Menü**, das beim
+Mausklick-und-Halten auf einem Dokument **um das Dokument herum** erscheint.
+
+**Aufbau:**
+- Dokumenten-Liste vertikal (Consolas-Font, ein Item pro Zeile mit Filesize + Datum)
+- Hint oben rechts: "☝ Klicken & halten zum Sortieren"
+- **Aktives Dokument** beim Halten:
+  - Akzent-Border #0078D4 + Glow (box-shadow rgba(0,120,212,0.6))
+  - `cursor:grabbing`
+  - z-index 10 (über dimmed Items)
+- **Andere Listen-Items**: `opacity:0.25` — Fokus auf das gehaltene Dokument
+- **Radial-Menü** (420×420px, z-index:100, pointer-events:none auf Container,
+  pointer-events:auto auf Segmenten):
+  - 6 Segmente in 60°-Anordnung um das aktive Dokument:
+    - **12 Uhr**: Polierpläne (blau #185FA5)
+    - **2 Uhr**: Statikpläne (lila #534AB7) — Beispiel für Hover-State mit Sub-Menü
+    - **4 Uhr**: Bewehrungspläne (rot #993C1D)
+    - **6 Uhr**: Protokolle (grün #0F6E56)
+    - **8 Uhr**: Sonstiges (grau #555)
+    - **10 Uhr**: + Neuer Ordner (transparent, dashed border #F0AD4E)
+  - Jedes Segment zeigt: Icon, Ordner-Name, Item-Anzahl bzw. "▸ halten" bei Hover-Segmenten
+- **Sub-Menü** (z-index:110, rechts vom hover-Segment):
+  - Erscheint, wenn der User über einem Segment mit Sub-Ordnern festhält
+  - Beispiel "Statikpläne": Schalung (23), Bewehrung (31), + Neuer Sub-Ordner
+- Footer-Hint im Radial-Container: "Loslassen über einem Ordner → Dokument wird
+  verschoben. Auf Pfeil-Segment halten → Unter-Ordner."
+
+**UX-Entscheidungen / Begründung:**
+- **Radial statt Dropdown:** Pen/Maus-Distanz konstant in alle Richtungen — der
+  User muss nicht erst zum Dropdown navigieren, sondern findet die Ordner-Optionen
+  direkt um den Cursor.
+- **Drum-herum-Anordnung:** Center bleibt sichtbar (transparent durch das Radial),
+  damit der User die Identität des gehaltenen Dokuments während der Auswahl
+  präsent hat.
+- **Sub-Menü nach rechts ausklappend:** zeigt Hierarchie ohne das Hauptmenü zu
+  verlassen — wenn nur 1 Ebene tief, kann der User direkt zum Sub-Ordner ziehen.
+- **`opacity:0.25` für andere Items:** verhindert visuelle Überforderung, simuliert
+  Backdrop-Dimming ohne separates Overlay.
+- **6 Segmente fix:** mehr als 6 wird optisch unübersichtlich. Wenn ein User mehr
+  Top-Level-Kategorien hat, wird die Liste vom System nach Häufigkeit/Letzte-Nutzung
+  begrenzt; "+ Neuer Ordner" als 6. Segment ermöglicht jederzeit Erweiterung.
+
+**Klick-Verhalten (im Mockup):**
+- Statisches HTML — Radial-Menü ist als sichtbarer Hover-/Halt-State gerendert,
+  nicht als echtes JS-Drag-and-Drop.
+- WPF-Umsetzung später: `MouseDown` startet Hold-Timer (~150ms), Radial-Menü
+  per `Popup` oder `AdornerLayer` rendern, `MouseMove` über Segment = Hover,
+  `MouseUp` = Auswahl.
+
+---
+
+### 15.6 Profil-Wizard — 5 Schritte (modaler Dialog)
+
+**Mockup-Verzeichnis:** `Docs/Mockups/PlanManager/03_ProfilWizard/`
+
+Modaler Dialog, **750×580px**, ohne Sidebar (Dialog-Frame mit Window-Title + rotem
+X-Schließen-Button). Header pro Schritt: Schritt-Titel + 5 Progress-Dots
+(Dot.done = #04395E / Dot.act = #0078D4 / inactive = #3C3C3C) + "Schritt N von 5"-Counter.
+Footer durchgängig: `Abbrechen` (links) — `← Zurück` — `Weiter →` (Primary).
+Letzter Schritt: `Profil speichern` (Primary, breit) statt Weiter.
+
+Schließen-Mechanismen (alle 5 Schritte → zurück zu Profile-Tab):
+- Rotes X im Window-Title
+- `Abbrechen`-Button im Footer
+
+#### 15.6.1 Schritt 1 — Datei auswählen
+
+**Mockup:** `03_ProfilWizard/01_Datei.html`
+
+- **Eingang-Liste** (ListBox-Style, max-height 140px, Consolas-Font): Dateien aus
+  dem Projekt-Eingang. Eine als Vorlage selected (Akzent-Background).
+- **Beispiel-Dateiname-Input**: TextBox mit aktueller Datei + `Parsen`-Button
+  rechts daneben (Secondary-Style).
+- **Trennzeichen-Input**: TextBox 80px breit (Default `- _ .`) + Hinweis
+  "(Leerzeichen-getrennt, z.B.: - _ .)".
+- **Parse-Info**: "✓ N Segmente erkannt" (grün, nach Parse).
+- **Segment-Vorschau** (read-only Tokens, Consolas): WrapPanel mit Border-Cards
+  je Segment-RawValue.
+
+`Zurück`-Button disabled (erster Schritt).
+
+#### 15.6.2 Schritt 2 — Segmente zuweisen
+
+**Mockup:** `03_ProfilWizard/02_Segmente.html`
+
+**UX-Konzept: Drag-and-Drop von Feldtypen auf farbige Segment-Tokens.**
+
+Ersetzt die ursprüngliche Per-Segment-Dropdown-Lösung. Inspiriert vom
+historischen Archiv-Mockup (`_Archiv/00_Gesamtuebersicht.html`).
+
+- **Beispiel-Block** (Background #252526): Dateiname (Consolas, grau, klein) +
+  Token-Reihe horizontal mit Trennzeichen sichtbar dazwischen.
+- **Tokens** (Drop-Ziele):
+  - Pro Segment ein farbiger Block mit 2 Zeilen — RawValue oben (Consolas weiß),
+    Field-Type-Label unten (klein, opacity 0.85).
+  - Farben pro Field-Type (konsistent mit Archiv-Mockup):
+    Projektnummer #534AB7 (lila), Plannummer #0F6E56 (grün), Index #993C1D (rot),
+    Geschoss #185FA5 (blau), Planart #1F7280 (cyan), Bezeichnung #555 (grau),
+    Ignorieren #3C3C3C + opacity 0.55 (gedimmt).
+  - **Unset-Token** (noch nicht zugewiesen): `background:#2D2D30`, `border:1px dashed #858585`,
+    Label "? Typ wählen".
+- **Feldtyp-Chips** (Drag-Quellen, unter dem Beispiel-Block):
+  - WrapPanel mit allen 16 verfügbaren Field-Types als Chips
+    (Plannummer, Index, Projektnummer, Bezeichnung, Datum, Geschoss, Haus, Planart,
+    Objekt, Bauteil, Bauabschnitt, Stiege, Achse, Zone, Block, Ignorieren)
+  - `cursor:grab` / `:grabbing`
+  - Schon zugewiesene Chips: `background:#04395E` mit Akzent-Text — visualisiert
+    "in Verwendung"
+  - **Plannummer** mit Pflicht-Marker `★` (orange)
+  - `+ Eigenes` als Custom-Chip (dashed orange border, transparenter Background)
+- **Drop-Hint** zwischen Tokens und Chips: "💡 Drop-Ziel: ein Segment-Token oben
+  — Feldtyp wird sofort übernommen"
+- **Warn-Hinweis** unten: "⚠ Pflicht: Mindestens Plannummer (★) muss zugewiesen werden."
+
+**WPF-Umsetzung später:** WPF-DragDrop-Framework, `DragSource` = Type-Chip,
+`DropTarget` = Segment-Token, OnDrop setzt `SegmentInfo.FieldType`.
+
+#### 15.6.3 Schritt 3 — Index-Erkennung
+
+**Mockup:** `03_ProfilWizard/03_IndexSource.html`
+
+- **Body-Title**: "Wie wird der Index (Revision) erkannt?"
+- **3 Radio-Optionen** mit Beschreibungstext darunter:
+  - **Aus Dateiname** (Default selected) — "Index wird aus einem Segment im
+    Dateinamen gelesen (z.B. A, B, C)"
+  - **Kein Index** — "Dokument hat keinen Index. Versionen werden per MD5-Hash erkannt."
+  - **Aus Plankopf** mit Badge `POST-V1`, disabled (opacity 0.45) — "Index wird
+    aus dem PDF-Plankopf gelesen. Noch nicht verfügbar."
+- **Sub-Box** (Background #252526, sichtbar wenn "Aus Dateiname" gewählt):
+  - **Index-Modus**:
+    - ● Optional (Erstausgabe kann ohne Index sein) — default
+    - ○ Pflicht (Jedes Dokument muss einen Index haben)
+  - Trennlinie
+  - ☑ Gross-/Kleinschreibung ignorieren (A = a)
+- **Warn-Box** (orange Border #F0AD4E, wenn in Schritt 2 kein Index-Segment zugewiesen):
+  "⚠ In Schritt 2 wurde kein Index-Segment zugewiesen. Gehe zurück und weise einem
+  Segment den Typ **Index** zu, oder wähle **Kein Index**."
+
+#### 15.6.4 Schritt 4 — Zielordner
+
+**Mockup:** `03_ProfilWizard/04_Zielordner.html`
+
+Kombination aus klassischem Dropdown (Hauptordner) und Drag-and-Drop-Hierarchie
+(Unterordner-Ebenen).
+
+- **Hauptordner**:
+  - Pseudo-Dropdown (TextBox-Look mit ▾): zeigt aktuell gewählten Ordner
+    (z.B. "01 Planunterlagen"). Klick = klassisches Auswahl-Dropdown.
+  - Daneben `+ Neuer Ordner`-Button (Secondary): falls keiner der vorhandenen
+    Top-Level-Ordner passt, kann ad-hoc einer erstellt werden.
+- **Unterordner-Ebenen** (optional):
+  - **Aktive Hierarchie-Liste** (dashed Border-Container als Drop-Zone):
+    Reihen mit `⋮⋮` Grip-Icon + "Ebene N:" + Feldname + Sample-Wert + ✕-Button.
+    Reihenfolge per Drag-and-Drop änderbar (Grip-Cursor).
+    Beispiel: `Ebene 1: Planart → Polierplan/`, `Ebene 2: Geschoss → OG1/`.
+  - **Verfügbare Felder** (WrapPanel mit Chips, Drag-Quelle):
+    Nur die in Schritt 2 zugewiesenen FieldTypes sind verfügbar (Plannummer ist
+    technisch verfügbar, ergibt aber keinen Sinn als Ordner-Ebene — kein
+    Hard-Block, User-Verantwortung). Schon verwendete Chips: `opacity:0.4`,
+    `cursor:not-allowed`.
+  - Sample-Wert pro Chip in Akzent-Farbe Consolas (z.B. `Geschoss [OG1]`).
+- **Vorschau Zielpfad** (Box mit Monospace-Pfad):
+  ```
+  01 Planunterlagen/
+    Polierplan/
+      OG1/
+        5998-201_OG1_Polierplan.dwg
+  ```
+
+**Konzept-Entscheidung:** Hauptordner als klassisches Dropdown (vertraut, schnell),
+weil es eine 1-aus-N-Auswahl ist. Unterordner-Ebenen als Drag-and-Drop, weil hier
+**Reihenfolge** (Ebene 1 → Ebene 2 → …) entscheidend ist und mehrere Felder
+auswählbar sind — Reihenfolge per Drag visuell intuitiv.
+
+#### 15.6.5 Schritt 5 — Erkennung
+
+**Mockup:** `03_ProfilWizard/05_Erkennung.html`
+
+**Kern-Entscheidung BPM-007.02: Modus-Toggle "Segmente klicken" vs. "Regex (für
+Sonderfälle)".** Der Recognizer unterstützt seit BPM-082 bereits beide Methoden
+(`Method=segment` Default + `Method=regex` Fallback mit 100ms Timeout). Im Wizard
+fehlte bisher die UI-Auswahl — `SelectedRecognitionMethod` war hardcoded auf
+`"segment"`.
+
+- **Profil-Name** (TextBox, Pflicht): freier Name, default = Planart-Wert aus Schritt 2.
+- **Modus-Toggle** (Pills-Style, segmentiert):
+  - `Segmente klicken` (Default, aktiv = Akzent-Background)
+  - `Regex (für Sonderfälle)` (Hover-/Klick → wechselt Mode)
+- **Segmente-Modus** (Default, BPM-082 Standard):
+  - Hint: "Klicke auf die Teile, die bei diesem Profil **immer gleich** sind:"
+  - Beispiel-Datei-Anzeige (Consolas, grau).
+  - Klickbare Token-Buttons (WrapPanel): unselected = transparent + grauer Border,
+    selected = Akzent-Background + weiß. Multi-Select möglich.
+  - Erkennungsmuster-Preview-Box:
+    - Erkennungsmuster: z.B. `Polierplan` (Akzent, Consolas, bold)
+    - Erkennungs-Methode: "Position-genauer Token-Vergleich (Segment N)"
+    - Priorität: 100 (Standard)
+- **Regex-Modus** (BPM-007.02 Sonderfall, noch nicht gemockt — `🟡 tot` Pfad zu
+  `05_Erkennung_Regex.html`):
+  - Pattern-TextBox (Consolas, monospace)
+  - Live-Syntax-Validierung (BPM-007.03) — bei `ArgumentException` rote Border + Fehler-Text,
+    Speichern blockiert
+  - Live-Match-Test gegen die Schritt-1-Beispieldatei (✓/✗-Indikator)
+  - Anwendungsfälle: Statiknummernkreise (`^5998-2\d{2}_`), Dateien ohne saubere Delimiters
+- **BPM-082.04 Erkennungs-Warnung** (orange, wenn variables Segment als
+  Erkennungsmuster gewählt — Plannummer, Index, Datum, rein numerisch):
+  Soft-Warn (kein Hard-Fail), User darf trotzdem speichern.
+
+Footer: `Profil speichern` (Primary, breit) statt `Weiter →`.
+
+---
+
+### 15.7 Sync-Tab (vertagt)
+
+**Status:** Mockup BPM-005 nach Spike 0 / ADR-053 — **nicht in der heutigen
+Mockup-Foundation.**
+
+**Begründung:** Mit der Entscheidung ADR-053 (Server-Sync-Architektur, 2026-04-30,
+PostgreSQL + ASP.NET Core, 5–10 User parallel, Pull/Push-Protokoll) ändert sich
+der **Inhalt** des Sync-Tabs grundlegend. Ein Mockup auf Basis der alten
+Cloud-Ordner-Sync-Mechanik (ADR-004) wäre Wegwerf-Arbeit.
+
+| Vorher (Cloud-Ordner-Sync, ADR-004) | Nachher (Server-Sync, ADR-053) |
+|---|---|
+| Files-im-Cloud-Ordner-Scanner | Aktive Server-Verbindung (online/offline) |
+| Polling-Status | Letzter Push/Pull, Pending Operations |
+| keine Multi-User-Sicht | Wer hat zuletzt geändert (5–10 User parallel) |
+| keine Konflikt-UI | Konflikt-Anzeige (auch wenn "server gewinnt", User will wissen was überschrieben wurde) |
+| — | Re-Sync, Force-Sync, Re-Auth |
+
+Im Mockup ist der Tab `Sync` aktuell ein `🟡 tot`-Pfad mit Hinweis-Text in der
+Sitemap: *"BPM-005 — Sync-Mockup nach ADR-053, frühestens nach Spike 0"*.
+
+---
+
+### 15.8 UI-Regeln (allgemein)
+
+**Screen States (5 Pflicht):** Empty, Loading, Error, Partial, Filled.
+Max. 1 Primary-Button pro Kontext. BPM Dark Theme Tokens aus `Colors.xaml`,
+Icons aus `Icons.xaml`. Sprache Deutsch, de-AT Formate. Interne Status reicher
+als UI-Begriffe (z.B. 9 Status-Typen im Code → 4–5 Anzeige-Kategorien in der UI).
+
+**Konsistente Farb-Token in den Mockups:**
+- Akzent: `#0078D4` (Primary), `#04395E` (aktiv-dunkel)
+- Background: `#1E1E1E` (Surface), `#252526` (elevated), `#2D2D30` (card)
+- Border: `#3C3C3C` (default), `#3E3E42` (input)
+- Text: `#FFFFFF` (bright), `#CCCCCC` (primary), `#858585` (secondary)
+- Status: `#4EC94E` (ok), `#F0AD4E` (warn), `#F44747` (error)
+- Field-Type-Token-Farben in Wizard-Schritt 2 / Manuell-Sortieren-Radial:
+  `#534AB7` `#0F6E56` `#993C1D` `#185FA5` `#1F7280` `#555` (siehe 15.6.2 / 15.5)
 
 ---
 
@@ -789,11 +1128,14 @@ BauProjektManager.PlanManager/
 │   ├── ImportPlanBuilder.cs           ← Zielpfade berechnen
 │   ├── ImportWorkflowService.cs       ← 7-Stufen-Pipeline Orchestrator
 │   ├── ImportExecutionService.cs      ← Dateien verschieben + Journal + DB
-│   ├── ProfileManager.cs             ← .bpm/profiles/ CRUD + v1→v2 Migration
-│   ├── PatternTemplateService.cs     ← Globale Musterbibliothek
-│   ├── PlanIndexManifestService.cs   ← .bpm/plan-index.json (optional V1)
-│   ├── FileRenamer.cs                ← RenameSchemaEngine + FileNameSanitizer
-│   └── PlanManagerDatabase.cs        ← planmanager.db 6 Tabellen + CRUD
+│   ├── RecoveryDecisionService.cs     ← Recovery-Entscheidung beim App-Start (pending → Reparatur)
+│   ├── RecoveryExecutorService.cs     ← Recovery-Aktionen ausführen
+│   ├── ProfileManager.cs              ← .bpm/profiles/ CRUD + v1→v2/v2→v3 Migration
+│   ├── PatternTemplate.cs             ← (Model) PatternTemplate-Type
+│   ├── PatternTemplateService.cs      ← Globale Musterbibliothek
+│   ├── PlanIndexManifestService.cs    ← .bpm/plan-index.json (⬜ GEPLANT — optional V1)
+│   ├── FileRenamer.cs                 ← RenameSchemaEngine + FileNameSanitizer (⬜ GEPLANT)
+│   └── PlanManagerDatabase.cs         ← planmanager.db 6 Tabellen + CRUD
 └── BauProjektManager.PlanManager.csproj
 ```
 

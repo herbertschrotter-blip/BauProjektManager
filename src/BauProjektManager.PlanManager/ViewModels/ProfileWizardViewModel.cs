@@ -327,6 +327,7 @@ public partial class ProfileWizardViewModel : ObservableObject
 
             Segments = new ObservableCollection<FileNameSegment>(result.Segments);
             ParseInfo = $"{result.Segments.Count} Segmente erkannt";
+            UpdateAssignedFieldTypes();
             ValidateCurrentStep();
             Log.Information("Dateiname geparst: {FileName} -> {Count} Segmente",
                 SampleFileName, result.Segments.Count);
@@ -349,6 +350,19 @@ public partial class ProfileWizardViewModel : ObservableObject
         segment.FieldType = option.Value;
         segment.CustomFieldName = option.Value == FieldType.Custom
             ? option.DisplayName : null;
+        UpdateAssignedFieldTypes();
+        ValidateCurrentStep();
+        OnPropertyChanged(nameof(HasPlanIndexSegment));
+    }
+
+    /// <summary>
+    /// Setzt eine Segment-Zuweisung zurueck (User-Klick auf X-Button am Token).
+    /// </summary>
+    public void ResetSegmentFieldType(FileNameSegment segment)
+    {
+        segment.FieldType = null;
+        segment.CustomFieldName = null;
+        UpdateAssignedFieldTypes();
         ValidateCurrentStep();
         OnPropertyChanged(nameof(HasPlanIndexSegment));
     }
@@ -661,16 +675,54 @@ public partial class ProfileWizardViewModel : ObservableObject
             new("Achse", FieldType.Achse),
             new("Zone", FieldType.Zone),
             new("Block", FieldType.Block),
+            new("+ Eigenes", FieldType.Custom),
         ];
+    }
+
+    /// <summary>
+    /// Aktualisiert IsAssigned-State pro FieldTypeOption — fuer Chip-Highlight
+    /// in Wizard-Schritt 2 nach Drag&Drop-Zuweisung.
+    /// </summary>
+    private void UpdateAssignedFieldTypes()
+    {
+        var assigned = Segments
+            .Where(s => s.FieldType.HasValue)
+            .Select(s => s.FieldType!.Value)
+            .ToHashSet();
+
+        foreach (var opt in FieldTypeOptions)
+        {
+            opt.IsAssigned = opt.Value.HasValue && assigned.Contains(opt.Value.Value);
+        }
     }
 }
 
 // === Helper-Klassen ===
 
-public class FieldTypeOption
+public class FieldTypeOption : System.ComponentModel.INotifyPropertyChanged
 {
+    private bool _isAssigned;
+
     public string DisplayName { get; }
     public FieldType? Value { get; }
+
+    /// <summary>
+    /// True wenn dieser FieldType bereits einem Segment zugewiesen ist (Wizard-Schritt 2).
+    /// Wird vom ViewModel nach jeder Zuweisung aktualisiert -> Chip wird visuell hervorgehoben.
+    /// </summary>
+    public bool IsAssigned
+    {
+        get => _isAssigned;
+        set
+        {
+            if (_isAssigned != value)
+            {
+                _isAssigned = value;
+                PropertyChanged?.Invoke(this,
+                    new System.ComponentModel.PropertyChangedEventArgs(nameof(IsAssigned)));
+            }
+        }
+    }
 
     public FieldTypeOption(string displayName, FieldType? value)
     {
@@ -679,6 +731,8 @@ public class FieldTypeOption
     }
 
     public override string ToString() => DisplayName;
+
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
 }
 
 public class IndexSourceOption

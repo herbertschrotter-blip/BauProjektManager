@@ -2,7 +2,10 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Shapes;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models;
 using BauProjektManager.Domain.Models.PlanManager;
@@ -10,6 +13,73 @@ using BauProjektManager.PlanManager.Services;
 using BauProjektManager.PlanManager.ViewModels;
 
 namespace BauProjektManager.PlanManager.Views;
+
+/// <summary>
+/// Native WPF DragAdorner fuer Wizard-Schritt 2 (Field-Type-Chip-Drag).
+/// Rendert eine semi-transparente Kopie des Source-Chips an der Maus-Position,
+/// versetzt um den Klick-Offset (Maus haengt exakt dort wo der User geklickt hat).
+/// </summary>
+public class DragAdorner : Adorner
+{
+    private readonly Rectangle _content;
+    private readonly Size _adornerSize;
+    private readonly Point _clickOffset;
+    private Point _currentMousePos;
+
+    public DragAdorner(UIElement adornedElement, FrameworkElement source, Point clickOffsetInSource)
+        : base(adornedElement)
+    {
+        _adornerSize = new Size(
+            source.ActualWidth > 0 ? source.ActualWidth : 80,
+            source.ActualHeight > 0 ? source.ActualHeight : 24);
+        _clickOffset = clickOffsetInSource;
+
+        // VisualBrush rendert das Source-Element als Brush — bei statischen Elementen sicher.
+        var brush = new VisualBrush(source)
+        {
+            Stretch = Stretch.None,
+            AlignmentX = AlignmentX.Left,
+            AlignmentY = AlignmentY.Top
+        };
+
+        _content = new Rectangle
+        {
+            Width = _adornerSize.Width,
+            Height = _adornerSize.Height,
+            Fill = brush,
+            RadiusX = 3,
+            RadiusY = 3,
+            Opacity = 0.85,
+            IsHitTestVisible = false
+        };
+        AddVisualChild(_content);
+        IsHitTestVisible = false;
+    }
+
+    public void UpdatePosition(Point mousePos)
+    {
+        _currentMousePos = mousePos;
+        InvalidateArrange();
+    }
+
+    protected override int VisualChildrenCount => 1;
+    protected override Visual GetVisualChild(int index) => _content;
+
+    protected override Size MeasureOverride(Size constraint)
+    {
+        _content.Measure(_adornerSize);
+        return _adornerSize;
+    }
+
+    protected override Size ArrangeOverride(Size finalSize)
+    {
+        var topLeft = new Point(
+            _currentMousePos.X - _clickOffset.X,
+            _currentMousePos.Y - _clickOffset.Y);
+        _content.Arrange(new Rect(topLeft, _adornerSize));
+        return finalSize;
+    }
+}
 
 public class CountToVisInverseConverter : IValueConverter
 {
@@ -184,15 +254,81 @@ public partial class ProfileWizardDialog : Window
         }
     }
 
-    // ── Schritt 2: Drag&Drop Token-Zuweisung (BPM-080.05) ──
+    // ── Schritt 2: Native WPF Drag&Drop mit eigenem Adorner ──
+    // Drag-Source: PreviewMouseDown speichert Startpunkt + Klick-Offset.
+    // PreviewMouseMove erkennt Threshold und startet DragDrop.DoDragDrop mit Adorner.
+    // Window's PreviewDragOver updated die Adorner-Position kontinuierlich.
 
-    private void OnFieldChipMouseDown(object sender, MouseButtonEventArgs e)
+    private Point _dragStartPoint;
+    private FrameworkElement? _dragSourceChip;
+    private Point _clickOffsetInChip;
+    private DragAdorner? _currentAdorner;
+    private AdornerLayer? _adornerLayer;
+
+    private void OnChipPreviewMouseDown(object sender, MouseButtonEventArgs e)
     {
         if (sender is FrameworkElement fe
-            && fe.DataContext is FieldTypeOption option
-            && option.Value.HasValue)
+            && fe.DataContext is FieldTypeOption opt
+            && opt.Value.HasValue)
         {
-            DragDrop.DoDragDrop(fe, option, DragDropEffects.Copy);
+            _dragStartPoint = e.GetPosition(this);
+            _dragSourceChip = fe;
+            _clickOffsetInChip = e.GetPosition(fe);
+        }
+    }
+
+    private void OnChipPreviewMouseMove(object sender, MouseEventArgs e)
+    {
+        if (e.LeftButton != MouseButtonState.Pressed || _dragSourceChip is null) return;
+
+        var current = e.GetPosition(this);
+        if (Math.Abs(current.X - _dragStartPoint.X) <= SystemParameters.MinimumHorizontalDragDistance
+            && Math.Abs(current.Y - _dragStartPoint.Y) <= SystemParameters.MinimumVerticalDragDistance)
+            return;
+
+        if (_dragSourceChip.DataContext is not FieldTypeOption opt) return;
+
+        var chip = _dragSourceChip;
+        var offset = _clickOffsetInChip;
+        _dragSourceChip = null;
+
+        // Adorner-Layer aus mehreren Quellen versuchen — Window's AdornerDecorator
+        // ist nicht immer direkt erreichbar.
+        var contentRoot = (UIElement)Content;
+        _adornerLayer = AdornerLayer.GetAdornerLayer(contentRoot)
+                        ?? AdornerLayer.GetAdornerLayer(chip);
+
+        if (_adornerLayer != null)
+        {
+            _currentAdorner = new DragAdorner(contentRoot, chip, offset);
+            _currentAdorner.UpdatePosition(current);
+            _adornerLayer.Add(_currentAdorner);
+        }
+
+        try
+        {
+            DragDrop.DoDragDrop(chip,
+                new DataObject(typeof(FieldTypeOption), opt),
+                DragDropEffects.Copy);
+        }
+        finally
+        {
+            if (_currentAdorner != null && _adornerLayer != null)
+            {
+                _adornerLayer.Remove(_currentAdorner);
+            }
+            _currentAdorner = null;
+            _adornerLayer = null;
+        }
+    }
+
+    /// <summary>Updated die Adorner-Position waehrend des Drags (Window-Level Event).</summary>
+    private void OnWindowPreviewDragOver(object sender, DragEventArgs e)
+    {
+        if (_currentAdorner != null)
+        {
+            var pos = e.GetPosition((IInputElement)Content);
+            _currentAdorner.UpdatePosition(pos);
         }
     }
 
@@ -211,6 +347,20 @@ public partial class ProfileWizardDialog : Window
             && e.Data.GetData(typeof(FieldTypeOption)) is FieldTypeOption option)
         {
             _vm.OnFieldTypeChanged(segment, option);
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>
+    /// Rechtsklick auf Token -> Segment-Zuweisung zuruecksetzen (FieldType auf null).
+    /// </summary>
+    private void OnTokenRightClick(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is FrameworkElement fe
+            && fe.DataContext is FileNameSegment segment)
+        {
+            _vm.ResetSegmentFieldType(segment);
+            e.Handled = true;
         }
     }
 

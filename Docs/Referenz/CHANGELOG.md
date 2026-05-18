@@ -31,6 +31,31 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.44] — 2026-05-18
+
+### Feature: BPM-108 Phase A — Segmenttyp-Katalog (Domain + Persistence + Seed)
+
+### Hinzugefuegt
+- `SegmentSemanticRole` Enum (Domain) — fachliche Sonderfaelle (PlanNumber, PlanIndex, ProjectNumber, Date, Description, Spatial, Ignore, None).
+- `SegmentTypeDefinition` + `SegmentTypeGroupDefinition` (Domain) — Zwei-Schichten-Modell mit `fieldTypeId` (immutable), `token_key` (immutable, snake_case fuer Templates), `semantic_role` (bei Built-ins read-only), `user_modified_*`-Flags fuer Built-in Update-Policy.
+- `ISegmentTypeRepository` + `SegmentTypeRepository` (Infrastructure) — CRUD auf `segment_types`/`segment_type_groups` in bpm.db. Soft-Delete only. Test-Konstruktor + `CreateTables`-Helper fuer isolierte Tests.
+- `ISegmentTypeCatalog` + `SegmentTypeCatalog` (Infrastructure) — In-Memory-Snapshot mit Lazy-Load + `Changed`-Event. Effektiv-aktiv-Liste sortiert nach Gruppen-/Type-SortOrder.
+- `SegmentTypeSeedService` (Infrastructure) — 4 Built-in-Gruppen + 16 Built-in-Typen. Update-Policy: nicht user-modifizierte Felder werden bei jedem App-Start aus dem Seed nachgezogen. `semantic_role` und `token_key` bei Built-ins immer korrigierbar (immutable Invariante).
+- `bpm.db` Schema v2.2: neue Tabellen `segment_type_groups` + `segment_types` mit FK + UNIQUE(token_key) WHERE NOT deleted.
+- ADR-056 `Segmenttyp-Architektur (BPM-108) — fieldTypeId + SemanticRole Zwei-Schichten-Modell` — formaler Entscheidungsanker basierend auf CGR-2026-05-12-segmenttyp-architektur (3 Runden Sign-off).
+- DB-SCHEMA.md Kap. 4.9 + 4.10 mit kompletten Tabellen-Definitionen + Built-in-Listen.
+- 27 Unit-Tests (SegmentTypeRepositoryTests, SegmentTypeSeedServiceTests, SegmentTypeCatalogTests) — alle gruen.
+
+### Hintergrund
+Resultiert aus dem Cross-Review mit ChatGPT (CGR-2026-05-12-segmenttyp-architektur r1–r3, Sign-off 2026-05-18). Erste Implementierungs-Phase von BPM-108. Phase B (Profilformat v4) und Phase C (Wizard/UI/Manager) folgen in separaten Commits.
+
+### Geaendert
+- `Directory.Build.props`: v0.28.43 → v0.28.44.
+- `ProjectDatabase.cs`: neue Tabellen + Indizes in `EnsureTables()`, Schema-Version 2.1 → 2.2, neue `EnsureInitialized()`-Methode fuer Sub-Repositories.
+- `App.xaml.cs`: DI-Registrierung fuer `ISegmentTypeRepository`, `SegmentTypeSeedService`, `ISegmentTypeCatalog`. Built-in-Seed laeuft beim App-Start nach DI-Build.
+
+---
+
 ## [v0.27.10] — 2026-04-30
 
 ### Docs: ADR-053 Konsistenz-Pflege Phase B+C (Konzepte stillgelegt + ADR-Status)

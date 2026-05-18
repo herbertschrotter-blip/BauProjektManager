@@ -20,7 +20,7 @@ supersedes: []
   - 1. Überblick
   - 2. Beziehungsdiagramm
   - 3. Modul-Zuordnung
-  - 4. Tabellen-Schema (v2.1 Sync — implementiert)
+  - 4. Tabellen-Schema (v2.2 — segment_types + segment_type_groups ab v0.28.44)
   - 5. Geplante Tabellen (nach V1)
   - 6. PlanManager-Datenbank (separat, implementiert)
   - 7. Schema-Migration
@@ -178,7 +178,7 @@ Welches Modul "besitzt" welche Tabelle (schreibt), und welche Module lesen.
 
 ---
 
-## 4. Tabellen-Schema (v2.1 Sync — implementiert)
+## 4. Tabellen-Schema (v2.2 — Segment-Type-Verwaltung ab v0.28.44)
 
 Alle Tabellen verwenden `id TEXT PRIMARY KEY` mit ULID. Keine `seq` Spalte.
 
@@ -398,6 +398,82 @@ CREATE TABLE schema_version (
     version TEXT NOT NULL
 );
 ```
+
+### 4.9 segment_type_groups (BPM-108, Schema 2.2)
+
+Gruppen für PlanManager-Segmenttypen (Identifikation, Räumlich, Inhaltlich, Sonstiges). Built-ins sind editierbar in `name`, `sort_order`, `is_active`; nicht-modifizierte Felder werden bei App-Update aus dem Seed übernommen (`user_modified_*`-Flags). Soft-Delete only.
+
+```sql
+CREATE TABLE segment_type_groups (
+    id TEXT PRIMARY KEY,                   -- snake_case String für Built-ins (z. B. "grp_identifikation"), ULID für Custom
+    name TEXT NOT NULL,                    -- "Identifikation"
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    is_builtin INTEGER NOT NULL DEFAULT 0,
+    -- Built-in Update-Policy
+    builtin_version INTEGER NOT NULL DEFAULT 1,
+    user_modified_name INTEGER NOT NULL DEFAULT 0,
+    user_modified_sort INTEGER NOT NULL DEFAULT 0,
+    user_modified_active INTEGER NOT NULL DEFAULT 0,
+    -- Sync-Felder ADR-050
+    created_at TEXT NOT NULL,
+    created_by TEXT NOT NULL DEFAULT '',
+    last_modified_at TEXT NOT NULL,
+    last_modified_by TEXT NOT NULL DEFAULT '',
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    is_deleted INTEGER NOT NULL DEFAULT 0
+);
+```
+
+**Built-in IDs:** `grp_identifikation`, `grp_raeumlich`, `grp_inhaltlich`, `grp_sonstiges`.
+
+### 4.10 segment_types (BPM-108, Schema 2.2)
+
+Segmenttypen für Dateinamen-Klassifikation im PlanManager (Plannummer, Geschoss, Akustik-Klasse, …). Zwei-Schichten-Modell: `token_key` für Templates, `semantic_role` für Wizard-Validierung. Custom-Typen haben immer `semantic_role = NULL`.
+
+```sql
+CREATE TABLE segment_types (
+    id TEXT PRIMARY KEY,                   -- Built-in: snake_case (z. B. "plan_number"), Custom: ULID
+    name TEXT NOT NULL,                    -- UI-Label (editierbar)
+    color TEXT NOT NULL,                   -- Hex #RRGGBB
+    token_key TEXT NOT NULL,               -- snake_case, stabil für renameSchema/folderHierarchy
+    semantic_role TEXT,                    -- NULL für Custom; "PlanNumber", "PlanIndex", "ProjectNumber",
+                                           --   "Date", "Description", "Spatial", "Ignore", "None" für Built-in
+    group_id TEXT NOT NULL,                -- FK → segment_type_groups.id
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    is_builtin INTEGER NOT NULL DEFAULT 0,
+    -- Built-in Update-Policy
+    builtin_version INTEGER NOT NULL DEFAULT 1,
+    user_modified_name INTEGER NOT NULL DEFAULT 0,
+    user_modified_color INTEGER NOT NULL DEFAULT 0,
+    user_modified_sort INTEGER NOT NULL DEFAULT 0,
+    user_modified_active INTEGER NOT NULL DEFAULT 0,
+    user_modified_group INTEGER NOT NULL DEFAULT 0,
+    -- Sync-Felder ADR-050
+    created_at TEXT NOT NULL,
+    created_by TEXT NOT NULL DEFAULT '',
+    last_modified_at TEXT NOT NULL,
+    last_modified_by TEXT NOT NULL DEFAULT '',
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    is_deleted INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (group_id) REFERENCES segment_type_groups(id)
+);
+
+CREATE INDEX idx_segment_types_group_id ON segment_types(group_id);
+CREATE UNIQUE INDEX ux_segment_types_token_key_active
+    ON segment_types(token_key) WHERE is_deleted = 0;
+```
+
+**Built-in IDs (16 Typen):**
+- Identifikation: `plan_number` (PlanNumber), `plan_index` (PlanIndex), `project_number` (ProjectNumber)
+- Räumlich (`Spatial`): `geschoss`, `haus`, `bauteil`, `bauabschnitt`, `stiege`, `achse`, `zone`, `block`, `objekt`
+- Inhaltlich: `planart` (None), `description` (Description)
+- Sonstiges: `datum` (Date), `ignore` (Ignore)
+
+**Immutable nach Anlage:** `id`, `token_key`, `semantic_role` (bei Built-ins), `is_builtin`.
+
+**Referenz:** ADR-056 (Zwei-Schichten-Modell), CGR-2026-05-12-segmenttyp-architektur (3-Runden-Review).
 
 ---
 

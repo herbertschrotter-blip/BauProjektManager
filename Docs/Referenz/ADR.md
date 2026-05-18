@@ -16,7 +16,7 @@ supersedes: []
 - Autorität: source_of_truth
 - Lesen wenn: Neue Architekturentscheidung treffen, bestehende ADR prüfen, Status ändern, Entscheidung nachschlagen
 - Nicht zuständig für: Implementierungs-Details (→ jeweilige Modul-Docs), Code-Standards (→ CODING_STANDARDS.md)
-- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-054)
+- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-056)
 - Pflichtlesen: keine (gezieltes Nachschlagen per ADR-Nummer)
 - Fachliche Invarianten:
   - Statusmodell: Decision Status (Proposed/Accepted/Superseded/Deprecated) getrennt von Implementation Status (Not Started/Partial/Implemented)
@@ -2542,6 +2542,71 @@ DevTools liest Inventar dynamisch im Reset-Tab und zeigt es mit Multi-Select-Che
 - FS-Scan-Patterns müssen bei neuen Persistenz-Zonen (z.B. wenn .bpm/cache/ eingeführt wird) erweitert werden.
 
 **Betrifft:** ADR-013 (.bpm-manifest), ADR-046 (.bpm/-Ordner), ADR-052 (Settings-Split), DB-SCHEMA.md Kap. 10.1
+
+---
+
+## ADR-056: Segmenttyp-Architektur (BPM-108) — `fieldTypeId` + `SemanticRole` Zwei-Schichten-Modell
+
+**Datum:** 2026-05-18
+**Status:** ✅ Entschieden (Sign-off via CGR-2026-05-12-segmenttyp-architektur r3)
+**Implementierung:** Phase A ✅ Implemented (v0.28.44) · Phase B/C ⬜ Geplant
+**Herkunft:** BPM-108 — erkannt im Zuge BPM-080.05 Schritt 2 (Token-Drag&Drop, "+ Eigenes"-Chip). `FieldType`-Enum hardcoded an mehreren Stellen, User kann weder eigene Typen anlegen noch Reihenfolge ändern. Cross-Review mit ChatGPT (3 Runden) führte zur unten beschriebenen Architektur.
+
+**Kontext:**
+
+Im PlanManager war `FieldType` (Enum) bisher gleichzeitig:
+- UI-Katalog (Wizard Schritt 2 Chip-Liste, Theme-Farben)
+- Fachlicher Schlüsselname in JSON-Profilen (`segments[].fieldType`)
+- Pflichtfeld-Trigger (`PlanNumber` muss zugewiesen sein)
+- Identity-Trigger (`PlanNumber` + `Haus` + `Bauteil` → `identityFields`)
+- Hierarchie-Auswahl (Schritt 4: `Geschoss`/`Haus`/`Bauteil`/…)
+- Rename-/Folder-Template-Token (`{plan_number}`)
+- Variable-Segment-Heuristik (`PlanNumber`/`PlanIndex`/`Date`)
+
+User-eigene Klassifikationen ("Akustik-Klasse", "Brandschutzklasse") waren nicht persistierbar. Built-in-Reihenfolge nicht änderbar. Built-ins nicht deaktivierbar.
+
+**Entscheidung:**
+
+Einführung eines Zwei-Schichten-Modells in `bpm.db` (Tabellen `segment_type_groups` + `segment_types`):
+
+1. **`fieldTypeId`** — persistente Referenz pro Segmenttyp.
+   - Built-in: snake_case String (z. B. `plan_number`, `geschoss`)
+   - Custom: ULID via `IIdGenerator`
+   - Unveränderlich nach Anlage
+
+2. **`SemanticRole`** — kleine Enum für fachliche Sonderfälle (`None`, `PlanNumber`, `PlanIndex`, `ProjectNumber`, `Date`, `Description`, `Spatial`, `Ignore`).
+   - Bei Built-ins seed-definiert und im Manager **read-only**
+   - Bei Custom-Typen **immer `NULL`** (rein dekorative Klassifikation)
+
+3. **`token_key`** — separate, stabile Schreibweise für Templates (`renameSchema`, `folderHierarchy`). Bei Built-ins identisch zu `id`. Bei Custom-Typen aus Namen generiert (snake_case mit Konflikt-Suffix). Unveränderlich nach Anlage.
+
+4. **Built-ins editierbar** für `name`, `color`, `group_id`, `sort_order`, `is_active`. Update-Policy via `user_modified_*`-Flags: App-Update überschreibt nur nicht user-modifizierte Felder.
+
+5. **Soft-Delete only.** Profile referenzieren `fieldTypeId`; gelöschte/deaktivierte Typen werden bei Wizard-Reopen mit Badge gerendert. Lookup ist ungefiltert. Auto-Import wird bei Missing-ID in `identityFields`/`folderHierarchy`/`renameSchema`/`indexExtraction` blockiert (`ProfileHealth = MissingSegmentTypes`).
+
+6. **`RecognitionRule` bleibt unverändert** (BPM-082-kompatibel: `method`/`pattern`/`segmentPosition`). `fieldTypeId` gehört in `segments[]`, nicht in `recognition[]`.
+
+7. **Frühphase = Reset.** Schema-Version 4 für JSON-Profile (strikt, keine Migration). Alte Profile werden via explizitem DevTool-Befehl nach `<project>/.bpm/profiles/_archiv/schema-reset-YYYYMMDD-HHMMSS/` verschoben. `pattern-templates.json` analog. Normaler Loader verwirft `schemaVersion != 4`.
+
+**Spatial-Built-ins** (`SemanticRole.Spatial`): `geschoss`, `haus`, `bauteil`, `bauabschnitt`, `stiege`, `zone`, `block`, `achse`, `objekt`.
+
+**Konsequenzen:**
+
+- Wizard-Validierung (Pflicht/Identity/Hierarchie/Variable) prüft `SemanticRole`, nicht den `FieldType`-Enum.
+- Custom-Typen sind nie identitätsbildend (keine versehentliche Identity-Drift).
+- Built-in-Namen können vom User umbenannt werden (z. B. „Plannummer" → „Plan-Nr."), die fachliche Rolle bleibt intakt — der Manager zeigt die Rolle read-only mit Warntext „Wird automatisch Teil der Dokument-Identität".
+- DSGVO: Klasse A (UI-/Profilkonfiguration, kein Personenbezug). `SegmentTypeDto` ist whitelist-fähig für ADR-053-Sync.
+- Sync-Reihenfolge topologisch: `segment_type_groups` → `segment_types` → Profile.
+
+**Implementierungsphasen:**
+
+- **Phase A (BPM-108):** Domain (`SegmentTypeDefinition`, `SegmentTypeGroupDefinition`, `SegmentSemanticRole`) + SQLite-Tabellen + `ISegmentTypeRepository` + `ISegmentTypeCatalog` + Seed-Service.
+- **Phase B:** Profilformat v4 (`ProfileSegment.FieldTypeId`), `IdentityFields`/`FolderHierarchy`/`RenameSchema` auf IDs/`token_key`, `ProfileManager.Load` strikt v4, `ProfileHealth`-Validator, DevTool-Archivierung.
+- **Phase C:** `ProfileWizardViewModel` auf `ISegmentTypeCatalog`, `FileNameSegment.FieldTypeId`, Inline-Popover „+ Eigenes" mit Token-Vorschau, Manager-Dialog mit Built-in-Rollenanzeige read-only.
+
+**Betrifft:** ADR-010 (Plan-Erkennung — Profile-Format), ADR-050 (Sync-Felder), ADR-053 (Server-Sync), DB-SCHEMA.md Kap. 4 (neue Tabellen), PlanManager.md Kap. 13/14.
+
+**Referenz:** [Docs/Referenz/chatgpt-reviews/CGR-2026-05-12-segmenttyp-architektur/](../Referenz/chatgpt-reviews/CGR-2026-05-12-segmenttyp-architektur/) — 3 Runden Cross-Review mit ChatGPT GPT-5.4 (16 Dateien).
 
 ---
 

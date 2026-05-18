@@ -133,6 +133,11 @@ public partial class App : Application
         sc.AddSingleton<ProjectDatabase>();
         sc.AddSingleton<IProfileManager, ProfileManager>();
 
+        // BPM-108: Segmenttyp-Katalog (Phase A)
+        sc.AddSingleton<ISegmentTypeRepository, SegmentTypeRepository>();
+        sc.AddSingleton<SegmentTypeSeedService>();
+        sc.AddSingleton<ISegmentTypeCatalog, SegmentTypeCatalog>();
+
         var logDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "BauProjektManager", "Logs");
@@ -166,6 +171,16 @@ public partial class App : Application
 
         // BPM-104.02: zentrale Persistenz-Registrierung nach DI-Build
         InitializePersistenceRegistry(settings, logDir);
+
+        // BPM-108: Built-in Segmenttyp-Seed beim App-Start
+        try
+        {
+            Services.GetRequiredService<SegmentTypeSeedService>().Seed();
+        }
+        catch (Exception ex)
+        {
+            Log.Warning("BPM-108: Segmenttyp-Seed fehlgeschlagen: {Error}", ex.Message);
+        }
 
         // --- MainWindow anzeigen ---
         var mainWindow = Services.GetRequiredService<MainWindow>();

@@ -200,11 +200,58 @@ public class ProjectDatabase : IDisposable
                 version TEXT NOT NULL
             );
 
+            -- BPM-108: Segmenttyp-Verwaltung (Phase A)
+            CREATE TABLE IF NOT EXISTS segment_type_groups (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                sort_order INTEGER NOT NULL DEFAULT 0,
+                is_active INTEGER NOT NULL DEFAULT 1,
+                is_builtin INTEGER NOT NULL DEFAULT 0,
+                builtin_version INTEGER NOT NULL DEFAULT 1,
+                user_modified_name INTEGER NOT NULL DEFAULT 0,
+                user_modified_sort INTEGER NOT NULL DEFAULT 0,
+                user_modified_active INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                created_by TEXT NOT NULL DEFAULT '',
+                last_modified_at TEXT NOT NULL,
+                last_modified_by TEXT NOT NULL DEFAULT '',
+                sync_version INTEGER NOT NULL DEFAULT 0,
+                is_deleted INTEGER NOT NULL DEFAULT 0
+            );
+
+            CREATE TABLE IF NOT EXISTS segment_types (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                color TEXT NOT NULL,
+                token_key TEXT NOT NULL,
+                semantic_role TEXT,
+                group_id TEXT NOT NULL,
+                sort_order INTEGER NOT NULL DEFAULT 0,
+                is_active INTEGER NOT NULL DEFAULT 1,
+                is_builtin INTEGER NOT NULL DEFAULT 0,
+                builtin_version INTEGER NOT NULL DEFAULT 1,
+                user_modified_name INTEGER NOT NULL DEFAULT 0,
+                user_modified_color INTEGER NOT NULL DEFAULT 0,
+                user_modified_sort INTEGER NOT NULL DEFAULT 0,
+                user_modified_active INTEGER NOT NULL DEFAULT 0,
+                user_modified_group INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                created_by TEXT NOT NULL DEFAULT '',
+                last_modified_at TEXT NOT NULL,
+                last_modified_by TEXT NOT NULL DEFAULT '',
+                sync_version INTEGER NOT NULL DEFAULT 0,
+                is_deleted INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY (group_id) REFERENCES segment_type_groups(id)
+            );
+
             -- FK-Indizes (ADR-039 v2)
             CREATE INDEX IF NOT EXISTS idx_building_parts_project_id ON building_parts(project_id);
             CREATE INDEX IF NOT EXISTS idx_building_levels_part_id ON building_levels(building_part_id);
             CREATE INDEX IF NOT EXISTS idx_participants_project_id ON project_participants(project_id);
             CREATE INDEX IF NOT EXISTS idx_links_project_id ON project_links(project_id);
+            CREATE INDEX IF NOT EXISTS idx_segment_types_group_id ON segment_types(group_id);
+            CREATE UNIQUE INDEX IF NOT EXISTS ux_segment_types_token_key_active
+                ON segment_types(token_key) WHERE is_deleted = 0;
             """;
         cmd.ExecuteNonQuery();
     }
@@ -213,7 +260,7 @@ public class ProjectDatabase : IDisposable
     {
         var conn = _connection!;
         var verCmd = conn.CreateCommand();
-        verCmd.CommandText = "DELETE FROM schema_version; INSERT INTO schema_version (version) VALUES ('2.1');";
+        verCmd.CommandText = "DELETE FROM schema_version; INSERT INTO schema_version (version) VALUES ('2.2');";
         Log.Verbose("Executing SQL: {Operation} on {Table}", "UPDATE", "schema_version");
         verCmd.ExecuteNonQuery();
     }
@@ -896,6 +943,13 @@ public class ProjectDatabase : IDisposable
     }
 
     public string GetDatabasePath() => _dbPath;
+
+    /// <summary>
+    /// Stellt sicher, dass die DB initialisiert ist (Tabellen + PRAGMAs + Schema-Migration).
+    /// Wird von Sub-Repositories (z. B. SegmentTypeRepository) aufgerufen,
+    /// bevor sie eigene Connections oeffnen.
+    /// </summary>
+    public void EnsureInitialized() => _ = GetConnection();
 
     public void Dispose()
     {

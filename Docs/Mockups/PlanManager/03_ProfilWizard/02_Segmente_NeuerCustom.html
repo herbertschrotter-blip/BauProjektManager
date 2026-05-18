@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>BPM ProfilWizard — Schritt 2: Inline-Popover „+ Eigenes"</title>
+<style>
+  body{margin:0;background:#111;font-family:'Segoe UI',sans-serif;color:#CCCCCC;font-size:13px;padding:40px;display:flex;justify-content:center}
+  .dialog{width:750px;background:#1E1E1E;border:1px solid #3C3C3C;border-radius:4px;overflow:hidden;display:flex;flex-direction:column;min-height:580px;position:relative}
+
+  /* Window-Title */
+  .dialog-title{background:#252526;padding:10px 16px;border-bottom:1px solid #3C3C3C;display:flex;justify-content:space-between;align-items:center}
+  .dialog-title-text{color:#FFFFFF;font-size:13px;font-weight:600}
+  .win-controls{display:flex;gap:8px}
+  .win-btn{width:12px;height:12px;border-radius:50%;background:#3C3C3C}
+  .win-btn.close{background:#F44747;cursor:pointer}
+
+  /* Header */
+  .header{background:#252526;padding:14px 16px;border-bottom:1px solid #2D2D30}
+  .step-title{color:#FFFFFF;font-size:15px;font-weight:600;margin:0 0 8px}
+  .dots{display:flex;align-items:center;gap:6px}
+  .dot{width:10px;height:10px;border-radius:50%;background:#3C3C3C}
+  .dot.done{background:#04395E}
+  .dot.act{background:#0078D4}
+  .step-counter{color:#858585;font-size:11px;margin-left:6px}
+
+  /* Body — Hintergrund (gedimmt waehrend Popover offen) */
+  .content{padding:16px;flex:1;overflow-y:auto;opacity:0.45;pointer-events:none}
+  .body-title{color:#FFFFFF;font-size:14px;font-weight:600;margin:0 0 4px}
+  .body-hint{color:#858585;font-size:11px;margin:0 0 14px}
+  .example{background:#252526;border:1px solid #3C3C3C;border-radius:4px;padding:12px 14px;margin-bottom:14px}
+  .example-label{color:#858585;font-size:10px;letter-spacing:0.5px;margin-bottom:4px;text-transform:uppercase}
+  .example-filename{color:#666;font-size:11px;font-family:Consolas,monospace;margin-bottom:10px}
+  .tokens{display:flex;flex-wrap:wrap;align-items:center;gap:3px}
+  .token{display:flex;flex-direction:column;align-items:center;padding:5px 10px;border-radius:4px;min-width:50px}
+  .token-val{color:#FFFFFF;font-size:13px;font-family:Consolas,monospace;font-weight:500}
+  .token-type{color:#FFFFFF;font-size:9px;opacity:0.85;margin-top:1px}
+  .token.unset{background:#2D2D30;border:1px dashed #858585}
+  .token.unset .token-val{color:#CCCCCC}
+  .token.unset .token-type{color:#858585;font-style:italic}
+  .token.t-prj{background:#534AB7}
+  .token.t-num{background:#0F6E56}
+  .token.t-art{background:#1F7280}
+  .token.t-ign{background:#3C3C3C;opacity:0.55}
+  /* Segment "OG1" wird im Popover-Szenario neu zugewiesen — daher als "aktiv" markiert */
+  .token.active-target{background:#2D2D30;border:2px solid #0078D4;box-shadow:0 0 8px rgba(0,120,212,0.4)}
+  .token.active-target .token-val{color:#FFFFFF}
+  .token.active-target .token-type{color:#0078D4}
+  .sep{font-size:14px;color:#555;padding:0 1px}
+
+  .types-header{display:flex;justify-content:space-between;align-items:center;margin:0 0 6px}
+  .types-label{color:#858585;font-size:12px}
+  .types-manage{color:#0078D4;font-size:11px;text-decoration:none}
+  .types{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px}
+  .type-chip{background:#2D2D30;color:#CCCCCC;font-size:11px;padding:4px 9px;border-radius:3px;font-family:'Segoe UI';border:1px solid transparent}
+  .type-chip.assigned{background:#04395E;color:#0078D4;border-color:#04395E}
+  .type-chip.req::after{content:' ★';color:#F0AD4E}
+  .type-chip.custom{color:#F0AD4E;border:1px dashed #F0AD4E;background:transparent;box-shadow:0 0 0 2px rgba(240,173,78,0.25)}
+
+  /* Footer */
+  .footer{background:#252526;padding:12px 16px;border-top:1px solid #3C3C3C;display:flex;justify-content:space-between;align-items:center;opacity:0.45}
+  .footer-left{display:flex;gap:8px}
+  .footer-right{display:flex;gap:8px}
+  .btn{background:transparent;border:1px solid #3C3C3C;border-radius:3px;color:#CCCCCC;font-size:12px;font-family:'Segoe UI';padding:6px 14px}
+  .btn-primary{background:#0078D4;border:none;color:#FFFFFF;font-weight:500}
+
+  /* === POPOVER === */
+  .popover-anchor{position:absolute;
+    /* Position knapp ueber dem "+Eigenes"-Chip im Mockup */
+    left:48px;
+    bottom:122px;
+  }
+  .popover{
+    width:300px;background:#252526;border:1px solid #0078D4;border-radius:6px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,120,212,0.4);
+    padding:14px 16px;
+    position:relative;
+  }
+  .popover::after{
+    /* Pfeil nach unten zum Chip */
+    content:'';position:absolute;left:24px;bottom:-7px;width:12px;height:12px;
+    background:#252526;border-right:1px solid #0078D4;border-bottom:1px solid #0078D4;
+    transform:rotate(45deg);
+  }
+  .pop-title{color:#FFFFFF;font-size:13px;font-weight:600;margin:0 0 10px;display:flex;align-items:center;gap:6px}
+  .pop-title-icon{color:#F0AD4E}
+
+  .pop-label{color:#858585;font-size:10px;text-transform:uppercase;letter-spacing:0.4px;margin:0 0 4px}
+  .pop-input{background:#1E1E1E;border:1px solid #0078D4;border-radius:3px;color:#FFFFFF;font-size:13px;padding:6px 9px;width:100%;box-sizing:border-box;outline:none;font-family:'Segoe UI';margin-bottom:8px}
+
+  .pop-token-row{background:#1E1E1E;border:1px solid #2D2D30;border-radius:3px;padding:6px 9px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .pop-token-key{color:#9CDCFE;font-size:12px;font-family:Consolas,monospace;flex:1}
+  .pop-token-lock{color:#666;font-size:9px}
+  .pop-token-hint{color:#858585;font-size:10px;margin:-8px 0 12px;line-height:1.4;padding:0 2px;display:flex;gap:4px;align-items:flex-start}
+  .pop-token-hint .info-icon{color:#0078D4;flex-shrink:0;font-size:11px;line-height:1}
+
+  .pop-palette{display:grid;grid-template-columns:repeat(6, 1fr);gap:5px;margin-bottom:8px}
+  .pop-color-swatch{aspect-ratio:1;border-radius:3px;cursor:pointer;border:2px solid transparent}
+  .pop-color-swatch.sel{border-color:#FFFFFF}
+
+  .pop-assign-hint{background:rgba(0,120,212,0.1);border:1px solid rgba(0,120,212,0.3);border-radius:3px;padding:6px 8px;margin-bottom:10px;color:#3794FF;font-size:11px;line-height:1.3;display:flex;gap:6px;align-items:flex-start}
+  .pop-assign-hint .arrow-icon{font-size:13px;line-height:1}
+
+  .pop-manager-hint{color:#666;font-size:10px;margin:0 0 12px;font-style:italic;line-height:1.3}
+  .pop-manager-hint a{color:#0078D4;text-decoration:none;font-style:normal}
+  .pop-manager-hint a:hover{text-decoration:underline}
+
+  .pop-actions{display:flex;gap:8px;justify-content:flex-end}
+  .pop-btn{background:transparent;border:1px solid #3C3C3C;border-radius:3px;color:#CCCCCC;font-size:11px;cursor:pointer;font-family:'Segoe UI';padding:5px 12px}
+  .pop-btn:hover{background:#37373D;border-color:#0078D4}
+  .pop-btn.primary{background:#0078D4;border:none;color:#FFFFFF;font-weight:500}
+  .pop-btn.primary:hover{background:#1A8AE0}
+
+  /* Annotation links neben dem Mockup */
+  .annotation{position:fixed;top:60px;right:24px;width:260px;background:#252526;border:1px solid #3C3C3C;border-radius:4px;padding:12px 14px;font-size:11px;color:#CCCCCC;line-height:1.5}
+  .annotation h4{color:#FFFFFF;font-size:12px;margin:0 0 8px;text-transform:uppercase;letter-spacing:0.4px}
+  .annotation ul{margin:0;padding-left:16px}
+  .annotation li{margin-bottom:6px}
+  .annotation .ok{color:#0F6E56}
+  .annotation .warn{color:#F0AD4E}
+</style>
+</head>
+<body>
+
+<!-- Annotation rechts -->
+<div class="annotation">
+  <h4>Popover-Zustände</h4>
+  <ul>
+    <li><span class="ok">●</span> Name eingegeben → Token live generiert (read-only)</li>
+    <li><span class="ok">●</span> Direkt-zuweisen-Hinweis erscheint, weil Segment „OG1" aktiv markiert ist</li>
+    <li><span class="ok">●</span> Hinweis auf Manager für Gruppe/Sortierung</li>
+    <li><span class="warn">⚠</span> Bei leerem Name: rote Validierungsmeldung „Name ist erforderlich."</li>
+  </ul>
+</div>
+
+<div class="dialog">
+
+  <!-- Window-Title -->
+  <div class="dialog-title">
+    <span class="dialog-title-text">Profil erstellen</span>
+    <div class="win-controls">
+      <div class="win-btn"></div>
+      <div class="win-btn"></div>
+      <div class="win-btn close" onclick="location.href='./02_Segmente.html'" title="Schließen"></div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="step-title">Schritt 2: Segmente zuweisen</div>
+    <div class="dots">
+      <div class="dot done"></div>
+      <div class="dot act"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <span class="step-counter">Schritt 2 von 5</span>
+    </div>
+  </div>
+
+  <!-- Content (gedimmt) -->
+  <div class="content">
+    <div class="body-title">Welcher Teil des Dateinamens ist was?</div>
+    <div class="body-hint">Ziehe einen Feldtyp aus der Liste unten auf ein Segment, um es zuzuweisen.</div>
+
+    <div class="example">
+      <div class="example-label">Beispiel-Datei</div>
+      <div class="example-filename">5998-201_OG1_Polierplan.dwg</div>
+      <div class="tokens">
+        <div class="token t-prj"><span class="token-val">5998</span><span class="token-type">Projektnr.</span></div>
+        <span class="sep">-</span>
+        <div class="token t-num"><span class="token-val">201</span><span class="token-type">Plannr. ★</span></div>
+        <span class="sep">-</span>
+        <!-- Aktives Segment - waehrend Popover offen ist -->
+        <div class="token active-target"><span class="token-val">OG1</span><span class="token-type">⟵ aktiv</span></div>
+        <span class="sep">_</span>
+        <div class="token t-art"><span class="token-val">Polierplan</span><span class="token-type">Planart</span></div>
+        <span class="sep">.</span>
+        <div class="token t-ign"><span class="token-val">dwg</span><span class="token-type">Ignorieren</span></div>
+      </div>
+    </div>
+
+    <div class="types-header">
+      <span class="types-label">Segmenttypen (ziehen):</span>
+      <span class="types-manage">⚙ Segmenttypen verwalten…</span>
+    </div>
+    <div class="types">
+      <div class="type-chip req assigned">Plannummer</div>
+      <div class="type-chip">Index</div>
+      <div class="type-chip assigned">Projektnummer</div>
+      <div class="type-chip">Bezeichnung</div>
+      <div class="type-chip">Datum</div>
+      <div class="type-chip">Geschoss</div>
+      <div class="type-chip">Haus</div>
+      <div class="type-chip assigned">Planart</div>
+      <div class="type-chip">Objekt</div>
+      <div class="type-chip">Bauteil</div>
+      <div class="type-chip">Bauabschnitt</div>
+      <div class="type-chip">Stiege</div>
+      <div class="type-chip">Achse</div>
+      <div class="type-chip">Zone</div>
+      <div class="type-chip">Block</div>
+      <div class="type-chip assigned">Ignorieren</div>
+      <div class="type-chip custom">+ Eigenes</div>
+    </div>
+  </div>
+
+  <!-- Footer (gedimmt) -->
+  <div class="footer">
+    <div class="footer-left">
+      <button class="btn">Abbrechen</button>
+    </div>
+    <div class="footer-right">
+      <button class="btn">← Zurück</button>
+      <button class="btn btn-primary">Weiter →</button>
+    </div>
+  </div>
+
+  <!-- Inline-Popover (overlay) -->
+  <div class="popover-anchor">
+    <div class="popover">
+      <div class="pop-title"><span class="pop-title-icon">+</span> Neuer Segmenttyp</div>
+
+      <div class="pop-label">Name</div>
+      <input type="text" class="pop-input" value="Akustik-Klasse" autofocus>
+
+      <div class="pop-label">Token</div>
+      <div class="pop-token-row">
+        <span class="pop-token-key">akustik_klasse</span>
+        <span class="pop-token-lock">🔒 fix</span>
+      </div>
+      <div class="pop-token-hint"><span class="info-icon">ℹ</span><span>Wird automatisch aus dem Namen generiert und bleibt unveränderlich. Verwendung in Rename-Templates: <span style="font-family:Consolas,monospace;color:#9CDCFE">{akustik_klasse}</span></span></div>
+
+      <div class="pop-label">Farbe</div>
+      <div class="pop-palette">
+        <div class="pop-color-swatch" style="background:#0F6E56"></div>
+        <div class="pop-color-swatch" style="background:#993C1D"></div>
+        <div class="pop-color-swatch" style="background:#534AB7"></div>
+        <div class="pop-color-swatch" style="background:#185FA5"></div>
+        <div class="pop-color-swatch" style="background:#1F7280"></div>
+        <div class="pop-color-swatch" style="background:#555555"></div>
+        <div class="pop-color-swatch" style="background:#7A1F5C"></div>
+        <div class="pop-color-swatch sel" style="background:#A87142"></div>
+        <div class="pop-color-swatch" style="background:#3D7B47"></div>
+        <div class="pop-color-swatch" style="background:#8B6914"></div>
+        <div class="pop-color-swatch" style="background:#5C3D8E"></div>
+        <div class="pop-color-swatch" style="background:#2E7D8A"></div>
+      </div>
+
+      <div class="pop-assign-hint">
+        <span class="arrow-icon">⮕</span>
+        <span>Nach dem Anlegen wird der neue Segmenttyp dem markierten Segment <strong>„OG1"</strong> zugewiesen.</span>
+      </div>
+
+      <div class="pop-manager-hint">
+        Gruppe und Sortierung kannst du später im <a href="../04_FeldtypManager/01_Uebersicht.html">Segmenttypen-Manager</a> ändern. Neu landet in Gruppe „Eigene".
+      </div>
+
+      <div class="pop-actions">
+        <button class="pop-btn" onclick="location.href='./02_Segmente.html'">Abbrechen</button>
+        <button class="pop-btn primary" onclick="location.href='./02_Segmente.html'">Anlegen</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -54,7 +54,10 @@
   .drop-hint{display:flex;align-items:center;gap:6px;color:#0078D4;font-size:11px;margin:0 0 6px;padding:0 2px}
 
   /* Feldtypen — Drag-Quelle */
-  .types-label{color:#858585;font-size:12px;margin:0 0 6px}
+  .types-header{display:flex;justify-content:space-between;align-items:center;margin:0 0 6px}
+  .types-label{color:#858585;font-size:12px}
+  .types-manage{color:#0078D4;font-size:11px;cursor:pointer;text-decoration:none}
+  .types-manage:hover{text-decoration:underline}
   .types{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px}
   .type-chip{background:#2D2D30;color:#CCCCCC;font-size:11px;padding:4px 9px;border-radius:3px;cursor:grab;font-family:'Segoe UI';border:1px solid transparent;user-select:none}
   .type-chip:hover{background:#37373D;border-color:#0078D4}
@@ -128,8 +131,11 @@
 
     <div class="drop-hint">💡 Drop-Ziel: ein Segment-Token oben — Feldtyp wird sofort übernommen</div>
 
-    <!-- Feldtypen -->
-    <div class="types-label">Feldtypen (ziehen):</div>
+    <!-- Segmenttypen -->
+    <div class="types-header">
+      <span class="types-label">Segmenttypen (ziehen):</span>
+      <span class="types-manage" onclick="location.href='../04_FeldtypManager/01_Uebersicht.html'">⚙ Segmenttypen verwalten…</span>
+    </div>
     <div class="types">
       <div class="type-chip req assigned">Plannummer</div>
       <div class="type-chip">Index</div>

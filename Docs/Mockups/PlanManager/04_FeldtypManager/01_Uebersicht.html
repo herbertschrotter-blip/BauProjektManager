@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>BPM Segmenttyp-Manager — Uebersicht mit Gruppen + Edit</title>
+<style>
+  body{margin:0;background:#111;font-family:'Segoe UI',sans-serif;color:#CCCCCC;font-size:13px;padding:40px;display:flex;justify-content:center}
+  .dialog{width:760px;background:#1E1E1E;border:1px solid #3C3C3C;border-radius:4px;overflow:hidden;display:flex;flex-direction:column;min-height:580px}
+
+  /* Window-Title */
+  .dialog-title{background:#252526;padding:10px 16px;border-bottom:1px solid #3C3C3C;display:flex;justify-content:space-between;align-items:center}
+  .dialog-title-text{color:#FFFFFF;font-size:13px;font-weight:600}
+  .win-controls{display:flex;gap:8px}
+  .win-btn{width:12px;height:12px;border-radius:50%;background:#3C3C3C}
+  .win-btn.close{background:#F44747;cursor:pointer}
+
+  /* Header */
+  .header{background:#252526;padding:14px 16px;border-bottom:1px solid #2D2D30}
+  .header-title{color:#FFFFFF;font-size:15px;font-weight:600;margin:0 0 4px}
+  .header-hint{color:#858585;font-size:11px}
+
+  /* Toolbar */
+  .toolbar{padding:10px 16px;background:#1E1E1E;border-bottom:1px solid #2D2D30;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .toolbar-info{color:#858585;font-size:11px}
+  .toolbar-buttons{display:flex;gap:6px}
+  .btn-new{background:#0078D4;color:#FFFFFF;border:none;border-radius:3px;padding:6px 12px;font-size:12px;font-weight:500;cursor:pointer;font-family:'Segoe UI'}
+  .btn-new:hover{background:#1A8AE0}
+  .btn-new.secondary{background:transparent;border:1px solid #0078D4;color:#0078D4}
+  .btn-new.secondary:hover{background:rgba(0,120,212,0.1)}
+
+  /* Body: 2-Spalten */
+  .body{flex:1;display:flex;min-height:0}
+
+  /* Liste */
+  .list-pane{flex:1;border-right:1px solid #2D2D30;overflow-y:auto;padding:4px 0}
+
+  /* Gruppen-Header */
+  .group{padding:0}
+  .group-head{display:grid;grid-template-columns:30px 16px 14px 1fr auto;gap:8px;align-items:center;padding:8px 12px;cursor:pointer;background:#252526;border-bottom:1px solid #2D2D30;border-top:1px solid #2D2D30}
+  .group-head:first-child{border-top:none}
+  .group-toggle{width:30px;height:16px;border-radius:8px;background:#3C3C3C;position:relative;cursor:pointer;flex-shrink:0}
+  .group-toggle.on{background:#0F6E56}
+  .group-toggle::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#CCCCCC}
+  .group-toggle.on::after{left:16px;background:#FFFFFF}
+  .caret{color:#858585;font-size:9px;line-height:1;transition:transform 0.15s}
+  .caret.collapsed{transform:rotate(-90deg)}
+  .group-grip{color:#666;font-size:13px;cursor:grab;line-height:1}
+  .group-name{color:#FFFFFF;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
+  .group-count{color:#858585;font-size:10px;font-weight:400}
+  .group-actions{color:#858585;font-size:11px;cursor:pointer}
+  .group-actions:hover{color:#0078D4}
+
+  /* Group inactive: alles drinnen gedimmt */
+  .group.inactive .item{opacity:0.4}
+  .group.inactive .group-name{color:#858585}
+
+  /* Items */
+  .item{display:grid;grid-template-columns:30px 16px 14px 1fr auto auto;gap:8px;align-items:center;padding:7px 12px 7px 24px;cursor:pointer;border-left:3px solid transparent}
+  .item:hover{background:#252526}
+  .item.sel{background:#04395E;border-left-color:#0078D4}
+  .item.inactive{opacity:0.45}
+  .item-toggle{width:30px;height:16px;border-radius:8px;background:#3C3C3C;position:relative;cursor:pointer;flex-shrink:0}
+  .item-toggle.on{background:#0F6E56}
+  .item-toggle::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#CCCCCC}
+  .item-toggle.on::after{left:16px;background:#FFFFFF}
+  .grip{color:#666;font-size:13px;line-height:1;user-select:none;cursor:grab}
+  .swatch{width:14px;height:14px;border-radius:3px;border:1px solid rgba(255,255,255,0.08)}
+  .name-row{display:flex;align-items:center;gap:6px;min-width:0}
+  .name{color:#FFFFFF;font-size:12px;white-space:nowrap}
+  .badge{font-size:9px;font-weight:600;padding:1px 6px;border-radius:8px;letter-spacing:0.3px;flex-shrink:0}
+  .badge.builtin{background:#37373D;color:#858585}
+  .badge.custom{background:#04395E;color:#3794FF}
+  .badge.req{background:rgba(240,173,78,0.18);color:#F0AD4E}
+  .icon-del{color:#666;cursor:pointer;font-size:13px;padding:0 4px;line-height:1}
+  .icon-del:hover{color:#F44747}
+  .icon-del.disabled{visibility:hidden}
+
+  /* Group-Body collapsed */
+  .group.collapsed .item{display:none}
+
+  /* Group-Head Lösch-Icon */
+  .group-head .icon-del{color:#666;cursor:pointer;font-size:13px;padding:0 4px;line-height:1;margin-left:6px}
+  .group-head .icon-del:hover{color:#F44747}
+  .group-head .icon-del.disabled{visibility:hidden}
+  .group-head .icon-del.locked{color:#3C3C3C;cursor:not-allowed}
+  .group-head .icon-del.locked:hover{color:#3C3C3C}
+
+  /* Edit-Panel rechts */
+  .edit-pane{width:280px;background:#252526;display:flex;flex-direction:column;padding:14px 16px;flex-shrink:0}
+  .edit-title{color:#FFFFFF;font-size:13px;font-weight:600;margin:0 0 12px}
+  .edit-actions{margin-top:auto;display:flex;gap:8px;justify-content:flex-end}
+  .edit-label{color:#858585;font-size:11px;margin:0 0 4px;text-transform:uppercase;letter-spacing:0.4px}
+  .edit-input{background:#1E1E1E;border:1px solid #3E3E42;border-radius:3px;color:#FFFFFF;font-size:13px;padding:7px 9px;width:100%;box-sizing:border-box;outline:none;font-family:'Segoe UI';margin-bottom:14px}
+  .edit-input:focus{border-color:#0078D4}
+  .name-row-edit{display:flex;align-items:stretch;gap:6px;margin-bottom:14px}
+  .name-row-edit .edit-input{margin-bottom:0;flex:1}
+  .btn-trash{background:transparent;border:1px solid #F44747;border-radius:3px;color:#F44747;font-size:14px;cursor:pointer;font-family:'Segoe UI';padding:0 10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .btn-trash:hover{background:rgba(244,71,71,0.12)}
+  .edit-select{background:#1E1E1E;border:1px solid #3E3E42;border-radius:3px;color:#FFFFFF;font-size:13px;padding:7px 9px;width:100%;box-sizing:border-box;outline:none;font-family:'Segoe UI';margin-bottom:14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+  .palette{display:grid;grid-template-columns:repeat(6, 1fr);gap:6px;margin-bottom:6px}
+  .color-swatch{aspect-ratio:1;border-radius:4px;cursor:pointer;border:2px solid transparent;transition:transform 0.1s}
+  .color-swatch:hover{transform:scale(1.06)}
+  .color-swatch.sel{border-color:#FFFFFF}
+  .palette-hint{color:#666;font-size:10px;margin:0 0 14px;font-style:italic}
+
+  /* Read-only Felder fuer Built-ins (Fachrolle, Token) */
+  .ro-block{background:#1E1E1E;border:1px solid #2D2D30;border-radius:3px;padding:7px 9px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .ro-value{color:#CCCCCC;font-size:12px}
+  .ro-value.mono{font-family:Consolas,monospace;color:#9CDCFE}
+  .ro-lock{color:#666;font-size:10px;margin-left:auto}
+  .ro-hint{color:#858585;font-size:10px;margin:0 0 14px;line-height:1.4;padding:0 2px;display:flex;gap:4px;align-items:flex-start}
+  .ro-hint .ro-icon{color:#0078D4;flex-shrink:0}
+
+  .edit-actions{margin-top:auto;display:flex;gap:8px;justify-content:flex-end}
+  .btn{background:transparent;border:1px solid #3C3C3C;border-radius:3px;color:#CCCCCC;font-size:12px;cursor:pointer;font-family:'Segoe UI';padding:6px 14px}
+  .btn:hover{background:#37373D;border-color:#0078D4}
+  .btn-primary{background:#0078D4;border:none;color:#FFFFFF;font-weight:500}
+  .btn-primary:hover{background:#1A8AE0}
+
+  /* Footer */
+  .footer{background:#252526;padding:12px 16px;border-top:1px solid #3C3C3C;display:flex;justify-content:flex-end;align-items:center;gap:8px}
+</style>
+</head>
+<body>
+
+<div class="dialog">
+
+  <!-- Window-Title -->
+  <div class="dialog-title">
+    <span class="dialog-title-text">Segmenttypen verwalten</span>
+    <div class="win-controls">
+      <div class="win-btn"></div>
+      <div class="win-btn"></div>
+      <div class="win-btn close" onclick="location.href='../03_ProfilWizard/02_Segmente.html'" title="Schließen"></div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-title">Segmenttypen für Profil-Wizard</div>
+    <div class="header-hint">Bestandteile des Dateinamens (Plannummer, Geschoss, Planart …) in Gruppen organisiert. Built-ins systemfest, eigene über ✕ am Eintrag/Gruppe löschbar (Custom-Gruppe nur wenn leer). Gruppe deaktivieren = alle Items darin im Wizard ausgeblendet.</div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <span class="toolbar-info">6 Gruppen (2 eigen) · 16 Segmenttypen · 1 deaktiviert · 1 eigen</span>
+    <div class="toolbar-buttons">
+      <button class="btn-new secondary">+ Neue Gruppe</button>
+      <button class="btn-new">+ Neuer Segmenttyp</button>
+    </div>
+  </div>
+
+  <!-- Body: 2-Spalten -->
+  <div class="body">
+
+    <!-- Liste -->
+    <div class="list-pane">
+
+      <!-- Gruppe Identifikation (Built-in) -->
+      <div class="group">
+        <div class="group-head">
+          <div class="group-toggle on"></div>
+          <span class="caret">▾</span>
+          <span class="group-grip">⋮⋮</span>
+          <span class="group-name">Identifikation <span class="group-count">(3)</span></span>
+          <span class="icon-del disabled">✕</span>
+        </div>
+        <div class="item">
+          <div class="item-toggle on"></div>
+          <span class="grip">⋮⋮</span>
+          <div class="swatch" style="background:#0F6E56"></div>
+          <div class="name-row"><span class="name">Plannummer</span><span class="badge req">PFLICHT</span><span class="badge builtin">BUILT-IN</span></div>
+          <span></span>
+          <span class="icon-del disabled">✕</span>
+        </div>
+        <div class="item">
+          <div class="item-toggle on"></div>
+          <span class="grip">⋮⋮</span>
+          <div class="swatch" style="background:#993C1D"></div>
+          <div class="name-row"><span class="name">Index</span><span class="badge builtin">BUILT-IN</span></div>
+          <span></span>
+          <span class="icon-del disabled">✕</span>
+        </div>
+        <div class="item">
+          <div class="item-toggle on"></div>
+          <span class="grip">⋮⋮</span>
+          <div class="swatch" style="background:#534AB7"></div>
+          <div class="name-row"><span class="name">Projektnummer</span><span class="badge builtin">BUILT-IN</span></div>
+          <span></span>
+          <span class="icon-del disabled">✕</span>
+        </div>
+      </div>
+
+      <!-- Gruppe Räumlich (Built-in) -->
+      <div class="group">
+        <div class="group-head">
+          <div class="group-toggle on"></div>
+          <span class="caret">▾</span>
+          <span class="group-grip">⋮⋮</span>
+          <span class="group-name">Räumlich <span class="group-count">(5)</span></span>
+          <span class="icon-del disabled">✕</span>
+        </div>
+        <div class="item sel">
+          <div class="item-toggle on"></div>
+          <span class="grip">⋮⋮</span>
+          <div class="swatch" style="background:#185FA5"></div>
+          <div class="name-row"><span class="name">Geschoss</span><span class="badge builtin">BUILT-IN</span></div>
+          <span></span>
+          <span class="icon-del disabled">✕</span>
+        </div>
+        <div class="item">
+          <div class="item-toggle on"></div>
+          <span class="grip">⋮⋮</span>
+          <div class="swatch" style="background:#6E6E6E"></div>
+          <div class="name-row"><span class="name">Haus</span><span class="badge builtin">BUILT-IN</span></div>
+          <span></span>
+          <span class="icon-del disabled">✕</span>
+        </div>
+        <div class="item">
+          <div class="item-toggle on"></div>
+          <span class="grip">⋮⋮</span>
+          <div class="swatch" style="background:#6E6E6E"></div>
+          <div class="name-row"><span class="name">Bauteil</span><span class="badge builtin">BUILT-IN</span></div>
+          <span></span>
+          <span class="icon-del disabled">✕</span>
+        </div>
+        <div class="item">
+          <div class="item-toggle on"></div>
+          <span class="grip">⋮⋮</span>
+          <div class="swatch" style="background:#6E6E6E"></div>
+          <div class="name-row"><span class="name">Stiege</span><span class="badge builtin">BUILT-IN</span></div>
+          <span></span>
+          <span class="icon-del disabled">✕</span>
+        </div>
+        <div class="item">
+          <div class="item-toggle on"></div>
+          <span class="grip">⋮⋮</span>
+          <div class="swatch" style="background:#6E6E6E"></div>
+          <div class="name-row"><span class="name">Zone</span><span class="badge builtin">BUILT-IN</span></div>
+          <span></span>
+          <span class="icon-del disabled">✕</span>
+        </div>
+      </div>
+
+      <!-- Gruppe Inhaltlich (Built-in, eingeklappt — Demo Collapsed-State) -->
+      <div class="group collapsed">
+        <div class="group-head">
+          <div class="group-toggle on"></div>
+          <span class="caret collapsed">▾</span>
+          <span class="group-grip">⋮⋮</span>
+          <span class="group-name">Inhaltlich <span class="group-count">(3)</span></span>
+          <span class="icon-del disabled">✕</span>
+        </div>
+        <div class="item">
+          <div class="item-toggle on"></div>
+          <span class="grip">⋮⋮</span>
+          <div class="swatch" style="background:#1F7280"></div>
+          <div class="name-row"><span class="name">Planart</span><span class="badge builtin">BUILT-IN</span></div>
+          <span></span>
+          <span class="icon-del disabled">✕</span>
+        </div>
+        <div class="item">
+          <div class="item-toggle on"></div>
+          <span class="grip">⋮⋮</span>
+          <div class="swatch" style="background:#555555"></div>
+          <div class="name-row"><span class="name">Bezeichnung</span><span class="badge builtin">BUILT-IN</span></div>
+          <span></span>
+          <span class="icon-del disabled">✕</span>
+        </div>
+        <div class="item">
+          <div class="item-toggle on"></div>
+          <span class="grip">⋮⋮</span>
+          <div class="swatch" style="background:#6E6E6E"></div>
+          <div class="name-row"><span class="name">Bauabschnitt</span><span class="badge builtin">BUILT-IN</span></div>
+          <span></span>
+          <span class="icon-del disabled">✕</span>
+        </div>
+      </div>
+
+      <!-- Gruppe Sonstiges (Built-in) — komplett deaktiviert (Demo: Group-Toggle aus) -->
+      <div class="group inactive">
+        <div class="group-head">
+          <div class="group-toggle"></div>
+          <span class="caret">▾</span>
+          <span class="group-grip">⋮⋮</span>
+          <span class="group-name">Sonstiges <span class="group-count">(3)</span></span>
+          <span class="icon-del disabled">✕</span>
+        </div>
+        <div class="item">
+          <div class="item-toggle on"></div>
+          <span class="grip">⋮⋮</span>
+          <div class="swatch" style="background:#6E6E6E"></div>
+          <div class="name-row"><span class="name">Datum</span><span class="badge builtin">BUILT-IN</span></div>
+          <span></span>
+          <span class="icon-del disabled">✕</span>
+        </div>
+        <div class="item">
+          <div class="item-toggle on"></div>
+          <span class="grip">⋮⋮</span>
+          <div class="swatch" style="background:#6E6E6E"></div>
+          <div class="name-row"><span class="name">Objekt</span><span class="badge builtin">BUILT-IN</span></div>
+          <span></span>
+          <span class="icon-del disabled">✕</span>
+        </div>
+        <div class="item">
+          <div class="item-toggle on"></div>
+          <span class="grip">⋮⋮</span>
+          <div class="swatch" style="background:#3C3C3C"></div>
+          <div class="name-row"><span class="name">Ignorieren</span><span class="badge builtin">BUILT-IN</span></div>
+          <span></span>
+          <span class="icon-del disabled">✕</span>
+        </div>
+      </div>
+
+      <!-- Gruppe Bauphysik (Custom) — löschbar weil nicht leer? Nein: locked solange Items drin -->
+      <div class="group">
+        <div class="group-head">
+          <div class="group-toggle on"></div>
+          <span class="caret">▾</span>
+          <span class="group-grip">⋮⋮</span>
+          <span class="group-name">Bauphysik <span class="group-count">(1)</span></span>
+          <span class="icon-del locked" title="Nicht löschbar — Gruppe enthält Items. Erst Items verschieben oder löschen.">✕</span>
+        </div>
+        <div class="item">
+          <div class="item-toggle on"></div>
+          <span class="grip">⋮⋮</span>
+          <div class="swatch" style="background:#A87142"></div>
+          <div class="name-row"><span class="name">Akustik-Klasse</span><span class="badge custom">EIGEN</span></div>
+          <span></span>
+          <span class="icon-del" title="Löschen">✕</span>
+        </div>
+      </div>
+
+      <!-- Gruppe Notizen (Custom, leer) — löschbar -->
+      <div class="group">
+        <div class="group-head">
+          <div class="group-toggle on"></div>
+          <span class="caret">▾</span>
+          <span class="group-grip">⋮⋮</span>
+          <span class="group-name">Notizen <span class="group-count">(0)</span></span>
+          <span class="icon-del" title="Gruppe löschen">✕</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Edit-Panel: Built-in (Geschoss) — kein Trash, Fachrolle + Token read-only -->
+    <div class="edit-pane">
+      <div class="edit-title">Segmenttyp bearbeiten</div>
+
+      <div class="edit-label">Name</div>
+      <input type="text" class="edit-input" value="Geschoss">
+
+      <div class="edit-label">Fachrolle</div>
+      <div class="ro-block">
+        <span class="ro-value">Räumlich</span>
+        <span class="ro-lock">🔒 read-only</span>
+      </div>
+      <div class="ro-hint"><span class="ro-icon">ℹ</span><span>Wird automatisch Teil der Dokument-Identität, wenn dieser Segmenttyp einem Profilsegment zugewiesen ist.</span></div>
+
+      <div class="edit-label">Token</div>
+      <div class="ro-block">
+        <span class="ro-value mono">geschoss</span>
+        <span class="ro-lock">🔒 fix</span>
+      </div>
+      <div class="ro-hint"><span class="ro-icon">ℹ</span><span>Wird in Rename-Templates verwendet (z. B. <span style="font-family:Consolas,monospace;color:#9CDCFE">{geschoss}</span>) und ist unveränderlich.</span></div>
+
+      <div class="edit-label">Gruppe</div>
+      <div class="edit-select"><span>Räumlich</span><span style="color:#858585;font-size:10px">▾</span></div>
+
+      <div class="edit-label">Farbe</div>
+      <div class="palette">
+        <div class="color-swatch" style="background:#0F6E56"></div>
+        <div class="color-swatch" style="background:#993C1D"></div>
+        <div class="color-swatch" style="background:#534AB7"></div>
+        <div class="color-swatch sel" style="background:#185FA5"></div>
+        <div class="color-swatch" style="background:#1F7280"></div>
+        <div class="color-swatch" style="background:#555555"></div>
+        <div class="color-swatch" style="background:#7A1F5C"></div>
+        <div class="color-swatch" style="background:#A87142"></div>
+        <div class="color-swatch" style="background:#3D7B47"></div>
+        <div class="color-swatch" style="background:#8B6914"></div>
+        <div class="color-swatch" style="background:#5C3D8E"></div>
+        <div class="color-swatch" style="background:#2E7D8A"></div>
+      </div>
+      <div class="palette-hint">Klick wählt — 12 vordefinierte Theme-Farben</div>
+
+      <div class="edit-actions">
+        <button class="btn">Abbrechen</button>
+        <button class="btn btn-primary">Speichern</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <button class="btn btn-primary" onclick="location.href='../03_ProfilWizard/02_Segmente.html'">Schließen</button>
+  </div>
+
+</div>
+
+</body>
+</html>

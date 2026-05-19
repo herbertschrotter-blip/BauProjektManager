@@ -68,12 +68,8 @@ public partial class SegmentTypeManagerDialog : Window
 
     private void OnGroupToggleClick(object sender, MouseButtonEventArgs e)
     {
-        // Doppelklick → Gruppe deaktivieren/aktivieren. Single-Klick koennte
-        // spaeter zum Collapse/Expand verwendet werden — hier bewusst Doppelklick
-        // damit nicht jeder Listen-Scroll-Klick versehentlich deaktiviert.
-        if (e.ClickCount == 2
-            && sender is FrameworkElement fe
-            && fe.Tag is SegmentTypeGroupDefinition group)
+        // Single-Klick auf den Toggle-Slider toggelt Gruppe.
+        if (sender is FrameworkElement fe && fe.Tag is SegmentTypeGroupDefinition group)
         {
             _vm.ToggleGroupActive(group);
             e.Handled = true;

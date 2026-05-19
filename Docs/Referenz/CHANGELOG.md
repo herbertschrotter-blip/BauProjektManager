@@ -31,6 +31,26 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.51] — 2026-05-19
+
+### Fix: BPM-108 Manager-Dialog UX-Korrekturen + Kosmetik
+
+### Hinzugefuegt
+- `SegmentTypeManagerViewModel.CreateNewGroupCommand` — legt neue Custom-Gruppe an (SortOrder = max + 10, IsBuiltin = false). Toolbar bekommt zwei Buttons: "+ Neue Gruppe" und "+ Neuer Segmenttyp".
+
+### Geaendert
+- Manager-Dialog Fenster: 780x600 → 1100x780 (MinWidth/Height 900x640). Edit-Panel-ScrollViewer entfernt — alle Felder sind sofort sichtbar.
+- Body-Spalten: Liste/Edit-Panel jetzt gleich breit (50/50 statt */300).
+- Per-Type-Toggle + Per-Group-Toggle: oval mit Slider-Punkt analog Mockup (30x16 rounded, grün wenn aktiv mit weissem Slider rechts, grau wenn deaktiviert mit hellem Slider links). Ersetzt das alte ●/○-Button-Design.
+- Gruppen-Header-Click: Single-Click auf den Toggle-Slider statt Doppelklick auf den ganzen Header. Verhindert versehentliche Toggles beim Scrollen.
+- Gruppen-Dropdown im Edit-Panel: explizites `ItemTemplate` mit `{Binding Name}` statt `DisplayMemberPath` — fixt die FQN-Anzeige ("BauProjektManager.Domain.Models.PlanM...") im SelectionBox.
+- `ProjectDatabase.cs`: Log-Text + Description + XML-Doc-Kommentar von "Schema v2.1" auf "Schema v2.2 — BPM-108 segment_types/-groups" aktualisiert (Kosmetik, kein funktionaler Impact).
+
+### Hintergrund
+Live-Test in v0.28.50 zeigte 5 UX-Issues: kein "+ Neue Gruppe"-Button, falsches Toggle-Design (●/○ statt oval-Slider), ungleiche Spaltenbreite, ScrollViewer im Edit-Panel benötigt, Gruppen-Dropdown zeigt Klassen-FQN. Alle 5 Issues in diesem Patch behoben. 238/238 Tests bleiben grün (kein Test-Refactor nötig).
+
+---
+
 ## [v0.28.50] — 2026-05-18
 
 ### Feature: BPM-108 Phase C Teil 5 — Auto-Import-Blockade bei ProfileHealth.MissingSegmentTypes

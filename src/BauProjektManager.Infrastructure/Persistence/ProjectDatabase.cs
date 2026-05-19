@@ -9,7 +9,7 @@ namespace BauProjektManager.Infrastructure.Persistence;
 
 /// <summary>
 /// SQLite database service — manages bpm.db in %LocalAppData%\BauProjektManager\.
-/// Schema v2.1: ULID + Sync-Spalten (created_by, last_modified_at/by, sync_version, is_deleted) auf allen Tabellen.
+/// Schema v2.2: ULID + Sync-Spalten + segment_type_groups/segment_types (BPM-108).
 /// ID generation via IIdGenerator (ADR-039 v2).
 /// </summary>
 public class ProjectDatabase : IDisposable
@@ -37,7 +37,7 @@ public class ProjectDatabase : IDisposable
             AbsolutePath: _dbPath,
             Type: PersistenceType.Database,
             Scope: PersistenceScope.Local,
-            Description: "SQLite, alle Projekte + Clients + Schema v2.1 Sync"));
+            Description: "SQLite, alle Projekte + Clients + Segmenttypen + Schema v2.2 Sync"));
     }
 
     private SqliteConnection GetConnection()
@@ -61,7 +61,7 @@ public class ProjectDatabase : IDisposable
 
     private void EnsureTables()
     {
-        Log.Debug("Creating database tables (schema v2.1 Sync)");
+        Log.Debug("Creating database tables (schema v2.2 — BPM-108 segment_types/-groups)");
         var conn = _connection!;
         var cmd = conn.CreateCommand();
         cmd.CommandText = """

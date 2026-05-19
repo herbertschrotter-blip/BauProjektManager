@@ -299,6 +299,41 @@ public partial class SegmentTypeManagerViewModel : ObservableObject
         return customs.Count == 0 ? 10 : customs.Max(t => t.SortOrder) + 10;
     }
 
+    // === Neue Custom-Gruppe ===
+
+    [RelayCommand]
+    private void CreateNewGroup()
+    {
+        var newGroup = new SegmentTypeGroupDefinition
+        {
+            Id = _idGenerator.NewId(),
+            Name = "Neue Gruppe",
+            SortOrder = NextCustomGroupSortOrder(),
+            IsActive = true,
+            IsBuiltin = false
+        };
+
+        try
+        {
+            _repository.SaveGroup(newGroup);
+            _catalog.Invalidate();
+            Log.Information("BPM-108: Neue Custom-Gruppe angelegt: {Id}", newGroup.Id);
+            Refresh();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "BPM-108: CreateNewGroup fehlgeschlagen");
+        }
+    }
+
+    private int NextCustomGroupSortOrder()
+    {
+        // Custom-Gruppen unterhalb von grp_eigene (SortOrder 50 + n*10)
+        var allGroups = _repository.LoadAllGroups();
+        if (allGroups.Count == 0) return 50;
+        return allGroups.Max(g => g.SortOrder) + 10;
+    }
+
     // === Refresh / Rebuild ===
 
     private void Refresh()

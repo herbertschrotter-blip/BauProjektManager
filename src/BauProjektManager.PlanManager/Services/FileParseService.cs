@@ -61,16 +61,19 @@ public class FileParseService
                         .FirstOrDefault(s => s.Position == segDef.Position);
                     if (matchingSeg is not null)
                     {
-                        var fieldKey = segDef.FieldType.ToLowerInvariant();
-                        extractedFields[fieldKey] = matchingSeg.RawValue;
+                        // v4 (BPM-108): FieldTypeId ist bereits snake_case (z. B. "plan_number")
+                        var fieldKey = segDef.FieldTypeId;
+                        if (!string.IsNullOrWhiteSpace(fieldKey))
+                            extractedFields[fieldKey] = matchingSeg.RawValue;
                     }
                 }
 
                 // Check required fields
                 foreach (var segDef in matchedProfile.Segments.Where(s => s.Required))
                 {
-                    var fieldKey = segDef.FieldType.ToLowerInvariant();
-                    if (!extractedFields.ContainsKey(fieldKey)
+                    var fieldKey = segDef.FieldTypeId;
+                    if (string.IsNullOrWhiteSpace(fieldKey)
+                        || !extractedFields.ContainsKey(fieldKey)
                         || string.IsNullOrWhiteSpace(extractedFields[fieldKey]))
                     {
                         confidence = ParseConfidence.Medium;

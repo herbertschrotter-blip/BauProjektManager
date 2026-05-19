@@ -12,10 +12,17 @@ namespace BauProjektManager.PlanManager.Services;
 /// <summary>
 /// Manages the global pattern-templates.json in Cloud .AppData/.
 /// Extracts reusable templates from profiles and suggests them for new projects.
-/// BPM-107: Registriert pattern-templates.json bei IPersistenceRegistry.
 /// </summary>
+/// <remarks>
+/// BPM-107: Registriert pattern-templates.json bei IPersistenceRegistry.
+/// BPM-108 Phase B (ADR-056): Strict v4. Templates mit <see cref="PatternTemplate.SchemaVersion"/>
+/// != <see cref="CurrentSchemaVersion"/> werden vom Loader verworfen. Reset via DevTool-Archive.
+/// </remarks>
 public class PatternTemplateService
 {
+    /// <summary>Aktuelle Schema-Version. Templates mit anderem Wert werden beim Laden verworfen.</summary>
+    public const int CurrentSchemaVersion = 4;
+
     private readonly IIdGenerator _idGenerator;
     private readonly IPersistenceRegistry? _persistenceRegistry;
 
@@ -36,6 +43,10 @@ public class PatternTemplateService
     /// <summary>
     /// Loads all templates from pattern-templates.json.
     /// </summary>
+    /// <remarks>
+    /// BPM-108 Phase B: Templates mit <c>SchemaVersion != 4</c> werden verworfen
+    /// und im Log dokumentiert (Frühphasen-Reset). Reset via DevTool-Archive.
+    /// </remarks>
     public List<PatternTemplate> LoadAll(string appDataPath)
     {
         var filePath = GetFilePath(appDataPath);
@@ -46,8 +57,23 @@ public class PatternTemplateService
         {
             var json = File.ReadAllText(filePath);
             var templates = JsonSerializer.Deserialize<List<PatternTemplate>>(json, JsonOptions);
-            Log.Information("PatternTemplates: {Count} Templates geladen", templates?.Count ?? 0);
-            return templates ?? [];
+            if (templates is null) return [];
+
+            var accepted = new List<PatternTemplate>(templates.Count);
+            foreach (var template in templates)
+            {
+                if (template.SchemaVersion != CurrentSchemaVersion)
+                {
+                    Log.Warning("PatternTemplate verworfen: {Name} ({Id}) — SchemaVersion {Version}, erwartet {Expected}.",
+                        template.DocumentTypeName, template.Id, template.SchemaVersion, CurrentSchemaVersion);
+                    continue;
+                }
+                accepted.Add(template);
+            }
+
+            Log.Information("PatternTemplates: {Count} von {Total} Templates geladen (v{Version}-konform)",
+                accepted.Count, templates.Count, CurrentSchemaVersion);
+            return accepted;
         }
         catch (Exception ex)
         {
@@ -88,6 +114,7 @@ public class PatternTemplateService
     {
         return new PatternTemplate
         {
+            SchemaVersion = CurrentSchemaVersion,
             Id = _idGenerator.NewId(),
             DocumentTypeId = profile.DocumentTypeId,
             DocumentTypeName = profile.DocumentTypeName,

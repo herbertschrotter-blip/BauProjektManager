@@ -31,6 +31,37 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.45] — 2026-05-18
+
+### Feature: BPM-108 Phase B — Profilformat v4 + ProfileHealth + DevTool-Archivierung
+
+### Hinzugefuegt
+- `RecognitionProfile.SchemaVersion = 4` mit `ProfileSegment.FieldTypeId` (statt FieldType-Enum-String) und entfaelltem `Label`-Feld. `IdentityFields`, `FolderHierarchy` und `RenameSchema` referenzieren snake_case-IDs bzw. `token_key`-Tokens. `IndexExtractionConfig.SegmentSelector` normiert auf `fieldTypeId`.
+- `ProfileHealth` Enum (Domain) — Zustaende `Valid`, `MissingSegmentTypes`, `OutdatedSchema`, `InvalidRecognitionRules`. `RecognitionProfile.Health` + `MissingSegmentTypeIds` werden beim Laden berechnet (nicht persistiert via `[JsonIgnore]`).
+- `IProfileArchiveService` + `ProfileArchiveService` (PlanManager.Services) — DevTool-Befehl, verschiebt veraltete RecognitionProfile-JSONs nach `<project>/.bpm/profiles/_archiv/schema-reset-YYYYMMDD-HHMMSS/` und `pattern-templates.json` analog. Kein Loader-Side-Effect.
+- `LegacyFieldTypeMapper` (PlanManager.Services, internal) — Compat-Shim fuer Phase B: uebersetzt Wizard-Enum-Werte auf snake_case-IDs. Wird in Phase C entfernt.
+- `PatternTemplate.SchemaVersion = 4` + `PatternTemplateService` Loader strikt auf v4. Aeltere Templates werden im Log dokumentiert verworfen.
+- ProfileManager-Constructor nimmt optional `ISegmentTypeCatalog` (Default null fuer Tests/isolierte Anwendungen).
+- 59 neue Unit-Tests (ProfileHealthTests, ProfileArchiveServiceTests, LegacyFieldTypeMapperTests).
+
+### Geaendert
+- `Directory.Build.props`: v0.28.44 → v0.28.45.
+- `ProfileManager.Load(All|ById)`: strict `schemaVersion == 4`; alte v1→v2-Migration entfernt; `MigrateIfNeeded` weg.
+- `ProfileManager.Save`: setzt `SchemaVersion = 4` zwingend.
+- `ProfileManager.BuildFromWizard`: liefert v4-Profile mit `FieldTypeId` (via LegacyFieldTypeMapper) und Spatial-erweiterten `identityFields`-Defaults.
+- `FileParseService`: `extractedFields[fieldKey]` nutzt nun `ProfileSegment.FieldTypeId` statt `FieldType` (snake_case statt enum.ToLowerInvariant).
+- `App.xaml.cs`: DI-Registrierung `IProfileArchiveService` ergaenzt; `IProfileManager` bekommt `ISegmentTypeCatalog` via Factory-Delegate fuer Health-Berechnung.
+- Tests `ProfileManagerSaveLoadTests` / `ProfileManagerLoadToleranceTests`: alle SchemaVersion-Asserts und JSON-Fixtures auf v4 angehoben.
+
+### Hintergrund
+Zweite Implementierungs-Phase von BPM-108 nach CGR-Sign-off (Akzeptanzkriterien #7–13 erfuellt). Recognition bleibt BPM-082-kompatibel — der `DocumentTypeRecognizer` wird in Phase B NICHT angefasst. Phase C (Wizard/UI/Manager) folgt im naechsten Commit und entfernt die `LegacyFieldTypeMapper`-Bruecke.
+
+### Migration / Reset
+- Frühphase = Reset (ADR-056). Alte v3-Profile werden vom Loader verworfen.
+- DevTool-Aufruf: `IProfileArchiveService.ArchiveOutdatedProfiles(projectRoot)` und `.ArchiveOutdatedPatternTemplates(cloudSharedAppData)` — manuelle Trigger, kein App-Start-Side-Effect.
+
+---
+
 ## [v0.28.44] — 2026-05-18
 
 ### Feature: BPM-108 Phase A — Segmenttyp-Katalog (Domain + Persistence + Seed)

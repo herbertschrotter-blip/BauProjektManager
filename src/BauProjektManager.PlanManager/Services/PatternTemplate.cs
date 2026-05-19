@@ -6,10 +6,17 @@ namespace BauProjektManager.PlanManager.Services;
 /// A reusable pattern template extracted from a RecognitionProfile.
 /// Stored globally in pattern-templates.json (Cloud .AppData/).
 /// Contains parsing + recognition rules but no project-specific data.
-/// Schema v2: uses DocumentTypeId + TokenizationConfig.
 /// </summary>
+/// <remarks>
+/// Schema v2: uses DocumentTypeId + TokenizationConfig.
+/// Schema v4 (BPM-108 Phase B, ADR-056): Segments referenzieren <c>segment_types.id</c>
+/// via <see cref="ProfileSegment.FieldTypeId"/>. <c>FolderHierarchy</c> ist eine Liste
+/// von <c>segment_types.id</c>. Strict v4: aeltere Templates werden vom Service verworfen.
+/// </remarks>
 public class PatternTemplate
 {
+    /// <summary>Aktuelle Schema-Version. Mismatch wird vom Loader verworfen.</summary>
+    public int SchemaVersion { get; set; } = 4;
     public string Id { get; set; } = string.Empty;
     public string DocumentTypeId { get; set; } = string.Empty;
     public string DocumentTypeName { get; set; } = string.Empty;

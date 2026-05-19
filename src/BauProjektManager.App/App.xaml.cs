@@ -131,12 +131,20 @@ public partial class App : Application
         sc.AddSingleton<IDialogService, BpmDialogService>();
         sc.AddSingleton<IPersistenceRegistry, PersistenceRegistry>();
         sc.AddSingleton<ProjectDatabase>();
-        sc.AddSingleton<IProfileManager, ProfileManager>();
 
-        // BPM-108: Segmenttyp-Katalog (Phase A)
+        // BPM-108: Segmenttyp-Katalog (Phase A) — vor ProfileManager registrieren,
+        // damit der Manager ihn fuer ProfileHealth-Berechnung bekommt.
         sc.AddSingleton<ISegmentTypeRepository, SegmentTypeRepository>();
         sc.AddSingleton<SegmentTypeSeedService>();
         sc.AddSingleton<ISegmentTypeCatalog, SegmentTypeCatalog>();
+
+        sc.AddSingleton<IProfileManager>(sp => new ProfileManager(
+            sp.GetRequiredService<IIdGenerator>(),
+            sp.GetService<IPersistenceRegistry>(),
+            sp.GetService<ISegmentTypeCatalog>()));
+
+        // BPM-108 Phase B: DevTool-Befehl fuer Schema-v4-Reset
+        sc.AddSingleton<IProfileArchiveService, ProfileArchiveService>();
 
         var logDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),

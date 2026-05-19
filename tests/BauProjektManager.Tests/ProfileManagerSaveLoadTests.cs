@@ -10,7 +10,7 @@ namespace BauProjektManager.Tests;
 /// Unit-Tests für <see cref="ProfileManager.Save"/>, <see cref="ProfileManager.LoadAll"/>
 /// und <see cref="ProfileManager.BuildFromWizard"/> (BPM-082.06b).
 ///
-/// Schwerpunkt: Save-Roundtrip, Profil-JSON-Format mit SchemaVersion=3,
+/// Schwerpunkt: Save-Roundtrip, Profil-JSON-Format mit SchemaVersion=4 (BPM-108 Phase B),
 /// segment-Rules korrekt geschrieben+gelesen, BuildFromWizard-Output.
 ///
 /// Pro Test ein frisches Temp-Verzeichnis (IDisposable Cleanup).
@@ -48,7 +48,7 @@ public class ProfileManagerSaveLoadTests : IDisposable
     // === BuildFromWizard ===
 
     [Fact]
-    public void BuildFromWizard_SetsSchemaVersion3()
+    public void BuildFromWizard_SetsSchemaVersion4()
     {
         var profile = _sut.BuildFromWizard(
             documentTypeName: "Bauprotokoll",
@@ -62,7 +62,7 @@ public class ProfileManagerSaveLoadTests : IDisposable
             recognition: [],
             recognitionPriority: 100);
 
-        Assert.Equal(3, profile.SchemaVersion);
+        Assert.Equal(4, profile.SchemaVersion);
     }
 
     [Fact]
@@ -216,17 +216,17 @@ public class ProfileManagerSaveLoadTests : IDisposable
     }
 
     [Fact]
-    public void Save_WritesValidJson_WithSchemaVersion3()
+    public void Save_WritesValidJson_WithSchemaVersion4()
     {
         var profile = MakeMinimalProfile(id: "ABC");
-        profile.SchemaVersion = 3;
+        profile.SchemaVersion = 4;
 
         _sut.Save(_tempRoot, profile);
 
         var json = File.ReadAllText(
             Path.Combine(_tempRoot, ".bpm", "profiles", "ABC.json"));
         using var doc = JsonDocument.Parse(json);
-        Assert.Equal(3, doc.RootElement.GetProperty("schemaVersion").GetInt32());
+        Assert.Equal(4, doc.RootElement.GetProperty("schemaVersion").GetInt32());
     }
 
     [Fact]
@@ -288,13 +288,13 @@ public class ProfileManagerSaveLoadTests : IDisposable
     public void SaveLoadById_Roundtrip_PreservesSchemaVersion()
     {
         var profile = MakeMinimalProfile(id: "ROUND-2");
-        profile.SchemaVersion = 3;
+        profile.SchemaVersion = 4;
 
         _sut.Save(_tempRoot, profile);
         var loaded = _sut.LoadById(_tempRoot, "ROUND-2");
 
         Assert.NotNull(loaded);
-        Assert.Equal(3, loaded!.SchemaVersion);
+        Assert.Equal(4, loaded!.SchemaVersion);
     }
 
     [Fact]
@@ -381,7 +381,7 @@ public class ProfileManagerSaveLoadTests : IDisposable
         return new RecognitionProfile
         {
             Id = id,
-            SchemaVersion = 3,
+            SchemaVersion = 4,
             DocumentTypeId = "test",
             DocumentTypeName = "TestType",
             TargetFolder = "01 Planunterlagen",

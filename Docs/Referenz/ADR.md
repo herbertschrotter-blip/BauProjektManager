@@ -2549,7 +2549,7 @@ DevTools liest Inventar dynamisch im Reset-Tab und zeigt es mit Multi-Select-Che
 
 **Datum:** 2026-05-18
 **Status:** ✅ Entschieden (Sign-off via CGR-2026-05-12-segmenttyp-architektur r3)
-**Implementierung:** Phase A ✅ Implemented (v0.28.44) · Phase B/C ⬜ Geplant
+**Implementierung:** Phase A ✅ Implemented (v0.28.44) · Phase B ✅ Implemented (v0.28.45) · Phase C ⬜ Geplant
 **Herkunft:** BPM-108 — erkannt im Zuge BPM-080.05 Schritt 2 (Token-Drag&Drop, "+ Eigenes"-Chip). `FieldType`-Enum hardcoded an mehreren Stellen, User kann weder eigene Typen anlegen noch Reihenfolge ändern. Cross-Review mit ChatGPT (3 Runden) führte zur unten beschriebenen Architektur.
 
 **Kontext:**

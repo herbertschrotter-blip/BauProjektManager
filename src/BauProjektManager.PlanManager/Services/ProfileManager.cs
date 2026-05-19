@@ -2,6 +2,7 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using BauProjektManager.Domain.Enums;
+using BauProjektManager.Domain.Enums.PlanManager;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models;
 using BauProjektManager.Domain.Models.PlanManager;
@@ -12,15 +13,26 @@ namespace BauProjektManager.PlanManager.Services;
 /// <summary>
 /// Manages RecognitionProfiles per project.
 /// Profiles are stored as individual JSON files in .bpm/profiles/ (ADR-046).
-/// BPM-082: Schema v3, Methoden segment (Default) und regex (Fallback).
-/// Load(All|ById) verwirft Profile mit invalider Identitaet, fehlender
-/// Tokenization, leerer Recognition oder ungueltigen Rules — der Recognizer
-/// sieht somit nie kaputte Profile (Konsens R3 Punkt 10+12).
 /// </summary>
+/// <remarks>
+/// BPM-082: Schema v3, Methoden segment (Default) und regex (Fallback).
+/// BPM-108 / ADR-056 (Phase B): Schema v4 — ProfileSegment.FieldTypeId statt FieldType-Enum;
+/// IdentityFields/FolderHierarchy/RenameSchema referenzieren segment_types.id bzw. token_key.
+/// LoadAll/LoadById verwerfen Profile mit SchemaVersion != 4 (Fruehphase = Reset, kein Migrations-Code).
+/// Optionaler <see cref="ISegmentTypeCatalog"/> berechnet beim Laden den
+/// <see cref="ProfileHealth"/> und befuellt <see cref="RecognitionProfile.MissingSegmentTypeIds"/>.
+/// </remarks>
 public class ProfileManager : IProfileManager
 {
+    /// <summary>Aktuelle Schema-Version. Profile mit anderem Wert werden beim Laden verworfen.</summary>
+    public const int CurrentSchemaVersion = 4;
+
+    /// <summary>Reservierter System-Key in <see cref="RecognitionProfile.IdentityFields"/>.</summary>
+    public const string DocumentTypeIdentityKey = "documentType";
+
     private readonly IIdGenerator _idGenerator;
     private readonly IPersistenceRegistry? _persistenceRegistry;
+    private readonly ISegmentTypeCatalog? _segmentTypeCatalog;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -30,10 +42,14 @@ public class ProfileManager : IProfileManager
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
     };
 
-    public ProfileManager(IIdGenerator idGenerator, IPersistenceRegistry? persistenceRegistry = null)
+    public ProfileManager(
+        IIdGenerator idGenerator,
+        IPersistenceRegistry? persistenceRegistry = null,
+        ISegmentTypeCatalog? segmentTypeCatalog = null)
     {
         _idGenerator = idGenerator;
         _persistenceRegistry = persistenceRegistry;
+        _segmentTypeCatalog = segmentTypeCatalog;
     }
 
     /// <summary>
@@ -49,10 +65,13 @@ public class ProfileManager : IProfileManager
 
     /// <summary>
     /// Loads all profiles for a project from .bpm/profiles/*.json.
-    /// BPM-082.05: Profile mit invalider Identitaet, fehlender Tokenization,
-    /// leerer Recognition oder ungueltigen Rules werden komplett verworfen
-    /// (Konsens R3 Punkt 10+12). Der Recognizer sieht somit nie kaputte Profile.
     /// </summary>
+    /// <remarks>
+    /// Schema-Disziplin (BPM-108 Phase B): nur <see cref="CurrentSchemaVersion"/> wird akzeptiert.
+    /// Aeltere Profile werden verworfen und im Log dokumentiert — Reset via DevTool-Archive.
+    /// Profile mit Missing-IDs (Catalog-Lookup fehlgeschlagen) werden geladen, aber als
+    /// <see cref="ProfileHealth.MissingSegmentTypes"/> markiert.
+    /// </remarks>
     public List<RecognitionProfile> LoadAll(string projectRootPath)
     {
         var dir = GetProfilesDirectory(projectRootPath);
@@ -67,9 +86,12 @@ public class ProfileManager : IProfileManager
                 if (profile is null)
                     continue;
 
-                if (MigrateIfNeeded(profile, file))
-                    Log.Information("Profil migriert v1→v2: {Name} ({Id})",
-                        profile.DocumentTypeName, profile.Id);
+                if (profile.SchemaVersion != CurrentSchemaVersion)
+                {
+                    Log.Error("Profil verworfen: {File} — SchemaVersion {Version}, erwartet {Expected}. Datei loeschen und neu anlegen.",
+                        file, profile.SchemaVersion, CurrentSchemaVersion);
+                    continue;
+                }
 
                 if (!IsProfileLoadable(profile, out var reason))
                 {
@@ -77,6 +99,7 @@ public class ProfileManager : IProfileManager
                     continue;
                 }
 
+                ComputeHealth(profile);
                 profiles.Add(profile);
             }
             catch (Exception ex)
@@ -92,7 +115,6 @@ public class ProfileManager : IProfileManager
 
     /// <summary>
     /// Loads a single profile by ID.
-    /// BPM-082.05: Validiert via IsProfileLoadable wie LoadAll.
     /// </summary>
     public RecognitionProfile? LoadById(string projectRootPath, string profileId)
     {
@@ -110,20 +132,27 @@ public class ProfileManager : IProfileManager
         if (profile is null)
             return null;
 
+        if (profile.SchemaVersion != CurrentSchemaVersion)
+        {
+            Log.Error("Profil verworfen (LoadById): {Id} — SchemaVersion {Version}, erwartet {Expected}.",
+                profileId, profile.SchemaVersion, CurrentSchemaVersion);
+            return null;
+        }
+
         if (!IsProfileLoadable(profile, out var reason))
         {
             Log.Error("Profil verworfen (LoadById): {Id} — {Reason}", profileId, reason);
             return null;
         }
 
+        ComputeHealth(profile);
         return profile;
     }
 
     /// <summary>
     /// Profil-Minimum-Validierung (BPM-082.05, Konsens R3 Punkt 12).
     /// Prueft Identitaet (Id, DocumentTypeName), Tokenization-Vorhandensein,
-    /// Recognition-Count und alle Rule.IsValid()-Checks. Liefert false und
-    /// einen menschenlesbaren Grund bei jedem Verstoss.
+    /// Recognition-Count und alle Rule.IsValid()-Checks.
     /// </summary>
     private static bool IsProfileLoadable(RecognitionProfile profile, out string reason)
     {
@@ -158,6 +187,97 @@ public class ProfileManager : IProfileManager
     }
 
     /// <summary>
+    /// Berechnet <see cref="RecognitionProfile.Health"/> und befuellt
+    /// <see cref="RecognitionProfile.MissingSegmentTypeIds"/>.
+    /// </summary>
+    /// <remarks>
+    /// Ohne <see cref="ISegmentTypeCatalog"/> bleibt Health = Valid (Tests koennen den Catalog
+    /// optional injizieren). Mit Catalog werden alle <c>fieldTypeId</c>-Referenzen aus
+    /// <c>segments</c>/<c>identityFields</c>/<c>folderHierarchy</c>/<c>renameSchema</c> geprueft.
+    /// </remarks>
+    private void ComputeHealth(RecognitionProfile profile)
+    {
+        if (_segmentTypeCatalog is null)
+        {
+            profile.Health = ProfileHealth.Valid;
+            profile.MissingSegmentTypeIds = [];
+            return;
+        }
+
+        var missing = new HashSet<string>(StringComparer.Ordinal);
+        var snapshot = _segmentTypeCatalog.SnapshotIncludingDeleted();
+
+        // segments[].fieldTypeId
+        foreach (var seg in profile.Segments)
+        {
+            if (string.IsNullOrWhiteSpace(seg.FieldTypeId)) continue;
+            if (!snapshot.ContainsKey(seg.FieldTypeId)) missing.Add(seg.FieldTypeId);
+        }
+
+        // identityFields (ohne DocumentTypeIdentityKey-Systemkey)
+        foreach (var id in profile.IdentityFields)
+        {
+            if (id == DocumentTypeIdentityKey) continue;
+            if (!snapshot.ContainsKey(id)) missing.Add(id);
+        }
+
+        // folderHierarchy
+        foreach (var id in profile.FolderHierarchy)
+        {
+            if (!snapshot.ContainsKey(id)) missing.Add(id);
+        }
+
+        // indexExtraction.segmentSelector
+        var selector = profile.IndexExtraction?.SegmentSelector;
+        if (!string.IsNullOrWhiteSpace(selector) && !snapshot.ContainsKey(selector))
+        {
+            missing.Add(selector);
+        }
+
+        // renameSchema {token_key}-Platzhalter — token_key liegt auf segment_types
+        var renameTokens = ExtractRenameTokens(profile.RenameSchema);
+        if (renameTokens.Count > 0)
+        {
+            var knownTokens = new HashSet<string>(snapshot.Values.Select(t => t.TokenKey), StringComparer.Ordinal);
+            foreach (var token in renameTokens)
+            {
+                if (!knownTokens.Contains(token))
+                    missing.Add($"{{{token}}}"); // Markiere als Token-Referenz fuer Diagnose
+            }
+        }
+
+        profile.MissingSegmentTypeIds = missing.ToList();
+        profile.Health = missing.Count == 0 ? ProfileHealth.Valid : ProfileHealth.MissingSegmentTypes;
+    }
+
+    /// <summary>
+    /// Extrahiert <c>{token}</c>-Platzhalter aus einem Rename-Schema-String.
+    /// </summary>
+    internal static List<string> ExtractRenameTokens(string renameSchema)
+    {
+        if (string.IsNullOrWhiteSpace(renameSchema)) return [];
+        var tokens = new List<string>();
+        var span = renameSchema.AsSpan();
+        var i = 0;
+        while (i < span.Length)
+        {
+            if (span[i] == '{')
+            {
+                var close = span[i..].IndexOf('}');
+                if (close > 1)
+                {
+                    var name = span.Slice(i + 1, close - 1).ToString();
+                    if (!string.IsNullOrWhiteSpace(name)) tokens.Add(name);
+                    i += close + 1;
+                    continue;
+                }
+            }
+            i++;
+        }
+        return tokens;
+    }
+
+    /// <summary>
     /// Saves a profile to .bpm/profiles/{id}.json.
     /// Generates a new ULID if the profile has no ID yet.
     /// </summary>
@@ -165,6 +285,9 @@ public class ProfileManager : IProfileManager
     {
         if (string.IsNullOrEmpty(profile.Id))
             profile.Id = _idGenerator.NewId();
+
+        // Schema bei Save zwingend setzen (Frühphase = Reset, kein Toleranz-Save)
+        profile.SchemaVersion = CurrentSchemaVersion;
 
         var now = DateTime.UtcNow.ToString("o");
         if (string.IsNullOrEmpty(profile.CreatedAt))
@@ -216,6 +339,13 @@ public class ProfileManager : IProfileManager
     /// Builds a RecognitionProfile from the current wizard state.
     /// Called by ProfileWizardViewModel.SaveProfile().
     /// </summary>
+    /// <remarks>
+    /// BPM-108 Phase B Compat-Shim: Wizard liefert weiterhin <see cref="FileNameSegment"/>
+    /// mit <see cref="FieldType"/>-Enum. Hier wird via
+    /// <see cref="LegacyFieldTypeMapper.ToFieldTypeId"/> auf snake_case-IDs uebersetzt.
+    /// Custom-Segmente erzeugen einen aus <c>CustomFieldName</c> abgeleiteten token_key.
+    /// Phase C ersetzt diese Shim durch echte Catalog-Lookups.
+    /// </remarks>
     public RecognitionProfile BuildFromWizard(
         string documentTypeName,
         string targetFolder,
@@ -231,32 +361,37 @@ public class ProfileManager : IProfileManager
     {
         var profileSegments = segments
             .Where(s => s.FieldType is not null)
-            .Select(s => new ProfileSegment
+            .Select(s =>
             {
-                Position = s.Position,
-                FieldType = s.FieldType == FieldType.Custom
-                    ? s.CustomFieldName ?? "custom"
-                    : s.FieldType.ToString()!,
-                Label = s.DisplayName,
-                Required = s.FieldType == FieldType.PlanNumber,
-                IncludeInIdentity = s.FieldType is FieldType.PlanNumber
-                    or FieldType.Haus or FieldType.Bauteil or FieldType.Bauabschnitt
+                var fieldTypeId = LegacyFieldTypeMapper.ToFieldTypeId(s);
+                return new ProfileSegment
+                {
+                    Position = s.Position,
+                    FieldTypeId = fieldTypeId,
+                    Required = s.FieldType == FieldType.PlanNumber,
+                    IncludeInIdentity = LegacyFieldTypeMapper.IsIdentityRelevant(s.FieldType)
+                };
             })
             .ToList();
 
-        // Build identityFields from segments that define document identity
-        var identityFields = new List<string> { "documentType" };
+        // Build identityFields (v4: snake_case IDs)
+        var identityFields = new List<string> { DocumentTypeIdentityKey };
         foreach (var seg in profileSegments.Where(s => s.IncludeInIdentity))
         {
-            identityFields.Add(seg.FieldType.ToLowerInvariant());
+            identityFields.Add(seg.FieldTypeId);
         }
+
+        // folderHierarchy auf snake_case-IDs normieren (Wizard liefert evtl. Enum-Namen)
+        var normalizedHierarchy = folderHierarchy
+            .Select(LegacyFieldTypeMapper.NormalizeFieldTypeId)
+            .ToList();
 
         var documentTypeId = NormalizeTypeId(documentTypeName);
 
         return new RecognitionProfile
         {
             Id = existingProfileId ?? string.Empty,
-            SchemaVersion = 3, // BPM-082, Konsens R3 Punkt 5
+            SchemaVersion = CurrentSchemaVersion,
             DocumentTypeId = documentTypeId,
             DocumentTypeName = documentTypeName,
             TargetFolder = targetFolder,
@@ -274,52 +409,8 @@ public class ProfileManager : IProfileManager
             RecognitionPriority = recognitionPriority,
             ConflictPolicy = "askUser",
             Grouping = new GroupingConfig { Mode = "identity" },
-            FolderHierarchy = folderHierarchy
+            FolderHierarchy = normalizedHierarchy
         };
-    }
-
-    /// <summary>
-    /// Migrates a v1 profile to v2 in-memory and persists it back.
-    /// Returns true if migration was performed.
-    /// </summary>
-    private bool MigrateIfNeeded(RecognitionProfile profile, string filePath)
-    {
-        if (profile.SchemaVersion >= 2)
-            return false;
-
-        // v1 → v2: add DocumentTypeId
-        if (string.IsNullOrEmpty(profile.DocumentTypeId))
-            profile.DocumentTypeId = NormalizeTypeId(profile.DocumentTypeName);
-
-        // v1 → v2: Tokenization (was flat Delimiters list)
-        if (profile.Tokenization.Delimiters.Count == 0
-            && profile.Tokenization.Delimiters is ["-", "_"])
-        {
-            // Already default, nothing to migrate
-        }
-
-        // v1 → v2: IncludeInIdentity on segments
-        foreach (var seg in profile.Segments)
-        {
-            var ft = seg.FieldType.ToLowerInvariant();
-            if (ft is "plannumber" or "haus" or "bauteil" or "bauabschnitt")
-                seg.IncludeInIdentity = true;
-        }
-
-        // v1 → v2: Grouping mode
-        if (profile.Grouping.Mode == "baseFileName")
-            profile.Grouping.Mode = "identity";
-
-        profile.SchemaVersion = 2;
-        profile.UpdatedAt = DateTime.UtcNow.ToString("o");
-
-        // Persist migrated profile atomically
-        var tempPath = filePath + ".tmp";
-        var json = JsonSerializer.Serialize(profile, JsonOptions);
-        File.WriteAllText(tempPath, json);
-        File.Move(tempPath, filePath, overwrite: true);
-
-        return true;
     }
 
     /// <summary>

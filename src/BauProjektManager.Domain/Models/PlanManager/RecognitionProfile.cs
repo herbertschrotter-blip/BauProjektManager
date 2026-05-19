@@ -1,14 +1,22 @@
+using System.Text.Json.Serialization;
+using BauProjektManager.Domain.Enums.PlanManager;
+
 namespace BauProjektManager.Domain.Models.PlanManager;
 
 /// <summary>
 /// Anlernbares Profil fuer einen Dokumenttyp (z.B. Polierplan, Schalungsplan, Bauprotokoll).
 /// Wird als JSON in .bpm/profiles/{id}.json pro Projekt gespeichert (ADR-010, ADR-046).
-/// Schema v2 (Cross-Review 15.04.2026): documentTypeId, tokenization, indexExtraction, includeInIdentity.
-/// Schema v3 (BPM-082, 2026-04-17): segment-basierte Erkennung via RecognitionRule.SegmentPosition.
 /// </summary>
+/// <remarks>
+/// <para>Schema v2 (Cross-Review 15.04.2026): documentTypeId, tokenization, indexExtraction, includeInIdentity.</para>
+/// <para>Schema v3 (BPM-082, 2026-04-17): segment-basierte Erkennung via RecognitionRule.SegmentPosition.</para>
+/// <para>Schema v4 (BPM-108, 2026-05-18, ADR-056): <c>ProfileSegment.FieldTypeId</c> (statt Enum-String),
+/// <c>identityFields</c>/<c>folderHierarchy</c>/<c>renameSchema</c> referenzieren <c>segment_types.id</c>
+/// bzw. <c>token_key</c>. Recognition unveraendert. Strict Reset — kein Migrations-Code.</para>
+/// </remarks>
 public class RecognitionProfile
 {
-    public int SchemaVersion { get; set; } = 3;
+    public int SchemaVersion { get; set; } = 4;
     public string Id { get; set; } = string.Empty;
 
     // --- Dokumenttyp (v2: TypeId + DisplayName getrennt) ---
@@ -30,7 +38,14 @@ public class RecognitionProfile
 
     // --- Parsing ---
     public List<ProfileSegment> Segments { get; set; } = [];
-    public List<string> IdentityFields { get; set; } = ["documentType", "planNumber"];
+
+    /// <summary>
+    /// IDs der Felder die die Dokument-Identitaet bilden.
+    /// V4: Eintraege sind entweder System-Keys (z. B. <c>"documentType"</c>) oder
+    /// stabile <c>segment_types.id</c>-Strings (z. B. <c>"plan_number"</c>, <c>"haus"</c>).
+    /// Reservierter System-Key: <c>documentType</c>.
+    /// </summary>
+    public List<string> IdentityFields { get; set; } = ["documentType", "plan_number"];
 
     // --- Erkennung ---
     public List<RecognitionRule> Recognition { get; set; } = [];
@@ -39,12 +54,35 @@ public class RecognitionProfile
 
     // --- Gruppierung + Ordner ---
     public GroupingConfig Grouping { get; set; } = new();
+
+    /// <summary>
+    /// Hierarchie der Zielordner-Ebenen. V4: Eintraege sind <c>segment_types.id</c>-Strings.
+    /// </summary>
     public List<string> FolderHierarchy { get; set; } = [];
+
+    /// <summary>
+    /// Rename-Template mit Token-Platzhaltern (V4: <c>{token_key}</c>, z. B. <c>{plan_number}-{plan_index}_{geschoss}</c>).
+    /// </summary>
     public string RenameSchema { get; set; } = string.Empty;
 
     // --- Zeitstempel ---
     public string CreatedAt { get; set; } = string.Empty;
     public string UpdatedAt { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Health-Status. Wird beim Laden ermittelt und NICHT persistiert.
+    /// Bei <see cref="ProfileHealth.MissingSegmentTypes"/> sind die fehlenden IDs in
+    /// <see cref="MissingSegmentTypeIds"/> aufgefuehrt.
+    /// </summary>
+    [JsonIgnore]
+    public ProfileHealth Health { get; set; } = ProfileHealth.Valid;
+
+    /// <summary>
+    /// Bei <see cref="ProfileHealth.MissingSegmentTypes"/>: Liste der unbekannten
+    /// <c>fieldTypeId</c>s. Wird beim Laden befuellt und NICHT persistiert.
+    /// </summary>
+    [JsonIgnore]
+    public List<string> MissingSegmentTypeIds { get; set; } = [];
 }
 
 /// <summary>
@@ -59,14 +97,18 @@ public class TokenizationConfig
 }
 
 /// <summary>
-/// Index extraction via Regex per profile (v2).
-/// For cases like "002a" (number+index without delimiter).
+/// Index extraction via Regex per profile (v2). For cases like "002a"
+/// (number+index without delimiter).
 /// </summary>
+/// <remarks>
+/// V4 (BPM-108): <see cref="SegmentSelector"/> ist eine <c>segment_types.id</c>
+/// (z. B. <c>"plan_number"</c>) — nicht mehr camelCase Enum-Name.
+/// </remarks>
 public class IndexExtractionConfig
 {
     /// <summary>"segment", "filename", or "suffix".</summary>
     public string Source { get; set; } = "segment";
-    /// <summary>Which segment to apply regex to (e.g. "planNumber"). Only for source=segment.</summary>
+    /// <summary>Welcher Segmenttyp wird gematcht (v4: <c>segment_types.id</c>, z. B. <c>"plan_number"</c>). Nur fuer source=segment.</summary>
     public string? SegmentSelector { get; set; }
     /// <summary>Regex with named groups (e.g. "^(?&lt;number&gt;\d{3})(?&lt;index&gt;[A-Za-z])$").</summary>
     public string Pattern { get; set; } = string.Empty;
@@ -87,17 +129,29 @@ public class IndexComparisonConfig
 }
 
 /// <summary>
-/// Segment-Definition im Profil (v2: includeInIdentity).
+/// Segment-Definition im Profil.
 /// </summary>
+/// <remarks>
+/// V2: <c>includeInIdentity</c>.
+/// V4 (BPM-108, ADR-056): <c>FieldType</c> (Enum-String) ersetzt durch <c>FieldTypeId</c>
+/// (stabile <c>segment_types.id</c>, z. B. <c>"plan_number"</c> oder Custom-ULID).
+/// <c>Label</c> entfaellt — Anzeige kommt zur Laufzeit aus <see cref="Enums.PlanManager.SegmentSemanticRole"/>/<c>segment_types.name</c>.
+/// </remarks>
 public class ProfileSegment
 {
     public int Position { get; set; }
-    public string FieldType { get; set; } = string.Empty;
-    public string Label { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Stabile Referenz auf <c>segment_types.id</c> (v4).
+    /// Built-in: snake_case (z. B. <c>"plan_number"</c>). Custom: ULID.
+    /// </summary>
+    public string FieldTypeId { get; set; } = string.Empty;
+
     public bool Required { get; set; }
+
     /// <summary>
     /// Whether this segment contributes to the document_key.
-    /// Default false for Custom fields (must be explicitly set).
+    /// V4: gesetzt aus <c>SemanticRole == PlanNumber | Spatial</c>.
     /// </summary>
     public bool IncludeInIdentity { get; set; }
 }

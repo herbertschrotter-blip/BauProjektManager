@@ -18,6 +18,7 @@ public partial class MainWindow : Window
     private readonly IDeveloperToolsService? _devTools;
     private readonly AppSettingsService _settingsService;
     private readonly IPersistenceRegistry? _persistenceRegistry;
+    private readonly IProfileArchiveService? _profileArchiveService;
 
     public MainWindow(
         ProjectDatabase db,
@@ -28,12 +29,14 @@ public partial class MainWindow : Window
         IDeveloperToolsService? devTools = null,
         IPersistenceRegistry? persistenceRegistry = null,
         ISegmentTypeCatalog? segmentTypeCatalog = null,
-        ISegmentTypeRepository? segmentTypeRepository = null)
+        ISegmentTypeRepository? segmentTypeRepository = null,
+        IProfileArchiveService? profileArchiveService = null)
     {
         InitializeComponent();
         _devTools = devTools;
         _settingsService = settingsService;
         _persistenceRegistry = persistenceRegistry;
+        _profileArchiveService = profileArchiveService;
 
         _planManagerView = new PlanManagerView(db, idGenerator, profileManager, persistenceRegistry,
             segmentTypeCatalog, segmentTypeRepository);
@@ -50,7 +53,7 @@ public partial class MainWindow : Window
     private void OnOpenDevTools(object sender, RoutedEventArgs e)
     {
         if (_devTools is null) return;
-        var dialog = new DevToolsDialog(_devTools, _settingsService, _persistenceRegistry);
+        var dialog = new DevToolsDialog(_devTools, _settingsService, _persistenceRegistry, _profileArchiveService);
         dialog.Owner = this;
         dialog.ShowDialog();
     }

@@ -369,6 +369,32 @@
                             </Grid>
                         </Border>
 
+                        <!-- Option 6: BPM-108 Profile/Templates auf v4 archivieren — BLAU (kein Restart) -->
+                        <Border x:Name="BorderBpm108Archive"
+                                Background="{StaticResource BpmBgElevated}"
+                                BorderBrush="{StaticResource BpmBorderDefault}"
+                                BorderThickness="1" CornerRadius="4"
+                                Padding="12,10" Margin="0,0,8,8" Width="330"
+                                Cursor="Hand" MouseLeftButtonDown="OnBpm108ArchiveClick">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="📦" FontSize="18"
+                                           Foreground="{StaticResource BpmAccentPrimary}"
+                                           VerticalAlignment="Center"
+                                           Margin="2,0,12,0"/>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="BPM-108: Profile/Templates auf v4 archivieren" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{StaticResource BpmTextPrimary}"/>
+                                    <TextBlock Text="Verschiebt alte Profile (schemaVersion!=4) und pattern-templates.json nach _archiv/schema-reset-*. Kein Restart."
+                                               FontSize="11" Foreground="{StaticResource BpmTextSecondary}"
+                                               Margin="0,2,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
                         <!-- Option 5: Logs loeschen — GRÜN (kein Restart) -->
                         <Border x:Name="BorderLogs"
                                 Background="{StaticResource BpmBgElevated}"

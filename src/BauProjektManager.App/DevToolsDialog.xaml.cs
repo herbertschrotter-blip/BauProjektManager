@@ -18,6 +18,7 @@ public partial class DevToolsDialog : Window
     private readonly IDeveloperToolsService _devTools;
     private readonly AppSettingsService? _settingsService;
     private readonly IPersistenceRegistry? _persistenceRegistry;
+    private readonly IProfileArchiveService? _profileArchiveService;
     private readonly System.Collections.ObjectModel.ObservableCollection<InventoryItemViewModel> _inventoryItems = new();
     private string _selectedReset = "DbOnly";
     private bool _isInitializing = true;
@@ -48,17 +49,127 @@ public partial class DevToolsDialog : Window
         { "Logs",         $"{DeleteIcon} Logs löschen (kein Restart)" }
     };
 
-    public DevToolsDialog(IDeveloperToolsService devTools, AppSettingsService? settingsService = null, IPersistenceRegistry? persistenceRegistry = null)
+    public DevToolsDialog(
+        IDeveloperToolsService devTools,
+        AppSettingsService? settingsService = null,
+        IPersistenceRegistry? persistenceRegistry = null,
+        IProfileArchiveService? profileArchiveService = null)
     {
         InitializeComponent();
         _devTools = devTools;
         _settingsService = settingsService;
         _persistenceRegistry = persistenceRegistry;
+        _profileArchiveService = profileArchiveService;
         LoadSystemInfo();
         InitLogFilter();
         LoadLog();
         LoadInventory();
         _isInitializing = false;
+    }
+
+    /// <summary>
+    /// BPM-108 Phase C Teil 4: Archiviert alle Profile mit <c>schemaVersion != 4</c>
+    /// in jedem Projektordner und (optional) <c>pattern-templates.json</c> mit alten
+    /// Templates. Frühphasen-Reset, kein Daten-Verlust (Files werden verschoben).
+    /// </summary>
+    private void OnBpm108ArchiveClick(object sender, MouseButtonEventArgs e)
+    {
+        if (_profileArchiveService is null)
+        {
+            MessageBox.Show(
+                this,
+                "ProfileArchiveService nicht verfuegbar. Bitte ueber den DI-Container injizieren.",
+                "BPM-108 Archive",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
+        // Confirm
+        var confirm = MessageBox.Show(
+            this,
+            "Alle Profile mit schemaVersion != 4 werden in '_archiv/schema-reset-*' verschoben.\n" +
+            "pattern-templates.json (falls vorhanden) wird ebenfalls archiviert wenn nicht v4.\n\n" +
+            "Daten werden nicht geloescht — nur verschoben. Fortfahren?",
+            "BPM-108 Archive bestaetigen",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+        if (confirm != MessageBoxResult.Yes) return;
+
+        var report = new StringBuilder();
+        var totalProfiles = 0;
+        var totalProjects = 0;
+        var templateArchived = false;
+
+        try
+        {
+            // Alle Projekt-Roots
+            var projectDb = App.Services.GetService(typeof(ProjectDatabase)) as ProjectDatabase;
+            if (projectDb is not null)
+            {
+                var projects = projectDb.LoadAllProjects()
+                    .Where(p => !string.IsNullOrWhiteSpace(p.Paths.Root)
+                                && System.IO.Directory.Exists(p.Paths.Root))
+                    .ToList();
+
+                foreach (var p in projects)
+                {
+                    var moved = _profileArchiveService.ArchiveOutdatedProfiles(p.Paths.Root);
+                    totalProjects++;
+                    totalProfiles += moved;
+                    if (moved > 0)
+                        report.AppendLine($"  • {p.Name}: {moved} Profile archiviert");
+                }
+            }
+            else
+            {
+                report.AppendLine("  • ProjectDatabase nicht verfuegbar — keine Projekte gescannt.");
+            }
+
+            // pattern-templates.json im Cloud-AppData
+            var basePath = _settingsService?.LoadDevice().BasePath;
+            if (!string.IsNullOrEmpty(basePath))
+            {
+                var sharedDir = AppSettingsService.GetSharedConfigDir(basePath);
+                templateArchived = _profileArchiveService.ArchiveOutdatedPatternTemplates(sharedDir);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "BPM-108 Archive fehlgeschlagen");
+            MessageBox.Show(
+                this,
+                $"Archivierung mit Fehler abgebrochen:\n{ex.Message}\n\nDetails im Log.",
+                "BPM-108 Archive",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            return;
+        }
+
+        var summary = new StringBuilder();
+        summary.AppendLine($"{totalProjects} Projekte gescannt.");
+        summary.AppendLine($"{totalProfiles} Profile in '_archiv/schema-reset-*' verschoben.");
+        summary.AppendLine(templateArchived
+            ? "pattern-templates.json wurde archiviert."
+            : "pattern-templates.json: nichts zu tun (entweder fehlt, oder schon v4).");
+        if (report.Length > 0)
+        {
+            summary.AppendLine();
+            summary.AppendLine("Pro Projekt:");
+            summary.Append(report);
+        }
+
+        MessageBox.Show(
+            this,
+            summary.ToString(),
+            "BPM-108 Archive abgeschlossen",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
+
+        // Inventar neu laden — archivierte Dateien sind weg, evtl. werden neue
+        // _archiv-Ordner-Eintraege gescannt.
+        LoadInventory();
+        e.Handled = true;
     }
 
     /// <summary>

@@ -31,6 +31,27 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.49] — 2026-05-18
+
+### Feature: BPM-108 Phase C Teil 4 — DevTool-UI fuer ProfileArchiveService
+
+### Hinzugefuegt
+- DevToolsDialog Reset-Tab: neue Quick-Action-Card "BPM-108: Profile/Templates auf v4 archivieren" (blau, kein App-Restart). Klick zeigt Confirm-Dialog, iteriert ueber alle Projekte (via `ProjectDatabase.LoadAllProjects()`), ruft `IProfileArchiveService.ArchiveOutdatedProfiles(projectRoot)` und `ArchiveOutdatedPatternTemplates(sharedDir)` auf. Summary-Dialog zeigt Anzahl bearbeiteter Projekte/Profile + Pattern-Template-Status. Inventar wird nach der Aktion neu geladen.
+- `DevToolsDialog`-Konstruktor erweitert um optionalen `IProfileArchiveService`-Parameter.
+- `MainWindow`-Konstruktor erweitert um optionalen `IProfileArchiveService` (Default null), wird an DevToolsDialog durchgereicht.
+- `App.xaml.cs` DI: `IProfileArchiveService` aus dem Container in MainWindow injiziert.
+
+### Geaendert
+- Falls `IProfileArchiveService` nicht injiziert ist (z. B. isolierte Test-Konstellation), zeigt der Click eine Warnung statt zu crashen.
+
+### Hintergrund
+Vierter Phase-C-Teil-Commit: User koennen alte Schema-v3-Profile (und veraltete pattern-templates.json) ueber den DevTools-Dialog explizit archivieren, statt sie manuell aus dem Dateisystem zu loeschen. Erfuellt das Frühphasen-Prinzip aus ADR-056 (Reset statt Migration). DevTool-Aufruf ist bewusst NICHT automatischer App-Start-Side-Effect — User muss bewusst klicken + bestaetigen.
+
+### Offen fuer Phase C
+- **Commit 5 (Teil 5):** Auto-Import-Blockade im ImportWorkflowService bei `ProfileHealth.MissingSegmentTypes` (Akzeptanzkriterium #17).
+
+---
+
 ## [v0.28.48] — 2026-05-18
 
 ### Feature: BPM-108 Phase C Teil 3 — Segmenttyp-Manager-Dialog

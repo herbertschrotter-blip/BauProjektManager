@@ -31,6 +31,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.52] — 2026-05-19
+
+### Fix: BPM-108 Manager-Dialog Fenster-Maße
+
+### Geaendert
+- `SegmentTypeManagerDialog.xaml`: Window-Maße auf 660x500 (statt 1100x780). Spaltenbreite je 320px (statt `*`). `MinWidth=MaxWidth=660` — Fenster ist horizontal nicht mehr resizable, damit kein "schwarzer Balken" rechts erscheint wenn Spalten kleiner sind als das Fenster. `MinHeight=440` — vertikal weiterhin resizable.
+
+### Hintergrund
+Live-Test in v0.28.51 zeigte: mit 50/50-Spalten (je ~542px) wirkten die Edit-Felder zu breit, und beim Verkleinern auf je 320px blieb das Fenster auf 1100px breit — die freie Fläche rechts war schwarz (Window-Background). Lock auf 660 fixt beides.
+
+---
+
 ## [v0.28.51] — 2026-05-19
 
 ### Fix: BPM-108 Manager-Dialog UX-Korrekturen + Kosmetik

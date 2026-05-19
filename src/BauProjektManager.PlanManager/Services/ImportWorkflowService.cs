@@ -52,8 +52,30 @@ public class ImportWorkflowService
         var fingerprinted = await _fingerprint.FingerprintAsync(scanned, projectRootPath, ct);
 
         // 3. Parse — split file names + match against profiles
-        var profiles = _profileManager.LoadAll(projectRootPath);
-        var parsed = _parse.ParseAll(fingerprinted, profiles);
+        //    BPM-108 Phase C Teil 5 (Akzeptanzkriterium #17): Profile mit
+        //    ProfileHealth != Valid (insb. MissingSegmentTypes) werden vom
+        //    Recognizer-Match ausgeschlossen. Files landen damit bei "Unknown"
+        //    statt mit fehlerhafter Identity importiert zu werden. Die Profile
+        //    bleiben im Manager/Wizard sichtbar — User muss sie reparieren.
+        var allProfiles = _profileManager.LoadAll(projectRootPath);
+        var unhealthyProfiles = allProfiles
+            .Where(p => p.Health != ProfileHealth.Valid)
+            .ToList();
+        var healthyProfiles = allProfiles
+            .Where(p => p.Health == ProfileHealth.Valid)
+            .ToList();
+
+        if (unhealthyProfiles.Count > 0)
+        {
+            foreach (var p in unhealthyProfiles)
+            {
+                Log.Warning("BPM-108: Profil {Name} ({Id}) ausgeschlossen — Health={Health}, fehlende IDs: {Missing}",
+                    p.DocumentTypeName, p.Id, p.Health,
+                    string.Join(", ", p.MissingSegmentTypeIds));
+            }
+        }
+
+        var parsed = _parse.ParseAll(fingerprinted, healthyProfiles);
 
         // 4. Resolve Context — folder path, stage, document type
         // 5. Build Identity — document_key from resolved fields
@@ -99,12 +121,13 @@ public class ImportWorkflowService
         // 7. Execution Plan — calculate target paths
         var planned = _planBuilder.BuildPlan(decisions, plansRelativePath);
 
-        Log.Information("Import-Analyse abgeschlossen: {Total} Dateien, {New} neu, {Unknown} unbekannt",
+        Log.Information("Import-Analyse abgeschlossen: {Total} Dateien, {New} neu, {Unknown} unbekannt, {Unhealthy} ausgeschlossene Profile",
             planned.Count,
             planned.Count(d => d.Status == ImportStatus.New),
-            planned.Count(d => d.Status == ImportStatus.Unknown));
+            planned.Count(d => d.Status == ImportStatus.Unknown),
+            unhealthyProfiles.Count);
 
-        return new ImportAnalysisResult(planned, profiles);
+        return new ImportAnalysisResult(planned, healthyProfiles, unhealthyProfiles);
     }
 
     private static RevisionKind DetectRevisionKind(string token)
@@ -126,11 +149,17 @@ public class ImportWorkflowService
 /// <summary>
 /// Result of the full import analysis pipeline.
 /// </summary>
+/// <remarks>
+/// BPM-108 Phase C Teil 5: <see cref="UnhealthyProfiles"/> listet Profile, die wegen
+/// <see cref="ProfileHealth.MissingSegmentTypes"/> vom Recognizer-Match ausgeschlossen
+/// wurden. Die UI kann darauf einen "Reparieren"-Hinweis stuetzen.
+/// </remarks>
 public sealed record ImportAnalysisResult(
     List<ImportDecision> Decisions,
-    List<RecognitionProfile> UsedProfiles)
+    List<RecognitionProfile> UsedProfiles,
+    List<RecognitionProfile> UnhealthyProfiles)
 {
-    public static ImportAnalysisResult Empty => new([], []);
+    public static ImportAnalysisResult Empty => new([], [], []);
 
     public int TotalFiles => Decisions.Count;
     public int NewCount => Decisions.Count(d => d.Status == ImportStatus.New);
@@ -140,4 +169,7 @@ public sealed record ImportAnalysisResult(
     public int ConflictCount => Decisions.Count(d => d.Status == ImportStatus.Conflict);
     public int WarningCount => Decisions.Count(d =>
         d.Status is ImportStatus.ChangedSameIndex or ImportStatus.OlderRevision);
+
+    /// <summary>Anzahl Profile mit <c>ProfileHealth.MissingSegmentTypes</c>.</summary>
+    public int UnhealthyProfileCount => UnhealthyProfiles.Count;
 }

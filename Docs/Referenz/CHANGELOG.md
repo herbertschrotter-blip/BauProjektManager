@@ -31,6 +31,32 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.50] — 2026-05-18
+
+### Feature: BPM-108 Phase C Teil 5 — Auto-Import-Blockade bei ProfileHealth.MissingSegmentTypes
+
+### Hinzugefuegt
+- `ImportWorkflowService.AnalyzeAsync`: schliesst Profile mit `ProfileHealth != Valid` vom Recognizer-Match aus. Files matchen nicht gegen unhealthy Profile → landen bei `ImportStatus.Unknown` statt mit fehlerhafter Identity importiert zu werden. Pro unhealthy Profile wird ein Warning-Log mit Name/ID/Health/Missing-IDs geschrieben.
+- `ImportAnalysisResult.UnhealthyProfiles` (List<RecognitionProfile>) + `UnhealthyProfileCount` (int) — UI kann darauf eine "Profile reparieren"-Hinweis-Bannermessung stuetzen.
+- Log-Eintrag am Ende der Analyse zeigt zusaetzlich `{Unhealthy}` Anzahl ausgeschlossener Profile.
+- 3 neue Tests (`ImportAnalysisResultTests`) — Empty/UnhealthyCount/Health-Filter-Contract.
+
+### Hintergrund
+Fuenfter und finaler Phase-C-Teil-Commit. Erfuellt CGR-Akzeptanzkriterium #17 (Health-Gating vor Auto-Import). Profile mit Missing-IDs bleiben in Manager-Dialog + Wizard sichtbar und reparierbar — nur die Import-Pipeline ueberspringt sie um stille Identity-Drift zu verhindern.
+
+### BPM-108 Status: ✅ ALLE PHASEN ABGESCHLOSSEN
+- Phase A (v0.28.44): Catalog Persistence + Seed
+- Phase B (v0.28.45): Profilformat v4 + Health + Archive
+- Phase C Teil 1 (v0.28.46): Wizard auf Catalog
+- Phase C Teil 2 (v0.28.47): Inline-Popover „+ Eigenes"
+- Phase C Teil 3 (v0.28.48): Manager-Dialog
+- Phase C Teil 4 (v0.28.49): DevTool-UI fuer Archive
+- Phase C Teil 5 (v0.28.50): Health-Gating bei Auto-Import
+
+Alle 17 CGR-Akzeptanzkriterien sind erfuellt. ADR-056 Status: Phase A+B+C Implemented.
+
+---
+
 ## [v0.28.49] — 2026-05-18
 
 ### Feature: BPM-108 Phase C Teil 4 — DevTool-UI fuer ProfileArchiveService

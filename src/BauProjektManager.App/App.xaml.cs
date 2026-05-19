@@ -165,12 +165,13 @@ public partial class App : Application
             var dialog = sp.GetRequiredService<IDialogService>();
             var profileManager = sp.GetRequiredService<IProfileManager>();
             var settingsService = sp.GetRequiredService<AppSettingsService>();
+            var catalog = sp.GetService<ISegmentTypeCatalog>();
 #if DEBUG
             var devTools = sp.GetService<IDeveloperToolsService>();
             var registry = sp.GetService<IPersistenceRegistry>();
-            return new MainWindow(db, idGen, dialog, profileManager, settingsService, devTools, registry);
+            return new MainWindow(db, idGen, dialog, profileManager, settingsService, devTools, registry, catalog);
 #else
-            return new MainWindow(db, idGen, dialog, profileManager, settingsService);
+            return new MainWindow(db, idGen, dialog, profileManager, settingsService, persistenceRegistry: null, segmentTypeCatalog: catalog);
 #endif
         });
 
@@ -189,6 +190,9 @@ public partial class App : Application
         {
             Log.Warning("BPM-108: Segmenttyp-Seed fehlgeschlagen: {Error}", ex.Message);
         }
+
+        // BPM-108 Phase C: WizardCatalogContext fuer XAML-Converter aktivieren
+        WizardCatalogContext.Initialize(Services.GetService<ISegmentTypeCatalog>());
 
         // --- MainWindow anzeigen ---
         var mainWindow = Services.GetRequiredService<MainWindow>();

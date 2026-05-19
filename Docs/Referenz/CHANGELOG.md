@@ -31,6 +31,44 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.46] — 2026-05-18
+
+### Refactor: BPM-108 Phase C Teil 1 — Wizard auf Segmenttyp-Katalog umgestellt
+
+### Hinzugefuegt
+- `WizardCatalogContext` (PlanManager.Services, statisch) — Catalog-Halter fuer XAML-Converter. Initialisiert in `App.xaml.cs` nach DI-Build.
+
+### Geaendert
+- `FileNameSegment`: `FieldType?`-Enum entfernt; ersetzt durch `string? FieldTypeId` (stabile `segment_types.id`-Referenz). `CustomFieldName` weg. `DisplayName` liefert nur noch die rohe ID — UI-Namen werden ueber den Catalog aufgeloest. INotifyPropertyChanged-Setter aktualisiert.
+- `ProfileWizardViewModel`: nimmt optionalen `ISegmentTypeCatalog` im Konstruktor. `FieldTypeOptions` werden aus `GetEffectiveActive()` aufgebaut (statt hardcoded Enum-Liste). `RebuildFieldTypeOptions()` reagiert auf Catalog-`Changed`-Event. `ValidateStep2` prueft genau ein Segment mit `SemanticRole.PlanNumber`. `BuildHierarchyLevels` liest alle Profil-Segmente mit `SemanticRole.Spatial`. `IsLikelyVariableSegment` arbeitet ueber Catalog-Lookup statt FieldType-Enum. `HasPlanIndexSegment`/`HasPlanNumberSegment` ueber Catalog-SnapshotIncludingDeleted.
+- `FieldTypeOption`: `Value` (FieldType?) → `FieldTypeId` (string?) + `IsCustomCreate` Flag. „+ Eigenes"-Chip bleibt sichtbar, Inline-Popover folgt in Commit 4.
+- `HierarchyLevelOption`: `FieldType` → `string FieldTypeId` + Label kommt aus dem Catalog.
+- Wizard-XAML: alle `Binding FieldType,...` → `Binding FieldTypeId,...`. Custom-Chip-DataTrigger ueber `IsCustomCreate`. Reset-Option versteckt via `MultiDataTrigger`.
+- Wizard-Converter (`FieldTypeToBrushConverter`, `FieldTypeIsUnsetConverter`, `FieldTypeToLabelConverter`, `FieldTypeToOpacityConverter`): konsumieren jetzt `string fieldTypeId` und loesen ueber `WizardCatalogContext.Catalog` Farbe/Name/SemanticRole auf. Hex-Farbe wird zur Laufzeit in `SolidColorBrush` konvertiert. Fallback: `BpmBgElevated`/`DimGray` bei unbekannter ID.
+- `ProfileManager.BuildFromWizard`: arbeitet direkt mit `FileNameSegment.FieldTypeId`. `IncludeInIdentity`/`Required` werden ueber Catalog-`SemanticRole`-Lookup (PlanNumber/Spatial) gesetzt. `LegacyFieldTypeMapper`-Bruecke entfernt.
+- `ProfileWizardDialog`/`ProjectDetailView`/`PlanManagerView`/`MainWindow`/`App.xaml.cs`: ISegmentTypeCatalog wird per Constructor-Injection bis zum Wizard durchgereicht.
+- `FileParseService`: bereits in Phase B auf `FieldTypeId` umgestellt — keine erneute Aenderung.
+
+### Entfernt
+- `LegacyFieldTypeMapper.cs` (PlanManager.Services) — Phase-B-Compat-Shim. Wird in Phase C nicht mehr gebraucht.
+- `LegacyFieldTypeMapperTests.cs` (Tests) — 43 Theory-Tests.
+- `xmlns:planmgr` aus `ProfileWizardDialog.xaml` (FieldType-Enum-Referenz weg).
+
+### Tests
+- `ProfileWizardVariableSegmentTests`: Umgestellt auf `FieldTypeId` + In-Memory-`FakeCatalog`. Alle 22 Tests gruen.
+- 201/201 Tests gruen (vorher 244 — Differenz = entfernte LegacyFieldTypeMapper-Tests).
+
+### Offen fuer Phase C Folge-Commits
+- **Commit 4:** Inline-Popover „+ Eigenes" mit Live-Token-Vorschau (XAML + ViewModel-Verdrahtung mit `ISegmentTypeRepository.SaveType`).
+- **Commit 5:** Manager-Dialog (Segmenttypen verwalten, Built-in-Rolle read-only mit Warntext).
+- **Commit 6:** DevTool-UI fuer `IProfileArchiveService` (Reset-Knopf im DevToolsDialog).
+- **Commit 7:** Auto-Import-Blockade im ImportWorkflowService bei `ProfileHealth.MissingSegmentTypes` (Akzeptanzkriterium #17).
+
+### Hintergrund
+Erster und groesster Schritt von BPM-108 Phase C: der Wizard nutzt jetzt durchgaengig den Segmenttyp-Katalog. Custom-Chip-Klick und Manager-Dialog sind bewusst noch nicht funktional — werden in Folge-Commits ergaenzt, damit die Phase-C-Refactor-Welle nicht zu monolithisch wird.
+
+---
+
 ## [v0.28.45] — 2026-05-18
 
 ### Feature: BPM-108 Phase B — Profilformat v4 + ProfileHealth + DevTool-Archivierung

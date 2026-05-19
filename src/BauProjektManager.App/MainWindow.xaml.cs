@@ -26,14 +26,15 @@ public partial class MainWindow : Window
         IProfileManager profileManager,
         AppSettingsService settingsService,
         IDeveloperToolsService? devTools = null,
-        IPersistenceRegistry? persistenceRegistry = null)
+        IPersistenceRegistry? persistenceRegistry = null,
+        ISegmentTypeCatalog? segmentTypeCatalog = null)
     {
         InitializeComponent();
         _devTools = devTools;
         _settingsService = settingsService;
         _persistenceRegistry = persistenceRegistry;
 
-        _planManagerView = new PlanManagerView(db, idGenerator, profileManager, persistenceRegistry);
+        _planManagerView = new PlanManagerView(db, idGenerator, profileManager, persistenceRegistry, segmentTypeCatalog);
         _settingsView = new SettingsView(db, dialogService, settingsService, persistenceRegistry);
 
         UpdateSidebarBadge();

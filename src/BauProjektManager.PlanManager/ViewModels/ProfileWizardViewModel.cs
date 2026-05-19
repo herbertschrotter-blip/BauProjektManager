@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.IO;
+using BauProjektManager.Domain.Enums.PlanManager;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models;
 using BauProjektManager.Domain.Models.PlanManager;
@@ -13,11 +14,16 @@ namespace BauProjektManager.PlanManager.ViewModels;
 /// <summary>
 /// ViewModel fuer den 5-Schritt Profil-Wizard.
 /// Schritt 1: Datei auswaehlen + Parsen.
-/// Schritt 2: Segmente zuweisen (FieldType-Dropdowns).
+/// Schritt 2: Segmente zuweisen (Segmenttyp-Chips aus dem Katalog).
 /// Schritt 3: Index-Konfiguration.
 /// Schritt 4: Zielordner + Ordner-Hierarchie.
 /// Schritt 5: Erkennung (klickbare Segmente).
 /// </summary>
+/// <remarks>
+/// BPM-108 Phase C: Verwendet <see cref="ISegmentTypeCatalog"/> statt der frueheren
+/// hardcoded <c>FieldType</c>-Enum-Liste. Pflicht- / Index- / Hierarchie- /
+/// Variable-Logik laeuft ueber <see cref="SegmentSemanticRole"/>.
+/// </remarks>
 public partial class ProfileWizardViewModel : ObservableObject
 {
     [ObservableProperty]
@@ -55,9 +61,11 @@ public partial class ProfileWizardViewModel : ObservableObject
     private string _parseInfo = "";
 
     /// <summary>
-    /// Verfuegbare Feldtypen fuer das Dropdown (Schritt 2).
+    /// Verfuegbare Segmenttypen fuer Wizard-Schritt 2 — aus dem Katalog.
+    /// Wird im Konstruktor + nach Catalog-<c>Changed</c>-Event aufgebaut.
     /// </summary>
-    public List<FieldTypeOption> FieldTypeOptions { get; } = BuildFieldTypeOptions();
+    [ObservableProperty]
+    private ObservableCollection<FieldTypeOption> _fieldTypeOptions = [];
 
     [ObservableProperty]
     private bool _canGoNext;
@@ -156,8 +164,11 @@ public partial class ProfileWizardViewModel : ObservableObject
     [ObservableProperty]
     private string _recognitionWarning = "";
 
-    public bool HasPlanIndexSegment =>
-        Segments.Any(s => s.FieldType == FieldType.PlanIndex);
+    /// <summary>True wenn ein Segment einen Typ mit <see cref="SegmentSemanticRole.PlanIndex"/> hat.</summary>
+    public bool HasPlanIndexSegment => HasSegmentWithRole(SegmentSemanticRole.PlanIndex);
+
+    /// <summary>True wenn ein Segment einen Typ mit <see cref="SegmentSemanticRole.PlanNumber"/> hat.</summary>
+    public bool HasPlanNumberSegment => HasSegmentWithRole(SegmentSemanticRole.PlanNumber);
 
     /// <summary>
     /// True wenn das Profil erfolgreich gespeichert wurde.
@@ -167,6 +178,7 @@ public partial class ProfileWizardViewModel : ObservableObject
 
     private readonly IProfileManager? _profileManager;
     private readonly PatternTemplateService? _templateService;
+    private readonly ISegmentTypeCatalog? _segmentTypeCatalog;
     private readonly Project? _project;
     private readonly string? _appDataPath;
 
@@ -174,14 +186,43 @@ public partial class ProfileWizardViewModel : ObservableObject
         Project? project = null,
         IProfileManager? profileManager = null,
         PatternTemplateService? templateService = null,
-        string? appDataPath = null)
+        string? appDataPath = null,
+        ISegmentTypeCatalog? segmentTypeCatalog = null)
     {
         _project = project;
         _profileManager = profileManager;
         _templateService = templateService;
         _appDataPath = appDataPath;
+        _segmentTypeCatalog = segmentTypeCatalog;
+
+        RebuildFieldTypeOptions();
+        if (_segmentTypeCatalog is not null)
+            _segmentTypeCatalog.Changed += (_, _) => RebuildFieldTypeOptions();
+
         if (project is not null)
             LoadInboxFiles(project);
+    }
+
+    /// <summary>
+    /// Liefert die <see cref="SegmentSemanticRole"/> eines Segmenttyps oder <see cref="SegmentSemanticRole.None"/>
+    /// wenn ID/Custom/Catalog fehlt.
+    /// </summary>
+    internal SegmentSemanticRole GetRoleForFieldTypeId(string? fieldTypeId)
+    {
+        if (string.IsNullOrEmpty(fieldTypeId) || _segmentTypeCatalog is null)
+            return SegmentSemanticRole.None;
+        var def = _segmentTypeCatalog.GetIncludingDeleted(fieldTypeId);
+        return def?.SemanticRole ?? SegmentSemanticRole.None;
+    }
+
+    private bool HasSegmentWithRole(SegmentSemanticRole role)
+    {
+        if (_segmentTypeCatalog is null) return false;
+        var snap = _segmentTypeCatalog.SnapshotIncludingDeleted();
+        return Segments.Any(s =>
+            s.FieldTypeId is { Length: > 0 } id
+            && snap.TryGetValue(id, out var def)
+            && def.SemanticRole == role);
     }
 
     // === OnChanged Handlers ===
@@ -347,12 +388,11 @@ public partial class ProfileWizardViewModel : ObservableObject
     {
         if (option is null) return;
 
-        segment.FieldType = option.Value;
-        segment.CustomFieldName = option.Value == FieldType.Custom
-            ? option.DisplayName : null;
+        segment.FieldTypeId = option.FieldTypeId;
         UpdateAssignedFieldTypes();
         ValidateCurrentStep();
         OnPropertyChanged(nameof(HasPlanIndexSegment));
+        OnPropertyChanged(nameof(HasPlanNumberSegment));
     }
 
     /// <summary>
@@ -360,11 +400,11 @@ public partial class ProfileWizardViewModel : ObservableObject
     /// </summary>
     public void ResetSegmentFieldType(FileNameSegment segment)
     {
-        segment.FieldType = null;
-        segment.CustomFieldName = null;
+        segment.FieldTypeId = null;
         UpdateAssignedFieldTypes();
         ValidateCurrentStep();
         OnPropertyChanged(nameof(HasPlanIndexSegment));
+        OnPropertyChanged(nameof(HasPlanNumberSegment));
     }
 
     // === Validierung ===
@@ -372,10 +412,18 @@ public partial class ProfileWizardViewModel : ObservableObject
     /// <summary>Schritt 1: Mindestens 1 Segment geparst.</summary>
     private bool ValidateStep1() => Segments.Count > 0;
 
-    /// <summary>Schritt 2: PlanNumber muss zugewiesen sein.</summary>
-    private bool ValidateStep2() =>
-        Segments.Count > 0
-        && Segments.Any(s => s.FieldType == FieldType.PlanNumber);
+    /// <summary>Schritt 2: Genau ein Segment mit <see cref="SegmentSemanticRole.PlanNumber"/> Pflicht.</summary>
+    private bool ValidateStep2()
+    {
+        if (Segments.Count == 0) return false;
+        if (_segmentTypeCatalog is null) return false;
+        var snap = _segmentTypeCatalog.SnapshotIncludingDeleted();
+        var planNumberCount = Segments.Count(s =>
+            s.FieldTypeId is { Length: > 0 } id
+            && snap.TryGetValue(id, out var def)
+            && def.SemanticRole == SegmentSemanticRole.PlanNumber);
+        return planNumberCount == 1;
+    }
 
     /// <summary>Schritt 3: IndexSource gueltig.</summary>
     private bool ValidateStep3()
@@ -411,27 +459,32 @@ public partial class ProfileWizardViewModel : ObservableObject
 
     // === Schritt 4: Hierarchie ===
 
+    /// <summary>
+    /// Baut die Hierarchie-Liste aus allen Profil-Segmenten deren Typ
+    /// die Rolle <see cref="SegmentSemanticRole.Spatial"/> hat. BPM-108 Phase C.
+    /// </summary>
     public void BuildHierarchyLevels()
     {
-        var hierarchyFieldTypes = new[]
-        {
-            (FieldType.Geschoss, "Geschoss"),
-            (FieldType.Haus, "Haus"),
-            (FieldType.Bauteil, "Bauteil"),
-            (FieldType.Bauabschnitt, "Bauabschnitt"),
-            (FieldType.Stiege, "Stiege"),
-            (FieldType.Zone, "Zone"),
-            (FieldType.Block, "Block"),
-        };
-
         var levels = new List<HierarchyLevelOption>();
-        foreach (var (fieldType, label) in hierarchyFieldTypes)
+
+        if (_segmentTypeCatalog is null)
         {
-            var segment = Segments.FirstOrDefault(
-                s => s.FieldType == fieldType);
-            if (segment is not null)
-                levels.Add(new HierarchyLevelOption(
-                    fieldType, label, segment.RawValue));
+            AvailableHierarchyLevels = new ObservableCollection<HierarchyLevelOption>(levels);
+            UpdateFolderPreview();
+            return;
+        }
+
+        var snap = _segmentTypeCatalog.SnapshotIncludingDeleted();
+        foreach (var segment in Segments.OrderBy(s => s.Position))
+        {
+            if (string.IsNullOrEmpty(segment.FieldTypeId)) continue;
+            if (!snap.TryGetValue(segment.FieldTypeId, out var def)) continue;
+            if (def.SemanticRole != SegmentSemanticRole.Spatial) continue;
+
+            levels.Add(new HierarchyLevelOption(
+                fieldTypeId: segment.FieldTypeId,
+                label: def.Name,
+                sampleValue: segment.RawValue));
         }
 
         AvailableHierarchyLevels =
@@ -566,7 +619,7 @@ public partial class ProfileWizardViewModel : ObservableObject
 
             var folderHierarchy = AvailableHierarchyLevels
                 .Where(h => h.IsSelected)
-                .Select(h => h.FieldType.ToString().ToLowerInvariant())
+                .Select(h => h.FieldTypeId)
                 .ToList();
 
             // BPM-082.03: Pro markiertem Segment eine eigene segment-Rule.
@@ -622,17 +675,21 @@ public partial class ProfileWizardViewModel : ObservableObject
     /// BPM-082.04 (U3): Heuristik aus Review R2-Konsens — Segment ist mit hoher
     /// Wahrscheinlichkeit variabel (waechst pro Datei mit) und damit als
     /// Erkennungs-Kriterium riskant. Warnung im Wizard, kein Hard-Fail.
-    /// Trigger: FieldType=PlanNumber/PlanIndex/Datum, oder rein numerisch,
-    /// oder als Datum parsbar.
     /// </summary>
+    /// <remarks>
+    /// BPM-108 Phase C: Trigger ist die <see cref="SegmentSemanticRole"/> des zugewiesenen
+    /// Segmenttyps (<c>PlanNumber</c> / <c>PlanIndex</c> / <c>Date</c>). Fallback: rein
+    /// numerisch oder als Datum parsbar.
+    /// </remarks>
     internal bool IsLikelyVariableSegment(RecognitionSegment seg)
     {
-        var fieldType = Segments
+        var fieldTypeId = Segments
             .FirstOrDefault(s => s.Position == seg.Position)
-            ?.FieldType;
-        if (fieldType is FieldType.PlanNumber
-                      or FieldType.PlanIndex
-                      or FieldType.Datum)
+            ?.FieldTypeId;
+        var role = GetRoleForFieldTypeId(fieldTypeId);
+        if (role is SegmentSemanticRole.PlanNumber
+                  or SegmentSemanticRole.PlanIndex
+                  or SegmentSemanticRole.Date)
             return true;
 
         var value = seg.RawValue?.Trim() ?? "";
@@ -654,29 +711,35 @@ public partial class ProfileWizardViewModel : ObservableObject
         return chars.Count > 0 ? chars.ToArray() : ['-', '_'];
     }
 
-    private static List<FieldTypeOption> BuildFieldTypeOptions()
+    /// <summary>
+    /// Baut die Chip-Liste fuer Wizard-Schritt 2 aus dem aktiven Segmenttyp-Katalog auf.
+    /// </summary>
+    /// <remarks>
+    /// BPM-108 Phase C: Anstelle der hardcoded Enum-Liste werden alle aktiven Built-in-
+    /// und Custom-Segmenttypen aus dem Katalog uebernommen. Der "+ Eigenes"-Chip bleibt
+    /// als Sonder-Marker (FieldTypeId == null, IsCustomCreate == true) am Listenende —
+    /// die Inline-Popover-Anlage folgt in einem spaeteren Commit.
+    /// </remarks>
+    private void RebuildFieldTypeOptions()
     {
-        return
-        [
-            new("-- Nicht zugewiesen", null),
-            new("Plannummer", FieldType.PlanNumber),
-            new("Index", FieldType.PlanIndex),
-            new("Projektnummer", FieldType.ProjectNumber),
-            new("Bezeichnung", FieldType.Description),
-            new("Ignorieren", FieldType.Ignore),
-            new("Datum", FieldType.Datum),
-            new("Geschoss", FieldType.Geschoss),
-            new("Haus", FieldType.Haus),
-            new("Planart", FieldType.Planart),
-            new("Objekt", FieldType.Objekt),
-            new("Bauteil", FieldType.Bauteil),
-            new("Bauabschnitt", FieldType.Bauabschnitt),
-            new("Stiege", FieldType.Stiege),
-            new("Achse", FieldType.Achse),
-            new("Zone", FieldType.Zone),
-            new("Block", FieldType.Block),
-            new("+ Eigenes", FieldType.Custom),
-        ];
+        var options = new ObservableCollection<FieldTypeOption>();
+        options.Add(new FieldTypeOption(displayName: "-- Nicht zugewiesen", fieldTypeId: null));
+
+        if (_segmentTypeCatalog is not null)
+        {
+            foreach (var def in _segmentTypeCatalog.GetEffectiveActive())
+            {
+                options.Add(new FieldTypeOption(displayName: def.Name, fieldTypeId: def.Id));
+            }
+        }
+
+        options.Add(new FieldTypeOption(
+            displayName: "+ Eigenes",
+            fieldTypeId: null,
+            isCustomCreate: true));
+
+        FieldTypeOptions = options;
+        UpdateAssignedFieldTypes();
     }
 
     /// <summary>
@@ -686,29 +749,40 @@ public partial class ProfileWizardViewModel : ObservableObject
     private void UpdateAssignedFieldTypes()
     {
         var assigned = Segments
-            .Where(s => s.FieldType.HasValue)
-            .Select(s => s.FieldType!.Value)
-            .ToHashSet();
+            .Where(s => !string.IsNullOrEmpty(s.FieldTypeId))
+            .Select(s => s.FieldTypeId!)
+            .ToHashSet(StringComparer.Ordinal);
 
         foreach (var opt in FieldTypeOptions)
         {
-            opt.IsAssigned = opt.Value.HasValue && assigned.Contains(opt.Value.Value);
+            opt.IsAssigned = opt.FieldTypeId is { Length: > 0 } id && assigned.Contains(id);
         }
     }
 }
 
 // === Helper-Klassen ===
 
+/// <summary>
+/// Eine Option in der Chip-Liste von Wizard-Schritt 2 (BPM-108 Phase C).
+/// </summary>
+/// <remarks>
+/// Spezialfaelle:
+/// <list type="bullet">
+/// <item><see cref="FieldTypeId"/> = null + <see cref="IsCustomCreate"/> = false → "-- Nicht zugewiesen" (Reset-Option).</item>
+/// <item><see cref="FieldTypeId"/> = null + <see cref="IsCustomCreate"/> = true → "+ Eigenes" (Inline-Popover-Trigger, Phase 4 commit).</item>
+/// <item>Sonst: regulaerer Segmenttyp aus dem Catalog.</item>
+/// </list>
+/// </remarks>
 public class FieldTypeOption : System.ComponentModel.INotifyPropertyChanged
 {
     private bool _isAssigned;
 
     public string DisplayName { get; }
-    public FieldType? Value { get; }
+    public string? FieldTypeId { get; }
+    public bool IsCustomCreate { get; }
 
     /// <summary>
-    /// True wenn dieser FieldType bereits einem Segment zugewiesen ist (Wizard-Schritt 2).
-    /// Wird vom ViewModel nach jeder Zuweisung aktualisiert -> Chip wird visuell hervorgehoben.
+    /// True wenn dieser Segmenttyp bereits einem Segment zugewiesen ist (Wizard-Schritt 2).
     /// </summary>
     public bool IsAssigned
     {
@@ -724,10 +798,11 @@ public class FieldTypeOption : System.ComponentModel.INotifyPropertyChanged
         }
     }
 
-    public FieldTypeOption(string displayName, FieldType? value)
+    public FieldTypeOption(string displayName, string? fieldTypeId, bool isCustomCreate = false)
     {
         DisplayName = displayName;
-        Value = value;
+        FieldTypeId = fieldTypeId;
+        IsCustomCreate = isCustomCreate;
     }
 
     public override string ToString() => DisplayName;
@@ -754,9 +829,14 @@ public class IndexSourceOption
     public override string ToString() => Label;
 }
 
+/// <summary>
+/// Eine Hierarchie-Ebene fuer Wizard-Schritt 4. BPM-108 Phase C:
+/// <see cref="FieldTypeId"/> ist die stabile <c>segment_types.id</c>
+/// (z. B. "geschoss"), <see cref="Label"/> kommt aus dem Catalog.
+/// </summary>
 public class HierarchyLevelOption : ObservableObject
 {
-    public FieldType FieldType { get; }
+    public string FieldTypeId { get; }
     public string Label { get; }
     public string SampleValue { get; }
 
@@ -767,10 +847,9 @@ public class HierarchyLevelOption : ObservableObject
         set => SetProperty(ref _isSelected, value);
     }
 
-    public HierarchyLevelOption(FieldType fieldType, string label,
-        string sampleValue)
+    public HierarchyLevelOption(string fieldTypeId, string label, string sampleValue)
     {
-        FieldType = fieldType;
+        FieldTypeId = fieldTypeId;
         Label = label;
         SampleValue = sampleValue;
     }

@@ -17,18 +17,21 @@ public partial class ProjectDetailView : UserControl
     private readonly IIdGenerator _idGenerator;
     private readonly string? _appDataPath;
     private readonly IPersistenceRegistry? _persistenceRegistry;
+    private readonly ISegmentTypeCatalog? _segmentTypeCatalog;
 
     public ProjectDetailView(
         Project project, BoolToVisConverter boolToVis, IProfileManager profileManager,
         IIdGenerator idGenerator,
         PatternTemplateService? templateService = null, string? appDataPath = null,
-        IPersistenceRegistry? persistenceRegistry = null)
+        IPersistenceRegistry? persistenceRegistry = null,
+        ISegmentTypeCatalog? segmentTypeCatalog = null)
     {
         _profileManager = profileManager;
         _idGenerator = idGenerator;
         _templateService = templateService;
         _appDataPath = appDataPath;
         _persistenceRegistry = persistenceRegistry;
+        _segmentTypeCatalog = segmentTypeCatalog;
         Resources.Add("BoolToVis", boolToVis);
         InitializeComponent();
 
@@ -39,7 +42,7 @@ public partial class ProjectDetailView : UserControl
     private void OnNewProfile(object sender, System.Windows.RoutedEventArgs e)
     {
         var dialog = new ProfileWizardDialog(
-            ViewModel.Project, _profileManager, _templateService, _appDataPath);
+            ViewModel.Project, _profileManager, _templateService, _appDataPath, _segmentTypeCatalog);
         dialog.Owner = System.Windows.Window.GetWindow(this);
         dialog.ShowDialog();
     }

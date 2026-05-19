@@ -6,6 +6,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using BauProjektManager.Domain.Enums.PlanManager;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models;
 using BauProjektManager.Domain.Models.PlanManager;
@@ -117,28 +118,39 @@ public class InverseBoolConverter : IValueConverter
 }
 
 /// <summary>
-/// FieldType -> Brush fuer farbige Segment-Tokens (Wizard Schritt 2).
-/// null/unbekannt -> BpmBgElevated (neutral grau).
+/// FieldTypeId -> Brush fuer farbige Segment-Tokens (Wizard Schritt 2).
 /// </summary>
+/// <remarks>
+/// BPM-108 Phase C: Loest die Farbe ueber den <see cref="WizardCatalogContext.Catalog"/> auf.
+/// Catalog liefert Hex-Strings (#RRGGBB) — diese werden zur Laufzeit in einen
+/// <see cref="SolidColorBrush"/> konvertiert. Ohne Catalog/unbekannte ID:
+/// <c>BpmBgElevated</c> Fallback aus dem Theme.
+/// </remarks>
 public class FieldTypeToBrushConverter : IValueConverter
 {
     public object? Convert(object value, Type targetType,
         object parameter, CultureInfo culture)
     {
-        var key = value is FieldType ft
-            ? ft switch
+        var id = value as string;
+        var catalog = WizardCatalogContext.Catalog;
+        if (!string.IsNullOrEmpty(id) && catalog is not null)
+        {
+            var def = catalog.GetIncludingDeleted(id);
+            if (def is not null && !string.IsNullOrEmpty(def.Color))
             {
-                FieldType.PlanNumber => "BpmFieldPlanNumber",
-                FieldType.PlanIndex => "BpmFieldPlanIndex",
-                FieldType.ProjectNumber => "BpmFieldProjectNumber",
-                FieldType.Geschoss => "BpmFieldGeschoss",
-                FieldType.Planart => "BpmFieldPlanart",
-                FieldType.Description => "BpmFieldDescription",
-                FieldType.Ignore => "BpmFieldIgnore",
-                _ => "BpmFieldDefault"
+                try
+                {
+                    var color = (Color)ColorConverter.ConvertFromString(def.Color)!;
+                    return new SolidColorBrush(color);
+                }
+                catch
+                {
+                    // ungueltige Hex-Farbe — Fallback
+                }
             }
-            : "BpmBgElevated";
-        return Application.Current.TryFindResource(key);
+        }
+        return Application.Current?.TryFindResource("BpmBgElevated")
+               ?? new SolidColorBrush(Colors.DimGray);
     }
 
     public object ConvertBack(object value, Type targetType,
@@ -147,13 +159,13 @@ public class FieldTypeToBrushConverter : IValueConverter
 }
 
 /// <summary>
-/// FieldType -> true wenn nicht zugewiesen. Triggert dashed border + unset-Label.
+/// FieldTypeId -> true wenn nicht zugewiesen (null/empty). Triggert dashed border + unset-Label.
 /// </summary>
 public class FieldTypeIsUnsetConverter : IValueConverter
 {
     public object Convert(object value, Type targetType,
         object parameter, CultureInfo culture)
-        => value is not FieldType;
+        => value is not string s || string.IsNullOrWhiteSpace(s);
 
     public object ConvertBack(object value, Type targetType,
         object parameter, CultureInfo culture)
@@ -161,36 +173,28 @@ public class FieldTypeIsUnsetConverter : IValueConverter
 }
 
 /// <summary>
-/// FieldType -> kurzes UI-Label fuer Token-Unterzeile.
-/// Pflicht-Marker (★) bei PlanNumber. null -> "? Typ waehlen".
+/// FieldTypeId -> kurzes UI-Label fuer Token-Unterzeile.
 /// </summary>
+/// <remarks>
+/// BPM-108 Phase C: Liefert <c>segment_types.name</c>. Bei <see cref="SegmentSemanticRole.PlanNumber"/>
+/// zusaetzlich Pflicht-Marker (★). Unbekannte ID: <c>Unbekannt (id)</c>. Null/empty: <c>? Typ waehlen</c>.
+/// </remarks>
 public class FieldTypeToLabelConverter : IValueConverter
 {
     public object Convert(object value, Type targetType,
         object parameter, CultureInfo culture)
-        => value is FieldType ft
-            ? ft switch
-            {
-                FieldType.PlanNumber => "Plannr. ★",
-                FieldType.PlanIndex => "Index",
-                FieldType.ProjectNumber => "Projektnr.",
-                FieldType.Description => "Bezeichnung",
-                FieldType.Datum => "Datum",
-                FieldType.Geschoss => "Geschoss",
-                FieldType.Haus => "Haus",
-                FieldType.Planart => "Planart",
-                FieldType.Objekt => "Objekt",
-                FieldType.Bauteil => "Bauteil",
-                FieldType.Bauabschnitt => "Bauabschnitt",
-                FieldType.Stiege => "Stiege",
-                FieldType.Achse => "Achse",
-                FieldType.Zone => "Zone",
-                FieldType.Block => "Block",
-                FieldType.Ignore => "Ignorieren",
-                FieldType.Custom => "Eigener Typ",
-                _ => ft.ToString()
-            }
-            : "? Typ waehlen";
+    {
+        var id = value as string;
+        if (string.IsNullOrWhiteSpace(id)) return "? Typ waehlen";
+
+        var catalog = WizardCatalogContext.Catalog;
+        var def = catalog?.GetIncludingDeleted(id);
+        if (def is null) return $"Unbekannt ({id})";
+
+        return def.SemanticRole == SegmentSemanticRole.PlanNumber
+            ? $"{def.Name} ★"
+            : def.Name;
+    }
 
     public object ConvertBack(object value, Type targetType,
         object parameter, CultureInfo culture)
@@ -198,13 +202,19 @@ public class FieldTypeToLabelConverter : IValueConverter
 }
 
 /// <summary>
-/// FieldType -> Opacity. Ignore-Felder sind gedaempft (0.55).
+/// FieldTypeId -> Opacity. Ignore-Felder (SemanticRole.Ignore) sind gedaempft (0.55).
 /// </summary>
 public class FieldTypeToOpacityConverter : IValueConverter
 {
     public object Convert(object value, Type targetType,
         object parameter, CultureInfo culture)
-        => value is FieldType.Ignore ? 0.55 : 1.0;
+    {
+        var id = value as string;
+        if (string.IsNullOrEmpty(id)) return 1.0;
+        var catalog = WizardCatalogContext.Catalog;
+        var def = catalog?.GetIncludingDeleted(id);
+        return def?.SemanticRole == SegmentSemanticRole.Ignore ? 0.55 : 1.0;
+    }
 
     public object ConvertBack(object value, Type targetType,
         object parameter, CultureInfo culture)
@@ -219,7 +229,8 @@ public partial class ProfileWizardDialog : Window
         Project? project = null,
         IProfileManager? profileManager = null,
         PatternTemplateService? templateService = null,
-        string? appDataPath = null)
+        string? appDataPath = null,
+        ISegmentTypeCatalog? segmentTypeCatalog = null)
     {
         Resources.Add("CountToVisInverse", new CountToVisInverseConverter());
         Resources.Add("CountToVisZero", new CountToVisZeroConverter());
@@ -231,7 +242,7 @@ public partial class ProfileWizardDialog : Window
         Resources.Add("FieldTypeToOpacity", new FieldTypeToOpacityConverter());
         InitializeComponent();
 
-        _vm = new ProfileWizardViewModel(project, profileManager, templateService, appDataPath);
+        _vm = new ProfileWizardViewModel(project, profileManager, templateService, appDataPath, segmentTypeCatalog);
         DataContext = _vm;
 
         Loaded += (_, _) => UpdateStepVisibility();
@@ -267,9 +278,13 @@ public partial class ProfileWizardDialog : Window
 
     private void OnChipPreviewMouseDown(object sender, MouseButtonEventArgs e)
     {
+        // BPM-108 Phase C: nur reale Segmenttypen sind drag-faehig.
+        // "-- Nicht zugewiesen" (FieldTypeId=null + !IsCustomCreate) und
+        // "+ Eigenes" (IsCustomCreate=true, Inline-Popover ist Commit 4) werden uebersprungen.
         if (sender is FrameworkElement fe
             && fe.DataContext is FieldTypeOption opt
-            && opt.Value.HasValue)
+            && !opt.IsCustomCreate
+            && !string.IsNullOrEmpty(opt.FieldTypeId))
         {
             _dragStartPoint = e.GetPosition(this);
             _dragSourceChip = fe;

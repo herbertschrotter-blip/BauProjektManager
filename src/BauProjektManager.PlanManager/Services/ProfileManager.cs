@@ -340,11 +340,11 @@ public class ProfileManager : IProfileManager
     /// Called by ProfileWizardViewModel.SaveProfile().
     /// </summary>
     /// <remarks>
-    /// BPM-108 Phase B Compat-Shim: Wizard liefert weiterhin <see cref="FileNameSegment"/>
-    /// mit <see cref="FieldType"/>-Enum. Hier wird via
-    /// <see cref="LegacyFieldTypeMapper.ToFieldTypeId"/> auf snake_case-IDs uebersetzt.
-    /// Custom-Segmente erzeugen einen aus <c>CustomFieldName</c> abgeleiteten token_key.
-    /// Phase C ersetzt diese Shim durch echte Catalog-Lookups.
+    /// BPM-108 Phase C: Wizard liefert <see cref="FileNameSegment"/> mit bereits gesetzter
+    /// <see cref="FileNameSegment.FieldTypeId"/> (stabile <c>segment_types.id</c>). Pflicht-
+    /// und Identity-Logik wird ueber den <see cref="ISegmentTypeCatalog"/> aufgeloest
+    /// (<see cref="SegmentSemanticRole.PlanNumber"/> = Pflicht; <see cref="SegmentSemanticRole.PlanNumber"/>
+    /// oder <see cref="SegmentSemanticRole.Spatial"/> = identitaetsbildend).
     /// </remarks>
     public RecognitionProfile BuildFromWizard(
         string documentTypeName,
@@ -359,32 +359,29 @@ public class ProfileManager : IProfileManager
         int recognitionPriority,
         string? existingProfileId = null)
     {
+        var snapshot = _segmentTypeCatalog?.SnapshotIncludingDeleted();
+
         var profileSegments = segments
-            .Where(s => s.FieldType is not null)
+            .Where(s => !string.IsNullOrEmpty(s.FieldTypeId))
             .Select(s =>
             {
-                var fieldTypeId = LegacyFieldTypeMapper.ToFieldTypeId(s);
+                var role = LookupRole(snapshot, s.FieldTypeId);
                 return new ProfileSegment
                 {
                     Position = s.Position,
-                    FieldTypeId = fieldTypeId,
-                    Required = s.FieldType == FieldType.PlanNumber,
-                    IncludeInIdentity = LegacyFieldTypeMapper.IsIdentityRelevant(s.FieldType)
+                    FieldTypeId = s.FieldTypeId!,
+                    Required = role == SegmentSemanticRole.PlanNumber,
+                    IncludeInIdentity = role is SegmentSemanticRole.PlanNumber or SegmentSemanticRole.Spatial
                 };
             })
             .ToList();
 
-        // Build identityFields (v4: snake_case IDs)
+        // Build identityFields (v4): documentType-System-Key + alle identitaetsbildenden Segmente
         var identityFields = new List<string> { DocumentTypeIdentityKey };
-        foreach (var seg in profileSegments.Where(s => s.IncludeInIdentity))
+        foreach (var seg in profileSegments.Where(s => s.IncludeInIdentity).OrderBy(s => s.Position))
         {
             identityFields.Add(seg.FieldTypeId);
         }
-
-        // folderHierarchy auf snake_case-IDs normieren (Wizard liefert evtl. Enum-Namen)
-        var normalizedHierarchy = folderHierarchy
-            .Select(LegacyFieldTypeMapper.NormalizeFieldTypeId)
-            .ToList();
 
         var documentTypeId = NormalizeTypeId(documentTypeName);
 
@@ -409,8 +406,18 @@ public class ProfileManager : IProfileManager
             RecognitionPriority = recognitionPriority,
             ConflictPolicy = "askUser",
             Grouping = new GroupingConfig { Mode = "identity" },
-            FolderHierarchy = normalizedHierarchy
+            FolderHierarchy = folderHierarchy
         };
+    }
+
+    private static SegmentSemanticRole LookupRole(
+        IReadOnlyDictionary<string, SegmentTypeDefinition>? snapshot,
+        string? fieldTypeId)
+    {
+        if (snapshot is null || string.IsNullOrEmpty(fieldTypeId)) return SegmentSemanticRole.None;
+        return snapshot.TryGetValue(fieldTypeId, out var def)
+            ? def.SemanticRole ?? SegmentSemanticRole.None
+            : SegmentSemanticRole.None;
     }
 
     /// <summary>

@@ -231,9 +231,24 @@
                                Text="Drop-Ziel: ein Segment-Token oben — Feldtyp wird sofort uebernommen"/>
 
                     <!-- Feldtyp-Chips als Drag-Quellen -->
-                    <TextBlock Text="Feldtypen (ziehen):"
-                               Foreground="{DynamicResource BpmTextSecondary}"
-                               FontSize="12" Margin="0,0,0,6"/>
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Text="Segmenttypen (ziehen):"
+                                   Foreground="{DynamicResource BpmTextSecondary}"
+                                   FontSize="12"/>
+                        <TextBlock Grid.Column="1"
+                                   x:Name="ManagerLink"
+                                   Text="⚙ Segmenttypen verwalten…"
+                                   Foreground="{DynamicResource BpmAccentPrimary}"
+                                   FontSize="11"
+                                   Cursor="Hand"
+                                   MouseLeftButtonUp="OnOpenManagerClick"
+                                   ToolTip="Manager-Dialog öffnen (BPM-108)"/>
+                    </Grid>
                     <ItemsControl ItemsSource="{Binding FieldTypeOptions}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -648,7 +663,7 @@
                                  Margin="0,0,0,8"/>
 
                         <TextBlock Text="{Binding CustomTypeError}"
-                                   Foreground="{DynamicResource BpmDanger}"
+                                   Foreground="{DynamicResource BpmError}"
                                    FontSize="11" Margin="0,0,0,8"
                                    Visibility="{Binding CustomTypeError, Converter={StaticResource EmptyToVisInverse}}"/>
 

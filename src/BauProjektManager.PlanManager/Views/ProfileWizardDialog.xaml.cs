@@ -257,6 +257,9 @@ public class FieldTypeToOpacityConverter : IValueConverter
 public partial class ProfileWizardDialog : Window
 {
     private readonly ProfileWizardViewModel _vm;
+    private readonly ISegmentTypeCatalog? _segmentTypeCatalog;
+    private readonly ISegmentTypeRepository? _segmentTypeRepository;
+    private readonly IIdGenerator? _idGenerator;
 
     public ProfileWizardDialog(
         Project? project = null,
@@ -278,6 +281,10 @@ public partial class ProfileWizardDialog : Window
         Resources.Add("HexToColor", new HexToColorConverter());
         Resources.Add("EmptyToVisInverse", new EmptyToVisInverseConverter());
         InitializeComponent();
+
+        _segmentTypeCatalog = segmentTypeCatalog;
+        _segmentTypeRepository = segmentTypeRepository;
+        _idGenerator = idGenerator;
 
         _vm = new ProfileWizardViewModel(project, profileManager, templateService, appDataPath,
             segmentTypeCatalog, segmentTypeRepository, idGenerator);
@@ -350,6 +357,26 @@ public partial class ProfileWizardDialog : Window
             _vm.CustomTypeColor = hex;
             e.Handled = true;
         }
+    }
+
+    /// <summary>
+    /// BPM-108 Phase C Teil 3: Oeffnet den Segmenttypen-Manager-Dialog.
+    /// </summary>
+    private void OnOpenManagerClick(object sender, MouseButtonEventArgs e)
+    {
+        if (_segmentTypeRepository is null || _segmentTypeCatalog is null || _idGenerator is null)
+        {
+            return;
+        }
+
+        var dialog = new SegmentTypeManagerDialog(_segmentTypeRepository, _segmentTypeCatalog, _idGenerator)
+        {
+            Owner = this
+        };
+        dialog.ShowDialog();
+        // Catalog-Invalidate-Events vom Manager-Dialog haben die FieldTypeOptions im Wizard
+        // bereits via Changed-Event aktualisiert — kein zusaetzlicher Refresh hier noetig.
+        e.Handled = true;
     }
 
     private void OnChipPreviewMouseMove(object sender, MouseEventArgs e)

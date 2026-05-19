@@ -31,6 +31,30 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.48] — 2026-05-18
+
+### Feature: BPM-108 Phase C Teil 3 — Segmenttyp-Manager-Dialog
+
+### Hinzugefuegt
+- `SegmentTypeManagerViewModel` (PlanManager.ViewModels) — Listen-/Edit-Drafts, Save/Cancel-Commands, Toggle-Active, Soft-Delete (Custom), Create-New-Custom. Built-in-Aenderungen setzen automatisch `user_modified_*`-Flags.
+- `SegmentTypeManagerDialog` (PlanManager.Views) — 2-Spalten-Dialog (Liste links + Edit-Panel rechts). Liste rendert alle 5 Gruppen mit Items, Inhalts-Badge BUILT-IN / EIGEN, Per-Item-Aktivieren/Deaktivieren-Toggle, Doppelklick auf Gruppen-Header toggelt Gruppe. Edit-Panel zeigt Name + Fachrolle (read-only bei Built-ins mit Info-Text wie „Genau ein Segment mit dieser Rolle ist pro Profil erforderlich.") + Token (read-only) + Gruppe-Dropdown + 12er-Farbpalette. Buttons Speichern/Verwerfen/Löschen (Löschen nur bei Custom).
+- `GroupBucket` Helper-Klasse — Gruppe + ihre Items fuer XAML-DataTemplate-Bindings.
+- Wizard Schritt 2: Link „⚙ Segmenttypen verwalten…" oeffnet Manager-Dialog. Owner = Wizard.
+- 10 neue Tests (`SegmentTypeManagerViewModelTests`) — Selection/Save-Roundtrip mit user_modified-Flag-Validierung, Toggle Type/Group, Custom-Create + Auto-Select + Token-Suffix-Konflikt, Soft-Delete, Built-in-Delete-No-Op.
+
+### Geaendert
+- `ProfileWizardDialog`: speichert `ISegmentTypeRepository`/`ISegmentTypeCatalog`/`IIdGenerator` als Felder, gibt sie an den Manager-Dialog weiter beim Klick auf den Link.
+- Theme-Token-Korrektur: `BpmDanger` (nicht vorhanden) → `BpmError` (existierend) in Wizard-Inline-Popover und Manager-Dialog.
+
+### Hintergrund
+Dritter Phase-C-Teil-Commit: Manager-Dialog erfuellt CGR-Akzeptanzkriterium #15 (Built-in-Rollen unveraenderlich, im Manager read-only). Toggle/Edit/Delete-Flows greifen direkt auf Repository, Catalog wird nach jeder Mutation invalidiert — UI-State des Wizards wird via `Changed`-Event automatisch aktualisiert. Drag-Reorder, neue Gruppen anlegen und Gruppen-Soft-Delete folgen bei Bedarf in spaeteren Iterationen.
+
+### Offen fuer Phase C
+- **Commit 4 (Teil 4):** DevTool-UI fuer `IProfileArchiveService` (Reset-Knopf im DevToolsDialog).
+- **Commit 5 (Teil 5):** Auto-Import-Blockade im ImportWorkflowService bei `ProfileHealth.MissingSegmentTypes` (Akzeptanzkriterium #17).
+
+---
+
 ## [v0.28.47] — 2026-05-18
 
 ### Feature: BPM-108 Phase C Teil 2 — Inline-Popover "+ Eigenes" im Wizard Schritt 2

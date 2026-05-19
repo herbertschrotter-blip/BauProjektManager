@@ -4,7 +4,7 @@
 **Zeitraum:** 2026-05-12
 **Ursprungs-Chat:** Teil 39 (BPM v0.28.42)
 **Tracker:** [BPM-108](https://app.clickup.com/t/86c9rtvzm)
-**Status:** Abgeschlossen
+**Status:** Abgeschlossen (Sign-off r3, Implementierung BPM-108 done 2026-05-18 mit 7 Commits v0.28.44–v0.28.50)
 
 ---
 

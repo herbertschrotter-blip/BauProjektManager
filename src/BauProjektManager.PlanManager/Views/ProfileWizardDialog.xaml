@@ -613,6 +613,95 @@
                 </StackPanel>
             </ScrollViewer>
 
+            <!-- === BPM-108 Phase C Teil 2: Inline-Popover "+ Eigenes" === -->
+            <!-- Overlay-Grid liegt ueber den Step-Panels. Klick auf Hintergrund schliesst NICHT
+                 — User muss Abbrechen oder Anlegen druecken. -->
+            <Grid x:Name="CustomPopoverOverlay"
+                  Grid.Row="1"
+                  Panel.ZIndex="10"
+                  Visibility="{Binding ShowCustomPopover, Converter={StaticResource BoolToVis}}"
+                  Background="#88000000">
+                <Border Background="{DynamicResource BpmBgSurface}"
+                        BorderBrush="{DynamicResource BpmAccentPrimary}"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Width="320"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Padding="16">
+                    <StackPanel>
+                        <TextBlock Text="+ Neuer Segmenttyp"
+                                   Foreground="{DynamicResource BpmTextBright}"
+                                   FontSize="14" FontWeight="SemiBold"
+                                   Margin="0,0,0,12"/>
+
+                        <TextBlock Text="Name"
+                                   Foreground="{DynamicResource BpmTextSecondary}"
+                                   FontSize="11" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding CustomTypeName, UpdateSourceTrigger=PropertyChanged}"
+                                 FontSize="13"
+                                 Padding="6,5"
+                                 Background="{DynamicResource BpmBgInput}"
+                                 Foreground="{DynamicResource BpmTextPrimary}"
+                                 BorderBrush="{DynamicResource BpmAccentPrimary}"
+                                 BorderThickness="1"
+                                 Margin="0,0,0,8"/>
+
+                        <TextBlock Text="{Binding CustomTypeError}"
+                                   Foreground="{DynamicResource BpmDanger}"
+                                   FontSize="11" Margin="0,0,0,8"
+                                   Visibility="{Binding CustomTypeError, Converter={StaticResource EmptyToVisInverse}}"/>
+
+                        <TextBlock Text="Token (read-only, in Templates verwendbar)"
+                                   Foreground="{DynamicResource BpmTextSecondary}"
+                                   FontSize="11" Margin="0,0,0,4"/>
+                        <Border Background="{DynamicResource BpmBgInput}"
+                                BorderBrush="{DynamicResource BpmBorderDefault}"
+                                BorderThickness="1" CornerRadius="3"
+                                Padding="6,5" Margin="0,0,0,12">
+                            <TextBlock Text="{Binding CustomTypeTokenPreview}"
+                                       FontFamily="Consolas" FontSize="12"
+                                       Foreground="{DynamicResource BpmAccentPrimary}"/>
+                        </Border>
+
+                        <TextBlock Text="Farbe"
+                                   Foreground="{DynamicResource BpmTextSecondary}"
+                                   FontSize="11" Margin="0,0,0,4"/>
+                        <ItemsControl ItemsSource="{Binding CustomTypePalette}" Margin="0,0,0,12">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="6" Rows="2"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Width="32" Height="24"
+                                            Margin="2"
+                                            CornerRadius="3"
+                                            Cursor="Hand"
+                                            MouseLeftButtonUp="OnCustomColorClick"
+                                            Tag="{Binding}">
+                                        <Border.Background>
+                                            <SolidColorBrush Color="{Binding Converter={StaticResource HexToColor}}"/>
+                                        </Border.Background>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Abbrechen"
+                                    Style="{DynamicResource BpmButtonSecondary}"
+                                    Margin="0,0,8,0"
+                                    Command="{Binding CancelCustomPopoverCommand}"/>
+                            <Button Content="Anlegen"
+                                    Style="{DynamicResource BpmButtonPrimary}"
+                                    Command="{Binding CreateCustomTypeCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
         </Grid>
 
         <!-- Footer -->

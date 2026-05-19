@@ -31,6 +31,33 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.47] — 2026-05-18
+
+### Feature: BPM-108 Phase C Teil 2 — Inline-Popover "+ Eigenes" im Wizard Schritt 2
+
+### Hinzugefuegt
+- `TokenKeyGenerator` (PlanManager.Services, static) — `Normalize(name)` erzeugt snake_case (z. B. "Akustik-Klasse" → "akustik_klasse"), `EnsureUnique(baseKey, isTaken)` haengt numerischen Suffix an (`akustik_klasse_2`) wenn der token_key schon belegt ist.
+- `SegmentTypeSeedService.GroupEigene` = `grp_eigene` — neue Built-in-Gruppe (SortOrder 50) als Standard fuer User-erstellte Custom-Segmenttypen. Built-in-Seeding aktualisiert bestehende bpm.db beim naechsten Start.
+- `ProfileWizardViewModel` — Inline-Popover State + Commands:
+  - `ShowCustomPopover` (bool), `CustomTypeName` (string), `CustomTypeColor` (hex), `CustomTypeTokenPreview` (computed, live), `CustomTypeError`, `CustomTypePalette` (12er).
+  - `OpenCustomPopover(activeSegment?)` — Popover oeffnen, optional Pre-Bind auf ein Segment fuer Auto-Assign nach Anlage.
+  - `CreateCustomTypeCommand` — Name validieren, token_key generieren + Unique-Check, `IIdGenerator.NewId()` fuer ULID, `ISegmentTypeRepository.SaveType()`, `ISegmentTypeCatalog.Invalidate()`, ggf. Segment-Zuweisung, Popover schliessen. `SemanticRole = NULL` (Custom rein dekorativ, CGR Sign-off).
+  - `CancelCustomPopoverCommand` — Popover schliessen + State clearen.
+- `ProfileWizardViewModel` Constructor nimmt jetzt zusaetzlich `ISegmentTypeRepository?` + `IIdGenerator?` (beide optional fuer Tests/isolierte ViewModels).
+- XAML-Overlay in Wizard Schritt 2 (`CustomPopoverOverlay`) — semi-transparenter Hintergrund + zentrierte Border mit Name-Input, Live-Token-Vorschau, 12er-Farbpalette, Anlegen/Abbrechen-Buttons.
+- `HexToColorConverter` + `EmptyToVisInverseConverter` (ProfileWizardDialog.xaml.cs) fuer Palette-Rendering und konditionale Fehleranzeige.
+- 18 neue Unit-Tests: `TokenKeyGeneratorTests` (9), `ProfileWizardCustomPopoverTests` (9 — inkl. Token-Konflikt-Suffix, Direkt-Zuweisung, Catalog-Invalidate-Roundtrip, Isolated-VM-Fehlerpfad).
+
+### Geaendert
+- `OnChipPreviewMouseDown`: erkennt `IsCustomCreate==true` und ruft `_vm.OpenCustomPopover()` statt Drag-Start.
+- `ProjectDetailView` / `PlanManagerView` / `MainWindow` / `App.xaml.cs`: `ISegmentTypeRepository` wird vom DI-Container bis zum Wizard durchgereicht.
+- `SegmentTypeSeedServiceTests` / `SegmentTypeCatalogTests`: Asserts auf 4 Gruppen → 5 Gruppen aktualisiert (durch `grp_eigene`).
+
+### Hintergrund
+Zweiter Teil-Schritt der Phase C: Custom-Segmenttypen koennen jetzt direkt im Wizard ohne Manager-Dialog-Wechsel angelegt werden. Token_key live als Vorschau sichtbar — User versteht von Anfang an, dass Rename den Token nicht aendert. Manager-Dialog (Phase C Teil 3) und DevTool-Reset-UI (Teil 4) folgen.
+
+---
+
 ## [v0.28.46] — 2026-05-18
 
 ### Refactor: BPM-108 Phase C Teil 1 — Wizard auf Segmenttyp-Katalog umgestellt

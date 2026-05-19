@@ -67,6 +67,42 @@ public partial class ProfileWizardViewModel : ObservableObject
     [ObservableProperty]
     private ObservableCollection<FieldTypeOption> _fieldTypeOptions = [];
 
+    // === Schritt 2: Inline-Popover "+ Eigenes" (BPM-108 Phase C Teil 2) ===
+
+    /// <summary>Sichtbarkeit des Inline-Popovers fuer Custom-Anlage.</summary>
+    [ObservableProperty]
+    private bool _showCustomPopover;
+
+    /// <summary>Name-Eingabe im Inline-Popover.</summary>
+    [ObservableProperty]
+    private string _customTypeName = "";
+
+    /// <summary>Gewaehlte Farbe (Hex) im Inline-Popover. Default = neutraler Eigene-Ton.</summary>
+    [ObservableProperty]
+    private string _customTypeColor = "#A87142";
+
+    /// <summary>Live-generierter Token-Preview aus dem Namen. Read-only fuer den User.</summary>
+    public string CustomTypeTokenPreview =>
+        TokenKeyGenerator.Normalize(CustomTypeName);
+
+    /// <summary>Validierungs-Fehlertext (z. B. "Name ist erforderlich.").</summary>
+    [ObservableProperty]
+    private string _customTypeError = "";
+
+    /// <summary>12er-Palette fuer den Color-Picker. Aktuell hardcoded analog zum Mockup.</summary>
+    public IReadOnlyList<string> CustomTypePalette { get; } =
+    [
+        "#0F6E56", "#993C1D", "#534AB7", "#185FA5",
+        "#1F7280", "#555555", "#7A1F5C", "#A87142",
+        "#3D7B47", "#8B6914", "#5C3D8E", "#2E7D8A"
+    ];
+
+    /// <summary>
+    /// Optional: bei Popover-Open vorgemerktes Segment, dem der neue Typ automatisch
+    /// zugewiesen wird. Null = nur Chip anlegen.
+    /// </summary>
+    private FileNameSegment? _customAssignmentTarget;
+
     [ObservableProperty]
     private bool _canGoNext;
 
@@ -179,6 +215,8 @@ public partial class ProfileWizardViewModel : ObservableObject
     private readonly IProfileManager? _profileManager;
     private readonly PatternTemplateService? _templateService;
     private readonly ISegmentTypeCatalog? _segmentTypeCatalog;
+    private readonly ISegmentTypeRepository? _segmentTypeRepository;
+    private readonly IIdGenerator? _idGenerator;
     private readonly Project? _project;
     private readonly string? _appDataPath;
 
@@ -187,13 +225,17 @@ public partial class ProfileWizardViewModel : ObservableObject
         IProfileManager? profileManager = null,
         PatternTemplateService? templateService = null,
         string? appDataPath = null,
-        ISegmentTypeCatalog? segmentTypeCatalog = null)
+        ISegmentTypeCatalog? segmentTypeCatalog = null,
+        ISegmentTypeRepository? segmentTypeRepository = null,
+        IIdGenerator? idGenerator = null)
     {
         _project = project;
         _profileManager = profileManager;
         _templateService = templateService;
         _appDataPath = appDataPath;
         _segmentTypeCatalog = segmentTypeCatalog;
+        _segmentTypeRepository = segmentTypeRepository;
+        _idGenerator = idGenerator;
 
         RebuildFieldTypeOptions();
         if (_segmentTypeCatalog is not null)
@@ -263,6 +305,14 @@ public partial class ProfileWizardViewModel : ObservableObject
     partial void OnDocumentTypeNameChanged(string value)
     {
         ValidateCurrentStep();
+    }
+
+    partial void OnCustomTypeNameChanged(string value)
+    {
+        OnPropertyChanged(nameof(CustomTypeTokenPreview));
+        // Fehler ausblenden sobald wieder getippt wird
+        if (!string.IsNullOrWhiteSpace(value))
+            CustomTypeError = "";
     }
 
     private void LoadInboxFiles(Project project)
@@ -757,6 +807,117 @@ public partial class ProfileWizardViewModel : ObservableObject
         {
             opt.IsAssigned = opt.FieldTypeId is { Length: > 0 } id && assigned.Contains(id);
         }
+    }
+
+    // === Inline-Popover "+ Eigenes" Commands ===
+
+    /// <summary>
+    /// Oeffnet den Inline-Popover. Optional <paramref name="assignmentTarget"/> = das aktuell
+    /// markierte Segment, dem der neue Typ nach Anlage direkt zugewiesen werden soll.
+    /// </summary>
+    public void OpenCustomPopover(FileNameSegment? assignmentTarget = null)
+    {
+        _customAssignmentTarget = assignmentTarget;
+        CustomTypeName = "";
+        CustomTypeColor = "#A87142";
+        CustomTypeError = "";
+        ShowCustomPopover = true;
+        OnPropertyChanged(nameof(CustomTypeTokenPreview));
+    }
+
+    [RelayCommand]
+    private void CancelCustomPopover()
+    {
+        ShowCustomPopover = false;
+        _customAssignmentTarget = null;
+        CustomTypeName = "";
+        CustomTypeError = "";
+    }
+
+    [RelayCommand]
+    private void CreateCustomType()
+    {
+        // Validierung Name
+        if (string.IsNullOrWhiteSpace(CustomTypeName))
+        {
+            CustomTypeError = "Name ist erforderlich.";
+            return;
+        }
+
+        if (_segmentTypeRepository is null
+            || _segmentTypeCatalog is null
+            || _idGenerator is null)
+        {
+            CustomTypeError = "Custom-Anlage in dieser Konfiguration nicht moeglich.";
+            Log.Warning("CreateCustomType: Repository/Catalog/IdGenerator fehlt — Wizard isoliert?");
+            return;
+        }
+
+        var baseKey = TokenKeyGenerator.Normalize(CustomTypeName);
+        if (string.IsNullOrEmpty(baseKey))
+        {
+            CustomTypeError = "Name enthaelt keine zulaessigen Zeichen.";
+            return;
+        }
+
+        var tokenKey = TokenKeyGenerator.EnsureUnique(baseKey,
+            isTaken: key => _segmentTypeRepository.TokenKeyExists(key));
+
+        var newType = new SegmentTypeDefinition
+        {
+            Id = _idGenerator.NewId(),
+            Name = CustomTypeName.Trim(),
+            Color = CustomTypeColor,
+            TokenKey = tokenKey,
+            SemanticRole = null, // Custom rein dekorativ (CGR Sign-off)
+            GroupId = "grp_eigene",
+            SortOrder = NextCustomSortOrder(),
+            IsActive = true,
+            IsBuiltin = false
+        };
+
+        try
+        {
+            _segmentTypeRepository.SaveType(newType);
+            _segmentTypeCatalog.Invalidate();
+
+            Log.Information("BPM-108: Custom-Segmenttyp angelegt: {Name} ({Id}, token_key={Token})",
+                newType.Name, newType.Id, newType.TokenKey);
+
+            // Direkt-zuweisen wenn ein aktives Segment vorgemerkt ist
+            if (_customAssignmentTarget is not null)
+            {
+                _customAssignmentTarget.FieldTypeId = newType.Id;
+                UpdateAssignedFieldTypes();
+                ValidateCurrentStep();
+                OnPropertyChanged(nameof(HasPlanIndexSegment));
+                OnPropertyChanged(nameof(HasPlanNumberSegment));
+            }
+
+            ShowCustomPopover = false;
+            _customAssignmentTarget = null;
+            CustomTypeName = "";
+            CustomTypeError = "";
+        }
+        catch (Exception ex)
+        {
+            CustomTypeError = "Speichern fehlgeschlagen — Details im Log.";
+            Log.Error(ex, "BPM-108: Custom-Anlage fehlgeschlagen");
+        }
+    }
+
+    /// <summary>
+    /// Liefert die naechste freie sort_order fuer neue Custom-Typen in <c>grp_eigene</c>
+    /// (max + 10). Faellt auf 10 zurueck wenn keine vorhanden.
+    /// </summary>
+    private int NextCustomSortOrder()
+    {
+        if (_segmentTypeCatalog is null) return 10;
+        var customs = _segmentTypeCatalog.GetEffectiveActive()
+            .Where(t => t.GroupId == "grp_eigene")
+            .ToList();
+        if (customs.Count == 0) return 10;
+        return customs.Max(t => t.SortOrder) + 10;
     }
 }
 

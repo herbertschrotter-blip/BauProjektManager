@@ -202,6 +202,39 @@ public class FieldTypeToLabelConverter : IValueConverter
 }
 
 /// <summary>
+/// Hex-String ("#A87142") -> <see cref="Color"/>. Fallback Transparent bei ungueltigem Wert.
+/// </summary>
+public class HexToColorConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is string hex && !string.IsNullOrEmpty(hex))
+        {
+            try { return (Color)ColorConverter.ConvertFromString(hex)!; }
+            catch { /* fallback */ }
+        }
+        return Colors.Transparent;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}
+
+/// <summary>
+/// Leerer String -> Collapsed, sonst Visible. Fuer Fehlermeldungen im Popover.
+/// </summary>
+public class EmptyToVisInverseConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is string s && !string.IsNullOrWhiteSpace(s)
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}
+
+/// <summary>
 /// FieldTypeId -> Opacity. Ignore-Felder (SemanticRole.Ignore) sind gedaempft (0.55).
 /// </summary>
 public class FieldTypeToOpacityConverter : IValueConverter
@@ -230,7 +263,9 @@ public partial class ProfileWizardDialog : Window
         IProfileManager? profileManager = null,
         PatternTemplateService? templateService = null,
         string? appDataPath = null,
-        ISegmentTypeCatalog? segmentTypeCatalog = null)
+        ISegmentTypeCatalog? segmentTypeCatalog = null,
+        ISegmentTypeRepository? segmentTypeRepository = null,
+        IIdGenerator? idGenerator = null)
     {
         Resources.Add("CountToVisInverse", new CountToVisInverseConverter());
         Resources.Add("CountToVisZero", new CountToVisZeroConverter());
@@ -240,9 +275,12 @@ public partial class ProfileWizardDialog : Window
         Resources.Add("FieldTypeIsUnset", new FieldTypeIsUnsetConverter());
         Resources.Add("FieldTypeToLabel", new FieldTypeToLabelConverter());
         Resources.Add("FieldTypeToOpacity", new FieldTypeToOpacityConverter());
+        Resources.Add("HexToColor", new HexToColorConverter());
+        Resources.Add("EmptyToVisInverse", new EmptyToVisInverseConverter());
         InitializeComponent();
 
-        _vm = new ProfileWizardViewModel(project, profileManager, templateService, appDataPath, segmentTypeCatalog);
+        _vm = new ProfileWizardViewModel(project, profileManager, templateService, appDataPath,
+            segmentTypeCatalog, segmentTypeRepository, idGenerator);
         DataContext = _vm;
 
         Loaded += (_, _) => UpdateStepVisibility();
@@ -279,16 +317,38 @@ public partial class ProfileWizardDialog : Window
     private void OnChipPreviewMouseDown(object sender, MouseButtonEventArgs e)
     {
         // BPM-108 Phase C: nur reale Segmenttypen sind drag-faehig.
-        // "-- Nicht zugewiesen" (FieldTypeId=null + !IsCustomCreate) und
-        // "+ Eigenes" (IsCustomCreate=true, Inline-Popover ist Commit 4) werden uebersprungen.
-        if (sender is FrameworkElement fe
-            && fe.DataContext is FieldTypeOption opt
-            && !opt.IsCustomCreate
-            && !string.IsNullOrEmpty(opt.FieldTypeId))
+        // "-- Nicht zugewiesen" (FieldTypeId=null + !IsCustomCreate) wird uebersprungen.
+        // "+ Eigenes" (IsCustomCreate=true) -> oeffnet Popover statt Drag.
+        if (sender is not FrameworkElement fe || fe.DataContext is not FieldTypeOption opt)
+            return;
+
+        if (opt.IsCustomCreate)
+        {
+            // Inline-Popover oeffnen; kein Drag. Pre-Bind auf das aktive Segment
+            // gibt es im Wizard noch nicht — kann in Folge-Commit ergaenzt werden.
+            _vm.OpenCustomPopover(assignmentTarget: null);
+            e.Handled = true;
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(opt.FieldTypeId))
         {
             _dragStartPoint = e.GetPosition(this);
             _dragSourceChip = fe;
             _clickOffsetInChip = e.GetPosition(fe);
+        }
+    }
+
+    /// <summary>
+    /// BPM-108 Phase C: Klick auf eine Farbpalette-Kachel im Inline-Popover.
+    /// Setzt <see cref="ProfileWizardViewModel.CustomTypeColor"/>.
+    /// </summary>
+    private void OnCustomColorClick(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.Tag is string hex)
+        {
+            _vm.CustomTypeColor = hex;
+            e.Handled = true;
         }
     }
 

@@ -156,10 +156,11 @@ public class SegmentTypeCatalogTests : IDisposable
         var cat = new SegmentTypeCatalog(_repo);
         var groups = cat.GetActiveGroups();
 
-        Assert.Equal(4, groups.Count);
+        Assert.Equal(5, groups.Count);
         Assert.Equal(SegmentTypeSeedService.GroupIdentifikation, groups[0].Id);
         Assert.Equal(SegmentTypeSeedService.GroupRaeumlich,      groups[1].Id);
         Assert.Equal(SegmentTypeSeedService.GroupInhaltlich,     groups[2].Id);
         Assert.Equal(SegmentTypeSeedService.GroupSonstiges,      groups[3].Id);
+        Assert.Equal(SegmentTypeSeedService.GroupEigene,         groups[4].Id);
     }
 }

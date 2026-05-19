@@ -129,12 +129,19 @@ public class SegmentTypeSeedService
     public const string GroupInhaltlich = "grp_inhaltlich";
     public const string GroupSonstiges = "grp_sonstiges";
 
+    /// <summary>
+    /// Built-in-Gruppe fuer User-erstellte Custom-Segmenttypen (BPM-108 Phase C).
+    /// Inline-Popover „+ Eigenes" legt neue Custom-Typen standardmaessig in diese Gruppe.
+    /// </summary>
+    public const string GroupEigene = "grp_eigene";
+
     private static IEnumerable<SegmentTypeGroupDefinition> BuiltinGroups() => new[]
     {
         new SegmentTypeGroupDefinition { Id = GroupIdentifikation, Name = "Identifikation", SortOrder = 10, IsBuiltin = true, BuiltinVersion = CurrentBuiltinVersion },
         new SegmentTypeGroupDefinition { Id = GroupRaeumlich,      Name = "Raeumlich",      SortOrder = 20, IsBuiltin = true, BuiltinVersion = CurrentBuiltinVersion },
         new SegmentTypeGroupDefinition { Id = GroupInhaltlich,     Name = "Inhaltlich",     SortOrder = 30, IsBuiltin = true, BuiltinVersion = CurrentBuiltinVersion },
-        new SegmentTypeGroupDefinition { Id = GroupSonstiges,      Name = "Sonstiges",      SortOrder = 40, IsBuiltin = true, BuiltinVersion = CurrentBuiltinVersion }
+        new SegmentTypeGroupDefinition { Id = GroupSonstiges,      Name = "Sonstiges",      SortOrder = 40, IsBuiltin = true, BuiltinVersion = CurrentBuiltinVersion },
+        new SegmentTypeGroupDefinition { Id = GroupEigene,         Name = "Eigene",         SortOrder = 50, IsBuiltin = true, BuiltinVersion = CurrentBuiltinVersion }
     };
 
     /// <summary>16 Built-in Segmenttypen, gruppiert. Farben aus dem aktuellen Theme.</summary>

@@ -166,12 +166,14 @@ public partial class App : Application
             var profileManager = sp.GetRequiredService<IProfileManager>();
             var settingsService = sp.GetRequiredService<AppSettingsService>();
             var catalog = sp.GetService<ISegmentTypeCatalog>();
+            var repo = sp.GetService<ISegmentTypeRepository>();
 #if DEBUG
             var devTools = sp.GetService<IDeveloperToolsService>();
             var registry = sp.GetService<IPersistenceRegistry>();
-            return new MainWindow(db, idGen, dialog, profileManager, settingsService, devTools, registry, catalog);
+            return new MainWindow(db, idGen, dialog, profileManager, settingsService, devTools, registry, catalog, repo);
 #else
-            return new MainWindow(db, idGen, dialog, profileManager, settingsService, persistenceRegistry: null, segmentTypeCatalog: catalog);
+            return new MainWindow(db, idGen, dialog, profileManager, settingsService,
+                persistenceRegistry: null, segmentTypeCatalog: catalog, segmentTypeRepository: repo);
 #endif
         });
 

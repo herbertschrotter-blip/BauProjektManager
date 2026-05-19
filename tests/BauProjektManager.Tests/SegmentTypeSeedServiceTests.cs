@@ -45,11 +45,11 @@ public class SegmentTypeSeedServiceTests : IDisposable
     }
 
     [Fact]
-    public void Seed_OnEmptyDb_Creates4GroupsAnd16Types()
+    public void Seed_OnEmptyDb_Creates5GroupsAnd16Types()
     {
         _sut.Seed();
 
-        Assert.Equal(4, _repo.LoadAllGroups().Count);
+        Assert.Equal(5, _repo.LoadAllGroups().Count);
         Assert.Equal(16, _repo.LoadAllTypes().Count);
     }
 
@@ -106,7 +106,7 @@ public class SegmentTypeSeedServiceTests : IDisposable
         _sut.Seed();
         _sut.Seed();
 
-        Assert.Equal(4, _repo.LoadAllGroups().Count);
+        Assert.Equal(5, _repo.LoadAllGroups().Count);
         Assert.Equal(16, _repo.LoadAllTypes().Count);
     }
 

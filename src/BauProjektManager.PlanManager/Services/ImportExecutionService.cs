@@ -141,12 +141,14 @@ public class ImportExecutionService
             if (!string.IsNullOrEmpty(targetDir))
                 Directory.CreateDirectory(targetDir);
 
-            // Archive existing file if updating
-            if (decision.Status == ImportStatus.UpdateNewerIndex
-                && decision.ExistingRevisionId is not null)
+            // --- Supersede + Archiv VOR dem Move (Parität zur bisherigen Reihenfolge) ---
+            // Schema v2.0 (BPM-109.03): bei Index-Update alte current-Revision auf superseded setzen.
+            if (decision.Status == ImportStatus.UpdateNewerIndex)
             {
                 ArchiveExistingFile(targetPath, projectRootPath);
-                _db.ArchiveRevision(decision.ExistingRevisionId);
+                var existingDoc = _db.GetDocumentByKey(decision.DocumentKey!);
+                if (existingDoc is not null)
+                    _db.SupersedeCurrentRevision(existingDoc.Id, DateTime.UtcNow.ToString("o"));
             }
 
             // Move file from inbox to target
@@ -157,37 +159,47 @@ public class ImportExecutionService
                     decision.File.Parsed.FileName, targetRelPath);
             }
 
-            // Update plan cache in DB
-            // Check if revision already exists for this key (e.g. DWG after PDF)
-            var existingRev = _db.GetCurrentRevision(decision.DocumentKey!);
-            if (existingRev is not null)
+            // --- Cache-DB-Write NACH dem Move (Schema v2.0 Drei-Ebenen-Modell, BPM-109.03) ---
+            var now = DateTime.UtcNow.ToString("o");
+            var documentId = _db.ResolveOrCreateDocument(
+                _db.ProjectId,
+                decision.DocumentKey!,
+                decision.File.DocumentTypeId ?? "",
+                decision.File.PlanNumber ?? "",
+                decision.File.DocumentTypeDisplayName ?? "unknown",
+                "",                                          // title
+                profile?.TargetFolder ?? "",
+                Path.GetDirectoryName(targetRelPath) ?? "",
+                null,                                        // building_part_id — SoftRef-Auflösung post-V1 (BPM-109.06)
+                null);                                       // building_level_id — dito
+
+            var currentRev = _db.GetCurrentRevisionForDocument(documentId);
+            if (currentRev is not null)
             {
-                // Add as additional file to existing revision
-                _db.AddFileToExistingRevision(
-                    decision.DocumentKey!,
-                    decision.File.Parsed.FileName,
-                    targetRelPath,
+                // Zusatzdatei zur bestehenden current-Revision (z.B. DWG nach PDF, ChangedNoIndex/LearnIndex)
+                _db.InsertFileForRevision(currentRev.Id,
+                    decision.File.Parsed.FileName, targetRelPath,
                     decision.File.Parsed.Extension,
-                    decision.File.Parsed.Md5,
-                    decision.File.Parsed.FileSize);
+                    decision.File.Parsed.Md5, decision.File.Parsed.FileSize,
+                    isPrimary: false);
             }
             else
             {
-                _db.InsertRevisionWithFile(
-                    decision.DocumentKey!,
-                    decision.File.DocumentTypeId ?? "",
-                    decision.File.PlanNumber ?? "",
-                    decision.File.RevisionToken,
-                    decision.File.DocumentTypeDisplayName ?? "unknown",
-                    profile?.TargetFolder ?? "",
-                    Path.GetDirectoryName(targetRelPath) ?? "",
-                    decision.File.RevisionSource.ToString(),
-                    importId,
-                    decision.File.Parsed.FileName,
-                    targetRelPath,
+                // Neue current-Revision (New oder nach Supersede bei UpdateNewerIndex)
+                var revisionId = _db.InsertRevision(
+                    documentId,
+                    decision.File.RevisionToken,                 // plan_index
+                    decision.File.RevisionSource.ToString(),     // index_source
+                    PlanArchive.Status.Current,
+                    now,                                         // current_from
+                    null,                                        // superseded_at
+                    now,                                         // received_at
+                    importId);                                   // last_import_id
+                _db.InsertFileForRevision(revisionId,
+                    decision.File.Parsed.FileName, targetRelPath,
                     decision.File.Parsed.Extension,
-                    decision.File.Parsed.Md5,
-                    decision.File.Parsed.FileSize);
+                    decision.File.Parsed.Md5, decision.File.Parsed.FileSize,
+                    isPrimary: true);
             }
 
             _db.CompleteImportAction(actionId, true);

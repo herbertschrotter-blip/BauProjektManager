@@ -20,12 +20,17 @@ namespace BauProjektManager.PlanManager.Services;
 public class PlanManagerDatabase : IDisposable
 {
     private readonly string _dbPath;
+    private readonly string _projectId;
     private readonly IIdGenerator _idGenerator;
     private readonly IPersistenceRegistry? _persistenceRegistry;
     private SqliteConnection? _connection;
 
+    /// <summary>Projekt-ID dieser DB (für plan_documents.project_id, BPM-109).</summary>
+    public string ProjectId => _projectId;
+
     public PlanManagerDatabase(string projectId, IIdGenerator idGenerator, IPersistenceRegistry? persistenceRegistry = null)
     {
+        _projectId = projectId;
         _idGenerator = idGenerator;
         _persistenceRegistry = persistenceRegistry;
         var projectDir = Path.Combine(
@@ -286,64 +291,6 @@ public class PlanManagerDatabase : IDisposable
         cmd.ExecuteNonQuery();
     }
 
-    // === PLAN REVISIONS (Cache-Schicht) ===
-    //
-    // BPM-109.01: plan_revisions wurde auf das Drei-Ebenen-Schema v2.0 umgebaut
-    // (document_key → document_id-FK auf plan_documents, neue Status-Enum + Zeitstempel).
-    // Die folgenden Cache-Repository-Methoden sind damit gegen das alte Schema nicht mehr gültig
-    // und werden in BPM-109.02 (Domain Models + Repository) gegen das neue Modell reimplementiert
-    // (inkl. Document-Resolve über document_key → plan_documents.id).
-    // Bis dahin Fail-Fast statt stiller Falsch-SQL — schützt die Import-Journal-Invariante
-    // (kein halb-geschriebener Cache-Zustand). Signaturen bleiben erhalten, damit die Aufrufer
-    // (ImportExecutionService / ImportWorkflowService) kompilieren.
-
-    private const string NotImplV2Message =
-        "BPM-109.01: plan_revisions wurde auf das Drei-Ebenen-Schema v2.0 umgebaut (document_id). " +
-        "Die Cache-Repository-Logik wird in BPM-109.02 gegen das neue Modell reimplementiert.";
-
-    /// <summary>
-    /// Gets the current revision for a document_key (if exists).
-    /// BPM-109.02: gegen plan_documents/plan_revisions (document_id) reimplementieren.
-    /// </summary>
-    public ExistingRevision? GetCurrentRevision(string documentKey)
-        => throw new NotSupportedException(NotImplV2Message);
-
-    /// <summary>
-    /// Gets all existing revisions as a lookup for the decision service.
-    /// BPM-109.02: gegen plan_documents/plan_revisions (document_id) reimplementieren.
-    /// </summary>
-    public Dictionary<string, ExistingRevision> GetAllCurrentRevisions()
-        => throw new NotSupportedException(NotImplV2Message);
-
-    /// <summary>
-    /// Inserts a new revision + file + link after import.
-    /// BPM-109.02: Document-Resolve (document_key → plan_documents.id) + Revision mit document_id-FK.
-    /// </summary>
-    public void InsertRevisionWithFile(
-        string documentKey, string documentTypeId, string planNumber,
-        string? planIndex, string documentType, string targetFolder,
-        string relativeDirectory, string indexSource, string importId,
-        string fileName, string relativePath, string fileType,
-        string md5Hash, long fileSize)
-        => throw new NotSupportedException(NotImplV2Message);
-
-    /// <summary>
-    /// Archives an existing revision (Schema v2.0: superseded statt archived).
-    /// BPM-109.02: revision_status='superseded' + superseded_at + plan_revision_events.
-    /// </summary>
-    public void ArchiveRevision(string revisionId)
-        => throw new NotSupportedException(NotImplV2Message);
-
-    /// <summary>
-    /// Adds a file to an existing current revision (e.g. DWG to existing PDF revision).
-    /// BPM-109.02: über document_id-Auflösung statt document_key.
-    /// </summary>
-    public void AddFileToExistingRevision(
-        string documentKey,
-        string fileName, string relativePath, string fileType,
-        string md5Hash, long fileSize)
-        => throw new NotSupportedException(NotImplV2Message);
-
     // === PLAN ARCHIVE v2.0 (BPM-109.02 Repository-Primitive) ===
     //
     // Additive Document-zentrische Primitive gegen das Drei-Ebenen-Schema. Die Pipeline-Verdrahtung
@@ -552,6 +499,64 @@ public class PlanManagerDatabase : IDisposable
         }
         Log.Debug("planmanager.db: {Count} aktuelle Revisionen (v2.0 Lookup)", result.Count);
         return result;
+    }
+
+    /// <summary>
+    /// Legt eine Datei an (plan_files) und verknüpft sie mit einer Revision (revision_file_links).
+    /// Gibt die file-id zurück. BPM-109.03.
+    /// </summary>
+    public string InsertFileForRevision(
+        string revisionId, string fileName, string relativePath, string fileType,
+        string md5Hash, long fileSize, bool isPrimary)
+    {
+        var conn = GetConnection();
+        var now = DateTime.UtcNow.ToString("o");
+        var fileId = _idGenerator.NewId();
+
+        var fileCmd = conn.CreateCommand();
+        fileCmd.CommandText = """
+            INSERT INTO plan_files (id, file_name, relative_path, file_type,
+                md5_hash, file_size, origin_mode, created_at, updated_at)
+            VALUES (@id, @fn, @rp, @ft, @md5, @fs, 'autoGrouped', @ca, @ua)
+            """;
+        fileCmd.Parameters.AddWithValue("@id", fileId);
+        fileCmd.Parameters.AddWithValue("@fn", fileName);
+        fileCmd.Parameters.AddWithValue("@rp", relativePath);
+        fileCmd.Parameters.AddWithValue("@ft", fileType);
+        fileCmd.Parameters.AddWithValue("@md5", md5Hash);
+        fileCmd.Parameters.AddWithValue("@fs", fileSize);
+        fileCmd.Parameters.AddWithValue("@ca", now);
+        fileCmd.Parameters.AddWithValue("@ua", now);
+        fileCmd.ExecuteNonQuery();
+
+        var linkCmd = conn.CreateCommand();
+        linkCmd.CommandText = """
+            INSERT INTO revision_file_links (revision_id, file_id, link_mode, is_primary)
+            VALUES (@rid, @fid, 'auto', @pr)
+            """;
+        linkCmd.Parameters.AddWithValue("@rid", revisionId);
+        linkCmd.Parameters.AddWithValue("@fid", fileId);
+        linkCmd.Parameters.AddWithValue("@pr", isPrimary ? 1 : 0);
+        linkCmd.ExecuteNonQuery();
+        return fileId;
+    }
+
+    /// <summary>
+    /// Setzt alle aktuellen (current) Revisionen eines Dokuments auf 'superseded' (minimal, BPM-109.03).
+    /// Feinlogik (Events, current_from-Kette) folgt in BPM-109.04. Gibt die Anzahl betroffener Zeilen zurück.
+    /// </summary>
+    public int SupersedeCurrentRevision(string documentId, string supersededAtUtc)
+    {
+        var conn = GetConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            UPDATE plan_revisions
+            SET revision_status = 'superseded', superseded_at = @sa, last_modified_at = @sa
+            WHERE document_id = @did AND revision_status = 'current' AND is_deleted = 0
+            """;
+        cmd.Parameters.AddWithValue("@sa", supersededAtUtc);
+        cmd.Parameters.AddWithValue("@did", documentId);
+        return cmd.ExecuteNonQuery();
     }
 
     // === IMPORT JOURNAL (unverändert v1.0) ===

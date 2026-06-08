@@ -115,7 +115,8 @@ public class ImportWorkflowService
         }
 
         // 6. Version Decision — apply 9-status decision matrix
-        var existingRevisions = _db.GetAllCurrentRevisions();
+        // Schema v2.0 (BPM-109.03): Lookup über plan_documents/plan_revisions statt altem Cache.
+        var existingRevisions = _db.GetCurrentRevisionLookup();
         var decisions = _decision.Decide(classified, existingRevisions);
 
         // 7. Execution Plan — calculate target paths

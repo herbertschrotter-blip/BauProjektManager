@@ -344,6 +344,216 @@ public class PlanManagerDatabase : IDisposable
         string md5Hash, long fileSize)
         => throw new NotSupportedException(NotImplV2Message);
 
+    // === PLAN ARCHIVE v2.0 (BPM-109.02 Repository-Primitive) ===
+    //
+    // Additive Document-zentrische Primitive gegen das Drei-Ebenen-Schema. Die Pipeline-Verdrahtung
+    // (ImportExecutionService/ImportWorkflowService auf diese Methoden) erfolgt in BPM-109.03, die
+    // Revision-Zeitlogik (Supersede-Übergänge) in BPM-109.04. Cross-DB-Bezüge sind Soft References
+    // (kein FK), Validierung service-seitig. Audit-/Sync-Spalten werden hier gesetzt.
+
+    /// <summary>
+    /// Sucht ein plan_documents per document_key (find) oder legt es neu an (create).
+    /// Gibt die document_id zurück. Idempotent bzgl. document_key (UNIQUE).
+    /// </summary>
+    public string ResolveOrCreateDocument(
+        string projectId, string documentKey, string documentTypeId,
+        string planNumber, string documentType, string title,
+        string targetFolder, string relativeDirectory,
+        string? buildingPartId, string? buildingLevelId)
+    {
+        var conn = GetConnection();
+        var findCmd = conn.CreateCommand();
+        findCmd.CommandText = "SELECT id FROM plan_documents WHERE document_key = @dk AND is_deleted = 0";
+        findCmd.Parameters.AddWithValue("@dk", documentKey);
+        if (findCmd.ExecuteScalar() is string existingId)
+            return existingId;
+
+        var id = _idGenerator.NewId();
+        var now = DateTime.UtcNow.ToString("o");
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            INSERT INTO plan_documents (id, project_id, document_key, document_type_id,
+                plan_number, document_type, title, target_folder, relative_directory,
+                building_part_id, building_level_id,
+                created_at, last_modified_at, sync_version, is_deleted)
+            VALUES (@id, @pid, @dk, @dti, @pn, @dt, @ti, @tf, @rd, @bp, @bl, @ca, @ua, 0, 0)
+            """;
+        cmd.Parameters.AddWithValue("@id", id);
+        cmd.Parameters.AddWithValue("@pid", projectId);
+        cmd.Parameters.AddWithValue("@dk", documentKey);
+        cmd.Parameters.AddWithValue("@dti", documentTypeId);
+        cmd.Parameters.AddWithValue("@pn", planNumber);
+        cmd.Parameters.AddWithValue("@dt", documentType);
+        cmd.Parameters.AddWithValue("@ti", title);
+        cmd.Parameters.AddWithValue("@tf", targetFolder);
+        cmd.Parameters.AddWithValue("@rd", relativeDirectory);
+        cmd.Parameters.AddWithValue("@bp", (object?)buildingPartId ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@bl", (object?)buildingLevelId ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@ca", now);
+        cmd.Parameters.AddWithValue("@ua", now);
+        cmd.ExecuteNonQuery();
+        Log.Debug("plan_documents angelegt: {Key} -> {Id}", documentKey, id);
+        return id;
+    }
+
+    /// <summary>Lädt ein plan_documents per document_key (oder null).</summary>
+    public PlanDocument? GetDocumentByKey(string documentKey)
+    {
+        var conn = GetConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT id, project_id, document_key, document_type_id, plan_number, document_type,
+                   title, target_folder, relative_directory, building_part_id, building_level_id
+            FROM plan_documents WHERE document_key = @dk AND is_deleted = 0
+            """;
+        cmd.Parameters.AddWithValue("@dk", documentKey);
+        using var reader = cmd.ExecuteReader();
+        if (!reader.Read()) return null;
+        return new PlanDocument(
+            reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3),
+            reader.GetString(4), reader.GetString(5), reader.GetString(6), reader.GetString(7),
+            reader.GetString(8),
+            reader.IsDBNull(9) ? null : reader.GetString(9),
+            reader.IsDBNull(10) ? null : reader.GetString(10));
+    }
+
+    /// <summary>Fügt eine Revision für ein Dokument ein. Gibt die revision_id zurück.</summary>
+    public string InsertRevision(
+        string documentId, string? planIndex, string indexSource,
+        string revisionStatus, string currentFrom, string? supersededAt,
+        string receivedAt, string? lastImportId)
+    {
+        var conn = GetConnection();
+        var id = _idGenerator.NewId();
+        var now = DateTime.UtcNow.ToString("o");
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            INSERT INTO plan_revisions (id, document_id, plan_index, index_source, revision_status,
+                current_from, superseded_at, received_at, last_import_id,
+                created_at, last_modified_at, sync_version, is_deleted)
+            VALUES (@id, @did, @pi, @is, @st, @cf, @sa, @ra, @ii, @ca, @ua, 0, 0)
+            """;
+        cmd.Parameters.AddWithValue("@id", id);
+        cmd.Parameters.AddWithValue("@did", documentId);
+        cmd.Parameters.AddWithValue("@pi", (object?)planIndex ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@is", indexSource);
+        cmd.Parameters.AddWithValue("@st", revisionStatus);
+        cmd.Parameters.AddWithValue("@cf", currentFrom);
+        cmd.Parameters.AddWithValue("@sa", (object?)supersededAt ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@ra", receivedAt);
+        cmd.Parameters.AddWithValue("@ii", (object?)lastImportId ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@ca", now);
+        cmd.Parameters.AddWithValue("@ua", now);
+        cmd.ExecuteNonQuery();
+        return id;
+    }
+
+    /// <summary>Fügt einen extrahierten Segmentwert für ein Dokument ein. Gibt die segment-id zurück.</summary>
+    public string InsertSegment(
+        string documentId, string segmentTypeId, string segmentKey,
+        string rawValue, string normalizedValue)
+    {
+        var conn = GetConnection();
+        var id = _idGenerator.NewId();
+        var now = DateTime.UtcNow.ToString("o");
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            INSERT INTO plan_document_segments (id, document_id, segment_type_id, segment_key,
+                raw_value, normalized_value, created_at, last_modified_at, sync_version, is_deleted)
+            VALUES (@id, @did, @sti, @sk, @rv, @nv, @ca, @ua, 0, 0)
+            """;
+        cmd.Parameters.AddWithValue("@id", id);
+        cmd.Parameters.AddWithValue("@did", documentId);
+        cmd.Parameters.AddWithValue("@sti", segmentTypeId);
+        cmd.Parameters.AddWithValue("@sk", segmentKey);
+        cmd.Parameters.AddWithValue("@rv", rawValue);
+        cmd.Parameters.AddWithValue("@nv", normalizedValue);
+        cmd.Parameters.AddWithValue("@ca", now);
+        cmd.Parameters.AddWithValue("@ua", now);
+        cmd.ExecuteNonQuery();
+        return id;
+    }
+
+    /// <summary>Fügt einen Revisions-Event ein (Audit-Trail). Gibt die event-id zurück.</summary>
+    public string InsertRevisionEvent(
+        string revisionId, string? importId, string eventType, string note = "")
+    {
+        var conn = GetConnection();
+        var id = _idGenerator.NewId();
+        var now = DateTime.UtcNow.ToString("o");
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            INSERT INTO plan_revision_events (id, revision_id, import_id, event_type, event_at,
+                note, created_at, last_modified_at, sync_version, is_deleted)
+            VALUES (@id, @rid, @iid, @et, @ea, @note, @ca, @ua, 0, 0)
+            """;
+        cmd.Parameters.AddWithValue("@id", id);
+        cmd.Parameters.AddWithValue("@rid", revisionId);
+        cmd.Parameters.AddWithValue("@iid", (object?)importId ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@et", eventType);
+        cmd.Parameters.AddWithValue("@ea", now);
+        cmd.Parameters.AddWithValue("@note", note);
+        cmd.Parameters.AddWithValue("@ca", now);
+        cmd.Parameters.AddWithValue("@ua", now);
+        cmd.ExecuteNonQuery();
+        return id;
+    }
+
+    /// <summary>Lädt die aktuelle (current) Revision eines Dokuments (oder null).</summary>
+    public PlanRevision? GetCurrentRevisionForDocument(string documentId)
+    {
+        var conn = GetConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT id, document_id, plan_index, index_source, revision_status,
+                   current_from, superseded_at, received_at, last_import_id
+            FROM plan_revisions
+            WHERE document_id = @did AND revision_status = 'current' AND is_deleted = 0
+            LIMIT 1
+            """;
+        cmd.Parameters.AddWithValue("@did", documentId);
+        using var reader = cmd.ExecuteReader();
+        if (!reader.Read()) return null;
+        return new PlanRevision(
+            reader.GetString(0), reader.GetString(1),
+            reader.IsDBNull(2) ? null : reader.GetString(2),
+            reader.GetString(3), reader.GetString(4), reader.GetString(5),
+            reader.IsDBNull(6) ? null : reader.GetString(6),
+            reader.GetString(7),
+            reader.IsDBNull(8) ? null : reader.GetString(8));
+    }
+
+    /// <summary>
+    /// Lookup aller aktuellen Revisionen, keyed by document_key — der v2.0-Ersatz für die in .01
+    /// Fail-Fast gesetzte GetAllCurrentRevisions. Wird in BPM-109.03 vom RevisionDecisionService genutzt.
+    /// md5 kommt aus der primären Datei (LEFT JOIN — leer wenn noch keine Datei verknüpft).
+    /// </summary>
+    public Dictionary<string, ExistingRevision> GetCurrentRevisionLookup()
+    {
+        var conn = GetConnection();
+        var result = new Dictionary<string, ExistingRevision>();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT pd.document_key, pr.id, pr.plan_index, COALESCE(pf.md5_hash, '') AS md5
+            FROM plan_documents pd
+            JOIN plan_revisions pr ON pr.document_id = pd.id
+                AND pr.revision_status = 'current' AND pr.is_deleted = 0
+            LEFT JOIN revision_file_links rfl ON rfl.revision_id = pr.id AND rfl.is_primary = 1
+            LEFT JOIN plan_files pf ON pf.id = rfl.file_id
+            WHERE pd.is_deleted = 0
+            """;
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            result[reader.GetString(0)] = new ExistingRevision(
+                reader.GetString(1),
+                reader.IsDBNull(2) ? null : reader.GetString(2),
+                reader.GetString(3));
+        }
+        Log.Debug("planmanager.db: {Count} aktuelle Revisionen (v2.0 Lookup)", result.Count);
+        return result;
+    }
+
     // === IMPORT JOURNAL (unverändert v1.0) ===
 
     /// <summary>

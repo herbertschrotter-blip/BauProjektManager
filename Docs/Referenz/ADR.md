@@ -2737,4 +2737,38 @@ Das Modell entspricht den Drei-Ebenen-Mustern von Procore (Drawing/Revision/Shee
 
 ---
 
+### ADR-058-Addendum: Cross-DB Soft References (2026-06-08, CGR r3)
+
+**Status:** ✅ Entschieden (Sign-off via CGR-2026-06-08-plan-archiv-architektur r3)
+**Herkunft:** Beim Vorbereiten von BPM-109.01 aufgefallen — die in DB-SCHEMA Kap. 6.7 / ADR-058 skizzierten neuen Tabellen in `planmanager.db` deklarierten FKs auf `building_parts`/`building_levels`/`segment_types`, die in `bpm.db` liegen. Cross-Review r3 (Claude + ChatGPT GPT-5.4) bestätigte Option A.
+
+**Problem:** `planmanager.db` (per-Projekt-Cache) und `bpm.db` (zentrale Stammdaten) sind getrennte SQLite-Dateien. **SQLite erzwingt keine Foreign Keys über getrennte Datenbankdateien hinweg** — auch `ATTACH` aktiviert keine Cross-DB-FK-Constraints. Eine DDL, die harte FKs aus `planmanager.db` auf `bpm.db`-Tabellen deklariert, ist technisch falsch.
+
+**Entscheidung (Option A — 2 DBs behalten):**
+
+1. **Architektur-Invariante:** `planmanager.db` bleibt pro Projekt lokale, rebuildbare PlanManager-Cache-/Journal-DB. Bezüge auf `bpm.db`-Tabellen sind **logische Referenzen** (`TEXT`-Spalten ohne `FOREIGN KEY`), die durch Import-/Lookup-Services validiert werden. Harte FKs bleiben **nur innerhalb derselben DB-Datei**.
+
+2. **Muster:** *„System-of-record DB + rebuildable bounded cache DB"* — **nicht** „Database per Module" (das wäre ein Anti-Pattern beim modularen Monolithen). Der Split `bpm.db` ↔ `planmanager.db` ist durch **Disposability + Projektkardinalität + Sync-Politik** gerechtfertigt, nicht durch Modul-Trennung. Ein künftiges Modul (z.B. Foto) bekommt nur dann eine eigene DB, wenn es ebenfalls einen rebuildbaren lokalen Cache mit eigenem Lebenszyklus braucht.
+
+3. **Keine Konsolidierung vor V1:** Plan-Tabellen nach `bpm.db` zu verschieben (Option B) wurde verworfen — zu wenig Nutzen (4 FKs) für zu viel Sync-/Reset-/Blast-Radius-Kosten (~5–8 PT netto + Kollision mit den Foundation-Slice-Stop-Punkten). Würde nur sinnvoll, wenn PlanManager-Daten zu primären (nicht-rebuildbaren) Records werden — dann eigenes ADR „PlanArchive as System of Record".
+
+**Drei Sub-Entscheidungen (CGR r3):**
+
+- **(a) `building_part_aliases` → `bpm.db`** statt `planmanager.db`. Damit zentral, gesynct, mit **hartem FK** auf `building_parts(id)` (gleiche Datei), plus `project_id` + Sync-Felder (ADR-050). Reduziert die Cross-DB-Soft-References von 4 auf **3** (verbleibend: `plan_documents.building_part_id`, `plan_documents.building_level_id`, `plan_document_segments.segment_type_id`). Siehe DB-SCHEMA Kap. 4.11.
+
+- **(b) Stammdaten-Löschung mit Planbezug = Soft-Delete + Warnbadge.** Löschen von `building_parts`/`building_levels` mit aktiven Planreferenzen wird **nicht hart blockiert** (konsistent mit ADR-050/ADR-056 Soft-Delete-Policy), sondern erlaubt mit Warnung + Badge im PlanManager. Der App-Level Delete Guard ist **post-V1**; im Foundation Slice nur als Invariante dokumentiert.
+
+- **(c) Doku-Vehikel = dieses ADR-058-Addendum** (kein eigenständiges ADR-059), plus DDL-Korrektur in DB-SCHEMA Kap. 6.7.
+
+**Service-Härtung (Scope):**
+- **BPM-109.01:** DDL-Fix (Cross-DB-FK-Klauseln raus, SoftRef-Kommentare + Cross-DB-Hinweis), harte Innen-FKs erhalten.
+- **BPM-109.03:** Import-Time-Validation (`ResolveBuildingPart`/`ResolveSegmentType` gegen `bpm.db`; deckt sich mit ADR-056-Health-Logik).
+- **post-V1:** App-Level Delete Guard, `PlanReferenceHealth`-Revalidate-Command, `ATTACH bpm.db`-Kapselung ausschließlich in `IPlanLookupService` (kein UI-/Repo-SQL über die Grenze).
+
+**Offener Punkt:** `plan_context_links` ist **kein** rebuildbarer Cache, sondern autorierte Cross-Modul-Verknüpfung (nicht aus Dateisystem rekonstruierbar). Spannung zum „disposable cache"-Modell. Für den Foundation Slice bleibt die Tabelle wie in ADR-058 in `planmanager.db` (nur angelegt, aktiv erst mit BPM-056). **Heimat neu bewerten, wenn BPM-056-Sync kommt.**
+
+**Referenz:** CGR-2026-06-08-plan-archiv-architektur **r3** (DB-Grenze).
+
+---
+
 *Dokument wird laufend aktualisiert wenn neue Architekturentscheidungen getroffen werden.*

@@ -439,6 +439,9 @@ Nach Stage 5 (`DocumentKeyBuilder` produziert Natural Key) kommt eine neue **Doc
 **Cross-Modul-API:**
 `IPlanLookupService` (Interface-Stub in V1, Implementation post-V1 parallel zu BPM-056) ist die öffentliche API für konsumierende Module (Bautagebuch, Foto, Vorlagen). Module schreiben Cross-Modul-Verweise in `plan_context_links` mit `resolution_mode = 'fixed_revision'` — alte Berichte zeigen immer dieselbe Revision (ADR-058 fachliche Invariante).
 
+**Cross-DB-Referenzen (ADR-058-Addendum, CGR r3):**
+`planmanager.db` (per-Projekt-Cache) und `bpm.db` (zentrale Stammdaten) sind getrennte SQLite-Dateien. Bezüge von Plan-Tabellen auf `bpm.db` (`building_part_id`, `building_level_id`, `segment_type_id`) sind **logische Referenzen** (`TEXT`, kein FK — SQLite erzwingt keine FK über DB-Datei-Grenzen). Gültigkeit wird **service-seitig** validiert: Import-Resolve (`.03`), `IPlanLookupService` (post-V1) und Stammdaten-Soft-Delete-Guard (post-V1). `ATTACH bpm.db` für Lookup/Reporting bleibt gekapselt im Service, **kein** Cross-DB-SQL in UI oder Low-Level-Repo. Harte FKs gelten nur innerhalb `planmanager.db`. Das Alias-Mapping `building_part_aliases` liegt zentral in `bpm.db` (DB-SCHEMA Kap. 4.11).
+
 **Reset-Anweisung bei Schema-Wechsel (Frühphasen-Regel):** User löscht `planmanager.db` → BPM erstellt sie beim nächsten App-Start neu mit v2.0. Keine Migration.
 
 Die folgenden Tabellen-Definitionen zeigen den **aktuellen Stand (v1.0)** — sie werden durch die v2.0-Variante in DB-SCHEMA.md Kap. 6.7 abgelöst.

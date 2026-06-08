@@ -2,10 +2,10 @@
 
 **Thema:** Reicht das aktuelle PlanManager-Schema (`plan_revisions` + `plan_files` + `revision_file_links`) für künftige Module wie Bautagebuch, Foto, Vorlagen? Müssen wir zu einer Document/Revision-Trennung mit Metadaten-Tags und Status-Historie wechseln (Industrie-Standard Procore/Aconex/think project!)?
 
-**Zeitraum:** 2026-06-08
-**Ursprungs-Chat:** BauProjektManager Teil 41
+**Zeitraum:** 2026-06-08 (r1–r2), 2026-06-08 (r3 Nachzügler)
+**Ursprungs-Chat:** BauProjektManager Teil 41 (r1–r2), Teil 42 (r3)
 **Bezug:** kein bestehender BPM-Task — Plan-Archiv-Persistenz v2 entsteht aus diesem Review
-**Status:** ✅ **Abgeschlossen — Sign-off in Runde 2**
+**Status:** ✅ **Abgeschlossen** (r1–r2 Sign-off Drei-Ebenen-Modell; r3 Sign-off DB-Grenze: 2 DBs + Soft Reference bestätigt)
 
 ---
 
@@ -46,6 +46,12 @@ Konsequenz: Eine Query wie „Welche Polierpläne waren am 15.06.2025 für Haus 
   1. V1-Scope: **Foundation Slice** (`.01–.04` blockierend, `.05–.07` post-V1)
   2. BPM-080.05: **komplett pausieren** bis Schema fertig (konservativer als ChatGPT empfahl)
   3. V1-Definition: **„Import stabil + Modulplattform vorbereitet"** → enthält Interface-Stub `.05a` für `IPlanLookupService`
+
+### Runde 3 — DB-Grenze: 2 DBs + Soft Reference vs. Konsolidierung (Nachzügler vor BPM-109.01)
+
+- **Artefakte:** [r3/](./r3/)
+- **Fokus:** Beim Vorbereiten von BPM-109.01 aufgefallen: die neuen v2-Tabellen in `planmanager.db` deklarieren FKs auf `building_parts`/`building_levels`/`segment_types`, die in `bpm.db` liegen → Cross-DB-FK, von SQLite nicht erzwingbar. Option A (2 DBs behalten, Soft Reference, Claudes Empfehlung) vs. Option B (auf eine konsolidierte DB umstellen, ~5–8 PT + Stop-Punkt-Kollision). Frage: gängige Praxis + lohnt Konsolidierung?
+- **Kernergebnis:** **Option A bestätigt** (ChatGPT + Claude einig). Muster ist *„System-of-record DB + rebuildable bounded cache DB"* (kein Database-per-Module — das wäre Anti-Pattern). Konsolidierung lohnt nicht: zu wenig Nutzen (4 FKs) für zu viel Sync-/Reset-/Blast-Radius-Kosten. **3 Entscheidungen Herbert:** (1) Dokumentation als **ADR-058-Addendum** + DDL-Fix in DB-SCHEMA Kap. 6.7 (Cross-DB-FK-Klauseln raus, SoftRef-Kommentare rein); (2) **`building_part_aliases` → `bpm.db`** statt planmanager.db (zentral, harter FK auf building_parts, project_id + Sync-Felder; reduziert Cross-DB-Soft-Refs von 4 auf 3); (3) Stammdaten-Löschung mit Planbezug = **Soft-Delete + Warnbadge** (Guard post-V1). **Offen markiert:** Heimat von `plan_context_links` (kein Cache, sondern autoriert) neu bewerten, wenn BPM-056-Sync kommt. 5 ChatGPT-Härtungen übernommen (DDL-Fix, harte Innen-FKs, Delete-Guard, Import-Time-Validation, Revalidate-Command + ATTACH-Kapselung in IPlanLookupService).
 
 ---
 

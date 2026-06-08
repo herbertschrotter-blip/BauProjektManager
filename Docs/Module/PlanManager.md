@@ -429,9 +429,21 @@ Wird nach jedem Import automatisch aktualisiert.
 
 ---
 
-## 10. Datenbank-Schema (planmanager.db) — 6 Tabellen
+## 10. Datenbank-Schema (planmanager.db) — 6 Tabellen (v1.0) + Schema v2.0 geplant
 
-### 10.1 Plan-Revisions-Cache (3 Tabellen)
+**Status:** Schema v1.0 ist implementiert seit v0.25.15. Schema v2.0 (Drei-Ebenen-Modell + Plan-Archiv-Persistenz) ist als Foundation Slice in BPM-109 vor V1-Release geplant — siehe **ADR-058** und **DB-SCHEMA.md Kap. 6.7** für die vollständige v2.0-Definition mit `plan_documents` (NEU), `plan_revisions` (umgebaut mit FK + Zeitstempeln), `plan_document_segments`, `plan_revision_events`, `plan_context_links` und `building_part_aliases`.
+
+**Pipeline-Erweiterung mit Schema v2.0:**
+Nach Stage 5 (`DocumentKeyBuilder` produziert Natural Key) kommt eine neue **Document-Resolve-Stage**, die das `document_key` in `plan_documents.id` auflöst (Upsert). `ImportPlanBuilder` unterscheidet danach 4 Operationen: `NewDocument`, `NewRevision`, `SupersedeCurrent`, `FileLink`. Extrahierte Segmentwerte landen in `plan_document_segments` mit FK auf `segment_types` (ADR-056). Stammdaten-FKs `building_part_id`/`building_level_id` werden über exakte Normalisierung gegen `building_parts`/`building_levels` (+ `building_part_aliases` post-V1) aufgelöst.
+
+**Cross-Modul-API:**
+`IPlanLookupService` (Interface-Stub in V1, Implementation post-V1 parallel zu BPM-056) ist die öffentliche API für konsumierende Module (Bautagebuch, Foto, Vorlagen). Module schreiben Cross-Modul-Verweise in `plan_context_links` mit `resolution_mode = 'fixed_revision'` — alte Berichte zeigen immer dieselbe Revision (ADR-058 fachliche Invariante).
+
+**Reset-Anweisung bei Schema-Wechsel (Frühphasen-Regel):** User löscht `planmanager.db` → BPM erstellt sie beim nächsten App-Start neu mit v2.0. Keine Migration.
+
+Die folgenden Tabellen-Definitionen zeigen den **aktuellen Stand (v1.0)** — sie werden durch die v2.0-Variante in DB-SCHEMA.md Kap. 6.7 abgelöst.
+
+### 10.1 Plan-Revisions-Cache (3 Tabellen, v1.0)
 
 ```sql
 CREATE TABLE plan_revisions (
@@ -1175,6 +1187,8 @@ BauProjektManager.PlanManager/
 | ADR-022 | Segment-basiertes Dateinamen-Parsing |
 | ADR-039 | ULID als Primärschlüssel |
 | ADR-045 | IndexSource — Dreistufiges Modell |
+| ADR-056 | Segmenttyp-Architektur (BPM-108) — fieldTypeId + SemanticRole |
+| ADR-058 | Plan-Archiv-Persistenz (BPM-109) — Drei-Ebenen-Modell + Foundation Slice |
 
 ---
 

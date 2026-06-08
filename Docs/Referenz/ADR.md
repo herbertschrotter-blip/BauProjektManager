@@ -16,7 +16,7 @@ supersedes: []
 - Autorität: source_of_truth
 - Lesen wenn: Neue Architekturentscheidung treffen, bestehende ADR prüfen, Status ändern, Entscheidung nachschlagen
 - Nicht zuständig für: Implementierungs-Details (→ jeweilige Modul-Docs), Code-Standards (→ CODING_STANDARDS.md)
-- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-056)
+- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-058)
 - Pflichtlesen: keine (gezieltes Nachschlagen per ADR-Nummer)
 - Fachliche Invarianten:
   - Statusmodell: Decision Status (Proposed/Accepted/Superseded/Deprecated) getrennt von Implementation Status (Not Started/Partial/Implemented)
@@ -103,6 +103,8 @@ Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheid
 | 053 | Server-Sync-Architektur — Windows-only Stack, Phase 0/1 VPS, Phase Verkauf On-Premise | ✅ Entschieden | 2026-04 |
 | 054 | PlanManager Import Identity & Gruppierung | ✅ Entschieden | 2026-04 |
 | 055 | IPersistenceRegistry — dynamisches Persistenz-Inventar als Single Source of Truth | ✅ Entschieden | 2026-05 |
+| 056 | Segmenttyp-Architektur (BPM-108) — fieldTypeId + SemanticRole Zwei-Schichten-Modell | ✅ Entschieden | 2026-05 |
+| 058 | Plan-Archiv-Persistenz (BPM-109) — Drei-Ebenen-Modell + Foundation Slice | ✅ Entschieden | 2026-06 |
 
 ---
 
@@ -462,6 +464,25 @@ beim Laden mit `Log.Error` verworfen und sind nicht mehr matchbar. Aktion
 fuer Tester: betroffene `.bpm/profiles/*.json`-Dateien loeschen, im Wizard
 neu anlegen. Disk-Reset via DevTools → Reset-Tab → Quick-Reset "All" oder
 manuell pro Projekt.
+
+### Erweiterung BPM-109: `document_key` bekommt FK-Bezug zu plan_documents (2026-06)
+
+Mit ADR-058 (Plan-Archiv-Persistenz) wird der vom `DocumentKeyBuilder`
+erzeugte `document_key` nicht mehr direkt als Identitäts-String in
+`plan_revisions` gespeichert, sondern landet in **`plan_documents.document_key`**
+(`UNIQUE`-Spalte). `plan_revisions.document_id` ist die stabile FK-Referenz für
+Cross-Modul-Verknüpfungen.
+
+**Recognition-Logik selbst ist nicht betroffen:**
+- `RecognitionProfile.IdentityFields`, `RecognitionRule.Method`/`Pattern`/
+  `SegmentPosition`, der `FileNameParser` und die `DocumentTypeRecognizer`-
+  Match-Methoden bleiben unverändert.
+- Der `DocumentKeyBuilder` produziert weiterhin denselben Natural-Key — er
+  wird nur an einer anderen Tabellenstelle persistiert.
+
+**Bautagebuch/Foto/Vorlagen-Module verwenden NICHT `document_key`-Strings**,
+sondern `plan_documents.id` als FK-Ziel. `document_key` bleibt für
+Debug/Export/Migration nützlich.
 
 ---
 
@@ -2303,6 +2324,24 @@ Verworfene Optionen mit Begründung:
 
 **Betrifft:** ADR-046 (.bpm/), ADR-047 (4-Klassen-Datenmodell), ADR-050 (DB-Schema v2.1), ADR-051 (Local-First), ADR-052 (IUserContext), `Docs/Konzepte/DatenarchitekturSync.md` (FolderSync-Pfad superseded), `Docs/Konzepte/ServerArchitektur.md` (bleibt relevant für Phase Verkauf)
 
+### Erweiterung BPM-109: `project_id`-Redundanz in `planmanager.db` (2026-06)
+
+Mit ADR-058 (Plan-Archiv-Persistenz) trägt `plan_documents` explizit eine
+**`project_id`-Spalte**, obwohl `planmanager.db` bereits pro Projekt existiert.
+Die Redundanz ist bewusst — Begründung:
+
+- **Sync-Robustheit:** Wenn `planmanager.db` exportiert oder in eine gemeinsame
+  Server-DB gestreamt wird (ADR-051 Phase Verkauf), bleibt die Projekt-Zuordnung
+  intakt — kein impliziter Kontext aus dem Dateinamen.
+- **Debug/Export-Hilfe:** Direkte Inspektion der `plan_documents`-Tabelle (z.B.
+  in SQLite-Browser) zeigt sofort, zu welchem Projekt die Daten gehören.
+- **Spätere Multi-Tenant-Vorbereitung:** Falls eine logische DB irgendwann
+  Daten mehrerer Projekte hält (z.B. Sync-Server), ist der FK schon da.
+- **Kosten:** Eine TEXT-Spalte je Document — vernachlässigbar.
+
+Diese Begründung gilt analog für `plan_revisions`, `plan_document_segments` etc.
+nicht — diese hängen über FK an `plan_documents` und erben damit die Projekt-Zuordnung.
+
 ## ADR-054: PlanManager Import Identity & Gruppierung
 
 **Datum:** 2026-04 (rückwirkend dokumentiert 2026-05)
@@ -2607,6 +2646,94 @@ Einführung eines Zwei-Schichten-Modells in `bpm.db` (Tabellen `segment_type_gro
 **Betrifft:** ADR-010 (Plan-Erkennung — Profile-Format), ADR-050 (Sync-Felder), ADR-053 (Server-Sync), DB-SCHEMA.md Kap. 4 (neue Tabellen), PlanManager.md Kap. 13/14.
 
 **Referenz:** [Docs/Referenz/chatgpt-reviews/CGR-2026-05-12-segmenttyp-architektur/](../Referenz/chatgpt-reviews/CGR-2026-05-12-segmenttyp-architektur/) — 3 Runden Cross-Review mit ChatGPT GPT-5.4 (16 Dateien).
+
+---
+
+## ADR-058: Plan-Archiv-Persistenz (BPM-109) — Drei-Ebenen-Modell + Foundation Slice
+
+**Datum:** 2026-06-08
+**Status:** ✅ Entschieden (Sign-off via CGR-2026-06-08-plan-archiv-architektur r2)
+**Implementierung:** Not Started — Foundation Slice (.01–.04 + .05a Stub) ist V1-Sperrposten
+**Herkunft:** BPM-109 — erkannt im Chat Teil 41 (Bautagesbericht-Use-Case „zeige damals aktuelle Pläne für Haus H1 EG"). Cross-Review mit ChatGPT (2 Runden) führte zur unten beschriebenen Architektur und Foundation-Slice-Begrenzung.
+
+**Kontext:**
+
+Das aktuelle PlanManager-Schema (v1.0, 6 Tabellen) speichert Plan-Identität als verketteten String (`document_key` = `"polierplan|103|h5|gr|e1"`) und sortiert Pläne in eine Ordnerhierarchie. Es reicht für V1-Import + Sortierung, aber nicht für zeitbezogene Cross-Modul-Abfragen, die mehrere geplante Module (BPM-056 Bautagebuch, BPM-057 Foto, BPM-061 Vorlagen) benötigen:
+
+- Filter „alle Polierpläne für Haus H1 + Geschoss EG am 15.06.2025" geht heute nur über `LIKE '%h1%'` — fehleranfällig, langsam, fängt `H10`/`EH1`/`Stiege H1` mit.
+- Status-Wechsel `current → archived` hat keinen Zeitstempel → Zeitreise unmöglich.
+- Cross-Modul-Verknüpfungen (Bautagebuch-Fußnote → Plan-Revision) brauchen stabilen FK, nicht Identitäts-String.
+
+**Entscheidung:**
+
+Drei-Ebenen-Modell analog Industrie-Standard (Procore, Aconex, think project!) — aber **als Foundation Slice**, nicht als kompletter Plattform-Refactor.
+
+1. **`plan_documents` (NEU)** — logisches Dokument über alle Revisionen hinweg. FKs `building_part_id` + `building_level_id`. `document_key UNIQUE`. Stabile Entität, auf die Cross-Modul-Links zeigen.
+
+2. **`plan_revisions` (UMGEBAUT)** — FK auf `plan_documents`. `revision_status` CHECK `current/superseded/rejected`. Zeitstempel `current_from` + `superseded_at` für Zeitreise. UNIQUE-Index auf `(document_id) WHERE status = 'current'`.
+
+3. **`plan_document_segments` (NEU)** — KV-Tabelle für extrahierte Segmentwerte (haus, geschoss, bauteil, …) mit FK auf `segment_types` aus ADR-056. Spalten `segment_key` (Denormalisierung für Debug) + `raw_value` + `normalized_value`.
+
+4. **`plan_revision_events` (NEU)** — minimaler Audit-Trail für Statuswechsel. CHECK `event_type IN (created/made_current/superseded/file_linked/manual_override)`. Kein voller Before/After-Snapshot pro Spalte.
+
+5. **`plan_context_links` (NEU)** — Cross-Modul-Verknüpfung. **PFLICHT: `resolution_mode = 'fixed_revision'`** — `target_revision_id` wird beim Speichern eines Berichts/Fotos festgezogen, nicht dynamisch `current_at_time` aufgelöst. Sonst verändern rückwirkende Korrekturen alte Berichte.
+
+6. **`building_part_aliases` (NEU)** — relational, nicht JSON. Auto-Learn-Mapping für Stammdaten. Stufe 1: exakte Normalisierung + Preview-Warnung bei fehlendem Match. Kein Fuzzy-Match, kein Auto-Anlegen ohne User-Bestätigung.
+
+7. **Bestehend bleibt:** `plan_files`, `revision_file_links`, `import_journal`, `import_actions`, `import_action_files` — Import-Journal speichert „was hat dieser Import gemacht", `plan_revision_events` speichert „was ist mit dieser Revision passiert". Beide existieren parallel.
+
+8. **`IPlanLookupService`** — öffentliche API für konsumierende Module:
+   - `FindCurrentPlansAsync(projectId, buildingPartId, buildingLevelId, documentTypeIds, atUtc)` — Zeitreise-Query
+   - `CreatePlanContextSnapshotAsync(sourceModule, sourceId, atUtc, filters)` — schreibt `plan_context_links` mit `fixed_revision`
+
+9. **Foundation Slice = V1-Sperrposten:**
+   - `.01 Schema v2 neu erzeugen`
+   - `.02 Domain Models + Repository`
+   - `.03 Pipeline-Grundgerüst` (Import schreibt Document + Revision + Segments)
+   - `.04 Revision-Zeitlogik` (`current_from`, `superseded_at`, Events)
+   - `.05a IPlanLookupService Interface-Stub` (nur Vertrag, keine Implementation)
+
+10. **Nicht V1-blockierend (post-V1):**
+    - `.05 IPlanLookupService Implementation` mit Query-Logik — parallel zu BPM-056
+    - `.06 Stammdaten-Mapping mit Preview-UI`
+    - `.07 vollständige Doku/GLOSSAR/BACKLOG/Architektur-Update`
+    - `plan_context_links` aktiv nutzen (kommt mit BPM-056)
+    - Alias-Verwaltung-UI
+    - Bautagebuch-/Foto-/Vorlagen-Integration
+
+11. **Frühphase = Reset.** Keine Migration. Bei Schema-v2-Einführung: User löscht `planmanager.db`, BPM erstellt sie beim nächsten Start neu. Schema-Reset für Profile (`.bpm/profiles/*.json`) ist NICHT nötig — die JSON-Format-Definition bleibt v4 (siehe ADR-056).
+
+12. **Stop-Punkte für Foundation-Slice-Sprint:**
+    - Schema-v2 erfordert >30 % Re-Design von BPM-080.05 → Stopp, Plan-Archiv nach V1 schieben
+    - >40 Pipeline-Tests gebrochen + Ursachen nicht lokal auf Repository → Stopp
+    - Import-Journal/Undo wackelt → **sofort** Stopp
+    - Dateiverschiebung + DB-Commit inkonsistent → **sofort** Stopp
+    - `.01–.04` dauern >10 PT → Foundation Slice gescheitert
+
+**Konsequenzen:**
+
+- BPM-080.05 (Wizard-WPF) und BPM-081 (ImportPreviewDialog) **komplett pausiert** bis `.01–.04` durch — auch UI-Layer ruht, um Wegwerfware zu vermeiden.
+- BPM-006 (ProjectDetailView) kann parallel laufen (UI-Polish ohne Persistenzbezug).
+- V1-Release verzögert sich um ~1–2 Wochen (geschätzte 8,5–10,5 PT Aufwand für Foundation Slice).
+- `RecognitionRule` aus BPM-082 bleibt unverändert (Recognition-Logik separat von Persistenz). ADR-010 bekommt nur Hinweis zur `document_key`-FK-Bedeutung.
+- ADR-053 (Sync-Strategie) bekommt Hinweis zur `project_id`-Redundanz in `planmanager.db`.
+- BPM-092 (`recognition_profiles` in DB) ist nicht Voraussetzung — kommt unabhängig nach diesem Ticket.
+- Cross-Modul-Snapshots auf `revision_id` (nicht `document_id + current_at_time`) sind **fachliche Invariante**: ein historischer Bericht muss immer dieselbe Revision zeigen, auch nach Korrekturen.
+
+**DSGVO:** Klasse A (technische Persistenz, kein Personenbezug). `PlanDocument`/`PlanRevision`/`SegmentValue` sind whitelist-fähig für ADR-053-Sync.
+
+**ISO 19650 / Industrie-Standard:**
+
+Das Modell entspricht den Drei-Ebenen-Mustern von Procore (Drawing/Revision/Sheet), Aconex (Document/Revision/File) und think project! (CONCLUDE CDE). Bewusst NICHT übernommen:
+- Suitability-Codes (S0–S4) — für Polier-Alltag overkill
+- Transmittals / Freigabe-Workflows — kein Versand-/Approval-Portal
+- Generic Custom-Fields — Segmenttypen aus ADR-056 reichen
+- OCR-Plankopf als Persistenz-Voraussetzung — `IndexSource = PlanHeader` bleibt post-V1
+- Revision-Branching — Baupläne sind linear genug (`current → superseded`)
+
+**Betrifft:** ADR-010 (Recognition — `document_key` jetzt FK-Bezug), ADR-050 (Sync-Felder — 6 Spalten auf neuen Tabellen), ADR-053 (Server-Sync — `project_id`-Redundanz), ADR-056 (Segmenttypen — `plan_document_segments.segment_type_id` FK), DB-SCHEMA.md Kap. 6, PlanManager.md (7-Stufen-Pipeline + Document-Resolve-Stage).
+
+**Referenz:** [Docs/Referenz/chatgpt-reviews/CGR-2026-06-08-plan-archiv-architektur/](../Referenz/chatgpt-reviews/CGR-2026-06-08-plan-archiv-architektur/) — 2 Runden Cross-Review mit ChatGPT GPT-5.4 (11 Detail-Verbesserungen R1 + 4 Roadmap-Korrekturen R2 übernommen).
 
 ---
 

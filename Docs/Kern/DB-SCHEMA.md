@@ -765,7 +765,9 @@ Pro Projekt eine eigene SQLite-DB. Liegt in `%LocalAppData%\BauProjektManager\Pr
 
 **Status:** `PlanManagerDatabase.cs` implementiert (v0.25.15). Schema v1.0, 6 Tabellen + schema_version.
 
-**6 Tabellen:** 3 Plan-Revisions-Cache + 3 Import-Journal (PlanManager.md v2.0, Cross-Review 09.04.2026).
+**Geplant:** Schema v2.0 (BPM-109, Foundation Slice) — Drei-Ebenen-Modell mit `plan_documents` + erweiterte `plan_revisions` + Segment/Event/ContextLink/Alias-Tabellen. Siehe Kap. 6.7 unten und ADR-058. Reset-Anweisung bei Schema-Wechsel: `planmanager.db` löschen → BPM erstellt sie beim nächsten Start neu (Frühphasen-Regel).
+
+**6 Tabellen (v1.0):** 3 Plan-Revisions-Cache + 3 Import-Journal (PlanManager.md v2.0, Cross-Review 09.04.2026).
 
 ### 6.1 plan_revisions (Cache)
 
@@ -883,6 +885,258 @@ CREATE TABLE import_action_files (
 
 CREATE INDEX idx_action_files_action ON import_action_files(action_id);
 ```
+
+---
+
+### 6.7 Schema v2.0 (BPM-109 Plan-Archiv-Persistenz Foundation Slice — ⚠ geplant)
+
+**Zweck:** Drei-Ebenen-Modell (Document/Revision/File) analog Industrie-Standard (Procore, Aconex, think project!) für zeitbezogene Cross-Modul-Abfragen aus Bautagebuch (BPM-056), Foto (BPM-057), Vorlagen (BPM-061).
+
+**Status:** Definition entschieden (ADR-058), Implementation `Not Started`. Foundation Slice (`.01–.04 + .05a` Stub) ist V1-Sperrposten — siehe BPM-109.
+
+**Reset-Anweisung bei Einführung (Frühphasen-Regel):**
+Betroffene Datei: `%LocalAppData%\BauProjektManager\Projects\<ProjektID>\planmanager.db`.
+Aktion: User löscht die Datei → BPM erstellt sie beim nächsten App-Start neu mit Schema v2.0. Keine Migration, keine Backward-Compatibility.
+
+**Bestehende Tabellen aus v1.0 die UNVERÄNDERT bleiben:**
+`plan_files` (Kap. 6.2), `revision_file_links` (Kap. 6.3), `import_journal` (Kap. 6.4), `import_actions` (Kap. 6.5), `import_action_files` (Kap. 6.6).
+
+**`plan_revisions` (Kap. 6.1) wird UMGEBAUT** — siehe 6.7.2 unten.
+
+#### 6.7.1 plan_documents (NEU)
+
+Logisches Dokument über alle Revisionen hinweg. Ziel für Cross-Modul-FKs.
+
+```sql
+CREATE TABLE plan_documents (
+    id TEXT PRIMARY KEY,                -- ULID
+    project_id TEXT NOT NULL,           -- redundant zu DB-Pfad, bewusst für Sync/Export
+    document_key TEXT NOT NULL UNIQUE,  -- Natural Key vom DocumentKeyBuilder
+    document_type_id TEXT NOT NULL,     -- Profil-ID (aus JSON .bpm/profiles, post-V1 FK auf recognition_profiles BPM-092)
+    plan_number TEXT NOT NULL,
+    document_type TEXT NOT NULL,
+    title TEXT NOT NULL DEFAULT '',
+    target_folder TEXT NOT NULL,
+    relative_directory TEXT NOT NULL,
+    building_part_id TEXT,              -- FK building_parts (NULL wenn nicht gemappt)
+    building_level_id TEXT,             -- FK building_levels (NULL wenn nicht gemappt)
+    created_at TEXT NOT NULL,           -- UTC ISO 8601
+    created_by TEXT,
+    last_modified_at TEXT NOT NULL,
+    last_modified_by TEXT,
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    is_deleted INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (building_part_id) REFERENCES building_parts(id),
+    FOREIGN KEY (building_level_id) REFERENCES building_levels(id)
+);
+
+CREATE INDEX idx_plan_documents_lookup
+ON plan_documents(project_id, building_part_id, building_level_id, document_type_id, is_deleted);
+
+CREATE INDEX idx_plan_documents_key ON plan_documents(document_key);
+```
+
+#### 6.7.2 plan_revisions (UMGEBAUT)
+
+Versionierte Revision mit Zeitstempeln für Zeitreise. Ersetzt v1.0-Definition aus Kap. 6.1.
+
+```sql
+CREATE TABLE plan_revisions (
+    id TEXT PRIMARY KEY,                -- ULID
+    document_id TEXT NOT NULL,          -- FK plan_documents
+    plan_index TEXT,                    -- NULL bei Erstausgabe / IndexSource=None
+    index_source TEXT NOT NULL,         -- "FileName", "None", "PlanHeader"
+    revision_status TEXT NOT NULL
+        CHECK (revision_status IN ('current', 'superseded', 'rejected')),
+    current_from TEXT NOT NULL,         -- UTC, wann diese Revision aktuell wurde
+    superseded_at TEXT,                 -- UTC, wann durch Nächste ersetzt (NULL solange current)
+    received_at TEXT NOT NULL,          -- UTC, wann importiert
+    last_import_id TEXT,
+    created_at TEXT NOT NULL,
+    created_by TEXT,
+    last_modified_at TEXT NOT NULL,
+    last_modified_by TEXT,
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    is_deleted INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (document_id) REFERENCES plan_documents(id),
+    FOREIGN KEY (last_import_id) REFERENCES import_journal(id)
+);
+
+CREATE UNIQUE INDEX ux_plan_revisions_current
+ON plan_revisions(document_id)
+WHERE revision_status = 'current' AND is_deleted = 0;
+
+CREATE INDEX idx_plan_revisions_timetravel
+ON plan_revisions(document_id, current_from, superseded_at, is_deleted);
+```
+
+**Status-Semantik:**
+- `current` — aktuelle gültige Revision (pro `document_id` maximal eine via UNIQUE-Index)
+- `superseded` — durch nächste Revision fachlich abgelöst, `superseded_at` gesetzt
+- `rejected` — bewusst verworfene Revision (z.B. ungültiger Vorabzug aus `RevisionDecisionService`), kein `current`, `superseded_at` als Verwerfungs-Zeitpunkt
+
+#### 6.7.3 plan_document_segments (NEU)
+
+Extrahierte Segmentwerte als KV-Tabelle, FK auf `segment_types` aus ADR-056.
+
+```sql
+CREATE TABLE plan_document_segments (
+    id TEXT PRIMARY KEY,                    -- ULID
+    document_id TEXT NOT NULL,              -- FK plan_documents
+    segment_type_id TEXT NOT NULL,          -- FK segment_types (BPM-108)
+    segment_key TEXT NOT NULL,              -- Denormalisierung für Debug/Export (token_key aus segment_types)
+    raw_value TEXT NOT NULL,                -- Original aus FileNameParser (z.B. "H1")
+    normalized_value TEXT NOT NULL,         -- Lowercase/normalisiert für Filter (z.B. "h1")
+    created_at TEXT NOT NULL,
+    created_by TEXT,
+    last_modified_at TEXT NOT NULL,
+    last_modified_by TEXT,
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    is_deleted INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (document_id) REFERENCES plan_documents(id),
+    FOREIGN KEY (segment_type_id) REFERENCES segment_types(id),
+    UNIQUE (document_id, segment_type_id)   -- pro Dokument ein Wert je Segmenttyp
+);
+
+CREATE INDEX idx_plan_document_segments_lookup
+ON plan_document_segments(segment_type_id, normalized_value, is_deleted);
+```
+
+**Verhältnis zu `building_part_id`/`building_level_id` in `plan_documents`:**
+Für die häufigen Modul-Filter (Haus + Geschoss) gibt es FK-Spalten direkt am Document. Alle weiteren Segmentwerte (Bauteil, Bauabschnitt, Zone, …) landen in `plan_document_segments`. Beide Wege koexistieren bewusst.
+
+#### 6.7.4 plan_revision_events (NEU)
+
+Minimaler Audit-Trail für Statuswechsel. KEIN voller Before/After-Snapshot.
+
+```sql
+CREATE TABLE plan_revision_events (
+    id TEXT PRIMARY KEY,                    -- ULID
+    revision_id TEXT NOT NULL,              -- FK plan_revisions
+    import_id TEXT,                         -- optional FK import_journal
+    event_type TEXT NOT NULL
+        CHECK (event_type IN ('created', 'made_current', 'superseded', 'file_linked', 'manual_override')),
+    event_at TEXT NOT NULL,                 -- UTC
+    event_by TEXT,
+    note TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL,
+    created_by TEXT,
+    last_modified_at TEXT NOT NULL,
+    last_modified_by TEXT,
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    is_deleted INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (revision_id) REFERENCES plan_revisions(id),
+    FOREIGN KEY (import_id) REFERENCES import_journal(id)
+);
+
+CREATE INDEX idx_plan_revision_events_revision
+ON plan_revision_events(revision_id, event_at);
+```
+
+#### 6.7.5 plan_context_links (NEU)
+
+Cross-Modul-Verknüpfung von z.B. Bautagebuch-Einträgen / Fotos / Vorlagen zu einer konkreten Plan-Revision.
+
+```sql
+CREATE TABLE plan_context_links (
+    id TEXT PRIMARY KEY,                    -- ULID
+    source_module TEXT NOT NULL,            -- z.B. "bautagebuch", "foto", "rfi", "vorlage"
+    source_id TEXT NOT NULL,                -- ID im Source-Modul
+    target_document_id TEXT NOT NULL,       -- FK plan_documents
+    target_revision_id TEXT,                -- FK plan_revisions — PFLICHT bei fixed_revision
+    resolution_mode TEXT NOT NULL
+        CHECK (resolution_mode IN ('fixed_revision')),  -- erweiterbar in Zukunft, derzeit nur ein Wert
+    context_time TEXT NOT NULL,             -- UTC, zu welchem Zeitpunkt der Link erstellt wurde (Berichtsdatum)
+    link_type TEXT NOT NULL
+        CHECK (link_type IN ('auto_reference', 'manual_reference', 'attachment')),
+    created_at TEXT NOT NULL,
+    created_by TEXT,
+    last_modified_at TEXT NOT NULL,
+    last_modified_by TEXT,
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    is_deleted INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (target_document_id) REFERENCES plan_documents(id),
+    FOREIGN KEY (target_revision_id) REFERENCES plan_revisions(id)
+);
+
+CREATE INDEX idx_plan_context_links_source
+ON plan_context_links(source_module, source_id, is_deleted);
+
+CREATE INDEX idx_plan_context_links_target
+ON plan_context_links(target_document_id, target_revision_id, is_deleted);
+```
+
+**Pflicht: `resolution_mode = 'fixed_revision'`** (ADR-058, fachliche Invariante). Beim Erzeugen eines Links wird die zu diesem Zeitpunkt aktuelle Revision festgezogen → alte Bautagesberichte zeigen immer dieselbe Revision, auch nach späterer Korrektur eines Importdatums.
+
+#### 6.7.6 building_part_aliases (NEU)
+
+Auto-Learn-Mapping für Stammdaten, relational statt JSON.
+
+```sql
+CREATE TABLE building_part_aliases (
+    id TEXT PRIMARY KEY,                    -- ULID
+    project_id TEXT NOT NULL,
+    building_part_id TEXT NOT NULL,         -- FK building_parts
+    alias_value TEXT NOT NULL,              -- Original-Schreibweise (z.B. "Haus 1")
+    normalized_alias_value TEXT NOT NULL,   -- Lowercase/normalisiert (z.B. "haus_1")
+    created_at TEXT NOT NULL,
+    created_by TEXT,
+    last_modified_at TEXT NOT NULL,
+    last_modified_by TEXT,
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    is_deleted INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (building_part_id) REFERENCES building_parts(id),
+    UNIQUE (project_id, normalized_alias_value)
+);
+```
+
+Analog später möglich: `building_level_aliases`. Nicht Teil des Foundation Slice — YAGNI.
+
+#### 6.7.7 Beispiel-Query: Zeitreise für Bautagebuch
+
+„Welche Polierpläne waren am Berichtstag (`2025-06-15 09:00:00Z`) für Haus H1, Geschoss EG aktuell?"
+
+```sql
+SELECT
+    pd.id AS document_id,
+    pd.document_key,
+    pd.plan_number,
+    pd.document_type,
+    pd.title,
+    pr.id AS revision_id,
+    pr.plan_index,
+    pf.relative_path
+FROM plan_documents pd
+JOIN plan_revisions pr ON pr.document_id = pd.id AND pr.is_deleted = 0
+JOIN revision_file_links rfl ON rfl.revision_id = pr.id AND rfl.is_primary = 1
+JOIN plan_files pf ON pf.id = rfl.file_id AND pf.is_deleted = 0
+WHERE pd.project_id = :project_id
+  AND pd.building_part_id = :h1_id
+  AND pd.building_level_id = :eg_id
+  AND pd.document_type_id IN (:polierplan_id, :schalung_id, :bewehrung_id)
+  AND pd.is_deleted = 0
+  AND pr.current_from <= '2025-06-15T09:00:00Z'
+  AND (pr.superseded_at IS NULL OR pr.superseded_at > '2025-06-15T09:00:00Z')
+ORDER BY pd.document_type, pd.plan_number;
+```
+
+Beim Speichern des Bautagesberichts wird je gefundenem Treffer ein Eintrag in `plan_context_links` mit `resolution_mode = 'fixed_revision'` geschrieben — siehe ADR-058.
+
+#### 6.7.8 Foundation-Slice-Umfang vs. Post-V1
+
+**V1-Sperrposten (Foundation Slice — BPM-109.01–.04 + .05a):**
+- Schema v2.0 wie oben definiert
+- Domain Models + Repository
+- Pipeline schreibt korrekt in alle neuen Tabellen
+- Revision-Zeitlogik (current_from / superseded_at + Events)
+- `IPlanLookupService` Interface-Stub (nur Vertrag, keine Implementation)
+
+**Post-V1 (BPM-109.05/.06/.07):**
+- `IPlanLookupService` Implementation (Query-Logik) — parallel zu BPM-056
+- Stammdaten-Mapping-UI mit Preview (Auto-Learn-Bestätigung)
+- `plan_context_links` aktiv nutzen (kommt mit BPM-056)
+- `building_part_aliases` UI
+- Vollständige Doku/GLOSSAR/BACKLOG/Architektur-Update
 
 ---
 

@@ -554,9 +554,22 @@ Dort dokumentiert:
 - Undo-Journal (3 SQLite-Tabellen), Recovery, Preflight
 - Manueller Sortier-Modus + Umbenennung
 - Bestandsmanifest (`.bpm/plan-index.json`), Cache-Rebuild
-- DB-Schema (planmanager.db, 6 Tabellen)
+- DB-Schema (planmanager.db, 6 Tabellen v1.0 — Schema v2.0 mit Drei-Ebenen-Modell für Foundation Slice in BPM-109 geplant, ADR-058)
 - Planlisten Import/Export (V1.1)
 - Solution-Struktur + Implementierungsreihenfolge
+
+### 4.1 Öffentliche API für andere Module — `IPlanLookupService`
+
+Mit Schema v2.0 (ADR-058) bekommt der PlanManager eine öffentliche API für nachfolgende Module:
+
+| Methode | Zweck | Genutzt von |
+|---|---|---|
+| `FindCurrentPlansAsync(projectId, buildingPartId, buildingLevelId, documentTypeIds, atUtc)` | Zeitreise-Query: welche Plan-Revisionen waren zu einem bestimmten Zeitpunkt für die angegebene Gebäude-Hierarchie aktuell? | BPM-056 Bautagebuch (Fußnote „damals gültige Pläne"), BPM-057 Foto, BPM-061 Vorlagen |
+| `CreatePlanContextSnapshotAsync(sourceModule, sourceId, atUtc, filters)` | Schreibt `plan_context_links` mit `resolution_mode = 'fixed_revision'` — friert die zum Zeitpunkt aktuelle Revision fest, sodass historische Berichte stabil bleiben | BPM-056/057/061 beim Speichern |
+
+**Wichtig:** Konsumierende Module verwenden NICHT direkten SQL-Zugriff auf `plan_documents` oder `LIKE '%H1%'` auf `document_key`-Strings — Filter laufen über die typsichere API. Damit bleibt die Persistenz-Schicht refaktorierbar.
+
+**Status:** Interface-Stub vor V1 (BPM-109.05a), Implementation post-V1 parallel zu BPM-056 (BPM-109.05).
 
 ---
 

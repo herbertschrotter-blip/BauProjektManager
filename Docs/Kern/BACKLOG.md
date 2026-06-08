@@ -169,7 +169,8 @@ Diese Features verbessern V1, sind aber kein Blocker für den Release.
 | Spike 3 | Sync-Endpoints Pull/Push für `clients` + `projects` | BPM-090 | ⬜ |
 | Spike 4 | Windows-VPS Setup (Strato VC 2-8) + Domain + Caddy + HTTPS | BPM-091 | ⬜ |
 | Spike 5 | Multi-Client-Test mit 2 lokalen SQLite-Instanzen + Server | (Sub-Task von Spike 3) | ⬜ |
-| Schema | recognition_profiles wandert in DB-Tabelle (post Spike 0) | BPM-092 | ⬜ |
+| Schema v2.0 | **Plan-Archiv-Persistenz** — plan_documents + plan_revisions umgebaut + plan_document_segments + plan_revision_events + plan_context_links + building_part_aliases. Foundation Slice vor V1 (`.01–.04 + .05a`), Rest post-V1. ADR-058 | **BPM-109** | ⬜ V1-blocker |
+| Schema | recognition_profiles wandert in DB-Tabelle — **nach BPM-109** (nicht blockierend für Plan-Archiv) | BPM-092 | ⬜ |
 
 **Verworfene Ansätze (nicht mehr im Backlog, durch ADR-053 obsolet):**
 

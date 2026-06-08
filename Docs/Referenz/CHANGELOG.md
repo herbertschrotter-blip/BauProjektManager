@@ -31,6 +31,39 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.53] — 2026-06-08
+
+### Docs: BPM-109 Plan-Archiv-Persistenz v2 — Foundation-Slice-Doku nach CGR-Sign-off
+
+### Hintergrund
+Nach 2 Runden Cross-Review (CGR-2026-06-08-plan-archiv-architektur) wurde die Schema-v2.0-Erweiterung für PlanManager beschlossen: Drei-Ebenen-Modell (`plan_documents` / `plan_revisions` / `plan_files`) mit `plan_document_segments`, `plan_revision_events`, `plan_context_links`, `building_part_aliases`. ChatGPT trug Herberts „vor V1"-Entscheidung mit, korrigierte aber Roadmap auf Foundation Slice (`.01–.04 + .05a`) — Rest post-V1. BPM-080.05/081 komplett pausiert bis Schema steht.
+
+### Hinzugefuegt
+- `Docs/Referenz/ADR.md` **ADR-058: Plan-Archiv-Persistenz (BPM-109)** — Drei-Ebenen-Modell + Foundation Slice + 12 Entscheidungspunkte + Stop-Punkte + `fixed_revision`-Snapshot-Pflicht (fachliche Invariante).
+- `Docs/Kern/DB-SCHEMA.md` Kap. 6.7 **Schema v2.0 (BPM-109)** — vollständige DDL aller neuen/umgebauten Tabellen + Indizes + Beispiel-Zeitreise-Query + Foundation-Slice-Umfang vs. Post-V1.
+- `Docs/Kern/BauProjektManager_Architektur.md` Kap. 4.1 **Öffentliche API IPlanLookupService** — `FindCurrentPlansAsync` + `CreatePlanContextSnapshotAsync` als Vertrag für Bautagebuch/Foto/Vorlagen.
+- `Docs/Referenz/GLOSSAR.md` Kap. 3 — 11 neue Begriffe: PlanDocument, PlanRevision, superseded, rejected, PlanDocumentSegment, PlanRevisionEvent, PlanContextLink, fixed_revision, BuildingPartAlias, IPlanLookupService.
+- `Docs/Referenz/chatgpt-reviews/CGR-2026-06-08-plan-archiv-architektur/` — kompletter Review-Archiv-Ordner (README + r1/r2 mit je 4 Dateien).
+- `INDEX.md` Plan-Management-Routing — DB-SCHEMA Kap. 6.7 verlinkt, ADR-058 als Reference, IPlanLookupService als Cross-Modul-API-Pflicht.
+
+### Geaendert
+- `Docs/Referenz/ADR.md` Inhaltsverzeichnis — ADR-056 nachgetragen (Doku-Lücke aus BPM-108), ADR-058 hinzugefügt. Frontmatter Kapitel-Range auf „ADR-001 bis ADR-058".
+- `Docs/Referenz/ADR.md` ADR-010 — Anhang „Erweiterung BPM-109: document_key bekommt FK-Bezug zu plan_documents" (Recognition-Logik selbst unverändert).
+- `Docs/Referenz/ADR.md` ADR-053 — Anhang „Erweiterung BPM-109: project_id-Redundanz in planmanager.db" mit Begründung.
+- `Docs/Kern/DB-SCHEMA.md` Kap. 6 Header — Status-Hinweis auf v2.0 + Reset-Anweisung (Frühphasen-Regel: `planmanager.db` löschen statt Migration).
+- `Docs/Module/PlanManager.md` Kap. 10 Header — Hinweis auf v2.0 + Pipeline-Erweiterung (Document-Resolve-Stage) + IPlanLookupService + Reset-Anweisung.
+- `Docs/Module/PlanManager.md` Kap. 18 Verwandte ADRs — ADR-056 + ADR-058 ergänzt.
+- `Docs/Kern/BACKLOG.md` — BPM-109 als V1-blocker im Schema-Block, BPM-092 nach BPM-109 gereiht.
+- `Docs/Referenz/chatgpt-reviews/INDEX.md` — Serie-Status auf „Abgeschlossen" mit BPM-109-Verweis und Kernergebnis-Zeile.
+
+### Tracker
+ClickUp-Issue **BPM-109 Plan-Archiv-Persistenz v2 (Foundation Slice)** mit 8 Subtasks angelegt (`.01`–`.07` + `.05a`). BPM-080 + BPM-080.05 + BPM-081 auf `open` zurückgesetzt mit Blockierungs-Hinweis.
+
+### Nicht-Code-Aenderung
+Reine Doku-/Architektur-Pflege. Kein Code geändert, keine Tests betroffen. Test-Stand bleibt 238/238 grün.
+
+---
+
 ## [v0.28.52] — 2026-05-19
 
 ### Fix: BPM-108 Manager-Dialog Fenster-Maße

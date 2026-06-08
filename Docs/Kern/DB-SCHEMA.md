@@ -924,11 +924,11 @@ CREATE INDEX idx_action_files_action ON import_action_files(action_id);
 
 ---
 
-### 6.7 Schema v2.0 (BPM-109 Plan-Archiv-Persistenz Foundation Slice — ⚠ geplant)
+### 6.7 Schema v2.0 (BPM-109 Plan-Archiv-Persistenz Foundation Slice — 🔄 DDL implementiert)
 
 **Zweck:** Drei-Ebenen-Modell (Document/Revision/File) analog Industrie-Standard (Procore, Aconex, think project!) für zeitbezogene Cross-Modul-Abfragen aus Bautagebuch (BPM-056), Foto (BPM-057), Vorlagen (BPM-061).
 
-**Status:** Definition entschieden (ADR-058), Implementation `Not Started`. Foundation Slice (`.01–.04 + .05a` Stub) ist V1-Sperrposten — siehe BPM-109.
+**Status:** Definition entschieden (ADR-058 + ADR-058-Addendum). **DDL implementiert in BPM-109.01 (v0.28.55)** — `PlanManagerDatabase.EnsureTables()` erzeugt alle Tabellen unten (Cross-DB-Bezüge als SoftRef ohne FK). Domain Models + Repository folgen in BPM-109.02; die Cache-Repository-Methoden sind bis dahin Fail-Fast. Foundation Slice (`.01–.04 + .05a` Stub) ist V1-Sperrposten — siehe BPM-109.
 
 **Reset-Anweisung bei Einführung (Frühphasen-Regel):**
 Betroffene Datei: `%LocalAppData%\BauProjektManager\Projects\<ProjektID>\planmanager.db`.

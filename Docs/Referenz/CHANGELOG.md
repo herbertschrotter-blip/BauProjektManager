@@ -31,6 +31,22 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.55] — 2026-06-08
+
+### Feature: BPM-109.01 — Schema v2.0 DDL (Plan-Archiv-Persistenz Foundation Slice)
+
+`PlanManagerDatabase.EnsureTables()` erzeugt jetzt das Drei-Ebenen-Schema v2.0 (11 Tabellen): `plan_documents` (NEU), `plan_revisions` umgebaut (`document_id`-FK + `current_from`/`superseded_at`/`received_at` + Status-CHECK `current/superseded/rejected` + Unique-Index auf `current`), `plan_document_segments` / `plan_revision_events` / `plan_context_links` (NEU); `plan_files` / `revision_file_links` / `import_*` unverändert. `schema_version=2.0`. Cross-DB-Bezüge (`building_part_id`/`building_level_id`/`segment_type_id`) als Soft References ohne FK (ADR-058-Addendum) — harte FKs nur innerhalb `planmanager.db`. Die 5 Cache-Methoden vorläufig Fail-Fast (`NotSupportedException`, BPM-109.02-Marker) — Import bis `.02` bewusst pausiert. Frühphasen-Reset: `planmanager.db` löschen, keine Migration. Build 0/0, Tests 238/238 grün.
+
+---
+
+## [v0.28.54] — 2026-06-08
+
+### Docs: BPM-109 ADR-058-Addendum — Cross-DB Soft References (CGR r3)
+
+Cross-Review r3 (Claude + ChatGPT) bestätigte: zwei DBs behalten (`bpm.db` System of Record + `planmanager.db` rebuildbarer per-Projekt-Cache), Cross-DB-Bezüge als Soft References (kein FK über SQLite-Datei-Grenze). Keine Konsolidierung vor V1. ADR-058-Addendum + DB-SCHEMA Kap. 6.7-Korrektur (FK-Klauseln → SoftRef-Kommentare + Cross-DB-Block) + neue Kap. 4.11 `building_part_aliases` (verschoben nach `bpm.db`, harter FK) + Kap. 2.3 FK-Übersicht + PlanManager.md Kap. 10. CGR-Serie r3 archiviert.
+
+---
+
 ## [v0.28.53] — 2026-06-08
 
 ### Docs: BPM-109 Plan-Archiv-Persistenz v2 — Foundation-Slice-Doku nach CGR-Sign-off

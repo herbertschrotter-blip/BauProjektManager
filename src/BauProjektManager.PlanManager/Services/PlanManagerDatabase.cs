@@ -10,9 +10,11 @@ namespace BauProjektManager.PlanManager.Services;
 
 /// <summary>
 /// SQLite database service for planmanager.db — per project, local only.
-/// Manages plan cache (revisions, files, links) and import journal.
+/// Manages plan cache (documents, revisions, files, links) and import journal.
 /// Created lazily when PlanManager module opens a project.
-/// Schema based on DB-SCHEMA.md Kap. 6 + Cross-Review 15.04.2026.
+/// Schema v2.0 (BPM-109): Drei-Ebenen-Modell (plan_documents → plan_revisions → revision_file_links)
+/// + plan_document_segments / plan_revision_events / plan_context_links.
+/// Siehe DB-SCHEMA.md Kap. 6.7 + ADR-058 + ADR-058-Addendum (Cross-DB Soft References).
 /// BPM-107: Registriert sich bei IPersistenceRegistry beim ersten Connection-Open.
 /// </summary>
 public class PlanManagerDatabase : IDisposable
@@ -61,32 +63,72 @@ public class PlanManagerDatabase : IDisposable
 
     private void EnsureTables()
     {
-        Log.Debug("Creating planmanager.db tables (6 tables)");
+        Log.Debug("Creating planmanager.db tables (Schema v2.0, 11 tables)");
         var conn = _connection!;
         var cmd = conn.CreateCommand();
+        // === Schema v2.0 (BPM-109 Drei-Ebenen-Modell) ===
+        // Frühphasen-Regel: keine Migration. Bei Schema-Wechsel planmanager.db löschen → wird neu erstellt.
+        // Cross-DB Soft References (ADR-058-Addendum): building_part_id / building_level_id /
+        // segment_type_id zeigen logisch auf bpm.db-Tabellen, sind aber reine TEXT-Spalten OHNE FK
+        // (SQLite erzwingt keine FK über getrennte DB-Dateien). Harte FKs nur innerhalb planmanager.db.
         cmd.CommandText = """
-            -- Plan Revisions Cache
-            CREATE TABLE IF NOT EXISTS plan_revisions (
+            -- Plan Documents (NEU v2.0) — logisches Dokument über alle Revisionen hinweg
+            CREATE TABLE IF NOT EXISTS plan_documents (
                 id TEXT PRIMARY KEY,
-                document_key TEXT NOT NULL,
-                document_type_id TEXT,
+                project_id TEXT NOT NULL,
+                document_key TEXT NOT NULL UNIQUE,
+                document_type_id TEXT NOT NULL,
                 plan_number TEXT NOT NULL,
-                plan_index TEXT,
                 document_type TEXT NOT NULL,
+                title TEXT NOT NULL DEFAULT '',
                 target_folder TEXT NOT NULL,
                 relative_directory TEXT NOT NULL,
-                index_source TEXT NOT NULL,
-                revision_status TEXT NOT NULL,
-                last_import_id TEXT,
+                building_part_id TEXT,              -- SoftRef bpm.db.building_parts(id), kein FK (Cross-DB)
+                building_level_id TEXT,             -- SoftRef bpm.db.building_levels(id), kein FK (Cross-DB)
                 created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL
+                created_by TEXT,
+                last_modified_at TEXT NOT NULL,
+                last_modified_by TEXT,
+                sync_version INTEGER NOT NULL DEFAULT 0,
+                is_deleted INTEGER NOT NULL DEFAULT 0
+                -- Keine FK auf building_parts/building_levels: Cross-DB Soft Reference (ADR-058-Addendum)
             );
 
-            CREATE UNIQUE INDEX IF NOT EXISTS ux_plan_revision_current
-            ON plan_revisions(document_key, revision_status)
-            WHERE revision_status = 'current';
+            CREATE INDEX IF NOT EXISTS idx_plan_documents_lookup
+            ON plan_documents(project_id, building_part_id, building_level_id, document_type_id, is_deleted);
 
-            -- Plan Files Cache
+            CREATE INDEX IF NOT EXISTS idx_plan_documents_key ON plan_documents(document_key);
+
+            -- Plan Revisions (UMGEBAUT v2.0) — versionierte Revision mit Zeitstempeln für Zeitreise
+            CREATE TABLE IF NOT EXISTS plan_revisions (
+                id TEXT PRIMARY KEY,
+                document_id TEXT NOT NULL,
+                plan_index TEXT,
+                index_source TEXT NOT NULL,
+                revision_status TEXT NOT NULL
+                    CHECK (revision_status IN ('current', 'superseded', 'rejected')),
+                current_from TEXT NOT NULL,
+                superseded_at TEXT,
+                received_at TEXT NOT NULL,
+                last_import_id TEXT,
+                created_at TEXT NOT NULL,
+                created_by TEXT,
+                last_modified_at TEXT NOT NULL,
+                last_modified_by TEXT,
+                sync_version INTEGER NOT NULL DEFAULT 0,
+                is_deleted INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY (document_id) REFERENCES plan_documents(id),
+                FOREIGN KEY (last_import_id) REFERENCES import_journal(id)
+            );
+
+            CREATE UNIQUE INDEX IF NOT EXISTS ux_plan_revisions_current
+            ON plan_revisions(document_id)
+            WHERE revision_status = 'current' AND is_deleted = 0;
+
+            CREATE INDEX IF NOT EXISTS idx_plan_revisions_timetravel
+            ON plan_revisions(document_id, current_from, superseded_at, is_deleted);
+
+            -- Plan Files Cache (unverändert v1.0)
             CREATE TABLE IF NOT EXISTS plan_files (
                 id TEXT PRIMARY KEY,
                 file_name TEXT NOT NULL,
@@ -99,7 +141,7 @@ public class PlanManagerDatabase : IDisposable
                 updated_at TEXT NOT NULL
             );
 
-            -- Revision-File Links (n:m)
+            -- Revision-File Links (n:m, unverändert v1.0)
             CREATE TABLE IF NOT EXISTS revision_file_links (
                 revision_id TEXT NOT NULL,
                 file_id TEXT NOT NULL,
@@ -110,7 +152,80 @@ public class PlanManagerDatabase : IDisposable
                 FOREIGN KEY (file_id) REFERENCES plan_files(id)
             );
 
-            -- Import Journal
+            -- Plan Document Segments (NEU v2.0) — extrahierte Segmentwerte als KV-Tabelle
+            CREATE TABLE IF NOT EXISTS plan_document_segments (
+                id TEXT PRIMARY KEY,
+                document_id TEXT NOT NULL,
+                segment_type_id TEXT NOT NULL,      -- SoftRef bpm.db.segment_types(id), kein FK (Cross-DB)
+                segment_key TEXT NOT NULL,
+                raw_value TEXT NOT NULL,
+                normalized_value TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                created_by TEXT,
+                last_modified_at TEXT NOT NULL,
+                last_modified_by TEXT,
+                sync_version INTEGER NOT NULL DEFAULT 0,
+                is_deleted INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY (document_id) REFERENCES plan_documents(id),
+                -- Keine FK auf segment_types: Cross-DB Soft Reference (ADR-058-Addendum)
+                UNIQUE (document_id, segment_type_id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_plan_document_segments_lookup
+            ON plan_document_segments(segment_type_id, normalized_value, is_deleted);
+
+            -- Plan Revision Events (NEU v2.0) — minimaler Audit-Trail für Statuswechsel
+            CREATE TABLE IF NOT EXISTS plan_revision_events (
+                id TEXT PRIMARY KEY,
+                revision_id TEXT NOT NULL,
+                import_id TEXT,
+                event_type TEXT NOT NULL
+                    CHECK (event_type IN ('created', 'made_current', 'superseded', 'file_linked', 'manual_override')),
+                event_at TEXT NOT NULL,
+                event_by TEXT,
+                note TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL,
+                created_by TEXT,
+                last_modified_at TEXT NOT NULL,
+                last_modified_by TEXT,
+                sync_version INTEGER NOT NULL DEFAULT 0,
+                is_deleted INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY (revision_id) REFERENCES plan_revisions(id),
+                FOREIGN KEY (import_id) REFERENCES import_journal(id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_plan_revision_events_revision
+            ON plan_revision_events(revision_id, event_at);
+
+            -- Plan Context Links (NEU v2.0) — Cross-Modul-Verknüpfung (fixed_revision Pflicht)
+            CREATE TABLE IF NOT EXISTS plan_context_links (
+                id TEXT PRIMARY KEY,
+                source_module TEXT NOT NULL,
+                source_id TEXT NOT NULL,
+                target_document_id TEXT NOT NULL,
+                target_revision_id TEXT,
+                resolution_mode TEXT NOT NULL
+                    CHECK (resolution_mode IN ('fixed_revision')),
+                context_time TEXT NOT NULL,
+                link_type TEXT NOT NULL
+                    CHECK (link_type IN ('auto_reference', 'manual_reference', 'attachment')),
+                created_at TEXT NOT NULL,
+                created_by TEXT,
+                last_modified_at TEXT NOT NULL,
+                last_modified_by TEXT,
+                sync_version INTEGER NOT NULL DEFAULT 0,
+                is_deleted INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY (target_document_id) REFERENCES plan_documents(id),
+                FOREIGN KEY (target_revision_id) REFERENCES plan_revisions(id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_plan_context_links_source
+            ON plan_context_links(source_module, source_id, is_deleted);
+
+            CREATE INDEX IF NOT EXISTS idx_plan_context_links_target
+            ON plan_context_links(target_document_id, target_revision_id, is_deleted);
+
+            -- Import Journal (unverändert v1.0)
             CREATE TABLE IF NOT EXISTS import_journal (
                 id TEXT PRIMARY KEY,
                 timestamp TEXT NOT NULL,
@@ -123,7 +238,7 @@ public class PlanManagerDatabase : IDisposable
                 error_message TEXT
             );
 
-            -- Import Actions
+            -- Import Actions (unverändert v1.0)
             CREATE TABLE IF NOT EXISTS import_actions (
                 id TEXT PRIMARY KEY,
                 import_id TEXT NOT NULL,
@@ -143,7 +258,7 @@ public class PlanManagerDatabase : IDisposable
 
             CREATE INDEX IF NOT EXISTS idx_actions_import ON import_actions(import_id);
 
-            -- Import Action Files
+            -- Import Action Files (unverändert v1.0)
             CREATE TABLE IF NOT EXISTS import_action_files (
                 id TEXT PRIMARY KEY,
                 action_id TEXT NOT NULL,
@@ -166,69 +281,43 @@ public class PlanManagerDatabase : IDisposable
                 version TEXT NOT NULL
             );
 
-            INSERT OR REPLACE INTO schema_version (version) VALUES ('1.0');
+            INSERT OR REPLACE INTO schema_version (version) VALUES ('2.0');
             """;
         cmd.ExecuteNonQuery();
     }
 
-    // === PLAN REVISIONS ===
+    // === PLAN REVISIONS (Cache-Schicht) ===
+    //
+    // BPM-109.01: plan_revisions wurde auf das Drei-Ebenen-Schema v2.0 umgebaut
+    // (document_key → document_id-FK auf plan_documents, neue Status-Enum + Zeitstempel).
+    // Die folgenden Cache-Repository-Methoden sind damit gegen das alte Schema nicht mehr gültig
+    // und werden in BPM-109.02 (Domain Models + Repository) gegen das neue Modell reimplementiert
+    // (inkl. Document-Resolve über document_key → plan_documents.id).
+    // Bis dahin Fail-Fast statt stiller Falsch-SQL — schützt die Import-Journal-Invariante
+    // (kein halb-geschriebener Cache-Zustand). Signaturen bleiben erhalten, damit die Aufrufer
+    // (ImportExecutionService / ImportWorkflowService) kompilieren.
+
+    private const string NotImplV2Message =
+        "BPM-109.01: plan_revisions wurde auf das Drei-Ebenen-Schema v2.0 umgebaut (document_id). " +
+        "Die Cache-Repository-Logik wird in BPM-109.02 gegen das neue Modell reimplementiert.";
 
     /// <summary>
     /// Gets the current revision for a document_key (if exists).
+    /// BPM-109.02: gegen plan_documents/plan_revisions (document_id) reimplementieren.
     /// </summary>
     public ExistingRevision? GetCurrentRevision(string documentKey)
-    {
-        var conn = GetConnection();
-        var cmd = conn.CreateCommand();
-        cmd.CommandText = """
-            SELECT pr.id, pr.plan_index, pf.md5_hash FROM plan_revisions pr
-            JOIN plan_files pf ON pf.id = (
-                SELECT file_id FROM revision_file_links
-                WHERE revision_id = pr.id AND is_primary = 1
-                LIMIT 1
-            )
-            WHERE pr.document_key = @key AND pr.revision_status = 'current'
-            """;
-        cmd.Parameters.AddWithValue("@key", documentKey);
-        using var reader = cmd.ExecuteReader();
-        if (!reader.Read()) return null;
-        return new ExistingRevision(
-            reader.GetString(0),
-            reader.IsDBNull(1) ? null : reader.GetString(1),
-            reader.GetString(2));
-    }
+        => throw new NotSupportedException(NotImplV2Message);
 
     /// <summary>
     /// Gets all existing revisions as a lookup for the decision service.
+    /// BPM-109.02: gegen plan_documents/plan_revisions (document_id) reimplementieren.
     /// </summary>
     public Dictionary<string, ExistingRevision> GetAllCurrentRevisions()
-    {
-        var conn = GetConnection();
-        var result = new Dictionary<string, ExistingRevision>();
-        var cmd = conn.CreateCommand();
-        cmd.CommandText = """
-            SELECT pr.document_key, pr.id, pr.plan_index,
-                   COALESCE(pf.md5_hash, '') as md5
-            FROM plan_revisions pr
-            LEFT JOIN revision_file_links rfl ON rfl.revision_id = pr.id AND rfl.is_primary = 1
-            LEFT JOIN plan_files pf ON pf.id = rfl.file_id
-            WHERE pr.revision_status = 'current'
-            """;
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read())
-        {
-            var key = reader.GetString(0);
-            result[key] = new ExistingRevision(
-                reader.GetString(1),
-                reader.IsDBNull(2) ? null : reader.GetString(2),
-                reader.GetString(3));
-        }
-        Log.Debug("planmanager.db: {Count} aktuelle Revisionen geladen", result.Count);
-        return result;
-    }
+        => throw new NotSupportedException(NotImplV2Message);
 
     /// <summary>
     /// Inserts a new revision + file + link after import.
+    /// BPM-109.02: Document-Resolve (document_key → plan_documents.id) + Revision mit document_id-FK.
     /// </summary>
     public void InsertRevisionWithFile(
         string documentKey, string documentTypeId, string planNumber,
@@ -236,129 +325,26 @@ public class PlanManagerDatabase : IDisposable
         string relativeDirectory, string indexSource, string importId,
         string fileName, string relativePath, string fileType,
         string md5Hash, long fileSize)
-    {
-        var conn = GetConnection();
-        var now = DateTime.UtcNow.ToString("o");
-        var revId = _idGenerator.NewId();
-        var fileId = _idGenerator.NewId();
-
-        // Insert revision
-        var revCmd = conn.CreateCommand();
-        revCmd.CommandText = """
-            INSERT INTO plan_revisions (id, document_key, document_type_id, plan_number,
-                plan_index, document_type, target_folder, relative_directory,
-                index_source, revision_status, last_import_id, created_at, updated_at)
-            VALUES (@id, @dk, @dti, @pn, @pi, @dt, @tf, @rd, @is, 'current', @ii, @ca, @ua)
-            """;
-        revCmd.Parameters.AddWithValue("@id", revId);
-        revCmd.Parameters.AddWithValue("@dk", documentKey);
-        revCmd.Parameters.AddWithValue("@dti", (object?)documentTypeId ?? DBNull.Value);
-        revCmd.Parameters.AddWithValue("@pn", planNumber);
-        revCmd.Parameters.AddWithValue("@pi", (object?)planIndex ?? DBNull.Value);
-        revCmd.Parameters.AddWithValue("@dt", documentType);
-        revCmd.Parameters.AddWithValue("@tf", targetFolder);
-        revCmd.Parameters.AddWithValue("@rd", relativeDirectory);
-        revCmd.Parameters.AddWithValue("@is", indexSource);
-        revCmd.Parameters.AddWithValue("@ii", importId);
-        revCmd.Parameters.AddWithValue("@ca", now);
-        revCmd.Parameters.AddWithValue("@ua", now);
-        revCmd.ExecuteNonQuery();
-
-        // Insert file
-        var fileCmd = conn.CreateCommand();
-        fileCmd.CommandText = """
-            INSERT INTO plan_files (id, file_name, relative_path, file_type,
-                md5_hash, file_size, origin_mode, created_at, updated_at)
-            VALUES (@id, @fn, @rp, @ft, @md5, @fs, 'autoGrouped', @ca, @ua)
-            """;
-        fileCmd.Parameters.AddWithValue("@id", fileId);
-        fileCmd.Parameters.AddWithValue("@fn", fileName);
-        fileCmd.Parameters.AddWithValue("@rp", relativePath);
-        fileCmd.Parameters.AddWithValue("@ft", fileType);
-        fileCmd.Parameters.AddWithValue("@md5", md5Hash);
-        fileCmd.Parameters.AddWithValue("@fs", fileSize);
-        fileCmd.Parameters.AddWithValue("@ca", now);
-        fileCmd.Parameters.AddWithValue("@ua", now);
-        fileCmd.ExecuteNonQuery();
-
-        // Link revision to file
-        var linkCmd = conn.CreateCommand();
-        linkCmd.CommandText = """
-            INSERT INTO revision_file_links (revision_id, file_id, link_mode, is_primary)
-            VALUES (@rid, @fid, 'auto', 1)
-            """;
-        linkCmd.Parameters.AddWithValue("@rid", revId);
-        linkCmd.Parameters.AddWithValue("@fid", fileId);
-        linkCmd.ExecuteNonQuery();
-    }
+        => throw new NotSupportedException(NotImplV2Message);
 
     /// <summary>
-    /// Archives an existing revision (sets status to 'archived').
+    /// Archives an existing revision (Schema v2.0: superseded statt archived).
+    /// BPM-109.02: revision_status='superseded' + superseded_at + plan_revision_events.
     /// </summary>
     public void ArchiveRevision(string revisionId)
-    {
-        var conn = GetConnection();
-        var cmd = conn.CreateCommand();
-        cmd.CommandText = """
-            UPDATE plan_revisions SET revision_status = 'archived',
-                updated_at = @ua WHERE id = @id
-            """;
-        cmd.Parameters.AddWithValue("@id", revisionId);
-        cmd.Parameters.AddWithValue("@ua", DateTime.UtcNow.ToString("o"));
-        cmd.ExecuteNonQuery();
-    }
+        => throw new NotSupportedException(NotImplV2Message);
 
     /// <summary>
     /// Adds a file to an existing current revision (e.g. DWG to existing PDF revision).
-    /// Used when document_key already has a 'current' revision.
+    /// BPM-109.02: über document_id-Auflösung statt document_key.
     /// </summary>
     public void AddFileToExistingRevision(
         string documentKey,
         string fileName, string relativePath, string fileType,
         string md5Hash, long fileSize)
-    {
-        var conn = GetConnection();
-        var now = DateTime.UtcNow.ToString("o");
-        var fileId = _idGenerator.NewId();
+        => throw new NotSupportedException(NotImplV2Message);
 
-        // Find existing revision
-        var findCmd = conn.CreateCommand();
-        findCmd.CommandText = "SELECT id FROM plan_revisions WHERE document_key = @dk AND revision_status = 'current'";
-        findCmd.Parameters.AddWithValue("@dk", documentKey);
-        var revId = findCmd.ExecuteScalar() as string;
-        if (revId is null) return;
-
-        // Insert file
-        var fileCmd = conn.CreateCommand();
-        fileCmd.CommandText = """
-            INSERT INTO plan_files (id, file_name, relative_path, file_type,
-                md5_hash, file_size, origin_mode, created_at, updated_at)
-            VALUES (@id, @fn, @rp, @ft, @md5, @fs, 'autoGrouped', @ca, @ua)
-            """;
-        fileCmd.Parameters.AddWithValue("@id", fileId);
-        fileCmd.Parameters.AddWithValue("@fn", fileName);
-        fileCmd.Parameters.AddWithValue("@rp", relativePath);
-        fileCmd.Parameters.AddWithValue("@ft", fileType);
-        fileCmd.Parameters.AddWithValue("@md5", md5Hash);
-        fileCmd.Parameters.AddWithValue("@fs", fileSize);
-        fileCmd.Parameters.AddWithValue("@ca", now);
-        fileCmd.Parameters.AddWithValue("@ua", now);
-        fileCmd.ExecuteNonQuery();
-
-        // Link to revision (not primary — primary is the first file)
-        var linkCmd = conn.CreateCommand();
-        linkCmd.CommandText = """
-            INSERT INTO revision_file_links (revision_id, file_id, link_mode, is_primary)
-            VALUES (@rid, @fid, 'auto', 0)
-            """;
-        linkCmd.Parameters.AddWithValue("@rid", revId);
-        linkCmd.Parameters.AddWithValue("@fid", fileId);
-        linkCmd.ExecuteNonQuery();
-
-        Log.Information("Datei zu bestehender Revision gelinkt: {File} → {Key}", fileName, documentKey);
-    }
-
-    // === IMPORT JOURNAL ===
+    // === IMPORT JOURNAL (unverändert v1.0) ===
 
     /// <summary>
     /// Creates a new import journal entry with status 'pending'.

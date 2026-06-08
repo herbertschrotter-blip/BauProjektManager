@@ -31,6 +31,22 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.57] — 2026-06-08
+
+### Feature: BPM-109.02 — Domain Models + Repository-Primitive (Schema v2.0)
+
+5 neue Domain-Records (`PlanDocument`, `PlanRevision`, `PlanDocumentSegment`, `PlanRevisionEvent`, `PlanContextLink`) in `PlanArchiveModels.cs` + `PlanArchive`-Konstanten (Status/EventType/ResolutionMode/LinkType). `PlanManagerDatabase` um additive Document-zentrische Primitive erweitert: `ResolveOrCreateDocument`, `GetDocumentByKey`, `InsertRevision`, `InsertSegment`, `InsertRevisionEvent`, `GetCurrentRevisionForDocument`, `GetCurrentRevisionLookup`. Cross-DB-Bezüge bleiben Soft References. Die 5 alten Fail-Fast-Methoden + `ImportExecutionService` bewusst unangetastet — Pipeline-Verdrahtung in `.03`. 7 neue Repository-Tests (inkl. Unique-current-Constraint + Unique-Segmenttyp). 245/245 grün.
+
+---
+
+## [v0.28.56] — 2026-06-08
+
+### Docs: BPM-109.01 Status nachgezogen
+
+DB-SCHEMA Kap. 6.7 + PlanManager.md Kap. 10 auf „Schema v2.0 DDL implementiert" gesetzt; CHANGELOG-Einträge v0.28.54/.55 ergänzt.
+
+---
+
 ## [v0.28.55] — 2026-06-08
 
 ### Feature: BPM-109.01 — Schema v2.0 DDL (Plan-Archiv-Persistenz Foundation Slice)

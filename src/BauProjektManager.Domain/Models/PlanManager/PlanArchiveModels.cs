@@ -42,7 +42,8 @@ public sealed record PlanDocument(
 /// <param name="RevisionStatus">"current" / "superseded" / "rejected" (siehe <see cref="PlanArchive"/>).</param>
 /// <param name="CurrentFrom">UTC ISO 8601 — wann diese Revision aktuell wurde.</param>
 /// <param name="SupersededAt">UTC — wann ersetzt (NULL solange current).</param>
-/// <param name="ReceivedAt">UTC — wann importiert.</param>
+/// <param name="ReceivedAt">UTC — wann importiert (Hinzufügedatum).</param>
+/// <param name="ReleasedAt">UTC — Freigabedatum des Index (NULL wenn unbekannt). Quelle: Plankopf-OCR / manuell (post-V1), Dateiname selten. Fürs Bautagebuch bevorzugt vor ReceivedAt (BPM-109.04b).</param>
 /// <param name="LastImportId">Optional FK import_journal.id.</param>
 public sealed record PlanRevision(
     string Id,
@@ -53,6 +54,7 @@ public sealed record PlanRevision(
     string CurrentFrom,
     string? SupersededAt,
     string ReceivedAt,
+    string? ReleasedAt,
     string? LastImportId);
 
 /// <summary>

@@ -115,6 +115,7 @@ public class PlanManagerDatabase : IDisposable
                 current_from TEXT NOT NULL,
                 superseded_at TEXT,
                 received_at TEXT NOT NULL,
+                released_at TEXT,                   -- Freigabedatum d. Index (BPM-109.04b); NULL bis OCR/manuell (post-V1)
                 last_import_id TEXT,
                 created_at TEXT NOT NULL,
                 created_by TEXT,
@@ -368,7 +369,7 @@ public class PlanManagerDatabase : IDisposable
     public string InsertRevision(
         string documentId, string? planIndex, string indexSource,
         string revisionStatus, string currentFrom, string? supersededAt,
-        string receivedAt, string? lastImportId)
+        string receivedAt, string? lastImportId, string? releasedAt = null)
     {
         var conn = GetConnection();
         var id = _idGenerator.NewId();
@@ -376,9 +377,9 @@ public class PlanManagerDatabase : IDisposable
         var cmd = conn.CreateCommand();
         cmd.CommandText = """
             INSERT INTO plan_revisions (id, document_id, plan_index, index_source, revision_status,
-                current_from, superseded_at, received_at, last_import_id,
+                current_from, superseded_at, received_at, released_at, last_import_id,
                 created_at, last_modified_at, sync_version, is_deleted)
-            VALUES (@id, @did, @pi, @is, @st, @cf, @sa, @ra, @ii, @ca, @ua, 0, 0)
+            VALUES (@id, @did, @pi, @is, @st, @cf, @sa, @ra, @rel, @ii, @ca, @ua, 0, 0)
             """;
         cmd.Parameters.AddWithValue("@id", id);
         cmd.Parameters.AddWithValue("@did", documentId);
@@ -388,6 +389,7 @@ public class PlanManagerDatabase : IDisposable
         cmd.Parameters.AddWithValue("@cf", currentFrom);
         cmd.Parameters.AddWithValue("@sa", (object?)supersededAt ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@ra", receivedAt);
+        cmd.Parameters.AddWithValue("@rel", (object?)releasedAt ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@ii", (object?)lastImportId ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@ca", now);
         cmd.Parameters.AddWithValue("@ua", now);
@@ -477,7 +479,7 @@ public class PlanManagerDatabase : IDisposable
         var cmd = conn.CreateCommand();
         cmd.CommandText = """
             SELECT id, document_id, plan_index, index_source, revision_status,
-                   current_from, superseded_at, received_at, last_import_id
+                   current_from, superseded_at, received_at, released_at, last_import_id
             FROM plan_revisions
             WHERE document_id = @did AND revision_status = 'current' AND is_deleted = 0
             LIMIT 1
@@ -491,7 +493,8 @@ public class PlanManagerDatabase : IDisposable
             reader.GetString(3), reader.GetString(4), reader.GetString(5),
             reader.IsDBNull(6) ? null : reader.GetString(6),
             reader.GetString(7),
-            reader.IsDBNull(8) ? null : reader.GetString(8));
+            reader.IsDBNull(8) ? null : reader.GetString(8),
+            reader.IsDBNull(9) ? null : reader.GetString(9));
     }
 
     /// <summary>Lädt alle Revisionen eines Dokuments (Historie), sortiert nach current_from. BPM-109.04.</summary>
@@ -502,7 +505,7 @@ public class PlanManagerDatabase : IDisposable
         var cmd = conn.CreateCommand();
         cmd.CommandText = """
             SELECT id, document_id, plan_index, index_source, revision_status,
-                   current_from, superseded_at, received_at, last_import_id
+                   current_from, superseded_at, received_at, released_at, last_import_id
             FROM plan_revisions
             WHERE document_id = @did AND is_deleted = 0
             ORDER BY current_from ASC
@@ -517,7 +520,8 @@ public class PlanManagerDatabase : IDisposable
                 reader.GetString(3), reader.GetString(4), reader.GetString(5),
                 reader.IsDBNull(6) ? null : reader.GetString(6),
                 reader.GetString(7),
-                reader.IsDBNull(8) ? null : reader.GetString(8)));
+                reader.IsDBNull(8) ? null : reader.GetString(8),
+                reader.IsDBNull(9) ? null : reader.GetString(9)));
         }
         return result;
     }

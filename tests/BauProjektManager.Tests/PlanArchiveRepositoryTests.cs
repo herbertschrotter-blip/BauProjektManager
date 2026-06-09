@@ -204,4 +204,24 @@ public class PlanArchiveRepositoryTests
         Assert.Equal(PlanArchive.EventType.FileLinked, events[0].EventType);
         Assert.Equal("zusatz.dwg", events[0].Note);
     }
+
+    [Fact]
+    public void InsertRevision_ReleasedAt_DefaultsNull_AndRoundTrips()
+    {
+        using var f = new TestDb();
+        var docId = CreateDoc(f.Repo);
+        var now = DateTime.UtcNow.ToString("o");
+
+        // V1-Standardpfad: kein Freigabedatum → released_at bleibt NULL
+        var rev1 = f.Repo.InsertRevision(docId, "A", "FileName", PlanArchive.Status.Superseded, now, now, now, null);
+        // Späterer Pfad (OCR/manuell): Freigabedatum gesetzt
+        var released = "2025-07-14T00:00:00.0000000Z";
+        var rev2 = f.Repo.InsertRevision(docId, "B", "FileName", PlanArchive.Status.Current, now, null, now, null, releasedAt: released);
+
+        var all = f.Repo.GetRevisionsForDocument(docId);
+        Assert.Null(all.Single(r => r.Id == rev1).ReleasedAt);
+        Assert.Equal(released, all.Single(r => r.Id == rev2).ReleasedAt);
+        // received_at ist immer gesetzt (Fallback fürs Bautagebuch wenn released_at NULL)
+        Assert.Equal(now, all.Single(r => r.Id == rev1).ReceivedAt);
+    }
 }

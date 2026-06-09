@@ -10,6 +10,7 @@ public sealed record ClassifiedImportFile(
     ParsedImportFile Parsed,
     string? DocumentTypeId,
     string? DocumentTypeDisplayName,
+    string? DocumentKey,
     string? PlanNumber,
     string? RevisionToken,
     RevisionKind RevisionKind,

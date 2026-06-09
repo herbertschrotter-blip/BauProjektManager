@@ -105,6 +105,7 @@ public class ImportWorkflowService
                 Parsed: file,
                 DocumentTypeId: context.DocumentTypeId,
                 DocumentTypeDisplayName: context.DocumentTypeDisplayName,
+                DocumentKey: documentKey,   // BPM-109.03b: kuratierter, index-freier Key (statt All-Fields-Join)
                 PlanNumber: file.ExtractedFields.GetValueOrDefault("plannumber"),
                 RevisionToken: revisionToken,
                 RevisionKind: revisionKind,

@@ -42,9 +42,9 @@ public class RevisionDecisionService
         Dictionary<string, ExistingRevision> existing)
     {
         var reasons = new List<string>();
-        var documentKey = file.Parsed.MatchedProfile is not null
-            ? string.Join("|", file.IdentityFields.Values)
-            : null;
+        // BPM-109.03b: kuratierter, index-freier document_key vom DocumentKeyBuilder
+        // (statt naivem string.Join über alle ExtractedFields) — Voraussetzung für Revisions-Gruppierung.
+        var documentKey = file.DocumentKey;
 
         // No document key → UNKNOWN
         if (string.IsNullOrEmpty(documentKey))

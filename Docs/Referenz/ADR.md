@@ -16,7 +16,7 @@ supersedes: []
 - Autorität: source_of_truth
 - Lesen wenn: Neue Architekturentscheidung treffen, bestehende ADR prüfen, Status ändern, Entscheidung nachschlagen
 - Nicht zuständig für: Implementierungs-Details (→ jeweilige Modul-Docs), Code-Standards (→ CODING_STANDARDS.md)
-- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-058)
+- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-059)
 - Pflichtlesen: keine (gezieltes Nachschlagen per ADR-Nummer)
 - Fachliche Invarianten:
   - Statusmodell: Decision Status (Proposed/Accepted/Superseded/Deprecated) getrennt von Implementation Status (Not Started/Partial/Implemented)
@@ -2774,6 +2774,61 @@ Das Modell entspricht den Drei-Ebenen-Mustern von Procore (Drawing/Revision/Shee
 - **Bautagebuch-Regel (post-V1):** effektives Datum = `released_at` wenn vorhanden, sonst `received_at`; bei Fallback **visuell markiert** (Farbe + Hinweis „Importdatum"). Geliefert via `IPlanLookupService` (`EffectiveDate`/`IsDateFallback`). Damit bleibt die `fixed_revision`-Invariante kompatibel: ein Bericht zeigt die festgezogene Revision mit ihrem effektiven Datum.
 
 **Referenz:** CGR-2026-06-08-plan-archiv-architektur **r3** (DB-Grenze).
+
+---
+
+## ADR-059: Recognition v2 / Plan-Erfassung — Manuelle Erstaufnahme (Strategie B) + Radial-UI
+
+**Datum:** 2026-06-09
+**Status:** ✅ Entschieden (Sign-off via CGR-2026-06-09-plan-erkennung r3)
+**Implementierung:** Not Started — Feldkey-Fix V1-blockierend, Radial-Erfassung V1, Auto-Extraktion post-V1
+**Herkunft:** Praxis-Import Statik (5998er) in Teil 42 → positionsbasierte Erkennung sortiert falsch (`\1`, `\KG`, `\(1)`). 3-Runden-Cross-Review mit ChatGPT.
+
+**Kontext:**
+
+Das bisherige Erkennungs-Modell extrahiert Identitätsfelder (haus/geschoss/plannummer) **positionsbasiert** aus dem Dateinamen (`FileParseService` über `segDef.Position`). Bau-Plan-Dateinamen sind in der Praxis chronisch uneinheitlich (jedes Büro/jede Quelle anders, variable Token-Anzahl, Kopiermarker `(1)`, Index am Plannummer-Token geklebt). Voll-Auto-Erkennung ist damit prinzipiell gedeckelt. Zusätzlich erscheint dasselbe Bauteil als „Haus 64"/„H64"/„Haus66"/„H66".
+
+**Entscheidung:**
+
+1. **MVP = Strategie B (manuelle Erstaufnahme + deterministisches Matching), nicht Voll-Auto-Erkennung.** Der Mensch vergibt die fachliche Identität **einmal pro Plan**; die Maschine macht danach das eng begrenzte, zuverlässige Matching: MD5-Dublette → Skip, neuer Index eines bekannten Dokuments → neue Revision/Supersede, sonst → Erstaufnahme.
+
+2. **Auto-Extraktion (Strategie A) ist nur Assist, nie Entscheider.** Harte Grenze: nur `ManualConfirmed` oder `ExistingDocumentMatch` dürfen schreiben/verschieben; `AutoSuggested` füllt nur Preview-Felder vor. (`enum ImportIdentitySource`.)
+
+3. **`document_key` ID-basiert** aus manuell bestätigten Stammdaten (`document_type_id` + `building_part_id` [+ `building_level_id`] + `plan_number`), nicht aus Anzeigenamen/Alias. Zielordner = `building_parts.name` (kanonisch), nicht Alias/Dateiname.
+
+4. **Matching-Semantik:** MD5 = Dublettenbeweis (≠ Revisionsbeweis); Plannummer = nur Suchanker; finale Identität über gespeicherten `document_key`/User-Bestätigung. Neue Dokumente ohne bestätigte Identität werden nie automatisch importiert.
+
+5. **V1-UI = Radial-/Nautilus-Menü** als primäre Erfassungsgeste (Herberts Mockup `02_ManuellSortieren.html`, überarbeitet zu echter konzentrischer Ring-/Fächer-Geometrie). Bedingungen:
+   - **Pending Assignments:** Radial schreibt nur einen Vorschlag-Zustand; finaler Import erst nach Preview/Bestätigung (Journal vor Dateioperationen bleibt).
+   - **Harte Caps:** max. 3 Kaskadenringe (**Plantyp → Bauteil → Geschoss**); Plantyp ≤8 Segmente (~7 fix: Polierplan/Bewehrung/Schalung/Fertigteil/Doka-Schalung/Leica-Vermessung/Protokoll); Bauteil ≤8 direkt / 9–16 paginiert / ≥17 Favoriten+Quick-Filter / ≥25 Listen-Fallback Pflicht; Bulk 2–8 direkt / 9–20 Zusatzbestätigung / >20 Fallback.
+   - **Capture-vs-Update-Buckets:** A Dubletten / B Update-Karten / C manuelle Erstaufnahme (→ Radial) / D Konflikte. Nur Bucket C öffnet das Radial; matched Updates überspringen es.
+   - **Dauerhaftes rechtes Detail-Panel** als Kontroll-/Bulk-/Fallback-Fläche (PlanNummer/Index-Kandidaten, Zielpfad, editierbar).
+   - **Undo zweistufig:** vor Import = Pending-Assignment rückgängig; nach Import = bestehendes Import-/Undo-Journal.
+
+6. **Design-Detail-Entscheidungen (Herbert):** Geschoss als **3. Radial-Ring** (≤6 direkt, ab 7 Liste); Bauteil-Sortierung **kontextbasiert** (Kandidat + zuletzt verwendet, dann natural sort); „+ Bauteil" als **Inline-Schnellanlage** (+ Link zu Projekt-Einstellungen); PDF+DWG default **„eine Revision"**-Vorschlag (im Panel bestätigt); Listen-Fallback als **dauerhaftes Panel** (kein separater Dialog).
+
+7. **Kombi-Pläne (mehrere Plantypen in einer Datei):** in V1 KEIN Auto-Split in mehrere `plan_documents`; stattdessen Plantyp „Kombiplan/Sonstiges" + Tags/`plan_document_segments`. Aufspaltung nur manuell/ausdrücklich.
+
+**Scope V1 vs post-V1:**
+
+- **V1-MUSS:** Feldkey-Bug-Fix (s.u.); manuelle Erstaufnahme als Workflow (Radial + Panel + Buckets); Lightweight PlanNummer/Index-Kandidaten-Extractor (+ Kopiermarker-Strip); `document_key` aus Stammdaten-IDs; plan_documents/revisions/files sauber schreiben; MD5-Dublette; Update-Vorschlag gegen bekanntes Dokument; Supersede/Journal (BPM-109).
+- **Post-V1:** frei konfigurierbare `FieldExtractionRule` (Regex-Named-Captures, BPM-007.02/.03 großer Teil); Alias-Mapping (BPM-109.06, `building_part_aliases`); OCR/Plankopf (+ `released_at`-Befüllung); echte Zero-Touch-Erkennung; „Bauteil fixieren"-Modus; Matrix-/Board-Komfortansicht.
+
+**Feldkey-Bug (V1-blockierend, strategie-unabhängig):** `FileParseService` schreibt `extractedFields` mit Key = `FieldTypeId` (`plan_number`/`plan_index`), `ImportWorkflowService` liest `plannumber`/`planindex` → `ClassifiedImportFile.PlanNumber` + `RevisionToken` sind null. Fix: zentrale `SegmentTypeIds`-Konstanten, beidseitig verwenden.
+
+**Konsequenzen:**
+
+- BPM-007.02/.03 werden gesplittet (LightweightPlanTokenExtractor V1 / FieldExtractionRule post-V1).
+- BPM-109.06 (Alias) + OCR-/KI-Modul sind explizit post-V1, nicht V1-blockierend.
+- BPM-080.05 (ProfileWizard) verliert an Gewicht für V1 (Auto-Profile ist nicht mehr der MVP-Kern); Schwerpunkt verschiebt sich zur manuellen Erstaufnahme-UI.
+- Neuer V1-Task „Manuelle Erstaufnahme + Radial-UI + Pending Assignments + Bucket-Matching".
+- Mockup `02_ManuellSortieren.html` zu echter Ring-/Fächer-Geometrie überarbeiten.
+
+**DSGVO:** Klasse A (technische Erkennung/Sortierung, kein Personenbezug). Cloud-KI bewusst vermieden (offline-first + Plandaten); falls OCR/LLM, dann lokal (ONNX/Tesseract/Windows.Media.Ocr) — neue Libraries nur mit Freigabe.
+
+**Betrifft:** ADR-010 (Recognition-Profile), ADR-022 (Dateiname-Parsing), ADR-056 (Segmenttypen), ADR-058 (Schema v2.0 — trägt B unverändert), PlanManager.md, DB-SCHEMA.md Kap. 6.7.
+
+**Referenz:** [Docs/Referenz/chatgpt-reviews/CGR-2026-06-09-plan-erkennung/](../Referenz/chatgpt-reviews/CGR-2026-06-09-plan-erkennung/) — 3 Runden Cross-Review mit ChatGPT GPT-5.4 (r1 Feld-Extraktionsmodell + Feldkey-Bug, r2 Strategie-Pivot A→B, r3 Radial-UI Sign-off).
 
 ---
 

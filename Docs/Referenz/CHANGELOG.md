@@ -31,6 +31,22 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.64] — 2026-06-09
+
+### Feature: BPM-109.05a — IPlanLookupService Interface + Stub (Foundation Slice komplett)
+
+Öffentliche PlanManager-API `IPlanLookupService` (Domain): `FindCurrentPlansAsync` (Zeitreise) + `CreatePlanContextSnapshotAsync` (fixed_revision-Snapshot). DTOs `PlanLookupResult` (mit `EffectiveDate` = `ReleasedAt ?? ReceivedAt` + `IsDateFallback` für Bautagebuch-Datumspriorisierung) + `PlanContextFilter`. Stub `PlanLookupService` wirft `NotImplementedException` (Query-Logik = BPM-109.05, post-V1). 4 Tests, 252/252 grün. **Damit Foundation Slice BPM-109 komplett (.01–.04 + .03b + .04b + .05a) — V1-Sperrposten aufgehoben.**
+
+---
+
+## [v0.28.63] — 2026-06-09
+
+### Docs: BPM-109.03b/.04/.04b nachgezogen
+
+DB-SCHEMA Kap. 6.7.2 (`released_at` + Drei-Zeiten-Semantik), ADR-058-Addendum (Drei-Zeiten-Modell + Bautagebuch-Priorisierung), CHANGELOG v0.28.59–.62, PlanManager.md Kap. 10.
+
+---
+
 ## [v0.28.62] — 2026-06-09
 
 ### Feature: BPM-109.04b — released_at (Freigabedatum) im Schema v2.0

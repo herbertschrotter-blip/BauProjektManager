@@ -569,7 +569,7 @@ Mit Schema v2.0 (ADR-058) bekommt der PlanManager eine öffentliche API für nac
 
 **Wichtig:** Konsumierende Module verwenden NICHT direkten SQL-Zugriff auf `plan_documents` oder `LIKE '%H1%'` auf `document_key`-Strings — Filter laufen über die typsichere API. Damit bleibt die Persistenz-Schicht refaktorierbar.
 
-**Status:** Interface-Stub vor V1 (BPM-109.05a), Implementation post-V1 parallel zu BPM-056 (BPM-109.05).
+**Status:** Interface-Stub **implementiert** (BPM-109.05a, v0.28.64) — `IPlanLookupService` (Domain) + DTOs `PlanLookupResult` (mit `EffectiveDate` = `ReleasedAt ?? ReceivedAt` + `IsDateFallback` für die Bautagebuch-Datumspriorisierung) + `PlanContextFilter`; Stub `PlanLookupService` wirft `NotImplementedException`. Query-/Snapshot-Implementation post-V1 parallel zu BPM-056 (BPM-109.05).
 
 ---
 

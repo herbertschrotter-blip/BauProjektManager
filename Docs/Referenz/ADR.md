@@ -2767,6 +2767,12 @@ Das Modell entspricht den Drei-Ebenen-Mustern von Procore (Drawing/Revision/Shee
 
 **Offener Punkt:** `plan_context_links` ist **kein** rebuildbarer Cache, sondern autorierte Cross-Modul-Verknüpfung (nicht aus Dateisystem rekonstruierbar). Spannung zum „disposable cache"-Modell. Für den Foundation Slice bleibt die Tabelle wie in ADR-058 in `planmanager.db` (nur angelegt, aktiv erst mit BPM-056). **Heimat neu bewerten, wenn BPM-056-Sync kommt.**
 
+**Erweiterung Drei-Zeiten-Modell (BPM-109.04/.04b, Teil 42):** Eine Plan-Revision trägt drei Zeiten:
+- **`current_from`/`superseded_at`** — technisches Gültigkeitsfenster (Supersede-Kette). Invariante: `superseded_at`(alt) == `current_from`(neu), ein `actionTime` pro Import-Aktion → Zeitreise lückenlos.
+- **`received_at`** — Hinzufügedatum (Import), immer bekannt.
+- **`released_at`** — Freigabedatum des Index (fachlich präziser). Quellen-Priorität: **Plankopf-OCR (post-V1) > manuell (post-V1) > Dateiname (selten)**; `NULL` solange unbekannt. Spalte ab v0.28.62 reserviert (Frühphase = keine Migration), Befüllung post-V1.
+- **Bautagebuch-Regel (post-V1):** effektives Datum = `released_at` wenn vorhanden, sonst `received_at`; bei Fallback **visuell markiert** (Farbe + Hinweis „Importdatum"). Geliefert via `IPlanLookupService` (`EffectiveDate`/`IsDateFallback`). Damit bleibt die `fixed_revision`-Invariante kompatibel: ein Bericht zeigt die festgezogene Revision mit ihrem effektiven Datum.
+
 **Referenz:** CGR-2026-06-08-plan-archiv-architektur **r3** (DB-Grenze).
 
 ---

@@ -991,9 +991,10 @@ CREATE TABLE plan_revisions (
     index_source TEXT NOT NULL,         -- "FileName", "None", "PlanHeader"
     revision_status TEXT NOT NULL
         CHECK (revision_status IN ('current', 'superseded', 'rejected')),
-    current_from TEXT NOT NULL,         -- UTC, wann diese Revision aktuell wurde
+    current_from TEXT NOT NULL,         -- UTC, wann diese Revision aktuell wurde (Gültigkeitsfenster)
     superseded_at TEXT,                 -- UTC, wann durch Nächste ersetzt (NULL solange current)
-    received_at TEXT NOT NULL,          -- UTC, wann importiert
+    received_at TEXT NOT NULL,          -- UTC, wann importiert (Hinzufügedatum)
+    released_at TEXT,                   -- UTC, Freigabedatum des Index (BPM-109.04b); NULL bis OCR/manuell (post-V1)
     last_import_id TEXT,
     created_at TEXT NOT NULL,
     created_by TEXT,
@@ -1017,6 +1018,12 @@ ON plan_revisions(document_id, current_from, superseded_at, is_deleted);
 - `current` — aktuelle gültige Revision (pro `document_id` maximal eine via UNIQUE-Index)
 - `superseded` — durch nächste Revision fachlich abgelöst, `superseded_at` gesetzt
 - `rejected` — bewusst verworfene Revision (z.B. ungültiger Vorabzug aus `RevisionDecisionService`), kein `current`, `superseded_at` als Verwerfungs-Zeitpunkt
+
+**Drei-Zeiten-Modell (BPM-109.04/.04b):**
+- `current_from` / `superseded_at` — technisches **Gültigkeitsfenster** (Supersede-Kette). Invariante: `superseded_at`(alt) == `current_from`(neu) → Zeitreise lückenlos (ein `actionTime` pro Import-Aktion).
+- `received_at` — **Hinzufügedatum** (Import), immer bekannt.
+- `released_at` — **Freigabedatum** des Index, fachlich präziser. Quelle: Plankopf-OCR (post-V1) > manuell (post-V1) > Dateiname (selten). NULL solange unbekannt.
+- **Bautagebuch-Priorisierung (post-V1, BPM-056):** effektives Datum = `released_at` wenn vorhanden, sonst `received_at` — bei Fallback **visuell markiert** (andere Farbe + Hinweis „Importdatum"). Geliefert über `IPlanLookupService` (`EffectiveDate`/`IsDateFallback`).
 
 #### 6.7.3 plan_document_segments (NEU)
 

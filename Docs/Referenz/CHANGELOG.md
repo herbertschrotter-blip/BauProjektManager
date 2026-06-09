@@ -31,6 +31,38 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.62] — 2026-06-09
+
+### Feature: BPM-109.04b — released_at (Freigabedatum) im Schema v2.0
+
+Drittes Zeit-Konzept: `released_at` (Freigabedatum pro Index) neben `received_at` (Import) und `current_from`/`superseded_at` (Gültigkeitsfenster). Spalte `released_at TEXT` (nullable) auf `plan_revisions`, `PlanRevision.ReleasedAt`, `InsertRevision`-Optionalparameter, Lese-Methoden. Befüllung vorerst NULL (Quelle Plankopf-OCR/manuell = post-V1). Bautagebuch priorisiert `released_at ?? received_at` mit visueller Fallback-Markierung. 248/248 grün.
+
+---
+
+## [v0.28.61] — 2026-06-09
+
+### Feature: BPM-109.04 — Revision-Zeitlogik + Audit-Events
+
+Ein `actionTime` pro Import-Aktion → `superseded_at`(alt) == `current_from`(neu) (Zeitreise lückenlos). `plan_revision_events` verdrahtet (`created`/`superseded`/`file_linked`). Neue Lese-Primitive `GetRevisionEvents` + `GetRevisionsForDocument`. 2 Lifecycle-Tests. 247/247 grün.
+
+---
+
+## [v0.28.60] — 2026-06-09
+
+### Fix: BPM-109.03b — document_key via DocumentKeyBuilder statt All-Fields-Join
+
+Der `DocumentKeyBuilder`-Key (kuratiert, index-frei) wurde berechnet aber verworfen; `RevisionDecisionService` nutzte einen naiven Join über alle `ExtractedFields`. Fix: `DocumentKey` in `ClassifiedImportFile` durchgereicht, `RevisionDecisionService` nutzt ihn → Revisionen gruppieren index-frei (Voraussetzung für Supersede). 245/245 grün.
+
+---
+
+## [v0.28.59] — 2026-06-08
+
+### Feature: BPM-109.03 — Pipeline auf Schema v2.0 (Import reaktiviert)
+
+`ImportExecutionService`/`ImportWorkflowService` auf die Document/Revision/File-Primitive umgestellt (Document-Resolve, Supersede, File-Link, `GetCurrentRevisionLookup`); Reihenfolge Journal→Move→Cache unverändert. Neue Primitive `InsertFileForRevision` + `SupersedeCurrentRevision`, `ProjectId`-Property; die 5 alten Fail-Fast-Methoden entfernt. Live-Smoke-Test: 8 OK / 0 Fehler. 245/245 grün.
+
+---
+
 ## [v0.28.57] — 2026-06-08
 
 ### Feature: BPM-109.02 — Domain Models + Repository-Primitive (Schema v2.0)

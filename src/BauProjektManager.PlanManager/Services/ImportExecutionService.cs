@@ -141,14 +141,24 @@ public class ImportExecutionService
             if (!string.IsNullOrEmpty(targetDir))
                 Directory.CreateDirectory(targetDir);
 
+            // --- EIN Zeitstempel pro Aktion (Zeitreise-Konsistenz, BPM-109.04):
+            //     superseded_at der alten == current_from der neuen → kein Loch, keine Überlappung. ---
+            var actionTime = DateTime.UtcNow.ToString("o");
+
             // --- Supersede + Archiv VOR dem Move (Parität zur bisherigen Reihenfolge) ---
-            // Schema v2.0 (BPM-109.03): bei Index-Update alte current-Revision auf superseded setzen.
+            // Schema v2.0: bei Index-Update alte current-Revision auf superseded setzen + Event.
             if (decision.Status == ImportStatus.UpdateNewerIndex)
             {
                 ArchiveExistingFile(targetPath, projectRootPath);
                 var existingDoc = _db.GetDocumentByKey(decision.DocumentKey!);
                 if (existingDoc is not null)
-                    _db.SupersedeCurrentRevision(existingDoc.Id, DateTime.UtcNow.ToString("o"));
+                {
+                    var oldCurrent = _db.GetCurrentRevisionForDocument(existingDoc.Id);
+                    _db.SupersedeCurrentRevision(existingDoc.Id, actionTime);
+                    if (oldCurrent is not null)
+                        _db.InsertRevisionEvent(oldCurrent.Id, importId,
+                            PlanArchive.EventType.Superseded, "Durch neue Revision ersetzt");
+                }
             }
 
             // Move file from inbox to target
@@ -159,8 +169,7 @@ public class ImportExecutionService
                     decision.File.Parsed.FileName, targetRelPath);
             }
 
-            // --- Cache-DB-Write NACH dem Move (Schema v2.0 Drei-Ebenen-Modell, BPM-109.03) ---
-            var now = DateTime.UtcNow.ToString("o");
+            // --- Cache-DB-Write NACH dem Move (Schema v2.0 Drei-Ebenen-Modell, BPM-109.03/.04) ---
             var documentId = _db.ResolveOrCreateDocument(
                 _db.ProjectId,
                 decision.DocumentKey!,
@@ -176,12 +185,14 @@ public class ImportExecutionService
             var currentRev = _db.GetCurrentRevisionForDocument(documentId);
             if (currentRev is not null)
             {
-                // Zusatzdatei zur bestehenden current-Revision (z.B. DWG nach PDF, ChangedNoIndex/LearnIndex)
+                // Zusatzdatei zur bestehenden current-Revision (ChangedNoIndex/LearnIndex, z.B. DWG nach PDF)
                 _db.InsertFileForRevision(currentRev.Id,
                     decision.File.Parsed.FileName, targetRelPath,
                     decision.File.Parsed.Extension,
                     decision.File.Parsed.Md5, decision.File.Parsed.FileSize,
                     isPrimary: false);
+                _db.InsertRevisionEvent(currentRev.Id, importId,
+                    PlanArchive.EventType.FileLinked, decision.File.Parsed.FileName);
             }
             else
             {
@@ -191,10 +202,12 @@ public class ImportExecutionService
                     decision.File.RevisionToken,                 // plan_index
                     decision.File.RevisionSource.ToString(),     // index_source
                     PlanArchive.Status.Current,
-                    now,                                         // current_from
+                    actionTime,                                  // current_from == actionTime
                     null,                                        // superseded_at
-                    now,                                         // received_at
+                    actionTime,                                  // received_at
                     importId);                                   // last_import_id
+                _db.InsertRevisionEvent(revisionId, importId,
+                    PlanArchive.EventType.Created, "Neue Revision angelegt");
                 _db.InsertFileForRevision(revisionId,
                     decision.File.Parsed.FileName, targetRelPath,
                     decision.File.Parsed.Extension,

@@ -150,4 +150,58 @@ public class PlanArchiveRepositoryTests
             eventType: PlanArchive.EventType.Created, note: "Erstausgabe");
         Assert.False(string.IsNullOrEmpty(eventId));
     }
+
+    // === BPM-109.04 Revision-Zeitlogik + Events ===
+
+    [Fact]
+    public void Lifecycle_Supersede_OldSuperseded_NewCurrent_TimeTravelConsistent()
+    {
+        using var f = new TestDb();
+        var docId = CreateDoc(f.Repo);
+
+        var t0 = "2025-06-01T00:00:00.0000000Z";
+        var rev1 = f.Repo.InsertRevision(docId, "A", "FileName", PlanArchive.Status.Current, t0, null, t0, null);
+        f.Repo.InsertRevisionEvent(rev1, null, PlanArchive.EventType.Created);
+
+        // Update: alte ablösen + neue current — EIN Zeitstempel t1 (wie ExecuteSingleAction.actionTime)
+        var t1 = "2025-06-15T00:00:00.0000000Z";
+        f.Repo.SupersedeCurrentRevision(docId, t1);
+        f.Repo.InsertRevisionEvent(rev1, null, PlanArchive.EventType.Superseded);
+        var rev2 = f.Repo.InsertRevision(docId, "B", "FileName", PlanArchive.Status.Current, t1, null, t1, null);
+        f.Repo.InsertRevisionEvent(rev2, null, PlanArchive.EventType.Created);
+
+        // current ist jetzt rev2
+        var cur = f.Repo.GetCurrentRevisionForDocument(docId);
+        Assert.Equal(rev2, cur!.Id);
+
+        // Zeitreise-Konsistenz: superseded_at(alt) == current_from(neu) == t1 (kein Loch/keine Überlappung)
+        var all = f.Repo.GetRevisionsForDocument(docId);
+        var r1 = all.Single(r => r.Id == rev1);
+        var r2 = all.Single(r => r.Id == rev2);
+        Assert.Equal(PlanArchive.Status.Superseded, r1.RevisionStatus);
+        Assert.Equal(t1, r1.SupersededAt);
+        Assert.Equal(t1, r2.CurrentFrom);
+        Assert.Equal(r1.SupersededAt, r2.CurrentFrom);
+
+        // Event-Trail rev1: created + superseded
+        var ev1 = f.Repo.GetRevisionEvents(rev1);
+        Assert.Equal(2, ev1.Count);
+        Assert.Contains(ev1, e => e.EventType == PlanArchive.EventType.Created);
+        Assert.Contains(ev1, e => e.EventType == PlanArchive.EventType.Superseded);
+    }
+
+    [Fact]
+    public void GetRevisionEvents_ReturnsFileLinkedEvent()
+    {
+        using var f = new TestDb();
+        var docId = CreateDoc(f.Repo);
+        var now = DateTime.UtcNow.ToString("o");
+        var revId = f.Repo.InsertRevision(docId, "A", "FileName", PlanArchive.Status.Current, now, null, now, null);
+        f.Repo.InsertRevisionEvent(revId, null, PlanArchive.EventType.FileLinked, "zusatz.dwg");
+
+        var events = f.Repo.GetRevisionEvents(revId);
+        Assert.Single(events);
+        Assert.Equal(PlanArchive.EventType.FileLinked, events[0].EventType);
+        Assert.Equal("zusatz.dwg", events[0].Note);
+    }
 }

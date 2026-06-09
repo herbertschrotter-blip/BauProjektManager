@@ -446,6 +446,30 @@ public class PlanManagerDatabase : IDisposable
         return id;
     }
 
+    /// <summary>Lädt den Audit-Trail (Events) einer Revision, chronologisch (event_at aufsteigend). BPM-109.04.</summary>
+    public List<PlanRevisionEvent> GetRevisionEvents(string revisionId)
+    {
+        var conn = GetConnection();
+        var result = new List<PlanRevisionEvent>();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT id, revision_id, import_id, event_type, event_at, note
+            FROM plan_revision_events
+            WHERE revision_id = @rid AND is_deleted = 0
+            ORDER BY event_at ASC
+            """;
+        cmd.Parameters.AddWithValue("@rid", revisionId);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            result.Add(new PlanRevisionEvent(
+                reader.GetString(0), reader.GetString(1),
+                reader.IsDBNull(2) ? null : reader.GetString(2),
+                reader.GetString(3), reader.GetString(4), reader.GetString(5)));
+        }
+        return result;
+    }
+
     /// <summary>Lädt die aktuelle (current) Revision eines Dokuments (oder null).</summary>
     public PlanRevision? GetCurrentRevisionForDocument(string documentId)
     {
@@ -468,6 +492,34 @@ public class PlanManagerDatabase : IDisposable
             reader.IsDBNull(6) ? null : reader.GetString(6),
             reader.GetString(7),
             reader.IsDBNull(8) ? null : reader.GetString(8));
+    }
+
+    /// <summary>Lädt alle Revisionen eines Dokuments (Historie), sortiert nach current_from. BPM-109.04.</summary>
+    public List<PlanRevision> GetRevisionsForDocument(string documentId)
+    {
+        var conn = GetConnection();
+        var result = new List<PlanRevision>();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT id, document_id, plan_index, index_source, revision_status,
+                   current_from, superseded_at, received_at, last_import_id
+            FROM plan_revisions
+            WHERE document_id = @did AND is_deleted = 0
+            ORDER BY current_from ASC
+            """;
+        cmd.Parameters.AddWithValue("@did", documentId);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            result.Add(new PlanRevision(
+                reader.GetString(0), reader.GetString(1),
+                reader.IsDBNull(2) ? null : reader.GetString(2),
+                reader.GetString(3), reader.GetString(4), reader.GetString(5),
+                reader.IsDBNull(6) ? null : reader.GetString(6),
+                reader.GetString(7),
+                reader.IsDBNull(8) ? null : reader.GetString(8)));
+        }
+        return result;
     }
 
     /// <summary>

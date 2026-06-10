@@ -31,6 +31,30 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.67] — 2026-06-10
+
+### Fix: BPM-110 — Feldkey-Bruch (Index-Erkennung war tot)
+
+`FileParseService` schreibt `ExtractedFields` mit `segment_types.id` (snake_case: `plan_number`/`plan_index`), `ImportWorkflowService` las aber die toten Keys `plannumber`/`planindex` → `PlanNumber`/`RevisionToken` immer null, Index-/Revisions-Erkennung faktisch tot. Fix: zentrale Konstanten-Klasse `SegmentTypeIds` (Domain, 16 Built-in-IDs + `documentType`-Sonderkey); ImportWorkflowService, DocumentKeyBuilder, SegmentTypeSeedService und `RecognitionProfile`-Default nutzen sie (Single Source). Zusatzbug behoben: `DocumentKeyBuilder` lowercaste IdentityField-Namen → Custom-Segmenttypen (ULID) wurden nie gefunden, jetzt Verbatim-Lookup. 6 neue Regressionstests (`DocumentKeyBuilderTests`), 258/258 grün. (Commit `dbfd946`)
+
+---
+
+## [v0.28.66] — 2026-06-09
+
+### Docs: ADR-059 — Recognition v2 / Plan-Erfassung
+
+ADR-059 (CGR-2026-06-09-plan-erkennung, 3 Runden Sign-off): MVP = manuelle Erstaufnahme (Strategie B) + deterministisches MD5/Index-Matching, Auto-Extraktion nur Assist. V1-UI = Radial-/Nautilus-Menü mit Caps + Pending Assignments + Listen-Fallback, Geschoss als 3. Ring. Neue Tasks BPM-110 (Feldkey-Fix) + BPM-111 (Radial-Erfassung).
+
+---
+
+## [v0.28.65] — 2026-06-09
+
+### Docs: BPM-109.05a Status nachgezogen
+
+Architektur Kap. 4.1 (IPlanLookupService Interface-Stub implementiert) + CHANGELOG v0.28.63/.64.
+
+---
+
 ## [v0.28.64] — 2026-06-09
 
 ### Feature: BPM-109.05a — IPlanLookupService Interface + Stub (Foundation Slice komplett)

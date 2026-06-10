@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>BPM PlanManager — Projektdetail Manuell sortieren</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#111;display:flex;justify-content:center;padding:40px;font-family:'Segoe UI',sans-serif}
+  .shell{background:#1E1E1E;border-radius:10px;overflow:hidden;border:1px solid #2D2D30;font-size:13px;color:#CCC;display:flex;flex-direction:column;width:1100px;min-height:600px}
+</style>
+</head>
+<body>
+<div class="shell">
+<div style="display:flex;flex:1;min-height:0">
+
+<!-- Sidebar -->
+<div style="width:200px;background:#252526;border-right:1px solid #2D2D30;display:flex;flex-direction:column;padding:12px 0;flex-shrink:0">
+<div style="font-size:13px;font-weight:600;color:#FFF;padding:4px 16px 14px">BauProjektManager</div>
+<div style="background:#04395E;color:#0078D4;padding:7px 16px;font-size:12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="location.href='../01_Projektuebersicht/01_Projektuebersicht.html'">
+<span>&#128193; PlanManager</span>
+<span style="background:#F0AD4E;color:#1E1E1E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px">15</span>
+</div>
+<div style="color:#858585;padding:7px 16px;font-size:12px;cursor:pointer" onclick="location.href='../../Settings/01_Einstellungen/01_Allgemein.html'">&#9881; Einstellungen</div>
+</div>
+
+<!-- Main -->
+<div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+
+<!-- Header -->
+<div style="display:flex;align-items:center;gap:8px;padding:6px 14px;background:#252526;border-bottom:1px solid #2D2D30;min-height:36px">
+<button style="background:none;border:none;color:#858585;cursor:pointer;font-size:14px;font-family:inherit;padding:2px 6px;border-radius:3px" onclick="location.href='../01_Projektuebersicht/01_Projektuebersicht.html'">&#8592;</button>
+<span style="font-size:13px;font-weight:500;color:#FFF;flex:1">&#214;WG Dobl-Zwaring</span>
+<button style="background:transparent;color:#CCC;border:1px solid #3C3C3C;padding:4px 10px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit">&#10227; R&#252;ckg&#228;ngig</button>
+</div>
+
+<div style="padding:5px 14px;background:#2a2418;border-bottom:1px solid #2D2D30;font-size:11px;color:#F0AD4E">&#9889; 15 im Eingang &middot; 3 vom Server-Sync</div>
+
+<!-- Tabs -->
+<div style="display:flex;gap:0;border-bottom:1px solid #2D2D30;background:#252526">
+<button style="background:none;border:none;color:#858585;padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit" onclick="location.href='./01_Profile.html'">Profile</button>
+<button style="background:none;border:none;color:#0078D4;padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px solid #0078D4;font-family:inherit">Manuell sortieren</button>
+<button style="background:none;border:none;color:#858585;padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px dashed #858585;opacity:0.7;font-family:inherit" onclick="alert('Mockup folgt: 02_Projektdetail/03_Sync.html (BPM-005)')">Sync</button>
+</div>
+
+<!-- Content -->
+<div style="flex:1;overflow:hidden;padding:12px 14px;position:relative">
+
+<div style="font-size:10px;color:#858585;margin-bottom:10px;text-transform:uppercase;letter-spacing:.4px;display:flex;align-items:center;gap:8px">
+<span>Unsortierte Dokumente (12)</span>
+<span style="flex:1;height:1px;background:#2D2D30"></span>
+<span style="color:#0078D4;font-style:italic;text-transform:none;letter-spacing:0">&#x261D; Klicken &amp; halten zum Sortieren</span>
+</div>
+
+<!-- Liste -->
+<div style="display:flex;flex-direction:column;gap:3px;position:relative;max-width:560px;margin:0 auto;padding:60px 0">
+
+<!-- Items 0-2 (über dem Radial) -->
+<div style="display:flex;align-items:center;background:#2D2D30;border:1px solid #2D2D30;border-radius:4px;padding:7px 10px;cursor:pointer;font-family:Consolas,monospace;font-size:12px;opacity:0.25"><span style="color:#FFF;flex:1">5998-200_EG_Polierplan.dwg</span><span style="color:#858585;font-size:10px;font-family:'Segoe UI'">144 KB</span></div>
+<div style="display:flex;align-items:center;background:#2D2D30;border:1px solid #2D2D30;border-radius:4px;padding:7px 10px;cursor:pointer;font-family:Consolas,monospace;font-size:12px;opacity:0.25"><span style="color:#FFF;flex:1">5998-201_OG1_Polierplan.dwg</span><span style="color:#858585;font-size:10px;font-family:'Segoe UI'">147 KB</span></div>
+<div style="display:flex;align-items:center;background:#2D2D30;border:1px solid #2D2D30;border-radius:4px;padding:7px 10px;cursor:pointer;font-family:Consolas,monospace;font-size:12px;opacity:0.25"><span style="color:#FFF;flex:1">5998-202_OG2_Polierplan.dwg</span><span style="color:#858585;font-size:10px;font-family:'Segoe UI'">152 KB</span></div>
+
+<!-- Aktives Dokument (Center des Radials) -->
+<div style="display:flex;align-items:center;background:#04395E;border:1.5px solid #0078D4;border-radius:4px;padding:8px 12px;cursor:grabbing;font-family:Consolas,monospace;font-size:12px;box-shadow:0 0 20px rgba(0,120,212,0.6);position:relative;z-index:10">
+<span style="color:#FFF;flex:1;font-weight:500">5998-203_OG3_Polierplan.dwg</span>
+<span style="color:#FFF;font-size:10px;font-family:'Segoe UI';opacity:0.85">148 KB</span>
+</div>
+
+<!-- Items 4+ (unter dem Radial) -->
+<div style="display:flex;align-items:center;background:#2D2D30;border:1px solid #2D2D30;border-radius:4px;padding:7px 10px;cursor:pointer;font-family:Consolas,monospace;font-size:12px;opacity:0.25"><span style="color:#FFF;flex:1">B-101_Bewehrung_OG1.pdf</span><span style="color:#858585;font-size:10px;font-family:'Segoe UI'">98 KB</span></div>
+<div style="display:flex;align-items:center;background:#2D2D30;border:1px solid #2D2D30;border-radius:4px;padding:7px 10px;cursor:pointer;font-family:Consolas,monospace;font-size:12px;opacity:0.25"><span style="color:#FFF;flex:1">S-201_Schalung_OG1.pdf</span><span style="color:#858585;font-size:10px;font-family:'Segoe UI'">114 KB</span></div>
+<div style="display:flex;align-items:center;background:#2D2D30;border:1px solid #2D2D30;border-radius:4px;padding:7px 10px;cursor:pointer;font-family:Consolas,monospace;font-size:12px;opacity:0.25"><span style="color:#FFF;flex:1">BB_2026-04-15_Baubesprechung.pdf</span><span style="color:#858585;font-size:10px;font-family:'Segoe UI'">412 KB</span></div>
+<div style="display:flex;align-items:center;background:#2D2D30;border:1px solid #2D2D30;border-radius:4px;padding:7px 10px;cursor:pointer;font-family:Consolas,monospace;font-size:12px;opacity:0.25"><span style="color:#FFF;flex:1">Statik_2026-03_Hauptberechnung.pdf</span><span style="color:#858585;font-size:10px;font-family:'Segoe UI'">2.1 MB</span></div>
+<div style="display:flex;align-items:center;background:#2D2D30;border:1px solid #2D2D30;border-radius:4px;padding:7px 10px;cursor:pointer;font-family:Consolas,monospace;font-size:12px;opacity:0.25"><span style="color:#FFF;flex:1">EnergieausweisOEWG.pdf</span><span style="color:#858585;font-size:10px;font-family:'Segoe UI'">340 KB</span></div>
+
+<!-- ────── Radial-Menü (zentriert um aktives Item bei Listen-Index 3) ────── -->
+<!-- Active item ist im Listenfluss in der Mitte (4. Item, Index 3) → vertikal mittig zwischen Items 3 und 4. Container .liste hat padding:60px 0, Items ~31px hoch + 3px gap. Item-Center 3 ≈ 60 + 3*(31+3) + 15 = 177px vom Listen-Top -->
+
+<div style="position:absolute;top:177px;left:50%;transform:translate(-50%,-50%);width:420px;height:420px;pointer-events:none;z-index:100">
+
+<!-- 12 Uhr (oben) -->
+<div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:108px;background:#185FA5;border:1px solid #185FA5;border-radius:6px;padding:8px 6px;text-align:center;cursor:pointer;pointer-events:auto;box-shadow:0 4px 12px rgba(0,0,0,0.4)">
+<div style="font-size:18px">&#128209;</div>
+<div style="color:#FFF;font-size:11px;font-weight:600;margin-top:2px">Polierpläne</div>
+<div style="color:rgba(255,255,255,0.7);font-size:8px;margin-top:1px">47 Pläne</div>
+</div>
+
+<!-- 2 Uhr (rechts oben) — HOVER + Sub-Menü -->
+<div style="position:absolute;top:84px;right:0;width:108px;background:#534AB7;border:2px solid #FFF;border-radius:6px;padding:8px 6px;text-align:center;cursor:pointer;pointer-events:auto;box-shadow:0 0 18px rgba(83,74,183,0.7);z-index:4">
+<div style="font-size:18px">&#127959;</div>
+<div style="color:#FFF;font-size:11px;font-weight:600;margin-top:2px">Statikpläne</div>
+<div style="color:rgba(255,255,255,0.9);font-size:8px;margin-top:1px">&#9656; halten</div>
+</div>
+
+<!-- 4 Uhr (rechts unten) -->
+<div style="position:absolute;bottom:84px;right:0;width:108px;background:#993C1D;border:1px solid #993C1D;border-radius:6px;padding:8px 6px;text-align:center;cursor:pointer;pointer-events:auto;box-shadow:0 4px 12px rgba(0,0,0,0.4)">
+<div style="font-size:18px">&#129683;</div>
+<div style="color:#FFF;font-size:11px;font-weight:600;margin-top:2px">Bewehrungspl.</div>
+<div style="color:rgba(255,255,255,0.7);font-size:8px;margin-top:1px">31 Pläne</div>
+</div>
+
+<!-- 6 Uhr (unten) -->
+<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:108px;background:#0F6E56;border:1px solid #0F6E56;border-radius:6px;padding:8px 6px;text-align:center;cursor:pointer;pointer-events:auto;box-shadow:0 4px 12px rgba(0,0,0,0.4)">
+<div style="font-size:18px">&#128221;</div>
+<div style="color:#FFF;font-size:11px;font-weight:600;margin-top:2px">Protokolle</div>
+<div style="color:rgba(255,255,255,0.7);font-size:8px;margin-top:1px">8 Stk.</div>
+</div>
+
+<!-- 8 Uhr (links unten) -->
+<div style="position:absolute;bottom:84px;left:0;width:108px;background:#555;border:1px solid #555;border-radius:6px;padding:8px 6px;text-align:center;cursor:pointer;pointer-events:auto;box-shadow:0 4px 12px rgba(0,0,0,0.4)">
+<div style="font-size:18px">&#128194;</div>
+<div style="color:#FFF;font-size:11px;font-weight:600;margin-top:2px">Sonstiges</div>
+<div style="color:rgba(255,255,255,0.7);font-size:8px;margin-top:1px">12 Stk.</div>
+</div>
+
+<!-- 10 Uhr (links oben) — Custom -->
+<div style="position:absolute;top:84px;left:0;width:108px;background:#1E1E1E;border:1px dashed #F0AD4E;border-radius:6px;padding:8px 6px;text-align:center;cursor:pointer;pointer-events:auto;box-shadow:0 4px 12px rgba(0,0,0,0.4)">
+<div style="font-size:18px;color:#F0AD4E">&#10010;</div>
+<div style="color:#F0AD4E;font-size:11px;font-weight:600;margin-top:2px">Neuer Ordner</div>
+<div style="color:#858585;font-size:8px;margin-top:1px">eigener Name</div>
+</div>
+
+</div>
+
+<!-- Sub-Menü (rechts vom 2-Uhr-Segment, außerhalb des Radial-Container) -->
+<div style="position:absolute;top:140px;right:-150px;display:flex;flex-direction:column;gap:4px;width:180px;pointer-events:auto;z-index:110">
+<div style="font-size:9px;color:#534AB7;letter-spacing:0.4px;text-transform:uppercase;margin-bottom:2px;font-weight:700">Statikpläne / Sub-Ordner</div>
+<div style="background:#3D3690;border:1px solid #534AB7;border-radius:4px;padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 4px 10px rgba(0,0,0,0.4)">
+<span style="color:#FFF;font-size:11px">&#9656;</span>
+<span style="color:#FFF;font-size:11px;font-weight:500;flex:1">Schalung</span>
+<span style="color:rgba(255,255,255,0.6);font-size:9px">23</span>
+</div>
+<div style="background:#3D3690;border:1px solid #534AB7;border-radius:4px;padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 4px 10px rgba(0,0,0,0.4)">
+<span style="color:#FFF;font-size:11px">&#9656;</span>
+<span style="color:#FFF;font-size:11px;font-weight:500;flex:1">Bewehrung</span>
+<span style="color:rgba(255,255,255,0.6);font-size:9px">31</span>
+</div>
+<div style="background:#1E1E1E;border:1px dashed #F0AD4E;border-radius:4px;padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:8px">
+<span style="color:#F0AD4E;font-size:11px">&#10010;</span>
+<span style="color:#F0AD4E;font-size:11px;font-weight:500">Neuer Sub-Ordner</span>
+</div>
+</div>
+
+</div>
+
+</div>
+
+<!-- Statusbar -->
+<div style="height:24px;background:#0078D4;display:flex;align-items:center;padding:0 12px;font-size:10px;color:#fff;flex-shrink:0">
+<span>&#214;WG &middot; 12 unsortiert &middot; 119 Dok.</span>
+<span style="margin-left:auto">15 im Eingang</span>
+</div>
+
+</div>
+</div>
+</div>
+</body>
+</html>

@@ -19,7 +19,7 @@ Wird vor jedem neuen Mockup gelesen und nach Mockup-Änderungen aktualisiert.
 | Ordner | Aufrufer | Trigger | Status | Datei(en) |
 |---|---|---|---|---|
 | 01_Projektuebersicht | (Sidebar / App-Start) | – | ✅ aktiv | 01_Projektuebersicht.html |
-| 02_Projektdetail | 01_Projektuebersicht | Projekt-Karte (Klick) | 🟡 in Arbeit | 01_Profile.html (02_ManuellSortieren=BPM-004, 03_Sync=BPM-005 fehlen) |
+| 02_Projektdetail | 01_Projektuebersicht | Projekt-Karte (Klick) | 🟡 in Arbeit | 01_Profile.html, 02_ManuellSortieren.html (Radial-Erfassung BPM-111.01; 03_Sync=BPM-005 fehlt) |
 | 03_ProfilWizard | 02_Projektdetail (Profile-Tab) | "✎ Profil" / "+ Neues Profil anlernen" | ✅ aktiv | 01_Datei.html, 02_Segmente.html, 02_Segmente_NeuerCustom.html (Inline-Popover BPM-108), 03_IndexSource.html, 04_Zielordner.html, 05_Erkennung.html |
 | 04_FeldtypManager | 03_ProfilWizard/02_Segmente.html | "⚙ Segmenttypen verwalten…" | ✅ aktiv | 01_Uebersicht.html (CRUD + Gruppen + Drag-Reorder + Farbpalette + Built-in Rollen-Read-only, BPM-108) |
 | _Archiv | – | – | – | 00_Gesamtuebersicht.html (alt, nicht navigierbar) |
@@ -33,8 +33,11 @@ Wird vor jedem neuen Mockup gelesen und nach Mockup-Änderungen aktualisiert.
 | 01_Projektuebersicht/01_Projektuebersicht.html | 02_Projektdetail/01_Profile.html | Projekt-Karte (Klick) | ✅ aktiv |
 | 02_Projektdetail/01_Profile.html | 01_Projektuebersicht/01_Projektuebersicht.html | ← Zurück-Pfeil | ✅ aktiv |
 | 02_Projektdetail/01_Profile.html | 01_Projektuebersicht/01_Projektuebersicht.html | Sidebar "📁 PlanManager" | ✅ aktiv |
-| 02_Projektdetail/01_Profile.html | 02_Projektdetail/02_ManuellSortieren.html | Tab "Manuell sortieren" | 🟡 tot |
+| 02_Projektdetail/01_Profile.html | 02_Projektdetail/02_ManuellSortieren.html | Tab "Manuell sortieren" | ✅ aktiv |
 | 02_Projektdetail/01_Profile.html | 02_Projektdetail/03_Sync.html | Tab "Sync" | 🟡 tot |
+| 02_Projektdetail/02_ManuellSortieren.html | 02_Projektdetail/01_Profile.html | Tab "Profile" | ✅ aktiv |
+| 02_Projektdetail/02_ManuellSortieren.html | 01_Projektuebersicht/01_Projektuebersicht.html | ← Zurück-Pfeil | ✅ aktiv |
+| 02_Projektdetail/02_ManuellSortieren.html | 02_Projektdetail/03_Sync.html | Tab "Sync" | 🟡 tot |
 | 02_Projektdetail/01_Profile.html | 03_ProfilWizard/01_Datei.html | "+ Neues Profil anlernen" | ✅ aktiv |
 | 02_Projektdetail/01_Profile.html | 03_ProfilWizard/01_Datei.html | "✎ Profil" pro Profil-Karte (4×) | ✅ aktiv |
 | 03_ProfilWizard/01_Datei.html | 03_ProfilWizard/02_Segmente.html | "Weiter →" | ✅ aktiv |
@@ -63,7 +66,7 @@ Wird vor jedem neuen Mockup gelesen und nach Mockup-Änderungen aktualisiert.
 
 ## Offene Punkte (Backlog-Referenz)
 
-- **BPM-004** — Mockup `02_Projektdetail/02_ManuellSortieren.html`
+- **BPM-004 / BPM-111.01** — Mockup `02_Projektdetail/02_ManuellSortieren.html` — ✅ erledigt (Radial-Erfassung nach ADR-059, Teil 43; alte Listenvariante in `_Archiv/`. Spezifikation als Kommentar-Block im HTML-Header: Hold/Dwell-Timing, typabhängige Ringe, + Neu… je Ebene, Pending/Update/Archiv-Tab, angedocktes Vorschau-Fenster)
 - **BPM-005** — Mockup `02_Projektdetail/03_Sync.html`
 - **BPM-080.01–04** — Mockups `03_ProfilWizard/01_Datei.html` bis `04_Zielordner.html` — ✅ erledigt
 - **BPM-007.02** — Mockup `03_ProfilWizard/05_Erkennung.html` (Toggle Segmente/Regex) — ✅ Segmente-Modus erledigt, Regex-Modus-Variante (`05_Erkennung_Regex.html`) noch offen

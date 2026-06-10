@@ -93,7 +93,9 @@ public class ImportWorkflowService
             var revisionKind = RevisionKind.None;
             var revisionSource = IndexSourceType.None;
 
-            if (file.ExtractedFields.TryGetValue("planindex", out var idx)
+            // BPM-110: ExtractedFields ist mit segment_types.id gekeyt (snake_case,
+            // siehe FileParseService) — Lesen NUR ueber SegmentTypeIds-Konstanten.
+            if (file.ExtractedFields.TryGetValue(SegmentTypeIds.PlanIndex, out var idx)
                 && !string.IsNullOrWhiteSpace(idx))
             {
                 revisionToken = idx;
@@ -106,7 +108,7 @@ public class ImportWorkflowService
                 DocumentTypeId: context.DocumentTypeId,
                 DocumentTypeDisplayName: context.DocumentTypeDisplayName,
                 DocumentKey: documentKey,   // BPM-109.03b: kuratierter, index-freier Key (statt All-Fields-Join)
-                PlanNumber: file.ExtractedFields.GetValueOrDefault("plannumber"),
+                PlanNumber: file.ExtractedFields.GetValueOrDefault(SegmentTypeIds.PlanNumber),
                 RevisionToken: revisionToken,
                 RevisionKind: revisionKind,
                 RevisionSource: revisionSource,

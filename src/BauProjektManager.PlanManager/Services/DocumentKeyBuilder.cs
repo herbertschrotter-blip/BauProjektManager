@@ -36,12 +36,13 @@ public class DocumentKeyBuilder
             foreach (var fieldName in profile.IdentityFields)
             {
                 // Skip documentType — already added as first part
-                if (fieldName.Equals("documentType", StringComparison.OrdinalIgnoreCase))
+                if (fieldName.Equals(SegmentTypeIds.DocumentTypeField, StringComparison.OrdinalIgnoreCase))
                     continue;
 
-                // Map field name to extracted value
-                var fieldKey = fieldName.ToLowerInvariant();
-                if (extractedFields.TryGetValue(fieldKey, out var value)
+                // BPM-110: IdentityFields und ExtractedFields sind beide mit
+                // segment_types.id gekeyt (Built-in snake_case, Custom ULID) —
+                // verbatim nachschlagen, KEIN ToLowerInvariant (zerstoert ULIDs).
+                if (extractedFields.TryGetValue(fieldName, out var value)
                     && !string.IsNullOrWhiteSpace(value))
                 {
                     parts.Add(Normalize(value));
@@ -51,7 +52,7 @@ public class DocumentKeyBuilder
         else
         {
             // No profile — try common identity fields
-            if (extractedFields.TryGetValue("plannumber", out var planNr)
+            if (extractedFields.TryGetValue(SegmentTypeIds.PlanNumber, out var planNr)
                 && !string.IsNullOrWhiteSpace(planNr))
                 parts.Add(Normalize(planNr));
         }

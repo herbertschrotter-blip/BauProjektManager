@@ -147,29 +147,29 @@ public class SegmentTypeSeedService
     /// <summary>16 Built-in Segmenttypen, gruppiert. Farben aus dem aktuellen Theme.</summary>
     private static IEnumerable<SegmentTypeDefinition> BuiltinTypes() => new[]
     {
-        // Identifikation
-        New("plan_number",     "Plannummer",     "#0F6E56", SegmentSemanticRole.PlanNumber,    GroupIdentifikation, 10),
-        New("plan_index",      "Index",          "#993C1D", SegmentSemanticRole.PlanIndex,     GroupIdentifikation, 20),
-        New("project_number",  "Projektnummer",  "#534AB7", SegmentSemanticRole.ProjectNumber, GroupIdentifikation, 30),
+        // Identifikation — IDs zentral in SegmentTypeIds (BPM-110)
+        New(SegmentTypeIds.PlanNumber,    "Plannummer",     "#0F6E56", SegmentSemanticRole.PlanNumber,    GroupIdentifikation, 10),
+        New(SegmentTypeIds.PlanIndex,     "Index",          "#993C1D", SegmentSemanticRole.PlanIndex,     GroupIdentifikation, 20),
+        New(SegmentTypeIds.ProjectNumber, "Projektnummer",  "#534AB7", SegmentSemanticRole.ProjectNumber, GroupIdentifikation, 30),
 
         // Raeumlich
-        New("geschoss",        "Geschoss",       "#185FA5", SegmentSemanticRole.Spatial, GroupRaeumlich, 10),
-        New("haus",            "Haus",           "#6E6E6E", SegmentSemanticRole.Spatial, GroupRaeumlich, 20),
-        New("bauteil",         "Bauteil",        "#6E6E6E", SegmentSemanticRole.Spatial, GroupRaeumlich, 30),
-        New("bauabschnitt",    "Bauabschnitt",   "#6E6E6E", SegmentSemanticRole.Spatial, GroupRaeumlich, 40),
-        New("stiege",          "Stiege",         "#6E6E6E", SegmentSemanticRole.Spatial, GroupRaeumlich, 50),
-        New("achse",           "Achse",          "#6E6E6E", SegmentSemanticRole.Spatial, GroupRaeumlich, 60),
-        New("zone",            "Zone",           "#6E6E6E", SegmentSemanticRole.Spatial, GroupRaeumlich, 70),
-        New("block",           "Block",          "#6E6E6E", SegmentSemanticRole.Spatial, GroupRaeumlich, 80),
-        New("objekt",          "Objekt",         "#6E6E6E", SegmentSemanticRole.Spatial, GroupRaeumlich, 90),
+        New(SegmentTypeIds.Geschoss,      "Geschoss",       "#185FA5", SegmentSemanticRole.Spatial, GroupRaeumlich, 10),
+        New(SegmentTypeIds.Haus,          "Haus",           "#6E6E6E", SegmentSemanticRole.Spatial, GroupRaeumlich, 20),
+        New(SegmentTypeIds.Bauteil,       "Bauteil",        "#6E6E6E", SegmentSemanticRole.Spatial, GroupRaeumlich, 30),
+        New(SegmentTypeIds.Bauabschnitt,  "Bauabschnitt",   "#6E6E6E", SegmentSemanticRole.Spatial, GroupRaeumlich, 40),
+        New(SegmentTypeIds.Stiege,        "Stiege",         "#6E6E6E", SegmentSemanticRole.Spatial, GroupRaeumlich, 50),
+        New(SegmentTypeIds.Achse,         "Achse",          "#6E6E6E", SegmentSemanticRole.Spatial, GroupRaeumlich, 60),
+        New(SegmentTypeIds.Zone,          "Zone",           "#6E6E6E", SegmentSemanticRole.Spatial, GroupRaeumlich, 70),
+        New(SegmentTypeIds.Block,         "Block",          "#6E6E6E", SegmentSemanticRole.Spatial, GroupRaeumlich, 80),
+        New(SegmentTypeIds.Objekt,        "Objekt",         "#6E6E6E", SegmentSemanticRole.Spatial, GroupRaeumlich, 90),
 
         // Inhaltlich
-        New("planart",         "Planart",        "#1F7280", SegmentSemanticRole.None,        GroupInhaltlich, 10),
-        New("description",     "Bezeichnung",    "#555555", SegmentSemanticRole.Description, GroupInhaltlich, 20),
+        New(SegmentTypeIds.Planart,       "Planart",        "#1F7280", SegmentSemanticRole.None,        GroupInhaltlich, 10),
+        New(SegmentTypeIds.Description,   "Bezeichnung",    "#555555", SegmentSemanticRole.Description, GroupInhaltlich, 20),
 
         // Sonstiges
-        New("datum",           "Datum",          "#6E6E6E", SegmentSemanticRole.Date,   GroupSonstiges, 10),
-        New("ignore",          "Ignorieren",     "#3C3C3C", SegmentSemanticRole.Ignore, GroupSonstiges, 20)
+        New(SegmentTypeIds.Datum,         "Datum",          "#6E6E6E", SegmentSemanticRole.Date,   GroupSonstiges, 10),
+        New(SegmentTypeIds.Ignore,        "Ignorieren",     "#3C3C3C", SegmentSemanticRole.Ignore, GroupSonstiges, 20)
     };
 
     private static SegmentTypeDefinition New(string id, string name, string color, SegmentSemanticRole role, string groupId, int sortOrder)

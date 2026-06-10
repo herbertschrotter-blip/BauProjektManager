@@ -45,7 +45,7 @@ public class RecognitionProfile
     /// stabile <c>segment_types.id</c>-Strings (z. B. <c>"plan_number"</c>, <c>"haus"</c>).
     /// Reservierter System-Key: <c>documentType</c>.
     /// </summary>
-    public List<string> IdentityFields { get; set; } = ["documentType", "plan_number"];
+    public List<string> IdentityFields { get; set; } = [SegmentTypeIds.DocumentTypeField, SegmentTypeIds.PlanNumber];
 
     // --- Erkennung ---
     public List<RecognitionRule> Recognition { get; set; } = [];

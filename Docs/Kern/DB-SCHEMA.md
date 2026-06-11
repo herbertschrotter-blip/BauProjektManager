@@ -125,6 +125,8 @@ clients ◄──────────── projects
 | projects | clients | client_id | Nein | ✅ Implementiert |
 | building_parts | projects | project_id | CASCADE | ✅ Implementiert |
 | building_levels | building_parts | building_part_id | CASCADE | ✅ Implementiert |
+| document_types | projects | project_id | CASCADE | ⬜ Geplant (BPM-111.05, ADR-059-Addendum) |
+| document_type_categories | document_types | document_type_id | CASCADE | ⬜ Geplant (BPM-111.05, ADR-059-Addendum) |
 | project_participants | projects | project_id | CASCADE | ✅ Implementiert |
 | project_links | projects | project_id | CASCADE | ✅ Implementiert |
 | buildings | projects | project_id | CASCADE | ✅ Legacy |
@@ -290,6 +292,7 @@ CREATE TABLE building_parts (
     id TEXT PRIMARY KEY,                   -- ULID
     project_id TEXT NOT NULL,
     short_name TEXT NOT NULL DEFAULT '',
+    folder_name TEXT NOT NULL DEFAULT '',  -- physischer Ordnername, EINMAL beim Anlegen erzeugt (ADR-059-Addendum; Frühphase: bpm.db-Reset)
     description TEXT NOT NULL DEFAULT '',
     building_type TEXT NOT NULL DEFAULT '',
     zero_level_absolute REAL NOT NULL DEFAULT 0,
@@ -512,6 +515,66 @@ Analog später möglich: `building_level_aliases` — nicht Teil des Foundation 
 **Referenz:** ADR-058-Addendum (Cross-DB Soft References), CGR-2026-06-08-plan-archiv-architektur r3.
 
 ---
+
+### 4.12 document_types (ADR-059-Addendum, BPM-111.05)
+
+Dokumenttyp-Stammdaten je Projekt — Quelle für Ring 1 des Radials und das
+typabhängige Unterteilungs-Schema. `ring2_source` bestimmt Ring 2
+(`building_parts` = räumlich mit Ring 3 Geschoss, `categories` = typgebundene
+Kategorien ohne Ring 3, `none` = keine Unterteilung).
+
+```sql
+CREATE TABLE document_types (
+    id TEXT PRIMARY KEY,                   -- ULID (Built-ins: stabile snake_case-Id)
+    project_id TEXT NOT NULL,
+    name TEXT NOT NULL,                    -- Anzeigename (z.B. "Polierplan")
+    folder_name TEXT NOT NULL,             -- physischer Ordnername, EINMAL erzeugt (Präfix bleibt erhalten)
+    color_hex TEXT,                        -- Radial-Segmentfarbe (Seed: Mockup-Palette)
+    ring2_source TEXT NOT NULL DEFAULT 'building_parts'
+        CHECK (ring2_source IN ('building_parts', 'categories', 'none')),
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    is_builtin INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    created_by TEXT NOT NULL DEFAULT '',
+    last_modified_at TEXT NOT NULL,
+    last_modified_by TEXT NOT NULL DEFAULT '',
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    is_deleted INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_document_types_project_id ON document_types(project_id);
+```
+
+**Seed bei Projektanlage:** Polierplan/Statik/Bewehrung/Schalung/Architektur
+(`building_parts`) · Fertigteile · Protokolle (`categories`) — siehe
+ADR-059-Addendum. `planmanager.db.plan_documents.document_type_id` referenziert
+diese Tabelle als Cross-DB-Soft-Reference (kein FK).
+
+### 4.13 document_type_categories (ADR-059-Addendum, BPM-111.05)
+
+Typgebundene Kategorien (z.B. Protokollarten, Fertigteil-Kategorien) — Quelle
+für Ring 2 bei `ring2_source='categories'`. „+ Neu…" im Radial legt hier an
+(+ physischer Ordner sofort).
+
+```sql
+CREATE TABLE document_type_categories (
+    id TEXT PRIMARY KEY,                   -- ULID
+    document_type_id TEXT NOT NULL,
+    name TEXT NOT NULL,                    -- z.B. "Baubesprechung"
+    folder_name TEXT NOT NULL,             -- EINMAL erzeugt, App ist alleiniger Schreiber
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    created_by TEXT NOT NULL DEFAULT '',
+    last_modified_at TEXT NOT NULL,
+    last_modified_by TEXT NOT NULL DEFAULT '',
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    is_deleted INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (document_type_id) REFERENCES document_types(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_doc_type_categories_type_id ON document_type_categories(document_type_id);
+```
 
 ## 5. Geplante Tabellen (nach V1)
 

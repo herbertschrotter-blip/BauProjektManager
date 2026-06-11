@@ -2830,6 +2830,23 @@ Das bisherige Erkennungs-Modell extrahiert Identitätsfelder (haus/geschoss/plan
 
 **Referenz:** [Docs/Referenz/chatgpt-reviews/CGR-2026-06-09-plan-erkennung/](../Referenz/chatgpt-reviews/CGR-2026-06-09-plan-erkennung/) — 3 Runden Cross-Review mit ChatGPT GPT-5.4 (r1 Feld-Extraktionsmodell + Feldkey-Bug, r2 Strategie-Pivot A→B, r3 Radial-UI Sign-off).
 
+### ADR-059-Addendum: Typabhängiges Unterteilungs-Schema + Dokumenttyp-Stammdaten (2026-06-11, Teil 43)
+
+**Kontext:** Die Mockup-Iteration zu BPM-111.01 ergab, dass Ring 2 des Radials NICHT immer „Bauteil" ist: Protokolle unterteilen nach Protokollart (Baubesprechung/Bautagesbericht/Sicherheit/Abnahme), Fertigteilpläne nach Kategorie (Wände/Decken/Stiegen). `building_parts`/`building_levels` existieren bereits als Stammdaten in `bpm.db` (Kap. 4.4/4.5) — was fehlt, sind Dokumenttyp-Stammdaten mit Unterteilungs-Konfiguration.
+
+**Entscheidungen:**
+
+1. **Neue Tabelle `document_types` in bpm.db** (projekt-scoped wie `building_parts`, harter FK auf `projects`, ULID + 6 Sync-Spalten nach Kap. 9.3): `name`, `folder_name`, `color_hex` (Radial-Segmentfarbe), **`ring2_source` CHECK IN (`building_parts`, `categories`, `none`)**, `sort_order`, `is_builtin`. Ring 3 (Geschoss) gibt es implizit nur bei `ring2_source='building_parts'` (`building_levels` je Bauteil).
+2. **Neue Tabelle `document_type_categories` in bpm.db** (harter FK auf `document_types`): typgebundene Kategorien (`name`, `folder_name`, `sort_order` + Sync-Spalten).
+3. **Verortung bpm.db, nicht planmanager.db** — konsistent mit dem ADR-058-Addendum (Stammdaten zentral + syncbar, `planmanager.db` bleibt Plan-Archiv). `plan_documents.document_type_id` bleibt Cross-DB-Soft-Reference (TEXT, kein FK); die Anzahl der Soft-Refs steigt nicht.
+4. **Ordnernamen-Regel (verbindlich, aus Mockup-Spez):** `folder_name` wird genau EINMAL beim Anlegen erzeugt (`IPlanValueNormalizer.NormalizeForFolderName`) und gespeichert — Präfixe wie „00 " bleiben erhalten, Umbenennen des Anzeigenamens ändert den Ordnernamen nicht automatisch, nur die App legt Ordner an/um. Entscheidung: eigenes Feld statt Präfix-Template (Template optional später). **`building_parts` erhält dafür zusätzlich eine `folder_name`-Spalte** (bisher nur `short_name`).
+5. **Seed bei Projektanlage** (= „Default-Ordnerstruktur ist der Seed der Stammdaten", DB ab dann führend): Built-in-Typen Polierplan `#185FA5`, Statik `#534AB7`, Bewehrung `#993C1D`, Schalung `#1F7280`, Architektur `#0F6E56` (alle `building_parts`) · Fertigteile `#6E6E6E` (`categories`: Wände/Decken/Stiegen) · Protokolle `#555555` (`categories`: Baubesprechung/Bautagesbericht/Sicherheit/Abnahme). „+ Neu…" in jeder Ringebene = Schnellanlage in diese Stammdaten + sofortige physische Ordner-Anlage; Pflege (Umbenennen/Löschen/Sortieren) in den Projekt-Einstellungen.
+6. **document_key präzisiert:** räumlich = `document_type_id + building_part_id [+ building_level_id] + plan_number`; kategorial (Typen ohne Plannummer) = `document_type_id + category_id + (Datum ?? Dateiname)`. Die Erstaufnahme (CaptureConfirmService) stellt auf Stammdaten-IDs um, sobald die Ringe daraus gespeist werden (BPM-111.05 Slice 2).
+
+**Frühphase:** Neue Tabellen sind additiv (`CREATE TABLE IF NOT EXISTS`); die `folder_name`-Spalte in `building_parts` ist eine Bestandsänderung → **Reset-Anweisung: bpm.db löschen, BPM legt sie beim nächsten Start neu an** (keine Migration, INDEX.md-Frühphasenregel).
+
+**Konsequenzen:** DB-SCHEMA.md Kap. 4.12/4.13 neu + Kap. 4.4 ergänzt; Einstellungen Tab 2 braucht post-Slice eine Pflege-UI für Typen/Kategorien; BPM-111.05 Slice 2 baut den Ring-Daten-Service auf diesen Tabellen auf.
+
 ---
 
 *Dokument wird laufend aktualisiert wenn neue Architekturentscheidungen getroffen werden.*

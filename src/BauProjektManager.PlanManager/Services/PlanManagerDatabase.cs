@@ -879,6 +879,105 @@ public class PlanManagerDatabase : IDisposable
         return result;
     }
 
+    // ── Undo-Primitive (BPM-111.04) — nur letzter Import, Kap. 11 ──
+
+    /// <summary>Id des letzten erfolgreich abgeschlossenen Imports (NULL wenn keiner).</summary>
+    public string? GetLastCompletedImportId()
+    {
+        var conn = GetConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT id FROM import_journal
+            WHERE status = 'completed'
+            ORDER BY timestamp DESC LIMIT 1
+            """;
+        return cmd.ExecuteScalar() as string;
+    }
+
+    /// <summary>Revisionen, die dieser Import angelegt hat (fuer Undo-Soft-Delete).</summary>
+    public List<(string RevisionId, string DocumentId)> GetRevisionsCreatedByImport(string importId)
+    {
+        var conn = GetConnection();
+        var result = new List<(string, string)>();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT id, document_id FROM plan_revisions
+            WHERE last_import_id = @iid AND is_deleted = 0
+            """;
+        cmd.Parameters.AddWithValue("@iid", importId);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+            result.Add((reader.GetString(0), reader.GetString(1)));
+        return result;
+    }
+
+    /// <summary>Revisionen, die durch diesen Import superseded wurden (via Audit-Events, BPM-109.04).</summary>
+    public List<string> GetRevisionIdsSupersededByImport(string importId)
+    {
+        var conn = GetConnection();
+        var result = new List<string>();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT DISTINCT revision_id FROM plan_revision_events
+            WHERE import_id = @iid AND event_type = 'superseded'
+            """;
+        cmd.Parameters.AddWithValue("@iid", importId);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+            result.Add(reader.GetString(0));
+        return result;
+    }
+
+    /// <summary>Soft Delete einer Revision (Undo: vom Import angelegte Revision zuruecknehmen).</summary>
+    public void SoftDeleteRevision(string revisionId)
+    {
+        var conn = GetConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = "UPDATE plan_revisions SET is_deleted = 1 WHERE id = @id";
+        cmd.Parameters.AddWithValue("@id", revisionId);
+        cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>Setzt eine superseded Revision zurueck auf current (Undo des Supersede).</summary>
+    public void RestoreRevisionToCurrent(string revisionId)
+    {
+        var conn = GetConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            UPDATE plan_revisions
+            SET revision_status = 'current', superseded_at = NULL
+            WHERE id = @id AND is_deleted = 0
+            """;
+        cmd.Parameters.AddWithValue("@id", revisionId);
+        cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>Soft Delete eines Dokuments, wenn keine aktive Revision mehr existiert.</summary>
+    public void SoftDeleteDocumentIfNoRevisions(string documentId)
+    {
+        var conn = GetConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            UPDATE plan_documents SET is_deleted = 1
+            WHERE id = @id AND NOT EXISTS (
+                SELECT 1 FROM plan_revisions
+                WHERE document_id = @id AND is_deleted = 0)
+            """;
+        cmd.Parameters.AddWithValue("@id", documentId);
+        cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>Markiert einen Import als rueckgaengig gemacht (Undo abgeschlossen).</summary>
+    public void MarkImportUndone(string importId)
+    {
+        var conn = GetConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = "UPDATE import_journal SET status = 'undone' WHERE id = @id";
+        cmd.Parameters.AddWithValue("@id", importId);
+        cmd.ExecuteNonQuery();
+        Log.Information("Import {ImportId} als 'undone' markiert", importId);
+    }
+
     public string GetDatabasePath() => _dbPath;
 
     public void Dispose()

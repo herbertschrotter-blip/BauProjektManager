@@ -1,8 +1,10 @@
 ﻿using System.IO;
 using Microsoft.Data.Sqlite;
 using BauProjektManager.Domain.Enums;
+using BauProjektManager.Domain.Enums.PlanManager;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models;
+using BauProjektManager.Domain.Models.PlanManager;
 using Serilog;
 
 namespace BauProjektManager.Infrastructure.Persistence;
@@ -20,7 +22,10 @@ public class ProjectDatabase : IDisposable
     private readonly IDeviceContext _deviceContext;
     private SqliteConnection? _connection;
 
-    public ProjectDatabase(IIdGenerator idGenerator, IUserContext userContext, IDeviceContext deviceContext, IPersistenceRegistry? persistenceRegistry = null)
+    // Zentrale folder_name-Erzeugung (ADR-059-Addendum, BPM-111.02/.05)
+    private static readonly Services.PlanValueNormalizer _normalizer = new();
+
+    public ProjectDatabase(IIdGenerator idGenerator, IUserContext userContext, IDeviceContext deviceContext, IPersistenceRegistry? persistenceRegistry = null, string? dbPathOverride = null)
     {
         _idGenerator = idGenerator;
         _userContext = userContext;
@@ -29,7 +34,8 @@ public class ProjectDatabase : IDisposable
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "BauProjektManager");
         Directory.CreateDirectory(appData);
-        _dbPath = Path.Combine(appData, "bpm.db");
+        // dbPathOverride nur fuer Tests (BPM-111.05) — Produktion immer LocalAppData\bpm.db
+        _dbPath = dbPathOverride ?? Path.Combine(appData, "bpm.db");
 
         // BPM-104.02: bei IPersistenceRegistry registrieren (optional fuer Tests)
         persistenceRegistry?.Register(new PersistenceEntry(
@@ -129,6 +135,7 @@ public class ProjectDatabase : IDisposable
                 id TEXT PRIMARY KEY,
                 project_id TEXT NOT NULL,
                 short_name TEXT NOT NULL DEFAULT '',
+                folder_name TEXT NOT NULL DEFAULT '',
                 description TEXT NOT NULL DEFAULT '',
                 building_type TEXT NOT NULL DEFAULT '',
                 zero_level_absolute REAL NOT NULL DEFAULT 0,
@@ -160,6 +167,45 @@ public class ProjectDatabase : IDisposable
                 is_deleted INTEGER NOT NULL DEFAULT 0,
                 FOREIGN KEY (building_part_id) REFERENCES building_parts(id) ON DELETE CASCADE
             );
+
+            -- Dokumenttyp-Stammdaten (ADR-059-Addendum, DB-SCHEMA Kap. 4.12/4.13)
+            CREATE TABLE IF NOT EXISTS document_types (
+                id TEXT PRIMARY KEY,
+                project_id TEXT NOT NULL,
+                name TEXT NOT NULL,
+                folder_name TEXT NOT NULL,
+                color_hex TEXT,
+                ring2_source TEXT NOT NULL DEFAULT 'building_parts'
+                    CHECK (ring2_source IN ('building_parts', 'categories', 'none')),
+                sort_order INTEGER NOT NULL DEFAULT 0,
+                is_builtin INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                created_by TEXT NOT NULL DEFAULT '',
+                last_modified_at TEXT NOT NULL,
+                last_modified_by TEXT NOT NULL DEFAULT '',
+                sync_version INTEGER NOT NULL DEFAULT 0,
+                is_deleted INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_document_types_project_id ON document_types(project_id);
+
+            CREATE TABLE IF NOT EXISTS document_type_categories (
+                id TEXT PRIMARY KEY,
+                document_type_id TEXT NOT NULL,
+                name TEXT NOT NULL,
+                folder_name TEXT NOT NULL,
+                sort_order INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                created_by TEXT NOT NULL DEFAULT '',
+                last_modified_at TEXT NOT NULL,
+                last_modified_by TEXT NOT NULL DEFAULT '',
+                sync_version INTEGER NOT NULL DEFAULT 0,
+                is_deleted INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY (document_type_id) REFERENCES document_types(id) ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_doc_type_categories_type_id ON document_type_categories(document_type_id);
 
             CREATE TABLE IF NOT EXISTS project_participants (
                 id TEXT PRIMARY KEY,
@@ -547,6 +593,7 @@ public class ProjectDatabase : IDisposable
             {
                 Id = reader.GetString(reader.GetOrdinal("id")),
                 ShortName = reader.GetString(reader.GetOrdinal("short_name")),
+                FolderName = reader.GetString(reader.GetOrdinal("folder_name")),
                 Description = reader.GetString(reader.GetOrdinal("description")),
                 BuildingType = reader.GetString(reader.GetOrdinal("building_type")),
                 ZeroLevelAbsolute = reader.GetDouble(reader.GetOrdinal("zero_level_absolute")),
@@ -627,10 +674,15 @@ public class ProjectDatabase : IDisposable
         for (int i = 0; i < parts.Count; i++)
         {
             var part = parts[i];
+            // folder_name EINMAL beim Anlegen erzeugen (ADR-059-Addendum) —
+            // ON CONFLICT laesst folder_name bewusst unangetastet (Umbenennen
+            // des Kuerzels aendert den physischen Ordner nicht).
+            if (string.IsNullOrWhiteSpace(part.FolderName))
+                part.FolderName = _normalizer.NormalizeForFolderName(part.ShortName);
             var cmd = conn.CreateCommand();
             cmd.CommandText = """
-                INSERT INTO building_parts (id, project_id, short_name, description, building_type, zero_level_absolute, sort_order, created_at, created_by, last_modified_at, last_modified_by, sync_version)
-                VALUES (@id, @pid, @sn, @desc, @bt, @zla, @so, @now, @user, @now, @user, 0)
+                INSERT INTO building_parts (id, project_id, short_name, folder_name, description, building_type, zero_level_absolute, sort_order, created_at, created_by, last_modified_at, last_modified_by, sync_version)
+                VALUES (@id, @pid, @sn, @fn, @desc, @bt, @zla, @so, @now, @user, @now, @user, 0)
                 ON CONFLICT(id) DO UPDATE SET
                     short_name = @sn, description = @desc, building_type = @bt,
                     zero_level_absolute = @zla, sort_order = @so,
@@ -640,7 +692,8 @@ public class ProjectDatabase : IDisposable
             cmd.Parameters.AddWithValue("@now", utcNow);
             cmd.Parameters.AddWithValue("@user", user);
             cmd.Parameters.AddWithValue("@id", part.Id); cmd.Parameters.AddWithValue("@pid", projectId);
-            cmd.Parameters.AddWithValue("@sn", part.ShortName); cmd.Parameters.AddWithValue("@desc", part.Description);
+            cmd.Parameters.AddWithValue("@sn", part.ShortName); cmd.Parameters.AddWithValue("@fn", part.FolderName);
+            cmd.Parameters.AddWithValue("@desc", part.Description);
             cmd.Parameters.AddWithValue("@bt", part.BuildingType); cmd.Parameters.AddWithValue("@zla", part.ZeroLevelAbsolute);
             cmd.Parameters.AddWithValue("@so", i);
             Log.Verbose("Executing SQL: {Operation} on {Table}", "UPSERT", "building_parts");
@@ -691,6 +744,157 @@ public class ProjectDatabase : IDisposable
             lvlCmd.ExecuteNonQuery();
         }
     }
+
+    // === DOCUMENT TYPES (ADR-059-Addendum, BPM-111.05) ===
+    // Dokumenttyp-Stammdaten fuer die manuelle Plan-Erfassung: Ring 1 des
+    // Radials + typabhaengiges Unterteilungs-Schema. Seed via
+    // DocumentTypeSeedService. folder_name wird einmal beim Anlegen erzeugt.
+
+    /// <summary>Bauteile + Geschosse eines Projekts (Ring 2/3 des Radials). Read-only Sicht.</summary>
+    public List<BuildingPart> GetBuildingParts(string projectId) => LoadBuildingParts(projectId);
+
+    /// <summary>True wenn das Projekt bereits Dokumenttyp-Stammdaten hat (Seed-Check).</summary>
+    public bool HasDocumentTypes(string projectId)
+    {
+        var conn = GetConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT COUNT(*) FROM document_types WHERE project_id = @pid AND is_deleted = 0";
+        cmd.Parameters.AddWithValue("@pid", projectId);
+        return Convert.ToInt64(cmd.ExecuteScalar()) > 0;
+    }
+
+    /// <summary>Dokumenttypen eines Projekts inkl. Kategorien, sortiert.</summary>
+    public List<PlanDocumentType> GetDocumentTypes(string projectId)
+    {
+        var conn = GetConnection();
+        var result = new List<PlanDocumentType>();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT id, name, folder_name, color_hex, ring2_source, sort_order, is_builtin
+            FROM document_types
+            WHERE project_id = @pid AND is_deleted = 0
+            ORDER BY sort_order
+            """;
+        cmd.Parameters.AddWithValue("@pid", projectId);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "SELECT", "document_types");
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var id = reader.GetString(0);
+            result.Add(new PlanDocumentType(
+                Id: id,
+                Name: reader.GetString(1),
+                FolderName: reader.GetString(2),
+                ColorHex: reader.IsDBNull(3) ? null : reader.GetString(3),
+                Ring2Source: ParseRing2Source(reader.GetString(4)),
+                SortOrder: reader.GetInt32(5),
+                IsBuiltin: reader.GetInt32(6) == 1,
+                Categories: []));
+        }
+
+        // Kategorien nachladen (eigener Reader — SQLite-Connection seriell)
+        for (var i = 0; i < result.Count; i++)
+        {
+            if (result[i].Ring2Source == Ring2Source.Categories)
+                result[i] = result[i] with { Categories = GetDocumentTypeCategories(result[i].Id) };
+        }
+        return result;
+    }
+
+    /// <summary>Kategorien eines Dokumenttyps, sortiert.</summary>
+    public List<PlanDocumentTypeCategory> GetDocumentTypeCategories(string documentTypeId)
+    {
+        var conn = GetConnection();
+        var result = new List<PlanDocumentTypeCategory>();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT id, name, folder_name, sort_order
+            FROM document_type_categories
+            WHERE document_type_id = @tid AND is_deleted = 0
+            ORDER BY sort_order
+            """;
+        cmd.Parameters.AddWithValue("@tid", documentTypeId);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+            result.Add(new PlanDocumentTypeCategory(
+                reader.GetString(0), reader.GetString(1),
+                reader.GetString(2), reader.GetInt32(3)));
+        return result;
+    }
+
+    /// <summary>
+    /// Legt einen Dokumenttyp an ("+ Neu…" Ring 1 / Seed). folder_name wird
+    /// hier EINMAL erzeugt wenn leer. Gibt die neue Id zurueck.
+    /// </summary>
+    public string InsertDocumentType(
+        string projectId, string name, string? folderName, string? colorHex,
+        Ring2Source ring2Source, int sortOrder, bool isBuiltin = false, string? id = null)
+    {
+        var conn = GetConnection();
+        var typeId = id ?? _idGenerator.NewId();
+        var utcNow = DateTime.UtcNow.ToString("o");
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            INSERT INTO document_types (id, project_id, name, folder_name, color_hex,
+                ring2_source, sort_order, is_builtin, created_at, created_by,
+                last_modified_at, last_modified_by, sync_version)
+            VALUES (@id, @pid, @name, @fn, @color, @r2, @so, @builtin, @now, @user, @now, @user, 0)
+            """;
+        cmd.Parameters.AddWithValue("@id", typeId);
+        cmd.Parameters.AddWithValue("@pid", projectId);
+        cmd.Parameters.AddWithValue("@name", name);
+        cmd.Parameters.AddWithValue("@fn", string.IsNullOrWhiteSpace(folderName)
+            ? _normalizer.NormalizeForFolderName(name) : folderName);
+        cmd.Parameters.AddWithValue("@color", (object?)colorHex ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@r2", Ring2SourceToDb(ring2Source));
+        cmd.Parameters.AddWithValue("@so", sortOrder);
+        cmd.Parameters.AddWithValue("@builtin", isBuiltin ? 1 : 0);
+        cmd.Parameters.AddWithValue("@now", utcNow);
+        cmd.Parameters.AddWithValue("@user", _userContext.DisplayName);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "INSERT", "document_types");
+        cmd.ExecuteNonQuery();
+        return typeId;
+    }
+
+    /// <summary>Legt eine typgebundene Kategorie an ("+ Neu…" Ring 2 / Seed).</summary>
+    public string InsertDocumentTypeCategory(
+        string documentTypeId, string name, string? folderName, int sortOrder)
+    {
+        var conn = GetConnection();
+        var categoryId = _idGenerator.NewId();
+        var utcNow = DateTime.UtcNow.ToString("o");
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            INSERT INTO document_type_categories (id, document_type_id, name, folder_name,
+                sort_order, created_at, created_by, last_modified_at, last_modified_by, sync_version)
+            VALUES (@id, @tid, @name, @fn, @so, @now, @user, @now, @user, 0)
+            """;
+        cmd.Parameters.AddWithValue("@id", categoryId);
+        cmd.Parameters.AddWithValue("@tid", documentTypeId);
+        cmd.Parameters.AddWithValue("@name", name);
+        cmd.Parameters.AddWithValue("@fn", string.IsNullOrWhiteSpace(folderName)
+            ? _normalizer.NormalizeForFolderName(name) : folderName);
+        cmd.Parameters.AddWithValue("@so", sortOrder);
+        cmd.Parameters.AddWithValue("@now", utcNow);
+        cmd.Parameters.AddWithValue("@user", _userContext.DisplayName);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "INSERT", "document_type_categories");
+        cmd.ExecuteNonQuery();
+        return categoryId;
+    }
+
+    private static Ring2Source ParseRing2Source(string value) => value switch
+    {
+        "categories" => Ring2Source.Categories,
+        "none" => Ring2Source.None,
+        _ => Ring2Source.BuildingParts
+    };
+
+    private static string Ring2SourceToDb(Ring2Source value) => value switch
+    {
+        Ring2Source.Categories => "categories",
+        Ring2Source.None => "none",
+        _ => "building_parts"
+    };
 
     // === PARTICIPANTS ===
 

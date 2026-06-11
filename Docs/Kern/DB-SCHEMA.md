@@ -525,7 +525,7 @@ Kategorien ohne Ring 3, `none` = keine Unterteilung).
 
 ```sql
 CREATE TABLE document_types (
-    id TEXT PRIMARY KEY,                   -- ULID (Built-ins: stabile snake_case-Id)
+    id TEXT PRIMARY KEY,                   -- ULID (projekt-scoped; Built-ins via is_builtin + name identifiziert)
     project_id TEXT NOT NULL,
     name TEXT NOT NULL,                    -- Anzeigename (z.B. "Polierplan")
     folder_name TEXT NOT NULL,             -- physischer Ordnername, EINMAL erzeugt (Präfix bleibt erhalten)

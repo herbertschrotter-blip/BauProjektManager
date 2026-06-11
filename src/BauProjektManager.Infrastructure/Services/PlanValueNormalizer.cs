@@ -2,12 +2,14 @@ using System.IO;
 using System.Text;
 using BauProjektManager.Domain.Interfaces;
 
-namespace BauProjektManager.PlanManager.Services;
+namespace BauProjektManager.Infrastructure.Services;
 
 /// <summary>
 /// Standard-Implementierung der zentralen Wert-Normalisierung (BPM-111.02).
-/// NormalizeForKey uebernimmt die bisherige private Logik des
-/// <see cref="DocumentKeyBuilder"/> unveraendert (Schluessel-Stabilitaet!).
+/// Seit BPM-111.05 in Infrastructure (statt PlanManager), weil auch
+/// ProjectDatabase/Seed die folder_name-Erzeugung brauchen (ADR-059-Addendum).
+/// NormalizeForKey ist die unveraenderte fruehere DocumentKeyBuilder-Logik
+/// (Schluessel-Stabilitaet!).
 /// </summary>
 public class PlanValueNormalizer : IPlanValueNormalizer
 {

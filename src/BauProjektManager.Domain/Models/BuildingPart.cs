@@ -15,6 +15,13 @@ public class BuildingPart
     public string ShortName { get; set; } = string.Empty;
 
     /// <summary>
+    /// Physischer Ordnername (ADR-059-Addendum): wird EINMAL beim Anlegen
+    /// erzeugt und danach nie automatisch geändert — Umbenennen von
+    /// <see cref="ShortName"/> lässt den Ordner unberührt.
+    /// </summary>
+    public string FolderName { get; set; } = string.Empty;
+
+    /// <summary>
     /// Beschreibung (z.B. "Stiege 1+2", "Gewerbe EG", "Tiefgarage").
     /// </summary>
     public string Description { get; set; } = string.Empty;

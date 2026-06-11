@@ -1,0 +1,169 @@
+<UserControl x:Class="BauProjektManager.PlanManager.Views.ManualCaptureView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:BauProjektManager.PlanManager.Controls"
+             UseLayoutRounding="True"
+             SnapsToDevicePixels="True">
+    <Grid x:Name="RootGrid">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="280"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Eingangs-Tabelle (Hold-Geste startet das Radial, siehe Code-Behind) -->
+        <DockPanel Grid.Column="0" Margin="0,0,8,0">
+            <TextBlock DockPanel.Dock="Top" Margin="0,0,0,6"
+                       Foreground="{DynamicResource BpmTextSecondary}"
+                       FontSize="{DynamicResource BpmFontSizeCaption}">
+                <Run Text="Klick = Auswahl · Strg+Klick = mehrere · "/><Run FontWeight="SemiBold" Text="Halten"/><Run Text=" = Radial zuordnen"/>
+            </TextBlock>
+
+            <ListBox x:Name="FileList"
+                     ItemsSource="{Binding Rows}"
+                     SelectionMode="Extended"
+                     Background="{DynamicResource BpmBgBase}"
+                     BorderThickness="0"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     PreviewMouseLeftButtonDown="OnRowPreviewMouseDown">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="Padding" Value="0"/>
+                        <Setter Property="Margin" Value="0,0,0,2"/>
+                        <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
+                        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Border x:Name="RowBorder"
+                                Background="{DynamicResource BpmBgSurface}"
+                                BorderThickness="3,0,0,0"
+                                BorderBrush="Transparent"
+                                Padding="8,6"
+                                MinHeight="36">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="70"/>
+                                    <ColumnDefinition Width="220"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Text="{Binding FileName}"
+                                           Foreground="{DynamicResource BpmTextBright}"
+                                           FontFamily="Consolas"
+                                           FontSize="{DynamicResource BpmFontSizeSmall}"
+                                           TextTrimming="CharacterEllipsis"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding SizeText}"
+                                           Foreground="{DynamicResource BpmTextSecondary}"
+                                           FontSize="{DynamicResource BpmFontSizeCaption}"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" x:Name="AssignText"
+                                           Text="{Binding CandidateText}"
+                                           Foreground="{DynamicResource BpmTextSecondary}"
+                                           FontSize="{DynamicResource BpmFontSizeCaption}"
+                                           TextTrimming="CharacterEllipsis"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsUpdate}" Value="True">
+                                <Setter TargetName="RowBorder" Property="BorderBrush" Value="{DynamicResource BpmInfo}"/>
+                                <Setter TargetName="AssignText" Property="Foreground" Value="{DynamicResource BpmInfo}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsConflict}" Value="True">
+                                <Setter TargetName="RowBorder" Property="BorderBrush" Value="{DynamicResource BpmError}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsDuplicate}" Value="True">
+                                <Setter TargetName="RowBorder" Property="Opacity" Value="0.5"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsPending}" Value="True">
+                                <Setter TargetName="RowBorder" Property="BorderBrush" Value="{DynamicResource BpmWarning}"/>
+                                <Setter TargetName="AssignText" Property="Foreground" Value="{DynamicResource BpmWarning}"/>
+                                <Setter TargetName="AssignText" Property="Text" Value="{Binding PendingText}"/>
+                            </DataTrigger>
+                            <Trigger SourceName="RowBorder" Property="IsMouseOver" Value="True">
+                                <Setter TargetName="RowBorder" Property="Background" Value="{DynamicResource BpmBgHover}"/>
+                            </Trigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </DockPanel>
+
+        <!-- Detail-Panel (Slice 2b: Pending-Steuerung; Plandaten-Edit kommt in 111.06) -->
+        <Border Grid.Column="1"
+                Background="{DynamicResource BpmBgSurface}"
+                BorderBrush="{DynamicResource BpmBorderSubtle}"
+                BorderThickness="1,0,0,0"
+                Padding="12">
+            <StackPanel>
+                <TextBlock Text="DETAIL-PANEL"
+                           Foreground="{DynamicResource BpmTextSecondary}"
+                           FontSize="{DynamicResource BpmFontSizeCaption}"
+                           Margin="0,0,0,8"/>
+                <TextBlock x:Name="SelectionInfo"
+                           Foreground="{DynamicResource BpmTextPrimary}"
+                           FontSize="{DynamicResource BpmFontSizeSmall}"
+                           TextWrapping="Wrap"
+                           Margin="0,0,0,12"
+                           Text="Keine Auswahl"/>
+                <Button x:Name="TakeUpdateButton"
+                        Visibility="Collapsed"
+                        Margin="0,0,0,12"
+                        Style="{DynamicResource BpmButtonPrimary}"
+                        Click="OnTakeUpdateClick"
+                        Content="⬆ Update übernehmen"/>
+
+                <Grid Margin="0,0,0,8">
+                    <TextBlock Text="Pending"
+                               Foreground="{DynamicResource BpmTextSecondary}"
+                               FontSize="{DynamicResource BpmFontSizeSmall}"/>
+                    <TextBlock HorizontalAlignment="Right"
+                               Foreground="{DynamicResource BpmWarning}"
+                               FontSize="{DynamicResource BpmFontSizeSmall}"
+                               Text="{Binding PendingCount}"/>
+                </Grid>
+
+                <Button Style="{DynamicResource BpmButtonPrimary}"
+                        Command="{Binding ConfirmImportCommand}"
+                        Margin="0,0,0,6"
+                        Content="Import bestätigen"/>
+                <Button Command="{Binding DiscardPendingCommand}"
+                        Margin="0,0,0,6"
+                        Content="Pending verwerfen"/>
+                <Button Command="{Binding UndoLastImportCommand}"
+                        IsEnabled="{Binding CanUndoLastImport}"
+                        Content="↩ Letzten Import rückgängig"/>
+
+                <TextBlock Text="{Binding StatusText}"
+                           Foreground="{DynamicResource BpmTextSecondary}"
+                           FontSize="{DynamicResource BpmFontSizeCaption}"
+                           TextWrapping="Wrap"
+                           Margin="0,12,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Radial-Overlay (Gesten-Host steuert Sichtbarkeit + Position) -->
+        <Canvas x:Name="OverlayCanvas"
+                Grid.ColumnSpan="2"
+                Visibility="Collapsed"
+                Background="Transparent"
+                IsHitTestVisible="False">
+            <controls:RadialCaptureControl x:Name="Radial"
+                                           Width="460" Height="460"/>
+            <Border x:Name="Ghost"
+                    Background="{DynamicResource BpmBgActive}"
+                    BorderBrush="{DynamicResource BpmAccentPrimary}"
+                    BorderThickness="1"
+                    CornerRadius="3"
+                    Padding="8,4">
+                <TextBlock x:Name="GhostText"
+                           Foreground="{DynamicResource BpmTextBright}"
+                           FontSize="{DynamicResource BpmFontSizeSmall}"/>
+            </Border>
+        </Canvas>
+    </Grid>
+</UserControl>

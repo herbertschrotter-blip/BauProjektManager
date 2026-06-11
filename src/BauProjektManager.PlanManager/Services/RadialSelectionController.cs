@@ -1,0 +1,163 @@
+using BauProjektManager.Domain.Enums.PlanManager;
+using BauProjektManager.Domain.Models;
+using BauProjektManager.Domain.Models.PlanManager;
+using BauProjektManager.PlanManager.Controls;
+
+namespace BauProjektManager.PlanManager.Services;
+
+/// <summary>
+/// Ergebnis eines Segment-Commits: was der Gesten-Host am Control aktualisieren
+/// muss. NULL-Listen = Ring unveraendert lassen; leere Liste = Ring entfernen.
+/// Animate-Flags nur true beim ERSCHEINEN eines Rings (Spez: Inhaltswechsel stumm).
+/// </summary>
+public sealed record RadialUpdate(
+    IReadOnlyList<RadialSegmentItem>? Ring2,
+    bool Ring2Animate,
+    IReadOnlyList<RadialSegmentItem>? Ring3,
+    bool Ring3Animate,
+    string CenterSecondary);
+
+/// <summary>
+/// Typabhaengige Ebenenlogik des Radials (BPM-111.05 Slice 2b) — reine,
+/// UI-freie Zustandsmaschine nach Mockup-Spez:
+/// - Ring 2 je <see cref="Ring2Source"/> des Dokumenttyps (Bauteile/Kategorien/keiner)
+/// - Ring 3 (Geschosse je Bauteil) nur bei raeumlichem Schema
+/// - Verweilen auf Ring 1 (auch gleicher Typ) schliesst Ring 3
+/// - Ring-Erscheinen animiert, Inhaltswechsel stumm
+/// </summary>
+public class RadialSelectionController
+{
+    private readonly IReadOnlyList<PlanDocumentType> _types;
+    private readonly IReadOnlyList<BuildingPart> _parts;
+
+    private bool _ring2Visible;
+    private bool _ring3Visible;
+
+    public RadialSelectionController(
+        IReadOnlyList<PlanDocumentType> types,
+        IReadOnlyList<BuildingPart> parts)
+    {
+        _types = types;
+        _parts = parts;
+    }
+
+    public PlanDocumentType? SelectedType { get; private set; }
+    public string? SelectedPart { get; private set; }
+    public string? SelectedLevel { get; private set; }
+
+    /// <summary>Ring 1 fuer den Capture-Start (Kandidat aus Extractor markiert).</summary>
+    public IReadOnlyList<RadialSegmentItem> BuildRing1(PlanFileCandidates? candidates)
+    {
+        var candidateType = candidates?.TypeKeywords.FirstOrDefault();
+        return [.. _types.Select(t => new RadialSegmentItem(
+            t.Name, t.ColorHex,
+            IsCandidate: candidateType is not null
+                && string.Equals(t.Name, candidateType, StringComparison.OrdinalIgnoreCase)))];
+    }
+
+    /// <summary>Setzt die Auswahl zurueck (neuer Capture-Vorgang).</summary>
+    public void Reset()
+    {
+        SelectedType = null;
+        SelectedPart = null;
+        SelectedLevel = null;
+        _ring2Visible = false;
+        _ring3Visible = false;
+    }
+
+    /// <summary>
+    /// Verarbeitet einen Dwell-Commit des Controls und liefert die noetigen
+    /// Ring-Updates fuer den Host.
+    /// </summary>
+    public RadialUpdate Commit(int ringIndex, string name, PlanFileCandidates? candidates)
+    {
+        switch (ringIndex)
+        {
+            case 1:
+                SelectedType = _types.FirstOrDefault(t => t.Name == name);
+                SelectedPart = null;
+                SelectedLevel = null;
+
+                var ring2 = BuildRing2(candidates);
+                // Animation NUR beim Erscheinen (unsichtbar -> sichtbar);
+                // Inhaltswechsel bei bereits sichtbarem Ring bleibt stumm (Spez)
+                var ring2Animate = !_ring2Visible && ring2.Count > 0;
+                _ring2Visible = ring2.Count > 0;
+                _ring3Visible = false;
+                return new RadialUpdate(ring2, ring2Animate, Ring3: [], Ring3Animate: false,
+                    CenterSecondary: SelectedType?.Name ?? "");
+
+            case 2:
+                SelectedPart = name;
+                SelectedLevel = null;
+                var ring3 = BuildRing3(candidates);
+                var ring3Animate = !_ring3Visible && ring3.Count > 0;
+                _ring3Visible = ring3.Count > 0;
+                return new RadialUpdate(Ring2: null, Ring2Animate: false,
+                    Ring3: ring3, Ring3Animate: ring3Animate,
+                    CenterSecondary: $"{SelectedType?.Name} › {name}");
+
+            case 3:
+                SelectedLevel = name;
+                return new RadialUpdate(null, false, null, false,
+                    $"{SelectedType?.Name} › {SelectedPart} › {name}");
+
+            default:
+                return new RadialUpdate(null, false, null, false, "");
+        }
+    }
+
+    /// <summary>Zielordner relativ zum Projekt aus den gespeicherten folder_names.</summary>
+    public string BuildTargetDirectory(string plansRelativePath)
+    {
+        var segments = new List<string> { plansRelativePath };
+        if (SelectedType is not null)
+            segments.Add(SelectedType.FolderName);
+
+        if (SelectedType?.Ring2Source == Ring2Source.BuildingParts && SelectedPart is not null)
+        {
+            var part = _parts.FirstOrDefault(p => p.ShortName == SelectedPart);
+            segments.Add(part?.FolderName is { Length: > 0 } fn ? fn : SelectedPart);
+            if (SelectedLevel is not null)
+                segments.Add(SelectedLevel);
+        }
+        else if (SelectedType?.Ring2Source == Ring2Source.Categories && SelectedPart is not null)
+        {
+            var category = SelectedType.Categories.FirstOrDefault(c => c.Name == SelectedPart);
+            segments.Add(category?.FolderName is { Length: > 0 } fn ? fn : SelectedPart);
+        }
+
+        return string.Join('/', segments.Where(s => !string.IsNullOrWhiteSpace(s)));
+    }
+
+    private List<RadialSegmentItem> BuildRing2(PlanFileCandidates? candidates)
+    {
+        if (SelectedType is null)
+            return [];
+
+        return SelectedType.Ring2Source switch
+        {
+            Ring2Source.BuildingParts => [.. _parts.Select(p => new RadialSegmentItem(
+                p.ShortName,
+                IsCandidate: candidates?.BuildingPartHint is not null
+                    && string.Equals(p.ShortName, candidates.BuildingPartHint, StringComparison.OrdinalIgnoreCase)))],
+            Ring2Source.Categories => [.. SelectedType.Categories.Select(c => new RadialSegmentItem(c.Name))],
+            _ => []
+        };
+    }
+
+    private List<RadialSegmentItem> BuildRing3(PlanFileCandidates? candidates)
+    {
+        if (SelectedType?.Ring2Source != Ring2Source.BuildingParts || SelectedPart is null)
+            return [];
+
+        var part = _parts.FirstOrDefault(p => p.ShortName == SelectedPart);
+        if (part is null || part.Levels.Count == 0)
+            return [];
+
+        return [.. part.Levels.Select(l => new RadialSegmentItem(
+            l.Name,
+            IsCandidate: candidates?.Level is not null
+                && string.Equals(l.Name, candidates.Level, StringComparison.OrdinalIgnoreCase)))];
+    }
+}

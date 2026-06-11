@@ -558,6 +558,60 @@ public class PlanManagerDatabase : IDisposable
     }
 
     /// <summary>
+    /// Alle bekannten Dokumente mit ihrer aktuellen Revision — Matching-Grundlage
+    /// fuer den ManualFirstCapture-Workflow (BPM-111.03). Read-only.
+    /// </summary>
+    public List<KnownPlanDocument> GetCurrentDocumentLookup()
+    {
+        var conn = GetConnection();
+        var result = new List<KnownPlanDocument>();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT pd.id, pd.document_key, pd.plan_number, pd.document_type,
+                   pd.target_folder, pd.relative_directory, pr.plan_index, pr.id
+            FROM plan_documents pd
+            JOIN plan_revisions pr ON pr.document_id = pd.id
+                AND pr.revision_status = 'current' AND pr.is_deleted = 0
+            WHERE pd.is_deleted = 0
+            """;
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            result.Add(new KnownPlanDocument(
+                reader.GetString(0), reader.GetString(1), reader.GetString(2),
+                reader.GetString(3), reader.GetString(4), reader.GetString(5),
+                reader.IsDBNull(6) ? null : reader.GetString(6),
+                reader.GetString(7)));
+        }
+        Log.Debug("planmanager.db: {Count} bekannte Dokumente (Capture-Lookup)", result.Count);
+        return result;
+    }
+
+    /// <summary>
+    /// MD5-Lookup aller verknuepften Bestandsdateien -> document_key.
+    /// Dubletten-Erkennung (Bucket A) im ManualFirstCapture-Workflow (BPM-111.03).
+    /// </summary>
+    public Dictionary<string, string> GetKnownMd5Lookup()
+    {
+        var conn = GetConnection();
+        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT pf.md5_hash, pd.document_key
+            FROM plan_files pf
+            JOIN revision_file_links rfl ON rfl.file_id = pf.id
+            JOIN plan_revisions pr ON pr.id = rfl.revision_id AND pr.is_deleted = 0
+            JOIN plan_documents pd ON pd.id = pr.document_id AND pd.is_deleted = 0
+            WHERE pf.md5_hash <> ''
+            """;
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+            result[reader.GetString(0)] = reader.GetString(1);
+        Log.Debug("planmanager.db: {Count} bekannte MD5-Hashes", result.Count);
+        return result;
+    }
+
+    /// <summary>
     /// Legt eine Datei an (plan_files) und verknüpft sie mit einer Revision (revision_file_links).
     /// Gibt die file-id zurück. BPM-109.03.
     /// </summary>

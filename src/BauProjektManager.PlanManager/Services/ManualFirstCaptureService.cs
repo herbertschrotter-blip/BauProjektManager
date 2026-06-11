@@ -1,0 +1,162 @@
+using BauProjektManager.Domain.Enums.PlanManager;
+using BauProjektManager.Domain.Interfaces;
+using BauProjektManager.Domain.Models.PlanManager;
+using Serilog;
+
+namespace BauProjektManager.PlanManager.Services;
+
+/// <summary>
+/// ManualFirstCapture-Workflow (BPM-111.03, ADR-059 Strategie B):
+/// Scan -> MD5 -> Lightweight-Kandidaten -> deterministisches Matching gegen
+/// bekannte plan_documents -> Buckets A/B/C/D.
+///
+/// Reine Analyse-/Service-Schicht: persistiert NICHTS, verschiebt NICHTS
+/// ("B entscheidet, A schlaegt vor" — Pending/Journal/Import = BPM-111.04).
+/// Bewusst PROFIL-UNABHAENGIG: Matching laeuft ueber Plannummern-Kandidaten
+/// und MD5, nicht ueber Recognizer-Profile.
+/// </summary>
+public class ManualFirstCaptureService
+{
+    private readonly ImportScanService _scan = new();
+    private readonly FileFingerprintService _fingerprint = new();
+    private readonly LightweightPlanExtractor _extractor = new();
+    private static readonly IPlanValueNormalizer _normalizer = new PlanValueNormalizer();
+    private readonly PlanManagerDatabase _db;
+
+    public ManualFirstCaptureService(PlanManagerDatabase db)
+    {
+        _db = db;
+    }
+
+    /// <summary>
+    /// Analysiert den Eingang und klassifiziert jede Datei in Bucket A/B/C/D.
+    /// </summary>
+    public async Task<ManualCaptureResult> AnalyzeAsync(
+        string projectRootPath,
+        string inboxRelativePath,
+        CancellationToken ct = default)
+    {
+        Log.Information("ManualFirstCapture-Analyse gestartet fuer {Path}", projectRootPath);
+
+        var scanned = await _scan.ScanAsync(projectRootPath, inboxRelativePath, ct);
+        if (scanned.Count == 0)
+        {
+            Log.Information("Keine Dateien im Eingang");
+            return ManualCaptureResult.Empty;
+        }
+
+        var fingerprinted = await _fingerprint.FingerprintAsync(scanned, projectRootPath, ct);
+
+        var knownDocs = _db.GetCurrentDocumentLookup();
+        var knownMd5 = _db.GetKnownMd5Lookup();
+
+        var result = Classify(fingerprinted, knownDocs, knownMd5, _extractor, _normalizer);
+
+        Log.Information(
+            "ManualFirstCapture: {Total} Dateien — {Dup} Dubletten, {Upd} Update-Vorschlaege, {New} Erstaufnahme, {Conf} Konflikte",
+            result.TotalFiles, result.DuplicateCount, result.UpdateProposalCount,
+            result.NewCaptureCount, result.ConflictCount);
+        return result;
+    }
+
+    /// <summary>
+    /// Reine Klassifikations-Logik (testbar ohne DB/Dateisystem).
+    /// Bucket-Reihenfolge: A (MD5) vor B/D (Plannummern-Match) vor C (Rest).
+    /// </summary>
+    public static ManualCaptureResult Classify(
+        List<FingerprintResult> fingerprinted,
+        IReadOnlyList<KnownPlanDocument> knownDocuments,
+        IReadOnlyDictionary<string, string> knownMd5ToDocumentKey,
+        LightweightPlanExtractor extractor,
+        IPlanValueNormalizer normalizer)
+    {
+        // Plannummern-Lookup: normalisierte Nummer -> alle bekannten Dokumente
+        var byNumber = knownDocuments
+            .Where(d => !string.IsNullOrWhiteSpace(d.PlanNumber))
+            .GroupBy(d => normalizer.NormalizeForMatch(d.PlanNumber))
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var items = new List<CaptureItem>(fingerprinted.Count);
+
+        foreach (var fp in fingerprinted)
+        {
+            var file = fp.File;
+            var candidates = extractor.ExtractCandidates(file.Scan.FileName);
+
+            // Bucket A — exakte Dublette per MD5 (Fingerprint-Invariante)
+            if (!string.IsNullOrEmpty(file.Md5)
+                && knownMd5ToDocumentKey.TryGetValue(file.Md5, out var dupKey))
+            {
+                var dupMatch = knownDocuments.FirstOrDefault(d => d.DocumentKey == dupKey);
+                items.Add(new CaptureItem(file, candidates, CaptureBucket.Duplicate,
+                    dupMatch, $"Inhalt bereits im Bestand ({dupKey})"));
+                continue;
+            }
+
+            // Ohne Plannummern-Kandidat -> Bucket C (manuelle Erstaufnahme/Radial)
+            if (candidates.PlanNumber is null
+                || !byNumber.TryGetValue(normalizer.NormalizeForMatch(candidates.PlanNumber), out var matches))
+            {
+                items.Add(new CaptureItem(file, candidates, CaptureBucket.NewCapture, null, null));
+                continue;
+            }
+
+            // Bucket D — Plannummer in mehreren Dokumenten (z. B. ueber Dokumenttypen)
+            if (matches.Count > 1)
+            {
+                items.Add(new CaptureItem(file, candidates, CaptureBucket.Conflict, null,
+                    $"Plannummer {candidates.PlanNumber} in {matches.Count} bekannten Dokumenten — Auswahl noetig"));
+                continue;
+            }
+
+            var match = matches[0];
+            var newIdx = NormalizeIndex(candidates.Index, normalizer);
+            var curIdx = NormalizeIndex(match.CurrentIndex, normalizer);
+
+            // Bucket D — gleicher Index, aber anderer Inhalt (Matrix: CHANGED_SAME_INDEX)
+            if (newIdx == curIdx)
+            {
+                items.Add(new CaptureItem(file, candidates, CaptureBucket.Conflict, match,
+                    $"Gleicher Index wie aktuelle Revision ({match.CurrentIndex ?? "Erstausgabe"}), aber anderer Inhalt — pruefen"));
+                continue;
+            }
+
+            // Bucket B — bekannter Plan, anderer Index (Matrix: UPDATE_NEWER_INDEX / OLDER_REVISION)
+            var older = IsOlderIndex(candidates.Index, match.CurrentIndex);
+            string? reason = older switch
+            {
+                true when candidates.Index is null =>
+                    $"Achtung: Datei ohne Index, aktuelle Revision ist {match.CurrentIndex} (OLDER_REVISION)",
+                true =>
+                    $"Achtung: Index {candidates.Index} ist NIEDRIGER als aktuelle Revision {match.CurrentIndex} (OLDER_REVISION)",
+                _ => null
+            };
+            items.Add(new CaptureItem(file, candidates, CaptureBucket.UpdateProposal, match, reason));
+        }
+
+        return new ManualCaptureResult(items);
+    }
+
+    private static string? NormalizeIndex(string? index, IPlanValueNormalizer normalizer) =>
+        string.IsNullOrWhiteSpace(index) ? null : normalizer.NormalizeForMatch(index);
+
+    /// <summary>
+    /// Vergleicht zwei Index-Tokens wenn beide vergleichbar sind:
+    /// beide numerisch (02 &lt; 03) oder beide einbuchstabig (B &lt; C).
+    /// NULL wenn nicht vergleichbar (kein falscher Alarm).
+    /// </summary>
+    private static bool? IsOlderIndex(string? newIndex, string? currentIndex)
+    {
+        if (string.IsNullOrWhiteSpace(newIndex) || string.IsNullOrWhiteSpace(currentIndex))
+            return newIndex is null && currentIndex is not null ? true : null;
+
+        if (newIndex.All(char.IsDigit) && currentIndex.All(char.IsDigit))
+            return int.Parse(newIndex) < int.Parse(currentIndex);
+
+        if (newIndex.Length == 1 && currentIndex.Length == 1
+            && char.IsLetter(newIndex[0]) && char.IsLetter(currentIndex[0]))
+            return char.ToUpperInvariant(newIndex[0]) < char.ToUpperInvariant(currentIndex[0]);
+
+        return null;
+    }
+}

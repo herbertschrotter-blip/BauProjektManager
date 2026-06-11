@@ -582,6 +582,22 @@ else
 
 `import_journal` auf „pending" Einträge prüfen → Reparatur-Dialog.
 
+### 11.4 Implementierungsstand (BPM-111.04, v0.28.73)
+
+Das Undo-System ist **zweistufig implementiert** (ADR-059 Pending Assignments):
+
+| Stufe | Wann | Implementierung |
+|-------|------|----------------|
+| **1 — vor Import** | Zuordnung getroffen, nicht bestätigt | `PendingAssignmentStore` (in-memory pro Session, bewusst ohne Persistenz — Entscheidung Teil 43). `Discard`/`Clear` verwirft, Re-Assign ersetzt. Kein Move, keine DB. |
+| **2 — nach Import** | Letzter bestätigter Import | `ImportUndoService`: Preflight-Trockenlauf (11.2) → Dateien rückwärts zurück in den Eingang, archivierte Vorgänger zurück ans Ziel → DB-Rollback → Journal-Status `undone`. |
+
+**DB-Rollback (Soft Delete, kein Schema-Change):**
+- Vom Import angelegte Revisionen (`last_import_id`) → `is_deleted = 1`
+- Dokumente ohne verbleibende aktive Revision → `is_deleted = 1`
+- Durch den Import superseded Revisionen (ermittelt über `plan_revision_events`, `event_type = 'superseded'`) → zurück auf `current`, `superseded_at = NULL`, Audit-Event `made_current` mit Undo-Notiz
+
+**Bestätigungs-Strecke:** `CaptureConfirmService` mappt Pending → `ImportDecision` und nutzt die bestehende `ImportExecutionService`-Strecke — Journal-vor-Move-Invariante und Supersede-Logik gelten unverändert. Erstaufnahmen erhalten einen manuellen, index-freien document_key (Typ|Nummer|Bauteil[|Geschoss]; nummernlose Typen: Dateiname statt Nummer).
+
 ---
 
 ## 12. MD5 als universeller Fingerabdruck

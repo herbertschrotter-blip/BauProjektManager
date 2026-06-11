@@ -31,6 +31,30 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.73] — 2026-06-11
+
+### Feature: BPM-111.04 — Pending Assignments + zweistufiges Undo
+
+Stufe 1: `PendingAssignmentStore` (in-memory pro Session, Entscheidung Teil 43) — Radial/Panel schreiben nur Vorschlag, `Discard`/`Clear` verwirft. Bestätigung: `CaptureConfirmService` mappt Pending → `ImportDecision` (manuelle index-freie Keys; Update-Übernahmen nutzen document_key + Zielordner des bekannten Dokuments) und nutzt die bestehende Execute-Strecke (Journal vor Move). Stufe 2: `ImportUndoService` — Undo NUR letzter Import mit Preflight-Trockenlauf (Kap. 11), Dateien zurück in den Eingang, Archiv-Restore, DB-Rollback per Soft Delete + Supersede-Restore (via Audit-Events, `made_current`-Undo-Spur), Journal-Status `undone`. 7 neue Undo-Primitive in PlanManagerDatabase (kein Schema-Change). 11 neue Tests, 316/316 grün. (Commit `22ebcc4`)
+
+---
+
+## [v0.28.72] — 2026-06-11
+
+### Feature: BPM-111.03 — ManualFirstCapture-Workflow (Buckets A/B/C/D)
+
+`ManualFirstCaptureService`: Scan → MD5 → Lightweight-Kandidaten → deterministisches Matching gegen bekannte `plan_documents` → Buckets A Dublette (MD5, Vorrang) / B Update-Vorschlag (bekannter Plan + anderer Index, OLDER_REVISION-Warnung) / C manuelle Erstaufnahme (Radial) / D Konflikt (gleicher Index bzw. mehrdeutige Plannummer). Klassifikation als reine statische Funktion, profil-unabhängig, read-only. Neue Lookups `GetCurrentDocumentLookup` + `GetKnownMd5Lookup`. 12 neue Tests, 305/305 grün. (Commit `19bfef1`)
+
+---
+
+## [v0.28.71] — 2026-06-10
+
+### Docs: CHANGELOG v0.28.68–.70 nachgezogen
+
+Einträge für CHANGELOG-Nachzug (.68), Mockup Radial-Erfassung (.69) und BPM-111.02 Extractor (.70). (Commit `e4e450e`-Folgecommit)
+
+---
+
 ## [v0.28.70] — 2026-06-10
 
 ### Feature: BPM-111.02 — Lightweight-Extractor + IPlanValueNormalizer

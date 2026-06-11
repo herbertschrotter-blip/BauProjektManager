@@ -45,6 +45,8 @@
 
         <!-- 3 Tabs (Style via Default aus Dialogs.xaml: BpmTabControl + BpmTabItem) -->
         <TabControl Grid.Row="2"
+                    x:Name="DetailTabs"
+                    SelectionChanged="OnTabChanged"
                     Foreground="{DynamicResource BpmTextPrimary}">
 
             <!-- Tab 1: Profile -->
@@ -67,17 +69,19 @@
                 </Grid>
             </TabItem>
 
-            <!-- Tab 2: Manuell sortieren -->
-            <TabItem Header="Manuell sortieren">
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <TextBlock Text="Manueller Sortier-Modus"
-                               Foreground="{DynamicResource BpmTextSecondary}"
-                               FontSize="14" HorizontalAlignment="Center"/>
-                    <TextBlock Text="Für Scans und nicht erkannte Dateien. (kommt mit #32)"
-                               Foreground="{DynamicResource BpmTextSecondary}"
-                               FontSize="11" HorizontalAlignment="Center"
-                               Margin="0,8,0,0"/>
-                </StackPanel>
+            <!-- Tab 2: Manuell sortieren (BPM-111.05: Radial-Erfassung, lazy beim ersten Öffnen) -->
+            <TabItem Header="Manuell sortieren" x:Name="ManualSortTab">
+                <ContentControl x:Name="ManualSortHost" Margin="0,12,0,0">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <TextBlock Text="Manueller Sortier-Modus"
+                                   Foreground="{DynamicResource BpmTextSecondary}"
+                                   FontSize="14" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Projektpfad nicht gesetzt — bitte zuerst in den Einstellungen hinterlegen."
+                                   Foreground="{DynamicResource BpmTextSecondary}"
+                                   FontSize="11" HorizontalAlignment="Center"
+                                   Margin="0,8,0,0"/>
+                    </StackPanel>
+                </ContentControl>
             </TabItem>
 
             <!-- Tab 3: Sync -->

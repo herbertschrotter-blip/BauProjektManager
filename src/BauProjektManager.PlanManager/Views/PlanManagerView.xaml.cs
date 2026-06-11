@@ -64,6 +64,7 @@ public partial class PlanManagerView : UserControl
 {
     private readonly PlanManagerViewModel _vm;
     private readonly BoolToVisConverter _boolToVis = new();
+    private readonly ProjectDatabase _db;
     private readonly IIdGenerator _idGenerator;
     private readonly IProfileManager _profileManager;
     private readonly PatternTemplateService _templateService;
@@ -79,6 +80,7 @@ public partial class PlanManagerView : UserControl
         ISegmentTypeCatalog? segmentTypeCatalog = null,
         ISegmentTypeRepository? segmentTypeRepository = null)
     {
+        _db = db;
         _idGenerator = idGenerator;
         _profileManager = profileManager;
         _persistenceRegistry = persistenceRegistry;
@@ -121,7 +123,7 @@ public partial class PlanManagerView : UserControl
 
         var detailView = new ProjectDetailView(
             project, _boolToVis, _profileManager, _idGenerator, _templateService, appDataPath,
-            _persistenceRegistry, _segmentTypeCatalog, _segmentTypeRepository);
+            _persistenceRegistry, _segmentTypeCatalog, _segmentTypeRepository, _db);
         detailView.ViewModel.NavigateBack += NavigateToList;
 
         ProjectListPanel.Visibility = Visibility.Collapsed;

@@ -19,6 +19,9 @@ public partial class ProjectDetailView : UserControl
     private readonly IPersistenceRegistry? _persistenceRegistry;
     private readonly ISegmentTypeCatalog? _segmentTypeCatalog;
     private readonly ISegmentTypeRepository? _segmentTypeRepository;
+    private readonly Infrastructure.Persistence.ProjectDatabase? _bpmDb;
+    private PlanManagerDatabase? _manualSortDb;
+    private bool _manualSortInitialized;
 
     public ProjectDetailView(
         Project project, BoolToVisConverter boolToVis, IProfileManager profileManager,
@@ -26,7 +29,8 @@ public partial class ProjectDetailView : UserControl
         PatternTemplateService? templateService = null, string? appDataPath = null,
         IPersistenceRegistry? persistenceRegistry = null,
         ISegmentTypeCatalog? segmentTypeCatalog = null,
-        ISegmentTypeRepository? segmentTypeRepository = null)
+        ISegmentTypeRepository? segmentTypeRepository = null,
+        Infrastructure.Persistence.ProjectDatabase? bpmDb = null)
     {
         _profileManager = profileManager;
         _idGenerator = idGenerator;
@@ -35,11 +39,52 @@ public partial class ProjectDetailView : UserControl
         _persistenceRegistry = persistenceRegistry;
         _segmentTypeCatalog = segmentTypeCatalog;
         _segmentTypeRepository = segmentTypeRepository;
+        _bpmDb = bpmDb;
         Resources.Add("BoolToVis", boolToVis);
         InitializeComponent();
 
         var vm = new ProjectDetailViewModel(project);
         DataContext = vm;
+
+        // PlanManagerDatabase des ManuellSortieren-Tabs beim Verlassen schliessen
+        Unloaded += (_, _) => { _manualSortDb?.Dispose(); _manualSortDb = null; };
+    }
+
+    /// <summary>
+    /// BPM-111.05 Slice 2c: ManuellSortieren-Tab lazy initialisieren —
+    /// die Eingang-Analyse laeuft erst, wenn der Tab wirklich geoeffnet wird.
+    /// </summary>
+    private void OnTabChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!ReferenceEquals(e.Source, DetailTabs))
+            return; // SelectionChanged von inneren Listen (ListBox) ignorieren
+        if (_manualSortInitialized || !ReferenceEquals(DetailTabs.SelectedItem, ManualSortTab))
+            return;
+
+        var project = ViewModel.Project;
+        if (_bpmDb is null || string.IsNullOrWhiteSpace(project.Paths.Root))
+            return; // Platzhalter-Hinweis im Tab bleibt stehen
+
+        _manualSortInitialized = true;
+        _manualSortDb = new PlanManagerDatabase(project.Id, _idGenerator, _persistenceRegistry);
+        var captureVm = new ManualCaptureViewModel(_manualSortDb, _bpmDb, _idGenerator);
+        ManualSortHost.Content = new ManualCaptureView { DataContext = captureVm };
+
+        _ = InitializeManualSortAsync(captureVm, project);
+    }
+
+    private static async Task InitializeManualSortAsync(ManualCaptureViewModel vm, Project project)
+    {
+        try
+        {
+            await vm.InitializeAsync(
+                project.Id, project.Paths.Root, project.Paths.Inbox, project.Paths.Plans);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "ManuellSortieren-Initialisierung fehlgeschlagen");
+            vm.StatusText = $"Fehler: {ex.Message}";
+        }
     }
 
     private void OnNewProfile(object sender, System.Windows.RoutedEventArgs e)

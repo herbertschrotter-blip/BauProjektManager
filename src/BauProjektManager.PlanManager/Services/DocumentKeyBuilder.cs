@@ -69,22 +69,9 @@ public class DocumentKeyBuilder
         return key;
     }
 
-    /// <summary>
-    /// Normalizes a value for use in document_key:
-    /// lowercase, trim, replace spaces/special chars with underscore.
-    /// </summary>
-    private static string Normalize(string value)
-    {
-        var normalized = value.ToLowerInvariant().Trim();
-        normalized = normalized
-            .Replace("ä", "ae").Replace("ö", "oe")
-            .Replace("ü", "ue").Replace("ß", "ss");
-        normalized = normalized
-            .Replace(" ", "_").Replace("-", "_")
-            .Replace(".", "_").Replace(",", "");
-        // Collapse multiple underscores
-        while (normalized.Contains("__"))
-            normalized = normalized.Replace("__", "_");
-        return normalized.Trim('_');
-    }
+    // BPM-111.02: Normalisierung zentral in PlanValueNormalizer (eine Stelle
+    // fuer Key/Match/FolderName) — Logik unveraendert, Keys bleiben stabil.
+    private static readonly PlanValueNormalizer _normalizer = new();
+
+    private static string Normalize(string value) => _normalizer.NormalizeForKey(value);
 }

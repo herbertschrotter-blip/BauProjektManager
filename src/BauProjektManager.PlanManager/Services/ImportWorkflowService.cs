@@ -134,20 +134,9 @@ public class ImportWorkflowService
         return new ImportAnalysisResult(planned, healthyProfiles, unhealthyProfiles);
     }
 
-    private static RevisionKind DetectRevisionKind(string token)
-    {
-        if (string.IsNullOrWhiteSpace(token))
-            return RevisionKind.None;
-
-        var lower = token.ToLowerInvariant();
-        if (lower is "vorabzug" or "vorab" or "va")
-            return RevisionKind.DraftMarker;
-        if (token.All(char.IsDigit))
-            return RevisionKind.Numeric;
-        if (token.All(char.IsLetter))
-            return RevisionKind.Alphabetic;
-        return RevisionKind.Unknown;
-    }
+    // BPM-111.02: zentral in RevisionKindDetector (Pipeline + Lightweight-Extractor)
+    private static RevisionKind DetectRevisionKind(string token) =>
+        RevisionKindDetector.Detect(token);
 }
 
 /// <summary>

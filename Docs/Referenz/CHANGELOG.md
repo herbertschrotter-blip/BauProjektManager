@@ -31,6 +31,30 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.70] — 2026-06-10
+
+### Feature: BPM-111.02 — Lightweight-Extractor + IPlanValueNormalizer
+
+`LightweightPlanExtractor` liest deterministisch Kandidaten aus Dateinamen (PlanNr inkl. Prefix/geklebtem Index `011vorab`/`002a`, Index + RevisionKind, Geschoss mit strikter Tokenliste, BuildingPartHint, Plantyp-/Protokoll-Keywords mit Kombi-Erkennung, Datum, Kopiermarker `_(1)`) — nur Assist nach ADR-059. `IPlanValueNormalizer` (Domain) mit drei Kontexten Key/Match/FolderName; `DocumentKeyBuilder` und `ImportWorkflowService` (`RevisionKindDetector`) delegieren an die zentralen Helfer, Verhalten unverändert. 35 neue Tests, 293/293 grün. (Commit `e4e450e`)
+
+---
+
+## [v0.28.69] — 2026-06-10
+
+### Docs: BPM-111.01 — Mockup Radial-Erfassung
+
+`02_ManuellSortieren.html` komplett neu (Hold-Drag-Geste mit timerbasiertem Dwell, typabhängige Ringe, „+ Neu…" je Ebene, Pending/Update-Markierung, Archiv-Tab mit Undo/Verschieben, angedocktes Vorschau-Fenster mit Plankopf-Ausschnitt; Spezifikation im HTML-Header). Alte Listenvariante nach `_Archiv/`, Tab-Link in `01_Profile.html` aktiviert, Sitemap nachgezogen. (Commit `3e1ee59`)
+
+---
+
+## [v0.28.68] — 2026-06-10
+
+### Docs: CHANGELOG v0.28.65–.67 nachgezogen
+
+Einträge für ADR-059-Sign-off (.66), BPM-109.05a-Status (.65) und BPM-110-Fix (.67) ergänzt. (Commit `dbfd946`)
+
+---
+
 ## [v0.28.67] — 2026-06-10
 
 ### Fix: BPM-110 — Feldkey-Bruch (Index-Erkennung war tot)

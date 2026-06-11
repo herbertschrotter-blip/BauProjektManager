@@ -1,0 +1,11 @@
+<UserControl x:Class="BauProjektManager.PlanManager.Controls.RadialCaptureControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             UseLayoutRounding="True"
+             SnapsToDevicePixels="True"
+             Background="Transparent">
+    <!-- Festes 520er Design-Koordinatensystem (Mockup-Spez), skaliert per Viewbox -->
+    <Viewbox Stretch="Uniform">
+        <Canvas x:Name="RootCanvas" Width="520" Height="520" Background="Transparent"/>
+    </Viewbox>
+</UserControl>

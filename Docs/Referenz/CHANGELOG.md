@@ -31,6 +31,62 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.80] — 2026-06-22
+
+### Fix: Bauteil-Kürzel-Pflicht + Radial-Fallback bei leerem Kürzel
+
+Im Live-Test BPM-111.05 zeigte sich: Bauteile ohne Kürzel (`short_name` leer) erzeugten leere Radial-Segmente (Ring 2/3) und einen leeren `folder_name` — kein Radial- oder DB-Bug, sondern fehlende Stammdaten. Zwei Absicherungen: (1) Kürzel-Pflicht im Bauteil-Editor (`ProjectEditDialog`) — OK blockiert mit Warnhinweis bei leerem Kürzel. (2) Defensiver Fallback im `RadialSelectionController`: neuer `EffectivePartName`-Helper (Kürzel, sonst Beschreibung) als konsistente Identität für Ring-2-Label und Ring-3-/Ziel-Matching; `folder_name` fällt bei Altdaten auf die normalisierte Beschreibung zurück (folder_name-Einmal-Regel gewahrt — nur transientes Pending-Ziel). 343/343 Tests grün. (Commit `63addd2`)
+
+---
+
+## [v0.28.79] — 2026-06-11
+
+### Feature: BPM-111.05 Slice 2c — ManuellSortieren-Tab verdrahtet
+
+Tab „Manuell sortieren" im Projektdetail komplett angebunden: Lazy-Init beim Tab-Wechsel, `ProjectDatabase` (bpm.db-Stammdaten) durchgereicht, `planmanager.db`-Lifecycle (Öffnen/Dispose pro Projekt). Kette geschlossen: Projekt → Tab → Seed → Buckets → Tabelle → Halten → Radial → Pending → Bestätigen → Undo. (Commit `8fbf976`)
+
+---
+
+## [v0.28.78] — 2026-06-11
+
+### Feature: BPM-111.05 Slice 2b — ManualCaptureView + Gesten-Host
+
+`ManualCaptureView` + Code-Behind als Gesten-Host (Hold 260ms / Capture / Ghost-Anker, Abbruch >40px), `ManualCaptureViewModel` (Eingangs-Tabelle aus Buckets, Pending-Anbindung), `RadialSelectionController` als reine, UI-freie Ebenenlogik (Ring 2 je `ring2_source`, Ring 3 Geschosse je Bauteil, Dwell-Commit, Animation nur bei Ring-Erscheinen). (Commit `2ad10b3`)
+
+---
+
+## [v0.28.77] — 2026-06-11
+
+### Feature: BPM-111.05 Slice 2a — Dokumenttyp-Stammdaten
+
+`document_types` + `document_type_categories` in bpm.db (projekt-scoped), `DocumentTypeSeedService` seedet 7 Built-in-Typen (Polierplan/Statik/Bewehrung/Schalung/Architektur = BuildingParts, Fertigteile/Protokolle = Categories), folder_name-Einmal-Regel. `PlanValueNormalizer` von PlanManager nach Infrastructure verschoben (Seed/ProjectDatabase brauchen die folder_name-Erzeugung ebenfalls). (Commit `6ace879`)
+
+---
+
+## [v0.28.76] — 2026-06-11
+
+### Docs: ADR-059-Addendum — typabhängiges Unterteilungs-Schema
+
+ADR-059-Addendum: `document_types` + `document_type_categories` in bpm.db, `ring2_source` je Typ (`building_parts`/`categories`/`none`), folder_name-Einmal-Regel (Feld statt Template), Seed-Definition. DB-SCHEMA Kap. 4.12/4.13 ergänzt. (Commit `d946a5a`)
+
+---
+
+## [v0.28.75] — 2026-06-11
+
+### Feature: BPM-111.05 Slice 1 — RadialCaptureControl
+
+`RadialCaptureControl` (Ring-Geometrie, daten-dummes Rendering) + `RadialGeometry`-Helfer, timerbasierter Dwell-Timer (110ms, nie MouseMove-gekoppelt), Erscheinen-Animation (140ms nur bei Ring-Erscheinen), Theme-Tokens statt Hardcoded-Farben. (Commit `4f715eb`)
+
+---
+
+## [v0.28.74] — 2026-06-11
+
+### Docs: CHANGELOG v0.28.71–.73 + PlanManager.md Kap. 11.4
+
+CHANGELOG-Einträge .71–.73 nachgezogen, PlanManager.md Kap. 11.4 um den Undo-Implementierungsstand (BPM-111.03/.04) ergänzt. (Commit `1fd33da`)
+
+---
+
 ## [v0.28.73] — 2026-06-11
 
 ### Feature: BPM-111.04 — Pending Assignments + zweistufiges Undo

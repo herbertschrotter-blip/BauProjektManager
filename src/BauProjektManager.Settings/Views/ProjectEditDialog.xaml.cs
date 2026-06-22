@@ -370,7 +370,21 @@ public partial class ProjectEditDialog : Window
             HorizontalAlignment = HorizontalAlignment.Right
         };
         Grid.SetRow(btnOk, 4); Grid.SetColumn(btnOk, 1);
-        btnOk.Click += (_, _) => { w.DialogResult = true; w.Close(); };
+        // Kürzel ist Pflicht: es bildet folder_name (ADR-059-Addendum) und das
+        // Radial-Segment der Plan-Erfassung — ohne Kürzel entsteht ein leerer
+        // Ordner-/Segmentname. Speichern wird daher blockiert (BPM-111.05).
+        btnOk.Click += (_, _) =>
+        {
+            if (string.IsNullOrWhiteSpace(txtShort.Text))
+            {
+                MessageBox.Show(
+                    "Bitte ein Kürzel angeben — es bildet den Ordnernamen und das Segment der Plan-Erfassung.",
+                    "Kürzel fehlt", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtShort.Focus();
+                return;
+            }
+            w.DialogResult = true; w.Close();
+        };
 
         grid.Children.Add(MakeLabel("Kürzel:", 0, 0)); grid.Children.Add(txtShort);
         grid.Children.Add(MakeLabel("Beschreibung:", 1, 0)); grid.Children.Add(txtDesc);

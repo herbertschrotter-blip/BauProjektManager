@@ -1,6 +1,7 @@
 using BauProjektManager.Domain.Enums.PlanManager;
 using BauProjektManager.Domain.Models;
 using BauProjektManager.Domain.Models.PlanManager;
+using BauProjektManager.Infrastructure.Services;
 using BauProjektManager.PlanManager.Controls;
 
 namespace BauProjektManager.PlanManager.Services;
@@ -29,6 +30,10 @@ public class RadialSelectionController
 {
     private readonly IReadOnlyList<PlanDocumentType> _types;
     private readonly IReadOnlyList<BuildingPart> _parts;
+
+    // folder_name-Erzeugung fuer den Fallback ohne gespeicherten folder_name —
+    // spiegelt die statische Normalizer-Nutzung in ProjectDatabase (ADR-059-Addendum).
+    private static readonly PlanValueNormalizer _normalizer = new();
 
     private bool _ring2Visible;
     private bool _ring3Visible;
@@ -116,8 +121,12 @@ public class RadialSelectionController
 
         if (SelectedType?.Ring2Source == Ring2Source.BuildingParts && SelectedPart is not null)
         {
-            var part = _parts.FirstOrDefault(p => p.ShortName == SelectedPart);
-            segments.Add(part?.FolderName is { Length: > 0 } fn ? fn : SelectedPart);
+            var part = _parts.FirstOrDefault(p => EffectivePartName(p) == SelectedPart);
+            // Gespeicherten folder_name bevorzugen; bei Altdaten ohne folder_name
+            // den Anzeigenamen normalisieren (kein leerer Pfad-Teil mehr).
+            segments.Add(part?.FolderName is { Length: > 0 } fn
+                ? fn
+                : _normalizer.NormalizeForFolderName(SelectedPart));
             if (SelectedLevel is not null)
                 segments.Add(SelectedLevel);
         }
@@ -138,20 +147,29 @@ public class RadialSelectionController
         return SelectedType.Ring2Source switch
         {
             Ring2Source.BuildingParts => [.. _parts.Select(p => new RadialSegmentItem(
-                p.ShortName,
+                EffectivePartName(p),
                 IsCandidate: candidates?.BuildingPartHint is not null
-                    && string.Equals(p.ShortName, candidates.BuildingPartHint, StringComparison.OrdinalIgnoreCase)))],
+                    && string.Equals(EffectivePartName(p), candidates.BuildingPartHint, StringComparison.OrdinalIgnoreCase)))],
             Ring2Source.Categories => [.. SelectedType.Categories.Select(c => new RadialSegmentItem(c.Name))],
             _ => []
         };
     }
+
+    /// <summary>
+    /// Anzeige- UND Identitaetsname eines Bauteils im Radial: das Kuerzel,
+    /// sonst (Altdaten ohne Kuerzel) die Beschreibung. Kuerzel ist seit
+    /// BPM-111.05 Pflicht im Bauteil-Editor — dieser Fallback schuetzt nur
+    /// vor leeren Bestandsdaten und haelt Label/Match/FolderName konsistent.
+    /// </summary>
+    private static string EffectivePartName(BuildingPart part) =>
+        !string.IsNullOrWhiteSpace(part.ShortName) ? part.ShortName : part.Description;
 
     private List<RadialSegmentItem> BuildRing3(PlanFileCandidates? candidates)
     {
         if (SelectedType?.Ring2Source != Ring2Source.BuildingParts || SelectedPart is null)
             return [];
 
-        var part = _parts.FirstOrDefault(p => p.ShortName == SelectedPart);
+        var part = _parts.FirstOrDefault(p => EffectivePartName(p) == SelectedPart);
         if (part is null || part.Levels.Count == 0)
             return [];
 

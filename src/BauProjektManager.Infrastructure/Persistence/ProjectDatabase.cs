@@ -640,7 +640,8 @@ public class ProjectDatabase : IDisposable
                 Rdok = reader.GetDouble(reader.GetOrdinal("rdok")),
                 Fbok = reader.GetDouble(reader.GetOrdinal("fbok")),
                 Rduk = reader.IsDBNull(reader.GetOrdinal("rduk")) ? null : reader.GetDouble(reader.GetOrdinal("rduk")),
-                SortOrder = reader.GetInt32(reader.GetOrdinal("sort_order"))
+                SortOrder = reader.GetInt32(reader.GetOrdinal("sort_order")),
+                FolderName = reader.GetString(reader.GetOrdinal("folder_name"))  // ADR-061 Slice 0.3
             });
         }
         for (int i = 0; i < levels.Count; i++)
@@ -740,13 +741,14 @@ public class ProjectDatabase : IDisposable
             var level = levels[j];
             var lvlCmd = conn.CreateCommand();
             lvlCmd.CommandText = """
-                INSERT INTO building_levels (id, building_part_id, prefix, name, description, rdok, fbok, rduk, sort_order, created_at, created_by, last_modified_at, last_modified_by, sync_version)
-                VALUES (@id, @bpid, @prefix, @name, @desc, @rdok, @fbok, @rduk, @so, @now, @user, @now, @user, 0)
+                INSERT INTO building_levels (id, building_part_id, prefix, name, description, rdok, fbok, rduk, sort_order, folder_name, created_at, created_by, last_modified_at, last_modified_by, sync_version)
+                VALUES (@id, @bpid, @prefix, @name, @desc, @rdok, @fbok, @rduk, @so, @fn, @now, @user, @now, @user, 0)
                 ON CONFLICT(id) DO UPDATE SET
                     prefix = @prefix, name = @name, description = @desc,
                     rdok = @rdok, fbok = @fbok, rduk = @rduk, sort_order = @so,
                     last_modified_at = @now, last_modified_by = @user,
                     sync_version = sync_version + 1
+                    -- ADR-061: folder_name bewusst NICHT im UPDATE (rename-stabil, Einmal-Regel)
                 """;
             lvlCmd.Parameters.AddWithValue("@now", utcNow);
             lvlCmd.Parameters.AddWithValue("@user", user);
@@ -755,6 +757,9 @@ public class ProjectDatabase : IDisposable
             lvlCmd.Parameters.AddWithValue("@desc", level.Description); lvlCmd.Parameters.AddWithValue("@rdok", level.Rdok);
             lvlCmd.Parameters.AddWithValue("@fbok", level.Fbok); lvlCmd.Parameters.AddWithValue("@rduk", (object?)level.Rduk ?? DBNull.Value);
             lvlCmd.Parameters.AddWithValue("@so", j);
+            // ADR-061: folder_name beim Insert EINMAL setzen (vorhandener Wert hat Vorrang — rename-stabil)
+            lvlCmd.Parameters.AddWithValue("@fn", string.IsNullOrWhiteSpace(level.FolderName)
+                ? level.BuildDefaultFolderName() : level.FolderName);
             Log.Verbose("Executing SQL: {Operation} on {Table}", "UPSERT", "building_levels");
             lvlCmd.ExecuteNonQuery();
         }
@@ -823,13 +828,15 @@ public class ProjectDatabase : IDisposable
 
         var cmd = conn.CreateCommand();
         cmd.CommandText = """
-            INSERT INTO building_levels (id, building_part_id, prefix, name, description, rdok, fbok, rduk, sort_order, created_at, created_by, last_modified_at, last_modified_by, sync_version)
-            VALUES (@id, @bpid, 0, @name, '', 0, 0, NULL, @so, @now, @user, @now, @user, 0)
+            INSERT INTO building_levels (id, building_part_id, prefix, name, description, rdok, fbok, rduk, sort_order, folder_name, created_at, created_by, last_modified_at, last_modified_by, sync_version)
+            VALUES (@id, @bpid, 0, @name, '', 0, 0, NULL, @so, @fn, @now, @user, @now, @user, 0)
             """;
         cmd.Parameters.AddWithValue("@id", levelId);
         cmd.Parameters.AddWithValue("@bpid", buildingPartId);
         cmd.Parameters.AddWithValue("@name", name);
         cmd.Parameters.AddWithValue("@so", sortOrder);
+        // ADR-061: folder_name EINMAL aus Prefix(0)+Name (Prefix-Feinpflege spaeter in den Einstellungen)
+        cmd.Parameters.AddWithValue("@fn", new BuildingLevel { Prefix = 0, Name = name }.BuildDefaultFolderName());
         cmd.Parameters.AddWithValue("@now", utcNow);
         cmd.Parameters.AddWithValue("@user", user);
         Log.Verbose("Executing SQL: {Operation} on {Table}", "INSERT", "building_levels");
@@ -854,7 +861,7 @@ public class ProjectDatabase : IDisposable
         var result = new List<PlanDocumentType>();
         var cmd = conn.CreateCommand();
         cmd.CommandText = """
-            SELECT id, name, folder_name, color_hex, ring2_source, sort_order, is_builtin
+            SELECT id, name, folder_name, color_hex, ring2_source, sort_order, is_builtin, key, root_relative_path
             FROM document_types
             WHERE project_id = @pid AND is_deleted = 0
             ORDER BY sort_order
@@ -873,7 +880,9 @@ public class ProjectDatabase : IDisposable
                 Ring2Source: ParseRing2Source(reader.GetString(4)),
                 SortOrder: reader.GetInt32(5),
                 IsBuiltin: reader.GetInt32(6) == 1,
-                Categories: []));
+                Categories: [],
+                Key: reader.GetString(7),
+                RootRelativePath: reader.GetString(8)));
         }
 
         // Kategorien nachladen (eigener Reader — SQLite-Connection seriell)
@@ -912,23 +921,27 @@ public class ProjectDatabase : IDisposable
     /// </summary>
     public string InsertDocumentType(
         string projectId, string name, string? folderName, string? colorHex,
-        Ring2Source ring2Source, int sortOrder, bool isBuiltin = false, string? id = null)
+        Ring2Source ring2Source, int sortOrder, bool isBuiltin = false, string? id = null,
+        string key = "", string rootRelativePath = "")
     {
         var conn = GetConnection();
         var typeId = id ?? _idGenerator.NewId();
         var utcNow = DateTime.UtcNow.ToString("o");
         var cmd = conn.CreateCommand();
         cmd.CommandText = """
-            INSERT INTO document_types (id, project_id, name, folder_name, color_hex,
+            INSERT INTO document_types (id, project_id, name, folder_name, key, root_relative_path, color_hex,
                 ring2_source, sort_order, is_builtin, created_at, created_by,
                 last_modified_at, last_modified_by, sync_version)
-            VALUES (@id, @pid, @name, @fn, @color, @r2, @so, @builtin, @now, @user, @now, @user, 0)
+            VALUES (@id, @pid, @name, @fn, @key, @rrp, @color, @r2, @so, @builtin, @now, @user, @now, @user, 0)
             """;
         cmd.Parameters.AddWithValue("@id", typeId);
         cmd.Parameters.AddWithValue("@pid", projectId);
         cmd.Parameters.AddWithValue("@name", name);
         cmd.Parameters.AddWithValue("@fn", string.IsNullOrWhiteSpace(folderName)
             ? _normalizer.NormalizeForFolderName(name) : folderName);
+        // ADR-061: key (gesperrt nach Anlage) + Ablage-Root. Permissive Defaults bis Seed 0.4 sie befuellt.
+        cmd.Parameters.AddWithValue("@key", key);
+        cmd.Parameters.AddWithValue("@rrp", rootRelativePath);
         cmd.Parameters.AddWithValue("@color", (object?)colorHex ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@r2", Ring2SourceToDb(ring2Source));
         cmd.Parameters.AddWithValue("@so", sortOrder);

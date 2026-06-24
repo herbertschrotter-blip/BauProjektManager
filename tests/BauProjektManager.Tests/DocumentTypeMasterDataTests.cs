@@ -109,6 +109,42 @@ public class DocumentTypeMasterDataTests : IDisposable
     }
 
     [Fact]
+    public void InsertDocumentType_PersistsKeyAndRootRelativePath()
+    {
+        // ADR-061 Slice 0.3: key + root_relative_path schreiben und lesen.
+        _db.InsertDocumentType(ProjectId, "Polierplan", "01 Polierpläne", null,
+            Ring2Source.BuildingParts, sortOrder: 10,
+            key: "polierplan", rootRelativePath: "01 Planunterlagen");
+
+        var t = Assert.Single(_db.GetDocumentTypes(ProjectId));
+        Assert.Equal("polierplan", t.Key);
+        Assert.Equal("01 Planunterlagen", t.RootRelativePath);
+    }
+
+    [Fact]
+    public void InsertDocumentType_DefaultsKeyAndRootToEmpty()
+    {
+        // Permissive Defaults (Slice 0.2/0.3): ohne explizite Werte -> leer, kein NULL.
+        _db.InsertDocumentType(ProjectId, "Sonstiges", null, null, Ring2Source.None, 10);
+
+        var t = Assert.Single(_db.GetDocumentTypes(ProjectId));
+        Assert.Equal(string.Empty, t.Key);
+        Assert.Equal(string.Empty, t.RootRelativePath);
+    }
+
+    [Fact]
+    public void InsertBuildingLevel_SetsFolderNameFromPrefixAndName()
+    {
+        // ADR-061 Slice 0.3: folder_name wird beim Insert EINMAL aus Prefix(0)+Name erzeugt.
+        var partId = _db.InsertBuildingPart(ProjectId, "Haus A");
+        _db.InsertBuildingLevel(partId, "EG");
+
+        var part = Assert.Single(_db.GetBuildingParts(ProjectId));
+        var level = Assert.Single(part.Levels);
+        Assert.Equal("00 EG", level.FolderName);
+    }
+
+    [Fact]
     public void Seed_IsPerProject()
     {
         var projectA = CreateProject("Projekt A");

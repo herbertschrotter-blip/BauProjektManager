@@ -120,8 +120,18 @@ public partial class ProjectDetailView : UserControl
                 return;
             }
 
-            var workflow = new ImportWorkflowService(_profileManager, db);
+            if (_bpmDb is null)
+            {
+                MessageBox.Show("Stammdaten-Datenbank nicht verfügbar — Import nicht möglich.",
+                    "Import", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // ADR-061 Slice 0.6a: bpmDb (Dokumenttyp-/Bauteil-Stammdaten) + projectId
+            // für die Resolver-basierte Zielpfad-Berechnung.
+            var workflow = new ImportWorkflowService(_profileManager, db, _bpmDb);
             var result = await workflow.AnalyzeAsync(
+                project.Id,
                 project.Paths.Root,
                 project.Paths.Inbox,
                 project.Paths.Plans);

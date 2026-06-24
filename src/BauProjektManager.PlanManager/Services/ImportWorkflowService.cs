@@ -1,6 +1,8 @@
 using BauProjektManager.Domain.Enums.PlanManager;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models.PlanManager;
+using BauProjektManager.Infrastructure.Persistence;
+using BauProjektManager.Infrastructure.Services;
 using Serilog;
 
 namespace BauProjektManager.PlanManager.Services;
@@ -18,14 +20,17 @@ public class ImportWorkflowService
     private readonly ImportContextResolver _resolver = new();
     private readonly DocumentKeyBuilder _keyBuilder = new();
     private readonly RevisionDecisionService _decision = new();
-    private readonly ImportPlanBuilder _planBuilder = new();
+    private readonly ImportPlanBuilder _planBuilder;
     private readonly IProfileManager _profileManager;
     private readonly PlanManagerDatabase _db;
 
-    public ImportWorkflowService(IProfileManager profileManager, PlanManagerDatabase db)
+    public ImportWorkflowService(IProfileManager profileManager, PlanManagerDatabase db, ProjectDatabase bpmDb)
     {
         _profileManager = profileManager;
         _db = db;
+        // ADR-061 Slice 0.6a: Zielpfade über den Resolver (DB = Ordner-Wahrheit).
+        var resolver = new DocumentTargetPathResolver(bpmDb, new PlanValueNormalizer(), new LocalFileSystem());
+        _planBuilder = new ImportPlanBuilder(resolver, bpmDb);
     }
 
     /// <summary>
@@ -33,6 +38,7 @@ public class ImportWorkflowService
     /// Returns ImportDecisions ready for the preview UI.
     /// </summary>
     public async Task<ImportAnalysisResult> AnalyzeAsync(
+        string projectId,
         string projectRootPath,
         string inboxRelativePath,
         string plansRelativePath,
@@ -122,8 +128,10 @@ public class ImportWorkflowService
         var existingRevisions = _db.GetCurrentRevisionLookup();
         var decisions = _decision.Decide(classified, existingRevisions);
 
-        // 7. Execution Plan — calculate target paths
-        var planned = _planBuilder.BuildPlan(decisions, plansRelativePath);
+        // 7. Execution Plan — Zielpfade über den DocumentTargetPathResolver (ADR-061).
+        //    plansRelativePath wird hier nicht mehr genutzt (Pfad kommt aus root_relative_path
+        //    je Typ); ProjectPaths.Plans bleibt nur Convenience/Navigation.
+        var planned = _planBuilder.BuildPlan(decisions, projectId);
 
         Log.Information("Import-Analyse abgeschlossen: {Total} Dateien, {New} neu, {Unknown} unbekannt, {Unhealthy} ausgeschlossene Profile",
             planned.Count,

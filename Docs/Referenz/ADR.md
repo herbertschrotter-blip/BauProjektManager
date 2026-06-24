@@ -16,7 +16,7 @@ supersedes: []
 - Autorität: source_of_truth
 - Lesen wenn: Neue Architekturentscheidung treffen, bestehende ADR prüfen, Status ändern, Entscheidung nachschlagen
 - Nicht zuständig für: Implementierungs-Details (→ jeweilige Modul-Docs), Code-Standards (→ CODING_STANDARDS.md)
-- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-059)
+- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-061)
 - Pflichtlesen: keine (gezieltes Nachschlagen per ADR-Nummer)
 - Fachliche Invarianten:
   - Statusmodell: Decision Status (Proposed/Accepted/Superseded/Deprecated) getrennt von Implementation Status (Not Started/Partial/Implemented)
@@ -2846,6 +2846,92 @@ Das bisherige Erkennungs-Modell extrahiert Identitätsfelder (haus/geschoss/plan
 **Frühphase:** Neue Tabellen sind additiv (`CREATE TABLE IF NOT EXISTS`); die `folder_name`-Spalte in `building_parts` ist eine Bestandsänderung → **Reset-Anweisung: bpm.db löschen, BPM legt sie beim nächsten Start neu an** (keine Migration, INDEX.md-Frühphasenregel).
 
 **Konsequenzen:** DB-SCHEMA.md Kap. 4.12/4.13 neu + Kap. 4.4 ergänzt; Einstellungen Tab 2 braucht post-Slice eine Pflege-UI für Typen/Kategorien; BPM-111.05 Slice 2 baut den Ring-Daten-Service auf diesen Tabellen auf.
+
+---
+
+## ADR-060: Vereinheitlichte Dateisystem-Ports für alle Module
+
+**Datum:** 2026-06-24
+**Status:** ✅ Entschieden (Sign-off via CGR-2026-06-22-bpm-architektur, 4 Runden)
+**Implementierung:** Not Started — BPM-112, Slices 0–6
+**Herkunft:** Live-Test BPM-111.05 (Teil 44) → Herberts Ausgangsfrage: braucht BPM ein vereinheitlichtes Dateisystem-Interface für alle Module? 4-Runden-Cross-Review mit ChatGPT GPT-5 Thinking.
+
+**Kontext:**
+
+`System.IO` (`Directory`/`File`/`Path`) ist über ~29 Dateien in allen Schichten verstreut — auch in Views/ViewModels (z.B. `ProjectEditDialog.xaml.cs`, `FolderTemplateControl.xaml.cs`, `SettingsViewModel.cs`). Kein vereinheitlichtes Interface → nicht testbar (kein Mock des Dateisystems), und Cloud-Sync-/DSGVO-/Pfadlogik fransen über die Codebasis aus. Es gibt einen `ProjectFolderService` und einen transaktionalen `ImportExecutionService`, aber keine gemeinsame Abstraktion.
+
+**Entscheidung:**
+
+1. **Ports & Adapters (Hexagonal).** Drei schmale Ports in `Domain.Interfaces`:
+   - `IFileSystemReader` — `FileExists`/`DirectoryExists`/`EnumerateFiles`/`EnumerateDirectories`/`GetFileInfo` (→ `FileInfoSnapshot`)/`OpenRead`
+   - `IFileSystemWriter` — `CreateDirectory`/`MoveFile`/`DeleteFile`/`CopyFile`
+   - `IPathService` — `Combine`/`GetDirectoryName`/`GetFileName`/`GetExtension`/`GetRelativePath`
+   Ein Adapter `LocalFileSystem` (Infrastructure) implementiert alle drei, via DI (Singleton) an alle Module. **Kein direktes `System.IO` mehr außerhalb des Adapters.**
+
+2. **Eigenes schmales Interface statt `System.IO.Abstractions`** (Projektregel keine neuen Libraries ohne Freigabe; BPM braucht nur wenige kontrollierte Operationen mit BPM-Verhalten: Logging, DSGVO-Pfadmaskierung, Same-Volume-Prüfung, Cloud-Vorsicht). `FileInfoSnapshot`-Record statt `System.IO.FileInfo`.
+
+3. **Zwei Zusatz-Ports für den In-App-Explorer:** `IFileLauncher` (`OpenFile` via ShellExecute / `OpenFolder` / `RevealInExplorer` / `CopyPathToClipboard`) — NICHT im File-Port. Später `IShareService` (Windows-Share-Sheet); echte Cloud-Share-Links bewusst **out-of-scope** (Provider-APIs, Online-Zwang, DSGVO/Berechtigungen).
+
+4. **Schichtregel:** Views/ViewModels nie `System.IO`; PlanManager/Settings keine direkten `File`/`Directory`/`Path`-Aufrufe; Infrastructure = echte `System.IO`; Domain nur Interfaces/Modelle. Bestehende High-Level-Services (`ProjectFolderService`, `ImportExecutionService`, `RecoveryExecutorService`, `CaptureConfirmService`) bleiben fachlich, werden nur von direktem `System.IO` entkoppelt.
+
+5. **Test:** In-Memory-Fake (`FakeFileStore`) für Unit-Tests (Pfad/Importplan/Recovery/Seed); Temp-Verzeichnis-Integrationstests für echte Move-/overwrite-/Lock-/Same-Volume-Semantik.
+
+**Umsetzung (Slices):** 0 Ports+Adapter+DI · 1 Scanner/Reader (`ImportScanService`, Hash/MD5) · 2 Pfadberechnung · 3 transaktionaler Import (Hochrisiko, `ImportExecutionService`) · 4 DB-Pfade (`PlanManagerDatabase`/`ProjectDatabase` nur Pfad/Ordneranlage, NICHT die SQLite-Connection) · 5 Settings/Views + `ProjectFolderService` · 6 In-App-Explorer (erst nach stabilen Ports).
+
+**Konsequenzen:**
+
+- Testbar, zentral auditierbar, eine Stelle für Cloud-/Lock-/DSGVO-Pfadlogik.
+- Etwas Boilerplate; Port klein halten (nur benötigte Operationen, kein Nachbau von `System.IO`).
+- Eng verzahnt mit ADR-061 (der `DocumentTargetPathResolver` nutzt `IPathService`; der Import nutzt die Writer-/Reader-Ports).
+
+**Alternativen verworfen:** `System.IO.Abstractions` (NuGet — jetzt nicht: Lib-Regel + zu breite Fläche); God-Interface `IFileStorage` (Coupling, schwer testbar).
+
+**DSGVO:** Klasse A (technische Dateioperationen). Pfade/Dateinamen können Personenbezug tragen → DSGVO-Pfadmaskierung beim Logging zentral im Adapter.
+
+**Betrifft:** ADR-053 (Server-Sync — Ports erleichtern spätere Remote-Adapter), ADR-061 (Resolver/Import nutzen die Ports), Architektur-Doc (Schichtgrenzen), DSVGO-Architektur.md.
+
+**Referenz:** [Docs/Referenz/chatgpt-reviews/CGR-2026-06-22-bpm-architektur/](../Referenz/chatgpt-reviews/CGR-2026-06-22-bpm-architektur/) — 4 Runden Cross-Review (r1 Port-Zuschnitt/Testbarkeit, r2–r4 Slices/Sign-off). ClickUp: BPM-112.
+
+---
+
+## ADR-061: DB als einzige Ordner-Wahrheit + DocumentTargetPathResolver
+
+**Datum:** 2026-06-24
+**Status:** ✅ Entschieden (Sign-off via CGR-2026-06-22-bpm-architektur, 4 Runden)
+**Implementierung:** Not Started — BPM-113, Slices 0.1–0.6. Ergänzt/präzisiert ADR-059-Addendum.
+**Herkunft:** Live-Test BPM-111.05 (Teil 44) — Radial-Import legte „Polierplan" an statt das vorhandene „01 Polierpläne" zu treffen.
+
+**Kontext:**
+
+Zwei getrennte Ordner-Wahrheiten, die sich nicht kennen: `AppSettings.FolderTemplate` erzeugt physische Plan-Ordner mit Positions-Präfix (`Polierpläne` → „01 Polierpläne"), während `document_types.folder_name` der normalisierte Typname war („Polierplan"). Zusätzlich war `profile.TargetFolder` eine dritte Wahrheit im klassischen Profil-Import. Ergebnis: Drift, neue Ordner statt Treffer der Vorlage.
+
+**Entscheidung:** Nach Bootstrap ist die DB die EINZIGE fachliche Ordner-/Typ-Wahrheit; `FolderTemplate` ist nur Bootstrap-Quelle beim Projekt-Setup.
+
+1. **Schema `document_types`:** + `key` (TEXT NOT NULL, `UNIQUE(project_id, key)`, nach Anlage gesperrt, ≠ UI-Name) + `root_relative_path` (TEXT NOT NULL, echter Root je Typ: „01 Planunterlagen" / „06 Protokolle"; CHECK `<> ''`) + `folder_name` (Typordner unter Root, **leer bei Root-Typ**). `document_type_categories.folder_name` = echter (ggf. präfixierter) Kategorieordner. **`building_levels` erhält `folder_name`** = `"{PrefixString} {Name}"` (z.B. `-01 KG` / `00 EG` / `01 OG1`), beim Anlegen erzeugt, rename-stabil (ON CONFLICT unangetastet).
+
+2. **Template trägt Typ-Metadaten:** `FolderTemplateEntry` UND `SubFolderEntry` bekommen optionale Typ-Metadaten (`CreatesDocumentType`, `DocumentTypeKey`, `DocumentTypeDisplayName`, `Ring2Source?`, `Categories` mit `HasPrefix` je Kategorie). **Regel:** Ein Template-Node wird Dokumenttyp GENAU DANN wenn `CreatesDocumentType == true` (keine implizite Ableitung aus HasPrefix/Name/Position/Kategorien). Ein Hauptordner kann Container ODER Typ ODER beides sein (nur explizit). **Protokolle = eigener Root-Typ** (Hauptordner „06 Protokolle", `folder_name` leer). Der hardcodierte `_builtins`-Seed in `DocumentTypeSeedService` entfällt → Seed aus `FolderTemplate`, nur beim Setup.
+
+3. **`DocumentTargetPathResolver`** (neuer Service in PlanManager): Zielpfad = `root_relative_path / folder_name(if!=leer) / Ring2 / Ring3 / fileName`, AUSSCHLIESSLICH aus DB-Stammdaten + erkannten/gewählten IDs. **Fail-Fast** bei fehlendem Ring-Wert (kein Teilpfad). Auflösung priorisiert: Id → key-exact → name/folder_name-exact-normalized → Fail. **KEIN Fuzzy** im Resolver (gehört in vorgelagerte Erkennung). `Ring2Source.BuildingParts` → `building_parts`/`building_levels` (projektspezifisch); `Categories` → `document_type_categories`; `None` → kein Ring2/3. `ResolvedDocumentTarget`-Record fließt durch `ImportDecision` bis `ImportExecutionService`.
+
+4. **`profile.TargetFolder` wird gebrochen** (`RecognitionProfile` SchemaVersion 5, Feld entfällt, `DocumentTypeId` führend). Profil-Import + Radial-Erfassung konvergieren auf denselben Resolver. `ProfileWizard` wählt Dokumenttyp statt Zielordner. `ProjectPaths.Plans` bleibt nur Convenience/Navigation, NICHT Resolver-Input.
+
+5. **Transaktionalität:** Journal VOR Move + temp-im-Zielordner (`.bpm_tmp`) + atomic rename (Temp→final im Zielordner) + idempotente Recovery. **Atomicity-Garantie gilt nur für den finalen Rename**; der Transfer aus dem globalen Eingang ist journalisiert/recovery-fähig. Cross-Root-Move (Eingang „01 Planunterlagen/_Eingang" → „06 Protokolle") unkritisch (gleicher Projektroot = gleiches Volume). Locks: einfacher Retry (3×). NICHT bauen: verteilte Locks, FileSystemWatcher-Sync-Engine, OneDrive-API, 2PC.
+
+6. **DB-Scope = Modell A:** Die DB ist ein kuratierter Index NUR der bewusst erfassten Plandokumente (`plan_documents`/`plan_revisions`), KEIN Vollspiegel des Projektbaums. Der In-App-Explorer liest das Dateisystem live. Startup-Reconcile prüft NUR die getrackte Teilmenge (Exists+Size first, Hash nur bei Bedarf); Drift-Status `MissingOnDisk`/`ChangedOnDisk`/`RelinkCandidate`; MD5-Relink nur als Vorschlag, nie automatisch. Getrackte Dateien sind im Explorer nicht frei verschieb-/löschbar (nur über Journal-Service).
+
+7. **„+ Neu…"-Schnellanlage (Radial) = kleiner MVP-Pflichtdialog** (Name + Ablagebereich-Dropdown Default „01 Planunterlagen" + Unterteilung Bauteil/Geschoss | Kategorien | Keine + editierbarer Ordnername). `key` auto-generiert aus Name + danach gesperrt; `folder_name` ohne Präfix bei User-Typen. Normalisierung in Creation-/Seed-Services, nicht in der Low-Level-DB-Methode. Ein globaler Import-Eingang in V1, Ziele in mehrere Roots.
+
+**Scope-Grenze (Post-V1):** genau EINE Ring-2-Strategie pro Dokumenttyp. Kombinierte Hierarchien (Kategorie + Bauteil + Geschoss, z.B. `04 Fertigteilpläne/01 Wände/Haus A/00 EG/`) sind post-V1 (z.B. via `document_type_folder_segments`).
+
+**Frühphase:** Schema-Änderungen an `document_types`/`building_levels`/`RecognitionProfile` → **Reset-Anweisung statt Migration:** `bpm.db` + projektbezogene `planmanager.db` + `.bpm/profiles/*.json` + ggf. `settings.json` löschen, BPM erstellt/seedet beim nächsten Start neu (INDEX.md-Frühphasenregel).
+
+**Umsetzung (Slices):** 0.1 Domain Models → 0.2 DB-Schema → 0.3 ProjectDatabase → 0.4 Seed → 0.5 Resolver → 0.6 Import-Break (additiv zuerst, `TargetFolder` zuletzt entfernen, jeder Zwischenstand baubar). **Slice 3a aus BPM-111.05** („+ Neu…" im Ring, uncommitted, 346 Tests grün) geht in Slice 0 auf — die Typ-Erzeugung wird aufs neue Modell gehoben.
+
+**Alternativen verworfen:** `root_key` abstrakt (zu kompliziert; `root_relative_path` passt zu offline-first); Mapping-Tabelle document_type→Ordner (zu viel Indirektion für V1); DB-Vollspiegel (Modell B — „halbes DMS"); Hybrid-Teilindex (Modell C — unscharfe Grenze); `profile.TargetFolder` behalten (dritte Wahrheit).
+
+**Betrifft:** ADR-059 + Addendum (präzisiert die generische Seed-Definition), ADR-058 (Drei-Ebenen-Persistenz), ADR-060 (nutzt die FS-Ports), DB-SCHEMA.md Kap. 4.12/4.13 + Kap. 4.5 (building_levels.folder_name), PlanManager.md.
+
+**Referenz:** [Docs/Referenz/chatgpt-reviews/CGR-2026-06-22-bpm-architektur/](../Referenz/chatgpt-reviews/CGR-2026-06-22-bpm-architektur/) — 4 Runden Cross-Review (r2 Schema/Import-Break, r3 Multi-Root/Protokolle, r4 Slice-0-Tiefe/Sign-off). ClickUp: BPM-113.
 
 ---
 

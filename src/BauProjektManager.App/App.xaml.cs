@@ -130,6 +130,14 @@ public partial class App : Application
         sc.AddSingleton<IDeviceContext>(sp => new LocalDeviceContext(sp.GetRequiredService<DeviceSettings>()));
         sc.AddSingleton<IDialogService, BpmDialogService>();
         sc.AddSingleton<IPersistenceRegistry, PersistenceRegistry>();
+
+        // BPM-112 (ADR-060): Dateisystem-Ports — ein Adapter, drei Interfaces,
+        // dieselbe Instanz. Kein direktes System.IO mehr ausserhalb des Adapters.
+        sc.AddSingleton<LocalFileSystem>();
+        sc.AddSingleton<IFileSystemReader>(sp => sp.GetRequiredService<LocalFileSystem>());
+        sc.AddSingleton<IFileSystemWriter>(sp => sp.GetRequiredService<LocalFileSystem>());
+        sc.AddSingleton<IPathService>(sp => sp.GetRequiredService<LocalFileSystem>());
+
         sc.AddSingleton<ProjectDatabase>();
 
         // BPM-108: Segmenttyp-Katalog (Phase A) — vor ProfileManager registrieren,

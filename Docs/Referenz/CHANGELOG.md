@@ -31,6 +31,30 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.83] — 2026-06-24
+
+### Feature: BPM-111.05 Slice 3a — „+ Neu…"-Segmente im Ring
+
+Schnellanlage neuer Stammdaten direkt aus der Radial-Erfassung: „+ Neu…"-Segmente erzeugen Typ, Bauteil, Geschoss bzw. Kategorie ohne Umweg über die Stammdaten-Dialoge. `ProjectDatabase` um `InsertBuildingPart`/`InsertBuildingLevel` erweitert, Add-Items im `RadialSelectionController`, `TryQuickAdd` + `PromptName`-Dialog in `ManualCaptureViewModel`/`ManualCaptureView`. Bewusster Zwischenstand vor dem ADR-061-Umbau — Slice 3a geht in BPM-113 Slice 0 auf (Typ-Erzeugung wird dort auf das neue Ordner-Wahrheit-Modell gehoben). 346/346 Tests grün. (Commit `87e7162`)
+
+---
+
+## [v0.28.82] — 2026-06-24
+
+### Docs: ADR-060 + ADR-061 + CGR-2026-06-22-bpm-architektur
+
+Architektur-Review-Ergebnis dokumentiert. **ADR-060 (Dateisystem-Ports):** `IFileSystemReader`/`IFileSystemWriter`/`IPathService` (Domain) + `LocalFileSystem`-Adapter (Infrastructure), alle Module via DI, kein direktes System.IO mehr; + `IFileLauncher`/`IShareService`. **ADR-061 (Ordner-Wahrheit + Resolver):** DB führend, FolderTemplate nur Bootstrap; `document_types` + `key` (UNIQUE) + `root_relative_path` (Multi-Root) + `folder_name`; `DocumentTargetPathResolver` (Fail-Fast, IDs vor Namen); `profile.TargetFolder` gebrochen (RecognitionProfile SchemaVersion 5). Voller Review-Verlauf unter `Docs/Referenz/chatgpt-reviews/CGR-2026-06-22-bpm-architektur/` (r1–r4, 4 Runden, beidseitiger Sign-off), INDEX-Routing ergänzt. (Commit `dca9ce4`)
+
+---
+
+## [v0.28.81] — 2026-06-22
+
+### Docs: CHANGELOG v0.28.74–.80 nachgezogen
+
+CHANGELOG-Lücke geschlossen: Einträge für BPM-111.05 Slices 1–2c (RadialCaptureControl, Dokumenttyp-Stammdaten, ManualCaptureView + Gesten-Host, ManuellSortieren-Tab), ADR-059-Addendum sowie den Kürzel-Fix (v0.28.80) nachgetragen. (Commit `6af9d05`)
+
+---
+
 ## [v0.28.80] — 2026-06-22
 
 ### Fix: Bauteil-Kürzel-Pflicht + Radial-Fallback bei leerem Kürzel

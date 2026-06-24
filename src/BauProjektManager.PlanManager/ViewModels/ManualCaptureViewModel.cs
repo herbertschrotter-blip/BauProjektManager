@@ -170,14 +170,17 @@ public partial class ManualCaptureViewModel : ObservableObject
     public IReadOnlyList<PlanDocumentType> Types => _types;
     public IReadOnlyList<BuildingPart> Parts => _parts;
 
-    public PlanDocumentType AddDocumentType(string name)
+    /// <summary>
+    /// Legt einen Dokumenttyp aus dem "+ Neu…"-Pflichtdialog an (ADR-061): Name +
+    /// Ablagebereich (root_relative_path) + Unterteilung (Ring2Source) + optionaler
+    /// Ordnername. key/Normalisierung/Eindeutigkeit uebernimmt der CreationService.
+    /// </summary>
+    public PlanDocumentType AddDocumentType(
+        string name, string rootRelativePath, Ring2Source ring2Source, string? folderName)
     {
-        // ADR-061: Anlage über den CreationService (key + Normalisierung + Eindeutigkeit).
-        // Default-Ablagebereich "01 Planunterlagen", Unterteilung None — der "+ Neu…"-
-        // Pflichtdialog (0.4b-2) liefert spaeter Ablagebereich/Unterteilung/Ordnername.
         var created = _creation.Create(
-            _projectId, name, rootRelativePath: "01 Planunterlagen",
-            Ring2Source.None, folderName: null, colorHex: DefaultTypeColor);
+            _projectId, name, rootRelativePath, ring2Source,
+            folderName, colorHex: DefaultTypeColor);
         _types = _bpmDb.GetDocumentTypes(_projectId);
         return _types.First(t => t.Id == created.Id);
     }

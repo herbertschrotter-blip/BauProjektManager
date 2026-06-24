@@ -45,9 +45,9 @@ public class DocumentTypeCreationService
 
         var existing = _db.GetDocumentTypes(projectId);
         var key = MakeUniqueKey(name, existing);
-        var folder = string.IsNullOrWhiteSpace(folderName)
-            ? _normalizer.NormalizeForFolderName(name)
-            : folderName;
+        // Ordnername immer normalisieren (gueltiger Windows-Name) — ob abgeleitet oder vorgegeben.
+        var folder = _normalizer.NormalizeForFolderName(
+            string.IsNullOrWhiteSpace(folderName) ? name : folderName);
         var sortOrder = existing.Count == 0 ? 10 : existing.Max(t => t.SortOrder) + 10;
 
         var id = _db.InsertDocumentType(

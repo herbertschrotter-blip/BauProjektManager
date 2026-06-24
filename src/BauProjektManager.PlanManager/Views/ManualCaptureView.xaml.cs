@@ -125,9 +125,12 @@ public partial class ManualCaptureView : UserControl
         {
             case 1:
             {
-                var name = PromptName("Neuer Dokumenttyp", "Name des Dokumenttyps:");
-                if (name is null) return;
-                committedName = ViewModel.AddDocumentType(name).Name;
+                // ADR-061: Pflichtdialog (Name + Ablagebereich + Unterteilung + Ordnername)
+                // statt reiner Namens-Abfrage.
+                var input = PromptNewDocumentType();
+                if (input is null) return;
+                var (typeName, root, ring2, folder) = input.Value;
+                committedName = ViewModel.AddDocumentType(typeName, root, ring2, folder).Name;
                 break;
             }
             case 2 when type?.Ring2Source == Ring2Source.BuildingParts:
@@ -327,6 +330,113 @@ public partial class ManualCaptureView : UserControl
         win.Content = grid;
 
         return win.ShowDialog() == true ? box.Text.Trim() : null;
+    }
+
+    /// <summary>
+    /// Pflichtdialog fuer die Dokumenttyp-Schnellanlage (ADR-061): Name +
+    /// Ablagebereich (root_relative_path) + Unterteilung (Ring2Source) +
+    /// optionaler Ordnername. Liefert die Eingaben oder NULL bei Abbruch.
+    /// </summary>
+    private (string Name, string Root, Ring2Source Ring2, string? FolderName)? PromptNewDocumentType()
+    {
+        var win = new Window
+        {
+            Title = "Neuer Dokumenttyp",
+            Width = 380,
+            SizeToContent = SizeToContent.Height,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Owner = Window.GetWindow(this),
+            ResizeMode = ResizeMode.NoResize,
+            WindowStyle = WindowStyle.ToolWindow,
+            Background = ThemeBrush("BpmBgBase")
+        };
+
+        var panel = new StackPanel { Margin = new Thickness(16) };
+
+        TextBlock Label(string t) => new()
+        {
+            Text = t,
+            Foreground = ThemeBrush("BpmTextSecondary"),
+            Margin = new Thickness(0, 0, 0, 4)
+        };
+        TextBox Field() => new()
+        {
+            FontSize = 14,
+            Padding = new Thickness(6, 4, 6, 4),
+            Margin = new Thickness(0, 0, 0, 12),
+            Background = ThemeBrush("BpmBgElevated"),
+            Foreground = ThemeBrush("BpmTextBright"),
+            BorderBrush = ThemeBrush("BpmAccentPrimary"),
+            CaretBrush = ThemeBrush("BpmTextBright")
+        };
+        ComboBox Combo() => new()
+        {
+            FontSize = 14,
+            Margin = new Thickness(0, 0, 0, 12),
+            Background = ThemeBrush("BpmBgElevated"),
+            Foreground = ThemeBrush("BpmTextBright")
+        };
+
+        panel.Children.Add(Label("Name des Dokumenttyps:"));
+        var nameBox = Field();
+        nameBox.Loaded += (_, _) => nameBox.Focus();
+        panel.Children.Add(nameBox);
+
+        panel.Children.Add(Label("Ablagebereich:"));
+        var rootCombo = Combo();
+        var roots = ViewModel.Types
+            .Select(t => t.RootRelativePath)
+            .Where(r => !string.IsNullOrWhiteSpace(r))
+            .Concat(new[] { "01 Planunterlagen", "06 Protokolle" })
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(r => r, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        foreach (var r in roots) rootCombo.Items.Add(r);
+        rootCombo.SelectedItem = roots.FirstOrDefault(
+            r => r.Equals("01 Planunterlagen", StringComparison.OrdinalIgnoreCase)) ?? roots.FirstOrDefault();
+        panel.Children.Add(rootCombo);
+
+        panel.Children.Add(Label("Unterteilung:"));
+        var ring2Combo = Combo();
+        ring2Combo.Items.Add("Bauteil / Geschoss");
+        ring2Combo.Items.Add("Kategorien");
+        ring2Combo.Items.Add("Keine");
+        ring2Combo.SelectedIndex = 0;
+        panel.Children.Add(ring2Combo);
+
+        panel.Children.Add(Label("Ordnername (leer = automatisch aus Name):"));
+        var folderBox = Field();
+        panel.Children.Add(folderBox);
+
+        var buttons = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Right
+        };
+        var ok = new Button { Content = "Anlegen", Width = 90, Margin = new Thickness(0, 0, 8, 0), IsDefault = true };
+        var cancel = new Button { Content = "Abbrechen", Width = 90, IsCancel = true };
+        ok.Click += (_, _) =>
+        {
+            if (!string.IsNullOrWhiteSpace(nameBox.Text) && rootCombo.SelectedItem is not null)
+                win.DialogResult = true;
+        };
+        buttons.Children.Add(ok);
+        buttons.Children.Add(cancel);
+        panel.Children.Add(buttons);
+
+        win.Content = panel;
+
+        if (win.ShowDialog() != true)
+            return null;
+
+        var ring2 = ring2Combo.SelectedIndex switch
+        {
+            1 => Ring2Source.Categories,
+            2 => Ring2Source.None,
+            _ => Ring2Source.BuildingParts
+        };
+        var folder = string.IsNullOrWhiteSpace(folderBox.Text) ? null : folderBox.Text.Trim();
+        return (nameBox.Text.Trim(), (string)rootCombo.SelectedItem!, ring2, folder);
     }
 
     private Brush ThemeBrush(string key) =>

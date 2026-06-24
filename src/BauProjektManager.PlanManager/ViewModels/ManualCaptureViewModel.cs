@@ -157,6 +157,48 @@ public partial class ManualCaptureViewModel : ObservableObject
     public IReadOnlyList<CaptureRowViewModel> SelectedRows =>
         [.. Rows.Where(r => r.IsSelected)];
 
+    // ── Schnellanlage „+ Neu…" (Slice 3) ────────────────────────────
+    // Stammdaten direkt aus dem Radial anlegen; Feinpflege in den Projekt-
+    // Einstellungen. Jede Methode schreibt in die DB und laedt die betroffene
+    // Stammdatenliste neu, sodass der Controller (RefreshStammdaten) und der
+    // naechste Capture die Neuanlage sehen.
+
+    private const string DefaultTypeColor = "#6E6E6E";
+
+    public IReadOnlyList<PlanDocumentType> Types => _types;
+    public IReadOnlyList<BuildingPart> Parts => _parts;
+
+    public PlanDocumentType AddDocumentType(string name)
+    {
+        var id = _bpmDb.InsertDocumentType(
+            _projectId, name, folderName: null, colorHex: DefaultTypeColor,
+            Ring2Source.None, sortOrder: _types.Count * 10, isBuiltin: false);
+        _types = _bpmDb.GetDocumentTypes(_projectId);
+        return _types.First(t => t.Id == id);
+    }
+
+    public PlanDocumentType AddCategory(PlanDocumentType type, string name)
+    {
+        _bpmDb.InsertDocumentTypeCategory(
+            type.Id, name, folderName: null, sortOrder: type.Categories.Count * 10);
+        _types = _bpmDb.GetDocumentTypes(_projectId);
+        return _types.First(t => t.Id == type.Id);
+    }
+
+    public BuildingPart AddBuildingPart(string shortName)
+    {
+        var id = _bpmDb.InsertBuildingPart(_projectId, shortName);
+        _parts = _bpmDb.GetBuildingParts(_projectId);
+        return _parts.First(p => p.Id == id);
+    }
+
+    public BuildingPart AddBuildingLevel(BuildingPart part, string levelName)
+    {
+        _bpmDb.InsertBuildingLevel(part.Id, levelName);
+        _parts = _bpmDb.GetBuildingParts(_projectId);
+        return _parts.First(p => p.Id == part.Id);
+    }
+
     /// <summary>
     /// Release im Radial: Pending Assignment fuer alle ausgewaehlten Zeilen
     /// (PlanNr/Index je Zeile aus den eigenen Kandidaten — ManualConfirmed

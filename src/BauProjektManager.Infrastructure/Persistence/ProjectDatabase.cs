@@ -753,6 +753,75 @@ public class ProjectDatabase : IDisposable
     /// <summary>Bauteile + Geschosse eines Projekts (Ring 2/3 des Radials). Read-only Sicht.</summary>
     public List<BuildingPart> GetBuildingParts(string projectId) => LoadBuildingParts(projectId);
 
+    /// <summary>
+    /// Schnellanlage eines Bauteils aus dem Radial ("+ Neu…" Ring 2, BPM-111.05
+    /// Slice 3). Nur Kuerzel; Beschreibung/Bauwerkstyp/Nullniveau bleiben leer
+    /// (Feinpflege in den Projekt-Einstellungen). folder_name wird EINMAL aus
+    /// dem Kuerzel erzeugt (ADR-059-Addendum). Gibt die neue Id zurueck.
+    /// </summary>
+    public string InsertBuildingPart(string projectId, string shortName, string? folderName = null)
+    {
+        var conn = GetConnection();
+        var partId = _idGenerator.NewId();
+        var utcNow = DateTime.UtcNow.ToString("o");
+        var user = _userContext.DisplayName;
+
+        var soCmd = conn.CreateCommand();
+        soCmd.CommandText = "SELECT COALESCE(MAX(sort_order), -1) + 1 FROM building_parts WHERE project_id = @pid AND is_deleted = 0";
+        soCmd.Parameters.AddWithValue("@pid", projectId);
+        var sortOrder = Convert.ToInt32(soCmd.ExecuteScalar());
+
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            INSERT INTO building_parts (id, project_id, short_name, folder_name, description, building_type, zero_level_absolute, sort_order, created_at, created_by, last_modified_at, last_modified_by, sync_version)
+            VALUES (@id, @pid, @sn, @fn, '', '', 0, @so, @now, @user, @now, @user, 0)
+            """;
+        cmd.Parameters.AddWithValue("@id", partId);
+        cmd.Parameters.AddWithValue("@pid", projectId);
+        cmd.Parameters.AddWithValue("@sn", shortName);
+        cmd.Parameters.AddWithValue("@fn", string.IsNullOrWhiteSpace(folderName)
+            ? _normalizer.NormalizeForFolderName(shortName) : folderName);
+        cmd.Parameters.AddWithValue("@so", sortOrder);
+        cmd.Parameters.AddWithValue("@now", utcNow);
+        cmd.Parameters.AddWithValue("@user", user);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "INSERT", "building_parts");
+        cmd.ExecuteNonQuery();
+        return partId;
+    }
+
+    /// <summary>
+    /// Schnellanlage eines Geschosses aus dem Radial ("+ Neu…" Ring 3, BPM-111.05
+    /// Slice 3). Nur Bezeichnung; Hoehenwerte (RDOK/FBOK/RDUK) bleiben 0/leer
+    /// (Feinpflege in den Projekt-Einstellungen). Gibt die neue Id zurueck.
+    /// </summary>
+    public string InsertBuildingLevel(string buildingPartId, string name)
+    {
+        var conn = GetConnection();
+        var levelId = _idGenerator.NewId();
+        var utcNow = DateTime.UtcNow.ToString("o");
+        var user = _userContext.DisplayName;
+
+        var soCmd = conn.CreateCommand();
+        soCmd.CommandText = "SELECT COALESCE(MAX(sort_order), -1) + 1 FROM building_levels WHERE building_part_id = @bpid AND is_deleted = 0";
+        soCmd.Parameters.AddWithValue("@bpid", buildingPartId);
+        var sortOrder = Convert.ToInt32(soCmd.ExecuteScalar());
+
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            INSERT INTO building_levels (id, building_part_id, prefix, name, description, rdok, fbok, rduk, sort_order, created_at, created_by, last_modified_at, last_modified_by, sync_version)
+            VALUES (@id, @bpid, 0, @name, '', 0, 0, NULL, @so, @now, @user, @now, @user, 0)
+            """;
+        cmd.Parameters.AddWithValue("@id", levelId);
+        cmd.Parameters.AddWithValue("@bpid", buildingPartId);
+        cmd.Parameters.AddWithValue("@name", name);
+        cmd.Parameters.AddWithValue("@so", sortOrder);
+        cmd.Parameters.AddWithValue("@now", utcNow);
+        cmd.Parameters.AddWithValue("@user", user);
+        Log.Verbose("Executing SQL: {Operation} on {Table}", "INSERT", "building_levels");
+        cmd.ExecuteNonQuery();
+        return levelId;
+    }
+
     /// <summary>True wenn das Projekt bereits Dokumenttyp-Stammdaten hat (Seed-Check).</summary>
     public bool HasDocumentTypes(string projectId)
     {

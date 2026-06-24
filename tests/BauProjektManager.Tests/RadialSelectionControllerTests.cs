@@ -44,7 +44,10 @@ public class RadialSelectionControllerTests
         var update = sut.Commit(1, "Polierplan", null);
 
         Assert.NotNull(update.Ring2);
-        Assert.Equal(["Haus 1", "Haus 3", "Allgemein"], update.Ring2!.Select(i => i.Name));
+        // Slice 3: „+ Neu…" haengt als letztes Segment an jedem nicht-leeren Ring
+        Assert.Equal(["Haus 1", "Haus 3", "Allgemein", RadialSelectionController.AddItemLabel],
+            update.Ring2!.Select(i => i.Name));
+        Assert.True(update.Ring2!.Last().IsAddItem);
         Assert.True(update.Ring2Animate);
         Assert.Equal([], update.Ring3);
     }
@@ -55,7 +58,8 @@ public class RadialSelectionControllerTests
         var sut = Make();
         var update = sut.Commit(1, "Protokolle", null);
 
-        Assert.Equal(["Baubesprechung", "Sicherheit"], update.Ring2!.Select(i => i.Name));
+        Assert.Equal(["Baubesprechung", "Sicherheit", RadialSelectionController.AddItemLabel],
+            update.Ring2!.Select(i => i.Name));
     }
 
     [Fact]
@@ -86,7 +90,7 @@ public class RadialSelectionControllerTests
         var sut = Make();
         sut.Commit(1, "Polierplan", null);
         var ring3 = sut.Commit(2, "Haus 1", null);
-        Assert.Equal(3, ring3.Ring3!.Count);
+        Assert.Equal(4, ring3.Ring3!.Count); // KG/EG/OG1 + „+ Neu…"
         Assert.True(ring3.Ring3Animate);
 
         // zurueck auf Ring 1 (gleicher Typ): Ring 3 schliesst, Ring 2 bleibt stumm
@@ -106,18 +110,22 @@ public class RadialSelectionControllerTests
         var again = sut.Commit(2, "Haus 3", null);  // Ring 3 wieder auf
 
         Assert.True(again.Ring3Animate);
-        Assert.Equal(2, again.Ring3!.Count);
+        Assert.Equal(3, again.Ring3!.Count); // EG/OG1 + „+ Neu…"
     }
 
     [Fact]
-    public void Commit_PartWithoutLevels_HasNoRing3()
+    public void Commit_PartWithoutLevels_Ring3HasOnlyAddItem()
     {
+        // Slice 3: Bauteil ohne Geschosse zeigt Ring 3 mit NUR „+ Neu…",
+        // damit man direkt ein Geschoss anlegen kann.
         var sut = Make();
         sut.Commit(1, "Polierplan", null);
         var update = sut.Commit(2, "Allgemein", null);
 
-        Assert.Equal([], update.Ring3);
-        Assert.False(update.Ring3Animate);
+        Assert.NotNull(update.Ring3);
+        Assert.Single(update.Ring3!);
+        Assert.True(update.Ring3![0].IsAddItem);
+        Assert.True(update.Ring3Animate);
     }
 
     [Fact]
@@ -152,5 +160,42 @@ public class RadialSelectionControllerTests
         sut.Commit(2, "Baubesprechung", null);
 
         Assert.Equal("Pläne/Protokolle/Baubesprechung", sut.BuildTargetDirectory("Pläne"));
+    }
+
+    [Fact]
+    public void BuildRing1_AppendsAddItem()
+    {
+        var sut = Make();
+        var ring1 = sut.BuildRing1(null);
+
+        Assert.Equal(RadialSelectionController.AddItemLabel, ring1[^1].Name);
+        Assert.True(ring1[^1].IsAddItem);
+        Assert.Equal(3, ring1.Count(i => !i.IsAddItem)); // 3 echte Typen
+    }
+
+    [Fact]
+    public void SelectedBuildingPart_ResolvesSelectedPart()
+    {
+        var sut = Make();
+        sut.Commit(1, "Polierplan", null);
+        sut.Commit(2, "Haus 1", null);
+
+        Assert.Equal("p-Haus 1", sut.SelectedBuildingPart?.Id);
+    }
+
+    [Fact]
+    public void RefreshStammdaten_RebindsSelectedTypeById()
+    {
+        var sut = Make();
+        sut.Commit(1, "Protokolle", null);
+
+        // Neue Typliste mit zusaetzlicher Kategorie unter gleicher Id
+        var refreshedTyp = Typ("Protokolle", Ring2Source.Categories,
+            "Baubesprechung", "Sicherheit", "Abnahme");
+        sut.RefreshStammdaten([refreshedTyp], []);
+
+        var ring2 = sut.Commit(1, "Protokolle", null);
+        Assert.Equal(["Baubesprechung", "Sicherheit", "Abnahme", RadialSelectionController.AddItemLabel],
+            ring2.Ring2!.Select(i => i.Name));
     }
 }

@@ -1,7 +1,9 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
+using BauProjektManager.Domain.Enums.PlanManager;
 using BauProjektManager.PlanManager.Controls;
 using BauProjektManager.PlanManager.Services;
 using BauProjektManager.PlanManager.ViewModels;
@@ -90,13 +92,74 @@ public partial class ManualCaptureView : UserControl
             return;
 
         var hit = Radial.HitTestSegment(e.GetPosition(Radial));
-        if (hit is not null && !hit.Item.IsAddItem)
+        if (hit is not null)
         {
-            // Release-Commit auf dem getroffenen Segment, dann Pending setzen
-            _controller.Commit(hit.RingIndex, hit.Item.Name, _captureAnchor?.Item.Candidates);
-            ViewModel.CompleteCapture(_controller);
+            if (hit.Item.IsAddItem)
+                TryQuickAdd(hit.RingIndex); // „+ Neu…": Schnellanlage + Pending (Slice 3)
+            else
+            {
+                // Release-Commit auf dem getroffenen Segment, dann Pending setzen
+                _controller.Commit(hit.RingIndex, hit.Item.Name, _captureAnchor?.Item.Candidates);
+                ViewModel.CompleteCapture(_controller);
+            }
         }
         CloseRadial();
+    }
+
+    /// <summary>
+    /// „+ Neu…"-Schnellanlage je Ringebene (Slice 3): Name abfragen → Stammdaten
+    /// in der DB anlegen → Controller-Stammdaten auffrischen → wie ein normaler
+    /// Release committen und die gezogenen Dateien als Pending zuordnen.
+    /// </summary>
+    private void TryQuickAdd(int ringIndex)
+    {
+        if (_controller is null)
+            return;
+
+        // Maus-Capture vor dem modalen Dialog freigeben
+        Mouse.Capture(null);
+
+        var type = _controller.SelectedType;
+        string committedName;
+        switch (ringIndex)
+        {
+            case 1:
+            {
+                var name = PromptName("Neuer Dokumenttyp", "Name des Dokumenttyps:");
+                if (name is null) return;
+                committedName = ViewModel.AddDocumentType(name).Name;
+                break;
+            }
+            case 2 when type?.Ring2Source == Ring2Source.BuildingParts:
+            {
+                var name = PromptName("Neues Bauteil", "Kürzel des Bauteils:");
+                if (name is null) return;
+                committedName = ViewModel.AddBuildingPart(name).ShortName;
+                break;
+            }
+            case 2 when type?.Ring2Source == Ring2Source.Categories:
+            {
+                var name = PromptName("Neue Kategorie", "Name der Kategorie:");
+                if (name is null) return;
+                ViewModel.AddCategory(type, name);
+                committedName = name;
+                break;
+            }
+            case 3 when _controller.SelectedBuildingPart is { } part:
+            {
+                var name = PromptName("Neues Geschoss", "Geschoss-Bezeichnung:");
+                if (name is null) return;
+                ViewModel.AddBuildingLevel(part, name);
+                committedName = name;
+                break;
+            }
+            default:
+                return;
+        }
+
+        _controller.RefreshStammdaten(ViewModel.Types, ViewModel.Parts);
+        _controller.Commit(ringIndex, committedName, _captureAnchor?.Item.Candidates);
+        ViewModel.CompleteCapture(_controller);
     }
 
     private void OnHoldElapsed(object? sender, EventArgs e)
@@ -195,4 +258,77 @@ public partial class ManualCaptureView : UserControl
             ViewModel.TakeUpdateCommand.Execute(row);
         UpdateSelectionInfo();
     }
+
+    // ── Schnellanlage-Dialog (Slice 3) ──────────────────────────────
+
+    /// <summary>
+    /// Minimaler modaler Namens-Dialog (Theme-Tokens). Liefert den getrimmten
+    /// Namen oder NULL bei Abbruch/leerer Eingabe.
+    /// </summary>
+    private string? PromptName(string title, string prompt)
+    {
+        var win = new Window
+        {
+            Title = title,
+            Width = 360,
+            SizeToContent = SizeToContent.Height,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Owner = Window.GetWindow(this),
+            ResizeMode = ResizeMode.NoResize,
+            WindowStyle = WindowStyle.ToolWindow,
+            Background = ThemeBrush("BpmBgBase")
+        };
+
+        var grid = new Grid { Margin = new Thickness(16) };
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+        var lbl = new TextBlock
+        {
+            Text = prompt,
+            Foreground = ThemeBrush("BpmTextSecondary"),
+            Margin = new Thickness(0, 0, 0, 8)
+        };
+        Grid.SetRow(lbl, 0);
+
+        var box = new TextBox
+        {
+            FontSize = 14,
+            Padding = new Thickness(6, 4, 6, 4),
+            Background = ThemeBrush("BpmBgElevated"),
+            Foreground = ThemeBrush("BpmTextBright"),
+            BorderBrush = ThemeBrush("BpmAccentPrimary"),
+            CaretBrush = ThemeBrush("BpmTextBright")
+        };
+        Grid.SetRow(box, 1);
+        box.Loaded += (_, _) => box.Focus();
+
+        var buttons = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Margin = new Thickness(0, 14, 0, 0)
+        };
+        var ok = new Button { Content = "Anlegen", Width = 90, Margin = new Thickness(0, 0, 8, 0), IsDefault = true };
+        var cancel = new Button { Content = "Abbrechen", Width = 90, IsCancel = true };
+        ok.Click += (_, _) =>
+        {
+            if (!string.IsNullOrWhiteSpace(box.Text))
+                win.DialogResult = true;
+        };
+        buttons.Children.Add(ok);
+        buttons.Children.Add(cancel);
+        Grid.SetRow(buttons, 2);
+
+        grid.Children.Add(lbl);
+        grid.Children.Add(box);
+        grid.Children.Add(buttons);
+        win.Content = grid;
+
+        return win.ShowDialog() == true ? box.Text.Trim() : null;
+    }
+
+    private Brush ThemeBrush(string key) =>
+        TryFindResource(key) as Brush ?? Brushes.Gray;
 }

@@ -28,8 +28,11 @@ public sealed record RadialUpdate(
 /// </summary>
 public class RadialSelectionController
 {
-    private readonly IReadOnlyList<PlanDocumentType> _types;
-    private readonly IReadOnlyList<BuildingPart> _parts;
+    /// <summary>Label der „+ Neu…"-Segmente (Schnellanlage je Ebene, BPM-111.05 Slice 3).</summary>
+    public const string AddItemLabel = "+ Neu…";
+
+    private IReadOnlyList<PlanDocumentType> _types;
+    private IReadOnlyList<BuildingPart> _parts;
 
     // folder_name-Erzeugung fuer den Fallback ohne gespeicherten folder_name —
     // spiegelt die statische Normalizer-Nutzung in ProjectDatabase (ADR-059-Addendum).
@@ -50,6 +53,26 @@ public class RadialSelectionController
     public string? SelectedPart { get; private set; }
     public string? SelectedLevel { get; private set; }
 
+    /// <summary>Aktuell gewaehltes Bauteil als Objekt (fuer „+ Neu…" Ring 3 / Geschoss-Anlage).</summary>
+    public BuildingPart? SelectedBuildingPart =>
+        SelectedPart is null ? null : _parts.FirstOrDefault(p => EffectivePartName(p) == SelectedPart);
+
+    /// <summary>
+    /// Aktualisiert die Stammdaten nach einer Schnellanlage ("+ Neu…", Slice 3)
+    /// und re-bindet <see cref="SelectedType"/> an das neu geladene Objekt
+    /// (gleiche Id), damit z. B. frisch angelegte Kategorien sichtbar werden.
+    /// </summary>
+    public void RefreshStammdaten(
+        IReadOnlyList<PlanDocumentType> types, IReadOnlyList<BuildingPart> parts)
+    {
+        _types = types;
+        _parts = parts;
+        if (SelectedType is not null)
+            SelectedType = _types.FirstOrDefault(t => t.Id == SelectedType.Id) ?? SelectedType;
+    }
+
+    private static RadialSegmentItem NewItem() => new(AddItemLabel, IsAddItem: true);
+
     /// <summary>Ring 1 fuer den Capture-Start (Kandidat aus Extractor markiert).</summary>
     public IReadOnlyList<RadialSegmentItem> BuildRing1(PlanFileCandidates? candidates)
     {
@@ -57,7 +80,8 @@ public class RadialSelectionController
         return [.. _types.Select(t => new RadialSegmentItem(
             t.Name, t.ColorHex,
             IsCandidate: candidateType is not null
-                && string.Equals(t.Name, candidateType, StringComparison.OrdinalIgnoreCase)))];
+                && string.Equals(t.Name, candidateType, StringComparison.OrdinalIgnoreCase))),
+            NewItem()];
     }
 
     /// <summary>Setzt die Auswahl zurueck (neuer Capture-Vorgang).</summary>
@@ -146,11 +170,15 @@ public class RadialSelectionController
 
         return SelectedType.Ring2Source switch
         {
+            // „+ Neu…" je Ebene (Slice 3): neues Bauteil bzw. neue Kategorie.
+            // Ring2Source.None bekommt KEIN Add-Item (kein Unter-Schema vorhanden).
             Ring2Source.BuildingParts => [.. _parts.Select(p => new RadialSegmentItem(
                 EffectivePartName(p),
                 IsCandidate: candidates?.BuildingPartHint is not null
-                    && string.Equals(EffectivePartName(p), candidates.BuildingPartHint, StringComparison.OrdinalIgnoreCase)))],
-            Ring2Source.Categories => [.. SelectedType.Categories.Select(c => new RadialSegmentItem(c.Name))],
+                    && string.Equals(EffectivePartName(p), candidates.BuildingPartHint, StringComparison.OrdinalIgnoreCase))),
+                NewItem()],
+            Ring2Source.Categories => [.. SelectedType.Categories.Select(c => new RadialSegmentItem(c.Name)),
+                NewItem()],
             _ => []
         };
     }
@@ -170,12 +198,15 @@ public class RadialSelectionController
             return [];
 
         var part = _parts.FirstOrDefault(p => EffectivePartName(p) == SelectedPart);
-        if (part is null || part.Levels.Count == 0)
+        if (part is null)
             return [];
 
+        // Geschosse + „+ Neu…" (Slice 3); Add-Item auch bei 0 Geschossen, damit
+        // ein Bauteil ohne Geschosse direkt eines anlegen kann.
         return [.. part.Levels.Select(l => new RadialSegmentItem(
             l.Name,
             IsCandidate: candidates?.Level is not null
-                && string.Equals(l.Name, candidates.Level, StringComparison.OrdinalIgnoreCase)))];
+                && string.Equals(l.Name, candidates.Level, StringComparison.OrdinalIgnoreCase))),
+            NewItem()];
     }
 }

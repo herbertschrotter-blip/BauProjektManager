@@ -127,12 +127,43 @@ public class AppSettings
         new("Sonstiges",      hasInbox: false),
         new("Planunterlagen", hasInbox: true, subFolders:
         [
-            new("Ausschreibungspläne", hasPrefix: true),
-            new("Polierpläne",         hasPrefix: true),
-            new("Statikpläne - Schalung",   hasPrefix: true),
-            new("Statikpläne - Bewehrung",  hasPrefix: true),
-            new("Fertigteilpläne",     hasPrefix: true),
-            new("Baustelleneinrichtung", hasPrefix: false),
+            // ADR-061: Plan-Unterordner = Dokumenttypen (Ring 2 = Bauteile/Geschosse).
+            new("Ausschreibungspläne", hasPrefix: true)
+            {
+                CreatesDocumentType = true, DocumentTypeKey = "ausschreibungsplan",
+                DocumentTypeDisplayName = "Ausschreibungsplan", Ring2Source = Ring2Source.BuildingParts,
+            },
+            new("Polierpläne", hasPrefix: true)
+            {
+                CreatesDocumentType = true, DocumentTypeKey = "polierplan",
+                DocumentTypeDisplayName = "Polierplan", Ring2Source = Ring2Source.BuildingParts,
+            },
+            new("Statikpläne - Schalung", hasPrefix: true)
+            {
+                CreatesDocumentType = true, DocumentTypeKey = "schalung",
+                DocumentTypeDisplayName = "Schalung", Ring2Source = Ring2Source.BuildingParts,
+            },
+            new("Statikpläne - Bewehrung", hasPrefix: true)
+            {
+                CreatesDocumentType = true, DocumentTypeKey = "bewehrung",
+                DocumentTypeDisplayName = "Bewehrung", Ring2Source = Ring2Source.BuildingParts,
+            },
+            new("Fertigteilpläne", hasPrefix: true)
+            {
+                CreatesDocumentType = true, DocumentTypeKey = "fertigteile",
+                DocumentTypeDisplayName = "Fertigteile", Ring2Source = Ring2Source.Categories,
+                Categories =
+                [
+                    new("Wände", hasPrefix: false),
+                    new("Decken", hasPrefix: false),
+                    new("Stiegen", hasPrefix: false),
+                ],
+            },
+            new("Baustelleneinrichtung", hasPrefix: false)
+            {
+                CreatesDocumentType = true, DocumentTypeKey = "baustelleneinrichtung",
+                DocumentTypeDisplayName = "Baustelleneinrichtung", Ring2Source = Ring2Source.None,
+            },
         ]),
         new("Fotos",          hasInbox: false),
         new("Leica",          hasInbox: false, subFolders:
@@ -142,7 +173,19 @@ public class AppSettings
         ]),
         new("DOKA",           hasInbox: false),
         new("LV",             hasInbox: false),
-        new("Protokolle",     hasInbox: false),
+        // ADR-061: Protokolle = eigener Root-Typ (folder_name leer, Ring 2 = Kategorien).
+        new("Protokolle",     hasInbox: false)
+        {
+            CreatesDocumentType = true, DocumentTypeKey = "protokolle",
+            DocumentTypeDisplayName = "Protokolle", Ring2Source = Ring2Source.Categories,
+            Categories =
+            [
+                new("Baubesprechung", hasPrefix: false),
+                new("Bautagesbericht", hasPrefix: false),
+                new("Sicherheit", hasPrefix: false),
+                new("Abnahme", hasPrefix: false),
+            ],
+        },
     ];
 }
 

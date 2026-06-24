@@ -937,7 +937,8 @@ public class ProjectDatabase : IDisposable
         cmd.Parameters.AddWithValue("@id", typeId);
         cmd.Parameters.AddWithValue("@pid", projectId);
         cmd.Parameters.AddWithValue("@name", name);
-        cmd.Parameters.AddWithValue("@fn", string.IsNullOrWhiteSpace(folderName)
+        // ADR-061: null = Ordnername aus Name ableiten; "" = bewusst leer (Root-Typ); sonst uebernehmen
+        cmd.Parameters.AddWithValue("@fn", folderName is null
             ? _normalizer.NormalizeForFolderName(name) : folderName);
         // ADR-061: key (gesperrt nach Anlage) + Ablage-Root. Permissive Defaults bis Seed 0.4 sie befuellt.
         cmd.Parameters.AddWithValue("@key", key);

@@ -563,10 +563,13 @@ CREATE UNIQUE INDEX idx_document_types_project_key
 > neu (permissive Defaults; `CHECK(root_relative_path<>'')` + voller Unique kommen in
 > Slice 0.4 mit dem Seed). Betroffene Datei: `bpm.db` → löschen, BPM seedet neu.
 
-**Seed bei Projektanlage:** Polierplan/Statik/Bewehrung/Schalung/Architektur
-(`building_parts`) · Fertigteile · Protokolle (`categories`) — siehe
-ADR-059-Addendum. `planmanager.db.plan_documents.document_type_id` referenziert
-diese Tabelle als Cross-DB-Soft-Reference (kein FK).
+**Seed bei Projektanlage (ADR-061 Slice 0.4):** aus dem `FolderTemplate` — ein
+Node wird Dokumenttyp gdw `CreatesDocumentType == true`. Default-Set: Ausschreibungsplan,
+Polierplan, Schalung, Bewehrung, Fertigteile, Baustelleneinrichtung (alle unter Root
+„01 Planunterlagen", `folder_name` = nummerierter Unterordner) · Protokolle (Root-Typ
+„06 Protokolle", `folder_name` leer, `categories`). `key`/`root_relative_path`/`folder_name`
+stammen aus der Template-Struktur. `planmanager.db.plan_documents.document_type_id`
+referenziert diese Tabelle als Cross-DB-Soft-Reference (kein FK).
 
 ### 4.13 document_type_categories (ADR-059-Addendum, BPM-111.05)
 

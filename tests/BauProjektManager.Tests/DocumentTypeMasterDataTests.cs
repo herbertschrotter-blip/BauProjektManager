@@ -86,7 +86,7 @@ public class DocumentTypeMasterDataTests : IDisposable
     }
 
     [Fact]
-    public void Seed_CreatesBuiltinsIdempotent()
+    public void Seed_CreatesTypesFromTemplate_Idempotent()
     {
         var seeder = new DocumentTypeSeedService(_db);
 
@@ -95,15 +95,26 @@ public class DocumentTypeMasterDataTests : IDisposable
 
         var types = _db.GetDocumentTypes(ProjectId);
         Assert.Equal(7, types.Count);
-        Assert.Equal("Polierplan", types[0].Name);
-        Assert.True(types[0].IsBuiltin);
-        Assert.Equal(Ring2Source.BuildingParts, types[0].Ring2Source);
 
-        var protokolle = types.Single(t => t.Name == "Protokolle");
+        // Reihenfolge = Template-Reihenfolge (Planunterlagen-Unterordner, dann Protokolle).
+        Assert.Equal("Ausschreibungsplan", types[0].Name);
+        Assert.True(types[0].IsBuiltin);
+
+        // Ordner-Wahrheit (ADR-061): Polierplan unter "01 Planunterlagen" / "01 Polierpläne".
+        var polier = types.Single(t => t.Key == "polierplan");
+        Assert.Equal("Polierplan", polier.Name);
+        Assert.Equal("01 Planunterlagen", polier.RootRelativePath);
+        Assert.Equal("01 Polierpläne", polier.FolderName);
+        Assert.Equal(Ring2Source.BuildingParts, polier.Ring2Source);
+
+        // Protokolle = Root-Typ: eigener Root, folder_name leer, Kategorien.
+        var protokolle = types.Single(t => t.Key == "protokolle");
+        Assert.Equal("06 Protokolle", protokolle.RootRelativePath);
+        Assert.Equal(string.Empty, protokolle.FolderName);
         Assert.Equal(Ring2Source.Categories, protokolle.Ring2Source);
         Assert.Equal(4, protokolle.Categories.Count);
 
-        var fertigteile = types.Single(t => t.Name == "Fertigteile");
+        var fertigteile = types.Single(t => t.Key == "fertigteile");
         Assert.Equal(3, fertigteile.Categories.Count);
         Assert.Equal("Wände", fertigteile.Categories[0].Name);
     }

@@ -72,6 +72,7 @@ public partial class ManualCaptureViewModel : ObservableObject
     private readonly ImportUndoService _undo;
     private readonly ProjectDatabase _bpmDb;
     private readonly DocumentTypeSeedService _seed;
+    private readonly DocumentTypeCreationService _creation;
 
     private string _projectId = string.Empty;
     private string _projectRootPath = string.Empty;
@@ -90,6 +91,7 @@ public partial class ManualCaptureViewModel : ObservableObject
         _undo = new ImportUndoService(planDb);
         _bpmDb = bpmDb;
         _seed = new DocumentTypeSeedService(bpmDb);
+        _creation = new DocumentTypeCreationService(bpmDb, new PlanValueNormalizer());
     }
 
     public ObservableCollection<CaptureRowViewModel> Rows { get; } = [];
@@ -170,11 +172,14 @@ public partial class ManualCaptureViewModel : ObservableObject
 
     public PlanDocumentType AddDocumentType(string name)
     {
-        var id = _bpmDb.InsertDocumentType(
-            _projectId, name, folderName: null, colorHex: DefaultTypeColor,
-            Ring2Source.None, sortOrder: _types.Count * 10, isBuiltin: false);
+        // ADR-061: Anlage über den CreationService (key + Normalisierung + Eindeutigkeit).
+        // Default-Ablagebereich "01 Planunterlagen", Unterteilung None — der "+ Neu…"-
+        // Pflichtdialog (0.4b-2) liefert spaeter Ablagebereich/Unterteilung/Ordnername.
+        var created = _creation.Create(
+            _projectId, name, rootRelativePath: "01 Planunterlagen",
+            Ring2Source.None, folderName: null, colorHex: DefaultTypeColor);
         _types = _bpmDb.GetDocumentTypes(_projectId);
-        return _types.First(t => t.Id == id);
+        return _types.First(t => t.Id == created.Id);
     }
 
     public PlanDocumentType AddCategory(PlanDocumentType type, string name)

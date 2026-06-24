@@ -86,6 +86,31 @@ public class DocumentTypeMasterDataTests : IDisposable
     }
 
     [Fact]
+    public void Creation_GeneratesKeyAndPersistsRoot()
+    {
+        var svc = new DocumentTypeCreationService(_db, new PlanValueNormalizer());
+
+        var t = svc.Create(ProjectId, "Polierplan", "01 Planunterlagen", Ring2Source.BuildingParts);
+
+        Assert.Equal("polierplan", t.Key);
+        Assert.Equal("01 Planunterlagen", t.RootRelativePath);
+        Assert.Equal("Polierplan", t.FolderName);
+        Assert.False(t.IsBuiltin);
+    }
+
+    [Fact]
+    public void Creation_DeduplicatesKeyOnCollision()
+    {
+        var svc = new DocumentTypeCreationService(_db, new PlanValueNormalizer());
+
+        var a = svc.Create(ProjectId, "Sonderplan", "01 Planunterlagen", Ring2Source.None);
+        var b = svc.Create(ProjectId, "Sonderplan", "01 Planunterlagen", Ring2Source.None);
+
+        Assert.Equal("sonderplan", a.Key);
+        Assert.Equal("sonderplan-2", b.Key);
+    }
+
+    [Fact]
     public void Seed_CreatesTypesFromTemplate_Idempotent()
     {
         var seeder = new DocumentTypeSeedService(_db);

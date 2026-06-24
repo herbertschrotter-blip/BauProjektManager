@@ -326,6 +326,7 @@ CREATE TABLE building_levels (
     fbok REAL NOT NULL DEFAULT 0,
     rduk REAL,
     sort_order INTEGER NOT NULL DEFAULT 0,
+    folder_name TEXT NOT NULL DEFAULT '',  -- ADR-061: physischer Geschoss-Ordner "{PrefixString} {Name}" (z.B. "-01 KG"/"00 EG"/"01 OG1"), EINMAL beim Anlegen gesetzt, danach rename-stabil
     created_at TEXT NOT NULL,
     created_by TEXT NOT NULL DEFAULT '',
     last_modified_at TEXT NOT NULL,
@@ -336,6 +337,11 @@ CREATE TABLE building_levels (
 );
 
 CREATE INDEX idx_building_levels_part_id ON building_levels(building_part_id);
+```
+
+> **ADR-061 / BPM-113.02 (Frühphase, keine Migration):** `folder_name` neu.
+> Betroffene Datei: `bpm.db` → löschen, BPM legt sie beim nächsten Start neu an.
+> Befüllt wird `folder_name` ab Slice 0.3 (`InsertBuildingLevel`).
 ```
 
 **Berechnete Werte (im Code, NICHT in DB gespeichert):**
@@ -528,7 +534,9 @@ CREATE TABLE document_types (
     id TEXT PRIMARY KEY,                   -- ULID (projekt-scoped; Built-ins via is_builtin + name identifiziert)
     project_id TEXT NOT NULL,
     name TEXT NOT NULL,                    -- Anzeigename (z.B. "Polierplan")
-    folder_name TEXT NOT NULL,             -- physischer Ordnername, EINMAL erzeugt (Präfix bleibt erhalten)
+    folder_name TEXT NOT NULL,             -- physischer Typordner unter dem Root, EINMAL erzeugt; LEER bei Root-Typ (ADR-061)
+    key TEXT NOT NULL DEFAULT '',          -- ADR-061: stabiler Schlüssel, != UI-Name, nach Anlage gesperrt (Default '' bis Seed 0.4)
+    root_relative_path TEXT NOT NULL DEFAULT '', -- ADR-061: echter Ablage-Root je Typ ("01 Planunterlagen"/"06 Protokolle"); CHECK<>'' folgt in 0.4
     color_hex TEXT,                        -- Radial-Segmentfarbe (Seed: Mockup-Palette)
     ring2_source TEXT NOT NULL DEFAULT 'building_parts'
         CHECK (ring2_source IN ('building_parts', 'categories', 'none')),
@@ -544,7 +552,16 @@ CREATE TABLE document_types (
 );
 
 CREATE INDEX idx_document_types_project_id ON document_types(project_id);
+
+-- ADR-061: key eindeutig je Projekt. Partiell, damit leere Permissive-Keys
+-- (vor Seed 0.4) und soft-deletete Typen nicht kollidieren.
+CREATE UNIQUE INDEX idx_document_types_project_key
+    ON document_types(project_id, key) WHERE key <> '' AND is_deleted = 0;
 ```
+
+> **ADR-061 / BPM-113.02 (Frühphase, keine Migration):** `key` + `root_relative_path`
+> neu (permissive Defaults; `CHECK(root_relative_path<>'')` + voller Unique kommen in
+> Slice 0.4 mit dem Seed). Betroffene Datei: `bpm.db` → löschen, BPM seedet neu.
 
 **Seed bei Projektanlage:** Polierplan/Statik/Bewehrung/Schalung/Architektur
 (`building_parts`) · Fertigteile · Protokolle (`categories`) — siehe

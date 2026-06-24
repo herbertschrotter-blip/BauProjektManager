@@ -159,6 +159,10 @@ public class ProjectDatabase : IDisposable
                 fbok REAL NOT NULL DEFAULT 0,
                 rduk REAL,
                 sort_order INTEGER NOT NULL DEFAULT 0,
+                -- ADR-061 Slice 0.2: physischer Geschoss-Ordnername "{PrefixString} {Name}",
+                -- einmal beim Anlegen gesetzt (Slice 0.3), danach rename-stabil. Default ''
+                -- bis der Insert ihn befuellt.
+                folder_name TEXT NOT NULL DEFAULT '',
                 created_at TEXT NOT NULL,
                 created_by TEXT NOT NULL DEFAULT '',
                 last_modified_at TEXT NOT NULL,
@@ -174,6 +178,11 @@ public class ProjectDatabase : IDisposable
                 project_id TEXT NOT NULL,
                 name TEXT NOT NULL,
                 folder_name TEXT NOT NULL,
+                -- ADR-061 Slice 0.2: key (gesperrt nach Anlage) + echter Ablage-Root je Typ.
+                -- Permissive Defaults (Slice 0.2) — befuellt ab Seed/Insert (0.3/0.4),
+                -- CHECK(root_relative_path<>'') + voller Unique folgen in 0.4.
+                key TEXT NOT NULL DEFAULT '',
+                root_relative_path TEXT NOT NULL DEFAULT '',
                 color_hex TEXT,
                 ring2_source TEXT NOT NULL DEFAULT 'building_parts'
                     CHECK (ring2_source IN ('building_parts', 'categories', 'none')),
@@ -189,6 +198,12 @@ public class ProjectDatabase : IDisposable
             );
 
             CREATE INDEX IF NOT EXISTS idx_document_types_project_id ON document_types(project_id);
+
+            -- ADR-061 Slice 0.2: key eindeutig je Projekt. Partiell (key<>'' AND nicht
+            -- soft-deleted), damit die noch leeren Permissive-Keys (vor Seed 0.4) und
+            -- geloeschte Typen nicht kollidieren.
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_document_types_project_key
+                ON document_types(project_id, key) WHERE key <> '' AND is_deleted = 0;
 
             CREATE TABLE IF NOT EXISTS document_type_categories (
                 id TEXT PRIMARY KEY,

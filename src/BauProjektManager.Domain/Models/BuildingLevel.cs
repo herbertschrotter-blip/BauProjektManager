@@ -51,6 +51,23 @@ public class BuildingLevel
 
     public int SortOrder { get; set; }
 
+    /// <summary>
+    /// Physischer Ordnername des Geschosses (ADR-061) = "{PrefixString} {Name}"
+    /// (z. B. "-01 KG" / "00 EG" / "01 OG1"). EINMAL beim Anlegen erzeugt,
+    /// danach rename-stabil (ON CONFLICT unangetastet) — wird NICHT live aus
+    /// Prefix/Name neu berechnet, damit ein spaeteres Umbenennen den Ordner
+    /// nicht verschiebt. Befuellt beim Insert (Slice 0.3) via
+    /// <see cref="BuildDefaultFolderName"/>.
+    /// </summary>
+    public string FolderName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Erzeugt den Standard-Ordnernamen aus Prefix + Name ("{PrefixString} {Name}").
+    /// Reine Berechnung ohne Seiteneffekt — der Aufrufer entscheidet, ob/wann
+    /// <see cref="FolderName"/> damit gesetzt wird (Einmal-Regel).
+    /// </summary>
+    public string BuildDefaultFolderName() => $"{PrefixString} {Name}".Trim();
+
     // === 4 errechnete Werte (NICHT in DB) ===
 
     /// <summary>

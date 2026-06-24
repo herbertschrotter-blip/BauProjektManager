@@ -1,4 +1,6 @@
-﻿namespace BauProjektManager.Domain.Models;
+﻿using BauProjektManager.Domain.Enums.PlanManager;
+
+namespace BauProjektManager.Domain.Models;
 
 /// <summary>
 /// App-Einstellungen — gespeichert in settings.json (lokal pro Rechner).
@@ -185,6 +187,26 @@ public class FolderTemplateEntry
     /// </summary>
     public List<SubFolderEntry> SubFolders { get; set; } = [];
 
+    // === Typ-Metadaten (ADR-061) — optional, nur Struktur (Slice 0.1) ===
+    // Befuellt wird das Template erst beim Seed (Slice 0.4). Regel: dieser Node
+    // wird Dokumenttyp GENAU DANN, wenn CreatesDocumentType == true (keine
+    // implizite Ableitung aus Name/Prefix/Position/Kategorien).
+
+    /// <summary>True = aus diesem Template-Node wird beim Seed ein Dokumenttyp.</summary>
+    public bool CreatesDocumentType { get; set; }
+
+    /// <summary>Stabiler Typ-Key (gesperrt nach Anlage). NULL solange kein Typ.</summary>
+    public string? DocumentTypeKey { get; set; }
+
+    /// <summary>Anzeigename des erzeugten Typs (NULL = Ordnername verwenden).</summary>
+    public string? DocumentTypeDisplayName { get; set; }
+
+    /// <summary>Unterteilungs-Schema des erzeugten Typs (NULL solange kein Typ).</summary>
+    public Ring2Source? Ring2Source { get; set; }
+
+    /// <summary>Typgebundene Kategorien (nur relevant bei Ring2Source=Categories).</summary>
+    public List<FolderTemplateCategory> Categories { get; set; } = [];
+
     public FolderTemplateEntry() { }
 
     public FolderTemplateEntry(string name, bool hasInbox)
@@ -230,6 +252,25 @@ public class SubFolderEntry
     /// </summary>
     public List<SubFolderEntry> SubFolders { get; set; } = [];
 
+    // === Typ-Metadaten (ADR-061) — optional, nur Struktur (Slice 0.1) ===
+    // Analog zu FolderTemplateEntry: auch ein Unterordner kann ein Dokumenttyp
+    // sein (z. B. "Polierpläne" unter "01 Planunterlagen"). Befuellung: Slice 0.4.
+
+    /// <summary>True = aus diesem Template-Node wird beim Seed ein Dokumenttyp.</summary>
+    public bool CreatesDocumentType { get; set; }
+
+    /// <summary>Stabiler Typ-Key (gesperrt nach Anlage). NULL solange kein Typ.</summary>
+    public string? DocumentTypeKey { get; set; }
+
+    /// <summary>Anzeigename des erzeugten Typs (NULL = Ordnername verwenden).</summary>
+    public string? DocumentTypeDisplayName { get; set; }
+
+    /// <summary>Unterteilungs-Schema des erzeugten Typs (NULL solange kein Typ).</summary>
+    public Ring2Source? Ring2Source { get; set; }
+
+    /// <summary>Typgebundene Kategorien (nur relevant bei Ring2Source=Categories).</summary>
+    public List<FolderTemplateCategory> Categories { get; set; } = [];
+
     public SubFolderEntry() { }
 
     public SubFolderEntry(string name, bool hasPrefix)
@@ -243,4 +284,26 @@ public class SubFolderEntry
     /// </summary>
     public string GetDisplayName(int position) =>
         HasPrefix ? $"{position:D2} {Name}" : Name;
+}
+
+/// <summary>
+/// Typgebundene Kategorie im Ordner-Template (ADR-061) — Bootstrap-Quelle fuer
+/// document_type_categories. Pro Kategorie steuert <see cref="HasPrefix"/>, ob
+/// der erzeugte Kategorieordner eine laufende Nummer bekommt.
+/// </summary>
+public class FolderTemplateCategory
+{
+    /// <summary>Kategoriename (z. B. "Baubesprechung", "Wände").</summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>Ob der Kategorieordner nummeriert wird ("01 Wände" vs. "Wände").</summary>
+    public bool HasPrefix { get; set; } = true;
+
+    public FolderTemplateCategory() { }
+
+    public FolderTemplateCategory(string name, bool hasPrefix = true)
+    {
+        Name = name;
+        HasPrefix = hasPrefix;
+    }
 }

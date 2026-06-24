@@ -9,12 +9,20 @@ namespace BauProjektManager.Domain.Models.PlanManager;
 /// </summary>
 /// <param name="Id">ULID, projekt-scoped (Built-ins werden via <paramref name="IsBuiltin"/> + Name identifiziert).</param>
 /// <param name="Name">Anzeigename (z. B. "Polierplan").</param>
-/// <param name="FolderName">Physischer Ordnername — EINMAL beim Anlegen erzeugt, Praefix bleibt erhalten.</param>
+/// <param name="FolderName">Physischer Typordner unter dem Root — EINMAL beim Anlegen erzeugt, Praefix bleibt erhalten. LEER bei Root-Typ (ADR-061).</param>
 /// <param name="ColorHex">Radial-Segmentfarbe, NULL = Theme-Default.</param>
 /// <param name="Ring2Source">Unterteilungs-Schema (raeumlich/kategorial/keins).</param>
 /// <param name="SortOrder">Reihenfolge im Ring.</param>
 /// <param name="IsBuiltin">True fuer Seed-Typen.</param>
 /// <param name="Categories">Typgebundene Kategorien (nur bei Ring2Source=Categories befuellt).</param>
+/// <param name="Key">
+/// Stabiler Schluessel (ADR-061), != UI-Name, nach Anlage gesperrt. UNIQUE je Projekt.
+/// Trailing-Default fuer additive Slice 0.1 — befuellt ab Slice 0.3/0.4 (Seed/DB).
+/// </param>
+/// <param name="RootRelativePath">
+/// Echter Ablage-Root je Typ, relativ zum Projektroot (z. B. "01 Planunterlagen" / "06 Protokolle", ADR-061).
+/// Trailing-Default fuer additive Slice 0.1 — befuellt ab Slice 0.3/0.4; DB-seitig NOT NULL / CHECK &lt;&gt; '' (Slice 0.2).
+/// </param>
 public sealed record PlanDocumentType(
     string Id,
     string Name,
@@ -23,7 +31,9 @@ public sealed record PlanDocumentType(
     Ring2Source Ring2Source,
     int SortOrder,
     bool IsBuiltin,
-    IReadOnlyList<PlanDocumentTypeCategory> Categories);
+    IReadOnlyList<PlanDocumentTypeCategory> Categories,
+    string Key = "",
+    string RootRelativePath = "");
 
 /// <summary>
 /// Typgebundene Kategorie (bpm.db document_type_categories, Kap. 4.13) —

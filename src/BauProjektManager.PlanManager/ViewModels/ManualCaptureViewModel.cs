@@ -245,9 +245,13 @@ public partial class ManualCaptureViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void TakeUpdate(CaptureRowViewModel row)
+    private void TakeUpdate()
     {
-        if (row.Item.Match is null)
+        // Arbeitet auf der aktuell im Detail-Panel gezeigten Zeile — kein
+        // CommandParameter (der beim ContentControl-DataContext-Wechsel als null
+        // ankommen kann). Button ist ohnehin nur bei CanTakeUpdate sichtbar.
+        var row = SelectedDetail?.Row;
+        if (row?.Item.Match is null)
             return;
         var c = row.Item.Candidates;
         _pending.Assign(new PendingAssignment(

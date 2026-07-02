@@ -197,8 +197,7 @@
                                             Style="{DynamicResource BpmButtonPrimary}"
                                             Margin="0,0,0,12"
                                             Visibility="{Binding CanTakeUpdate, Converter={StaticResource BoolToVis}}"
-                                            Command="{Binding DataContext.TakeUpdateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding Row}"/>
+                                            Command="{Binding DataContext.TakeUpdateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
 
                                     <StackPanel Visibility="{Binding HasHistory, Converter={StaticResource BoolToVis}}">
                                         <TextBlock Text="Index-Historie"

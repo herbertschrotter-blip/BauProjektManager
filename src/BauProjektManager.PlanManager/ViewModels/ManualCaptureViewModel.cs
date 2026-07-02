@@ -108,6 +108,14 @@ public partial class ManualCaptureViewModel : ObservableObject
     [ObservableProperty]
     private bool _canUndoLastImport;
 
+    /// <summary>Detail-Panel-Inhalt der einzeln gewählten Zeile (null = keine/mehrere Auswahl).</summary>
+    [ObservableProperty]
+    private CaptureDetailViewModel? _selectedDetail;
+
+    /// <summary>Platzhaltertext im Detail-Panel bei keiner oder mehrfacher Auswahl.</summary>
+    [ObservableProperty]
+    private string _detailPlaceholder = "Keine Auswahl";
+
     /// <summary>Projekt-Kontext setzen und Eingang analysieren.</summary>
     public async Task InitializeAsync(
         string projectId, string projectRootPath,
@@ -142,6 +150,7 @@ public partial class ManualCaptureViewModel : ObservableObject
                      $"{result.UpdateProposalCount} Updates, {result.NewCaptureCount} neu, " +
                      $"{result.ConflictCount} Konflikte";
         CanUndoLastImport = _undo.Preflight(_projectRootPath).CanUndo;
+        SetSelectedRow();
     }
 
     // ── Radial-Orchestrierung (vom Gesten-Host aufgerufen) ─────────
@@ -249,6 +258,7 @@ public partial class ManualCaptureViewModel : ObservableObject
             row.Item.Match.RelativeDirectory, row.Item.Match));
         row.PendingTarget = row.Item.Match.RelativeDirectory;
         UpdatePendingState();
+        SetSelectedRow();
     }
 
     [RelayCommand]
@@ -298,4 +308,46 @@ public partial class ManualCaptureViewModel : ObservableObject
     }
 
     private void UpdatePendingState() => PendingCount = _pending.Count;
+
+    /// <summary>
+    /// Baut den Detail-Panel-Inhalt für die aktuelle Auswahl (BPM-111.06 Slice A):
+    /// genau eine Zeile → Detail-VM inkl. Index-Historie; sonst Platzhalter.
+    /// Wird vom Gesten-Host bei Auswahländerung und nach Refresh/TakeUpdate gerufen.
+    /// </summary>
+    public void SetSelectedRow()
+    {
+        var selected = SelectedRows;
+        if (selected.Count == 1)
+        {
+            SelectedDetail = new CaptureDetailViewModel(selected[0], BuildHistory(selected[0]));
+            DetailPlaceholder = string.Empty;
+        }
+        else
+        {
+            SelectedDetail = null;
+            DetailPlaceholder = selected.Count == 0
+                ? "Keine Auswahl"
+                : $"{selected.Count} Datei(en) ausgewählt — halten & ziehen";
+        }
+    }
+
+    /// <summary>Index-Historie (plan_revisions) des zugeordneten Dokuments; leer ohne Match.</summary>
+    private IReadOnlyList<PlanRevisionHistoryRow> BuildHistory(CaptureRowViewModel row)
+    {
+        var match = row.Item.Match;
+        if (match is null)
+            return [];
+
+        var revisions = _planDb.GetRevisionsForDocument(match.DocumentId);
+        return [.. revisions.Select(r => new PlanRevisionHistoryRow(
+            r.PlanIndex ?? "Erstausgabe",
+            r.RevisionStatus,
+            FormatRevisionDate(r.CurrentFrom)))];
+    }
+
+    private static string FormatRevisionDate(string isoUtc)
+        => DateTime.TryParse(isoUtc, null,
+                System.Globalization.DateTimeStyles.RoundtripKind, out var dt)
+            ? dt.ToLocalTime().ToString("yyyy-MM-dd")
+            : string.Empty;
 }

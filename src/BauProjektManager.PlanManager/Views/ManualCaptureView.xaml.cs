@@ -59,7 +59,11 @@ public partial class ManualCaptureView : UserControl
         _holdTimer.Tick += OnHoldElapsed;
 
         Radial.SegmentCommitted += OnSegmentCommitted;
-        FileList.SelectionChanged += (_, _) => UpdateSelectionInfo();
+        FileList.SelectionChanged += (_, _) =>
+        {
+            if (DataContext is ManualCaptureViewModel vm)
+                vm.SetSelectedRow();
+        };
     }
 
     // ── Hold-Erkennung ──────────────────────────────────────────────
@@ -314,38 +318,7 @@ public partial class ManualCaptureView : UserControl
         _controller = null;
         _captureAnchor = null;
         _justLatched = false;
-        UpdateSelectionInfo();
-    }
-
-    // ── Detail-Panel (Slice 2b minimal) ─────────────────────────────
-
-    private void UpdateSelectionInfo()
-    {
-        var selected = ViewModel.SelectedRows;
-        if (selected.Count == 1)
-        {
-            var row = selected[0];
-            SelectionInfo.Text = row.IsPending
-                ? $"{row.FileName}\n{row.PendingText}"
-                : $"{row.FileName}\n{row.CandidateText}{(row.Reason is not null ? $"\n⚠ {row.Reason}" : "")}";
-            TakeUpdateButton.Visibility = row.IsUpdate && !row.IsPending
-                ? Visibility.Visible : Visibility.Collapsed;
-        }
-        else
-        {
-            SelectionInfo.Text = selected.Count == 0
-                ? "Keine Auswahl"
-                : $"{selected.Count} Datei(en) ausgewählt — halten & ziehen";
-            TakeUpdateButton.Visibility = Visibility.Collapsed;
-        }
-    }
-
-    private void OnTakeUpdateClick(object sender, RoutedEventArgs e)
-    {
-        var row = ViewModel.SelectedRows.FirstOrDefault();
-        if (row is not null && ViewModel.TakeUpdateCommand.CanExecute(row))
-            ViewModel.TakeUpdateCommand.Execute(row);
-        UpdateSelectionInfo();
+        ViewModel.SetSelectedRow();
     }
 
     // ── Schnellanlage-Dialog (Slice 3) ──────────────────────────────

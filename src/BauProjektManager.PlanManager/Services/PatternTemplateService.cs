@@ -21,7 +21,7 @@ namespace BauProjektManager.PlanManager.Services;
 public class PatternTemplateService
 {
     /// <summary>Aktuelle Schema-Version. Templates mit anderem Wert werden beim Laden verworfen.</summary>
-    public const int CurrentSchemaVersion = 4;
+    public const int CurrentSchemaVersion = 5;
 
     private readonly IIdGenerator _idGenerator;
     private readonly IPersistenceRegistry? _persistenceRegistry;
@@ -118,7 +118,6 @@ public class PatternTemplateService
             Id = _idGenerator.NewId(),
             DocumentTypeId = profile.DocumentTypeId,
             DocumentTypeName = profile.DocumentTypeName,
-            TargetFolder = profile.TargetFolder,
             Tokenization = profile.Tokenization,
             Segments = profile.Segments,
             Recognition = profile.Recognition,

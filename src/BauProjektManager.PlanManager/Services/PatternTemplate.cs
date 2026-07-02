@@ -16,11 +16,10 @@ namespace BauProjektManager.PlanManager.Services;
 public class PatternTemplate
 {
     /// <summary>Aktuelle Schema-Version. Mismatch wird vom Loader verworfen.</summary>
-    public int SchemaVersion { get; set; } = 4;
+    public int SchemaVersion { get; set; } = 5;
     public string Id { get; set; } = string.Empty;
     public string DocumentTypeId { get; set; } = string.Empty;
     public string DocumentTypeName { get; set; } = string.Empty;
-    public string TargetFolder { get; set; } = string.Empty;
     public TokenizationConfig Tokenization { get; set; } = new();
     public List<ProfileSegment> Segments { get; set; } = [];
     public List<RecognitionRule> Recognition { get; set; } = [];

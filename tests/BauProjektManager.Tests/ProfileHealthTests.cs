@@ -65,11 +65,10 @@ public class ProfileHealthTests : IDisposable
 
     private const string ProfileWithSegment = """
         {
-          "schemaVersion": 4,
+          "schemaVersion": 5,
           "id": "PROF-1",
           "documentTypeId": "test",
           "documentTypeName": "TestType",
-          "targetFolder": "01",
           "tokenization": { "delimiters": ["-"] },
           "segments": [
             { "position": 1, "fieldTypeId": "plan_number", "required": true, "includeInIdentity": true }
@@ -176,7 +175,7 @@ public class ProfileHealthTests : IDisposable
     public void Load_SchemaVersion3_IsDiscarded()
     {
         // BPM-108: alte v3-Profile werden vom Loader strikt verworfen
-        var v3Profile = ProfileWithSegment.Replace("\"schemaVersion\": 4", "\"schemaVersion\": 3");
+        var v3Profile = ProfileWithSegment.Replace("\"schemaVersion\": 5", "\"schemaVersion\": 3");
         WriteProfile("v3.json", v3Profile);
 
         var profile = _sut.LoadById(_tempRoot, "PROF-1");

@@ -18,14 +18,14 @@ namespace BauProjektManager.PlanManager.Services;
 /// BPM-082: Schema v3, Methoden segment (Default) und regex (Fallback).
 /// BPM-108 / ADR-056 (Phase B): Schema v4 — ProfileSegment.FieldTypeId statt FieldType-Enum;
 /// IdentityFields/FolderHierarchy/RenameSchema referenzieren segment_types.id bzw. token_key.
-/// LoadAll/LoadById verwerfen Profile mit SchemaVersion != 4 (Fruehphase = Reset, kein Migrations-Code).
+/// LoadAll/LoadById verwerfen Profile mit SchemaVersion != 5 (Fruehphase = Reset, kein Migrations-Code).
 /// Optionaler <see cref="ISegmentTypeCatalog"/> berechnet beim Laden den
 /// <see cref="ProfileHealth"/> und befuellt <see cref="RecognitionProfile.MissingSegmentTypeIds"/>.
 /// </remarks>
 public class ProfileManager : IProfileManager
 {
     /// <summary>Aktuelle Schema-Version. Profile mit anderem Wert werden beim Laden verworfen.</summary>
-    public const int CurrentSchemaVersion = 4;
+    public const int CurrentSchemaVersion = 5;
 
     /// <summary>Reservierter System-Key in <see cref="RecognitionProfile.IdentityFields"/>.</summary>
     public const string DocumentTypeIdentityKey = "documentType";
@@ -348,7 +348,6 @@ public class ProfileManager : IProfileManager
     /// </remarks>
     public RecognitionProfile BuildFromWizard(
         string documentTypeName,
-        string targetFolder,
         IndexSourceType indexSource,
         bool indexModeOptional,
         bool indexCaseInsensitive,
@@ -397,7 +396,6 @@ public class ProfileManager : IProfileManager
             SchemaVersion = CurrentSchemaVersion,
             DocumentTypeId = resolvedDocumentTypeId,
             DocumentTypeName = documentTypeName,
-            TargetFolder = targetFolder,
             IndexSource = indexSource,
             IndexMode = indexModeOptional ? "optional" : "required",
             IndexComparison = new IndexComparisonConfig

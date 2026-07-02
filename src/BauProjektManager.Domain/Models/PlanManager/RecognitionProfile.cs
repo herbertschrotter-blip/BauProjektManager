@@ -13,16 +13,18 @@ namespace BauProjektManager.Domain.Models.PlanManager;
 /// <para>Schema v4 (BPM-108, 2026-05-18, ADR-056): <c>ProfileSegment.FieldTypeId</c> (statt Enum-String),
 /// <c>identityFields</c>/<c>folderHierarchy</c>/<c>renameSchema</c> referenzieren <c>segment_types.id</c>
 /// bzw. <c>token_key</c>. Recognition unveraendert. Strict Reset — kein Migrations-Code.</para>
+/// <para>Schema v5 (BPM-113.06 Slice 0.6c, ADR-061): <c>TargetFolder</c> entfernt — der Zielordner
+/// kommt ausschliesslich aus den DB-Stammdaten via <c>DocumentTargetPathResolver</c>
+/// (<see cref="DocumentTypeId"/> fuehrend). Strict Reset — kein Migrations-Code.</para>
 /// </remarks>
 public class RecognitionProfile
 {
-    public int SchemaVersion { get; set; } = 4;
+    public int SchemaVersion { get; set; } = 5;
     public string Id { get; set; } = string.Empty;
 
     // --- Dokumenttyp (v2: TypeId + DisplayName getrennt) ---
     public string DocumentTypeId { get; set; } = string.Empty;
     public string DocumentTypeName { get; set; } = string.Empty;
-    public string TargetFolder { get; set; } = string.Empty;
 
     // --- Index-Konfiguration (ADR-045) ---
     public IndexSourceType IndexSource { get; set; } = IndexSourceType.FileName;

@@ -138,38 +138,17 @@ public partial class ProfileWizardViewModel : ObservableObject
     [ObservableProperty]
     private bool _showIndexWarning;
 
-    // === Schritt 4: Zielordner ===
-
-    public List<string> TargetFolderOptions { get; } =
-    [
-        "01 Planunterlagen",
-        "02 Statik",
-        "03 Dokumente",
-        "04 Protokolle",
-        "05 Fotos",
-        "06 Sonstiges"
-    ];
-
-    [ObservableProperty]
-    private string _selectedTargetFolder = "01 Planunterlagen";
-
-    [ObservableProperty]
-    private bool _useCustomFolder;
-
-    [ObservableProperty]
-    private string _customFolderName = "";
+    // === Schritt 4: Dokumenttyp + Ordner-Hierarchie ===
+    // BPM-113.06 Slice 0.6c (ADR-061): Der Zielordner kommt ausschliesslich aus den
+    // document_types-Stammdaten (root_relative_path/folder_name) via DocumentTargetPathResolver.
+    // Die frueheren hardcodierten TargetFolder-Felder (TargetFolderOptions/SelectedTargetFolder/
+    // UseCustomFolder/CustomFolderName) sind entfernt.
 
     [ObservableProperty]
     private ObservableCollection<HierarchyLevelOption> _availableHierarchyLevels = [];
 
     [ObservableProperty]
     private string _folderPreview = "";
-
-    // === Schritt 4: Dokumenttyp (BPM-113.06 Slice 0.6b, ADR-061) ===
-    // Loest die hardcodierten TargetFolderOptions ab: Der Zielordner kommt jetzt aus
-    // den document_types-Stammdaten (root_relative_path/folder_name) und ist damit
-    // resolverbar (DocumentTargetPathResolver). Die alten TargetFolder-Felder bleiben
-    // additiv bis Slice 0.6c (dort Entfernung + SchemaVersion 5 + Fruehphasen-Reset).
 
     /// <summary>Dokumenttypen aus den Projekt-Stammdaten (bpm.db) fuer den Schritt-4-Picker.</summary>
     [ObservableProperty]
@@ -305,24 +284,6 @@ public partial class ProfileWizardViewModel : ObservableObject
     partial void OnSelectedIndexSourceChanged(IndexSourceType value)
     {
         ShowIndexModeOptions = value == IndexSourceType.FileName;
-        ValidateCurrentStep();
-    }
-
-    partial void OnSelectedTargetFolderChanged(string value)
-    {
-        UpdateFolderPreview();
-        ValidateCurrentStep();
-    }
-
-    partial void OnUseCustomFolderChanged(bool value)
-    {
-        UpdateFolderPreview();
-        ValidateCurrentStep();
-    }
-
-    partial void OnCustomFolderNameChanged(string value)
-    {
-        UpdateFolderPreview();
         ValidateCurrentStep();
     }
 
@@ -740,14 +701,11 @@ public partial class ProfileWizardViewModel : ObservableObject
                 })
                 .ToList();
 
-            // BPM-113.06 Slice 0.6b: DocumentTypeId = stabile type.Id aus den Stammdaten
-            // (resolverbar in ImportPlanBuilder/DocumentTargetPathResolver). targetFolder
-            // wird nur noch als Legacy-Metadatum mitgeschrieben (Entfernung in Slice 0.6c).
-            var targetFolder = SelectedDocumentType?.RootRelativePath ?? "";
-
+            // BPM-113.06 Slice 0.6c: DocumentTypeId = stabile type.Id aus den Stammdaten
+            // (resolverbar in ImportPlanBuilder/DocumentTargetPathResolver). Kein TargetFolder
+            // mehr — der Zielordner kommt ausschliesslich aus der DB (ADR-061).
             var profile = _profileManager.BuildFromWizard(
                 documentTypeName: DocumentTypeName,
-                targetFolder: targetFolder,
                 indexSource: SelectedIndexSource,
                 indexModeOptional: IndexModeOptional,
                 indexCaseInsensitive: IndexCaseInsensitive,

@@ -35,7 +35,6 @@ public interface IProfileManager
     /// </summary>
     RecognitionProfile BuildFromWizard(
         string documentTypeName,
-        string targetFolder,
         IndexSourceType indexSource,
         bool indexModeOptional,
         bool indexCaseInsensitive,

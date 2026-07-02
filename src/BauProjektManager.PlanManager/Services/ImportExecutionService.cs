@@ -112,7 +112,6 @@ public class ImportExecutionService
             return new ActionResult(false, "Kein Zielpfad berechnet");
 
         var targetPath = Path.Combine(projectRootPath, targetRelPath);
-        var profile = decision.File.Parsed.MatchedProfile;
 
         // Write journal action (pending) BEFORE moving
         var actionType = decision.Status switch
@@ -170,6 +169,13 @@ public class ImportExecutionService
             }
 
             // --- Cache-DB-Write NACH dem Move (Schema v2.0 Drei-Ebenen-Modell, BPM-109.03/.04) ---
+            // ADR-061 Slice 0.6c: target_folder kommt aus dem aufgeloesten Zielpfad
+            // (Root-Segment = root_relative_path des Dokumenttyps), NICHT mehr aus dem
+            // entfernten profile.TargetFolder. relative_directory = voller aufgeloester Ordner.
+            var resolvedDir = Path.GetDirectoryName(targetRelPath) ?? "";
+            var rootParts = resolvedDir.Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries);
+            var rootFolder = rootParts.Length > 0 ? rootParts[0] : "";
+
             var documentId = _db.ResolveOrCreateDocument(
                 _db.ProjectId,
                 decision.DocumentKey!,
@@ -177,8 +183,8 @@ public class ImportExecutionService
                 decision.File.PlanNumber ?? "",
                 decision.File.DocumentTypeDisplayName ?? "unknown",
                 "",                                          // title
-                profile?.TargetFolder ?? "",
-                Path.GetDirectoryName(targetRelPath) ?? "",
+                rootFolder,                                  // target_folder = root_relative_path (ADR-061)
+                resolvedDir,                                 // relative_directory (voller aufgeloester Ordner)
                 null,                                        // building_part_id — SoftRef-Auflösung post-V1 (BPM-109.06)
                 null);                                       // building_level_id — dito
 

@@ -52,11 +52,10 @@ public class ProfileManagerLoadToleranceTests : IDisposable
 
     private const string ValidProfile = """
         {
-          "schemaVersion": 4,
+          "schemaVersion": 5,
           "id": "VALID-1",
           "documentTypeId": "test",
           "documentTypeName": "TestType",
-          "targetFolder": "01 Planunterlagen",
           "tokenization": { "delimiters": ["-", "_"] },
           "recognition": [
             { "method": "segment", "pattern": "PROT", "segmentPosition": 1 }
@@ -85,7 +84,7 @@ public class ProfileManagerLoadToleranceTests : IDisposable
     {
         const string noId = """
             {
-              "schemaVersion": 4,
+              "schemaVersion": 5,
               "id": "",
               "documentTypeName": "TestType",
               "tokenization": { "delimiters": ["-"] },
@@ -106,7 +105,7 @@ public class ProfileManagerLoadToleranceTests : IDisposable
     {
         const string noId = """
             {
-              "schemaVersion": 4,
+              "schemaVersion": 5,
               "id": "",
               "documentTypeName": "TestType",
               "tokenization": { "delimiters": ["-"] },
@@ -130,7 +129,7 @@ public class ProfileManagerLoadToleranceTests : IDisposable
     {
         const string noName = """
             {
-              "schemaVersion": 4,
+              "schemaVersion": 5,
               "id": "X",
               "documentTypeName": "",
               "tokenization": { "delimiters": ["-"] },
@@ -153,7 +152,7 @@ public class ProfileManagerLoadToleranceTests : IDisposable
     {
         const string noRules = """
             {
-              "schemaVersion": 4,
+              "schemaVersion": 5,
               "id": "X",
               "documentTypeName": "TestType",
               "tokenization": { "delimiters": ["-"] },
@@ -174,7 +173,7 @@ public class ProfileManagerLoadToleranceTests : IDisposable
     {
         const string legacyContains = """
             {
-              "schemaVersion": 4,
+              "schemaVersion": 5,
               "id": "LEG-1",
               "documentTypeName": "LegacyType",
               "tokenization": { "delimiters": ["-"] },
@@ -195,7 +194,7 @@ public class ProfileManagerLoadToleranceTests : IDisposable
     {
         const string legacyPrefix = """
             {
-              "schemaVersion": 4,
+              "schemaVersion": 5,
               "id": "LEG-2",
               "documentTypeName": "LegacyType",
               "tokenization": { "delimiters": ["-"] },
@@ -218,7 +217,7 @@ public class ProfileManagerLoadToleranceTests : IDisposable
     {
         const string noPos = """
             {
-              "schemaVersion": 4,
+              "schemaVersion": 5,
               "id": "X",
               "documentTypeName": "TestType",
               "tokenization": { "delimiters": ["-"] },
@@ -241,7 +240,7 @@ public class ProfileManagerLoadToleranceTests : IDisposable
     {
         const string noPattern = """
             {
-              "schemaVersion": 4,
+              "schemaVersion": 5,
               "id": "X",
               "documentTypeName": "TestType",
               "tokenization": { "delimiters": ["-"] },
@@ -265,7 +264,7 @@ public class ProfileManagerLoadToleranceTests : IDisposable
         WriteProfile("valid.json", ValidProfile);
         WriteProfile("bad-no-rules.json", """
             {
-              "schemaVersion": 4,
+              "schemaVersion": 5,
               "id": "BAD",
               "documentTypeName": "Bad",
               "tokenization": { "delimiters": ["-"] },
@@ -274,7 +273,7 @@ public class ProfileManagerLoadToleranceTests : IDisposable
             """);
         WriteProfile("bad-legacy.json", """
             {
-              "schemaVersion": 4,
+              "schemaVersion": 5,
               "id": "BAD2",
               "documentTypeName": "Bad2",
               "tokenization": { "delimiters": ["-"] },
@@ -370,7 +369,7 @@ public class ProfileManagerLoadToleranceTests : IDisposable
     {
         const string legacy = """
             {
-              "schemaVersion": 4,
+              "schemaVersion": 5,
               "id": "LEG-X",
               "documentTypeName": "Legacy",
               "tokenization": { "delimiters": ["-"] },

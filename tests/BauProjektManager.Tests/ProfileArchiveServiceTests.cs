@@ -5,7 +5,7 @@ namespace BauProjektManager.Tests;
 
 /// <summary>
 /// Tests fuer <see cref="ProfileArchiveService"/> (BPM-108 Phase B).
-/// Verschiebt Profile/Templates mit schemaVersion != 4 nach _archiv/schema-reset-*.
+/// Verschiebt Profile/Templates mit schemaVersion != 5 nach _archiv/schema-reset-*.
 /// </summary>
 public class ProfileArchiveServiceTests : IDisposable
 {
@@ -43,10 +43,10 @@ public class ProfileArchiveServiceTests : IDisposable
     }
 
     [Fact]
-    public void ArchiveOutdatedProfiles_AllV4_NothingMoved()
+    public void ArchiveOutdatedProfiles_AllV5_NothingMoved()
     {
-        File.WriteAllText(Path.Combine(_profilesDir, "p1.json"), """{"schemaVersion":4,"id":"P1"}""");
-        File.WriteAllText(Path.Combine(_profilesDir, "p2.json"), """{"schemaVersion":4,"id":"P2"}""");
+        File.WriteAllText(Path.Combine(_profilesDir, "p1.json"), """{"schemaVersion":5,"id":"P1"}""");
+        File.WriteAllText(Path.Combine(_profilesDir, "p2.json"), """{"schemaVersion":5,"id":"P2"}""");
 
         var moved = _sut.ArchiveOutdatedProfiles(_tempRoot);
 
@@ -59,7 +59,7 @@ public class ProfileArchiveServiceTests : IDisposable
     public void ArchiveOutdatedProfiles_V3Profile_IsMovedToArchive()
     {
         File.WriteAllText(Path.Combine(_profilesDir, "v3.json"), """{"schemaVersion":3,"id":"V3"}""");
-        File.WriteAllText(Path.Combine(_profilesDir, "v4.json"), """{"schemaVersion":4,"id":"V4"}""");
+        File.WriteAllText(Path.Combine(_profilesDir, "v4.json"), """{"schemaVersion":5,"id":"V4"}""");
 
         var moved = _sut.ArchiveOutdatedProfiles(_tempRoot);
 
@@ -79,7 +79,7 @@ public class ProfileArchiveServiceTests : IDisposable
     public void ArchiveOutdatedProfiles_UnreadableJson_TreatedAsOutdated()
     {
         File.WriteAllText(Path.Combine(_profilesDir, "garbage.json"), "not json at all");
-        File.WriteAllText(Path.Combine(_profilesDir, "ok.json"), """{"schemaVersion":4,"id":"OK"}""");
+        File.WriteAllText(Path.Combine(_profilesDir, "ok.json"), """{"schemaVersion":5,"id":"OK"}""");
 
         var moved = _sut.ArchiveOutdatedProfiles(_tempRoot);
 
@@ -89,12 +89,12 @@ public class ProfileArchiveServiceTests : IDisposable
     }
 
     [Fact]
-    public void ArchiveOutdatedPatternTemplates_AllV4_NothingMoved()
+    public void ArchiveOutdatedPatternTemplates_AllV5_NothingMoved()
     {
         var cloudShared = Path.Combine(_tempRoot, ".AppData");
         Directory.CreateDirectory(cloudShared);
         File.WriteAllText(Path.Combine(cloudShared, "pattern-templates.json"),
-            """[{"schemaVersion":4,"id":"T1","documentTypeName":"X"}]""");
+            """[{"schemaVersion":5,"id":"T1","documentTypeName":"X"}]""");
 
         var archived = _sut.ArchiveOutdatedPatternTemplates(cloudShared);
 
@@ -108,7 +108,7 @@ public class ProfileArchiveServiceTests : IDisposable
         var cloudShared = Path.Combine(_tempRoot, ".AppData");
         Directory.CreateDirectory(cloudShared);
         File.WriteAllText(Path.Combine(cloudShared, "pattern-templates.json"),
-            """[{"schemaVersion":4,"id":"T1"},{"schemaVersion":3,"id":"T2"}]""");
+            """[{"schemaVersion":5,"id":"T1"},{"schemaVersion":3,"id":"T2"}]""");
 
         var archived = _sut.ArchiveOutdatedPatternTemplates(cloudShared);
 

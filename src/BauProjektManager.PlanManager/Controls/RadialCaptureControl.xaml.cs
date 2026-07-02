@@ -238,8 +238,12 @@ public partial class RadialCaptureControl : UserControl
             ring.Group.Children.Add(path);
 
             var (lx, ly) = RadialGeometry.LabelPoint(Cx, Cx, inner, outer, start, sweep);
-            var label = MakeLabel(item.Name, ringIndex == 3 ? 11 : 12,
-                item.IsAddItem ? FindBrush("BpmWarning") : FindBrush("BpmTextBright"));
+            var labelBrush = item.IsAddItem
+                ? FindBrush("BpmWarning")
+                : isSelected || !IsLightColor(ResolveFieldColor(item))
+                    ? FindBrush("BpmTextBright")
+                    : FindBrush("BpmBgBase");
+            var label = MakeLabel(item.Name, ringIndex == 3 ? 11 : 12, labelBrush);
             PlaceLabel(label, lx, ly);
             ring.Group.Children.Add(label);
         }
@@ -250,13 +254,29 @@ public partial class RadialCaptureControl : UserControl
         if (item.IsAddItem)
             return CloneWithOpacity(FindBrush("BpmBgBase"), 0.7);
         if (isSelected)
-            return CloneWithOpacity(FindBrush("BpmBgActive"), FillOpacityActive);
+            return FindBrush("BpmBgActive");
 
-        var baseBrush = item.ColorHex is not null
-            ? new SolidColorBrush((Color)ColorConverter.ConvertFromString(item.ColorHex))
-            : FindBrush("BpmBgElevated");
-        return CloneWithOpacity(baseBrush, isHover ? FillOpacityActive : FillOpacityDefault);
+        // Sticky-Radial (Teil 46): Segmente voll deckend — kein 0.78/0.95 mehr.
+        // Hover wird ueber Rahmen (weiss) + Strichstaerke unterschieden, nicht Opazitaet.
+        var fill = new SolidColorBrush(ResolveFieldColor(item));
+        if (fill.CanFreeze) fill.Freeze();
+        return fill;
     }
+
+    /// <summary>Effektive Feldfarbe (ColorHex oder Theme-Default) — auch Basis der adaptiven Textfarbe.</summary>
+    private Color ResolveFieldColor(RadialSegmentItem item)
+    {
+        if (item.ColorHex is not null)
+        {
+            try { return (Color)ColorConverter.ConvertFromString(item.ColorHex); }
+            catch { /* ungueltiger Hex → Fallback */ }
+        }
+        return (FindBrush("BpmBgElevated") as SolidColorBrush)?.Color ?? Colors.DimGray;
+    }
+
+    /// <summary>Rec.601-Luma-Schwelle: helle Fuellung → dunkler Text, sonst weiss.</summary>
+    private static bool IsLightColor(Color c) =>
+        (0.299 * c.R + 0.587 * c.G + 0.114 * c.B) / 255.0 > 0.6;
 
     private Brush BuildStroke(RadialSegmentItem item, bool isSelected, bool isHover)
     {

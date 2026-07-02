@@ -134,6 +134,52 @@ public class RadialSelectionController
         return rotated;
     }
 
+    /// <summary>
+    /// Weist jedem Feld (ohne „+ Neu…") eine feld-stabile Rampenfarbe dunkel→hell der
+    /// Typfarbe nach urspruenglicher Position zu und haengt „+ Neu…" ans Ende.
+    /// Der Offset wird ERST danach angewandt → jedes Feld behaelt seine Farbe.
+    /// BPM-111.05 Slice C (Teil 46).
+    /// </summary>
+    private static IReadOnlyList<RadialSegmentItem> WithRamp(IReadOnlyList<RadialSegmentItem> baseItems, string? typeColor)
+    {
+        var n = baseItems.Count;
+        var result = new List<RadialSegmentItem>(n + 1);
+        for (var i = 0; i < n; i++)
+        {
+            var t = n > 1 ? (double)i / (n - 1) : 0.0;
+            result.Add(baseItems[i] with { ColorHex = RampHex(typeColor, t) });
+        }
+        result.Add(NewItem());
+        return result;
+    }
+
+    /// <summary>Farbe auf der Rampe dunkel (t=0, ~45%) → hell (t=1, ~65% aufgehellt) der Typfarbe.</summary>
+    private static string RampHex(string? typeColor, double t)
+    {
+        var (r, g, b) = ParseHex(typeColor);
+        static int Channel(int v, double tt)
+        {
+            double dark = v * 0.45;
+            double light = v + (255 - v) * 0.65;
+            return (int)Math.Round(dark + (light - dark) * tt);
+        }
+        return $"#{Channel(r, t):X2}{Channel(g, t):X2}{Channel(b, t):X2}";
+    }
+
+    private static (int R, int G, int B) ParseHex(string? hex)
+    {
+        if (!string.IsNullOrEmpty(hex))
+        {
+            var h = hex.TrimStart('#');
+            if (h.Length == 6
+                && int.TryParse(h.AsSpan(0, 2), System.Globalization.NumberStyles.HexNumber, null, out var r)
+                && int.TryParse(h.AsSpan(2, 2), System.Globalization.NumberStyles.HexNumber, null, out var g)
+                && int.TryParse(h.AsSpan(4, 2), System.Globalization.NumberStyles.HexNumber, null, out var b))
+                return (r, g, b);
+        }
+        return (24, 63, 90); // Fallback ~ Akzentblau
+    }
+
     /// <summary>Setzt die Auswahl zurueck (neuer Capture-Vorgang).</summary>
     public void Reset()
     {
@@ -222,20 +268,21 @@ public class RadialSelectionController
         if (SelectedType is null)
             return [];
 
-        IReadOnlyList<RadialSegmentItem> items = SelectedType.Ring2Source switch
+        // Basis-Items OHNE „+ Neu…" — die Rampe wird nach Original-Position vergeben,
+        // dann NewItem angehaengt (WithRamp) und zuletzt der Offset angewandt.
+        // Ring2Source.None bekommt KEIN Add-Item (kein Unter-Schema vorhanden).
+        IReadOnlyList<RadialSegmentItem> baseItems = SelectedType.Ring2Source switch
         {
-            // „+ Neu…" je Ebene (Slice 3): neues Bauteil bzw. neue Kategorie.
-            // Ring2Source.None bekommt KEIN Add-Item (kein Unter-Schema vorhanden).
             Ring2Source.BuildingParts => [.. _parts.Select(p => new RadialSegmentItem(
                 EffectivePartName(p),
                 IsCandidate: candidates?.BuildingPartHint is not null
-                    && string.Equals(EffectivePartName(p), candidates.BuildingPartHint, StringComparison.OrdinalIgnoreCase))),
-                NewItem()],
-            Ring2Source.Categories => [.. SelectedType.Categories.Select(c => new RadialSegmentItem(c.Name)),
-                NewItem()],
+                    && string.Equals(EffectivePartName(p), candidates.BuildingPartHint, StringComparison.OrdinalIgnoreCase)))],
+            Ring2Source.Categories => [.. SelectedType.Categories.Select(c => new RadialSegmentItem(c.Name))],
             _ => []
         };
-        return ApplyOffset(items, _ringOffset[1]);
+        if (baseItems.Count == 0)
+            return [];
+        return ApplyOffset(WithRamp(baseItems, SelectedType.ColorHex), _ringOffset[1]);
     }
 
     /// <summary>
@@ -256,13 +303,12 @@ public class RadialSelectionController
         if (part is null)
             return [];
 
-        // Geschosse + „+ Neu…" (Slice 3); Add-Item auch bei 0 Geschossen, damit
-        // ein Bauteil ohne Geschosse direkt eines anlegen kann.
-        IReadOnlyList<RadialSegmentItem> items = [.. part.Levels.Select(l => new RadialSegmentItem(
+        // Geschosse; Rampe nach Original-Position, NewItem via WithRamp (auch bei 0
+        // Geschossen, damit ein Bauteil ohne Geschosse direkt eines anlegen kann).
+        IReadOnlyList<RadialSegmentItem> baseItems = [.. part.Levels.Select(l => new RadialSegmentItem(
             l.Name,
             IsCandidate: candidates?.Level is not null
-                && string.Equals(l.Name, candidates.Level, StringComparison.OrdinalIgnoreCase))),
-            NewItem()];
-        return ApplyOffset(items, _ringOffset[2]);
+                && string.Equals(l.Name, candidates.Level, StringComparison.OrdinalIgnoreCase)))];
+        return ApplyOffset(WithRamp(baseItems, SelectedType.ColorHex), _ringOffset[2]);
     }
 }

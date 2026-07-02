@@ -66,10 +66,12 @@ public partial class CaptureRowViewModel : ObservableObject
 /// </summary>
 public partial class ManualCaptureViewModel : ObservableObject
 {
+    private readonly PlanManagerDatabase _planDb;
     private readonly ManualFirstCaptureService _capture;
     private readonly PendingAssignmentStore _pending;
     private readonly CaptureConfirmService _confirm;
     private readonly ImportUndoService _undo;
+    private readonly PreImportRecoveryCheck _preImportCheck = new();
     private readonly ProjectDatabase _bpmDb;
     private readonly DocumentTypeSeedService _seed;
     private readonly DocumentTypeCreationService _creation;
@@ -85,6 +87,7 @@ public partial class ManualCaptureViewModel : ObservableObject
     public ManualCaptureViewModel(
         PlanManagerDatabase planDb, ProjectDatabase bpmDb, IIdGenerator idGenerator)
     {
+        _planDb = planDb;
         _capture = new ManualFirstCaptureService(planDb);
         _pending = new PendingAssignmentStore();
         _confirm = new CaptureConfirmService(planDb, idGenerator, _pending);
@@ -261,6 +264,20 @@ public partial class ManualCaptureViewModel : ObservableObject
     [RelayCommand]
     private async Task ConfirmImportAsync()
     {
+        // BPM-111.05 Slice 3d: Recovery-Check vor dem Bestätigen. Existiert noch ein
+        // pending Import (App-Crash im letzten Confirm, via Cloud gesyncter Fremd-Stand),
+        // darf kein neuer Journal-Vorgang starten — der Altvorgang muss zuerst über die
+        // Recovery-Strecke (BPM-016, "Import starten") behandelt werden, sonst kollidieren
+        // die pending Aktionen mit dem neuen Import.
+        var check = _preImportCheck.Evaluate(_planDb.GetPendingImports());
+        if (!check.CanConfirm)
+        {
+            StatusText = $"⛔ {check.Message}";
+            Log.Warning("ManualCapture-Bestaetigung blockiert: {Count} pending Import(e)",
+                check.BlockingImports.Count);
+            return;
+        }
+
         var result = _confirm.ConfirmAll(_projectRootPath, _inboxRelativePath);
         StatusText = result.Failed == 0
             ? $"✓ {result.Succeeded} Datei(en) importiert (Journal → Move → DB)"

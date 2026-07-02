@@ -69,6 +69,13 @@ public class ProjectFolderService
                     Directory.CreateDirectory(inboxPath);
                     Log.Information("  Inbox created: {Name}/_Eingang", numberedName);
                 }
+
+                // Persistierte Pfade an die reale (nummerierte) Vorlage koppeln.
+                // Ohne das behalten Paths.Plans/Inbox die Klassen-Defaults ("Pläne\_Eingang"),
+                // waehrend physisch z. B. "01 Planunterlagen\_Eingang" existiert — Import,
+                // ManuellSortieren und Wizard finden den Eingang dann nicht.
+                project.Paths.Plans = numberedName;
+                project.Paths.Inbox = Path.Combine(numberedName, "_Eingang");
             }
 
             // Create subfolders

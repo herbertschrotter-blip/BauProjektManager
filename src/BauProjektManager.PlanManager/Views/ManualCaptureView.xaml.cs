@@ -32,6 +32,14 @@ public partial class ManualCaptureView : UserControl
     private RadialSelectionController? _controller;
     private CaptureRowViewModel? _captureAnchor;
 
+    /// <summary>
+    /// Merkt die Zeile, bei der auf dem Maus-Runter der Selektions-Kollaps der ListBox
+    /// unterdrueckt wurde (Klick ohne Modifier auf eine Zeile innerhalb einer Mehrfach-
+    /// auswahl). Bleibt es beim reinen Klick (kein Hold/Radial), wird die Einzelauswahl
+    /// im MouseUp nachgeholt.
+    /// </summary>
+    private CaptureRowViewModel? _multiSelectDownRow;
+
     private ManualCaptureViewModel ViewModel => (ManualCaptureViewModel)DataContext;
 
     public ManualCaptureView()
@@ -60,6 +68,22 @@ public partial class ManualCaptureView : UserControl
         _downRow = row;
         _downPoint = e.GetPosition(RootGrid);
         _holdTimer.Start();
+
+        // Mehrfachauswahl fuer das Hold-Verschieben bewahren: Klickt der User OHNE
+        // Strg/Shift auf eine bereits markierte Zeile innerhalb einer Mehrfachauswahl,
+        // wuerde die ListBox die Selektion beim Maus-Runter auf genau diese Zeile
+        // kollabieren -> das Radial saehe nur 1 Datei. Wir unterdruecken den Kollaps
+        // (e.Handled) und holen die Einzelauswahl bei einem reinen Klick im MouseUp nach.
+        var noModifier = (Keyboard.Modifiers & (ModifierKeys.Control | ModifierKeys.Shift)) == 0;
+        if (noModifier && row.IsSelected && ViewModel.SelectedRows.Count > 1)
+        {
+            _multiSelectDownRow = row;
+            e.Handled = true;
+        }
+        else
+        {
+            _multiSelectDownRow = null;
+        }
     }
 
     protected override void OnPreviewMouseMove(MouseEventArgs e)
@@ -89,8 +113,19 @@ public partial class ManualCaptureView : UserControl
         _downRow = null;
 
         if (_controller is null)
+        {
+            // Kein Radial gestartet: War es ein reiner Klick auf eine Zeile innerhalb
+            // einer Mehrfachauswahl (Kollaps unterdrueckt), jetzt Einzelauswahl nachholen.
+            if (_multiSelectDownRow is not null)
+            {
+                foreach (var r in ViewModel.Rows)
+                    r.IsSelected = ReferenceEquals(r, _multiSelectDownRow);
+                _multiSelectDownRow = null;
+            }
             return;
+        }
 
+        _multiSelectDownRow = null;
         var hit = Radial.HitTestSegment(e.GetPosition(Radial));
         if (hit is not null)
         {

@@ -159,7 +159,8 @@
                     BorderBrush="{DynamicResource BpmAccentPrimary}"
                     BorderThickness="1"
                     CornerRadius="3"
-                    Padding="8,4">
+                    Padding="8,4"
+                    IsHitTestVisible="False">
                 <TextBlock x:Name="GhostText"
                            Foreground="{DynamicResource BpmTextBright}"
                            FontSize="{DynamicResource BpmFontSizeSmall}"/>

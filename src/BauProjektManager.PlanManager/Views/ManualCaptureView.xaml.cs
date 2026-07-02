@@ -33,6 +33,13 @@ public partial class ManualCaptureView : UserControl
     private CaptureRowViewModel? _captureAnchor;
 
     /// <summary>
+    /// Sticky-Radial (Teil 46): True direkt nach dem Einrasten, bis die linke Taste
+    /// EINMAL losgelassen wurde. Verhindert, dass das Loslassen der Einrast-Geste
+    /// sofort als Commit/Abbruch gilt — das Radial bleibt offen, bis bewusst geklickt wird.
+    /// </summary>
+    private bool _justLatched;
+
+    /// <summary>
     /// Merkt die Zeile, bei der auf dem Maus-Runter der Selektions-Kollaps der ListBox
     /// unterdrueckt wurde (Klick ohne Modifier auf eine Zeile innerhalb einer Mehrfach-
     /// auswahl). Bleibt es beim reinen Klick (kein Hold/Radial), wird die Einzelauswahl
@@ -100,8 +107,8 @@ public partial class ManualCaptureView : UserControl
         if (_controller is null)
             return;
 
+        // Hover/Dwell macht das Control jetzt selbst (kein Capture mehr) — hier nur der Ghost.
         var p = e.GetPosition(RootGrid);
-        Radial.UpdateHoverFromHost(e.GetPosition(Radial));
         Canvas.SetLeft(Ghost, p.X + 16);
         Canvas.SetTop(Ghost, p.Y + 14);
     }
@@ -126,19 +133,37 @@ public partial class ManualCaptureView : UserControl
         }
 
         _multiSelectDownRow = null;
-        var hit = Radial.HitTestSegment(e.GetPosition(Radial));
-        if (hit is not null)
+
+        // Sticky-Radial: Das Loslassen der Einrast-Geste schliesst das Radial NICHT.
+        if (_justLatched)
         {
-            if (hit.Item.IsAddItem)
-                TryQuickAdd(hit.RingIndex); // „+ Neu…": Schnellanlage + Pending (Slice 3)
-            else
-            {
-                // Release-Commit auf dem getroffenen Segment, dann Pending setzen
-                _controller.Commit(hit.RingIndex, hit.Item.Name, _captureAnchor?.Item.Candidates);
-                ViewModel.CompleteCapture(_controller);
-            }
+            _justLatched = false;
+            return;
         }
-        CloseRadial();
+
+        // Rechtsklick bei offenem Radial = Dateien lösen + Radial schließen (Abbruch).
+        if (e.ChangedButton == MouseButton.Right)
+        {
+            CloseRadial();
+            e.Handled = true;
+            return;
+        }
+
+        // Linksklick auf ein Segment = zuordnen. Klick ins Leere lässt das Radial offen.
+        if (e.ChangedButton == MouseButton.Left)
+        {
+            var hit = Radial.HitTestSegment(e.GetPosition(Radial));
+            if (hit is null)
+                return;
+            if (hit.Item.IsAddItem)
+            {
+                TryQuickAdd(hit.RingIndex); // „+ Neu…": Schnellanlage + Pending; schließt bei Erfolg
+                return;
+            }
+            _controller.Commit(hit.RingIndex, hit.Item.Name, _captureAnchor?.Item.Candidates);
+            ViewModel.CompleteCapture(_controller);
+            CloseRadial();
+        }
     }
 
     /// <summary>
@@ -198,6 +223,7 @@ public partial class ManualCaptureView : UserControl
         _controller.RefreshStammdaten(ViewModel.Types, ViewModel.Parts);
         _controller.Commit(ringIndex, committedName, _captureAnchor?.Item.Candidates);
         ViewModel.CompleteCapture(_controller);
+        CloseRadial();
     }
 
     private void OnHoldElapsed(object? sender, EventArgs e)
@@ -227,8 +253,12 @@ public partial class ManualCaptureView : UserControl
         Canvas.SetLeft(Ghost, _downPoint.X + 16);
         Canvas.SetTop(Ghost, _downPoint.Y + 14);
 
+        // Sticky-Radial: KEIN Mouse.Capture mehr. Das Overlay wird hit-test-fähig,
+        // sodass das Control eigene Hover/Dwell-Events bekommt und die Maus nach dem
+        // Loslassen der Taste frei über die Ringe fährt.
         OverlayCanvas.Visibility = Visibility.Visible;
-        Mouse.Capture(this, CaptureMode.SubTree);
+        OverlayCanvas.IsHitTestVisible = true;
+        _justLatched = true;
         _downRow = null;
     }
 
@@ -260,9 +290,11 @@ public partial class ManualCaptureView : UserControl
     {
         Mouse.Capture(null);
         OverlayCanvas.Visibility = Visibility.Collapsed;
+        OverlayCanvas.IsHitTestVisible = false;
         Radial.ResetInteraction();
         _controller = null;
         _captureAnchor = null;
+        _justLatched = false;
         UpdateSelectionInfo();
     }
 

@@ -6,26 +6,35 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 BPM-111.01 — Manuelle Erstaufnahme + Radial-UI — Mockup-Spezifikation
-Stand: 2026-06-10 (Teil 43) · ADR-059 · ersetzt Listenvariante (_Archiv)
+Stand: 2026-07-02 (Teil 46) · ADR-059 · ersetzt Listenvariante (_Archiv)
+Interaktion Teil 46 ueberarbeitet: Sticky-Radial (Einrasten + Klick-Commit)
 ═══════════════════════════════════════════════════════════════════════════
 
-INTERAKTION (verbindlich für WPF-Umsetzung BPM-111.05):
+INTERAKTION (verbindlich für WPF-Umsetzung BPM-111.05) — Sticky-Radial (Teil 46):
 - Tabelle Eingang: Klick = Auswahl · Strg+Klick = Mehrfachauswahl ·
-  Rechtsklick = Kontextmenü (Datei öffnen / Vorschau rechts andocken)
-- Linke Maustaste HALTEN (260 ms) auf Auswahl → Radial-Overlay am Cursor.
-  Abbruch, wenn vor Ablauf >40 px bewegt wird (kein versehentliches Öffnen).
-- Dwell 110 ms TIMERBASIERT (DispatcherTimer pro Segment-Eintritt — NIE an
-  MouseMove-Events koppeln, sonst inkonsistentes Timing!) → Segment wird
-  übernommen, nächster Ring klappt auf.
+  Rechtsklick (bei GESCHLOSSENEM Radial) = Kontextmenü (Datei öffnen /
+  Vorschau rechts andocken, BPM-111.06).
+- Linke Maustaste KURZ HALTEN (260 ms) auf Auswahl → Radial rastet EIN und
+  bleibt offen; die Taste DARF losgelassen werden (kein Dauerhalten mehr).
+  Abbruch der Öffnung, wenn vor Ablauf >40 px bewegt wird.
+- Danach FREIE Navigation (Taste losgelassen): Maus über die Ringe ziehen →
+  Ebenen öffnen per Dwell 110 ms TIMERBASIERT (DispatcherTimer pro Segment-
+  Eintritt — NIE an MouseMove koppeln). Verweilen auf Ring 1 schließt Ring 3
+  (Ring-Tiefe folgt der Ebene, auf der man steht).
+- MAUSRAD dreht NUR die Ebene UNTER dem Cursor (Ring 1 Typen / Ring 2 Bauteile
+  bzw. Kategorien / Ring 3 Geschosse) — feld-stabil (jedes Feld behält
+  Position + Farbe, der Verlauf dreht mit). Für viele Einträge.
+- LINKSKLICK auf ein Segment = Zuordnung (Pending, KEIN Move). Klick ins Leere
+  = nichts (Radial bleibt offen). Auf Plantyp = nur Typ · auf Bauteil = ohne
+  Geschoss.
+- RECHTSKLICK (bei OFFENEM Radial) = Dateien lösen + Radial schließen (Abbruch).
 - Ring-Animation (Scale 0.7→1 + Fade, 140 ms ease-out) NUR bei Erscheinen/
   Verschwinden eines Rings. Inhaltswechsel (anderer Plantyp) tauscht stumm.
-- Ebenenlogik: Verweilen auf Ring 1 schließt Ring 3 (Ring-Tiefe folgt der
-  Ebene, auf der man steht).
-- LOSLASSEN im Segment = Pending-Zuordnung (KEIN Move). Außerhalb = Abbruch.
-  Auf Plantyp = nur Typ (z.B. Protokolle). Auf Bauteil = ohne Geschoss.
-- Drag-Ghost (Datei-Icon + Name bzw. "N Dateien") folgt dem Cursor.
-- Transparenz: Segmente fill-opacity 0.78 (Hover/Auswahl 0.95), Zentrum 0.9
-  — Tabelle dahinter bleibt erkennbar.
+- Drag-Ghost (Name bzw. "N Dateien") folgt dem Cursor, solange das Radial offen ist.
+- OPTIK: Ring 1 = Typfarben. Ring 2/3 = Typfarbe mit feld-stabiler Helligkeits-
+  Rampe (dunkel→hell über die Felder), VOLL DECKEND (keine Transparenz). Text
+  passt sich an (dunkel auf hell, weiß auf dunkel/markiert). Rampe/Farben
+  später projektspezifisch konfigurierbar (BPM-116).
 
 DATENMODELL (BPM-111.03):
 - Ringe kommen aus DB-STAMMDATEN, nie aus dem Dateisystem (kein Drift).
@@ -44,7 +53,7 @@ WORKFLOW (BPM-111.04):
   (plan_documents / plan_revisions, Schema v2.0).
 - Update-Erkennung (blau): bekannter Plan + neuer Index überspringt das
   Radial; Detail-Panel zeigt Index-Historie + "Update übernehmen".
-- Tab Archiv: alle importierten Dokumente. Halten = Verschieben (Radial,
+- Tab Archiv: alle importierten Dokumente. Kurz halten = Radial (Verschieben,
   eigene Journal-Aktion). Undo NUR letzter Import (Invariante), grün markiert.
 - Vorschau (BPM-111.06): Rechtsklick → eigenes, rechts außen ANGEDOCKTES
   Fenster (WPF: Window mit Owner + LocationChanged-Sync). Start = Plankopf
@@ -197,6 +206,7 @@ var GESCH_MAP={'Haus 1':['KG','EG','OG1','OG2'],'Haus 2':['KG','EG','OG1','OG2',
 var R={open:false,typ:null,bau:null,ges:null,hov:null,cand:null,candG:null,move:null};
 var DWELL=110,HOLD=260,vis={bau:false,ges:false},addCtx=null;
 var ADD={n:'+ Neu…',add:1};
+var rotOff={typ:0,bau:0,ges:0};
 var CX=260,RING1=[72,138],RING2=[146,204],RING3=[212,256],CR=62;
 function byId(id){return FILES.find(function(f){return f.id===id;});}
 function arcById(id){return ARCHIV.find(function(a){return a.f.id===id;});}
@@ -204,12 +214,16 @@ function anyById(id){return byId(id)||(arcById(id)||{}).f;}
 function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');}
 function typDef(n){return TYPEN.find(function(t){return t.n===n;});}
 function isCat(n){var t=typDef(n);return t&&t.sub==='cat';}
-function ring1Items(){return TYPEN.concat([ADD]);}
+function applyOff(list,off){if(!list.length)return list;off=((off%list.length)+list.length)%list.length;return list.slice(off).concat(list.slice(0,off));}
+function rampCol(hex,t){hex=(hex||'#185FA5').replace('#','');function ch(o){var v=parseInt(hex.substr(o,2),16);var d=v*0.45,l=v+(255-v)*0.65;return Math.round(d+(l-d)*t);}return 'rgb('+ch(0)+','+ch(2)+','+ch(4)+')';}
+function grade(list){var N=list.length;list.forEach(function(it,i){it._t=N>1?i/(N-1):0;});return list;}
+function ring1Items(){return applyOff(TYPEN,rotOff.typ).concat([ADD]);}
 function ring2Items(){if(!R.typ)return[];
-if(isCat(R.typ))return CATMAP[R.typ].map(function(c){return{n:c};}).concat([ADD]);
-return BAUTEILE.concat([ADD]);}
+var base=isCat(R.typ)?CATMAP[R.typ].map(function(c){return{n:c};}):BAUTEILE.map(function(b){return{n:b.n};});
+grade(base);return applyOff(base,rotOff.bau).concat([ADD]);}
 function ring3Items(){if(!R.bau||isCat(R.typ))return[];
-return (GESCH_MAP[R.bau]||[]).map(function(g){return{n:g};}).concat([ADD]);}
+var base=(GESCH_MAP[R.bau]||[]).map(function(g){return{n:g};});if(!base.length)return[ADD];
+grade(base);return applyOff(base,rotOff.ges).concat([ADD]);}
 function sheet(f){return '<rect x="0" y="0" width="840" height="594" fill="#F5F4EF"/>'+
 '<rect x="14" y="14" width="812" height="566" fill="none" stroke="#999" stroke-width="2"/>'+
 '<rect x="70" y="70" width="430" height="310" fill="none" stroke="#444" stroke-width="5"/>'+
@@ -243,7 +257,7 @@ function render(){
 var tn=document.getElementById('tabNeu'),ta=document.getElementById('tabArc');
 tn.className='tab'+(TAB==='neu'?' on':'');ta.className='tab'+(TAB==='archiv'?' on':'');
 tn.textContent='Neue Pläne ('+FILES.length+')';ta.textContent='Archiv ('+ARCHIV.length+')';
-document.getElementById('hint').innerHTML=TAB==='neu'?'Klick = Auswahl · Strg+Klick = mehrere · <b>Halten</b> = Radial zuordnen · <b>Rechtsklick</b> = Öffnen/Vorschau · + Neu… in jedem Ring':'<b>Halten</b> = per Radial verschieben · <b>Rechtsklick</b> = Vorschau · ↩ Undo nur letzter Import (Journal)';
+document.getElementById('hint').innerHTML=TAB==='neu'?'Kurz <b>halten</b> = Radial einrasten (Taste loslassen ok) · Maus ziehen = navigieren · <b>Mausrad</b> = Ring 2 drehen · <b>Linksklick</b> = zuordnen · <b>Rechtsklick</b> = abbrechen · + Neu… in jedem Ring':'Kurz <b>halten</b> = Radial (Verschieben) · <b>Mausrad</b>/<b>Links</b>/<b>Rechtsklick</b> wie links · ↩ Undo nur letzter Import (Journal)';
 document.getElementById('legend').innerHTML=TAB==='neu'?'<span style="color:#F0AD4E">■ Pending (zugewiesen, nicht bestätigt)</span><span style="color:#3794FF">■ Update — bekannter Plan, neuer Index</span><span style="color:#5a5a5a">■ offen</span>':'<span style="color:#4EC94E">■ letzter Import (Undo möglich)</span><span style="color:#5a5a5a">■ ältere Importe</span>';
 if(TAB==='neu')tblNeu();else tblArc();
 var pc=Object.keys(pend).length;
@@ -336,8 +350,11 @@ items.forEach(function(it,i){var a0=st+i*full/n,a1=st+(i+1)*full/n,mid=(a0+a1)/2
 var p=document.createElementNS('http://www.w3.org/2000/svg','path');
 p.setAttribute('d',arcP(r0,r1,a0,a1));
 var isSel=selName===it.n,isHov=R.hov&&R.hov.ring===ringId&&R.hov.name===it.n;
-p.setAttribute('fill',isSel?'#04395E':(it.c||'#2D2D30'));
-p.setAttribute('fill-opacity',isSel||isHov?'0.95':'0.78');
+var graded=(ringId==='bau'||ringId==='ges')&&!it.add;
+var typeCol=(typDef(R.typ)&&typDef(R.typ).c)||'#185FA5';
+var baseFill=graded?rampCol(typeCol,it._t!=null?it._t:0):(it.c||'#2D2D30');
+p.setAttribute('fill',isSel?'#04395E':baseFill);
+p.setAttribute('fill-opacity','1');
 p.setAttribute('stroke',isSel?'#0078D4':isHov?'#FFF':(candName===it.n?'#F0AD4E':'#1E1E1E'));
 p.setAttribute('stroke-width',isSel||isHov?2:1.5);
 if(candName===it.n&&!isSel)p.setAttribute('stroke-dasharray','4 3');
@@ -348,7 +365,7 @@ grp.appendChild(p);
 var t=document.createElementNS('http://www.w3.org/2000/svg','text');
 t.setAttribute('x',CX+rm*Math.cos(mid));t.setAttribute('y',CX+rm*Math.sin(mid)+4);
 t.setAttribute('text-anchor','middle');t.setAttribute('font-size','12');
-t.setAttribute('fill',it.add?'#F0AD4E':'#FFF');t.style.pointerEvents='none';t.textContent=it.n;grp.appendChild(t);});
+t.setAttribute('fill',it.add?'#F0AD4E':(isSel?'#FFF':((ringId==='bau'||ringId==='ges')&&it._t>0.55?'#14202b':'#FFF')));t.style.pointerEvents='none';t.textContent=it.n;grp.appendChild(t);});
 svg.appendChild(grp);}
 function renderRadial(){var svg=document.getElementById('radial');svg.innerHTML='';
 var c=document.createElementNS('http://www.w3.org/2000/svg','circle');
@@ -367,11 +384,11 @@ var showGes=gl.length>1;
 if(showGes)ring(svg,RING3,gl,'ges',R.ges,R.cand==='Polierplan'?R.candG:null,!vis.ges);
 vis.bau=showBau;vis.ges=showGes;}
 function commit(h){if(h.add)return;
-if(h.ring==='typ'){if(R.typ!==h.name){R.typ=h.name;R.bau=null;R.ges=null;renderRadial();}
-else if(R.bau||R.ges){R.bau=null;R.ges=null;renderRadial();}}
-else if(h.ring==='bau'&&R.bau!==h.name){R.bau=h.name;R.ges=null;renderRadial();}
+if(h.ring==='typ'){if(R.typ!==h.name){R.typ=h.name;R.bau=null;R.ges=null;rotOff.bau=0;rotOff.ges=0;renderRadial();}
+else if(R.bau||R.ges){R.bau=null;R.ges=null;rotOff.ges=0;renderRadial();}}
+else if(h.ring==='bau'&&R.bau!==h.name){R.bau=h.name;R.ges=null;rotOff.ges=0;renderRadial();}
 else if(h.ring==='ges'&&R.ges!==h.name){R.ges=h.name;renderRadial();}}
-var holdT=null,dwellT=null,downId=-1,downXY=null,downArc=false;
+var holdT=null,dwellT=null,downId=-1,downXY=null,downArc=false,justOpened=false;
 var frame=document.getElementById('frame');
 function moveGhost(cx,cy){var fr=frame.getBoundingClientRect();var g=document.getElementById('ghost');
 g.style.left=(cx-fr.left+16)+'px';g.style.top=(cy-fr.top+14)+'px';}
@@ -379,7 +396,7 @@ function showGhost(cx,cy,label){document.getElementById('ghostTxt').textContent=
 document.getElementById('ghost').style.display='flex';moveGhost(cx,cy);}
 function startRadial(f,moveId){R.open=true;R.move=moveId!=null?moveId:null;
 R.typ=null;R.bau=null;R.ges=null;R.hov=null;R.cand=f.t||null;R.candG=f.g||null;
-vis={bau:false,ges:false};
+vis={bau:false,ges:false};rotOff={typ:0,bau:0,ges:0};
 var fr=frame.getBoundingClientRect();var x=downXY[0]-fr.left,y=downXY[1]-fr.top;
 x=Math.max(255,Math.min(fr.width-255,x));y=Math.max(252,Math.min(fr.height-252,y));
 var o=document.getElementById('ovl');o.style.left=(x-250)+'px';o.style.top=(y-250)+'px';o.style.display='block';
@@ -390,11 +407,11 @@ downArc=tr.hasAttribute('data-a');
 downId=+(tr.dataset.i||tr.dataset.a);downXY=[e.clientX,e.clientY];
 if(!downArc){var f=byId(downId);if(f.kind==='update')return;
 holdT=setTimeout(function(){if(!sel.has(downId)){sel.clear();sel.add(downId);render();}
-var n=sel.size;startRadial(f,null);
+var n=sel.size;startRadial(f,null);justOpened=true;
 showGhost(downXY[0],downXY[1],n===1?f.n:n+' Dateien');},HOLD);}
 else{var a=arcById(downId);
 holdT=setTimeout(function(){sel.clear();sel.add(downId);render();
-startRadial(a.f,downId);
+startRadial(a.f,downId);justOpened=true;
 showGhost(downXY[0],downXY[1],'↷ '+a.f.n);},HOLD);}});
 document.addEventListener('pointermove',function(e){if(!R.open){if(holdT&&downXY&&Math.hypot(e.clientX-downXY[0],e.clientY-downXY[1])>40){clearTimeout(holdT);holdT=null;}return;}
 moveGhost(e.clientX,e.clientY);
@@ -405,19 +422,26 @@ clearTimeout(dwellT);R.hov=seg;renderRadial();
 dwellT=setTimeout(function(){commit(seg);},DWELL);}
 else if(!seg&&R.hov){clearTimeout(dwellT);R.hov=null;renderRadial();}});
 document.addEventListener('pointerup',function(e){if(e.button!==0)return;clearTimeout(holdT);holdT=null;clearTimeout(dwellT);
-document.getElementById('ghost').style.display='none';
-if(R.open){var el=document.elementFromPoint(e.clientX,e.clientY);
+if(R.open){
+if(justOpened){justOpened=false;downId=-1;downXY=null;downArc=false;return;}
+var el=document.elementFromPoint(e.clientX,e.clientY);
 var seg=el&&el.dataset&&el.dataset.ring&&!el.dataset.inert?{ring:el.dataset.ring,name:el.dataset.name,add:el.dataset.add}:null;
+if(!seg){downId=-1;downXY=null;downArc=false;return;}
 var files=[];sel.forEach(function(id){files.push(id);});
-if(seg&&seg.add){R.open=false;document.getElementById('ovl').style.display='none';openAdd(seg.ring,files);downId=-1;downXY=null;return;}
-if(seg){if(seg.ring==='typ')R.typ=seg.name;if(seg.ring==='bau')R.bau=seg.name;if(seg.ring==='ges')R.ges=seg.name;}
-if(R.typ&&(seg||R.bau||R.ges)){var path='Pläne/'+R.typ+(R.bau?'/'+R.bau:'')+(R.ges?'/'+R.ges:'')+'/';
-applyTarget(path,files,R.move);}
-R.open=false;R.move=null;document.getElementById('ovl').style.display='none';render();}
-else if(downId>=0&&!downArc&&!e.target.closest('#addBox')&&!e.target.closest('#cmenu')){if(e.ctrlKey){if(sel.has(downId))sel.delete(downId);else sel.add(downId);}
+if(seg.add){R.open=false;justOpened=false;document.getElementById('ovl').style.display='none';document.getElementById('ghost').style.display='none';openAdd(seg.ring,files);downId=-1;downXY=null;return;}
+if(seg.ring==='typ')R.typ=seg.name;if(seg.ring==='bau')R.bau=seg.name;if(seg.ring==='ges')R.ges=seg.name;
+if(R.typ){var path='Pläne/'+R.typ+(R.bau?'/'+R.bau:'')+(R.ges?'/'+R.ges:'')+'/';applyTarget(path,files,R.move);}
+closeRadial();downId=-1;downXY=null;downArc=false;return;}
+document.getElementById('ghost').style.display='none';
+if(downId>=0&&!downArc&&!e.target.closest('#addBox')&&!e.target.closest('#cmenu')){if(e.ctrlKey){if(sel.has(downId))sel.delete(downId);else sel.add(downId);}
 else{if(sel.size===1&&sel.has(downId))sel.clear();else{sel.clear();sel.add(downId);}}render();}
 else if(downId>=0&&downArc&&!e.target.closest('#cmenu')){sel.clear();sel.add(downId);render();}
 downId=-1;downXY=null;downArc=false;});
+function closeRadial(){R.open=false;R.move=null;justOpened=false;R.hov=null;clearTimeout(dwellT);document.getElementById('ovl').style.display='none';document.getElementById('ghost').style.display='none';render();}
+document.addEventListener('wheel',function(e){if(!R.open)return;var el=document.elementFromPoint(e.clientX,e.clientY);var ring=el&&el.dataset?el.dataset.ring:null;if(!ring)return;e.preventDefault();var d=e.deltaY>0?1:-1;
+if(ring==='typ')rotOff.typ+=d;else if(ring==='bau')rotOff.bau+=d;else if(ring==='ges')rotOff.ges+=d;
+renderRadial();},{passive:false});
+document.addEventListener('contextmenu',function(e){if(R.open){e.preventDefault();e.stopPropagation();closeRadial();}},true);
 render();
 </script>
 </body>

@@ -40,6 +40,31 @@ public class DeviceSettings
     /// Device-spezifisch; nicht ins shared-config übernehmen.
     /// </summary>
     public DevToolsSettings DevTools { get; set; } = new();
+
+    /// <summary>
+    /// Zuletzt gemerkte Fensterlage des Hauptfensters (Win32 WINDOWPLACEMENT).
+    /// Null = noch nie gespeichert (Erststart) → App startet maximiert.
+    /// Bewusst geräte-lokal: Monitor-Setup unterscheidet sich pro Maschine.
+    /// </summary>
+    public WindowPlacementSettings? MainWindowPlacement { get; set; }
+}
+
+/// <summary>
+/// Serialisierbare Form der Win32-<c>WINDOWPLACEMENT</c>-Struktur: der
+/// Wiederherstellungs-Rahmen (<see cref="Left"/>/<see cref="Top"/>/<see cref="Right"/>/<see cref="Bottom"/>,
+/// in Arbeitsbereich-Koordinaten) plus der Anzeigemodus (<see cref="ShowCmd"/>).
+/// Windows klemmt beim Wiederherstellen selbst auf einen sichtbaren Bildschirm
+/// und behandelt unterschiedliche DPI je Monitor korrekt.
+/// </summary>
+public class WindowPlacementSettings
+{
+    public int Left { get; set; }
+    public int Top { get; set; }
+    public int Right { get; set; }
+    public int Bottom { get; set; }
+
+    /// <summary>Win32 SW_-Konstante: 1 = Normal, 3 = Maximiert (Minimiert wird nie gespeichert).</summary>
+    public int ShowCmd { get; set; } = 1;
 }
 
 /// <summary>

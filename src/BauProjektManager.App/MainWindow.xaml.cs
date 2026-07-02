@@ -1,6 +1,10 @@
+using System.ComponentModel;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Interop;
 using BauProjektManager.Domain.Interfaces;
+using BauProjektManager.Domain.Models;
 using BauProjektManager.Infrastructure.Persistence;
 using BauProjektManager.PlanManager.Views;
 using BauProjektManager.Settings.Views;
@@ -44,10 +48,120 @@ public partial class MainWindow : Window
 
         UpdateSidebarBadge();
 
+        SourceInitialized += OnSourceInitialized;
+        Closing += OnMainWindowClosing;
+
 #if DEBUG
         BtnDevTools.Visibility = Visibility.Visible;
 #endif
     }
+
+    // ── Fensterlage merken/wiederherstellen (Win32 WINDOWPLACEMENT) ──
+    // Persistiert geräte-lokal in device-settings.json. Windows klemmt beim
+    // Wiederherstellen selbst auf einen sichtbaren Bildschirm und behandelt
+    // unterschiedliche DPI je Monitor korrekt (4K-Haupt- + 1080p-Zweitmonitor).
+
+    private const int SwShowNormal = 1;
+    private const int SwShowMaximized = 3;
+
+    private void OnSourceInitialized(object? sender, EventArgs e)
+    {
+        try
+        {
+            var saved = _settingsService.LoadDevice().MainWindowPlacement;
+            if (saved is null)
+            {
+                // Erststart (noch nichts gespeichert): maximiert.
+                WindowState = WindowState.Maximized;
+                return;
+            }
+
+            var placement = new WINDOWPLACEMENT
+            {
+                length = Marshal.SizeOf<WINDOWPLACEMENT>(),
+                flags = 0,
+                // Minimiert nie wiederherstellen → auf Normal zurückfallen.
+                showCmd = saved.ShowCmd == SwShowMaximized ? SwShowMaximized : SwShowNormal,
+                ptMinPosition = new POINT { X = -1, Y = -1 },
+                ptMaxPosition = new POINT { X = -1, Y = -1 },
+                rcNormalPosition = new RECT
+                {
+                    Left = saved.Left,
+                    Top = saved.Top,
+                    Right = saved.Right,
+                    Bottom = saved.Bottom
+                }
+            };
+            SetWindowPlacement(new WindowInteropHelper(this).Handle, ref placement);
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Warning(ex, "Fensterlage konnte nicht wiederhergestellt werden");
+        }
+    }
+
+    private void OnMainWindowClosing(object? sender, CancelEventArgs e)
+    {
+        try
+        {
+            var handle = new WindowInteropHelper(this).Handle;
+            if (handle == IntPtr.Zero) return;
+
+            var placement = new WINDOWPLACEMENT { length = Marshal.SizeOf<WINDOWPLACEMENT>() };
+            if (!GetWindowPlacement(handle, ref placement)) return;
+
+            var device = _settingsService.LoadDevice();
+            device.MainWindowPlacement = new WindowPlacementSettings
+            {
+                Left = placement.rcNormalPosition.Left,
+                Top = placement.rcNormalPosition.Top,
+                Right = placement.rcNormalPosition.Right,
+                Bottom = placement.rcNormalPosition.Bottom,
+                // Minimiert nicht persistieren — sonst startet die App minimiert.
+                ShowCmd = placement.showCmd == SwShowMaximized ? SwShowMaximized : SwShowNormal
+            };
+            _settingsService.SaveDevice(device);
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Warning(ex, "Fensterlage konnte nicht gespeichert werden");
+        }
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct WINDOWPLACEMENT
+    {
+        public int length;
+        public int flags;
+        public int showCmd;
+        public POINT ptMinPosition;
+        public POINT ptMaxPosition;
+        public RECT rcNormalPosition;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct POINT
+    {
+        public int X;
+        public int Y;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct RECT
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetWindowPlacement(IntPtr hWnd, ref WINDOWPLACEMENT lpwndpl);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetWindowPlacement(IntPtr hWnd, ref WINDOWPLACEMENT lpwndpl);
 
 #if DEBUG
     private void OnOpenDevTools(object sender, RoutedEventArgs e)

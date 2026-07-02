@@ -31,6 +31,46 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.104] — 2026-07-02
+
+### Feature: BPM-111.05 Sticky-Radial Slice C — Farbrampe
+
+Ring 2/3 im Radial „Manuell sortieren" bekommen die Typfarbe mit einer **feld-stabilen Helligkeitsrampe** (dunkel→hell über die Felder, nach Original-Position), **voll deckend** (keine Transparenz), mit **adaptiver Textfarbe** (dunkel auf hell, weiß auf dunkel/markiert). Rampe im `RadialSelectionController` (`WithRamp`/`RampHex`), Rendering im `RadialCaptureControl`. Ring 1 = Typfarben unverändert. (Commit `89c3411`)
+
+---
+
+## [v0.28.103] — 2026-07-02
+
+### Feature: BPM-111.05 Sticky-Radial Slice B — Mausrad-Rotation
+
+Das Mausrad dreht nur die Ring-Ebene **unter dem Cursor** (Ring 1 Typen / Ring 2 Bauteile bzw. Kategorien / Ring 3 Geschosse) — feld-stabil über einen Rotations-Offset je Ring im `RadialSelectionController` (Datenlisten bleiben unverändert), Offsets bei Ebenenwechsel/Neustart zurückgesetzt. Wheel-Handler im `ManualCaptureView` rendert die getroffene Ebene neu. Ersetzt weitgehend die geplanten Slices 3b (Quick-Filter) / 3c (Pagination/Caps). (Commit `4d7a07d`)
+
+---
+
+## [v0.28.102] — 2026-07-02
+
+### Change: BPM-111.05 Sticky-Radial Gesten-Kern (Slice A)
+
+Das Radial „Manuell sortieren" wechselt vom „halten & loslassen" auf ein **einrastendes** Modell: kurz halten (260 ms) → Radial rastet ein und bleibt offen (Taste darf losgelassen werden, kein `Mouse.Capture` mehr → freie Navigation, Hover/Dwell nativ im Control). Linksklick auf ein Segment = Zuordnung (Pending); Klick ins Leere lässt das Radial offen; Rechtsklick = abbrechen (Dateien lösen + schließen). Das Multi-Select-Verhalten (BPM-115) bleibt erhalten. (Commit `2eb5826`)
+
+---
+
+## [v0.28.101] — 2026-07-02
+
+### Docs: Mockup ManuellSortieren auf Sticky-Radial
+
+Mockup `02_ManuellSortieren.html` + verbindliche Interaktionsspez auf das Sticky-Radial-Modell umgeschrieben (Einrasten, Mausrad dreht die Ebene unter dem Cursor, feld-stabile Helligkeitsrampe, Rechtsklick = Abbruch). Grundlage für den Code-Umbau BPM-111.05. (Commit `9d58184`)
+
+---
+
+## [v0.28.100] — 2026-07-02
+
+### Docs: CHANGELOG v0.28.97–.99 + ADR-061 done
+
+CHANGELOG-Einträge .97/.98/.99 nachgezogen; ADR-061 Implementierungs-Status auf „Umgesetzt" (BPM-113 abgeschlossen). (Commit `d2d61cc`)
+
+---
+
 ## [v0.28.99] — 2026-07-02
 
 ### Fix: Mehrfachauswahl beim Hold-Verschieben (ManuellSortieren)

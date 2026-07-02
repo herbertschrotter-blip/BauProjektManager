@@ -357,7 +357,8 @@ public class ProfileManager : IProfileManager
         List<string> folderHierarchy,
         List<RecognitionRule> recognition,
         int recognitionPriority,
-        string? existingProfileId = null)
+        string? existingProfileId = null,
+        string? documentTypeId = null)
     {
         var snapshot = _segmentTypeCatalog?.SnapshotIncludingDeleted();
 
@@ -383,13 +384,18 @@ public class ProfileManager : IProfileManager
             identityFields.Add(seg.FieldTypeId);
         }
 
-        var documentTypeId = NormalizeTypeId(documentTypeName);
+        // BPM-113.06 Slice 0.6b: Bevorzugt die stabile, vom Wizard gewaehlte type.Id
+        // (resolverbar via DocumentTargetPathResolver). Fallback auf den normalisierten
+        // Namen nur fuer Aufrufer ohne Stammdaten-Auswahl (Tests/Legacy).
+        var resolvedDocumentTypeId = string.IsNullOrWhiteSpace(documentTypeId)
+            ? NormalizeTypeId(documentTypeName)
+            : documentTypeId;
 
         return new RecognitionProfile
         {
             Id = existingProfileId ?? string.Empty,
             SchemaVersion = CurrentSchemaVersion,
-            DocumentTypeId = documentTypeId,
+            DocumentTypeId = resolvedDocumentTypeId,
             DocumentTypeName = documentTypeName,
             TargetFolder = targetFolder,
             IndexSource = indexSource,

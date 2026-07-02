@@ -4,6 +4,7 @@ using BauProjektManager.Domain.Enums.PlanManager;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models;
 using BauProjektManager.Domain.Models.PlanManager;
+using BauProjektManager.Infrastructure.Persistence;
 using BauProjektManager.PlanManager.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -164,6 +165,23 @@ public partial class ProfileWizardViewModel : ObservableObject
     [ObservableProperty]
     private string _folderPreview = "";
 
+    // === Schritt 4: Dokumenttyp (BPM-113.06 Slice 0.6b, ADR-061) ===
+    // Loest die hardcodierten TargetFolderOptions ab: Der Zielordner kommt jetzt aus
+    // den document_types-Stammdaten (root_relative_path/folder_name) und ist damit
+    // resolverbar (DocumentTargetPathResolver). Die alten TargetFolder-Felder bleiben
+    // additiv bis Slice 0.6c (dort Entfernung + SchemaVersion 5 + Fruehphasen-Reset).
+
+    /// <summary>Dokumenttypen aus den Projekt-Stammdaten (bpm.db) fuer den Schritt-4-Picker.</summary>
+    [ObservableProperty]
+    private ObservableCollection<PlanDocumentType> _documentTypeOptions = [];
+
+    /// <summary>
+    /// Gewaehlter Dokumenttyp. Setzt beim Wechsel <see cref="DocumentTypeName"/> (Anzeige)
+    /// und liefert beim Speichern die stabile <c>type.Id</c> als <c>DocumentTypeId</c>.
+    /// </summary>
+    [ObservableProperty]
+    private PlanDocumentType? _selectedDocumentType;
+
     // === Schritt 5: Erkennung (klickbare Segmente) ===
 
     [ObservableProperty]
@@ -219,6 +237,7 @@ public partial class ProfileWizardViewModel : ObservableObject
     private readonly IIdGenerator? _idGenerator;
     private readonly Project? _project;
     private readonly string? _appDataPath;
+    private readonly ProjectDatabase? _bpmDb;
 
     public ProfileWizardViewModel(
         Project? project = null,
@@ -227,7 +246,8 @@ public partial class ProfileWizardViewModel : ObservableObject
         string? appDataPath = null,
         ISegmentTypeCatalog? segmentTypeCatalog = null,
         ISegmentTypeRepository? segmentTypeRepository = null,
-        IIdGenerator? idGenerator = null)
+        IIdGenerator? idGenerator = null,
+        ProjectDatabase? bpmDb = null)
     {
         _project = project;
         _profileManager = profileManager;
@@ -236,13 +256,17 @@ public partial class ProfileWizardViewModel : ObservableObject
         _segmentTypeCatalog = segmentTypeCatalog;
         _segmentTypeRepository = segmentTypeRepository;
         _idGenerator = idGenerator;
+        _bpmDb = bpmDb;
 
         RebuildFieldTypeOptions();
         if (_segmentTypeCatalog is not null)
             _segmentTypeCatalog.Changed += (_, _) => RebuildFieldTypeOptions();
 
         if (project is not null)
+        {
             LoadInboxFiles(project);
+            LoadDocumentTypes(project);
+        }
     }
 
     /// <summary>
@@ -302,6 +326,14 @@ public partial class ProfileWizardViewModel : ObservableObject
         ValidateCurrentStep();
     }
 
+    partial void OnSelectedDocumentTypeChanged(PlanDocumentType? value)
+    {
+        if (value is not null)
+            DocumentTypeName = value.Name;
+        UpdateFolderPreview();
+        ValidateCurrentStep();
+    }
+
     partial void OnDocumentTypeNameChanged(string value)
     {
         ValidateCurrentStep();
@@ -341,6 +373,26 @@ public partial class ProfileWizardViewModel : ObservableObject
         catch (Exception ex)
         {
             Log.Warning(ex, "Eingang konnte nicht geladen werden");
+        }
+    }
+
+    /// <summary>
+    /// BPM-113.06 Slice 0.6b: Laedt die Dokumenttyp-Stammdaten fuer den Schritt-4-Picker.
+    /// Ohne bpm.db (z. B. isolierter Wizard/Test) bleibt die Liste leer — Schritt 4 ist
+    /// dann nicht passierbar (ValidateStep4).
+    /// </summary>
+    private void LoadDocumentTypes(Project project)
+    {
+        if (_bpmDb is null) return;
+        try
+        {
+            var types = _bpmDb.GetDocumentTypes(project.Id);
+            DocumentTypeOptions = new ObservableCollection<PlanDocumentType>(types);
+            Log.Information("Wizard: {Count} Dokumenttypen geladen", types.Count);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Dokumenttypen konnten nicht geladen werden");
         }
     }
 
@@ -492,13 +544,8 @@ public partial class ProfileWizardViewModel : ObservableObject
         return true;
     }
 
-    /// <summary>Schritt 4: Zielordner nicht leer.</summary>
-    private bool ValidateStep4()
-    {
-        if (UseCustomFolder)
-            return !string.IsNullOrWhiteSpace(CustomFolderName);
-        return !string.IsNullOrWhiteSpace(SelectedTargetFolder);
-    }
+    /// <summary>Schritt 4: Ein Dokumenttyp ist gewaehlt (BPM-113.06 Slice 0.6b).</summary>
+    private bool ValidateStep4() => SelectedDocumentType is not null;
 
     /// <summary>Schritt 5: Name + mind. 1 Segment gewaehlt.</summary>
     private bool ValidateStep5()
@@ -544,21 +591,28 @@ public partial class ProfileWizardViewModel : ObservableObject
 
     private void UpdateFolderPreview()
     {
-        var folder = UseCustomFolder ? CustomFolderName : SelectedTargetFolder;
-        if (string.IsNullOrWhiteSpace(folder))
+        var type = SelectedDocumentType;
+        if (type is null)
         {
             FolderPreview = "";
             return;
         }
 
-        var parts = new List<string> { folder };
+        // Vorschau-Root = root_relative_path / folder_name (analog zum Resolver).
+        // Die Hierarchie-Ebenen zeigen den Beispielwert; der echte Ordnername je
+        // Bauteil/Geschoss kommt zur Importzeit aus dem Resolver (DB-Wahrheit).
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(type.RootRelativePath))
+            parts.Add(type.RootRelativePath);
+        if (!string.IsNullOrWhiteSpace(type.FolderName))
+            parts.Add(type.FolderName);
         foreach (var level in AvailableHierarchyLevels)
         {
             if (level.IsSelected
                 && !string.IsNullOrWhiteSpace(level.SampleValue))
                 parts.Add(level.SampleValue);
         }
-        FolderPreview = string.Join("/", parts) + "/";
+        FolderPreview = parts.Count > 0 ? string.Join("/", parts) + "/" : "";
     }
 
     public void OnHierarchyLevelChanged()
@@ -686,7 +740,10 @@ public partial class ProfileWizardViewModel : ObservableObject
                 })
                 .ToList();
 
-            var targetFolder = UseCustomFolder ? CustomFolderName : SelectedTargetFolder;
+            // BPM-113.06 Slice 0.6b: DocumentTypeId = stabile type.Id aus den Stammdaten
+            // (resolverbar in ImportPlanBuilder/DocumentTargetPathResolver). targetFolder
+            // wird nur noch als Legacy-Metadatum mitgeschrieben (Entfernung in Slice 0.6c).
+            var targetFolder = SelectedDocumentType?.RootRelativePath ?? "";
 
             var profile = _profileManager.BuildFromWizard(
                 documentTypeName: DocumentTypeName,
@@ -698,7 +755,8 @@ public partial class ProfileWizardViewModel : ObservableObject
                 delimiters: delimiters,
                 folderHierarchy: folderHierarchy,
                 recognition: recognition,
-                recognitionPriority: RecognitionPriority);
+                recognitionPriority: RecognitionPriority,
+                documentTypeId: SelectedDocumentType?.Id);
 
             _profileManager.Save(_project.Paths.Root, profile);
             ProfileSaved = true;

@@ -91,7 +91,7 @@ public partial class ProjectDetailView : UserControl
     {
         var dialog = new ProfileWizardDialog(
             ViewModel.Project, _profileManager, _templateService, _appDataPath,
-            _segmentTypeCatalog, _segmentTypeRepository, _idGenerator);
+            _segmentTypeCatalog, _segmentTypeRepository, _idGenerator, _bpmDb);
         dialog.Owner = System.Windows.Window.GetWindow(this);
         dialog.ShowDialog();
     }

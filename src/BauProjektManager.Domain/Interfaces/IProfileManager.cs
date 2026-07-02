@@ -44,5 +44,6 @@ public interface IProfileManager
         List<string> folderHierarchy,
         List<RecognitionRule> recognition,
         int recognitionPriority,
-        string? existingProfileId = null);
+        string? existingProfileId = null,
+        string? documentTypeId = null);
 }

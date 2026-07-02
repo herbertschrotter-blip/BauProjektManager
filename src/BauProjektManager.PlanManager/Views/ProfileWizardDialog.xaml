@@ -392,28 +392,20 @@
                                Foreground="{DynamicResource BpmTextBright}"
                                FontSize="14" FontWeight="SemiBold" Margin="0,0,0,16"/>
 
-                    <TextBlock Text="Hauptordner"
+                    <TextBlock Text="Dokumenttyp"
                                Foreground="{DynamicResource BpmTextSecondary}"
                                FontSize="12" Margin="0,0,0,4"/>
-                    <ComboBox ItemsSource="{Binding TargetFolderOptions}"
-                              SelectedItem="{Binding SelectedTargetFolder}"
+                    <ComboBox ItemsSource="{Binding DocumentTypeOptions}"
+                              SelectedItem="{Binding SelectedDocumentType}"
+                              DisplayMemberPath="Name"
                               Background="{DynamicResource BpmBgInput}"
                               Foreground="{DynamicResource BpmTextPrimary}"
                               BorderBrush="{DynamicResource BpmBorderDefault}"
                               FontSize="13" Margin="0,0,0,8"/>
-
-                    <CheckBox IsChecked="{Binding UseCustomFolder}"
-                              Foreground="{DynamicResource BpmTextPrimary}"
-                              FontSize="12" Margin="0,0,0,4">
-                        <TextBlock Text="Eigenen Ordnernamen eingeben"/>
-                    </CheckBox>
-                    <TextBox Text="{Binding CustomFolderName, UpdateSourceTrigger=PropertyChanged}"
-                             Visibility="{Binding UseCustomFolder, Converter={StaticResource BoolToVis}}"
-                             FontSize="13"
-                             Background="{DynamicResource BpmBgInput}"
-                             Foreground="{DynamicResource BpmTextPrimary}"
-                             BorderBrush="{DynamicResource BpmBorderDefault}"
-                             Padding="8,6" Margin="0,0,0,12"/>
+                    <TextBlock Text="Keine Dokumenttypen vorhanden — bitte zuerst in den Stammdaten anlegen."
+                               Foreground="{DynamicResource BpmTextSecondary}"
+                               FontSize="11" FontStyle="Italic" Margin="0,0,0,12"
+                               Visibility="{Binding DocumentTypeOptions.Count, Converter={StaticResource CountToVisZero}}"/>
 
                     <TextBlock Text="Unterordner-Ebenen (optional)"
                                Foreground="{DynamicResource BpmTextBright}"

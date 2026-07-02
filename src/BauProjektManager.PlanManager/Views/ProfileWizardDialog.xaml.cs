@@ -268,7 +268,8 @@ public partial class ProfileWizardDialog : Window
         string? appDataPath = null,
         ISegmentTypeCatalog? segmentTypeCatalog = null,
         ISegmentTypeRepository? segmentTypeRepository = null,
-        IIdGenerator? idGenerator = null)
+        IIdGenerator? idGenerator = null,
+        Infrastructure.Persistence.ProjectDatabase? bpmDb = null)
     {
         Resources.Add("CountToVisInverse", new CountToVisInverseConverter());
         Resources.Add("CountToVisZero", new CountToVisZeroConverter());
@@ -287,7 +288,7 @@ public partial class ProfileWizardDialog : Window
         _idGenerator = idGenerator;
 
         _vm = new ProfileWizardViewModel(project, profileManager, templateService, appDataPath,
-            segmentTypeCatalog, segmentTypeRepository, idGenerator);
+            segmentTypeCatalog, segmentTypeRepository, idGenerator, bpmDb);
         DataContext = _vm;
 
         Loaded += (_, _) => UpdateStepVisibility();

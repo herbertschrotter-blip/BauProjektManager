@@ -41,6 +41,11 @@ public class RadialSelectionController
     private bool _ring2Visible;
     private bool _ring3Visible;
 
+    // BPM-111.05 Slice B (Teil 46): Rotations-Offset je Ring fuers Mausrad-Blaettern.
+    // Feld-stabil — rotiert nur die ANZEIGE-Reihenfolge, die Stammdatenlisten bleiben
+    // unveraendert. Index 0 = Ring 1, 1 = Ring 2, 2 = Ring 3.
+    private readonly int[] _ringOffset = new int[3];
+
     public RadialSelectionController(
         IReadOnlyList<PlanDocumentType> types,
         IReadOnlyList<BuildingPart> parts)
@@ -77,11 +82,56 @@ public class RadialSelectionController
     public IReadOnlyList<RadialSegmentItem> BuildRing1(PlanFileCandidates? candidates)
     {
         var candidateType = candidates?.TypeKeywords.FirstOrDefault();
-        return [.. _types.Select(t => new RadialSegmentItem(
+        IReadOnlyList<RadialSegmentItem> items = [.. _types.Select(t => new RadialSegmentItem(
             t.Name, t.ColorHex,
             IsCandidate: candidateType is not null
                 && string.Equals(t.Name, candidateType, StringComparison.OrdinalIgnoreCase))),
             NewItem()];
+        return ApplyOffset(items, _ringOffset[0]);
+    }
+
+    /// <summary>Aktuelle Items eines Rings (1..3) inkl. Rotations-Offset — fuer das Mausrad-Neurendern.</summary>
+    public IReadOnlyList<RadialSegmentItem> BuildRing(int ringIndex, PlanFileCandidates? candidates) => ringIndex switch
+    {
+        1 => BuildRing1(candidates),
+        2 => BuildRing2(candidates),
+        3 => BuildRing3(candidates),
+        _ => []
+    };
+
+    /// <summary>Name des aktuell gewaehlten Segments eines Rings (Highlight beim Neurendern).</summary>
+    public string? SelectedNameFor(int ringIndex) => ringIndex switch
+    {
+        1 => SelectedType?.Name,
+        2 => SelectedPart,
+        3 => SelectedLevel,
+        _ => null
+    };
+
+    /// <summary>Mausrad: dreht NUR die angegebene Ebene (feld-stabil ueber Offset).</summary>
+    public void RotateRing(int ringIndex, int delta)
+    {
+        if (ringIndex is >= 1 and <= 3)
+            _ringOffset[ringIndex - 1] += delta;
+    }
+
+    /// <summary>
+    /// Rotiert die Anzeige-Reihenfolge um <paramref name="off"/> Positionen, ohne die
+    /// Datenliste zu veraendern. Das „+ Neu…"-Segment bleibt fix am Ende.
+    /// </summary>
+    private static IReadOnlyList<RadialSegmentItem> ApplyOffset(IReadOnlyList<RadialSegmentItem> items, int off)
+    {
+        if (items.Count == 0) return items;
+        var hasAdd = items[^1].IsAddItem;
+        var realCount = hasAdd ? items.Count - 1 : items.Count;
+        if (realCount <= 1) return items;
+        var norm = ((off % realCount) + realCount) % realCount;
+        if (norm == 0) return items;
+        var rotated = new List<RadialSegmentItem>(items.Count);
+        for (var i = 0; i < realCount; i++)
+            rotated.Add(items[(i + norm) % realCount]);
+        if (hasAdd) rotated.Add(items[^1]);
+        return rotated;
     }
 
     /// <summary>Setzt die Auswahl zurueck (neuer Capture-Vorgang).</summary>
@@ -92,6 +142,7 @@ public class RadialSelectionController
         SelectedLevel = null;
         _ring2Visible = false;
         _ring3Visible = false;
+        _ringOffset[0] = _ringOffset[1] = _ringOffset[2] = 0;
     }
 
     /// <summary>
@@ -106,6 +157,8 @@ public class RadialSelectionController
                 SelectedType = _types.FirstOrDefault(t => t.Name == name);
                 SelectedPart = null;
                 SelectedLevel = null;
+                _ringOffset[1] = 0;
+                _ringOffset[2] = 0;
 
                 var ring2 = BuildRing2(candidates);
                 // Animation NUR beim Erscheinen (unsichtbar -> sichtbar);
@@ -119,6 +172,7 @@ public class RadialSelectionController
             case 2:
                 SelectedPart = name;
                 SelectedLevel = null;
+                _ringOffset[2] = 0;
                 var ring3 = BuildRing3(candidates);
                 var ring3Animate = !_ring3Visible && ring3.Count > 0;
                 _ring3Visible = ring3.Count > 0;
@@ -163,12 +217,12 @@ public class RadialSelectionController
         return string.Join('/', segments.Where(s => !string.IsNullOrWhiteSpace(s)));
     }
 
-    private List<RadialSegmentItem> BuildRing2(PlanFileCandidates? candidates)
+    private IReadOnlyList<RadialSegmentItem> BuildRing2(PlanFileCandidates? candidates)
     {
         if (SelectedType is null)
             return [];
 
-        return SelectedType.Ring2Source switch
+        IReadOnlyList<RadialSegmentItem> items = SelectedType.Ring2Source switch
         {
             // „+ Neu…" je Ebene (Slice 3): neues Bauteil bzw. neue Kategorie.
             // Ring2Source.None bekommt KEIN Add-Item (kein Unter-Schema vorhanden).
@@ -181,6 +235,7 @@ public class RadialSelectionController
                 NewItem()],
             _ => []
         };
+        return ApplyOffset(items, _ringOffset[1]);
     }
 
     /// <summary>
@@ -192,7 +247,7 @@ public class RadialSelectionController
     private static string EffectivePartName(BuildingPart part) =>
         !string.IsNullOrWhiteSpace(part.ShortName) ? part.ShortName : part.Description;
 
-    private List<RadialSegmentItem> BuildRing3(PlanFileCandidates? candidates)
+    private IReadOnlyList<RadialSegmentItem> BuildRing3(PlanFileCandidates? candidates)
     {
         if (SelectedType?.Ring2Source != Ring2Source.BuildingParts || SelectedPart is null)
             return [];
@@ -203,10 +258,11 @@ public class RadialSelectionController
 
         // Geschosse + „+ Neu…" (Slice 3); Add-Item auch bei 0 Geschossen, damit
         // ein Bauteil ohne Geschosse direkt eines anlegen kann.
-        return [.. part.Levels.Select(l => new RadialSegmentItem(
+        IReadOnlyList<RadialSegmentItem> items = [.. part.Levels.Select(l => new RadialSegmentItem(
             l.Name,
             IsCandidate: candidates?.Level is not null
                 && string.Equals(l.Name, candidates.Level, StringComparison.OrdinalIgnoreCase))),
             NewItem()];
+        return ApplyOffset(items, _ringOffset[2]);
     }
 }

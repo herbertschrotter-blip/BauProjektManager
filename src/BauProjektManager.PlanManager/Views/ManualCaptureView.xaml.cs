@@ -166,6 +166,25 @@ public partial class ManualCaptureView : UserControl
         }
     }
 
+    // ── Mausrad: dreht NUR die Ebene unter dem Cursor (BPM-111.05 Slice B) ──
+    protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
+    {
+        base.OnPreviewMouseWheel(e);
+        if (_controller is null)
+            return;
+
+        var hit = Radial.HitTestSegment(e.GetPosition(Radial));
+        if (hit is null)
+            return; // nicht über einem Ring → normales Scrollen zulassen
+
+        e.Handled = true;
+        _controller.RotateRing(hit.RingIndex, e.Delta < 0 ? 1 : -1);
+        Radial.SetRing(hit.RingIndex,
+            _controller.BuildRing(hit.RingIndex, _captureAnchor?.Item.Candidates),
+            _controller.SelectedNameFor(hit.RingIndex),
+            animate: false);
+    }
+
     /// <summary>
     /// „+ Neu…"-Schnellanlage je Ringebene (Slice 3): Name abfragen → Stammdaten
     /// in der DB anlegen → Controller-Stammdaten auffrischen → wie ein normaler

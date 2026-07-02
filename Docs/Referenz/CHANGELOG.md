@@ -31,6 +31,30 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.99] — 2026-07-02
+
+### Fix: Mehrfachauswahl beim Hold-Verschieben (ManuellSortieren)
+
+Im Tab „Manuell sortieren" ordnete das Hold-Verschieben trotz Mehrfachauswahl nur **eine** Datei zu: Beim Maus-Runter (ohne Modifier) auf eine bereits markierte Zeile kollabierte die WPF-`ListBox` (SelectionMode=Extended) die Selektion auf diese Zeile, bevor der Hold-Timer (260 ms) das Radial öffnete. `ManualCaptureView.OnRowPreviewMouseDown` unterdrückt den Kollaps jetzt (`e.Handled`) bei Klick auf eine mehrfach-markierte Zeile; der reine Klick (ohne Hold) holt die Einzelauswahl im `MouseUp` nach. (BPM-115, Commit `4fc2bd5`)
+
+---
+
+## [v0.28.98] — 2026-07-02
+
+### Change: BPM-113.06 Slice 0.6c — profile.TargetFolder entfernt (RecognitionProfile SchemaVersion 5)
+
+Abschluss von ADR-061: `RecognitionProfile.TargetFolder` und `PatternTemplate.TargetFolder` entfernt, SchemaVersion 4→5 (Strict Reset, kein Migrations-Code). `IProfileManager.BuildFromWizard` ohne `targetFolder`-Parameter — der Zielordner kommt ausschließlich aus den DB-Stammdaten via `DocumentTargetPathResolver`. `ImportExecutionService` schreibt `plan_documents.target_folder` aus dem Root-Segment des aufgelösten Pfads. ProfileWizard-Reste (TargetFolderOptions/SelectedTargetFolder/UseCustomFolder/CustomFolderName) entfernt. 5 Test-Dateien auf v5 nachgezogen, 396/396 grün. Frühphasen-Reset: `.bpm/profiles/*.json` + `pattern-templates.json` + `planmanager.db`. Schließt **BPM-113** (ADR-061 komplett). (Commit `1388bbc`)
+
+---
+
+## [v0.28.97] — 2026-07-02
+
+### Docs: CHANGELOG v0.28.84–.96 + ADR-060/061 Slice-Status
+
+CHANGELOG-Rückstand (.84–.96) nachgezogen; ADR-060/061 Implementierungs-Status auf „In Progress" + Slice-Fortschritt aktualisiert. (Commit `443654b`)
+
+---
+
 ## [v0.28.96] — 2026-07-02
 
 ### Feature: Fensterlage merken (WINDOWPLACEMENT)

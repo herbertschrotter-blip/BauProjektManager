@@ -2898,7 +2898,7 @@ Das bisherige Erkennungs-Modell extrahiert Identitätsfelder (haus/geschoss/plan
 
 **Datum:** 2026-06-24
 **Status:** ✅ Entschieden (Sign-off via CGR-2026-06-22-bpm-architektur, 4 Runden)
-**Implementierung:** 🟡 In Progress — BPM-113: Slices 0.1–0.5 + 0.6a + 0.6b done (v0.28.86–.93, .95); offen nur noch Slice 0.6c (`profile.TargetFolder` entfernen + `RecognitionProfile` SchemaVersion 5 + Frühphasen-Reset). Ergänzt/präzisiert ADR-059-Addendum.
+**Implementierung:** ✅ Umgesetzt — BPM-113 komplett: Slices 0.1–0.6c done (v0.28.86–.98). `profile.TargetFolder` entfernt, `RecognitionProfile`/`PatternTemplate` SchemaVersion 5, Zielpfad ausschließlich über `DocumentTargetPathResolver`. Ergänzt/präzisiert ADR-059-Addendum.
 **Herkunft:** Live-Test BPM-111.05 (Teil 44) — Radial-Import legte „Polierplan" an statt das vorhandene „01 Polierpläne" zu treffen.
 
 **Kontext:**

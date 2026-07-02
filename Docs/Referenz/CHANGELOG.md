@@ -31,6 +31,110 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.96] — 2026-07-02
+
+### Feature: Fensterlage merken (WINDOWPLACEMENT)
+
+Das Hauptfenster merkt sich Position, Größe und Maximiert-Zustand über die Win32-`WINDOWPLACEMENT`-Struktur (`GetWindowPlacement`/`SetWindowPlacement`), persistiert geräte-lokal in `device-settings.json` (`WindowPlacementSettings` in `DeviceSettings`). Beim Schließen gespeichert, beim Start wiederhergestellt — Windows klemmt selbst auf einen sichtbaren Bildschirm (robust bei Multi-Monitor + unterschiedlichen DPI, passt zu PerMonitorV2). Erststart (noch nichts gespeichert) maximiert; `MainWindow.WindowStartupLocation` auf `Manual`. (Commit `4e2baa1`)
+
+---
+
+## [v0.28.95] — 2026-07-02
+
+### Feature: BPM-113.06 Slice 0.6b — ProfileWizard wählt Dokumenttyp statt Zielordner
+
+ProfileWizard-Schritt 4 bietet jetzt einen Dokumenttyp-Picker aus `ProjectDatabase.GetDocumentTypes` statt der hardcodierten Zielordner-Liste. `SelectedDocumentType` setzt den Anzeigenamen; `SaveProfile` schreibt `documentTypeId` = stabile `type.Id`, die in `ImportPlanBuilder`/`DocumentTargetPathResolver` auflösbar ist — schließt den 0.6a-Bruch, bei dem der normalisierte Freitext-Name nie eine DB-Id/Key traf. `IProfileManager.BuildFromWizard` um trailing-optional `documentTypeId` erweitert (Fallback = alte Normalisierung, Tests unberührt). 396/396 Tests grün, runtime-verifiziert. Offen: Slice 0.6c (`TargetFolder` entfernen + SchemaVersion 5). (Commit `ff08ef7`)
+
+---
+
+## [v0.28.94] — 2026-07-02
+
+### Fix: BPM-114 Eingang-/Plans-Pfad an nummerierte Ordnervorlage koppeln
+
+`ProjectFolderService.CreateProjectFolders` setzt `project.Paths.Plans`/`Inbox` jetzt auf die real angelegten, nummerierten Vorlagen-Ordner (z. B. `01 Planunterlagen\_Eingang`) statt sie auf den Klassen-Defaults `Pläne\_Eingang` zu belassen. Vorher fanden Import, ManuellSortieren und ProfileWizard-Schritt 1 den Eingang nicht (0 Dateien) — bei jedem Projekt mit nummerierter Vorlage, V1-blockierend. Entdeckt bei der Runtime-Verifikation von Slice 0.6b. (Commit `726b93c`)
+
+---
+
+## [v0.28.93] — 2026-06-24
+
+### Feature: BPM-113.06 Slice 0.6a — Import-Zielpfad über DocumentTargetPathResolver
+
+Der Import berechnet den Zielpfad jetzt über den `DocumentTargetPathResolver` statt über `profile.TargetFolder`. `ImportPlanBuilder` mit fixierter `MapRings`-Regel (Ring3 = Geschoss; Ring2 = erster Bauteil-Id-Wert bzw. erster Nicht-Geschoss-Wert), verdrahtet in `ImportWorkflowService`/`ProjectDatabase` und `ProjectDetailView`. Additiv — `TargetFolder` bleibt vorerst im Modell. (Commit `ebe4168`)
+
+---
+
+## [v0.28.92] — 2026-06-24
+
+### Feature: BPM-113.05 Slice 0.5 — DocumentTargetPathResolver
+
+Neuer PlanManager-Service `DocumentTargetPathResolver`: baut den Ablage-Zielpfad ausschließlich aus DB-Stammdaten (`root_relative_path`/`folder_name`/Ring2/Ring3), Fail-Fast ohne Teilpfad, Auflösung je Ebene Id → key → normalisierter Name (kein Fuzzy). 8 Tests. (Commit `f5363a3`)
+
+---
+
+## [v0.28.91] — 2026-06-24
+
+### Feature: BPM-113.04b-2 — Neu-Dokumenttyp-Pflichtdialog
+
+„+ Neu…"-Schnellanlage als MVP-Pflichtdialog (Name/Ablagebereich/Unterteilung/Ordnername), Ring-1 verdrahtet. (Commit `3049a9e`)
+
+---
+
+## [v0.28.90] — 2026-06-24
+
+### Feature: BPM-113.04b-1 — DocumentTypeCreationService
+
+`DocumentTypeCreationService` (key-Erzeugung + Dedup + Normalisierung), `AddDocumentType` verdrahtet. (Commit `feb1a36`)
+
+---
+
+## [v0.28.89] — 2026-06-24
+
+### Feature: BPM-113.04a — Seed aus FolderTemplate
+
+Dokumenttyp-Seed kommt jetzt aus dem FolderTemplate statt aus hardcodierten `_builtins`: Typ-Metadaten + `key`/`root_relative_path`/`folder_name` aus der Ordnerstruktur, Protokolle-Root. (Commit `62ed690`)
+
+---
+
+## [v0.28.88] — 2026-06-24
+
+### Feature: BPM-113.03 Slice 0.3 — ProjectDatabase Insert/Read
+
+`ProjectDatabase` liest/schreibt `document_types.key`/`root_relative_path` und `building_levels.folder_name` (Einmal-Regel), key/root Round-Trip. (Commit `4b86e7e`)
+
+---
+
+## [v0.28.87] — 2026-06-24
+
+### Feature: BPM-113.02 Slice 0.2 — DB-Schema (key/root_relative_path + Unique-Index)
+
+`document_types` um `key` + `root_relative_path` erweitert, partieller Unique-Index (project_id, key), `building_levels.folder_name`. (Commit `9f84fed`)
+
+---
+
+## [v0.28.86] — 2026-06-24
+
+### Feature: BPM-113.01 Slice 0.1 — Domain-Models (key/root_relative_path)
+
+Domain-Models: `document_types` `key`/`root_relative_path`, `BuildingLevel.FolderName`, FolderTemplate-Typmetadaten. (Commit `474f03a`)
+
+---
+
+## [v0.28.85] — 2026-06-24
+
+### Feature: BPM-112 Slice 0 — Dateisystem-Ports (ADR-060)
+
+FS-Ports `IFileSystemReader`/`IFileSystemWriter`/`IPathService` (Domain) + `LocalFileSystem`-Adapter (Infrastructure) + DI-Registrierung + `FakeFileStore` + Contract-Tests. Grundlage für die Migration der ~29 direkten System.IO-Stellen (Slices 1–6 offen). (Commit `e60fa3c`)
+
+---
+
+## [v0.28.84] — 2026-06-24
+
+### Docs: CHANGELOG v0.28.81–.83 nachgezogen
+
+CHANGELOG-Lücke geschlossen: Einträge für Slice 3a (v0.28.83), ADR-060/061 + CGR-2026-06-22-bpm-architektur (v0.28.82) sowie die vorherige CHANGELOG-Nachpflege (v0.28.81). (Commit `528d74f`)
+
+---
+
 ## [v0.28.83] — 2026-06-24
 
 ### Feature: BPM-111.05 Slice 3a — „+ Neu…"-Segmente im Ring

@@ -2853,7 +2853,7 @@ Das bisherige Erkennungs-Modell extrahiert Identitätsfelder (haus/geschoss/plan
 
 **Datum:** 2026-06-24
 **Status:** ✅ Entschieden (Sign-off via CGR-2026-06-22-bpm-architektur, 4 Runden)
-**Implementierung:** Not Started — BPM-112, Slices 0–6
+**Implementierung:** 🟡 In Progress — BPM-112: Slice 0 (FS-Ports + `LocalFileSystem`-Adapter + DI + `FakeFileStore`/Contract-Tests) done (v0.28.85, `e60fa3c`); Slices 1–6 (System.IO-Migration, ~29 Stellen) offen.
 **Herkunft:** Live-Test BPM-111.05 (Teil 44) → Herberts Ausgangsfrage: braucht BPM ein vereinheitlichtes Dateisystem-Interface für alle Module? 4-Runden-Cross-Review mit ChatGPT GPT-5 Thinking.
 
 **Kontext:**
@@ -2898,7 +2898,7 @@ Das bisherige Erkennungs-Modell extrahiert Identitätsfelder (haus/geschoss/plan
 
 **Datum:** 2026-06-24
 **Status:** ✅ Entschieden (Sign-off via CGR-2026-06-22-bpm-architektur, 4 Runden)
-**Implementierung:** Not Started — BPM-113, Slices 0.1–0.6. Ergänzt/präzisiert ADR-059-Addendum.
+**Implementierung:** 🟡 In Progress — BPM-113: Slices 0.1–0.5 + 0.6a + 0.6b done (v0.28.86–.93, .95); offen nur noch Slice 0.6c (`profile.TargetFolder` entfernen + `RecognitionProfile` SchemaVersion 5 + Frühphasen-Reset). Ergänzt/präzisiert ADR-059-Addendum.
 **Herkunft:** Live-Test BPM-111.05 (Teil 44) — Radial-Import legte „Polierplan" an statt das vorhandene „01 Polierpläne" zu treffen.
 
 **Kontext:**

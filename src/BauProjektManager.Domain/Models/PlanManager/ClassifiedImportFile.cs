@@ -17,7 +17,8 @@ public sealed record ClassifiedImportFile(
     IndexSourceType RevisionSource,
     ImportStage Stage,
     IReadOnlyDictionary<string, string> IdentityFields,
-    IReadOnlyList<ResolutionEvidence> Evidence);
+    IReadOnlyList<ResolutionEvidence> Evidence,
+    string? Title = null);
 
 /// <summary>
 /// Final import decision for one file — ready for preview UI.

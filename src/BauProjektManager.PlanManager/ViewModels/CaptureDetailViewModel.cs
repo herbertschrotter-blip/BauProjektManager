@@ -13,18 +13,42 @@ public sealed record PlanRevisionHistoryRow(string Index, string Status, string 
 
 /// <summary>
 /// Detail-Sub-ViewModel für die einzeln gewählte "Neue Pläne"-Zeile
-/// (BPM-111.06 Slice A, Detail-Panel). In Slice A read-only: zeigt Plandaten,
-/// Zielordner, Reason-Hinweis, Index-Historie und steuert "Update übernehmen".
-/// Editierbare Felder + Re-Matching folgen in Slice A2/A3.
+/// (BPM-111.06 Slice A, Detail-Panel): zeigt Plandaten, Zielordner,
+/// Reason-Hinweis, Index-Historie und steuert "Update übernehmen".
+/// Slice A2: Plannummer/Index editierbar — "Anwenden" löst den Einzel-
+/// Re-Match im <see cref="ManualCaptureViewModel"/> aus (Identitätswechsel).
 /// </summary>
-public sealed class CaptureDetailViewModel : ObservableObject
+public sealed partial class CaptureDetailViewModel : ObservableObject
 {
     public CaptureDetailViewModel(
         CaptureRowViewModel row, IReadOnlyList<PlanRevisionHistoryRow> history)
     {
         Row = row;
         History = history;
+        _editPlanNumber = row.Item.Candidates.PlanNumber ?? row.Item.Match?.PlanNumber ?? string.Empty;
+        _editIndex = row.Item.Candidates.Index ?? string.Empty;
     }
+
+    /// <summary>Editierbare Plannummer (Slice A2) — vorbelegt aus Kandidat bzw. Match.</summary>
+    [ObservableProperty]
+    private string _editPlanNumber;
+
+    /// <summary>Editierbarer Index (Slice A2) — vorbelegt aus dem Kandidaten.</summary>
+    [ObservableProperty]
+    private string _editIndex;
+
+    /// <summary>Identität editierbar — nicht bei MD5-Dubletten (Bucket A).</summary>
+    public bool CanEditIdentity => !Row.IsDuplicate;
+
+    /// <summary>
+    /// Bezeichnung editierbar (Slice A3) — nur für Zeilen die ein NEUES Dokument
+    /// anlegen (Erstaufnahme/Konflikt). Updates behalten den Titel des bekannten
+    /// Dokuments, Dubletten werden nicht importiert.
+    /// </summary>
+    public bool CanEditTitle => !Row.IsDuplicate && !Row.IsUpdate;
+
+    /// <summary>Read-only-Anzeige statt Edit-Feldern (Dubletten).</summary>
+    public bool IsIdentityReadOnly => Row.IsDuplicate;
 
     /// <summary>Die zugrundeliegende Zeile — dient als CommandParameter für TakeUpdate.</summary>
     public CaptureRowViewModel Row { get; }

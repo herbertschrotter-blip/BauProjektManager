@@ -101,7 +101,8 @@ public class CaptureConfirmService
                 RevisionSource: p.Index is null ? IndexSourceType.None : IndexSourceType.FileName,
                 Stage: ImportStage.Unknown,
                 IdentityFields: fields,
-                Evidence: []);
+                Evidence: [],
+                Title: p.Title);
 
             decisions.Add(new ImportDecision(
                 File: classified,

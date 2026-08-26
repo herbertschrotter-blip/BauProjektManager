@@ -75,6 +75,26 @@ public class CaptureConfirmServiceTests
     }
 
     [Fact]
+    public void BuildDecisions_TitleFlowsIntoClassifiedFile()
+    {
+        // Slice A3: Panel-Bezeichnung landet in ClassifiedImportFile.Title
+        // (Execution schreibt sie bei Erstaufnahmen in plan_documents.title)
+        var withTitle = new PendingAssignment(
+            File("5998-300_OG2.pdf"), CaptureBucket.NewCapture,
+            "polierplan", "Polierplan", "Haus 2", "OG2", "5998-300", null,
+            "Pläne/Polierplan/Haus 2/OG2", Match: null, Title: "Grundriss OG2");
+        var withoutTitle = new PendingAssignment(
+            File("5998-301_OG3.pdf"), CaptureBucket.NewCapture,
+            "polierplan", "Polierplan", "Haus 2", "OG3", "5998-301", null,
+            "Pläne/Polierplan/Haus 2/OG3", Match: null);
+
+        var decisions = CaptureConfirmService.BuildDecisions([withTitle, withoutTitle], _normalizer);
+
+        Assert.Equal("Grundriss OG2", decisions[0].File.Title);
+        Assert.Null(decisions[1].File.Title);
+    }
+
+    [Fact]
     public void BuildDecisions_KeyIsIndexFree()
     {
         // Invariante: Index ist NIE Teil des document_key

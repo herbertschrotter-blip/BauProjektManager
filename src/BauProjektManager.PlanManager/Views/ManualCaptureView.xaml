@@ -181,10 +181,60 @@
                                     <TextBlock Text="Plannummer / Index"
                                                Foreground="{DynamicResource BpmTextSecondary}"
                                                FontSize="{DynamicResource BpmFontSizeCaption}"/>
+
+                                    <!-- Dubletten: nur Anzeige -->
                                     <TextBlock Text="{Binding PlanIndexText}"
                                                Foreground="{DynamicResource BpmTextPrimary}"
                                                FontSize="{DynamicResource BpmFontSizeSmall}"
-                                               Margin="0,0,0,8"/>
+                                               Margin="0,0,0,8"
+                                               Visibility="{Binding IsIdentityReadOnly, Converter={StaticResource BoolToVis}}"/>
+
+                                    <!-- Slice A2: editierbare Identität + Re-Match -->
+                                    <StackPanel Margin="0,2,0,8"
+                                                Visibility="{Binding CanEditIdentity, Converter={StaticResource BoolToVis}}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="6"/>
+                                                <ColumnDefinition Width="56"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Grid.Column="0"
+                                                     Text="{Binding EditPlanNumber, UpdateSourceTrigger=PropertyChanged}"
+                                                     FontSize="{DynamicResource BpmFontSizeSmall}"
+                                                     Padding="4,3"
+                                                     Background="{DynamicResource BpmBgElevated}"
+                                                     Foreground="{DynamicResource BpmTextBright}"
+                                                     BorderBrush="{DynamicResource BpmBorderSubtle}"
+                                                     CaretBrush="{DynamicResource BpmTextBright}"/>
+                                            <TextBox Grid.Column="2"
+                                                     Text="{Binding EditIndex, UpdateSourceTrigger=PropertyChanged}"
+                                                     FontSize="{DynamicResource BpmFontSizeSmall}"
+                                                     Padding="4,3"
+                                                     Background="{DynamicResource BpmBgElevated}"
+                                                     Foreground="{DynamicResource BpmTextBright}"
+                                                     BorderBrush="{DynamicResource BpmBorderSubtle}"
+                                                     CaretBrush="{DynamicResource BpmTextBright}"/>
+                                        </Grid>
+                                        <Button Content="Re-Match anwenden"
+                                                Margin="0,6,0,0"
+                                                Command="{Binding DataContext.ApplyIdentityEditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                    </StackPanel>
+
+                                    <!-- Slice A3: Bezeichnung (nur neue Dokumente — Updates behalten den Bestandstitel) -->
+                                    <StackPanel Margin="0,0,0,8"
+                                                Visibility="{Binding CanEditTitle, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="Bezeichnung"
+                                                   Foreground="{DynamicResource BpmTextSecondary}"
+                                                   FontSize="{DynamicResource BpmFontSizeCaption}"/>
+                                        <TextBox Text="{Binding Row.Title, UpdateSourceTrigger=PropertyChanged}"
+                                                 FontSize="{DynamicResource BpmFontSizeSmall}"
+                                                 Padding="4,3"
+                                                 Margin="0,2,0,0"
+                                                 Background="{DynamicResource BpmBgElevated}"
+                                                 Foreground="{DynamicResource BpmTextBright}"
+                                                 BorderBrush="{DynamicResource BpmBorderSubtle}"
+                                                 CaretBrush="{DynamicResource BpmTextBright}"/>
+                                    </StackPanel>
 
                                     <TextBlock Text="{Binding ReasonText}"
                                                Foreground="{DynamicResource BpmWarning}"

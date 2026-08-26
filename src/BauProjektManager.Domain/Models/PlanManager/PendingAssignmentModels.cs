@@ -19,6 +19,7 @@ namespace BauProjektManager.Domain.Models.PlanManager;
 /// <param name="Index">Bestaetigter Index, NULL bei Erstausgabe.</param>
 /// <param name="TargetRelativeDirectory">Zielordner relativ zum Projekt (z. B. "Pläne/Polierplan/Haus 1/OG3").</param>
 /// <param name="Match">Bekanntes Dokument bei Update-Uebernahme (Bucket B), sonst NULL.</param>
+/// <param name="Title">Vom User erfasste Bezeichnung (BPM-111.06 Slice A3) — fliesst bei Erstaufnahmen in plan_documents.title. NULL = keine.</param>
 public sealed record PendingAssignment(
     FingerprintedFile File,
     CaptureBucket SourceBucket,
@@ -29,7 +30,8 @@ public sealed record PendingAssignment(
     string? PlanNumber,
     string? Index,
     string TargetRelativeDirectory,
-    KnownPlanDocument? Match);
+    KnownPlanDocument? Match,
+    string? Title = null);
 
 /// <summary>Konflikt einer Undo-Preflight-Pruefung (eine Journal-Aktion).</summary>
 public sealed record UndoActionConflict(string ActionId, string FileName, string Issue);

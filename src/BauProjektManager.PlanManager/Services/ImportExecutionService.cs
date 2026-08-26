@@ -182,7 +182,7 @@ public class ImportExecutionService
                 decision.File.DocumentTypeId ?? "",
                 decision.File.PlanNumber ?? "",
                 decision.File.DocumentTypeDisplayName ?? "unknown",
-                "",                                          // title
+                decision.File.Title ?? "",                   // title (Panel-Bezeichnung, Slice A3)
                 rootFolder,                                  // target_folder = root_relative_path (ADR-061)
                 resolvedDir,                                 // relative_directory (voller aufgeloester Ordner)
                 null,                                        // building_part_id — SoftRef-Auflösung post-V1 (BPM-109.06)

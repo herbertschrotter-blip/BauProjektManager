@@ -47,6 +47,10 @@ public partial class CaptureRowViewModel : ObservableObject
     [ObservableProperty]
     private bool _isSelected;
 
+    /// <summary>Vom User erfasste Bezeichnung (Slice A3) — fliesst bei Erstaufnahmen in plan_documents.title.</summary>
+    [ObservableProperty]
+    private string? _title;
+
     /// <summary>Pending-Zielordner (NULL = nicht zugeordnet) — steuert die Gelb-Markierung.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsPending))]
@@ -237,7 +241,8 @@ public partial class ManualCaptureViewModel : ObservableObject
                 row.Item.File, row.Item.Bucket,
                 controller.SelectedType.Id, controller.SelectedType.Name,
                 controller.SelectedPart, controller.SelectedLevel,
-                c.PlanNumber, c.Index, targetDir, Match: null));
+                c.PlanNumber, c.Index, targetDir, Match: null,
+                Title: NormalizeTitle(row.Title)));
             row.PendingTarget = targetDir;
             row.IsSelected = false;
         }
@@ -262,6 +267,58 @@ public partial class ManualCaptureViewModel : ObservableObject
             row.Item.Match.RelativeDirectory, row.Item.Match));
         row.PendingTarget = row.Item.Match.RelativeDirectory;
         UpdatePendingState();
+        SetSelectedRow();
+    }
+
+    /// <summary>
+    /// Slice A2: Panel-Edit von Plannummer/Index anwenden — Identitätswechsel
+    /// (Spez 111.06: "Plannummer-Änderung = Identitätswechsel -> Re-Matching").
+    /// Klassifiziert die Zeile per <see cref="ManualFirstCaptureService.RematchByNumber"/>
+    /// neu (Bucket B/C/D) und ersetzt sie im Grid. Eine stale Pending-Zuordnung
+    /// der alten Identität wird verworfen. MD5-Dubletten (Bucket A) sind vom
+    /// Edit ausgenommen (CanEditIdentity im Detail-VM).
+    /// </summary>
+    [RelayCommand]
+    private void ApplyIdentityEdit()
+    {
+        var detail = SelectedDetail;
+        if (detail is null || detail.Row.IsDuplicate)
+            return;
+        var row = detail.Row;
+
+        var number = string.IsNullOrWhiteSpace(detail.EditPlanNumber)
+            ? null : detail.EditPlanNumber.Trim();
+        var index = string.IsNullOrWhiteSpace(detail.EditIndex)
+            ? null : detail.EditIndex.Trim();
+
+        var (bucket, match, reason) = _capture.RematchByNumber(number, index);
+
+        var newCandidates = row.Item.Candidates with
+        {
+            PlanNumber = number,
+            Index = index,
+            RevisionKind = RevisionKindDetector.Detect(index)
+        };
+        var newItem = new CaptureItem(row.Item.File, newCandidates, bucket, match, reason);
+
+        // Stale Pending der alten Identität verwerfen
+        if (_pending.Discard(row.Item.File.Scan.RelativePath))
+            UpdatePendingState();
+
+        var newRow = new CaptureRowViewModel(newItem) { IsSelected = true, Title = row.Title };
+        var pos = Rows.IndexOf(row);
+        if (pos >= 0) Rows[pos] = newRow;
+        else Rows.Add(newRow);
+
+        StatusText = bucket switch
+        {
+            CaptureBucket.UpdateProposal =>
+                $"Re-Match: bekannter Plan {match!.PlanNumber} — Update-Vorschlag",
+            CaptureBucket.Conflict => $"Re-Match: Konflikt — {reason}",
+            _ => "Re-Match: Erstaufnahme (kein bekanntes Dokument)"
+        };
+        Log.Information("Panel-Edit Re-Match: {File} -> {Bucket}",
+            row.FileName, bucket);
         SetSelectedRow();
     }
 
@@ -292,6 +349,17 @@ public partial class ManualCaptureViewModel : ObservableObject
             return;
         }
 
+        // Slice A3: Panel-Bezeichnungen in die Pending Assignments uebernehmen
+        // (deckt Titel-Edits NACH der Radial-Zuordnung ab — Store haelt sonst den
+        // Stand vom Zuordnungszeitpunkt).
+        foreach (var row in Rows.Where(r => r.IsPending))
+        {
+            var p = _pending.Get(row.RelativePath);
+            var title = NormalizeTitle(row.Title);
+            if (p is not null && p.Title != title)
+                _pending.Assign(p with { Title = title });
+        }
+
         var result = _confirm.ConfirmAll(_projectRootPath, _inboxRelativePath);
         StatusText = result.Failed == 0
             ? $"✓ {result.Succeeded} Datei(en) importiert (Journal → Move → DB)"
@@ -312,6 +380,10 @@ public partial class ManualCaptureViewModel : ObservableObject
     }
 
     private void UpdatePendingState() => PendingCount = _pending.Count;
+
+    /// <summary>Leere/Whitespace-Bezeichnung -> NULL, sonst getrimmt (Slice A3).</summary>
+    private static string? NormalizeTitle(string? title)
+        => string.IsNullOrWhiteSpace(title) ? null : title.Trim();
 
     /// <summary>
     /// Baut den Detail-Panel-Inhalt für die aktuelle Auswahl (BPM-111.06 Slice A):

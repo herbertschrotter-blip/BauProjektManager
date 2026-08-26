@@ -339,8 +339,9 @@ public partial class ManualCaptureView : UserControl
     // ── Vorschau (BPM-111.06 Slice C1) ──────────────────────────────
 
     /// <summary>
-    /// Kontextmenue auf einer Eingang-Zeile (Rechtsklick bei geschlossenem Radial):
-    /// C1 nur "Vorschau" (PDF); "Datei oeffnen" / "Im Explorer zeigen" folgen in Slice B.
+    /// Kontextmenue auf einer Eingang-Zeile (Rechtsklick bei geschlossenem Radial,
+    /// Spez 111.06): "Vorschau" (Slice C, nur PDF) + "Datei oeffnen" /
+    /// "Im Explorer zeigen" (Slice B, via IFileLauncher/ADR-060).
     /// </summary>
     private void TryOpenRowContextMenu(MouseButtonEventArgs e)
     {
@@ -353,19 +354,46 @@ public partial class ManualCaptureView : UserControl
         foreach (var r in ViewModel.Rows)
             r.IsSelected = ReferenceEquals(r, row);
 
+        // Theme-Styles (Dialogs.xaml) — keyed, daher explizit zuweisen
+        var itemStyle = TryFindResource("BpmMenuItem") as Style;
+        MenuItem Item(string header, bool enabled)
+            => new() { Header = header, IsEnabled = enabled, Style = itemStyle };
+
         var isPdf = row.Item.File.Scan.Extension
             .Equals(".pdf", StringComparison.OrdinalIgnoreCase);
-        var previewItem = new MenuItem
-        {
-            Header = "Vorschau",
-            IsEnabled = PdfRenderService is not null && isPdf
-        };
+        var previewItem = Item("Vorschau", PdfRenderService is not null && isPdf);
         previewItem.Click += async (_, _) => await OpenPreviewAsync(row);
 
+        var openItem = Item("Datei öffnen", FileLauncher is not null);
+        openItem.Click += (_, _) => LaunchRow(row, reveal: false);
+
+        var revealItem = Item("Im Explorer zeigen", FileLauncher is not null);
+        revealItem.Click += (_, _) => LaunchRow(row, reveal: true);
+
         var menu = new ContextMenu { PlacementTarget = container };
+        if (TryFindResource("BpmContextMenu") is Style menuStyle)
+            menu.Style = menuStyle;
+        var separator = new Separator();
+        if (TryFindResource("BpmMenuSeparator") is Style separatorStyle)
+            separator.Style = separatorStyle;
+
         menu.Items.Add(previewItem);
+        menu.Items.Add(separator);
+        menu.Items.Add(openItem);
+        menu.Items.Add(revealItem);
         menu.IsOpen = true;
         e.Handled = true;
+    }
+
+    /// <summary>Slice B: Datei in der Standard-App oeffnen bzw. im Explorer zeigen.</summary>
+    private void LaunchRow(CaptureRowViewModel row, bool reveal)
+    {
+        if (FileLauncher is null)
+            return;
+        var absolutePath = Path.Combine(ViewModel.ProjectRootPath, row.RelativePath);
+        var ok = reveal ? FileLauncher.RevealInExplorer(absolutePath) : FileLauncher.OpenFile(absolutePath);
+        if (!ok)
+            ViewModel.StatusText = $"⚠ {(reveal ? "Explorer" : "Öffnen")} fehlgeschlagen: {row.FileName}";
     }
 
     /// <summary>Oeffnet (oder aktualisiert) das Vorschau-Fenster fuer die Zeile.</summary>

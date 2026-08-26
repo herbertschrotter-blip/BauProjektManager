@@ -180,6 +180,8 @@
     </Style>
 
     <!-- ── ContextMenu Style ───────────────────────────────────── -->
+    <!-- Eigenes Template: das Default-Template zeichnet links eine helle
+         Icon-Spalte (Gutter), die im Dark-Theme stört. -->
     <Style x:Key="BpmContextMenu" TargetType="ContextMenu">
         <Setter Property="Background" Value="{StaticResource BpmBgElevated}"/>
         <Setter Property="Foreground" Value="{StaticResource BpmTextPrimary}"/>
@@ -188,6 +190,19 @@
         <Setter Property="Padding" Value="0,4"/>
         <Setter Property="FontFamily" Value="{StaticResource BpmFontFamily}"/>
         <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContextMenu">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Padding="{TemplateBinding Padding}">
+                        <StackPanel IsItemsHost="True"
+                                    KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <Style x:Key="BpmMenuItem" TargetType="MenuItem">

@@ -16,7 +16,7 @@ supersedes: []
 - Autorität: source_of_truth
 - Lesen wenn: Neue Architekturentscheidung treffen, bestehende ADR prüfen, Status ändern, Entscheidung nachschlagen
 - Nicht zuständig für: Implementierungs-Details (→ jeweilige Modul-Docs), Code-Standards (→ CODING_STANDARDS.md)
-- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-061)
+- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-062)
 - Pflichtlesen: keine (gezieltes Nachschlagen per ADR-Nummer)
 - Fachliche Invarianten:
   - Statusmodell: Decision Status (Proposed/Accepted/Superseded/Deprecated) getrennt von Implementation Status (Not Started/Partial/Implemented)
@@ -105,6 +105,10 @@ Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheid
 | 055 | IPersistenceRegistry — dynamisches Persistenz-Inventar als Single Source of Truth | ✅ Entschieden | 2026-05 |
 | 056 | Segmenttyp-Architektur (BPM-108) — fieldTypeId + SemanticRole Zwei-Schichten-Modell | ✅ Entschieden | 2026-05 |
 | 058 | Plan-Archiv-Persistenz (BPM-109) — Drei-Ebenen-Modell + Foundation Slice | ✅ Entschieden | 2026-06 |
+| 059 | Recognition v2 / Plan-Erfassung — Manuelle Erstaufnahme (Strategie B) + Radial-UI | ✅ Entschieden | 2026-06 |
+| 060 | Vereinheitlichte Dateisystem-Ports für alle Module | ✅ Entschieden | 2026-06 |
+| 061 | DB als einzige Ordner-Wahrheit + DocumentTargetPathResolver | ✅ Entschieden | 2026-06 |
+| 062 | Zentraler PDF-Render-Port (IPdfRenderService) | ✅ Entschieden | 2026-08 |
 
 ---
 
@@ -2932,6 +2936,40 @@ Zwei getrennte Ordner-Wahrheiten, die sich nicht kennen: `AppSettings.FolderTemp
 **Betrifft:** ADR-059 + Addendum (präzisiert die generische Seed-Definition), ADR-058 (Drei-Ebenen-Persistenz), ADR-060 (nutzt die FS-Ports), DB-SCHEMA.md Kap. 4.12/4.13 + Kap. 4.5 (building_levels.folder_name), PlanManager.md.
 
 **Referenz:** [Docs/Referenz/chatgpt-reviews/CGR-2026-06-22-bpm-architektur/](../Referenz/chatgpt-reviews/CGR-2026-06-22-bpm-architektur/) — 4 Runden Cross-Review (r2 Schema/Import-Break, r3 Multi-Root/Protokolle, r4 Slice-0-Tiefe/Sign-off). ClickUp: BPM-113.
+
+---
+
+## ADR-062: Zentraler PDF-Render-Port (IPdfRenderService)
+
+**Datum:** 2026-08-26
+**Status:** ✅ Entschieden (Herbert, Teil 47)
+**Implementierung:** 🔴 Not Started — geplant als BPM-111.06 Slice C (Vorschau-Fenster)
+**Herkunft:** BPM-111.06 Slice C (angedockte PDF-Vorschau) + Herberts Frage: zentrales PDF-System für alle Module statt Modul-Einzellösungen?
+
+**Kontext:**
+
+Die Plan-Vorschau (BPM-111.06) braucht In-App-PDF-Rendering; die Spez (Mockup 02_ManuellSortieren, ADR-059-Umfeld) legt `Windows.Data.Pdf` ohne Drittanbieter-Library fest. Weitere Module werden künftig PDFs anzeigen (Bautagebuch-Anhänge, Foto, KI-Assistent, post-V1 evtl. Bearbeitung). `Windows.Data.Pdf` ist eine WinRT-API und braucht ein Windows-SDK-TFM (`net10.0-windows10.0.xxxxx`) — würde jedes Modul die API direkt nutzen, müssten alle Referenzierer das TFM anheben und jedes Modul eigene PDF-Pfade pflegen.
+
+**Entscheidung:**
+
+1. **Port im Domain-Layer:** `IPdfRenderService` in `Domain.Interfaces` mit puren .NET-Signaturen — `Task<int> GetPageCountAsync(Stream pdf)` und `Task<byte[]> RenderPageAsPngAsync(Stream pdf, int pageIndex, int pixelWidth)`. Kein WPF-, kein WinRT-Typ im Port (PNG-Bytes statt `ImageSource`).
+2. **Eine Implementierung im Composition Root:** `WindowsPdfRenderService` via `Windows.Data.Pdf` im App-Projekt, DI-registriert (Singleton). **TFM-Bump NUR App** auf `net10.0-windows10.0.19041.0` mit `SupportedOSPlatformVersion 10.0.17763` (Win10 1809 bleibt Mindest-OS). Module, Domain, Infrastructure, Tests behalten ihre TFMs.
+3. **Module konsumieren nur den Port** (Constructor Injection) und wandeln die PNG-Bytes selbst in `BitmapImage`. Viewer-UI (Zoom, Andocken, Plankopf-Ausschnitt) bleibt Modulsache; ein gemeinsames Viewer-Control wird erst extrahiert, wenn ein zweites Modul es braucht.
+4. **PDF-Bearbeitung = post-V1, eigener Port:** `Windows.Data.Pdf` kann nur rendern. Bearbeitung (Anmerkungen, Stempel, Formulare) bekommt später einen eigenen Port + Engine-Entscheidung (Drittanbieter → Freigabe-Regel + neues ADR). Durch den Port-Schnitt ist auch die Render-Engine austauschbar, ohne Module anzufassen.
+
+**Konsequenzen:**
+
+- Ein Ansprechpartner für PDF-Rendering in allen Modulen; Engine austauschbar; Module testbar (Port mockbar).
+- Minimaler Build-Eingriff (nur App-TFM) statt solution-weitem Bump.
+- PNG-Bytes-Roundtrip kostet etwas Speicher gegenüber direktem `WriteableBitmap` — bewusst in Kauf genommen (Entkopplung > Mikro-Optimierung; Vorschau rendert einzelne Seiten, keine Massen).
+
+**Alternativen verworfen:** Implementierung in Infrastructure (TFM-Bump machte Infrastructure Windows-SDK-gebunden, Tests-Kette müsste mitziehen); Drittanbieter-Renderer wie PdfiumViewer (Lib-Regel: keine neuen Libraries ohne Freigabe, für reines Rendern unnötig); Rendering direkt im PlanManager (TFM-Bump aller Referenzierer + Modul-Silo statt zentralem Dienst).
+
+**DSGVO:** Klasse A — rein lokales Rendering, keine externen Verbindungen; Planinhalte verlassen das Gerät nicht.
+
+**Betrifft:** ADR-060 (wendet dessen Port-Prinzip auf PDF-Rendering an), ADR-045 (Plankopf-Extraktion post-V1 nutzt ggf. denselben Stream, bleibt eigene Entscheidung), Architektur-Doc (Schichtgrenzen unverändert: Port in Domain, Adapter im Composition Root).
+
+**Referenz:** ClickUp BPM-111.06 / Subtask Slice C (86cahy45b), Teil 47.
 
 ---
 

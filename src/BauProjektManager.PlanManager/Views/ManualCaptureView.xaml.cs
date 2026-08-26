@@ -57,13 +57,19 @@ public partial class ManualCaptureView : UserControl
     /// <summary>Shell-Launcher (ADR-060) — "In Standard-App öffnen" im Vorschau-Panel.</summary>
     public IFileLauncher? FileLauncher { get; set; }
 
+    /// <summary>Geräte-lokale Settings (device-settings.json) — merkt die Vorschau-Breite.</summary>
+    public Infrastructure.Persistence.AppSettingsService? SettingsService { get; set; }
+
     private const double DetailPanelWidth = 280;
-    private const double PreviewDefaultWidth = 380;
+    private const double PreviewDefaultWidth = 520;
+    private const double PreviewMinWidth = 260;
+    private const double PreviewMaxWidth = 1600;
 
     public ManualCaptureView()
     {
         InitializeComponent();
         PreviewPanel.CloseRequested += (_, _) => SetPreviewVisible(false);
+        PreviewSplitter.DragCompleted += OnPreviewSplitterDragCompleted;
         _holdTimer = new DispatcherTimer
         {
             Interval = TimeSpan.FromMilliseconds(HoldMilliseconds)
@@ -413,14 +419,35 @@ public partial class ManualCaptureView : UserControl
 
     /// <summary>
     /// Vorschau-Spalte ein-/ausblenden: RightColumn = Detail-Panel (280) plus
-    /// Vorschau-Breite; der Splitter ist nur bei offener Vorschau sichtbar.
+    /// Vorschau-Breite (gemerkt in device-settings.json, sonst Default);
+    /// der Splitter ist nur bei offener Vorschau sichtbar.
     /// </summary>
     private void SetPreviewVisible(bool visible)
     {
         PreviewHost.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
         PreviewSplitter.Visibility = PreviewHost.Visibility;
+
+        var stored = SettingsService?.LoadDevice().UiLayout.PlanPreviewWidth;
+        var previewWidth = Math.Clamp(stored ?? PreviewDefaultWidth, PreviewMinWidth, PreviewMaxWidth);
         RightColumn.Width = new GridLength(
-            visible ? DetailPanelWidth + PreviewDefaultWidth : DetailPanelWidth);
+            visible ? DetailPanelWidth + previewWidth : DetailPanelWidth);
+    }
+
+    /// <summary>
+    /// Splitter losgelassen: aktuelle Vorschau-Breite geräte-lokal merken
+    /// (device-settings.json, uiLayout.planPreviewWidth).
+    /// </summary>
+    private void OnPreviewSplitterDragCompleted(
+        object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+    {
+        if (SettingsService is null || PreviewHost.Visibility != Visibility.Visible)
+            return;
+
+        var width = Math.Clamp(
+            RightColumn.ActualWidth - DetailPanelWidth, PreviewMinWidth, PreviewMaxWidth);
+        var device = SettingsService.LoadDevice();
+        device.UiLayout.PlanPreviewWidth = width;
+        SettingsService.SaveDevice(device);
     }
 
     // ── Schnellanlage-Dialog (Slice 3) ──────────────────────────────

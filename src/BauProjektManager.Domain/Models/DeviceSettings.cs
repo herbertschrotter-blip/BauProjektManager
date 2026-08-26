@@ -47,6 +47,24 @@ public class DeviceSettings
     /// Bewusst geräte-lokal: Monitor-Setup unterscheidet sich pro Maschine.
     /// </summary>
     public WindowPlacementSettings? MainWindowPlacement { get; set; }
+
+    /// <summary>
+    /// Geräte-lokale UI-Layout-Werte (Panel-Breiten etc.). Bewusst pro Gerät:
+    /// Monitor-/Fenstergrößen unterscheiden sich je Maschine.
+    /// </summary>
+    public UiLayoutSettings UiLayout { get; set; } = new();
+}
+
+/// <summary>
+/// UI-Layout-Zustand — wird in device-settings.json unter "uiLayout" persistiert.
+/// </summary>
+public class UiLayoutSettings
+{
+    /// <summary>
+    /// Breite des PDF-Vorschau-Panels im Tab "Manuell sortieren" (BPM-111.06,
+    /// per Splitter angepasst). Null = noch nie verändert → Default-Breite.
+    /// </summary>
+    public double? PlanPreviewWidth { get; set; }
 }
 
 /// <summary>

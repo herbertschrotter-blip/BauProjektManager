@@ -381,7 +381,11 @@ public class AppSettingsService
             ExportPath = settings.ExportPath,
             IsFirstRun = settings.IsFirstRun,
             SetupCompletedAt = settings.SetupCompletedAt,
-            DevTools = existing.DevTools
+            DevTools = existing.DevTools,
+            // Wie DevTools aus existing uebernehmen — sonst verwirft ein
+            // Save(AppSettings) mid-session Fensterlage bzw. UI-Layout.
+            MainWindowPlacement = existing.MainWindowPlacement,
+            UiLayout = existing.UiLayout
         };
 
         // BPM-102: Diff-Check — SaveDevice nur wenn sich tatsächlich ein Device-Feld geändert hat.

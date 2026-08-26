@@ -22,6 +22,7 @@ public partial class ProjectDetailView : UserControl
     private readonly Infrastructure.Persistence.ProjectDatabase? _bpmDb;
     private readonly IPdfRenderService? _pdfRenderService;
     private readonly IFileLauncher? _fileLauncher;
+    private readonly Infrastructure.Persistence.AppSettingsService? _settingsService;
     private PlanManagerDatabase? _manualSortDb;
     private bool _manualSortInitialized;
 
@@ -34,7 +35,8 @@ public partial class ProjectDetailView : UserControl
         ISegmentTypeRepository? segmentTypeRepository = null,
         Infrastructure.Persistence.ProjectDatabase? bpmDb = null,
         IPdfRenderService? pdfRenderService = null,
-        IFileLauncher? fileLauncher = null)
+        IFileLauncher? fileLauncher = null,
+        Infrastructure.Persistence.AppSettingsService? settingsService = null)
     {
         _profileManager = profileManager;
         _idGenerator = idGenerator;
@@ -46,6 +48,7 @@ public partial class ProjectDetailView : UserControl
         _bpmDb = bpmDb;
         _pdfRenderService = pdfRenderService;
         _fileLauncher = fileLauncher;
+        _settingsService = settingsService;
         Resources.Add("BoolToVis", boolToVis);
         InitializeComponent();
 
@@ -78,7 +81,8 @@ public partial class ProjectDetailView : UserControl
         {
             DataContext = captureVm,
             PdfRenderService = _pdfRenderService,
-            FileLauncher = _fileLauncher
+            FileLauncher = _fileLauncher,
+            SettingsService = _settingsService
         };
 
         _ = InitializeManualSortAsync(captureVm, project);

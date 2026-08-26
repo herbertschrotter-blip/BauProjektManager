@@ -45,7 +45,7 @@ public partial class MainWindow : Window
         _profileArchiveService = profileArchiveService;
 
         _planManagerView = new PlanManagerView(db, idGenerator, profileManager, persistenceRegistry,
-            segmentTypeCatalog, segmentTypeRepository, pdfRenderService, fileLauncher);
+            segmentTypeCatalog, segmentTypeRepository, pdfRenderService, fileLauncher, settingsService);
         _settingsView = new SettingsView(db, dialogService, settingsService, persistenceRegistry);
 
         UpdateSidebarBadge();

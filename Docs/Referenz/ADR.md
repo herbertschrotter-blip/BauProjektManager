@@ -2943,7 +2943,7 @@ Zwei getrennte Ordner-Wahrheiten, die sich nicht kennen: `AppSettings.FolderTemp
 
 **Datum:** 2026-08-26
 **Status:** ✅ Entschieden (Herbert, Teil 47)
-**Implementierung:** 🔴 Not Started — geplant als BPM-111.06 Slice C (Vorschau-Fenster)
+**Implementierung:** 🟡 In Progress — C1+C2 umgesetzt (v0.28.112, `5c782ef`): Port + `WindowsPdfRenderService` + `PlanPreviewWindow` (Plankopf-Start A4 rechts unten, Zoom/Pan/Blättern) + `IFileLauncher`/`LocalFileLauncher`; offen: Andocken ans MainWindow + DWG-Pairing (C3)
 **Herkunft:** BPM-111.06 Slice C (angedockte PDF-Vorschau) + Herberts Frage: zentrales PDF-System für alle Module statt Modul-Einzellösungen?
 
 **Kontext:**
@@ -2962,6 +2962,8 @@ Die Plan-Vorschau (BPM-111.06) braucht In-App-PDF-Rendering; die Spez (Mockup 02
 - Ein Ansprechpartner für PDF-Rendering in allen Modulen; Engine austauschbar; Module testbar (Port mockbar).
 - Minimaler Build-Eingriff (nur App-TFM) statt solution-weitem Bump.
 - PNG-Bytes-Roundtrip kostet etwas Speicher gegenüber direktem `WriteableBitmap` — bewusst in Kauf genommen (Entkopplung > Mikro-Optimierung; Vorschau rendert einzelne Seiten, keine Massen).
+
+**Addendum (Teil 47, Herbert):** PDF-**Bearbeitung** erfolgt bewusst dauerhaft **extern** — das Vorschau-Fenster bietet „In Standard-App öffnen" (via `IFileLauncher`, ADR-060), Windows-Standardprogramm übernimmt. Ein In-App-Edit-Port ist nicht mehr geplant, solange kein konkreter Bedarf entsteht (Punkt 4 bleibt als Fallback-Option dokumentiert). Außerdem liefert `RenderPageAsPngAsync` seit v0.28.112 ein `PdfPageRender`-Record (PNG **+ physische Blattgröße in mm**, rotationsbereinigt aus der MediaBox) statt nackter PNG-Bytes — Grundlage für viewer-seitige Ausschnitte in Realgrößen (Plankopf-Start = A4 rechts unten).
 
 **Alternativen verworfen:** Implementierung in Infrastructure (TFM-Bump machte Infrastructure Windows-SDK-gebunden, Tests-Kette müsste mitziehen); Drittanbieter-Renderer wie PdfiumViewer (Lib-Regel: keine neuen Libraries ohne Freigabe, für reines Rendern unnötig); Rendering direkt im PlanManager (TFM-Bump aller Referenzierer + Modul-Silo statt zentralem Dienst).
 

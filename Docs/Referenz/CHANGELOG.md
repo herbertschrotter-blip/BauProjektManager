@@ -31,6 +31,78 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.113] — 2026-08-26
+
+### Feature: BPM-111.06 Slice B — Kontextmenü „Datei öffnen" + „Im Explorer zeigen"
+
+Das Rechtsklick-Kontextmenü im Tab „Manuell sortieren" (bei geschlossenem Radial) ist komplett: neben „Vorschau" jetzt **„Datei öffnen"** (Windows-Standard-App) und **„Im Explorer zeigen"** (vorselektiert) — beides über den `IFileLauncher`-Port (ADR-060), Fehler landen als ⚠ in der Statuszeile. Zusätzlich Theme-Fix: `BpmContextMenu` bekommt ein eigenes Template ohne die helle Icon-Spalte (Gutter) des WPF-Default-Templates — Menüs sind jetzt durchgehend im Dark-Theme (gilt app-weit, auch Settings). (Commit `d26b2df`)
+
+---
+
+## [v0.28.112] — 2026-08-26
+
+### Feature: BPM-111.06 Slice C1+C2 — PDF-Vorschau (ADR-062)
+
+Zentraler PDF-Render-Port **`IPdfRenderService`** (Domain) mit einziger Implementierung `WindowsPdfRenderService` via `Windows.Data.Pdf` im Composition Root — **TFM-Bump NUR App** auf `net10.0-windows10.0.19041.0` (Mindest-OS bleibt Win10 1809), Module/Tests unverändert. Neues **`PlanPreviewWindow`** im Tab „Manuell sortieren" (Rechtsklick → „Vorschau"): **Startansicht = Plankopf** (rechte untere Blattecke, A4-Ausschnitt — mm-genau über `PdfPageRender` mit rotationsbereinigter Blattgröße aus der MediaBox), Mausrad = cursorzentrierter Zoom, mittlere Maustaste = Verschieben, Seiten blättern, Buttons „Plankopf"/„Ganzes Blatt" + „↗ In Standard-App öffnen". Dazu **`IFileLauncher`-Port + `LocalFileLauncher`** (ADR-060 P.3, ShellExecute) — PDF-Bearbeitung passiert bewusst extern, nie in-app. (Commit `5c782ef`)
+
+---
+
+## [v0.28.111] — 2026-08-26
+
+### Docs: ADR-062 Zentraler PDF-Render-Port
+
+ADR-062 (IPdfRenderService: Port in Domain, Implementierung im App-Root, TFM-Bump nur App; PDF-Bearbeitung = eigener Port post-V1) + ADR-Inhaltsverzeichnis-Nachzug 059–061 + INDEX-Routing. (Commit `a03f90d`)
+
+---
+
+## [v0.28.110] — 2026-08-26
+
+### Feature: BPM-111.06 Slice A2+A3 — Panel-Edit + Bezeichnung
+
+Detail-Panel: **Plannummer/Index editierbar**; „Re-Match anwenden" behandelt den Edit als Identitätswechsel (Spez 111.06) — Neuklassifikation via `RematchByNumber`, Zeile wird im Grid ersetzt, stale Pending-Zuordnung der alten Identität verworfen. Neu: Feld **„Bezeichnung"** fließt end-to-end (`PendingAssignment.Title` → `ClassifiedImportFile.Title` → `plan_documents.title`, vorher hart `""`) — nur für Zeilen, die ein neues Dokument anlegen; Updates behalten den Bestandstitel. Titel-Edits nach der Radial-Zuordnung werden beim Bestätigen synchronisiert. (Commit `e41b343`)
+
+---
+
+## [v0.28.109] — 2026-08-26
+
+### Refactor: BPM-111.06 Slice A2 — Match-Kern pure
+
+Klassifikations-Kern des `ManualFirstCaptureService` als statische, pure **`MatchByNumber`** extrahiert (Bucket B/C/D) + Instanz-`RematchByNumber` als Einzel-Re-Match-Fundament für den Panel-Edit. Verhalten unverändert (alle Bestandstests grün), 6 neue Unit-Tests. (Commit `81cb399`)
+
+---
+
+## [v0.28.108] — 2026-07-02
+
+### Fix: BPM-111.06 Slice A1 — NRE bei „Update übernehmen"
+
+Nach einem Import konnte „⬆ Update übernehmen" crashen: `CommandParameter="{Binding Row}"` kam beim DataContext-Wechsel des ContentControls als `null` an. `TakeUpdate` arbeitet jetzt parameterlos auf `SelectedDetail.Row` (null-sicher). Hinweis: Commit trägt versehentlich die .107-Message. (Commit `f13301f`)
+
+---
+
+## [v0.28.107] — 2026-07-02
+
+### Feature: BPM-111.06 Slice A1 — Detail-Panel MVVM
+
+Das Detail-Panel im Tab „Manuell sortieren" wechselt von Code-Behind-Text auf MVVM: neues **`CaptureDetailViewModel`** (`SelectedDetail`) mit Dateiname, Zielordner, Plannummer/Index, Reason-Hinweis, **Index-Historie** aus `plan_revisions` (`GetRevisionsForDocument`) und „Update übernehmen"-Sichtbarkeit; XAML bindet via ContentControl-DataTemplate. (Commit `ba87926`)
+
+---
+
+## [v0.28.106] — 2026-07-02
+
+### Feature: BPM-111.05 Slice 3d — Recovery-Check vor „Import bestätigen"
+
+Der manuelle Bestätigen-Pfad (Sticky-Radial) bekommt denselben Schutz wie der Profil-Import: **`PreImportRecoveryCheck`** (pure Gate, keine DB/Disk) + `PreImportCheckResult`; `ConfirmImportAsync` blockiert bei pending Import (App-Crash, gesyncter Fremd-Stand) mit ⛔-Status, bis die Recovery-Strecke (BPM-016) gelaufen ist. 3 Unit-Tests. Damit ist BPM-111.05 funktional komplett (Sticky-Radial ersetzt die alten Slices 3b/3c). (Commit `ea7ab8e`)
+
+---
+
+## [v0.28.105] — 2026-07-02
+
+### Docs: CHANGELOG v0.28.100–.104
+
+CHANGELOG-Einträge .100–.104 (Sticky-Radial A/B/C + Mockup-Spez) nachgezogen. (Commit `cc09c00`)
+
+---
+
 ## [v0.28.104] — 2026-07-02
 
 ### Feature: BPM-111.05 Sticky-Radial Slice C — Farbrampe

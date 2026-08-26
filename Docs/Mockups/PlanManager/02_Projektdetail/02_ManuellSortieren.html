@@ -79,12 +79,13 @@ WORKFLOW (BPM-111.04):
   released_at) + "Zuweisen als Segment" DYNAMISCH aus dem Segmenttyp-Katalog
   (ISegmentTypeCatalog/BPM-108, inkl. benutzerdefinierter Typen). KEIN OCR —
   Textebene vorausgesetzt; ohne Textebene Hinweis + manuelle Eingabe.
+  (Demo hier: Klick auf den Änderungstext markiert, Rechtsklick = Zuweisen.)
 ═══════════════════════════════════════════════════════════════════════════
 -->
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:#111;display:flex;justify-content:center;align-items:flex-start;gap:8px;padding:40px;font-family:'Segoe UI',sans-serif}
-  .shell{background:#1E1E1E;border-radius:10px;overflow:hidden;border:1px solid #2D2D30;font-size:13px;color:#CCCCCC;display:flex;flex-direction:column;width:1240px;min-height:680px}
+  .shell{background:#1E1E1E;border-radius:10px;overflow:hidden;border:1px solid #2D2D30;font-size:13px;color:#CCCCCC;display:flex;flex-direction:column;width:1460px;min-height:680px}
   @keyframes ringIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
   .ringAnim{transform-origin:260px 260px;animation:ringIn 140ms ease-out}
   .tab{display:inline-block;border-bottom:3px solid transparent;margin-bottom:-1px;padding:12px 20px;font-size:13px;font-weight:500;color:#858585;cursor:pointer;line-height:1;user-select:none}
@@ -104,8 +105,10 @@ WORKFLOW (BPM-111.04):
   .ub:disabled{opacity:.35;cursor:default}
   .cmi{padding:8px 14px;color:#CCC;font-size:13px;cursor:pointer;display:flex;gap:10px;align-items:center;user-select:none}
   .cmi:hover{background:#04395E;color:#FFF}
+  .cmh{padding:4px 14px;color:#858585;font-size:10px;text-transform:uppercase;letter-spacing:.4px;user-select:none}
   .tbx{display:inline-block;background:#3C3C3C;color:#FFF;height:26px;line-height:26px;border-radius:3px;cursor:pointer;font-size:12px;padding:0 10px;user-select:none}
   .tbx:hover{background:#4a4a4a}
+  .tbx.on{background:#04395E}
   table{border-collapse:collapse;width:100%}
   td{border-top:1px solid #2D2D30}
 </style>
@@ -136,15 +139,15 @@ WORKFLOW (BPM-111.04):
 
 <div id="hint" style="padding:7px 16px;background:#1E1E1E;border-bottom:1px solid #2D2D30;font-size:12px;color:#0078D4"></div>
 
-<!-- Content -->
+<!-- Content: Tabelle | Detail-Panel (320) | Vorschau-Panel (einblendbar) -->
 <div id="frame" style="position:relative;display:flex;flex:1;min-height:0">
 <div style="flex:1;padding:12px 16px;min-width:0;overflow:auto">
 <table id="tbl" style="font-size:13px"></table>
 <div id="legend" style="margin-top:10px;font-size:11px;display:flex;gap:18px"></div>
 </div>
 
-<!-- Detail-Panel -->
-<div style="width:260px;background:#252526;border-left:1px solid #2D2D30;padding:12px 14px;font-size:13px;flex-shrink:0;overflow:auto">
+<!-- Detail-Panel (Teil 47: 320px, Historie 3-spaltig immer sichtbar) -->
+<div style="width:320px;background:#252526;border-left:1px solid #2D2D30;padding:12px 14px;font-size:13px;flex-shrink:0;overflow:auto">
 <div style="color:#858585;font-size:11px;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Detail-Panel</div>
 <div id="dEdit"><div style="color:#5a5a5a;font-size:12px">Keine Auswahl</div></div>
 <div id="dHist"></div>
@@ -154,12 +157,30 @@ WORKFLOW (BPM-111.04):
 <button class="btn" style="width:100%;margin-top:6px" onclick="clearPend()">Pending verwerfen</button>
 </div>
 
+<!-- Vorschau-Panel (Teil 47 Variante B: integriert rechts aussen, ADR-062/063) -->
+<div id="pvPanel" style="display:none;width:460px;flex-shrink:0;background:#1A1A1B;border-left:1px solid #2D2D30;flex-direction:column">
+<div style="display:flex;align-items:center;gap:5px;padding:6px 10px;background:#252526;border-bottom:1px solid #2D2D30">
+<span style="color:#858585;font-size:11px;text-transform:uppercase;letter-spacing:.4px;flex:1">Vorschau</span>
+<span class="tbx" style="padding:0 8px">&#9664;</span><span style="color:#858585;font-size:12px">1/1</span><span class="tbx" style="padding:0 8px">&#9654;</span>
+<span class="tbx on" onclick="kopfView()">Plankopf</span>
+<span class="tbx" onclick="fitView()">Blatt</span>
+<span class="tbx" onclick="zoom(1.25)">+</span>
+<span class="tbx" onclick="zoom(0.8)">&minus;</span>
+<span class="tbx" onclick="pvOpenExt()" title="In Standard-App &ouml;ffnen">&#8599;</span>
+<span onclick="closePv()" style="color:#858585;cursor:pointer;font-size:14px;padding:0 4px">&#10005;</span>
+</div>
+<div style="flex:1;background:#111;display:flex;align-items:center;justify-content:center;padding:8px;min-height:0">
+<svg id="pvSvg" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"></svg>
+</div>
+<div id="pvStatus" style="padding:6px 12px;background:#252526;border-top:1px solid #2D2D30;font-size:11px;color:#858585">Klick auf Text = markieren &middot; Rechtsklick = Zuweisen &middot; Rad = Zoom &middot; Mitteltaste = Pan</div>
+</div>
+
 <!-- Radial-Overlay -->
 <div id="ovl" style="position:absolute;display:none;z-index:50;pointer-events:none"><svg id="radial" viewBox="0 0 520 520" width="500" height="500"></svg></div>
 <!-- Drag-Ghost -->
 <div id="ghost" style="position:absolute;display:none;z-index:60;pointer-events:none;background:#04395E;border:1px solid #0078D4;border-radius:3px;padding:5px 10px;color:#FFF;font-size:12px;white-space:nowrap;align-items:center;gap:6px">&#128196; <span id="ghostTxt"></span></div>
 <!-- Kontextmenü -->
-<div id="cmenu" style="position:absolute;display:none;z-index:70;background:#252526;border:1px solid #3C3C3C;border-radius:4px;padding:4px 0;min-width:210px"></div>
+<div id="cmenu" style="position:absolute;display:none;z-index:70;background:#252526;border:1px solid #3C3C3C;border-radius:4px;padding:4px 0;min-width:230px"></div>
 <!-- Anlage-Dialog -->
 <div id="addBox" style="position:absolute;display:none;z-index:90;left:50%;top:42%;transform:translate(-50%,-50%);background:#252526;border:1px solid #0078D4;border-radius:4px;padding:16px;width:290px">
 <div id="addTitle" style="color:#FFF;font-size:14px;font-weight:500;margin-bottom:8px"></div>
@@ -178,35 +199,12 @@ WORKFLOW (BPM-111.04):
 </div>
 </div>
 
-<!-- Angedocktes Vorschau-Fenster (rechts außen, eigenes Window) -->
-<div id="pvWin" style="display:none;width:360px;flex-shrink:0;background:#1E1E1E;border:1px solid #3C3C3C;border-radius:10px;overflow:hidden;font-family:'Segoe UI',sans-serif;user-select:none;flex-direction:column;min-height:560px">
-<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:#252526;border-bottom:1px solid #2D2D30">
-<span style="color:#0078D4;font-size:14px">&#128065;</span>
-<span id="pvTitle" style="color:#FFF;font-size:12px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Vorschau</span>
-<span onclick="closePv()" style="color:#858585;cursor:pointer;font-size:14px;padding:0 4px">&#10005;</span>
-</div>
-<div style="display:flex;gap:4px;padding:8px 12px;background:#1E1E1E;border-bottom:1px solid #2D2D30;flex-wrap:wrap">
-<div class="tbx" onclick="kopfView()">Plankopf</div>
-<div class="tbx" onclick="fitView()">Ganzes Blatt</div>
-<div class="tbx" onclick="zoom(1.25)">+</div>
-<div class="tbx" onclick="zoom(0.8)">&minus;</div>
-<div class="tbx" onclick="pan(-60,0)">&larr;</div>
-<div class="tbx" onclick="pan(60,0)">&rarr;</div>
-<div class="tbx" onclick="pan(0,-50)">&uarr;</div>
-<div class="tbx" onclick="pan(0,50)">&darr;</div>
-</div>
-<div style="flex:1;background:#111;display:flex;align-items:center;justify-content:center;padding:8px">
-<svg id="pvSvg" width="100%" height="460" preserveAspectRatio="xMidYMid meet"></svg>
-</div>
-<div style="padding:6px 14px;background:#252526;border-top:1px solid #2D2D30;font-size:11px;color:#858585">Angedocktes Vorschau-Fenster &middot; PDF via Windows.Data.Pdf &middot; DWG: gepaarte PDF</div>
-</div>
-
 <script>
 var FILES=[
 {id:1,n:'5998-200_EG_Polierplan.dwg',s:'144 KB',g:'EG',t:'Polierplan',nr:'5998-200',idx:'—',bez:'Polierplan EG'},
 {id:2,n:'5998-201_OG1_Polierplan.dwg',s:'147 KB',g:'OG1',t:'Polierplan',nr:'5998-201',idx:'—',bez:'Polierplan OG1'},
 {id:3,n:'5998-203_OG3_Polierplan.dwg',s:'148 KB',g:'OG3',t:'Polierplan',nr:'5998-203',idx:'—',bez:'Polierplan OG3'},
-{id:5,n:'5998-100-B_KG_Polierplan.dwg',s:'151 KB',kind:'update',newIdx:'B',nr:'5998-100',idx:'B',bez:'Polierplan KG',target:'Pläne/Polierplan/Haus 1/KG/',hist:[{i:'A',d:'12.05.2026'},{i:'— (Erstausgabe)',d:'02.04.2026'}]},
+{id:5,n:'5998-100-B_KG_Polierplan.dwg',s:'151 KB',kind:'update',newIdx:'B',newD:'heute',newC:'',nr:'5998-100',idx:'B',bez:'Polierplan KG',target:'Pläne/Polierplan/Haus 1/KG/',hist:[{i:'A',d:'12.05.2026',c:'Seilsicherungssystem durch Auflastgeländer ersetzt'},{i:'—',d:'02.04.2026',c:'Erstausgabe'}]},
 {id:6,n:'B-101_Bewehrung_OG1.pdf',s:'98 KB',g:'OG1',t:'Bewehrung',nr:'B-101',idx:'—',bez:'Bewehrung Decke OG1'},
 {id:7,n:'FT_W04_Wandelemente_H2.pdf',s:'204 KB',g:'',t:'Fertigteile',nr:'FT-W04',idx:'—',bez:'Wandelemente Haus 2'},
 {id:8,n:'BB_2026-04-15_Baubesprechung.pdf',s:'412 KB',g:'',t:'Protokolle',nr:'',idx:'',bez:'Baubesprechung 15.04.'},
@@ -218,7 +216,8 @@ var ARCHIV=[
 {f:{id:103,n:'BB_2026-03-20_Baubesprechung.pdf',s:'388 KB',g:'',t:'Protokolle',nr:'',idx:'',bez:'Baubesprechung 20.03.'},target:'Pläne/Protokolle/Baubesprechung/',date:'20.03.2026',last:false},
 {f:{id:104,n:'S-190_Schalung_EG.pdf',s:'121 KB',g:'EG',t:'Schalung',nr:'S-190',idx:'—',bez:'Schalung Decke EG'},target:'Pläne/Schalung/Haus 2/EG/',date:'09.06.2026',last:true},
 {f:{id:105,n:'B-099_Bewehrung_EG.pdf',s:'102 KB',g:'EG',t:'Bewehrung',nr:'B-099',idx:'—',bez:'Bewehrung Decke EG'},target:'Pläne/Bewehrung/Haus 2/EG/',date:'09.06.2026',last:true}];
-var sel=new Set(),pend={},TAB='neu',pvId=null,vb={x:500,y:415,w:356,h:195};
+var sel=new Set(),pend={},TAB='neu',pvId=null,vb={x:500,y:320,w:356,h:270},pvSel=false;
+var SEGMENTE=['Plannummer','Planindex','Bezeichnung','Planart','Datum','Bauteil','Geschoss'];
 var TYPEN=[{n:'Polierplan',c:'#185FA5'},{n:'Statik',c:'#534AB7'},{n:'Bewehrung',c:'#993C1D'},{n:'Schalung',c:'#1F7280'},{n:'Architektur',c:'#0F6E56'},{n:'Fertigteile',c:'#6E6E6E',sub:'cat'},{n:'Protokolle',c:'#555555',sub:'cat'},{n:'Mehr …',c:'#3C3C3C',m:1}];
 var BAUTEILE=[{n:'Haus 1'},{n:'Haus 2'},{n:'Haus 3'},{n:'TG'},{n:'Allgemein'},{n:'Aussenanl.'}];
 var CATMAP={'Protokolle':['Baubesprechung','Bautagesbericht','Sicherheit','Abnahme'],'Fertigteile':['Wände','Decken','Stiegen']};
@@ -228,6 +227,7 @@ var DWELL=110,HOLD=260,vis={bau:false,ges:false},addCtx=null;
 var ADD={n:'+ Neu…',add:1};
 var rotOff={typ:0,bau:0,ges:0};
 var CX=260,RING1=[72,138],RING2=[146,204],RING3=[212,256],CR=62;
+var SELTXT='erg. Deckendurchbruch 20/20cm (S2)';
 function byId(id){return FILES.find(function(f){return f.id===id;});}
 function arcById(id){return ARCHIV.find(function(a){return a.f.id===id;});}
 function anyById(id){return byId(id)||(arcById(id)||{}).f;}
@@ -244,13 +244,32 @@ grade(base);return applyOff(base,rotOff.bau).concat([ADD]);}
 function ring3Items(){if(!R.bau||isCat(R.typ))return[];
 var base=(GESCH_MAP[R.bau]||[]).map(function(g){return{n:g};});if(!base.length)return[ADD];
 grade(base);return applyOff(base,rotOff.ges).concat([ADD]);}
-function sheet(f){return '<rect x="0" y="0" width="840" height="594" fill="#F5F4EF"/>'+
+function sheet(f){var isUpd=f.kind==='update';
+return '<rect x="0" y="0" width="840" height="594" fill="#F5F4EF"/>'+
 '<rect x="14" y="14" width="812" height="566" fill="none" stroke="#999" stroke-width="2"/>'+
-'<rect x="70" y="70" width="430" height="310" fill="none" stroke="#444" stroke-width="5"/>'+
-'<line x1="70" y1="225" x2="500" y2="225" stroke="#444" stroke-width="3"/>'+
-'<line x1="280" y1="70" x2="280" y2="380" stroke="#444" stroke-width="3"/>'+
-'<rect x="120" y="110" width="60" height="40" fill="none" stroke="#777" stroke-width="2"/>'+
-'<rect x="330" y="260" width="80" height="50" fill="none" stroke="#777" stroke-width="2"/>'+
+'<rect x="70" y="70" width="430" height="260" fill="none" stroke="#444" stroke-width="5"/>'+
+'<line x1="70" y1="200" x2="500" y2="200" stroke="#444" stroke-width="3"/>'+
+'<line x1="280" y1="70" x2="280" y2="330" stroke="#444" stroke-width="3"/>'+
+'<rect x="120" y="105" width="60" height="40" fill="none" stroke="#777" stroke-width="2"/>'+
+'<rect x="330" y="240" width="80" height="50" fill="none" stroke="#777" stroke-width="2"/>'+
+'<rect x="530" y="336" width="296" height="92" fill="#FFF" stroke="#333" stroke-width="2"/>'+
+'<line x1="530" y1="354" x2="826" y2="354" stroke="#333" stroke-width="1"/>'+
+'<line x1="568" y1="336" x2="568" y2="428" stroke="#888" stroke-width="0.5"/>'+
+'<line x1="634" y1="336" x2="634" y2="428" stroke="#888" stroke-width="0.5"/>'+
+'<line x1="660" y1="336" x2="660" y2="428" stroke="#888" stroke-width="0.5"/>'+
+'<text x="536" y="349" font-size="10" fill="#333" font-weight="500">Revision</text>'+
+'<text x="574" y="349" font-size="10" fill="#333" font-weight="500">Datum</text>'+
+'<text x="639" y="349" font-size="10" fill="#333" font-weight="500">gez.</text>'+
+'<text x="666" y="349" font-size="10" fill="#333" font-weight="500">Änderung</text>'+
+(isUpd?'<text x="545" y="372" font-size="10" fill="#222">A</text>'+
+'<text x="574" y="372" font-size="10" fill="#222">04.12.2025</text>'+
+'<text x="640" y="372" font-size="10" fill="#222">gp</text>'+
+'<text x="666" y="372" font-size="9" fill="#222">Seilsicherung → Auflastgeländer</text>'+
+'<text x="545" y="390" font-size="10" fill="#222">B</text>'+
+'<text x="574" y="390" font-size="10" fill="#222">20.01.2026</text>'+
+'<text x="640" y="390" font-size="10" fill="#222">hf</text>'+
+(pvSel?'<rect x="664" y="381" width="160" height="12" fill="#78b4e6"/>':'')+
+'<text id="selTxt" x="666" y="390" font-size="9" fill="#111" style="cursor:text;pointer-events:auto">'+esc(SELTXT)+'</text>':'')+
 '<rect x="530" y="440" width="296" height="140" fill="#FFF" stroke="#333" stroke-width="2"/>'+
 '<line x1="530" y1="468" x2="826" y2="468" stroke="#333" stroke-width="1"/>'+
 '<line x1="530" y1="502" x2="826" y2="502" stroke="#333" stroke-width="1"/>'+
@@ -264,11 +283,14 @@ function sheet(f){return '<rect x="0" y="0" width="840" height="594" fill="#F5F4
 '<text x="688" y="560" font-size="10" fill="#666">Datum 10.06.2026</text>';}
 function pvDraw(){if(!pvId)return;var f=anyById(pvId);if(!f){closePv();return;}
 var s=document.getElementById('pvSvg');
-s.setAttribute('viewBox',vb.x+' '+vb.y+' '+vb.w+' '+vb.h);s.innerHTML=sheet(f);}
-function openPv(id){pvId=id;document.getElementById('pvWin').style.display='flex';
-document.getElementById('pvTitle').textContent='Vorschau — '+anyById(id).n;kopfView();}
-function closePv(){pvId=null;document.getElementById('pvWin').style.display='none';}
-function kopfView(){vb={x:500,y:415,w:356,h:195};pvDraw();}
+s.setAttribute('viewBox',vb.x+' '+vb.y+' '+vb.w+' '+vb.h);s.innerHTML=sheet(f);
+var st=document.getElementById('selTxt');
+if(st)st.addEventListener('pointerdown',function(e){if(e.button!==0)return;e.stopPropagation();pvSel=!pvSel;pvDraw();
+document.getElementById('pvStatus').textContent=pvSel?'„'+SELTXT+'" markiert · Rechtsklick = Zuweisen':'Klick auf Text = markieren · Rechtsklick = Zuweisen · Rad = Zoom · Mitteltaste = Pan';});}
+function openPv(id){pvId=id;pvSel=false;document.getElementById('pvPanel').style.display='flex';kopfView();}
+function closePv(){pvId=null;pvSel=false;document.getElementById('pvPanel').style.display='none';}
+function pvOpenExt(){if(pvId)document.getElementById('dMsg').textContent='▶ würde '+anyById(pvId).n+' in Standard-App öffnen (IFileLauncher)';}
+function kopfView(){vb={x:500,y:320,w:356,h:270};pvDraw();}
 function fitView(){vb={x:0,y:0,w:840,h:594};pvDraw();}
 function zoom(f){var nw=vb.w/f,nh=vb.h/f;vb.x+=(vb.w-nw)/2;vb.y+=(vb.h-nh)/2;vb.w=nw;vb.h=nh;pvDraw();}
 function pan(dx,dy){vb.x+=dx*(vb.w/840);vb.y+=dy*(vb.h/594);pvDraw();}
@@ -277,7 +299,7 @@ function render(){
 var tn=document.getElementById('tabNeu'),ta=document.getElementById('tabArc');
 tn.className='tab'+(TAB==='neu'?' on':'');ta.className='tab'+(TAB==='archiv'?' on':'');
 tn.textContent='Neue Pläne ('+FILES.length+')';ta.textContent='Archiv ('+ARCHIV.length+')';
-document.getElementById('hint').innerHTML=TAB==='neu'?'Kurz <b>halten</b> = Radial einrasten (Taste loslassen ok) · Maus ziehen = navigieren · <b>Mausrad</b> = Ring 2 drehen · <b>Linksklick</b> = zuordnen · <b>Rechtsklick</b> = abbrechen · + Neu… in jedem Ring':'Kurz <b>halten</b> = Radial (Verschieben) · <b>Mausrad</b>/<b>Links</b>/<b>Rechtsklick</b> wie links · ↩ Undo nur letzter Import (Journal)';
+document.getElementById('hint').innerHTML=TAB==='neu'?'Kurz <b>halten</b> = Radial einrasten (Taste loslassen ok) · Maus ziehen = navigieren · <b>Mausrad</b> = Ring 2 drehen · <b>Linksklick</b> = zuordnen · <b>Rechtsklick</b> = abbrechen bzw. Kontextmenü · + Neu… in jedem Ring':'Kurz <b>halten</b> = Radial (Verschieben) · <b>Mausrad</b>/<b>Links</b>/<b>Rechtsklick</b> wie links · ↩ Undo nur letzter Import (Journal)';
 document.getElementById('legend').innerHTML=TAB==='neu'?'<span style="color:#F0AD4E">■ Pending (zugewiesen, nicht bestätigt)</span><span style="color:#3794FF">■ Update — bekannter Plan, neuer Index</span><span style="color:#5a5a5a">■ offen</span>':'<span style="color:#4EC94E">■ letzter Import (Undo möglich)</span><span style="color:#5a5a5a">■ ältere Importe</span>';
 if(TAB==='neu')tblNeu();else tblArc();
 var pc=Object.keys(pend).length;
@@ -310,6 +332,15 @@ ARCHIV=ARCHIV.filter(function(x){return x.f.id!==id;});
 FILES.push(a.f);if(pvId===id)closePv();
 document.getElementById('dMsg').textContent='↩ '+a.f.n+' zurück in den Eingang (Undo-Journal)';
 render();}
+function histRows(f,a){
+var rows='';
+if(f.kind==='update'){
+rows+='<tr style="background:#04395E"><td style="padding:4px 6px;border:none;color:#85b8d9;vertical-align:top">'+f.newIdx+' (neu)</td><td style="padding:4px 6px;border:none;color:#85b8d9;vertical-align:top">'+f.newD+'</td><td style="padding:4px 6px;border:none;color:#FFF">'+esc(f.newC||'—')+'</td></tr>';
+f.hist.forEach(function(r){rows+='<tr><td style="padding:4px 6px;border:none;color:#FFF;vertical-align:top">'+r.i+'</td><td style="padding:4px 6px;border:none;color:#858585;vertical-align:top">'+r.d+'</td><td style="padding:4px 6px;border:none;color:'+(r.c==='Erstausgabe'?'#858585':'#CCC')+'">'+esc(r.c)+'</td></tr>';});}
+else{
+var ix=(f.idx&&f.idx!=='—'&&f.idx!=='')?f.idx:'—';
+rows+='<tr><td style="padding:4px 6px;border:none;color:#FFF">'+ix+'</td><td style="padding:4px 6px;border:none;color:#858585">'+(a?a.date:'heute')+'</td><td style="padding:4px 6px;border:none;color:#858585">Erstausgabe</td></tr>';}
+return rows;}
 function panel(){var ed=document.getElementById('dEdit'),hd=document.getElementById('dHist');hd.innerHTML='';
 if(sel.size===1){var id=sel.values().next().value;var f=anyById(id);
 if(!f){ed.innerHTML='';return;}
@@ -320,11 +351,12 @@ ed.innerHTML='<div style="display:grid;grid-template-columns:1fr 64px;gap:8px;ma
 '<div style="margin-bottom:8px"><div class="lbl">Bezeichnung</div><input class="inp" value="'+esc(f.bez)+'" onchange="updF('+f.id+',\'bez\',this.value)"></div>'+
 (a?'<div style="color:#858585;font-size:12px">Ordner: <span style="color:#CCC">'+a.target+'</span></div><div style="color:#858585;font-size:12px;margin-bottom:8px">Hinzugefügt: <span style="color:'+(a.last?'#4EC94E':'#CCC')+'">'+a.date+'</span></div>':'')+
 (pend[f.id]?'<div style="color:#F0AD4E;font-size:12px;margin-bottom:8px">⏳ '+pend[f.id]+'</div>':'');
-if(f.kind==='update'&&f.hist){var rows=f.hist.map(function(r){return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-top:1px solid #2D2D30"><span style="color:#CCC">Index '+r.i+'</span><span style="color:#858585">'+r.d+'</span></div>';}).join('');
-hd.innerHTML='<div class="lbl">Index-Historie · '+f.nr+' · Haus 1/KG</div>'+
-'<div style="background:#2D2D30;border-radius:3px;padding:6px 10px;margin-bottom:8px;font-size:12px">'+
-'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#3794FF">Index '+f.newIdx+' (neu)</span><span style="color:#3794FF">heute</span></div>'+rows+'</div>'+
-(pend[f.id]?'':'<button onclick="takeUpdate('+f.id+')" style="width:100%;background:#0a3a5e;border:1px solid #3794FF;color:#FFF;font-size:12px;padding:7px;border-radius:3px;cursor:pointer;margin-bottom:8px;font-family:inherit">⬆ Update übernehmen → bekannter Ordner</button>');}}
+var ctx=f.kind==='update'?' · Haus 1/KG':(a?' · '+a.target.replace('Pläne/',''):'');
+hd.innerHTML='<div class="lbl">Index-Historie · '+(f.nr||'—')+ctx+'</div>'+
+'<div style="background:#2D2D30;border-radius:3px;padding:4px 4px;margin-bottom:8px;font-size:12px">'+
+'<table style="width:100%;font-size:11px"><tr style="color:#858585;font-size:10px;text-transform:uppercase;letter-spacing:.3px"><td style="padding:2px 6px;border:none;width:56px">Revision</td><td style="padding:2px 6px;border:none;width:72px">Datum</td><td style="padding:2px 6px;border:none">Änderung</td></tr>'+
+histRows(f,a)+'</table></div>'+
+(f.kind==='update'&&!pend[f.id]?'<button onclick="takeUpdate('+f.id+')" style="width:100%;background:#0a3a5e;border:1px solid #3794FF;color:#FFF;font-size:12px;padding:7px;border-radius:3px;cursor:pointer;margin-bottom:8px;font-family:inherit">⬆ Update übernehmen → bekannter Ordner</button>':'');}
 else ed.innerHTML='<div style="color:#5a5a5a;font-size:12px">'+(sel.size?sel.size+' Datei(en) ausgewählt — halten &amp; ziehen':'Keine Auswahl')+'</div>';}
 function updF(id,k,v){var f=anyById(id);if(f){f[k]=v;if(pvId===id)pvDraw();}}
 function takeUpdate(id){var f=byId(id);if(f)pend[id]=f.target;render();}
@@ -353,14 +385,35 @@ applyTarget(path,addCtx.files,addCtx.move);
 document.getElementById('dMsg').textContent='✓ "'+name+'" in Projektdaten angelegt + Ordner erstellt';
 closeAdd();render();}
 var cm=document.getElementById('cmenu');
+function showCm(x,y,html){var fr=document.getElementById('frame').getBoundingClientRect();
+cm.innerHTML=html;
+cm.style.left=Math.min(x-fr.left,fr.width-260)+'px';cm.style.top=Math.min(y-fr.top,fr.height-320)+'px';cm.style.display='block';}
 document.getElementById('tbl').addEventListener('contextmenu',function(e){var tr=e.target.closest('tr[data-i],tr[data-a]');if(!tr)return;e.preventDefault();
 var id=+(tr.dataset.i||tr.dataset.a);sel.clear();sel.add(id);render();
-var fr=document.getElementById('frame').getBoundingClientRect();
-cm.innerHTML='<div class="cmi" onclick="cmOpen('+id+')">\u{1F4C2} Datei öffnen</div>'+
-'<div class="cmi" onclick="cmPv('+id+')">\u{1F441} Vorschau (rechts andocken)</div>';
-cm.style.left=Math.min(e.clientX-fr.left,fr.width-220)+'px';cm.style.top=Math.min(e.clientY-fr.top,fr.height-80)+'px';cm.style.display='block';});
-function cmOpen(id){cm.style.display='none';document.getElementById('dMsg').textContent='▶ würde '+anyById(id).n+' in Standard-App öffnen';}
+showCm(e.clientX,e.clientY,'<div class="cmi" onclick="cmPv('+id+')">\u{1F441} Vorschau</div>'+
+'<div style="border-top:1px solid #2D2D30;margin:4px 0"></div>'+
+'<div class="cmi" onclick="cmOpen('+id+')">\u{1F4C2} Datei öffnen</div>'+
+'<div class="cmi" onclick="cmRev('+id+')">\u{1F4C1} Im Explorer zeigen</div>');});
+function cmOpen(id){cm.style.display='none';document.getElementById('dMsg').textContent='▶ würde '+anyById(id).n+' in Standard-App öffnen (IFileLauncher)';}
+function cmRev(id){cm.style.display='none';document.getElementById('dMsg').textContent='▶ würde '+anyById(id).n+' im Explorer zeigen (IFileLauncher)';}
 function cmPv(id){cm.style.display='none';openPv(id);}
+document.getElementById('pvSvg').addEventListener('contextmenu',function(e){e.preventDefault();
+if(!pvSel){document.getElementById('pvStatus').textContent='Erst Text anklicken (markieren), dann Rechtsklick zum Zuweisen';return;}
+var segs=SEGMENTE.map(function(s){return '<div class="cmi" onclick="assignPv(\''+s+'\')">'+s+'</div>';}).join('');
+showCm(e.clientX,e.clientY,'<div style="padding:6px 14px;color:#858585;font-size:11px;border-bottom:1px solid #2D2D30;font-style:italic">„'+SELTXT+'"</div>'+
+'<div class="cmh">Revision · Index B</div>'+
+'<div class="cmi" onclick="assignPv(\'Änderungshinweis\')">Änderungshinweis übernehmen</div>'+
+'<div class="cmi" onclick="assignPv(\'Index-Datum\')">Index-Datum übernehmen</div>'+
+'<div class="cmh" style="border-top:1px solid #2D2D30;margin-top:4px;padding-top:8px">Zuweisen als Segment (Katalog BPM-108)</div>'+segs+
+'<div class="cmi" style="color:#858585">Weitere Segmenttypen …</div>'+
+'<div style="border-top:1px solid #2D2D30;margin:4px 0"></div>'+
+'<div class="cmi" style="color:#858585">Kopieren</div>');});
+function assignPv(target){cm.style.display='none';if(!pvId)return;var f=anyById(pvId);
+if(target==='Änderungshinweis'&&f.kind==='update'){f.newC=SELTXT;}
+else if(target==='Bezeichnung'){f.bez=SELTXT;}
+else if(target==='Index-Datum'&&f.kind==='update'){f.newD='20.01.2026';}
+document.getElementById('dMsg').textContent='✓ „'+SELTXT.substring(0,26)+'…" → '+target+' übernommen';
+pvSel=false;pvDraw();render();}
 document.addEventListener('pointerdown',function(e){if(!e.target.closest('#cmenu'))cm.style.display='none';},true);
 function arcP(r0,r1,a0,a1){var g=0.012;a0+=g;a1-=g;function p(r,a){return (CX+r*Math.cos(a)).toFixed(1)+' '+(CX+r*Math.sin(a)).toFixed(1);}var la=(a1-a0)>Math.PI?1:0;return 'M'+p(r0,a0)+' A'+r0+' '+r0+' 0 '+la+' 1 '+p(r0,a1)+' L'+p(r1,a1)+' A'+r1+' '+r1+' 0 '+la+' 0 '+p(r1,a0)+' Z';}
 function ring(svg,rr,items,ringId,selName,candName,anim){var n=items.length;if(!n)return;var full=2*Math.PI,st=-Math.PI/2,r0=rr[0],r1=rr[1];

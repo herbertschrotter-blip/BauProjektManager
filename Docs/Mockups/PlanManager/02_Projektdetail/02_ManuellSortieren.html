@@ -65,7 +65,20 @@ WORKFLOW (BPM-111.04):
   Start = Plankopf (rechte untere Blattecke, A4-Ausschnitt); Mausrad = Zoom
   (cursorzentriert), mittlere Maustaste = Pan; Seitenwechsel behält Zoom.
   PDF-Rendering via IPdfRenderService/ADR-062 (Windows.Data.Pdf, kein
-  Drittanbieter); DWG: gepaarte PDF-Datei anzeigen.
+  Drittanbieter); DWG: gepaarte PDF-Datei anzeigen. Vorschau-Breite wird
+  geräte-lokal gemerkt (device-settings.json uiLayout.planPreviewWidth).
+- DETAIL-PANEL (GEÄNDERT Teil 47): Breite 320px. Editierbare Felder
+  Plannummer / Index / Bezeichnung (Re-Match = Identitätswechsel, Slice A2).
+  INDEX-HISTORIE IMMER sichtbar (auch bei nur einer Version), DREI Spalten
+  nebeneinander: Revision | Datum | Änderung (plan_revisions: plan_index,
+  released_at, change_note NEU). Aktuelle/neue Revision hervorgehoben
+  ("B (neu)"), Erstausgabe als "—"-Zeile. Kopfzeile: Plannummer + Zielkontext.
+- TEXT-ZUWEISUNG aus der Vorschau (BPM-118, ADR-063, PdfPig freigegeben):
+  Rechteck über Text im Plan aufziehen → Rechtsklick → Kontextmenü mit zwei
+  Gruppen: Revisions-Ziele (Änderungshinweis → change_note, Index-Datum →
+  released_at) + "Zuweisen als Segment" DYNAMISCH aus dem Segmenttyp-Katalog
+  (ISegmentTypeCatalog/BPM-108, inkl. benutzerdefinierter Typen). KEIN OCR —
+  Textebene vorausgesetzt; ohne Textebene Hinweis + manuelle Eingabe.
 ═══════════════════════════════════════════════════════════════════════════
 -->
 <style>

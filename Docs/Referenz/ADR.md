@@ -16,7 +16,7 @@ supersedes: []
 - Autorität: source_of_truth
 - Lesen wenn: Neue Architekturentscheidung treffen, bestehende ADR prüfen, Status ändern, Entscheidung nachschlagen
 - Nicht zuständig für: Implementierungs-Details (→ jeweilige Modul-Docs), Code-Standards (→ CODING_STANDARDS.md)
-- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-062)
+- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-063)
 - Pflichtlesen: keine (gezieltes Nachschlagen per ADR-Nummer)
 - Fachliche Invarianten:
   - Statusmodell: Decision Status (Proposed/Accepted/Superseded/Deprecated) getrennt von Implementation Status (Not Started/Partial/Implemented)
@@ -109,6 +109,7 @@ Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheid
 | 060 | Vereinheitlichte Dateisystem-Ports für alle Module | ✅ Entschieden | 2026-06 |
 | 061 | DB als einzige Ordner-Wahrheit + DocumentTargetPathResolver | ✅ Entschieden | 2026-06 |
 | 062 | Zentraler PDF-Render-Port (IPdfRenderService) | ✅ Entschieden | 2026-08 |
+| 063 | PDF-Text-Port (IPdfTextService) + PdfPig-Freigabe | ✅ Entschieden | 2026-08 |
 
 ---
 
@@ -2972,6 +2973,41 @@ Die Plan-Vorschau (BPM-111.06) braucht In-App-PDF-Rendering; die Spez (Mockup 02
 **Betrifft:** ADR-060 (wendet dessen Port-Prinzip auf PDF-Rendering an), ADR-045 (Plankopf-Extraktion post-V1 nutzt ggf. denselben Stream, bleibt eigene Entscheidung), Architektur-Doc (Schichtgrenzen unverändert: Port in Domain, Adapter im Composition Root).
 
 **Referenz:** ClickUp BPM-111.06 / Subtask Slice C (86cahy45b), Teil 47.
+
+---
+
+## ADR-063: PDF-Text-Port (IPdfTextService) + PdfPig-Freigabe
+
+**Datum:** 2026-08-26
+**Status:** ✅ Entschieden (Herbert, Teil 47 — inkl. Library-Freigabe PdfPig)
+**Implementierung:** 🔴 Not Started — geplant als BPM-118
+**Herkunft:** Wunsch Teil 47: Plandaten (Änderungshinweis, Index-Datum, Segmente) direkt aus der PDF-Vorschau per Text-Markieren + Rechtsklick zuweisen, statt sie abzutippen.
+
+**Kontext:**
+
+`Windows.Data.Pdf` (ADR-062) rendert ausschließlich Bitmaps — es gibt keine Textebene im Viewer. Für „Text markieren → zuweisen" braucht es Wort-Text **mit Koordinaten**. CAD-exportierte Pläne haben praktisch immer eine echte PDF-Textebene → **kein OCR nötig** (Entscheidung Herbert). Zuweisungsziele existieren bereits: `plan_revisions.released_at` (Index-Datum, seit BPM-109 vorgesehen) und der Segmenttyp-Katalog aus BPM-108 (`ISegmentTypeCatalog`).
+
+**Entscheidung:**
+
+1. **Port im Domain-Layer:** `IPdfTextService` in `Domain.Interfaces` — z. B. `Task<IReadOnlyList<PdfWord>> GetWordsAsync(Stream pdf, int pageIndex, CancellationToken)`; `PdfWord` = Text + BoundingBox **in mm, rotationsbereinigt** — dasselbe Koordinatensystem wie `PdfPageRender` (ADR-062), damit Viewer-Pixel ↔ PDF-mm eine einzige Umrechnung bleibt.
+2. **Implementierung `PdfPigTextService` in Infrastructure** via **PdfPig** (UglyToad.PdfPig, **MIT — Library-Freigabe Herbert Teil 47**): rein verwaltetes C#, keine nativen DLLs, offline, Wort-/Buchstaben-Koordinaten. Kein Windows-SDK-TFM nötig → Infrastructure bleibt `net10.0`. MIT-Lizenztext wird der App beigelegt (Über/Lizenzen).
+3. **UI-Fluss (BPM-118):** Rechteck-Markieren im Vorschau-Panel → Wörter in der Region einsammeln → Rechtsklick-Kontextmenü mit zwei Gruppen: **Revisions-Ziele** (Änderungshinweis → `plan_revisions.change_note`, Index-Datum → `released_at`) + **„Zuweisen als Segment"** dynamisch aus dem `ISegmentTypeCatalog` (BPM-108, inkl. benutzerdefinierter Typen — nichts hartcodiert).
+4. **Kein OCR:** PDFs ohne Textebene zeigen einen Hinweis, Werte werden manuell getippt. OCR bleibt bewusste post-V1-Option (ADR-045-Umfeld); PdfPig ist zugleich das in ADR-045 vorgesehene Werkzeug für die spätere Plankopf-Extraktion.
+5. **Schema:** `plan_revisions` + `change_note TEXT NOT NULL DEFAULT ''`. **Frühphase:** projektbezogene `planmanager.db` löschen statt Migration (INDEX.md-Frühphasenregel).
+
+**Konsequenzen:**
+
+- Zwei PDF-Engines parallel — bewusst: Rendern (`Windows.Data.Pdf`, App) und Textlesen (PdfPig, Infrastructure) sind getrennte Ports und einzeln austauschbar.
+- Erster konkreter Baustein Richtung ADR-045-Plankopf-Extraktion (gleicher Port, später automatisiert statt manuell markiert).
+- Erste neue Drittanbieter-Library seit Projektregel-Einführung — Freigabeprozess (Herbert) durchlaufen und hier dokumentiert.
+
+**Alternativen verworfen:** iText 7 (AGPL — für Closed-Source-Verkauf teure Kommerzlizenz nötig); PDFium-Wrapper (native DLLs, Deployment-Aufwand, Wrapper-Pflege); PDFsharp (keine verlässlichen Text-Koordinaten); OCR-Ansatz (unnötig bei vorhandener Textebene, deutlich schwergewichtiger).
+
+**DSGVO:** Klasse A — rein lokale Textextraktion, keine externen Verbindungen.
+
+**Betrifft:** ADR-062 (gemeinsames mm-Koordinatensystem), ADR-045 (bekommt sein Extraktions-Werkzeug), ADR-056 (Segmenttypen als Zuweisungsziele), DB-SCHEMA.md (plan_revisions.change_note), Mockup-Spez 02_ManuellSortieren.
+
+**Referenz:** ClickUp BPM-118, Teil 47.
 
 ---
 

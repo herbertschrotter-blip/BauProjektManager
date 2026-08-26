@@ -1,0 +1,76 @@
+<UserControl x:Class="BauProjektManager.PlanManager.Views.PlanPreviewPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             UseLayoutRounding="True"
+             SnapsToDevicePixels="True">
+    <DockPanel Background="{DynamicResource BpmBgBase}">
+        <!-- Panel-Kopf: Caption + kompakte Toolbar + Schließen -->
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource BpmBgSurface}"
+                BorderBrush="{DynamicResource BpmBorderSubtle}"
+                BorderThickness="0,0,0,1"
+                Padding="8,5">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button x:Name="PrevPageButton" Content="◀" Width="24" Padding="0,2"
+                            Style="{DynamicResource BpmButtonGhost}"
+                            Click="OnPrevPageClick"/>
+                    <TextBlock x:Name="PageLabel"
+                               Foreground="{DynamicResource BpmTextSecondary}"
+                               FontSize="{DynamicResource BpmFontSizeCaption}"
+                               VerticalAlignment="Center" Margin="4,0"/>
+                    <Button x:Name="NextPageButton" Content="▶" Width="24" Padding="0,2"
+                            Style="{DynamicResource BpmButtonGhost}"
+                            Click="OnNextPageClick"/>
+                    <Button Content="Plankopf" Padding="8,2" Margin="8,0,0,0"
+                            Style="{DynamicResource BpmButtonGhost}"
+                            Click="OnPlankopfClick"/>
+                    <Button Content="Blatt" Padding="8,2" Margin="4,0,0,0"
+                            Style="{DynamicResource BpmButtonGhost}"
+                            ToolTip="Ganzes Blatt einpassen"
+                            Click="OnFitPageClick"/>
+                    <Button x:Name="OpenExternalButton" Content="↗" Width="26" Padding="0,2" Margin="8,0,0,0"
+                            Style="{DynamicResource BpmButtonGhost}"
+                            ToolTip="In Standard-App öffnen"
+                            Click="OnOpenExternalClick"/>
+                    <Button Content="✕" Width="26" Padding="0,2" Margin="4,0,0,0"
+                            Style="{DynamicResource BpmButtonGhost}"
+                            ToolTip="Vorschau schließen"
+                            Click="OnCloseClick"/>
+                </StackPanel>
+                <TextBlock Text="VORSCHAU"
+                           Foreground="{DynamicResource BpmTextSecondary}"
+                           FontSize="{DynamicResource BpmFontSizeCaption}"
+                           VerticalAlignment="Center"/>
+            </DockPanel>
+        </Border>
+
+        <!-- Statuszeile: Dateiname + Seite + Bedienhinweis -->
+        <TextBlock DockPanel.Dock="Bottom"
+                   x:Name="StatusText"
+                   Foreground="{DynamicResource BpmTextSecondary}"
+                   FontSize="{DynamicResource BpmFontSizeCaption}"
+                   TextTrimming="CharacterEllipsis"
+                   Padding="8,4"/>
+
+        <!-- Blatt-Ansicht: Start = Plankopf (A4 rechts unten) · Mausrad = Zoom · Mitteltaste = Pan -->
+        <ScrollViewer x:Name="ScrollHost"
+                      Background="{DynamicResource BpmBgBase}"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto"
+                      Focusable="False"
+                      PreviewMouseWheel="OnScrollPreviewMouseWheel">
+            <Image x:Name="PageImage"
+                   Stretch="None"
+                   RenderOptions.BitmapScalingMode="HighQuality"
+                   Cursor="Hand"
+                   MouseDown="OnImageMouseDown"
+                   MouseMove="OnImageMouseMove"
+                   MouseUp="OnImageMouseUp">
+                <Image.LayoutTransform>
+                    <ScaleTransform x:Name="ZoomTransform" ScaleX="1" ScaleY="1"/>
+                </Image.LayoutTransform>
+            </Image>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

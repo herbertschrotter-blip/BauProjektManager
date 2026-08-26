@@ -1,5 +1,6 @@
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -10,25 +11,33 @@ using Serilog;
 namespace BauProjektManager.PlanManager.Views;
 
 /// <summary>
-/// PDF-Vorschau-Fenster (BPM-111.06 Slice C1/C2): rendert Seiten über den
-/// zentralen <see cref="IPdfRenderService"/> (ADR-062).
-/// Startansicht = PLANKOPF: rechte untere Blattecke im A4-Ausschnitt (Spez
-/// Mockup 02_ManuellSortieren). Strg+Mausrad = Zoom (cursorzentriert),
-/// Ziehen = Verschieben, ◀/▶ = Seiten, "Ganzes Blatt" = Fit.
-/// "In Standard-App öffnen" delegiert an <see cref="IFileLauncher"/> (ADR-060)
-/// — Bearbeiten passiert bewusst extern, nie in-app.
+/// Integriertes PDF-Vorschau-Panel (BPM-111.06 Slice C, Variante B — Teil 47):
+/// lebt als rechte Spalte im Tab "Manuell sortieren" (Tabelle | Detail-Panel |
+/// Vorschau-Panel), KEIN separates Fenster. Rendert Seiten über den zentralen
+/// <see cref="IPdfRenderService"/> (ADR-062).
+/// Startansicht = PLANKOPF: rechte untere Blattecke im A4-Ausschnitt.
+/// Mausrad = Zoom (cursorzentriert) · mittlere Maustaste = Verschieben ·
+/// ◀/▶ = Seiten (Zoom/Position bleiben) · "Blatt" = Fit.
+/// "↗" öffnet die Datei in der Windows-Standard-App (<see cref="IFileLauncher"/>,
+/// ADR-060) — Bearbeiten passiert bewusst extern, nie in-app.
 /// </summary>
-public partial class PlanPreviewWindow : Window
+public partial class PlanPreviewPanel : UserControl
 {
     private const int RenderPixelWidth = 3600;
     private const double A4WidthMm = 210;
     private const double A4HeightMm = 297;
     private const double MinZoom = 0.05;
     private const double MaxZoom = 8.0;
-    private const string InteractionHint = "Mausrad = Zoom · Mittlere Maustaste = Verschieben";
+    private const string InteractionHint = "Rad = Zoom · Mitteltaste = Pan";
 
-    private readonly IPdfRenderService _pdfRender;
-    private readonly IFileLauncher? _fileLauncher;
+    /// <summary>PDF-Render-Port (ADR-062) — vom Host gesetzt, bevor ShowFileAsync läuft.</summary>
+    public IPdfRenderService? PdfRenderService { get; set; }
+
+    /// <summary>Shell-Launcher (ADR-060) — "↗ In Standard-App öffnen".</summary>
+    public IFileLauncher? FileLauncher { get; set; }
+
+    /// <summary>Vom ✕-Button ausgelöst — der Host blendet die Panel-Spalte aus.</summary>
+    public event EventHandler? CloseRequested;
 
     private string? _currentPath;
     private int _renderGeneration;
@@ -41,12 +50,9 @@ public partial class PlanPreviewWindow : Window
     private double _panStartH;
     private double _panStartV;
 
-    public PlanPreviewWindow(IPdfRenderService pdfRender, IFileLauncher? fileLauncher)
+    public PlanPreviewPanel()
     {
         InitializeComponent();
-        _pdfRender = pdfRender;
-        _fileLauncher = fileLauncher;
-        OpenExternalButton.IsEnabled = fileLauncher is not null;
     }
 
     /// <summary>
@@ -55,18 +61,23 @@ public partial class PlanPreviewWindow : Window
     /// </summary>
     public async Task ShowFileAsync(string absolutePath)
     {
+        if (PdfRenderService is null)
+        {
+            StatusText.Text = "⚠ Kein PDF-Renderer verfügbar";
+            return;
+        }
+
         _currentPath = absolutePath;
-        var fileName = Path.GetFileName(absolutePath);
-        Title = $"Vorschau — {fileName}";
-        FileNameText.Text = fileName;
+        OpenExternalButton.IsEnabled = FileLauncher is not null;
         PageImage.Source = null;
+        StatusText.Text = "Rendere …";
 
         var generation = ++_renderGeneration;
         try
         {
             // Direktes File.OpenRead: System.IO-Migration des PlanManagers folgt mit BPM-112.
             await using (var stream = File.OpenRead(absolutePath))
-                _pageCount = await _pdfRender.GetPageCountAsync(stream);
+                _pageCount = await PdfRenderService.GetPageCountAsync(stream);
             if (generation != _renderGeneration)
                 return;
 
@@ -77,7 +88,7 @@ public partial class PlanPreviewWindow : Window
         {
             if (generation != _renderGeneration)
                 return;
-            Log.Warning(ex, "PDF-Vorschau fehlgeschlagen fuer {Name}", fileName);
+            Log.Warning(ex, "PDF-Vorschau fehlgeschlagen fuer {Name}", Path.GetFileName(absolutePath));
             StatusText.Text = $"⚠ Vorschau nicht möglich: {ex.Message}";
         }
     }
@@ -85,11 +96,13 @@ public partial class PlanPreviewWindow : Window
     /// <summary>Rendert die aktuelle Seite; bei Seitenwechsel bleiben Zoom/Position erhalten.</summary>
     private async Task RenderCurrentPageAsync(int generation, bool startWithPlankopf)
     {
+        if (PdfRenderService is null || _currentPath is null)
+            return;
         StatusText.Text = "Rendere …";
 
         PdfPageRender page;
-        await using (var stream = File.OpenRead(_currentPath!))
-            page = await _pdfRender.RenderPageAsPngAsync(stream, _currentPage, RenderPixelWidth);
+        await using (var stream = File.OpenRead(_currentPath))
+            page = await PdfRenderService.RenderPageAsPngAsync(stream, _currentPage, RenderPixelWidth);
         if (generation != _renderGeneration)
             return;
         _page = page;
@@ -105,7 +118,7 @@ public partial class PlanPreviewWindow : Window
         PageLabel.Text = $"{_currentPage + 1}/{_pageCount}";
         PrevPageButton.IsEnabled = _currentPage > 0;
         NextPageButton.IsEnabled = _currentPage < _pageCount - 1;
-        StatusText.Text = $"Seite {_currentPage + 1} von {_pageCount} · {InteractionHint}";
+        StatusText.Text = $"{Path.GetFileName(_currentPath)} · Seite {_currentPage + 1} von {_pageCount} · {InteractionHint}";
 
         if (startWithPlankopf)
             await Dispatcher.InvokeAsync(ApplyPlankopfView, DispatcherPriority.Loaded);
@@ -215,6 +228,9 @@ public partial class PlanPreviewWindow : Window
 
     private void OnFitPageClick(object sender, RoutedEventArgs e) => ApplyFitPageView();
 
+    private void OnCloseClick(object sender, RoutedEventArgs e)
+        => CloseRequested?.Invoke(this, EventArgs.Empty);
+
     private async void OnPrevPageClick(object sender, RoutedEventArgs e)
         => await ChangePageAsync(-1);
 
@@ -244,7 +260,7 @@ public partial class PlanPreviewWindow : Window
 
     private void OnOpenExternalClick(object sender, RoutedEventArgs e)
     {
-        if (_currentPath is not null && _fileLauncher?.OpenFile(_currentPath) != true)
+        if (_currentPath is not null && FileLauncher?.OpenFile(_currentPath) != true)
             StatusText.Text = "⚠ Öffnen in Standard-App fehlgeschlagen";
     }
 }

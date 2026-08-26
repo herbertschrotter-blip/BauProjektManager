@@ -54,15 +54,16 @@ public partial class ManualCaptureView : UserControl
     /// <summary>PDF-Render-Port (ADR-062) — vom Host (ProjectDetailView) gesetzt; null = keine Vorschau.</summary>
     public IPdfRenderService? PdfRenderService { get; set; }
 
-    /// <summary>Shell-Launcher (ADR-060) — "In Standard-App öffnen" im Vorschau-Fenster.</summary>
+    /// <summary>Shell-Launcher (ADR-060) — "In Standard-App öffnen" im Vorschau-Panel.</summary>
     public IFileLauncher? FileLauncher { get; set; }
 
-    private PlanPreviewWindow? _previewWindow;
+    private const double DetailPanelWidth = 280;
+    private const double PreviewDefaultWidth = 380;
 
     public ManualCaptureView()
     {
         InitializeComponent();
-        Unloaded += (_, _) => { _previewWindow?.Close(); _previewWindow = null; };
+        PreviewPanel.CloseRequested += (_, _) => SetPreviewVisible(false);
         _holdTimer = new DispatcherTimer
         {
             Interval = TimeSpan.FromMilliseconds(HoldMilliseconds)
@@ -396,28 +397,30 @@ public partial class ManualCaptureView : UserControl
             ViewModel.StatusText = $"⚠ {(reveal ? "Explorer" : "Öffnen")} fehlgeschlagen: {row.FileName}";
     }
 
-    /// <summary>Oeffnet (oder aktualisiert) das Vorschau-Fenster fuer die Zeile.</summary>
+    /// <summary>Blendet das Vorschau-Panel ein (Variante B) und zeigt die Zeile an.</summary>
     private async Task OpenPreviewAsync(CaptureRowViewModel row)
     {
         if (PdfRenderService is null)
             return;
 
-        if (_previewWindow is null)
-        {
-            _previewWindow = new PlanPreviewWindow(PdfRenderService, FileLauncher)
-            {
-                Owner = Window.GetWindow(this)
-            };
-            _previewWindow.Closed += (_, _) => _previewWindow = null;
-            _previewWindow.Show();
-        }
-        else
-        {
-            _previewWindow.Activate();
-        }
+        PreviewPanel.PdfRenderService = PdfRenderService;
+        PreviewPanel.FileLauncher = FileLauncher;
+        SetPreviewVisible(true);
 
         var absolutePath = Path.Combine(ViewModel.ProjectRootPath, row.RelativePath);
-        await _previewWindow.ShowFileAsync(absolutePath);
+        await PreviewPanel.ShowFileAsync(absolutePath);
+    }
+
+    /// <summary>
+    /// Vorschau-Spalte ein-/ausblenden: RightColumn = Detail-Panel (280) plus
+    /// Vorschau-Breite; der Splitter ist nur bei offener Vorschau sichtbar.
+    /// </summary>
+    private void SetPreviewVisible(bool visible)
+    {
+        PreviewHost.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+        PreviewSplitter.Visibility = PreviewHost.Visibility;
+        RightColumn.Width = new GridLength(
+            visible ? DetailPanelWidth + PreviewDefaultWidth : DetailPanelWidth);
     }
 
     // ── Schnellanlage-Dialog (Slice 3) ──────────────────────────────

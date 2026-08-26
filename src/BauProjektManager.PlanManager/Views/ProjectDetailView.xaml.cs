@@ -20,6 +20,8 @@ public partial class ProjectDetailView : UserControl
     private readonly ISegmentTypeCatalog? _segmentTypeCatalog;
     private readonly ISegmentTypeRepository? _segmentTypeRepository;
     private readonly Infrastructure.Persistence.ProjectDatabase? _bpmDb;
+    private readonly IPdfRenderService? _pdfRenderService;
+    private readonly IFileLauncher? _fileLauncher;
     private PlanManagerDatabase? _manualSortDb;
     private bool _manualSortInitialized;
 
@@ -30,7 +32,9 @@ public partial class ProjectDetailView : UserControl
         IPersistenceRegistry? persistenceRegistry = null,
         ISegmentTypeCatalog? segmentTypeCatalog = null,
         ISegmentTypeRepository? segmentTypeRepository = null,
-        Infrastructure.Persistence.ProjectDatabase? bpmDb = null)
+        Infrastructure.Persistence.ProjectDatabase? bpmDb = null,
+        IPdfRenderService? pdfRenderService = null,
+        IFileLauncher? fileLauncher = null)
     {
         _profileManager = profileManager;
         _idGenerator = idGenerator;
@@ -40,6 +44,8 @@ public partial class ProjectDetailView : UserControl
         _segmentTypeCatalog = segmentTypeCatalog;
         _segmentTypeRepository = segmentTypeRepository;
         _bpmDb = bpmDb;
+        _pdfRenderService = pdfRenderService;
+        _fileLauncher = fileLauncher;
         Resources.Add("BoolToVis", boolToVis);
         InitializeComponent();
 
@@ -68,7 +74,12 @@ public partial class ProjectDetailView : UserControl
         _manualSortInitialized = true;
         _manualSortDb = new PlanManagerDatabase(project.Id, _idGenerator, _persistenceRegistry);
         var captureVm = new ManualCaptureViewModel(_manualSortDb, _bpmDb, _idGenerator);
-        ManualSortHost.Content = new ManualCaptureView { DataContext = captureVm };
+        ManualSortHost.Content = new ManualCaptureView
+        {
+            DataContext = captureVm,
+            PdfRenderService = _pdfRenderService,
+            FileLauncher = _fileLauncher
+        };
 
         _ = InitializeManualSortAsync(captureVm, project);
     }

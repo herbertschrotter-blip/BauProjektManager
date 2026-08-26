@@ -1,9 +1,11 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using BauProjektManager.Domain.Enums.PlanManager;
+using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.PlanManager.Controls;
 using BauProjektManager.PlanManager.Services;
 using BauProjektManager.PlanManager.ViewModels;
@@ -49,9 +51,18 @@ public partial class ManualCaptureView : UserControl
 
     private ManualCaptureViewModel ViewModel => (ManualCaptureViewModel)DataContext;
 
+    /// <summary>PDF-Render-Port (ADR-062) — vom Host (ProjectDetailView) gesetzt; null = keine Vorschau.</summary>
+    public IPdfRenderService? PdfRenderService { get; set; }
+
+    /// <summary>Shell-Launcher (ADR-060) — "In Standard-App öffnen" im Vorschau-Fenster.</summary>
+    public IFileLauncher? FileLauncher { get; set; }
+
+    private PlanPreviewWindow? _previewWindow;
+
     public ManualCaptureView()
     {
         InitializeComponent();
+        Unloaded += (_, _) => { _previewWindow?.Close(); _previewWindow = null; };
         _holdTimer = new DispatcherTimer
         {
             Interval = TimeSpan.FromMilliseconds(HoldMilliseconds)
@@ -133,6 +144,10 @@ public partial class ManualCaptureView : UserControl
                     r.IsSelected = ReferenceEquals(r, _multiSelectDownRow);
                 _multiSelectDownRow = null;
             }
+
+            // Rechtsklick bei GESCHLOSSENEM Radial = Kontextmenue (Spez 111.06)
+            if (e.ChangedButton == MouseButton.Right)
+                TryOpenRowContextMenu(e);
             return;
         }
 
@@ -319,6 +334,62 @@ public partial class ManualCaptureView : UserControl
         _captureAnchor = null;
         _justLatched = false;
         ViewModel.SetSelectedRow();
+    }
+
+    // ── Vorschau (BPM-111.06 Slice C1) ──────────────────────────────
+
+    /// <summary>
+    /// Kontextmenue auf einer Eingang-Zeile (Rechtsklick bei geschlossenem Radial):
+    /// C1 nur "Vorschau" (PDF); "Datei oeffnen" / "Im Explorer zeigen" folgen in Slice B.
+    /// </summary>
+    private void TryOpenRowContextMenu(MouseButtonEventArgs e)
+    {
+        if (e.OriginalSource is not DependencyObject source)
+            return;
+        var container = ItemsControl.ContainerFromElement(FileList, source) as ListBoxItem;
+        if (container?.DataContext is not CaptureRowViewModel row)
+            return;
+
+        foreach (var r in ViewModel.Rows)
+            r.IsSelected = ReferenceEquals(r, row);
+
+        var isPdf = row.Item.File.Scan.Extension
+            .Equals(".pdf", StringComparison.OrdinalIgnoreCase);
+        var previewItem = new MenuItem
+        {
+            Header = "Vorschau",
+            IsEnabled = PdfRenderService is not null && isPdf
+        };
+        previewItem.Click += async (_, _) => await OpenPreviewAsync(row);
+
+        var menu = new ContextMenu { PlacementTarget = container };
+        menu.Items.Add(previewItem);
+        menu.IsOpen = true;
+        e.Handled = true;
+    }
+
+    /// <summary>Oeffnet (oder aktualisiert) das Vorschau-Fenster fuer die Zeile.</summary>
+    private async Task OpenPreviewAsync(CaptureRowViewModel row)
+    {
+        if (PdfRenderService is null)
+            return;
+
+        if (_previewWindow is null)
+        {
+            _previewWindow = new PlanPreviewWindow(PdfRenderService, FileLauncher)
+            {
+                Owner = Window.GetWindow(this)
+            };
+            _previewWindow.Closed += (_, _) => _previewWindow = null;
+            _previewWindow.Show();
+        }
+        else
+        {
+            _previewWindow.Activate();
+        }
+
+        var absolutePath = Path.Combine(ViewModel.ProjectRootPath, row.RelativePath);
+        await _previewWindow.ShowFileAsync(absolutePath);
     }
 
     // ── Schnellanlage-Dialog (Slice 3) ──────────────────────────────

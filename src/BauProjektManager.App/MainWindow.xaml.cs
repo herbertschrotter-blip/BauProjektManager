@@ -34,7 +34,9 @@ public partial class MainWindow : Window
         IPersistenceRegistry? persistenceRegistry = null,
         ISegmentTypeCatalog? segmentTypeCatalog = null,
         ISegmentTypeRepository? segmentTypeRepository = null,
-        IProfileArchiveService? profileArchiveService = null)
+        IProfileArchiveService? profileArchiveService = null,
+        IPdfRenderService? pdfRenderService = null,
+        IFileLauncher? fileLauncher = null)
     {
         InitializeComponent();
         _devTools = devTools;
@@ -43,7 +45,7 @@ public partial class MainWindow : Window
         _profileArchiveService = profileArchiveService;
 
         _planManagerView = new PlanManagerView(db, idGenerator, profileManager, persistenceRegistry,
-            segmentTypeCatalog, segmentTypeRepository);
+            segmentTypeCatalog, segmentTypeRepository, pdfRenderService, fileLauncher);
         _settingsView = new SettingsView(db, dialogService, settingsService, persistenceRegistry);
 
         UpdateSidebarBadge();

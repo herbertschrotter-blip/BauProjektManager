@@ -103,6 +103,9 @@ public partial class ManualCaptureViewModel : ObservableObject
 
     public ObservableCollection<CaptureRowViewModel> Rows { get; } = [];
 
+    /// <summary>Projekt-Root für absolute Pfade (Vorschau/Launcher, BPM-111.06 Slice C).</summary>
+    public string ProjectRootPath => _projectRootPath;
+
     [ObservableProperty]
     private string _statusText = "bereit";
 

@@ -138,6 +138,13 @@ public partial class App : Application
         sc.AddSingleton<IFileSystemWriter>(sp => sp.GetRequiredService<LocalFileSystem>());
         sc.AddSingleton<IPathService>(sp => sp.GetRequiredService<LocalFileSystem>());
 
+        // ADR-060 Punkt 3: Shell-Launcher (Datei/Ordner in Standard-App bzw. Explorer)
+        sc.AddSingleton<IFileLauncher, LocalFileLauncher>();
+
+        // ADR-062: Zentraler PDF-Render-Port — Implementierung nur hier im
+        // Composition Root (Windows.Data.Pdf, Windows-SDK-TFM nur in der App).
+        sc.AddSingleton<IPdfRenderService, Services.WindowsPdfRenderService>();
+
         sc.AddSingleton<ProjectDatabase>();
 
         // BPM-108: Segmenttyp-Katalog (Phase A) — vor ProfileManager registrieren,
@@ -176,14 +183,18 @@ public partial class App : Application
             var catalog = sp.GetService<ISegmentTypeCatalog>();
             var repo = sp.GetService<ISegmentTypeRepository>();
             var archive = sp.GetService<IProfileArchiveService>();
+            var pdfRender = sp.GetService<IPdfRenderService>();
+            var fileLauncher = sp.GetService<IFileLauncher>();
 #if DEBUG
             var devTools = sp.GetService<IDeveloperToolsService>();
             var registry = sp.GetService<IPersistenceRegistry>();
-            return new MainWindow(db, idGen, dialog, profileManager, settingsService, devTools, registry, catalog, repo, archive);
+            return new MainWindow(db, idGen, dialog, profileManager, settingsService, devTools, registry, catalog, repo, archive,
+                pdfRender, fileLauncher);
 #else
             return new MainWindow(db, idGen, dialog, profileManager, settingsService,
                 persistenceRegistry: null, segmentTypeCatalog: catalog,
-                segmentTypeRepository: repo, profileArchiveService: archive);
+                segmentTypeRepository: repo, profileArchiveService: archive,
+                pdfRenderService: pdfRender, fileLauncher: fileLauncher);
 #endif
         });
 

@@ -71,6 +71,8 @@ public partial class PlanManagerView : UserControl
     private readonly IPersistenceRegistry? _persistenceRegistry;
     private readonly ISegmentTypeCatalog? _segmentTypeCatalog;
     private readonly ISegmentTypeRepository? _segmentTypeRepository;
+    private readonly IPdfRenderService? _pdfRenderService;
+    private readonly IFileLauncher? _fileLauncher;
 
     public PlanManagerView(
         ProjectDatabase db,
@@ -78,7 +80,9 @@ public partial class PlanManagerView : UserControl
         IProfileManager profileManager,
         IPersistenceRegistry? persistenceRegistry = null,
         ISegmentTypeCatalog? segmentTypeCatalog = null,
-        ISegmentTypeRepository? segmentTypeRepository = null)
+        ISegmentTypeRepository? segmentTypeRepository = null,
+        IPdfRenderService? pdfRenderService = null,
+        IFileLauncher? fileLauncher = null)
     {
         _db = db;
         _idGenerator = idGenerator;
@@ -86,6 +90,8 @@ public partial class PlanManagerView : UserControl
         _persistenceRegistry = persistenceRegistry;
         _segmentTypeCatalog = segmentTypeCatalog;
         _segmentTypeRepository = segmentTypeRepository;
+        _pdfRenderService = pdfRenderService;
+        _fileLauncher = fileLauncher;
         _templateService = new PatternTemplateService(_idGenerator, persistenceRegistry);
         Resources.Add("BoolToVis", _boolToVis);
         Resources.Add("InverseBoolToVis", new InverseBoolToVisConverter());
@@ -123,7 +129,8 @@ public partial class PlanManagerView : UserControl
 
         var detailView = new ProjectDetailView(
             project, _boolToVis, _profileManager, _idGenerator, _templateService, appDataPath,
-            _persistenceRegistry, _segmentTypeCatalog, _segmentTypeRepository, _db);
+            _persistenceRegistry, _segmentTypeCatalog, _segmentTypeRepository, _db,
+            _pdfRenderService, _fileLauncher);
         detailView.ViewModel.NavigateBack += NavigateToList;
 
         ProjectListPanel.Visibility = Visibility.Collapsed;

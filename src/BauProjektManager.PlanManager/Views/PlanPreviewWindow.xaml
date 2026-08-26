@@ -1,0 +1,70 @@
+<Window x:Class="BauProjektManager.PlanManager.Views.PlanPreviewWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Vorschau"
+        Width="760" Height="980"
+        ShowInTaskbar="False"
+        Background="{DynamicResource BpmBgBase}">
+    <DockPanel>
+        <!-- Kopfzeile: Dateiname + Aktionen oben rechts -->
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource BpmBgSurface}"
+                BorderBrush="{DynamicResource BpmBorderSubtle}"
+                BorderThickness="0,0,0,1"
+                Padding="10,8">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button x:Name="PrevPageButton" Content="◀" Width="28" Padding="0,4"
+                            Click="OnPrevPageClick"/>
+                    <TextBlock x:Name="PageLabel"
+                               Foreground="{DynamicResource BpmTextSecondary}"
+                               FontSize="{DynamicResource BpmFontSizeSmall}"
+                               VerticalAlignment="Center" Margin="6,0"/>
+                    <Button x:Name="NextPageButton" Content="▶" Width="28" Padding="0,4"
+                            Click="OnNextPageClick"/>
+                    <Border Width="1" Background="{DynamicResource BpmBorderSubtle}" Margin="8,2"/>
+                    <Button Content="Plankopf" Padding="10,4" Click="OnPlankopfClick"/>
+                    <Button Content="Ganzes Blatt" Padding="10,4" Margin="6,0,0,0" Click="OnFitPageClick"/>
+                    <Border Width="1" Background="{DynamicResource BpmBorderSubtle}" Margin="8,2"/>
+                    <Button x:Name="OpenExternalButton"
+                            Content="↗ In Standard-App öffnen"
+                            Padding="10,4"
+                            Click="OnOpenExternalClick"/>
+                </StackPanel>
+                <TextBlock x:Name="FileNameText"
+                           Foreground="{DynamicResource BpmTextBright}"
+                           FontSize="{DynamicResource BpmFontSizeSmall}"
+                           TextTrimming="CharacterEllipsis"
+                           VerticalAlignment="Center"
+                           Margin="0,0,10,0"/>
+            </DockPanel>
+        </Border>
+
+        <!-- Statuszeile -->
+        <TextBlock DockPanel.Dock="Bottom"
+                   x:Name="StatusText"
+                   Foreground="{DynamicResource BpmTextSecondary}"
+                   FontSize="{DynamicResource BpmFontSizeCaption}"
+                   Padding="10,6"/>
+
+        <!-- Blatt-Ansicht: Start = Plankopf (A4 rechts unten) · Mausrad = Zoom · Mitteltaste = Pan -->
+        <ScrollViewer x:Name="ScrollHost"
+                      Background="{DynamicResource BpmBgBase}"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto"
+                      Focusable="False"
+                      PreviewMouseWheel="OnScrollPreviewMouseWheel">
+            <Image x:Name="PageImage"
+                   Stretch="None"
+                   RenderOptions.BitmapScalingMode="HighQuality"
+                   Cursor="Hand"
+                   MouseDown="OnImageMouseDown"
+                   MouseMove="OnImageMouseMove"
+                   MouseUp="OnImageMouseUp">
+                <Image.LayoutTransform>
+                    <ScaleTransform x:Name="ZoomTransform" ScaleX="1" ScaleY="1"/>
+                </Image.LayoutTransform>
+            </Image>
+        </ScrollViewer>
+    </DockPanel>
+</Window>

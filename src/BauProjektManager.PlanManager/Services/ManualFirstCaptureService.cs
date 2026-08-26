@@ -71,12 +71,7 @@ public class ManualFirstCaptureService
         LightweightPlanExtractor extractor,
         IPlanValueNormalizer normalizer)
     {
-        // Plannummern-Lookup: normalisierte Nummer -> alle bekannten Dokumente
-        var byNumber = knownDocuments
-            .Where(d => !string.IsNullOrWhiteSpace(d.PlanNumber))
-            .GroupBy(d => normalizer.NormalizeForMatch(d.PlanNumber))
-            .ToDictionary(g => g.Key, g => g.ToList());
-
+        var byNumber = BuildNumberLookup(knownDocuments, normalizer);
         var items = new List<CaptureItem>(fingerprinted.Count);
 
         foreach (var fp in fingerprinted)
@@ -94,49 +89,83 @@ public class ManualFirstCaptureService
                 continue;
             }
 
-            // Ohne Plannummern-Kandidat -> Bucket C (manuelle Erstaufnahme/Radial)
-            if (candidates.PlanNumber is null
-                || !byNumber.TryGetValue(normalizer.NormalizeForMatch(candidates.PlanNumber), out var matches))
-            {
-                items.Add(new CaptureItem(file, candidates, CaptureBucket.NewCapture, null, null));
-                continue;
-            }
-
-            // Bucket D — Plannummer in mehreren Dokumenten (z. B. ueber Dokumenttypen)
-            if (matches.Count > 1)
-            {
-                items.Add(new CaptureItem(file, candidates, CaptureBucket.Conflict, null,
-                    $"Plannummer {candidates.PlanNumber} in {matches.Count} bekannten Dokumenten — Auswahl noetig"));
-                continue;
-            }
-
-            var match = matches[0];
-            var newIdx = NormalizeIndex(candidates.Index, normalizer);
-            var curIdx = NormalizeIndex(match.CurrentIndex, normalizer);
-
-            // Bucket D — gleicher Index, aber anderer Inhalt (Matrix: CHANGED_SAME_INDEX)
-            if (newIdx == curIdx)
-            {
-                items.Add(new CaptureItem(file, candidates, CaptureBucket.Conflict, match,
-                    $"Gleicher Index wie aktuelle Revision ({match.CurrentIndex ?? "Erstausgabe"}), aber anderer Inhalt — pruefen"));
-                continue;
-            }
-
-            // Bucket B — bekannter Plan, anderer Index (Matrix: UPDATE_NEWER_INDEX / OLDER_REVISION)
-            var older = IsOlderIndex(candidates.Index, match.CurrentIndex);
-            string? reason = older switch
-            {
-                true when candidates.Index is null =>
-                    $"Achtung: Datei ohne Index, aktuelle Revision ist {match.CurrentIndex} (OLDER_REVISION)",
-                true =>
-                    $"Achtung: Index {candidates.Index} ist NIEDRIGER als aktuelle Revision {match.CurrentIndex} (OLDER_REVISION)",
-                _ => null
-            };
-            items.Add(new CaptureItem(file, candidates, CaptureBucket.UpdateProposal, match, reason));
+            // Bucket B/C/D — deterministisches Matching über die Plannummer
+            var (bucket, match, reason) = MatchByNumber(
+                candidates.PlanNumber, candidates.Index, byNumber, normalizer);
+            items.Add(new CaptureItem(file, candidates, bucket, match, reason));
         }
 
         return new ManualCaptureResult(items);
     }
+
+    /// <summary>
+    /// Einzel-Re-Match nach Panel-Edit der Plannummer/Index (BPM-111.06 Slice A2):
+    /// klassifiziert eine bearbeitete Identität neu gegen die bekannten Dokumente.
+    /// Nur B/C/D — der Dubletten-Bucket A hängt an MD5 und ändert sich durch einen
+    /// Nummern-/Index-Edit nicht.
+    /// </summary>
+    public (CaptureBucket Bucket, KnownPlanDocument? Match, string? Reason) RematchByNumber(
+        string? planNumber, string? index)
+    {
+        var byNumber = BuildNumberLookup(_db.GetCurrentDocumentLookup(), _normalizer);
+        return MatchByNumber(planNumber, index, byNumber, _normalizer);
+    }
+
+    /// <summary>
+    /// Pure Matching-Logik einer einzelnen Identität gegen die bekannten Dokumente
+    /// (Bucket B/C/D). Testbar ohne DB/Dateisystem — Kern des Einzel-Re-Match und
+    /// der Batch-Klassifikation.
+    /// </summary>
+    public static (CaptureBucket Bucket, KnownPlanDocument? Match, string? Reason) MatchByNumber(
+        string? planNumber, string? index,
+        IReadOnlyDictionary<string, List<KnownPlanDocument>> byNumber,
+        IPlanValueNormalizer normalizer)
+    {
+        // Ohne Plannummern-Kandidat oder ohne Treffer -> Bucket C (Erstaufnahme/Radial)
+        if (planNumber is null
+            || !byNumber.TryGetValue(normalizer.NormalizeForMatch(planNumber), out var matches))
+        {
+            return (CaptureBucket.NewCapture, null, null);
+        }
+
+        // Bucket D — Plannummer in mehreren Dokumenten (z. B. über Dokumenttypen)
+        if (matches.Count > 1)
+        {
+            return (CaptureBucket.Conflict, null,
+                $"Plannummer {planNumber} in {matches.Count} bekannten Dokumenten — Auswahl noetig");
+        }
+
+        var match = matches[0];
+        var newIdx = NormalizeIndex(index, normalizer);
+        var curIdx = NormalizeIndex(match.CurrentIndex, normalizer);
+
+        // Bucket D — gleicher Index, aber anderer Inhalt (Matrix: CHANGED_SAME_INDEX)
+        if (newIdx == curIdx)
+        {
+            return (CaptureBucket.Conflict, match,
+                $"Gleicher Index wie aktuelle Revision ({match.CurrentIndex ?? "Erstausgabe"}), aber anderer Inhalt — pruefen");
+        }
+
+        // Bucket B — bekannter Plan, anderer Index (Matrix: UPDATE_NEWER_INDEX / OLDER_REVISION)
+        var older = IsOlderIndex(index, match.CurrentIndex);
+        string? reason = older switch
+        {
+            true when index is null =>
+                $"Achtung: Datei ohne Index, aktuelle Revision ist {match.CurrentIndex} (OLDER_REVISION)",
+            true =>
+                $"Achtung: Index {index} ist NIEDRIGER als aktuelle Revision {match.CurrentIndex} (OLDER_REVISION)",
+            _ => null
+        };
+        return (CaptureBucket.UpdateProposal, match, reason);
+    }
+
+    /// <summary>Normalisierte Plannummer -> alle bekannten Dokumente mit dieser Nummer.</summary>
+    private static Dictionary<string, List<KnownPlanDocument>> BuildNumberLookup(
+        IReadOnlyList<KnownPlanDocument> knownDocuments, IPlanValueNormalizer normalizer)
+        => knownDocuments
+            .Where(d => !string.IsNullOrWhiteSpace(d.PlanNumber))
+            .GroupBy(d => normalizer.NormalizeForMatch(d.PlanNumber))
+            .ToDictionary(g => g.Key, g => g.ToList());
 
     private static string? NormalizeIndex(string? index, IPlanValueNormalizer normalizer) =>
         string.IsNullOrWhiteSpace(index) ? null : normalizer.NormalizeForMatch(index);

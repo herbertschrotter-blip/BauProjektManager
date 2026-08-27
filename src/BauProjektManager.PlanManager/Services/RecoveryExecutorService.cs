@@ -46,10 +46,18 @@ public class RecoveryExecutorService
         int processed = 0;
         int failed = 0;
         var errors = new List<string>();
+        Dictionary<string, string>? knownMd5 = null; // lazy — nur bei skipDuplicate noetig
 
         foreach (var action in pending)
         {
-            var error = TryMoveSourceToDestination(action, projectRootPath);
+            string? error;
+            if (action.ActionType == "skipDuplicate")
+            {
+                knownMd5 ??= _db.GetKnownMd5Lookup();
+                error = TryRecoverSkipDuplicate(action, projectRootPath, knownMd5);
+            }
+            else
+                error = TryMoveSourceToDestination(action, projectRootPath);
             if (error is null)
             {
                 _db.CompleteImportAction(action.Id, success: true);
@@ -90,6 +98,14 @@ public class RecoveryExecutorService
 
         foreach (var action in completed)
         {
+            if (action.ActionType == "skipDuplicate")
+            {
+                // BPM-120 T2: geloeschte Dublette ist nicht wiederherstellbar
+                // (kein Papierkorb) — Status bleibt completed, Terminal-Semantik
+                // regelt T6 (ADR-064 P.6/P.7).
+                Log.Information("Rollback: skipDuplicate {Id} bleibt bestehen (nicht reversibel)", action.Id);
+                continue;
+            }
             var error = TryRollbackSingle(action, projectRootPath);
             if (error is null)
             {
@@ -145,12 +161,40 @@ public class RecoveryExecutorService
     /// Forward-Move: Source → Destination. Bei archive_path: existing destination zuerst dorthin
     /// archivieren. Returns null bei Erfolg, Fehler-Text bei Problem.
     /// </summary>
+    /// <summary>
+    /// skipDuplicate-Recovery (BPM-120 T2, ADR-064 P.7): Endzustand = redundante
+    /// Inbox-Kopie existiert nicht mehr UND der Inhalt liegt MD5-identisch im
+    /// getrackten Bestand (Lookup ueber die getrackte Teilmenge, ADR-061 Modell A,
+    /// kein Verzeichnis-Scan). Fehlt der Bestandsnachweis: RecoveryConflict —
+    /// nie blind completed.
+    /// </summary>
+    private string? TryRecoverSkipDuplicate(
+        ImportActionRow action, string projectRootPath, Dictionary<string, string> knownMd5)
+    {
+        try
+        {
+            var inStock = action.Md5 is not null && knownMd5.ContainsKey(action.Md5);
+            if (!inStock)
+                return $"RecoveryConflict: MD5 der Dublette nicht im getrackten Bestand ({action.SourcePath})";
+
+            var sourceAbs = _path.Combine(projectRootPath, action.SourcePath);
+            if (_reader.FileExists(sourceAbs))
+                _writer.DeleteFile(sourceAbs);
+            // Source bereits weg + MD5 im Bestand -> idempotent erfuellt
+            return null;
+        }
+        catch (Exception ex)
+        {
+            return ex.Message;
+        }
+    }
+
     private string? TryMoveSourceToDestination(ImportActionRow action, string projectRootPath)
     {
         try
         {
             var sourceAbs = _path.Combine(projectRootPath, action.SourcePath);
-            var destAbs = _path.Combine(projectRootPath, action.DestinationPath);
+            var destAbs = _path.Combine(projectRootPath, action.DestinationPath!);
 
             if (!_reader.FileExists(sourceAbs))
                 return $"Source-Datei nicht mehr da: {action.SourcePath}";
@@ -182,7 +226,7 @@ public class RecoveryExecutorService
         try
         {
             var sourceAbs = _path.Combine(projectRootPath, action.SourcePath);
-            var destAbs = _path.Combine(projectRootPath, action.DestinationPath);
+            var destAbs = _path.Combine(projectRootPath, action.DestinationPath!);
 
             if (!_reader.FileExists(destAbs))
                 return $"Destination-Datei nicht mehr da: {action.DestinationPath}";

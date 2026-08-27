@@ -16,5 +16,7 @@ public sealed record ImportActionRow(
     string ActionType,
     string ActionStatus,
     string SourcePath,
-    string DestinationPath,
-    string? ArchivePath);
+    string? DestinationPath,
+    string? ArchivePath,
+    string? Md5 = null,
+    long? FileSize = null);

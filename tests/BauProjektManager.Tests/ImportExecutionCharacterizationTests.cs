@@ -9,19 +9,16 @@ using Microsoft.Data.Sqlite;
 namespace BauProjektManager.Tests;
 
 /// <summary>
-/// BPM-120 T0: Characterization-Tests des ungehärteten Importpfads
-/// (ADR-064). Pinnen das beobachtbare IST-Verhalten von
-/// <see cref="ImportExecutionService.Execute"/> vor der Transaktions-Härtung
-/// (T1–T8), damit Verhaltensänderungen beim Umbau sichtbar werden.
+/// BPM-120 T0: Characterization-Tests des Importpfads (ADR-064). Pinnen das
+/// beobachtbare Verhalten von <see cref="ImportExecutionService.Execute"/>,
+/// damit Verhaltensänderungen bei der Transaktions-Härtung sichtbar werden.
 ///
 /// Asserts NUR auf härtungsstabile Endzustände (Dateien am Ziel, DB-Struktur,
-/// Journal completed, Zeitinvariante). Bekannte Fehler werden bewusst NICHT
-/// als Soll festgeschrieben:
-/// - archive_path wird heute als null journalisiert (T2 macht ihn deterministisch)
-/// - Actions werden einzeln statt vorab journalisiert (T2)
-/// - Reiner SkipIdentical-Import trifft den Early-Return: weder Journal noch
-///   Delete (bekannter, für V1 gestrichener Skip-only-Fix → Bucket A in T2)
-/// - failed-Semantik terminal ohne Rollback (T6)
+/// Journal completed, Zeitinvariante). Stand nach T2 (Vorab-Journalisierung):
+/// archive_path deterministisch journalisiert, skipDuplicate = echte Action
+/// (Bucket A) — siehe ImportExecutionPreJournalTests für die AK-4/5/6-Beweise.
+/// Bekannte Restfehler bewusst NICHT gepinnt: failed-Semantik terminal ohne
+/// Rollback (T6), Undo-DB-Rollback nach Disk-Fehlern (T7).
 /// </summary>
 public class ImportExecutionCharacterizationTests
 {
@@ -85,7 +82,7 @@ public class ImportExecutionCharacterizationTests
         return rows;
     }
 
-    private static List<(string Type, string Status, string Source, string Destination)>
+    private static List<(string Type, string Status, string Source, string? Destination)>
         GetActionRows(TestEnv env, string importId)
     {
         using var conn = new SqliteConnection($"Data Source={env.Repo.GetDatabasePath()}");
@@ -97,10 +94,10 @@ public class ImportExecutionCharacterizationTests
             """;
         cmd.Parameters.AddWithValue("@iid", importId);
         using var reader = cmd.ExecuteReader();
-        var rows = new List<(string, string, string, string)>();
+        var rows = new List<(string, string, string, string?)>();
         while (reader.Read())
-            rows.Add((reader.GetString(0), reader.GetString(1),
-                reader.GetString(2), reader.GetString(3)));
+            rows.Add((reader.GetString(0), reader.GetString(1), reader.GetString(2),
+                reader.IsDBNull(3) ? null : reader.GetString(3)));
         return rows;
     }
 
@@ -252,10 +249,9 @@ public class ImportExecutionCharacterizationTests
     [Fact]
     public void Execute_MixedNewAndSkipIdentical_DeletesDuplicateFromInbox()
     {
-        // Gemischter Import: die New-Action läuft journalisiert, die bestätigte
-        // Dublette wird aus dem Eingang entfernt (Skipped=1). Dass der Delete
-        // heute NICHT journalisiert ist, ist bekannter Fehler (Bucket A → T2)
-        // und wird hier bewusst nicht gepinnt.
+        // Gemischter Import (seit T2/AK 6): New und skipDuplicate werden
+        // GEMEINSAM vorab journalisiert; die bestätigte Dublette wird beim
+        // Confirm aus dem Eingang entfernt (Skipped=1, kein Papierkorb).
         using var env = new TestEnv();
         File.WriteAllText(Path.Combine(env.Root, "_Eingang", "5998-300_OG2.pdf"), "pdf-content");
         File.WriteAllText(Path.Combine(env.Root, "_Eingang", "5998-310_OG2.pdf"), "dup-content");
@@ -285,11 +281,13 @@ public class ImportExecutionCharacterizationTests
         Assert.True(File.Exists(Path.Combine(
             env.Root, "Pläne", "Polierplan", "Haus 2", "OG2", "5998-300_OG2.pdf")));
 
-        // Journal completed mit genau einer (der New-)Action
+        // Journal completed mit BEIDEN Actions (T2/AK 6: gemeinsam journalisiert)
         var journal = Assert.Single(GetJournalRows(env));
         Assert.Equal("completed", journal.Status);
-        var action = Assert.Single(GetActionRows(env, journal.Id));
-        Assert.Equal("new", action.Type);
-        Assert.Equal("completed", action.Status);
+        var actions = GetActionRows(env, journal.Id);
+        Assert.Equal(2, actions.Count);
+        Assert.Contains(actions, a => a.Type == "new" && a.Status == "completed");
+        Assert.Contains(actions, a =>
+            a.Type == "skipDuplicate" && a.Status == "completed" && a.Destination is null);
     }
 }

@@ -40,14 +40,19 @@ public class ImportUndoService
         if (importId is null)
             return new UndoPreflightReport(null, 0, []);
 
-        var actions = _db.GetImportActions(importId, statusFilter: "completed");
+        // BPM-120 T2/AK 15: skipDuplicate ist bewusst NICHT undo-bar (kein
+        // Papierkorb) — zaehlt nicht als undo-faehige Action. Ein reiner
+        // skipDuplicate-Import wird damit gar nicht als undo-faehig angeboten.
+        var actions = _db.GetImportActions(importId, statusFilter: "completed")
+            .Where(a => a.ActionType != "skipDuplicate")
+            .ToList();
         var conflicts = new List<UndoActionConflict>();
 
         foreach (var action in actions)
         {
-            var destination = _path.Combine(projectRootPath, action.DestinationPath);
+            var destination = _path.Combine(projectRootPath, action.DestinationPath!);
             var source = _path.Combine(projectRootPath, action.SourcePath);
-            var fileName = _path.GetFileName(action.DestinationPath);
+            var fileName = _path.GetFileName(action.DestinationPath!);
 
             if (!_reader.FileExists(destination))
                 conflicts.Add(new UndoActionConflict(action.Id, fileName,
@@ -83,7 +88,11 @@ public class ImportUndoService
         }
 
         var importId = preflight.ImportId!;
-        var actions = _db.GetImportActions(importId, statusFilter: "completed");
+        // T2: skipDuplicate bleibt geloescht — gemischter Import darf trotzdem
+        // 'undone' werden (ADR-064 P.7).
+        var actions = _db.GetImportActions(importId, statusFilter: "completed")
+            .Where(a => a.ActionType != "skipDuplicate")
+            .ToList();
         var errors = new List<string>();
         var restored = 0;
 
@@ -92,7 +101,7 @@ public class ImportUndoService
         {
             try
             {
-                var destination = _path.Combine(projectRootPath, action.DestinationPath);
+                var destination = _path.Combine(projectRootPath, action.DestinationPath!);
                 var source = _path.Combine(projectRootPath, action.SourcePath);
 
                 var sourceDir = _path.GetDirectoryName(source);
@@ -112,7 +121,7 @@ public class ImportUndoService
             catch (Exception ex)
             {
                 Log.Error(ex, "Undo-Dateioperation fehlgeschlagen: {Path}", action.DestinationPath);
-                errors.Add($"{_path.GetFileName(action.DestinationPath)}: {ex.Message}");
+                errors.Add($"{_path.GetFileName(action.DestinationPath!)}: {ex.Message}");
             }
         }
 

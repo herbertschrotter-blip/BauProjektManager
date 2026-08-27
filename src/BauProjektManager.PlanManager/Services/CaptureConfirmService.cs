@@ -32,18 +32,25 @@ public class CaptureConfirmService
     /// <summary>
     /// Fuehrt den Import aller Pending Assignments aus und leert den Store
     /// bei Erfolg. Gibt das Execute-Ergebnis zurueck (Journal-basiert).
+    /// BPM-120 T2 (Bucket A): bestaetigte MD5-Dubletten laufen als
+    /// skipDuplicate-Actions mit — der Confirm ist die Bestaetigung (ADR-064 P.7).
     /// </summary>
-    public ImportExecutionResult ConfirmAll(string projectRootPath, string inboxRelativePath)
+    public ImportExecutionResult ConfirmAll(
+        string projectRootPath, string inboxRelativePath,
+        IReadOnlyList<CaptureItem>? confirmedDuplicates = null)
     {
         var pending = _store.Snapshot();
-        if (pending.Count == 0)
+        var duplicates = confirmedDuplicates ?? [];
+        if (pending.Count == 0 && duplicates.Count == 0)
         {
             Log.Information("Bestaetigung: keine Pending Assignments");
             return new ImportExecutionResult(0, 0, 0, []);
         }
 
         var decisions = BuildDecisions(pending, _normalizer);
-        Log.Information("Bestaetigung: {Count} Pending Assignments werden importiert", decisions.Count);
+        decisions.AddRange(BuildSkipDecisions(duplicates));
+        Log.Information("Bestaetigung: {Count} Pending Assignments + {Dups} Dublette(n) werden importiert",
+            pending.Count, duplicates.Count);
 
         var result = _execution.Execute(decisions, projectRootPath, inboxRelativePath);
 
@@ -126,6 +133,50 @@ public class CaptureConfirmService
                     : "Manuelle Erstaufnahme (ManualConfirmed)"]));
         }
 
+        return decisions;
+    }
+
+    /// <summary>
+    /// Bucket A (BPM-120 T2): bestaetigte MD5-Dubletten -> SkipIdentical-Decisions.
+    /// Die Execution journalisiert sie als skipDuplicate-Action (source, MD5,
+    /// Groesse, KEIN Ziel) und loescht die Eingangs-Kopie beim Confirm.
+    /// </summary>
+    public static List<ImportDecision> BuildSkipDecisions(IReadOnlyList<CaptureItem> duplicates)
+    {
+        var decisions = new List<ImportDecision>(duplicates.Count);
+        foreach (var item in duplicates)
+        {
+            var scan = item.File.Scan;
+            var parsed = new ParsedImportFile(
+                RelativePath: scan.RelativePath,
+                FileName: scan.FileName,
+                Extension: scan.Extension,
+                FileSize: scan.FileSize,
+                Md5: item.File.Md5,
+                MatchedProfile: null,
+                ExtractedFields: new Dictionary<string, string>(),
+                Confidence: ParseConfidence.High,
+                Warnings: []);
+            var classified = new ClassifiedImportFile(
+                Parsed: parsed,
+                DocumentTypeId: null,
+                DocumentTypeDisplayName: item.Match?.DocumentType,
+                DocumentKey: item.Match?.DocumentKey,
+                PlanNumber: item.Match?.PlanNumber,
+                RevisionToken: null,
+                RevisionKind: RevisionKind.None,
+                RevisionSource: IndexSourceType.None,
+                Stage: ImportStage.Unknown,
+                IdentityFields: new Dictionary<string, string>(),
+                Evidence: []);
+            decisions.Add(new ImportDecision(
+                File: classified,
+                Status: ImportStatus.SkipIdentical,
+                DocumentKey: item.Match?.DocumentKey,
+                ExistingRevisionId: null,
+                TargetRelativePath: null,
+                Reasons: ["MD5-Dublette — beim Bestätigen entfernt (Bucket A)"]));
+        }
         return decisions;
     }
 

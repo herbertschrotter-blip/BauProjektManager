@@ -545,10 +545,17 @@ public partial class ManualCaptureViewModel : ObservableObject
                 });
         }
 
-        var result = _confirm.ConfirmAll(_projectRootPath, _inboxRelativePath);
+        // BPM-120 T2 (Bucket A): erkannte MD5-Dubletten laufen beim Bestätigen
+        // als journalisierte skipDuplicate-Actions mit (direktes Delete, kein
+        // Papierkorb — ADR-064 P.7).
+        var confirmedDuplicates = Rows.Where(r => r.IsDuplicate)
+            .Select(r => r.Item).ToList();
+
+        var result = _confirm.ConfirmAll(_projectRootPath, _inboxRelativePath, confirmedDuplicates);
         StatusText = result.Failed == 0
             ? $"✓ {result.Succeeded} Datei(en) importiert (Journal → Move → DB)"
-            : $"⚠ {result.Failed} von {result.Succeeded + result.Failed} Aktionen fehlgeschlagen";
+              + (result.Skipped > 0 ? $" · {result.Skipped} Dublette(n) entfernt" : "")
+            : $"⚠ {result.Failed} von {result.Succeeded + result.Failed + result.Skipped} Aktionen fehlgeschlagen";
         Log.Information("ManualCapture-Bestaetigung: {Ok} OK / {Fail} Fehler",
             result.Succeeded, result.Failed);
         await RefreshAsync();

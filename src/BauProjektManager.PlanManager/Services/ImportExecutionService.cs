@@ -35,7 +35,11 @@ public class ImportExecutionService
 
     /// <summary>
     /// Executes the import: journal first, then move files, then update DB.
-    /// Returns summary of what happened.
+    /// BPM-120 T2 (ADR-064 P.2): ZWEIPHASIG — Phase 1 plant alle Actions
+    /// (inkl. deterministischem archive_path) und journalisiert Header + ALLE
+    /// Actions vor der ersten Mutation; Phase 2 fuehrt aus. Bestaetigte
+    /// MD5-Dubletten laufen als echte skipDuplicate-Actions (Bucket A, P.7) —
+    /// journalisiert + recovery-faehig, bewusst NICHT undo-bar.
     /// </summary>
     public ImportExecutionResult Execute(
         List<ImportDecision> decisions,
@@ -46,31 +50,99 @@ public class ImportExecutionService
             .Where(d => d.Status is ImportStatus.New or ImportStatus.UpdateNewerIndex
                 or ImportStatus.ChangedNoIndex or ImportStatus.LearnIndex)
             .ToList();
-
-        if (actionable.Count == 0)
-        {
-            Log.Information("Import: keine Aktionen auszuführen");
-            return new ImportExecutionResult(0, 0, 0, []);
-        }
-
-        Log.Information("Import-Ausführung: {Count} Aktionen", actionable.Count);
-
-        // 1. Create journal entry (pending)
-        var importId = _db.CreateImportJournal(
-            inboxRelativePath, actionable.Count, profileId: null);
+        var duplicates = decisions
+            .Where(d => d.Status == ImportStatus.SkipIdentical)
+            .ToList();
 
         int succeeded = 0;
         int failed = 0;
         int skipped = 0;
         var errors = new List<string>();
 
-        // 2. Execute each action
-        for (int i = 0; i < actionable.Count; i++)
+        // Planbarkeits-Check VOR der Journalisierung: ohne Zielpfad keine Action
+        // (zaehlt wie bisher als Fehler, mutiert nichts, journalisiert nichts).
+        var plannable = new List<ImportDecision>();
+        foreach (var decision in actionable)
         {
-            var decision = actionable[i];
-            var actionResult = ExecuteSingleAction(
-                decision, projectRootPath, importId, i);
+            if (string.IsNullOrEmpty(decision.TargetRelativePath))
+            {
+                failed++;
+                errors.Add($"{decision.File.Parsed.FileName}: Kein Zielpfad berechnet");
+                continue;
+            }
+            plannable.Add(decision);
+        }
 
+        if (plannable.Count == 0 && duplicates.Count == 0)
+        {
+            Log.Information("Import: keine Aktionen auszuführen");
+            return new ImportExecutionResult(0, failed, 0, errors);
+        }
+
+        Log.Information("Import-Ausführung: {Count} Aktionen, {Skips} Dubletten",
+            plannable.Count, duplicates.Count);
+
+        // ── Phase 1: Journal-Header + ALLE Actions VOR der ersten Mutation (AK 4) ──
+        var importId = _db.CreateImportJournal(
+            inboxRelativePath, plannable.Count + duplicates.Count, profileId: null);
+
+        var planned = new List<(ImportDecision Decision, string ActionId, string? ArchiveRelPath)>();
+        var order = 0;
+        foreach (var decision in plannable)
+        {
+            var targetRelPath = decision.TargetRelativePath!;
+            var actionType = decision.Status switch
+            {
+                ImportStatus.New => "new",
+                ImportStatus.UpdateNewerIndex => "indexUpdate",
+                ImportStatus.ChangedNoIndex => "changed",
+                ImportStatus.LearnIndex => "learnIndex",
+                _ => "unknown"
+            };
+
+            // Deterministischer Archivpfad (AK 5): VOR der ersten Mutation
+            // festgelegt und journalisiert — kein ad-hoc-Name bei der Ausfuehrung.
+            string? archiveRelPath = null;
+            if (decision.Status == ImportStatus.UpdateNewerIndex
+                && _reader.FileExists(_path.Combine(projectRootPath, targetRelPath)))
+                archiveRelPath = BuildArchiveRelPath(targetRelPath);
+
+            var actionId = _db.InsertImportAction(
+                importId, order++, actionType,
+                decision.DocumentKey,
+                decision.File.PlanNumber ?? "",
+                decision.File.RevisionToken,
+                oldIndex: null,
+                decision.File.Parsed.RelativePath,
+                targetRelPath,
+                archiveRelPath,
+                decision.File.Parsed.Md5,
+                decision.File.Parsed.FileSize);
+            planned.Add((decision, actionId, archiveRelPath));
+        }
+
+        var plannedSkips = new List<(ImportDecision Decision, string ActionId)>();
+        foreach (var dup in duplicates)
+        {
+            var actionId = _db.InsertImportAction(
+                importId, order++, "skipDuplicate",
+                dup.DocumentKey,
+                dup.File.PlanNumber ?? "",
+                dup.File.RevisionToken,
+                oldIndex: null,
+                dup.File.Parsed.RelativePath,
+                destinationPath: null,
+                archivePath: null,
+                dup.File.Parsed.Md5,
+                dup.File.Parsed.FileSize);
+            plannedSkips.Add((dup, actionId));
+        }
+
+        // ── Phase 2: Ausfuehrung ──
+        foreach (var (decision, actionId, archiveRelPath) in planned)
+        {
+            var actionResult = ExecuteSingleAction(
+                decision, projectRootPath, importId, actionId, archiveRelPath);
             if (actionResult.Success)
                 succeeded++;
             else
@@ -80,29 +152,19 @@ public class ImportExecutionService
             }
         }
 
-        // 3. Handle skipped (identical) — remove from inbox
-        var identicals = decisions
-            .Where(d => d.Status == ImportStatus.SkipIdentical)
-            .ToList();
-        foreach (var skip in identicals)
+        foreach (var (dup, actionId) in plannedSkips)
         {
-            try
+            var skipResult = ExecuteSkipDuplicate(dup, projectRootPath, actionId);
+            if (skipResult.Success)
+                skipped++;
+            else
             {
-                var sourcePath = _path.Combine(projectRootPath, skip.File.Parsed.RelativePath);
-                if (_reader.FileExists(sourcePath))
-                {
-                    _writer.DeleteFile(sourcePath);
-                    skipped++;
-                    Log.Debug("Identische Datei aus Eingang entfernt: {File}", skip.File.Parsed.FileName);
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, "Konnte identische Datei nicht entfernen: {File}", skip.File.Parsed.FileName);
+                failed++;
+                errors.Add($"{dup.File.Parsed.FileName}: {skipResult.Error}");
             }
         }
 
-        // 4. Complete journal
+        // Journal abschliessen
         _db.CompleteImportJournal(importId, failed == 0,
             failed > 0 ? $"{failed} Aktionen fehlgeschlagen" : null);
 
@@ -114,35 +176,11 @@ public class ImportExecutionService
 
     private ActionResult ExecuteSingleAction(
         ImportDecision decision, string projectRootPath,
-        string importId, int actionOrder)
+        string importId, string actionId, string? archiveRelPath)
     {
         var sourcePath = _path.Combine(projectRootPath, decision.File.Parsed.RelativePath);
-        var targetRelPath = decision.TargetRelativePath;
-
-        if (string.IsNullOrEmpty(targetRelPath))
-            return new ActionResult(false, "Kein Zielpfad berechnet");
-
+        var targetRelPath = decision.TargetRelativePath!;
         var targetPath = _path.Combine(projectRootPath, targetRelPath);
-
-        // Write journal action (pending) BEFORE moving
-        var actionType = decision.Status switch
-        {
-            ImportStatus.New => "new",
-            ImportStatus.UpdateNewerIndex => "indexUpdate",
-            ImportStatus.ChangedNoIndex => "changed",
-            ImportStatus.LearnIndex => "learnIndex",
-            _ => "unknown"
-        };
-
-        var actionId = _db.InsertImportAction(
-            importId, actionOrder, actionType,
-            decision.DocumentKey,
-            decision.File.PlanNumber ?? "",
-            decision.File.RevisionToken,
-            oldIndex: null,
-            decision.File.Parsed.RelativePath,
-            targetRelPath,
-            archivePath: null);
 
         try
         {
@@ -159,7 +197,9 @@ public class ImportExecutionService
             // Schema v2.0: bei Index-Update alte current-Revision auf superseded setzen + Event.
             if (decision.Status == ImportStatus.UpdateNewerIndex)
             {
-                ArchiveExistingFile(targetPath, projectRootPath);
+                // T2/AK 5: Archiv-Ziel kommt aus dem Journal (Planung), nie ad hoc.
+                if (archiveRelPath is not null)
+                    ArchiveExistingFile(targetPath, _path.Combine(projectRootPath, archiveRelPath));
                 var existingDoc = _db.GetDocumentByKey(decision.DocumentKey!);
                 if (existingDoc is not null)
                 {
@@ -259,24 +299,57 @@ public class ImportExecutionService
     }
 
     /// <summary>
-    /// Archives an existing file by moving it to _Archiv/ subfolder.
+    /// Bucket A (BPM-120 T2, ADR-064 P.7): bestätigte MD5-Dublette — Quelldatei
+    /// aus dem Eingang löschen. Journalisiert + recovery-fähig, bewusst NICHT
+    /// undo-bar (Inhalt liegt MD5-identisch im Bestand, kein Papierkorb).
     /// </summary>
-    private void ArchiveExistingFile(string targetPath, string projectRootPath)
+    private ActionResult ExecuteSkipDuplicate(
+        ImportDecision decision, string projectRootPath, string actionId)
+    {
+        try
+        {
+            var sourcePath = _path.Combine(projectRootPath, decision.File.Parsed.RelativePath);
+            if (_reader.FileExists(sourcePath))
+                _writer.DeleteFile(sourcePath);
+            _db.CompleteImportAction(actionId, true);
+            Log.Debug("Dublette aus Eingang entfernt: {File}", decision.File.Parsed.FileName);
+            return new ActionResult(true, null);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "skipDuplicate fehlgeschlagen: {File}", decision.File.Parsed.FileName);
+            _db.CompleteImportAction(actionId, false, ex.Message);
+            return new ActionResult(false, ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Deterministischer Archivpfad relativ zum Projekt-Root (BPM-120 T2, AK 5):
+    /// _Archiv-Unterordner neben dem Ziel, Name + Zeitstempel der PLANUNG.
+    /// Recovery und Undo verwenden exakt diesen journalisierten Pfad.
+    /// </summary>
+    private string BuildArchiveRelPath(string targetRelPath)
+    {
+        var dir = _path.GetDirectoryName(targetRelPath) ?? "";
+        var fileName = _path.GetFileName(targetRelPath);
+        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        var archiveName = $"{_path.GetFileNameWithoutExtension(fileName)}_{timestamp}{_path.GetExtension(fileName)}";
+        return _path.Combine(dir, "_Archiv", archiveName);
+    }
+
+    /// <summary>
+    /// Verschiebt die vorhandene Zieldatei an den journalisierten Archivpfad.
+    /// No-Op wenn die Zieldatei nicht (mehr) existiert.
+    /// </summary>
+    private void ArchiveExistingFile(string targetPath, string archiveAbsPath)
     {
         if (!_reader.FileExists(targetPath))
             return;
 
-        var targetDir = _path.GetDirectoryName(targetPath)!;
-        var archiveDir = _path.Combine(targetDir, "_Archiv");
-        _writer.CreateDirectory(archiveDir);
-
-        var fileName = _path.GetFileName(targetPath);
-        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        var archiveName = $"{_path.GetFileNameWithoutExtension(fileName)}_{timestamp}{_path.GetExtension(fileName)}";
-        var archivePath = _path.Combine(archiveDir, archiveName);
-
-        _writer.MoveFile(targetPath, archivePath);
-        Log.Information("Datei archiviert: {Source} → {Archive}", fileName, archiveName);
+        _writer.CreateDirectory(_path.GetDirectoryName(archiveAbsPath)!);
+        _writer.MoveFile(targetPath, archiveAbsPath);
+        Log.Information("Datei archiviert: {Source} → {Archive}",
+            _path.GetFileName(targetPath), _path.GetFileName(archiveAbsPath));
     }
 
     private sealed record ActionResult(bool Success, string? Error);

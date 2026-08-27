@@ -32,6 +32,9 @@ public partial class CaptureRowViewModel : ObservableObject
     public bool IsConflict => Item.Bucket == CaptureBucket.Conflict;
     public string? Reason => Item.Reason;
 
+    /// <summary>Kombi-Plan erkannt (mehrere Plantyp-Keywords im Namen, 111.07 Slice C) — Badge + Panel-Warnhinweis.</summary>
+    public bool IsCombi => Item.Candidates.IsCombi;
+
     public string CandidateText
     {
         get

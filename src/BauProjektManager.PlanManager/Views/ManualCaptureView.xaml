@@ -73,6 +73,17 @@
                                                    FontSize="{DynamicResource BpmFontSizeCaption}"
                                                    FontWeight="SemiBold"/>
                                     </Border>
+                                    <!-- 111.07 Slice C: Kombi-Plan (kein Auto-Split, V1) -->
+                                    <Border Background="{DynamicResource BpmWarning}"
+                                            CornerRadius="8" Padding="6,2"
+                                            Margin="8,0,0,0"
+                                            VerticalAlignment="Center"
+                                            Visibility="{Binding IsCombi, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="⚠ Kombi"
+                                                   Foreground="{DynamicResource BpmTextBright}"
+                                                   FontSize="{DynamicResource BpmFontSizeCaption}"
+                                                   FontWeight="SemiBold"/>
+                                    </Border>
                                 </StackPanel>
                                 <TextBlock Grid.Column="1"
                                            Text="{Binding SizeText}"
@@ -295,6 +306,26 @@
                                                        TextWrapping="Wrap"
                                                        Margin="0,2,0,0"
                                                        Text="Import als EINE Revision mit zwei Dateien (PDF führend, DWG angehängt)"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- 111.07 Slice C: Kombi-Warnhinweis (kein Auto-Split in V1) -->
+                                    <Border Background="{DynamicResource BpmBgElevated}"
+                                            BorderBrush="{DynamicResource BpmWarning}"
+                                            BorderThickness="3,0,0,0"
+                                            Padding="8,6"
+                                            Margin="0,0,0,10"
+                                            Visibility="{Binding Row.IsCombi, Converter={StaticResource BoolToVis}}">
+                                        <StackPanel>
+                                            <TextBlock FontSize="{DynamicResource BpmFontSizeCaption}"
+                                                       Foreground="{DynamicResource BpmWarning}"
+                                                       TextWrapping="Wrap"
+                                                       Text="⚠ Kombi-Plan erkannt (mehrere Plantypen im Namen)"/>
+                                            <TextBlock FontSize="{DynamicResource BpmFontSizeCaption}"
+                                                       Foreground="{DynamicResource BpmTextSecondary}"
+                                                       TextWrapping="Wrap"
+                                                       Margin="0,2,0,0"
+                                                       Text="V1: kein Auto-Split — als EIN Dokument erfassen, Typ „Kombiplan/Sonstiges“ empfohlen (+ Neu…); Inhalte per Text-Zuweisung als Segmente."/>
                                         </StackPanel>
                                     </Border>
 

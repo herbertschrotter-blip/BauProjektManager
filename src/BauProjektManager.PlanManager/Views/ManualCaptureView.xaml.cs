@@ -310,7 +310,9 @@ public partial class ManualCaptureView : UserControl
         Radial.ClearRing(2);
         Radial.ClearRing(3);
         var count = vm.SelectedRows.Count;
-        Radial.SetCenter(count == 1 ? _captureAnchor.FileName : $"{count} Dateien", "");
+        // Slice C: Kombi-Hinweis im Radial-Zentrum, solange kein Typ gewählt ist
+        var combiHint = vm.SelectedRows.Any(r => r.IsCombi) ? "⚠ Kombi-Plan" : "";
+        Radial.SetCenter(count == 1 ? _captureAnchor.FileName : $"{count} Dateien", combiHint);
 
         // Overlay am Cursor positionieren (in RootGrid geklemmt)
         var half = RadialSize / 2;

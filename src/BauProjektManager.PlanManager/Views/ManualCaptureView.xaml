@@ -142,7 +142,8 @@
                      Background="{DynamicResource BpmBgBase}"
                      BorderThickness="0"
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                     MouseRightButtonUp="OnArchiveRowContextMenu">
+                     MouseRightButtonUp="OnArchiveRowContextMenu"
+                     PreviewMouseLeftButtonDown="OnArchiveRowPreviewMouseDown">
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
                         <Setter Property="HorizontalContentAlignment" Value="Stretch"/>

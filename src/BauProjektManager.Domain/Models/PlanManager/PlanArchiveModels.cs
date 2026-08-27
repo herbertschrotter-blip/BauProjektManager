@@ -101,6 +101,13 @@ public sealed record PlanArchiveEntry(
     string? FileName,
     string? RelativePath);
 
+/// <summary>Eine mit einer Revision verknüpfte Datei (plan_files via revision_file_links) — für den Archiv-Move (111.07 Slice D).</summary>
+public sealed record PlanRevisionFile(
+    string FileId,
+    string FileName,
+    string RelativePath,
+    bool IsPrimary);
+
 /// <summary>
 /// Minimaler Audit-Trail-Eintrag für einen Revisions-Statuswechsel (Tabelle plan_revision_events).
 /// </summary>

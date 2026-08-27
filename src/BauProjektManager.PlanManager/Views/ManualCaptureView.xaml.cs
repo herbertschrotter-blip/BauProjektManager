@@ -70,6 +70,12 @@ public partial class ManualCaptureView : UserControl
     /// <summary>Die aktuell in der Vorschau gezeigte Zeile (Ziel der Text-Zuweisung).</summary>
     private CaptureRowViewModel? _previewRow;
 
+    /// <summary>Archiv-Zeile unter der laufenden Hold-Geste (111.07 Slice D, Verschieben).</summary>
+    private ArchiveRowViewModel? _moveDownRow;
+
+    /// <summary>Archiv-Zeile des offenen Move-Radials — NULL = normaler Zuordnungs-Modus.</summary>
+    private ArchiveRowViewModel? _moveAnchor;
+
     private const double DetailDefaultWidth = 320;
     private const double DetailMinWidth = 320;
     private const double DetailMaxWidth = 900;
@@ -142,6 +148,7 @@ public partial class ManualCaptureView : UserControl
         {
             _holdTimer.Stop();
             _downRow = null;
+            _moveDownRow = null;
         }
 
         if (_controller is null)
@@ -158,6 +165,7 @@ public partial class ManualCaptureView : UserControl
         base.OnPreviewMouseUp(e);
         _holdTimer.Stop();
         _downRow = null;
+        _moveDownRow = null;
 
         if (_controller is null)
         {
@@ -205,9 +213,23 @@ public partial class ManualCaptureView : UserControl
                 return;
             }
             _controller.Commit(hit.RingIndex, hit.Item.Name, _captureAnchor?.Item.Candidates);
-            ViewModel.CompleteCapture(_controller);
-            CloseRadial();
+            CommitRadial();
         }
+    }
+
+    /// <summary>
+    /// Schließt die Radial-Auswahl ab: normaler Modus = Pending-Zuordnung,
+    /// Move-Modus (111.07 Slice D, Archiv-Zeile) = sofortiger Journal-Move.
+    /// </summary>
+    private void CommitRadial()
+    {
+        if (_controller is null)
+            return;
+        if (_moveAnchor is not null)
+            ViewModel.CompleteMove(_controller, _moveAnchor);
+        else
+            ViewModel.CompleteCapture(_controller);
+        CloseRadial();
     }
 
     // ── Mausrad: dreht NUR die Ebene unter dem Cursor (BPM-111.05 Slice B) ──
@@ -285,14 +307,32 @@ public partial class ManualCaptureView : UserControl
 
         _controller.RefreshStammdaten(ViewModel.Types, ViewModel.Parts);
         _controller.Commit(ringIndex, committedName, _captureAnchor?.Item.Candidates);
-        ViewModel.CompleteCapture(_controller);
-        CloseRadial();
+        CommitRadial();
     }
 
     private void OnHoldElapsed(object? sender, EventArgs e)
     {
         _holdTimer.Stop();
-        if (_downRow is null || DataContext is not ManualCaptureViewModel vm)
+        if (DataContext is not ManualCaptureViewModel vm)
+            return;
+
+        // 111.07 Slice D: Hold auf einer Archiv-Zeile = Radial im Move-Modus
+        // (Zuordnung verschiebt sofort per Journal, kein Pending).
+        if (_moveDownRow is not null)
+        {
+            _moveAnchor = _moveDownRow;
+            _captureAnchor = null;
+            _controller = vm.BeginMove(_moveAnchor);
+            Radial.SetRing(1, _controller.BuildRing1(null), selectedName: null, animate: true);
+            Radial.ClearRing(2);
+            Radial.ClearRing(3);
+            Radial.SetCenter("Verschieben", _moveAnchor.FileName);
+            ShowRadialOverlay("↷ " + _moveAnchor.FileName);
+            _moveDownRow = null;
+            return;
+        }
+
+        if (_downRow is null)
             return;
 
         _captureAnchor = _downRow;
@@ -314,24 +354,31 @@ public partial class ManualCaptureView : UserControl
         var combiHint = vm.SelectedRows.Any(r => r.IsCombi) ? "⚠ Kombi-Plan" : "";
         Radial.SetCenter(count == 1 ? _captureAnchor.FileName : $"{count} Dateien", combiHint);
 
-        // Overlay am Cursor positionieren (in RootGrid geklemmt)
+        ShowRadialOverlay(count == 1 ? _captureAnchor.FileName : $"{count} Dateien");
+        _downRow = null;
+    }
+
+    /// <summary>
+    /// Overlay am Cursor positionieren (in RootGrid geklemmt) + Ghost + Sticky-
+    /// Einrasten — gemeinsamer Abschluss für Zuordnungs- und Move-Radial.
+    /// Sticky-Radial: KEIN Mouse.Capture — das Overlay wird hit-test-fähig,
+    /// sodass das Control eigene Hover/Dwell-Events bekommt.
+    /// </summary>
+    private void ShowRadialOverlay(string ghostLabel)
+    {
         var half = RadialSize / 2;
         var x = Math.Clamp(_downPoint.X, half, Math.Max(half, RootGrid.ActualWidth - half));
         var y = Math.Clamp(_downPoint.Y, half, Math.Max(half, RootGrid.ActualHeight - half));
         Canvas.SetLeft(Radial, x - half);
         Canvas.SetTop(Radial, y - half);
 
-        GhostText.Text = count == 1 ? _captureAnchor.FileName : $"{count} Dateien";
+        GhostText.Text = ghostLabel;
         Canvas.SetLeft(Ghost, _downPoint.X + 16);
         Canvas.SetTop(Ghost, _downPoint.Y + 14);
 
-        // Sticky-Radial: KEIN Mouse.Capture mehr. Das Overlay wird hit-test-fähig,
-        // sodass das Control eigene Hover/Dwell-Events bekommt und die Maus nach dem
-        // Loslassen der Taste frei über die Ringe fährt.
         OverlayCanvas.Visibility = Visibility.Visible;
         OverlayCanvas.IsHitTestVisible = true;
         _justLatched = true;
-        _downRow = null;
     }
 
     // ── Radial-Ebenenlogik (Controller entscheidet, Host rendert) ───
@@ -366,8 +413,30 @@ public partial class ManualCaptureView : UserControl
         Radial.ResetInteraction();
         _controller = null;
         _captureAnchor = null;
+        _moveAnchor = null;
         _justLatched = false;
         ViewModel.SetSelectedRow();
+    }
+
+    /// <summary>
+    /// Hold-Start auf einer Archiv-Zeile (111.07 Slice D): startet den
+    /// Hold-Timer für das Move-Radial (Abbruch bei Bewegung wie im Eingang).
+    /// </summary>
+    private void OnArchiveRowPreviewMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        var container = ItemsControl.ContainerFromElement(ArchiveList, (DependencyObject)e.OriginalSource) as ListBoxItem;
+        if (container?.DataContext is not ArchiveRowViewModel row)
+            return;
+
+        // Klick auf den ↩-Button startet keinen Hold
+        for (var d = e.OriginalSource as DependencyObject; d is not null and not ListBoxItem;
+             d = System.Windows.Media.VisualTreeHelper.GetParent(d))
+            if (d is Button)
+                return;
+
+        _moveDownRow = row;
+        _downPoint = e.GetPosition(RootGrid);
+        _holdTimer.Start();
     }
 
     // ── Vorschau (BPM-111.06 Slice C1) ──────────────────────────────

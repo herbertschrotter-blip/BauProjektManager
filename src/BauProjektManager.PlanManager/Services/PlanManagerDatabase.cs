@@ -493,6 +493,76 @@ public class PlanManagerDatabase : IDisposable
         return result;
     }
 
+    /// <summary>Alle mit einer Revision verknüpften Dateien (111.07 Slice D, Primärdatei zuerst).</summary>
+    public List<PlanRevisionFile> GetFilesForRevision(string revisionId)
+    {
+        var conn = GetConnection();
+        var result = new List<PlanRevisionFile>();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT pf.id, pf.file_name, pf.relative_path, rfl.is_primary
+            FROM plan_files pf
+            JOIN revision_file_links rfl ON rfl.file_id = pf.id
+            WHERE rfl.revision_id = @rid
+            ORDER BY rfl.is_primary DESC, pf.file_name ASC
+            """;
+        cmd.Parameters.AddWithValue("@rid", revisionId);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+            result.Add(new PlanRevisionFile(
+                reader.GetString(0), reader.GetString(1), reader.GetString(2),
+                reader.GetInt64(3) != 0));
+        return result;
+    }
+
+    /// <summary>Aktualisiert den relativen Pfad einer Datei nach einem Archiv-Move (111.07 Slice D).</summary>
+    public void UpdateFilePath(string fileId, string newRelativePath)
+    {
+        var conn = GetConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            UPDATE plan_files SET relative_path = @rp, updated_at = @ua WHERE id = @id
+            """;
+        cmd.Parameters.AddWithValue("@rp", newRelativePath);
+        cmd.Parameters.AddWithValue("@ua", DateTime.UtcNow.ToString("o"));
+        cmd.Parameters.AddWithValue("@id", fileId);
+        cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>Aktualisiert die Ablage eines Dokuments nach einem Archiv-Move (111.07 Slice D, ADR-061: DB = Ordner-Wahrheit).</summary>
+    public void UpdateDocumentDirectory(string documentId, string targetFolder, string relativeDirectory)
+    {
+        var conn = GetConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            UPDATE plan_documents
+            SET target_folder = @tf, relative_directory = @rd, last_modified_at = @ua
+            WHERE id = @id
+            """;
+        cmd.Parameters.AddWithValue("@tf", targetFolder);
+        cmd.Parameters.AddWithValue("@rd", relativeDirectory);
+        cmd.Parameters.AddWithValue("@ua", DateTime.UtcNow.ToString("o"));
+        cmd.Parameters.AddWithValue("@id", documentId);
+        cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>
+    /// Schließt einen Archiv-Move-Journal-Vorgang mit Status 'moved' ab
+    /// (111.07 Slice D): bewusst NICHT 'completed', damit Import-Undo und
+    /// „letzter Import"-Kennzeichnung Moves ignorieren.
+    /// </summary>
+    public void MarkJournalMoved(string importId)
+    {
+        var conn = GetConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            UPDATE import_journal SET status = 'moved', completed_at = @ca WHERE id = @id
+            """;
+        cmd.Parameters.AddWithValue("@ca", DateTime.UtcNow.ToString("o"));
+        cmd.Parameters.AddWithValue("@id", importId);
+        cmd.ExecuteNonQuery();
+    }
+
     /// <summary>Lädt die Segmentwerte eines Dokuments (BPM-118), sortiert nach segment_key.</summary>
     public List<PlanDocumentSegment> GetSegmentsForDocument(string documentId)
     {

@@ -108,6 +108,7 @@ public partial class ManualCaptureViewModel : ObservableObject
     private readonly PendingAssignmentStore _pending;
     private readonly CaptureConfirmService _confirm;
     private readonly ImportUndoService _undo;
+    private readonly ArchiveMoveService _move;
     private readonly PreImportRecoveryCheck _preImportCheck = new();
     private readonly ProjectDatabase _bpmDb;
     private readonly DocumentTypeSeedService _seed;
@@ -129,6 +130,7 @@ public partial class ManualCaptureViewModel : ObservableObject
         _pending = new PendingAssignmentStore();
         _confirm = new CaptureConfirmService(planDb, idGenerator, _pending);
         _undo = new ImportUndoService(planDb);
+        _move = new ArchiveMoveService(planDb);
         _bpmDb = bpmDb;
         _seed = new DocumentTypeSeedService(bpmDb);
         _creation = new DocumentTypeCreationService(bpmDb, new PlanValueNormalizer());
@@ -252,6 +254,37 @@ public partial class ManualCaptureViewModel : ObservableObject
 
     public IReadOnlyList<CaptureRowViewModel> SelectedRows =>
         [.. Rows.Where(r => r.IsSelected)];
+
+    /// <summary>
+    /// Startet einen Verschiebe-Vorgang für eine Archiv-Zeile (111.07 Slice D):
+    /// gleiches Radial, aber Ziel = sofortiger Move statt Pending.
+    /// </summary>
+    public RadialSelectionController BeginMove(ArchiveRowViewModel row)
+    {
+        foreach (var r in ArchiveRows)
+            r.IsSelected = ReferenceEquals(r, row);
+        var controller = new RadialSelectionController(_types, _parts);
+        controller.Reset();
+        return controller;
+    }
+
+    /// <summary>
+    /// Führt den Archiv-Move aus (111.07 Slice D): journalisiert (Status
+    /// 'moved'), sofort — kein Pending, kein Undo (Undo gilt nur dem letzten
+    /// Import). Lädt den Archiv-Bestand danach neu.
+    /// </summary>
+    public void CompleteMove(RadialSelectionController controller, ArchiveRowViewModel row)
+    {
+        if (controller.SelectedType is null)
+            return;
+
+        var targetDir = controller.BuildTargetDirectory(_plansRelativePath);
+        var result = _move.MoveDocument(row.Entry, targetDir, _projectRootPath);
+        StatusText = result.Success
+            ? $"↷ {row.FileName} verschoben nach {targetDir} ({result.MovedFiles} Datei(en), Journal)"
+            : $"⚠ Verschieben fehlgeschlagen: {result.Error}";
+        LoadArchive();
+    }
 
     // ── Schnellanlage „+ Neu…" (Slice 3) ────────────────────────────
     // Stammdaten direkt aus dem Radial anlegen; Feinpflege in den Projekt-

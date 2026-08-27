@@ -155,10 +155,16 @@ public class ImportExecutionService
                 if (existingDoc is not null)
                 {
                     var oldCurrent = _db.GetCurrentRevisionForDocument(existingDoc.Id);
-                    _db.SupersedeCurrentRevision(existingDoc.Id, actionTime);
-                    if (oldCurrent is not null)
+                    // 111.07 Slice A2: Zweite Datei desselben Dokuments im SELBEN
+                    // Import (PDF+DWG-Paar) darf die gerade angelegte Revision
+                    // nicht gleich wieder ablösen — sie dockt unten als
+                    // Zusatzdatei an (FileLinked-Zweig).
+                    if (oldCurrent is not null && oldCurrent.LastImportId != importId)
+                    {
+                        _db.SupersedeCurrentRevision(existingDoc.Id, actionTime);
                         _db.InsertRevisionEvent(oldCurrent.Id, importId,
                             PlanArchive.EventType.Superseded, "Durch neue Revision ersetzt");
+                    }
                 }
             }
 

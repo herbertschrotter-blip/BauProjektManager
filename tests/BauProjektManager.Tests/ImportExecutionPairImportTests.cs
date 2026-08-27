@@ -85,4 +85,68 @@ public class ImportExecutionPairImportTests
         Assert.False(File.Exists(Path.Combine(env.Root, "_Eingang", "5998-300_OG2.pdf")));
         Assert.False(File.Exists(Path.Combine(env.Root, "_Eingang", "5998-300_OG2.dwg")));
     }
+
+    [Fact]
+    public void Execute_PdfDwgPairAsUpdate_SupersedesOnceAndLinksDwgToNewRevision()
+    {
+        // Slice A2: Zwei UpdateNewerIndex-Aktionen auf dasselbe Dokument im
+        // selben Import (PDF+DWG-Paar) — ohne den Import-Guard würde die zweite
+        // Aktion die frisch angelegte Revision gleich wieder superseden.
+        using var env = new TestEnv();
+        var targetRelDir = Path.Combine("Pläne", "Polierplan", "Haus 2", "OG2");
+        var targetAbsDir = Path.Combine(env.Root, targetRelDir);
+        Directory.CreateDirectory(targetAbsDir);
+
+        // Bestand: Dokument + current Revision A mit alter PDF+DWG im Ziel
+        const string key = "polierplan|5998_300|haus_2|og2";
+        var docId = env.Repo.ResolveOrCreateDocument("proj1", key,
+            "polierplan", "5998-300", "Polierplan", "", "Pläne", targetRelDir, null, null);
+        var now = DateTime.UtcNow.ToString("o");
+        var oldImportId = env.Repo.CreateImportJournal("_Eingang", 1, profileId: null);
+        env.Repo.CompleteImportJournal(oldImportId, success: true);
+        var revA = env.Repo.InsertRevision(docId, "A", "FileName",
+            PlanArchive.Status.Current, now, null, now, lastImportId: oldImportId);
+
+        // Eingang: neues Paar mit Index B
+        File.WriteAllText(Path.Combine(env.Root, "_Eingang", "5998-300-B_OG2.pdf"), "new-pdf");
+        File.WriteAllText(Path.Combine(env.Root, "_Eingang", "5998-300-B_OG2.dwg"), "new-dwg");
+
+        var match = new KnownPlanDocument(docId, key, "5998-300", "Polierplan",
+            "Pläne", targetRelDir, "A", revA);
+        PendingAssignment UpdatePending(string fileName, string md5)
+        {
+            var scan = new ScannedFile(
+                Path.Combine("_Eingang", fileName), fileName,
+                Path.GetExtension(fileName), 12, DateTime.UtcNow);
+            return new PendingAssignment(
+                new FingerprintedFile(scan, md5), CaptureBucket.UpdateProposal,
+                docId, "Polierplan", null, null, "5998-300", "B",
+                targetRelDir, match);
+        }
+
+        // DWG bewusst zuerst — Sortierung + Guard müssen zusammen greifen.
+        var decisions = CaptureConfirmService.BuildDecisions(
+            [UpdatePending("5998-300-B_OG2.dwg", "md5-dwg-b"), UpdatePending("5998-300-B_OG2.pdf", "md5-pdf-b")],
+            new PlanValueNormalizer());
+        var result = new ImportExecutionService(env.Repo, new UlidIdGenerator())
+            .Execute(decisions, env.Root, "_Eingang");
+
+        Assert.Equal(0, result.Failed);
+        Assert.Equal(2, result.Succeeded);
+
+        var revisions = env.Repo.GetRevisionsForDocument(docId);
+        Assert.Equal(2, revisions.Count);
+        var current = env.Repo.GetCurrentRevisionForDocument(docId);
+        Assert.NotNull(current);
+        Assert.Equal("B", current!.PlanIndex);
+        Assert.Equal(PlanArchive.Status.Superseded,
+            revisions.Single(r => r.Id == revA).RevisionStatus);
+        Assert.Equal(
+            Path.Combine(targetRelDir, "5998-300-B_OG2.pdf"),
+            env.Repo.GetPdfPathForRevision(current.Id));
+
+        // Beide neuen Dateien liegen am Ziel
+        Assert.True(File.Exists(Path.Combine(targetAbsDir, "5998-300-B_OG2.pdf")));
+        Assert.True(File.Exists(Path.Combine(targetAbsDir, "5998-300-B_OG2.dwg")));
+    }
 }

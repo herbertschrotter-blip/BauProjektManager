@@ -293,21 +293,44 @@ public partial class ManualCaptureViewModel : ObservableObject
         // CommandParameter (der beim ContentControl-DataContext-Wechsel als null
         // ankommen kann). Button ist ohnehin nur bei CanTakeUpdate sichtbar.
         var row = SelectedDetail?.Row;
-        if (row?.Item.Match is null)
+        var match = row?.Item.Match;
+        if (row is null || match is null)
             return;
+
+        AssignUpdate(row, match);
+
+        // 111.07 Slice A2: PDF/DWG-Partner (gleicher Stamm) mit übernehmen —
+        // beide Dateien gehören zur selben neuen Revision (der Import-Guard
+        // in der Execution verhindert das Doppel-Supersede).
+        var extension = row.Item.File.Scan.Extension;
+        var pairedExtension = extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase) ? ".dwg"
+            : extension.Equals(".dwg", StringComparison.OrdinalIgnoreCase) ? ".pdf"
+            : null;
+        var partner = pairedExtension is null ? null : FindPairedRow(row, Rows, pairedExtension);
+        if (partner is not null && !partner.IsDuplicate && !partner.IsPending)
+        {
+            AssignUpdate(partner, partner.Item.Match ?? match);
+            StatusText = $"⛓ Gepaarte Datei mit übernommen: {partner.FileName}";
+        }
+
+        UpdatePendingState();
+        SetSelectedRow();
+    }
+
+    /// <summary>Update-Übernahme einer Zeile auf das bekannte Dokument (Bucket B, 111.04/111.07 A2).</summary>
+    private void AssignUpdate(CaptureRowViewModel row, KnownPlanDocument match)
+    {
         var c = row.Item.Candidates;
         _pending.Assign(new PendingAssignment(
             row.Item.File, row.Item.Bucket,
-            row.Item.Match.DocumentId, row.Item.Match.DocumentType,
+            match.DocumentId, match.DocumentType,
             BuildingPart: null, Level: null,
-            c.PlanNumber ?? row.Item.Match.PlanNumber, c.Index,
-            row.Item.Match.RelativeDirectory, row.Item.Match,
+            c.PlanNumber ?? match.PlanNumber, c.Index,
+            match.RelativeDirectory, match,
             ChangeNote: NormalizeText(row.ChangeNote),
             ReleasedAt: row.ReleasedAtIso,
             AssignedSegments: [.. row.AssignedSegments.Values]));
-        row.PendingTarget = row.Item.Match.RelativeDirectory;
-        UpdatePendingState();
-        SetSelectedRow();
+        row.PendingTarget = match.RelativeDirectory;
     }
 
     /// <summary>

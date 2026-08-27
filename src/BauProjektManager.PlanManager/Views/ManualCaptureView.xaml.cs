@@ -297,6 +297,13 @@ public partial class ManualCaptureView : UserControl
 
         _captureAnchor = _downRow;
         _controller = vm.BeginCapture(_downRow);
+        if (_controller is null)
+        {
+            // Slice B: Bulk-Deckel — Radial öffnet nicht, Grund steht in der Statuszeile.
+            _captureAnchor = null;
+            _downRow = null;
+            return;
+        }
 
         var candidates = _captureAnchor.Item.Candidates;
         Radial.SetRing(1, _controller.BuildRing1(candidates), selectedName: null, animate: true);

@@ -193,14 +193,31 @@ public partial class ManualCaptureViewModel : ObservableObject
 
     // ── Radial-Orchestrierung (vom Gesten-Host aufgerufen) ─────────
 
-    /// <summary>Startet einen Capture-Vorgang fuer die uebergebene (Anker-)Zeile.</summary>
-    public RadialSelectionController BeginCapture(CaptureRowViewModel anchorRow)
+    /// <summary>
+    /// Startet einen Capture-Vorgang fuer die uebergebene (Anker-)Zeile.
+    /// 111.07 Slice B: Bulk-Vorprüfung über die effektive Zuordnungsliste
+    /// (inkl. Paar-Partner) — NULL wenn geblockt (Radial öffnet nicht),
+    /// Warnungen landen in der Statuszeile.
+    /// </summary>
+    public RadialSelectionController? BeginCapture(CaptureRowViewModel anchorRow)
     {
         if (!anchorRow.IsSelected)
         {
             foreach (var r in Rows) r.IsSelected = false;
             anchorRow.IsSelected = true;
         }
+
+        var selected = SelectedRows.Where(r => !r.IsDuplicate && !r.IsUpdate).ToList();
+        var effective = ExpandWithPairedRows(selected, Rows);
+        var check = BulkPrecheck.Evaluate(effective);
+        if (check.Gate == BulkGate.Blocked)
+        {
+            StatusText = $"⛔ {check.BlockReason}";
+            return null;
+        }
+        if (check.Warnings.Count > 0)
+            StatusText = "⚠ " + string.Join(" · ", check.Warnings);
+
         var controller = new RadialSelectionController(_types, _parts);
         controller.Reset();
         return controller;

@@ -1,15 +1,20 @@
 namespace BauProjektManager.Domain.Models;
 
 /// <summary>
-/// Ergebnis eines Seiten-Renderings über den PDF-Render-Port (ADR-062):
-/// PNG-Bytes plus physische Blattgröße in Millimetern (rotationsbereinigt).
-/// Die mm-Maße erlauben viewer-seitige Ausschnitte in realen Größen —
-/// z. B. den Plankopf-Start (A4 rechts unten, BPM-111.06 Slice C2).
+/// Ergebnis eines Seiten-Renderings über den PDF-Render-Port (ADR-062,
+/// Addendum Teil 47): rohe BGRA-Pixel plus physische Blattgröße in mm.
+/// Pixel und Text-Koordinaten (IPdfTextService) stammen aus DERSELBEN
+/// Engine-Pipeline (PDFium) — Viewer-Pixel ↔ mm ist eine einzige lineare
+/// Umrechnung, ohne eigenes Koordinaten-Mapping.
 /// </summary>
-/// <param name="Png">Gerenderte Seite als PNG.</param>
-/// <param name="PageWidthMm">Blattbreite in mm (nach Seitenrotation).</param>
-/// <param name="PageHeightMm">Blatthöhe in mm (nach Seitenrotation).</param>
+/// <param name="PixelsBgra">Seite als BGRA32-Pixel (Zeilen top-down, Stride = PixelWidth*4).</param>
+/// <param name="PixelWidth">Bildbreite in Pixel.</param>
+/// <param name="PixelHeight">Bildhöhe in Pixel.</param>
+/// <param name="PageWidthMm">Blattbreite in mm (Anzeige-Orientierung).</param>
+/// <param name="PageHeightMm">Blatthöhe in mm (Anzeige-Orientierung).</param>
 public sealed record PdfPageRender(
-    byte[] Png,
+    byte[] PixelsBgra,
+    int PixelWidth,
+    int PixelHeight,
     double PageWidthMm,
     double PageHeightMm);

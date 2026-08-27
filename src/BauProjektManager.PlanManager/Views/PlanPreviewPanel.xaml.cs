@@ -2,13 +2,35 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using Rectangle = System.Windows.Shapes.Rectangle;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models;
 using Serilog;
 
 namespace BauProjektManager.PlanManager.Views;
+
+/// <summary>Ziel-Art einer Text-Zuweisung aus der Vorschau (BPM-118).</summary>
+public enum PdfAssignKind
+{
+    /// <summary>Änderungshinweis der einlaufenden Revision (plan_revisions.change_note).</summary>
+    ChangeNote,
+    /// <summary>Index-Datum der einlaufenden Revision (plan_revisions.released_at).</summary>
+    ReleasedAt,
+    /// <summary>Segmenttyp aus dem Katalog (BPM-108).</summary>
+    Segment
+}
+
+/// <summary>Vom User gewählte Zuweisung: markierter Text → Ziel.</summary>
+public sealed class PdfTextAssignedEventArgs : EventArgs
+{
+    public required PdfAssignKind Kind { get; init; }
+    public string? SegmentTypeId { get; init; }
+    public string? SegmentTypeName { get; init; }
+    public required string Text { get; init; }
+}
 
 /// <summary>
 /// Integriertes PDF-Vorschau-Panel (BPM-111.06 Slice C, Variante B — Teil 47):
@@ -24,6 +46,8 @@ namespace BauProjektManager.PlanManager.Views;
 public partial class PlanPreviewPanel : UserControl
 {
     private const int RenderPixelWidth = 3600;
+    private const double TargetPixelsPerMm = 7.0; // ~180 DPI — scharf bis in den Plankopf
+    private const int MaxRenderWidth = 7200;      // Speicher-Deckel (A0 ≈ 146 MB BGRA)
     private const double A4WidthMm = 210;
     private const double A4HeightMm = 297;
     private const double MinZoom = 0.05;
@@ -36,8 +60,17 @@ public partial class PlanPreviewPanel : UserControl
     /// <summary>Shell-Launcher (ADR-060) — "↗ In Standard-App öffnen".</summary>
     public IFileLauncher? FileLauncher { get; set; }
 
+    /// <summary>PDF-Text-Port (ADR-063) — null = kein Markieren möglich.</summary>
+    public IPdfTextService? PdfTextService { get; set; }
+
+    /// <summary>Segmenttyp-Katalog (BPM-108) für das Zuweisungs-Menü.</summary>
+    public ISegmentTypeCatalog? SegmentTypeCatalog { get; set; }
+
     /// <summary>Vom ✕-Button ausgelöst — der Host blendet die Panel-Spalte aus.</summary>
     public event EventHandler? CloseRequested;
+
+    /// <summary>Markierter Text wurde einem Ziel zugewiesen (BPM-118).</summary>
+    public event EventHandler<PdfTextAssignedEventArgs>? AssignRequested;
 
     private string? _currentPath;
     private int _renderGeneration;
@@ -49,6 +82,15 @@ public partial class PlanPreviewPanel : UserControl
     private Point _panStart;
     private double _panStartH;
     private double _panStartV;
+
+    // Text-Markierung (BPM-118): Wort-Cache je Seite + klassische Auswahl
+    // (Anker → Cursor als zusammenhängender Bereich in Leserichtung)
+    private IReadOnlyList<PdfWord>? _words;
+    private readonly List<PdfWord> _selectedWords = [];
+    private string _selectedText = string.Empty;
+    private bool _selecting;
+    private int _selAnchor = -1;
+    private int _selCursor = -1;
 
     public PlanPreviewPanel()
     {
@@ -98,20 +140,32 @@ public partial class PlanPreviewPanel : UserControl
     {
         if (PdfRenderService is null || _currentPath is null)
             return;
+        _words = null; // Wort-Cache gilt pro Seite/Datei
+        ClearSelection();
         StatusText.Text = "Rendere …";
 
         PdfPageRender page;
         await using (var stream = File.OpenRead(_currentPath))
-            page = await PdfRenderService.RenderPageAsPngAsync(stream, _currentPage, RenderPixelWidth);
+            page = await PdfRenderService.RenderPageAsync(stream, _currentPage, RenderPixelWidth);
         if (generation != _renderGeneration)
             return;
+
+        // Große Blätter (A1/A0) brauchen mehr Pixel, sonst wird der Plankopf-Zoom
+        // matschig — einmalig auf Zieldichte nachrendern (Viewer-Verhalten).
+        var targetWidth = Math.Clamp(
+            (int)(page.PageWidthMm * TargetPixelsPerMm), RenderPixelWidth, MaxRenderWidth);
+        if (targetWidth > page.PixelWidth * 12 / 10)
+        {
+            await using var stream = File.OpenRead(_currentPath);
+            page = await PdfRenderService.RenderPageAsync(stream, _currentPage, targetWidth);
+            if (generation != _renderGeneration)
+                return;
+        }
         _page = page;
 
-        var image = new BitmapImage();
-        image.BeginInit();
-        image.CacheOption = BitmapCacheOption.OnLoad;
-        image.StreamSource = new MemoryStream(page.Png);
-        image.EndInit();
+        var image = BitmapSource.Create(
+            page.PixelWidth, page.PixelHeight, 96, 96,
+            PixelFormats.Bgra32, null, page.PixelsBgra, page.PixelWidth * 4);
         image.Freeze();
         PageImage.Source = image;
 
@@ -119,6 +173,7 @@ public partial class PlanPreviewPanel : UserControl
         PrevPageButton.IsEnabled = _currentPage > 0;
         NextPageButton.IsEnabled = _currentPage < _pageCount - 1;
         StatusText.Text = $"{Path.GetFileName(_currentPath)} · Seite {_currentPage + 1} von {_pageCount} · {InteractionHint}";
+        _ = EnsureWordsAsync(); // Textebene proaktiv laden → Markieren startet ohne Verzögerung
 
         if (startWithPlankopf)
             await Dispatcher.InvokeAsync(ApplyPlankopfView, DispatcherPriority.Loaded);
@@ -172,6 +227,248 @@ public partial class PlanPreviewPanel : UserControl
         ZoomTransform.ScaleY = zoom;
     }
 
+    // ── Text-Markierung + Zuweisung (BPM-118, ADR-063) ──────────────
+
+    /// <summary>Pixel des gerenderten Bilds ↔ mm des Blatts (eine lineare Umrechnung).</summary>
+    private double MmPerPixel()
+        => PageImage.Source is BitmapSource bmp && _page is not null && bmp.PixelWidth > 0
+            ? _page.PageWidthMm / bmp.PixelWidth
+            : 0;
+
+    private void ClearSelection()
+    {
+        _selectedWords.Clear();
+        _selectedText = string.Empty;
+        _selecting = false;
+        _selAnchor = -1;
+        _selCursor = -1;
+        SelectionCanvas.Children.Clear();
+    }
+
+    private async Task EnsureWordsAsync()
+    {
+        if (_words is not null || PdfTextService is null || _currentPath is null)
+            return;
+        try
+        {
+            await using var stream = File.OpenRead(_currentPath);
+            _words = await PdfTextService.GetWordsAsync(stream, _currentPage);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "PDF-Textebene nicht lesbar fuer {Name}", Path.GetFileName(_currentPath));
+            _words = [];
+        }
+    }
+
+    /// <summary>
+    /// Wort unter dem Cursor (Bild-Pixel). strict: nur bei (fast) direktem
+    /// Treffer — für den Auswahl-START. Sonst nächstliegendes Wort (Zeile
+    /// stark gewichtet) — fürs ZIEHEN, wie in klassischen Viewern.
+    /// </summary>
+    private int HitWordIndex(Point px, bool strict)
+    {
+        var k = MmPerPixel();
+        if (k <= 0 || _words is null || _words.Count == 0)
+            return -1;
+
+        var pxMmX = px.X * k;
+        var pxMmY = px.Y * k;
+        const double pad = 0.8; // mm Toleranz um die Wortbox
+
+        var best = -1;
+        var bestScore = double.MaxValue;
+        for (var i = 0; i < _words.Count; i++)
+        {
+            var w = _words[i];
+            var dx = Math.Max(0, Math.Max(w.XMm - pxMmX, pxMmX - (w.XMm + w.WidthMm)));
+            var dy = Math.Max(0, Math.Max(w.YMm - pxMmY, pxMmY - (w.YMm + w.HeightMm)));
+            if (strict)
+            {
+                if (dx <= pad && dy <= pad)
+                    return i;
+                continue;
+            }
+            var score = dy * 4 + dx; // Zeilenabstand dominiert
+            if (score < bestScore)
+            {
+                bestScore = score;
+                best = i;
+            }
+        }
+        return strict ? -1 : best;
+    }
+
+    /// <summary>
+    /// Auswahlbereich (Anker→Cursor, Leserichtung) hervorheben — wie in
+    /// Word/Browser: EIN durchgehender Balken je Zeile in einheitlicher Höhe
+    /// (Wortzwischenräume inklusive), Theme-Akzent halbtransparent.
+    /// </summary>
+    private void UpdateSelectionVisual()
+    {
+        SelectionCanvas.Children.Clear();
+        var k = MmPerPixel();
+        if (k <= 0 || _words is null || _selAnchor < 0 || _selCursor < 0)
+            return;
+
+        var accent = TryFindResource("BpmAccentPrimary") as SolidColorBrush;
+        var c = accent?.Color ?? Color.FromRgb(0, 120, 212);
+        var fill = new SolidColorBrush(Color.FromArgb(90, c.R, c.G, c.B));
+        fill.Freeze();
+
+        var from = Math.Min(_selAnchor, _selCursor);
+        var to = Math.Max(_selAnchor, _selCursor);
+
+        // Wörter zu Zeilen clustern (vertikale Überlappung mit der laufenden Zeile)
+        double lineTop = 0, lineBottom = 0, lineLeft = 0, lineRight = 0;
+        var lineOpen = false;
+        for (var i = from; i <= to; i++)
+        {
+            var w = _words[i];
+            var overlaps = lineOpen
+                && w.YMm < lineBottom - 0.3
+                && w.YMm + w.HeightMm > lineTop + 0.3;
+            if (!overlaps)
+            {
+                FlushLine();
+                lineTop = w.YMm;
+                lineBottom = w.YMm + w.HeightMm;
+                lineLeft = w.XMm;
+                lineRight = w.XMm + w.WidthMm;
+                lineOpen = true;
+            }
+            else
+            {
+                lineTop = Math.Min(lineTop, w.YMm);
+                lineBottom = Math.Max(lineBottom, w.YMm + w.HeightMm);
+                lineLeft = Math.Min(lineLeft, w.XMm);
+                lineRight = Math.Max(lineRight, w.XMm + w.WidthMm);
+            }
+        }
+        FlushLine();
+
+        void FlushLine()
+        {
+            if (!lineOpen)
+                return;
+            const double padMm = 0.4; // etwas Luft wie bei echter Textauswahl
+            var r = new Rectangle
+            {
+                Width = Math.Max(1, (lineRight - lineLeft + 2 * padMm) / k),
+                Height = Math.Max(1, (lineBottom - lineTop + 2 * padMm) / k),
+                Fill = fill,
+                RadiusX = 1,
+                RadiusY = 1
+            };
+            Canvas.SetLeft(r, (lineLeft - padMm) / k);
+            Canvas.SetTop(r, (lineTop - padMm) / k);
+            SelectionCanvas.Children.Add(r);
+            lineOpen = false;
+        }
+    }
+
+    /// <summary>Auswahl abschließen: Text des Bereichs übernehmen + Status.</summary>
+    private void FinalizeSelection()
+    {
+        _selectedWords.Clear();
+        _selectedText = string.Empty;
+        if (_words is null || _selAnchor < 0 || _selCursor < 0)
+            return;
+
+        var from = Math.Min(_selAnchor, _selCursor);
+        var to = Math.Max(_selAnchor, _selCursor);
+        for (var i = from; i <= to; i++)
+            _selectedWords.Add(_words[i]);
+        _selectedText = string.Join(" ", _selectedWords.Select(w => w.Text));
+
+        var preview = _selectedText.Length > 48 ? _selectedText[..48] + "…" : _selectedText;
+        StatusText.Text = $"„{preview}\" markiert · Rechtsklick = Zuweisen";
+    }
+
+    /// <summary>
+    /// Rechtsklick bei bestehender Auswahl: Zuweisungs-Menü — gut lesbar
+    /// (größere Schrift/Abstände), mit Gruppen-Überschriften "Revision" und
+    /// "Zuweisen als Segment" (Katalog BPM-108).
+    /// </summary>
+    private void OpenAssignMenu()
+    {
+        var itemStyle = TryFindResource("BpmMenuItem") as Style;
+        MenuItem Item(string header) => new()
+        {
+            Header = header,
+            Style = itemStyle,
+            FontSize = 14,
+            Padding = new Thickness(16, 8, 16, 8)
+        };
+        MenuItem Caption(string text) => new()
+        {
+            Header = text.ToUpperInvariant(),
+            Style = itemStyle,
+            IsEnabled = false,
+            FontSize = 11,
+            Padding = new Thickness(16, 8, 16, 2)
+        };
+
+        var menu = new ContextMenu { PlacementTarget = SheetHost, MinWidth = 300 };
+        if (TryFindResource("BpmContextMenu") is Style menuStyle)
+            menu.Style = menuStyle;
+
+        var preview = _selectedText.Length > 34 ? _selectedText[..34] + "…" : _selectedText;
+        var header = new MenuItem
+        {
+            Header = $"„{preview}\"",
+            IsEnabled = false,
+            Style = itemStyle,
+            FontSize = 13,
+            FontStyle = FontStyles.Italic,
+            Padding = new Thickness(16, 8, 16, 8)
+        };
+        menu.Items.Add(header);
+        AddSeparator(menu);
+
+        menu.Items.Add(Caption("Revision"));
+        var changeItem = Item("Änderungshinweis übernehmen");
+        changeItem.Click += (_, _) => RaiseAssign(PdfAssignKind.ChangeNote, null, null);
+        menu.Items.Add(changeItem);
+        var dateItem = Item("Index-Datum übernehmen");
+        dateItem.Click += (_, _) => RaiseAssign(PdfAssignKind.ReleasedAt, null, null);
+        menu.Items.Add(dateItem);
+        AddSeparator(menu);
+
+        menu.Items.Add(Caption("Zuweisen als Segment"));
+        foreach (var seg in SegmentTypeCatalog?.GetEffectiveActive() ?? [])
+        {
+            var segItem = Item(seg.Name);
+            var id = seg.Id;
+            var name = seg.Name;
+            segItem.Click += (_, _) => RaiseAssign(PdfAssignKind.Segment, id, name);
+            menu.Items.Add(segItem);
+        }
+
+        menu.IsOpen = true;
+
+        void AddSeparator(ContextMenu m)
+        {
+            var s = new Separator();
+            if (TryFindResource("BpmMenuSeparator") is Style st)
+                s.Style = st;
+            m.Items.Add(s);
+        }
+    }
+
+    private void RaiseAssign(PdfAssignKind kind, string? segmentTypeId, string? segmentTypeName)
+    {
+        if (_selectedText.Length == 0)
+            return;
+        AssignRequested?.Invoke(this, new PdfTextAssignedEventArgs
+        {
+            Kind = kind,
+            SegmentTypeId = segmentTypeId,
+            SegmentTypeName = segmentTypeName,
+            Text = _selectedText
+        });
+    }
+
     // ── Interaktion: Zoom (Mausrad) + Pan (mittlere Maustaste) ──────
 
     private void OnScrollPreviewMouseWheel(object sender, MouseWheelEventArgs e)
@@ -193,33 +490,96 @@ public partial class PlanPreviewPanel : UserControl
         ScrollHost.ScrollToVerticalOffset(contentY * newZoom - pos.Y);
     }
 
-    private void OnImageMouseDown(object sender, MouseButtonEventArgs e)
+    private void OnSheetMouseDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.ChangedButton != MouseButton.Middle)
+        if (e.ChangedButton == MouseButton.Middle)
+        {
+            _panning = true;
+            _panStart = e.GetPosition(ScrollHost);
+            _panStartH = ScrollHost.HorizontalOffset;
+            _panStartV = ScrollHost.VerticalOffset;
+            SheetHost.CaptureMouse();
+            e.Handled = true;
             return;
-        _panning = true;
-        _panStart = e.GetPosition(ScrollHost);
-        _panStartH = ScrollHost.HorizontalOffset;
-        _panStartV = ScrollHost.VerticalOffset;
-        PageImage.CaptureMouse();
-        e.Handled = true;
+        }
+
+        if (e.ChangedButton == MouseButton.Left)
+        {
+            // Klassische Textauswahl: auf einem Wort starten, ziehen erweitert
+            // den Bereich in Leserichtung (Anker → Cursor)
+            ClearSelection();
+            if (_words is null)
+            {
+                _ = EnsureWordsAsync(); // Hintergrund-Nachladen, nächster Versuch trifft
+                if (PdfTextService is null)
+                    StatusText.Text = "⚠ Kein Text-Dienst verfügbar";
+                return;
+            }
+            if (_words.Count == 0)
+            {
+                StatusText.Text = "⚠ Keine Textebene in dieser PDF — Werte bitte manuell eintragen";
+                return;
+            }
+
+            var idx = HitWordIndex(e.GetPosition(SheetHost), strict: true);
+            if (idx < 0)
+                return; // Klick neben den Text = Auswahl aufheben
+
+            _selecting = true;
+            _selAnchor = idx;
+            _selCursor = idx;
+            UpdateSelectionVisual();
+            SheetHost.CaptureMouse();
+            e.Handled = true;
+        }
     }
 
-    private void OnImageMouseMove(object sender, MouseEventArgs e)
+    private void OnSheetMouseMove(object sender, MouseEventArgs e)
     {
-        if (!_panning)
+        if (_panning)
+        {
+            var pos = e.GetPosition(ScrollHost);
+            ScrollHost.ScrollToHorizontalOffset(_panStartH - (pos.X - _panStart.X));
+            ScrollHost.ScrollToVerticalOffset(_panStartV - (pos.Y - _panStart.Y));
             return;
-        var pos = e.GetPosition(ScrollHost);
-        ScrollHost.ScrollToHorizontalOffset(_panStartH - (pos.X - _panStart.X));
-        ScrollHost.ScrollToVerticalOffset(_panStartV - (pos.Y - _panStart.Y));
+        }
+
+        if (_selecting)
+        {
+            var idx = HitWordIndex(e.GetPosition(SheetHost), strict: false);
+            if (idx >= 0 && idx != _selCursor)
+            {
+                _selCursor = idx;
+                UpdateSelectionVisual();
+            }
+        }
     }
 
-    private void OnImageMouseUp(object sender, MouseButtonEventArgs e)
+    private void OnSheetMouseUp(object sender, MouseButtonEventArgs e)
     {
-        if (e.ChangedButton != MouseButton.Middle)
+        if (e.ChangedButton == MouseButton.Middle && _panning)
+        {
+            _panning = false;
+            SheetHost.ReleaseMouseCapture();
             return;
-        _panning = false;
-        PageImage.ReleaseMouseCapture();
+        }
+
+        if (e.ChangedButton == MouseButton.Left && _selecting)
+        {
+            _selecting = false;
+            SheetHost.ReleaseMouseCapture();
+            FinalizeSelection();
+            return;
+        }
+
+        if (e.ChangedButton == MouseButton.Right)
+        {
+            if (_selectedWords.Count > 0)
+                OpenAssignMenu();
+            else
+                StatusText.Text = "Erst Text markieren (linke Taste ziehen), dann Rechtsklick = Zuweisen";
+            e.Handled = true;
+        }
     }
 
     // ── Toolbar ─────────────────────────────────────────────────────

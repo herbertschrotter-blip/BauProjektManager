@@ -141,9 +141,12 @@ public partial class App : Application
         // ADR-060 Punkt 3: Shell-Launcher (Datei/Ordner in Standard-App bzw. Explorer)
         sc.AddSingleton<IFileLauncher, LocalFileLauncher>();
 
-        // ADR-062: Zentraler PDF-Render-Port — Implementierung nur hier im
-        // Composition Root (Windows.Data.Pdf, Windows-SDK-TFM nur in der App).
-        sc.AddSingleton<IPdfRenderService, Services.WindowsPdfRenderService>();
+        // ADR-062/063 (Addendum Teil 47): EINE Engine für Rendern + Text —
+        // PDFium via Docnet.Core. Bild-Pixel und Zeichen-Boxen entstehen im
+        // selben Engine-Durchlauf/Koordinatenraum (der "Acrobat-Weg").
+        sc.AddSingleton<PdfiumPdfService>();
+        sc.AddSingleton<IPdfRenderService>(sp => sp.GetRequiredService<PdfiumPdfService>());
+        sc.AddSingleton<IPdfTextService>(sp => sp.GetRequiredService<PdfiumPdfService>());
 
         sc.AddSingleton<ProjectDatabase>();
 
@@ -184,17 +187,19 @@ public partial class App : Application
             var repo = sp.GetService<ISegmentTypeRepository>();
             var archive = sp.GetService<IProfileArchiveService>();
             var pdfRender = sp.GetService<IPdfRenderService>();
+            var pdfText = sp.GetService<IPdfTextService>();
             var fileLauncher = sp.GetService<IFileLauncher>();
 #if DEBUG
             var devTools = sp.GetService<IDeveloperToolsService>();
             var registry = sp.GetService<IPersistenceRegistry>();
             return new MainWindow(db, idGen, dialog, profileManager, settingsService, devTools, registry, catalog, repo, archive,
-                pdfRender, fileLauncher);
+                pdfRender, fileLauncher, pdfText);
 #else
             return new MainWindow(db, idGen, dialog, profileManager, settingsService,
                 persistenceRegistry: null, segmentTypeCatalog: catalog,
                 segmentTypeRepository: repo, profileArchiveService: archive,
-                pdfRenderService: pdfRender, fileLauncher: fileLauncher);
+                pdfRenderService: pdfRender, fileLauncher: fileLauncher,
+                pdfTextService: pdfText);
 #endif
         });
 

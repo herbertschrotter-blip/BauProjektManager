@@ -53,24 +53,28 @@
                    TextTrimming="CharacterEllipsis"
                    Padding="8,4"/>
 
-        <!-- Blatt-Ansicht: Start = Plankopf (A4 rechts unten) · Mausrad = Zoom · Mitteltaste = Pan -->
+        <!-- Blatt-Ansicht: Start = Plankopf (A4 rechts unten) · Mausrad = Zoom ·
+             Mitteltaste = Pan · Linke Taste ziehen = Text markieren (BPM-118) -->
         <ScrollViewer x:Name="ScrollHost"
                       Background="{DynamicResource BpmBgBase}"
                       HorizontalScrollBarVisibility="Auto"
                       VerticalScrollBarVisibility="Auto"
                       Focusable="False"
                       PreviewMouseWheel="OnScrollPreviewMouseWheel">
-            <Image x:Name="PageImage"
-                   Stretch="None"
-                   RenderOptions.BitmapScalingMode="HighQuality"
-                   Cursor="Hand"
-                   MouseDown="OnImageMouseDown"
-                   MouseMove="OnImageMouseMove"
-                   MouseUp="OnImageMouseUp">
-                <Image.LayoutTransform>
+            <Grid x:Name="SheetHost"
+                  Background="Transparent"
+                  Cursor="IBeam"
+                  MouseDown="OnSheetMouseDown"
+                  MouseMove="OnSheetMouseMove"
+                  MouseUp="OnSheetMouseUp">
+                <Grid.LayoutTransform>
                     <ScaleTransform x:Name="ZoomTransform" ScaleX="1" ScaleY="1"/>
-                </Image.LayoutTransform>
-            </Image>
+                </Grid.LayoutTransform>
+                <Image x:Name="PageImage"
+                       Stretch="None"
+                       RenderOptions.BitmapScalingMode="HighQuality"/>
+                <Canvas x:Name="SelectionCanvas" IsHitTestVisible="False"/>
+            </Grid>
         </ScrollViewer>
     </DockPanel>
 </UserControl>

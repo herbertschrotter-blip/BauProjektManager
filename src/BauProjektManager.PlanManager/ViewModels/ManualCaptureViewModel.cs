@@ -51,6 +51,17 @@ public partial class CaptureRowViewModel : ObservableObject
     [ObservableProperty]
     private string? _title;
 
+    /// <summary>Änderungshinweis der einlaufenden Revision (BPM-118, → plan_revisions.change_note).</summary>
+    [ObservableProperty]
+    private string? _changeNote;
+
+    /// <summary>Index-Datum der einlaufenden Revision als ISO-UTC (BPM-118, → plan_revisions.released_at).</summary>
+    [ObservableProperty]
+    private string? _releasedAtIso;
+
+    /// <summary>Per Text-Zuweisung vorgemerkte Segmentwerte (SegmentTypeId → Wert, BPM-118).</summary>
+    public Dictionary<string, string> AssignedSegments { get; } = new();
+
     /// <summary>Pending-Zielordner (NULL = nicht zugeordnet) — steuert die Gelb-Markierung.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsPending))]
@@ -308,7 +319,15 @@ public partial class ManualCaptureViewModel : ObservableObject
         if (_pending.Discard(row.Item.File.Scan.RelativePath))
             UpdatePendingState();
 
-        var newRow = new CaptureRowViewModel(newItem) { IsSelected = true, Title = row.Title };
+        var newRow = new CaptureRowViewModel(newItem)
+        {
+            IsSelected = true,
+            Title = row.Title,
+            ChangeNote = row.ChangeNote,
+            ReleasedAtIso = row.ReleasedAtIso
+        };
+        foreach (var kv in row.AssignedSegments)
+            newRow.AssignedSegments[kv.Key] = kv.Value;
         var pos = Rows.IndexOf(row);
         if (pos >= 0) Rows[pos] = newRow;
         else Rows.Add(newRow);
@@ -425,10 +444,15 @@ public partial class ManualCaptureViewModel : ObservableObject
         if (!row.IsDuplicate)
         {
             var newIndex = row.Item.Candidates.Index ?? "—";
+            var newDate = row.ReleasedAtIso is not null
+                ? FormatRevisionDate(row.ReleasedAtIso)
+                : "heute";
+            var newChange = row.ChangeNote
+                ?? (match is null ? "Erstausgabe" : "—");
             rows.Add(new PlanRevisionHistoryRow(
                 match is null ? newIndex : $"{newIndex} (neu)",
-                "heute",
-                match is null ? "Erstausgabe" : "—",
+                newDate,
+                newChange,
                 IsNew: true));
         }
 

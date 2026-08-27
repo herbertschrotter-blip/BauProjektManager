@@ -74,6 +74,7 @@ public partial class PlanManagerView : UserControl
     private readonly IPdfRenderService? _pdfRenderService;
     private readonly IFileLauncher? _fileLauncher;
     private readonly AppSettingsService? _settingsService;
+    private readonly IPdfTextService? _pdfTextService;
 
     public PlanManagerView(
         ProjectDatabase db,
@@ -84,7 +85,8 @@ public partial class PlanManagerView : UserControl
         ISegmentTypeRepository? segmentTypeRepository = null,
         IPdfRenderService? pdfRenderService = null,
         IFileLauncher? fileLauncher = null,
-        AppSettingsService? settingsService = null)
+        AppSettingsService? settingsService = null,
+        IPdfTextService? pdfTextService = null)
     {
         _db = db;
         _idGenerator = idGenerator;
@@ -95,6 +97,7 @@ public partial class PlanManagerView : UserControl
         _pdfRenderService = pdfRenderService;
         _fileLauncher = fileLauncher;
         _settingsService = settingsService;
+        _pdfTextService = pdfTextService;
         _templateService = new PatternTemplateService(_idGenerator, persistenceRegistry);
         Resources.Add("BoolToVis", _boolToVis);
         Resources.Add("InverseBoolToVis", new InverseBoolToVisConverter());
@@ -133,7 +136,7 @@ public partial class PlanManagerView : UserControl
         var detailView = new ProjectDetailView(
             project, _boolToVis, _profileManager, _idGenerator, _templateService, appDataPath,
             _persistenceRegistry, _segmentTypeCatalog, _segmentTypeRepository, _db,
-            _pdfRenderService, _fileLauncher, _settingsService);
+            _pdfRenderService, _fileLauncher, _settingsService, _pdfTextService);
         detailView.ViewModel.NavigateBack += NavigateToList;
 
         ProjectListPanel.Visibility = Visibility.Collapsed;

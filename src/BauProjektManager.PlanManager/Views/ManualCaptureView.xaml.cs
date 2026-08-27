@@ -6,6 +6,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using BauProjektManager.Domain.Enums.PlanManager;
 using BauProjektManager.Domain.Interfaces;
+using BauProjektManager.Domain.Models.PlanManager;
 using BauProjektManager.PlanManager.Controls;
 using BauProjektManager.PlanManager.Services;
 using BauProjektManager.PlanManager.ViewModels;
@@ -60,6 +61,15 @@ public partial class ManualCaptureView : UserControl
     /// <summary>Geräte-lokale Settings (device-settings.json) — merkt die Vorschau-Breite.</summary>
     public Infrastructure.Persistence.AppSettingsService? SettingsService { get; set; }
 
+    /// <summary>PDF-Text-Port (ADR-063) — Text markieren + zuweisen in der Vorschau.</summary>
+    public IPdfTextService? PdfTextService { get; set; }
+
+    /// <summary>Segmenttyp-Katalog (BPM-108) fürs Zuweisungs-Menü der Vorschau.</summary>
+    public ISegmentTypeCatalog? SegmentTypeCatalog { get; set; }
+
+    /// <summary>Die aktuell in der Vorschau gezeigte Zeile (Ziel der Text-Zuweisung).</summary>
+    private CaptureRowViewModel? _previewRow;
+
     private const double DetailDefaultWidth = 320;
     private const double DetailMinWidth = 320;
     private const double DetailMaxWidth = 900;
@@ -71,7 +81,8 @@ public partial class ManualCaptureView : UserControl
     public ManualCaptureView()
     {
         InitializeComponent();
-        PreviewPanel.CloseRequested += (_, _) => SetPreviewVisible(false);
+        PreviewPanel.CloseRequested += (_, _) => { _previewRow = null; SetPreviewVisible(false); };
+        PreviewPanel.AssignRequested += OnPreviewTextAssigned;
         PreviewSplitter.DragCompleted += OnPreviewSplitterDragCompleted;
         DetailSplitter.DragCompleted += OnDetailSplitterDragCompleted;
         // Gemerkte Detail-Breite erst nach dem Setzen von SettingsService anwenden
@@ -418,10 +429,89 @@ public partial class ManualCaptureView : UserControl
 
         PreviewPanel.PdfRenderService = PdfRenderService;
         PreviewPanel.FileLauncher = FileLauncher;
+        PreviewPanel.PdfTextService = PdfTextService;
+        PreviewPanel.SegmentTypeCatalog = SegmentTypeCatalog;
+        _previewRow = row;
         SetPreviewVisible(true);
 
         var absolutePath = Path.Combine(ViewModel.ProjectRootPath, row.RelativePath);
         await PreviewPanel.ShowFileAsync(absolutePath);
+    }
+
+    /// <summary>
+    /// Text-Zuweisung aus der Vorschau (BPM-118): markierter Text → Ziel der
+    /// aktuell gezeigten Zeile. Revisions-Ziele landen am Row-Zustand
+    /// (change_note/released_at, sichtbar in der Historie); Identitäts-Segmente
+    /// füllen die Edit-Felder des Detail-Panels (Anwenden = Re-Match);
+    /// übrige Segmente werden für den Import vorgemerkt.
+    /// </summary>
+    private void OnPreviewTextAssigned(object? sender, PdfTextAssignedEventArgs e)
+    {
+        var row = _previewRow;
+        if (row is null)
+            return;
+
+        // Zeile in den Fokus holen, damit das Detail-Panel das Ziel zeigt
+        foreach (var r in ViewModel.Rows)
+            r.IsSelected = ReferenceEquals(r, row);
+        ViewModel.SetSelectedRow();
+        var detail = ViewModel.SelectedDetail;
+
+        var text = e.Text.Trim();
+        switch (e.Kind)
+        {
+            case PdfAssignKind.ChangeNote:
+                row.ChangeNote = text;
+                ViewModel.StatusText = "✓ Änderungshinweis übernommen";
+                break;
+
+            case PdfAssignKind.ReleasedAt:
+                if (!TryParseDate(text, out var iso))
+                {
+                    ViewModel.StatusText = $"⚠ „{text}\" ist kein gültiges Datum";
+                    return;
+                }
+                row.ReleasedAtIso = iso;
+                ViewModel.StatusText = "✓ Index-Datum übernommen";
+                break;
+
+            case PdfAssignKind.Segment when e.SegmentTypeId == SegmentTypeIds.PlanNumber:
+                if (detail is not null) detail.EditPlanNumber = text;
+                ViewModel.StatusText = "✓ Plannummer ins Panel übernommen — „Re-Match anwenden\" prüft";
+                break;
+
+            case PdfAssignKind.Segment when e.SegmentTypeId == SegmentTypeIds.PlanIndex:
+                if (detail is not null) detail.EditIndex = text;
+                ViewModel.StatusText = "✓ Index ins Panel übernommen — „Re-Match anwenden\" prüft";
+                break;
+
+            case PdfAssignKind.Segment when e.SegmentTypeId == SegmentTypeIds.Description:
+                row.Title = text;
+                ViewModel.StatusText = "✓ Bezeichnung übernommen";
+                break;
+
+            case PdfAssignKind.Segment when e.SegmentTypeId is not null:
+                row.AssignedSegments[e.SegmentTypeId] = text;
+                ViewModel.StatusText = $"✓ Segment „{e.SegmentTypeName}\" für den Import vorgemerkt";
+                break;
+        }
+
+        ViewModel.SetSelectedRow(); // Historie/Panel auffrischen
+    }
+
+    /// <summary>Datum aus dem Plankopf: dd.MM.yyyy oder yyyy-MM-dd → ISO-UTC.</summary>
+    private static bool TryParseDate(string text, out string isoUtc)
+    {
+        string[] formats = ["dd.MM.yyyy", "d.M.yyyy", "yyyy-MM-dd"];
+        if (DateTime.TryParseExact(text, formats, null,
+                System.Globalization.DateTimeStyles.AssumeUniversal
+                | System.Globalization.DateTimeStyles.AdjustToUniversal, out var dt))
+        {
+            isoUtc = dt.ToString("o");
+            return true;
+        }
+        isoUtc = string.Empty;
+        return false;
     }
 
     private double StoredDetailWidth()

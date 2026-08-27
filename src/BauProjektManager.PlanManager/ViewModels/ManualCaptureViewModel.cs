@@ -62,6 +62,13 @@ public partial class CaptureRowViewModel : ObservableObject
     /// <summary>Per Text-Zuweisung vorgemerkte Segmentwerte (Key = SegmentTypeId, BPM-118).</summary>
     public Dictionary<string, AssignedSegmentValue> AssignedSegments { get; } = new();
 
+    /// <summary>Dateiname des PDF/DWG-Partners (111.07 Slice A) — NULL = kein Paar. Steuert Badge + Panel-Hinweis.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsPaired))]
+    private string? _pairedFileName;
+
+    public bool IsPaired => PairedFileName is not null;
+
     /// <summary>Pending-Zielordner (NULL = nicht zugeordnet) — steuert die Gelb-Markierung.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsPending))]
@@ -175,6 +182,7 @@ public partial class ManualCaptureViewModel : ObservableObject
             };
             Rows.Add(row);
         }
+        UpdatePairFlags();
         UpdatePendingState();
         StatusText = $"{result.TotalFiles} Dateien — {result.DuplicateCount} Dubletten, " +
                      $"{result.UpdateProposalCount} Updates, {result.NewCaptureCount} neu, " +
@@ -302,10 +310,7 @@ public partial class ManualCaptureViewModel : ObservableObject
         // 111.07 Slice A2: PDF/DWG-Partner (gleicher Stamm) mit übernehmen —
         // beide Dateien gehören zur selben neuen Revision (der Import-Guard
         // in der Execution verhindert das Doppel-Supersede).
-        var extension = row.Item.File.Scan.Extension;
-        var pairedExtension = extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase) ? ".dwg"
-            : extension.Equals(".dwg", StringComparison.OrdinalIgnoreCase) ? ".pdf"
-            : null;
+        var pairedExtension = PairedExtensionFor(row);
         var partner = pairedExtension is null ? null : FindPairedRow(row, Rows, pairedExtension);
         if (partner is not null && !partner.IsDuplicate && !partner.IsPending)
         {
@@ -380,6 +385,7 @@ public partial class ManualCaptureViewModel : ObservableObject
         var pos = Rows.IndexOf(row);
         if (pos >= 0) Rows[pos] = newRow;
         else Rows.Add(newRow);
+        UpdatePairFlags();
 
         StatusText = bucket switch
         {
@@ -510,6 +516,29 @@ public partial class ManualCaptureViewModel : ObservableObject
             && FileNameStem(r.Item.File.Scan).Equals(stem, StringComparison.OrdinalIgnoreCase));
     }
 
+    /// <summary>Partner-Extension einer Zeile: .pdf↔.dwg, sonst NULL (111.07 Slice A).</summary>
+    private static string? PairedExtensionFor(CaptureRowViewModel row)
+    {
+        var extension = row.Item.File.Scan.Extension;
+        return extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase) ? ".dwg"
+            : extension.Equals(".dwg", StringComparison.OrdinalIgnoreCase) ? ".pdf"
+            : null;
+    }
+
+    /// <summary>
+    /// Setzt die Paar-Kennzeichnung aller Zeilen (⛓-Badge + Panel-Hinweis,
+    /// 111.07 Slice A) — nach jeder Rows-Änderung aufrufen.
+    /// </summary>
+    private void UpdatePairFlags()
+    {
+        foreach (var row in Rows)
+        {
+            var pairedExtension = PairedExtensionFor(row);
+            row.PairedFileName = pairedExtension is null ? null
+                : FindPairedRow(row, Rows, pairedExtension)?.FileName;
+        }
+    }
+
     /// <summary>
     /// 111.07 Slice A: ergänzt die Zuordnungs-Liste um nicht-selektierte
     /// PDF/DWG-Partner (gleicher Dateinamens-Stamm) — beide Dateien landen so
@@ -522,10 +551,7 @@ public partial class ManualCaptureViewModel : ObservableObject
         var result = new List<CaptureRowViewModel>(selected);
         foreach (var row in selected)
         {
-            var extension = row.Item.File.Scan.Extension;
-            var pairedExtension = extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase) ? ".dwg"
-                : extension.Equals(".dwg", StringComparison.OrdinalIgnoreCase) ? ".pdf"
-                : null;
+            var pairedExtension = PairedExtensionFor(row);
             if (pairedExtension is null)
                 continue;
 

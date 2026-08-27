@@ -55,13 +55,25 @@
                                     <ColumnDefinition Width="70"/>
                                     <ColumnDefinition Width="220"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0"
-                                           Text="{Binding FileName}"
-                                           Foreground="{DynamicResource BpmTextBright}"
-                                           FontFamily="Consolas"
-                                           FontSize="{DynamicResource BpmFontSizeSmall}"
-                                           TextTrimming="CharacterEllipsis"
-                                           VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding FileName}"
+                                               Foreground="{DynamicResource BpmTextBright}"
+                                               FontFamily="Consolas"
+                                               FontSize="{DynamicResource BpmFontSizeSmall}"
+                                               TextTrimming="CharacterEllipsis"
+                                               VerticalAlignment="Center"/>
+                                    <!-- 111.07 Slice A: Pill-Badge wie Eingang-Badge der Projektliste -->
+                                    <Border Background="{DynamicResource BpmInfo}"
+                                            CornerRadius="8" Padding="6,2"
+                                            Margin="8,0,0,0"
+                                            VerticalAlignment="Center"
+                                            Visibility="{Binding IsPaired, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="⛓ Paar"
+                                                   Foreground="{DynamicResource BpmTextBright}"
+                                                   FontSize="{DynamicResource BpmFontSizeCaption}"
+                                                   FontWeight="SemiBold"/>
+                                    </Border>
+                                </StackPanel>
                                 <TextBlock Grid.Column="1"
                                            Text="{Binding SizeText}"
                                            Foreground="{DynamicResource BpmTextSecondary}"
@@ -264,6 +276,27 @@
                                                  BorderBrush="{DynamicResource BpmBorderSubtle}"
                                                  CaretBrush="{DynamicResource BpmTextBright}"/>
                                     </StackPanel>
+
+                                    <!-- 111.07 Slice A: Paar-Hinweis (eine Revision, zwei Dateien) -->
+                                    <Border Background="{DynamicResource BpmBgActive}"
+                                            BorderBrush="{DynamicResource BpmInfo}"
+                                            BorderThickness="3,0,0,0"
+                                            Padding="8,6"
+                                            Margin="0,0,0,10"
+                                            Visibility="{Binding Row.IsPaired, Converter={StaticResource BoolToVis}}">
+                                        <StackPanel>
+                                            <TextBlock FontSize="{DynamicResource BpmFontSizeCaption}"
+                                                       Foreground="{DynamicResource BpmTextBright}"
+                                                       TextWrapping="Wrap">
+                                                <Run Text="⛓ Gepaart mit "/><Run FontFamily="Consolas" Text="{Binding Row.PairedFileName, Mode=OneWay}"/>
+                                            </TextBlock>
+                                            <TextBlock FontSize="{DynamicResource BpmFontSizeCaption}"
+                                                       Foreground="{DynamicResource BpmTextSecondary}"
+                                                       TextWrapping="Wrap"
+                                                       Margin="0,2,0,0"
+                                                       Text="Import als EINE Revision mit zwei Dateien (PDF führend, DWG angehängt)"/>
+                                        </StackPanel>
+                                    </Border>
 
                                     <TextBlock Text="{Binding ReasonText}"
                                                Foreground="{DynamicResource BpmWarning}"

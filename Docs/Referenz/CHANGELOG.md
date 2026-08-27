@@ -31,6 +31,30 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.138] — 2026-08-27
+
+### Docs: ADR-065 Lernende Planerkennung + CGR-2026-08-27-plan-erkennung Abschluss
+
+Neue Review-Serie (3 Runden, beidseitiges Sign-off) zu ChatGPTs Konzept „lernende Profile": Entscheidung **gegen** ML.NET/Embeddings/LLM im Importpfad, **für** erklärbare Assistenz — bestätigte Roh-Evidenz → nachvollziehbares Rule Mining → explizite Profilregeln + Aliasse. **ADR-065** verankert: ADR-059-Grenze unangetastet (nur L0 MD5/`document_key` entscheidet, alles Gelernte `AutoSuggested`); Evidenz-Backoff L2a (Projekt × `DocumentTypeId`) → L2b (`profileLineageId`-Familie) → L2c (kuratierte Formen) mit Veto-Regel statt Score-Fusion; WERTE/ROLLEN/FORMEN-Scoping (Stammdaten-IDs nie scope-übergreifend); Tokenization-Bootstrap (Rohfakten statt Token-Snapshots, Reparse via `FileNameParser`); `document_types` als fachliches Hauptobjekt (Erkennungs-Tab als View, `RecognitionProfile` 0..1, kein leeres Profil-JSON, Löschen asymmetrisch); `document_types.is_active` + PatternTemplate-Identität via Lineage (mit Stufe B/C2); Roadmap A/B/C1/C2/D. Neuer Sammel-Task **BPM-121**. (Commit `dede6a7`)
+
+---
+
+## [v0.28.137] — 2026-08-27
+
+### Docs: ADR-064 Import-Transaktions-Härtung + CGR-2026-08-27-bpm-architektur Abschluss
+
+**ADR-064** verankert (11 verbindliche Invarianten: Idempotenz-Kerninvariante, Vorab-Journalisierung, atomarer Action-Abschluss, gemeinsamer Apply-Pfad Import/Recovery, Undo nur nach vollem Disk-Reverse, `skipDuplicate` journalisiert/recovery-fähig/nicht undo-bar, H0-Cutover, `destination_path` nullable via DB-Reset; Slice-Folge H0+T0–T8 → BPM-120) + Serie mit beidseitigem Sign-off r3 abgeschlossen, BPM-120-Verweise in Serien-README + Review-INDEX. (Commit `5c31cdc`)
+
+---
+
+## [v0.28.136] — 2026-08-27
+
+### Docs: CHANGELOG-Nachzug v0.28.130–.135
+
+Einträge für die BPM-111.07-Slices B/C/D (damit 111.07 komplett) + Mockup-Spez Kombi nachgezogen. (Commit `5723a0d`)
+
+---
+
 ## [v0.28.135] — 2026-08-27
 
 ### Feature: BPM-111.07 Slice D2 — Archiv-Verschieben per Radial

@@ -37,8 +37,11 @@ public class ImportExecutionPairImportTests
 
         public void Dispose()
         {
+            var dbPath = Repo.GetDatabasePath();
             Repo.Dispose();
-            SqliteConnection.ClearAllPools();
+            // BPM-120 T0: gezielter Pool-Clear statt ClearAllPools (Parallellast-Flaky)
+            using (var pc = new SqliteConnection($"Data Source={dbPath}"))
+                SqliteConnection.ClearPool(pc);
             try { if (Directory.Exists(_dbFolder)) Directory.Delete(_dbFolder, recursive: true); } catch { }
             try { if (Directory.Exists(Root)) Directory.Delete(Root, recursive: true); } catch { }
         }

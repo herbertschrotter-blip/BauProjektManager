@@ -117,14 +117,17 @@ public sealed class RecoveryTestFixture : IDisposable
 
     public void Dispose()
     {
+        var dbPath = Db.GetDatabasePath();
         Db.Dispose();
 
         // Microsoft.Data.Sqlite hat Connection-Pooling — Db.Dispose() schliesst
-        // nur die Connection-Instanz, nicht den Pool. Ohne ClearAllPools haelt
+        // nur die Connection-Instanz, nicht den Pool. Ohne Pool-Clear haelt
         // der Pool das DB-File offen und Directory.Delete schlaegt mit
-        // IOException fehl (File-Lock). Frueher wurde der Fehler vom try/catch
-        // verschluckt — Resultat: Muell-Ordner unter %LocalAppData%\Projects\.
-        SqliteConnection.ClearAllPools();
+        // IOException fehl (File-Lock). BPM-120 T0: gezielt NUR den Pool dieser
+        // DB leeren — das fruehere ClearAllPools riss unter xunit-Parallellast
+        // die Pools fremder Test-Klassen mit (Flaky-Ursache).
+        using (var pc = new SqliteConnection($"Data Source={dbPath}"))
+            SqliteConnection.ClearPool(pc);
 
         try
         {

@@ -40,7 +40,9 @@ public class SegmentTypeCatalogTests : IDisposable
     public void Dispose()
     {
         _schemaConn.Dispose();
-        SqliteConnection.ClearAllPools();
+        // BPM-120 T0: gezielter Pool-Clear statt ClearAllPools (Parallellast-Flaky)
+        using (var pc = new SqliteConnection($"Data Source={_dbPath}"))
+            SqliteConnection.ClearPool(pc);
         try { if (File.Exists(_dbPath)) File.Delete(_dbPath); } catch { /* ignore */ }
     }
 

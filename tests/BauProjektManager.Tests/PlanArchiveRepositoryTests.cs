@@ -34,8 +34,11 @@ public class PlanArchiveRepositoryTests
 
         public void Dispose()
         {
+            var dbPath = Repo.GetDatabasePath();
             Repo.Dispose();
-            SqliteConnection.ClearAllPools();
+            // BPM-120 T0: gezielter Pool-Clear statt ClearAllPools (Parallellast-Flaky)
+            using (var pc = new SqliteConnection($"Data Source={dbPath}"))
+                SqliteConnection.ClearPool(pc);
             try { if (Directory.Exists(_folder)) Directory.Delete(_folder, recursive: true); }
             catch { /* Pool-Lock unter Windows — best effort, wie RecoveryTestFixture */ }
         }

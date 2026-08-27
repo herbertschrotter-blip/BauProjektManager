@@ -16,7 +16,7 @@ supersedes: []
 - Autorität: source_of_truth
 - Lesen wenn: Neue Architekturentscheidung treffen, bestehende ADR prüfen, Status ändern, Entscheidung nachschlagen
 - Nicht zuständig für: Implementierungs-Details (→ jeweilige Modul-Docs), Code-Standards (→ CODING_STANDARDS.md)
-- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-064)
+- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-065)
 - Pflichtlesen: keine (gezieltes Nachschlagen per ADR-Nummer)
 - Fachliche Invarianten:
   - Statusmodell: Decision Status (Proposed/Accepted/Superseded/Deprecated) getrennt von Implementation Status (Not Started/Partial/Implemented)
@@ -111,6 +111,7 @@ Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheid
 | 062 | Zentraler PDF-Render-Port (IPdfRenderService) | ✅ Entschieden | 2026-08 |
 | 063 | PDF-Text-Port (IPdfTextService) + PdfPig-Freigabe | ✅ Entschieden | 2026-08 |
 | 064 | Import-Transaktions-Härtung — idempotente Journal-/Recovery-/Undo-Semantik | ✅ Entschieden | 2026-08 |
+| 065 | Lernende Planerkennung — hierarchisches Evidenz-Scoping + Dokumenttyp als Hauptobjekt | ✅ Accepted / Not Started (post-V1) | 2026-08 |
 
 ---
 
@@ -3065,6 +3066,100 @@ Elf verbindliche Invarianten (Sign-off r3), umzusetzen via BPM-120:
 **Betrifft:** ADR-058 (Stop-Punkte + Journal-Haltbarkeit), ADR-059 (ein V1-Importweg, Buckets), ADR-060 (Slice 3 wird in BPM-120 erledigt), ADR-061 (P5 wird umgesetzt und DB-seitig präzisiert), DB-SCHEMA.md Kap. 6 (`import_actions`/`import_action_files` — `destination_path` nullable, mit BPM-120 nachziehen), PlanManager.md (Import-/Recovery-/Undo-Kapitel).
 
 **Referenz:** [Docs/Referenz/chatgpt-reviews/CGR-2026-08-27-bpm-architektur/](../Referenz/chatgpt-reviews/CGR-2026-08-27-bpm-architektur/) — 3 Runden Cross-Review (r1 Delta-Analyse + Task-Schnitt, r2 Diagramm-Nachlieferung + Undo-Befund + H0, r3 Sign-off + 15 Akzeptanzkriterien). ClickUp: BPM-120.
+
+---
+
+## ADR-065: Lernende Planerkennung — hierarchisches Evidenz-Scoping + Dokumenttyp als Hauptobjekt
+
+**Datum:** 2026-08-27
+**Status:** ✅ Accepted (beidseitiges Sign-off via CGR-2026-08-27-plan-erkennung r2 + r3: ChatGPT + Claude + Herbert)
+**Implementierung:** Not Started — komplett post-V1 (Ausnahme: das Dokumenttyp-Zielbild aus Punkt 7 bindet ab sofort alle Arbeiten an Profil-UI/ProfileWizard/Erkennungs-Tab; die reine UI-Zusammenführung darf vor Stufe B kommen, wenn V1-Arbeit sie ohnehin anfasst). ClickUp-Sammel-Task „Lernende Planerkennung".
+**Herkunft:** ChatGPT-Konzeptvorschlag „Lernende Planerkennung" (hybride Pipeline Regeln → Similarity → ML.NET/Embeddings/LLM → Confidence-Gate). 3 Runden Cross-Review mit Code-Verifikation gegen `feature/planmanager-v1`; Herberts Zusatzfrage zur Beziehung Ring 1 ↔ Dokumenttyp ↔ Profil führte zum Dokumenttyp-Zielbild.
+
+**Kontext:**
+
+Erkennungsprofile sind heute statisch: Sie werden einmal konfiguriert und lernen nicht aus bestätigten Erfassungen oder Benutzerkorrekturen. Gleichzeitig erzeugt der V1-Radial-Workflow (ADR-059, Bucket C) mit jeder manuellen Erstaufnahme bestätigte, normalisierte Labels (`plan_documents` + `plan_document_segments`) — ein Trainingsdatensatz, der ungenutzt bleibt. Zu klären war: Braucht Lernen ML (ML.NET, lokale Embeddings, ONNX, LLM) oder reicht deterministische Musterstatistik? Auf welcher Ebene wird gelernt (Projekt/Profil/global)? Und: Das Klassifikationsziel ist bei BPM nicht „Datei → Planart" als Ein-Label, sondern strukturierte Felder, deren Werte auf Stammdaten-IDs auflösen müssen (`document_type_id`, `building_part_id`/`category_id`, `building_level_id`, `plan_number`, `plan_index` — ADR-056/061, Resolver Fail-Fast, kein Fuzzy).
+
+**Entscheidung:**
+
+1. **Assist-Grenze (ADR-059 unangetastet):** Nur deterministisches Bestandsmatching (L0: MD5-Dublette, `document_key`-Update) darf automatisch entscheiden. Alles Gelernte ist `AutoSuggested` — füllt Radial/Panel vor, wird vom User bestätigt. Confidence steuert NIE Schreibrechte; auch ein 127/127-Muster erhält keine Auto-Berechtigung. Zero-Touch wäre eine bewusste Wiedereröffnung von ADR-059, kein Nebenprodukt des Lernsystems.
+
+2. **Kein ML im Importpfad:** ML.NET, lokale Embeddings, ONNX-Modelle und LLMs sind NICHT Teil der Erkennung. Begründung: Few-Shot-Regime (10–50 Pläne/Profil), Reproduzierbarkeit (Undo-/Journal-System verträgt keine modellabhängigen Entscheidungen), offline-first, Library-Freigabe-Regel, Erklärbarkeit. Ein ML-Experiment ist erst zulässig, wenn die Akzeptanzrate der Vorschläge nach den Ausbaustufen messbar unzureichend bleibt — offline, als Analysewerkzeug, nie als Entscheider. LLM höchstens post-V1 als explizites On-Demand-Assistenzwissen („Was bedeutet RCP?"), nie im Importpfad; extern nur via `IExternalCommunicationService` (dann Klasse C).
+
+3. **Schichtenmodell:**
+   - **L0** Deterministisches Bestandsmatching (entscheidet — ADR-059).
+   - **L1** Explizite Profilregeln (`RecognitionRule`, später `FieldExtractionRule`) → `AutoSuggested`.
+   - **L2a** Projektlokale Evidenz (bestätigte Erfassungen) → stärkster lernender Vorschlag.
+   - **L2b** Profil-Familien-Evidenz (nur explizit verwandte Profile via Lineage) → Fallback.
+   - **L2c** Globales Basiswissen (kuratierte Kürzel + Tokenformen) → schwächster Fallback, macht NIE Wertzuordnungen.
+   - **L3** Rule Mining: stabile Evidenz → Regelvorschlag `[Übernehmen]/[Ablehnen]` → wird normale L1-Profilregel. **Eine Regel-Wahrheit:** gemined-te Regeln sind normale Profilregeln, kein zweites Regelsystem.
+
+4. **Evidenz-Backoff ohne Score-Fusion:** Vorrang Projekt > Familie > global als Backoff, keine ebenen-übergreifende Prozentmischung. Ordinale Evidenz-Stufen mit Begründungstext („12/12 bisherige Pläne mit ‚GR' an dieser Stelle waren Grundrisse") statt Prozent-Scores. Schwellen-Startwerte (Kalibrierungswerte, KEINE Invarianten): L2a Support ≥ 5 / Purity ≥ 0,90 · L2b Support ≥ 10 / Purity ≥ 0,95 (diskrete Wirkung beachten: n=5/0,90 heißt praktisch 5/5). **Veto-Regel:** positive Vorschlagsschwelle ≠ Veto-Schwelle — unter-schwellige lokale Gegen-Evidenz (Startpunkt: ≥ 2 lokale Fälle, 100 % widersprüchlich) blockiert den Familien-Wertvorschlag und erzwingt manuelle Bestätigung mit Hinweis. Eine prioritäre Ebene braucht keine eigene Vorschlagsreife, um widersprechende Fallbacks zu blockieren.
+
+5. **Scope-Invarianten (verbindlich):**
+   - *WERTE* (konkrete Projektnummern, Bauteil-/Geschoss-Werte, Indizes) lernen ausschließlich projektlokal.
+   - *ROLLEN* („Token 0 = Projektnummer dieses Büros") sind nur über die Profil-Familie übertragbar.
+   - *FORMEN* (`^\d{3,5}$` = Nummernkandidat, `^rev\d+$` = Revisionskandidat) sind global erlaubt — sie markieren Kandidaten, stiften nie Identität.
+   - **Projektgebundene Stammdaten-IDs werden niemals scope-übergreifend gelernt oder übertragen.** Die Auflösung eines vorgeschlagenen Werts auf `document_type_id`/`building_part_id`/`building_level_id`/`category_id` erfolgt IMMER lokal gegen die Stammdaten des Zielprojekts (ADR-061-konform, Fail-Fast).
+   - Globales Wissen ist kuratiertes Repo-Wissen (Lexikon + Formen), kein lernender globaler Aggregator; widersprüchliche Projekte werden nie gemittelt („GR = mehrdeutig" statt „Grundriss 75 %").
+
+6. **L2a-Scope + Tokenization-Bootstrap:** L2a lernt pro `ProjectId + DocumentTypeId` (nicht pro Profil) — die manuelle Erfassung (`ManualFirstCaptureService`, bewusst profilunabhängig) erzeugt Evidenz VOR dem ersten Profil. **Invariante:** Lern-Evidenz persistiert bestätigte Rohfakten (Dateiname + bestätigte Segmentwerte), keine abgeleiteten Token-Snapshots. Tokenabhängige Features werden mit der jeweils geltenden `TokenizationConfig` über den zentralen `FileNameParser` reproduzierbar neu berechnet. `TokenizationConfig` bleibt Recognition-Konfiguration und wandert NICHT nach `document_types`. Profilunabhängige Features (Formen, Extractor-Kandidaten, bestätigte Werte) tragen Stufe A ohne Tokenization; positionsbezogene Token-Features entstehen erst im Anlern-Kontext (ephemer, bis der User ein valides Profil bestätigt). Kein Dummy-Profil fürs Lernen.
+
+7. **Dokumenttyp als Hauptobjekt (UI zusammenführen, Domänenobjekte NICHT verschmelzen):** `document_types` ist die gemeinsame fachliche Typ-Wahrheit für Dial Ring 1, manuelle Erfassung, Zielpfad und Lern-Evidenz. `RecognitionProfile` ist die optionale ausführbare Erkennungs-Konfiguration — **0..1 pro Dokumenttyp** (Mehrquellen-Varianten = YAGNI, siehe Punkt 12). Merkformel: Dokumenttyp = „was ist das fachlich?", Profil = „wie erkenne ich es?". Konsequenzen:
+   - Der Erkennungs-Tab ist eine View über `document_types`, angereichert mit optionalem Profil (Status „Nicht angelernt / Lernend / Aktiv / Inaktiv").
+   - Ring-1-„+ Neu" legt einen Dokumenttyp an (sofort in Ring 1 + Erkennungs-Tab), erzeugt aber KEIN leeres Profil-JSON — `.bpm/profiles/<id>.json` entsteht erst mit einer validen Recognition-Konfiguration (User konfiguriert oder übernimmt Mining-Vorschlag).
+   - „+ Neues Profil" bedeutet „Erkennung für Dokumenttyp einrichten" (bestehenden Typ wählen oder neuen anlegen) — keine getrennte Namensanlage mehr (verhindert „Polierplan" vs. „Polierpläne").
+   - **Löschen asymmetrisch:** Profil löschen → nur Erkennung weg, Typ/Ring 1/Dokumente/Evidenz bleiben („Nicht angelernt"). Typ löschen/deaktivieren ist die stärkere, getrennte Aktion.
+   - UI-Begriff: **„Erkennung"** (Tab, „Erkennung anlernen/bearbeiten"); „Erkennungsprofil" in Doku; `RecognitionProfile` bleibt Code-Name.
+
+8. **`document_types.is_active` (Deaktivieren ≠ Löschen):** `document_types` erhält zusätzlich zu `is_deleted` eine `is_active`-Spalte (analog `segment_types`). Deaktivieren (`is_active = 0`): Ring 1 blendet aus, Erkennung stoppt, Profil/Evidenz/Dokumente bleiben, Key bleibt reserviert; Reaktivierung stellt alles wieder her. `is_deleted` bleibt Soft-Delete (der partielle Unique-Index auf `key` gibt Keys nur bei echtem Löschen frei). Diagnose getrennt: `ProfileHealth.DocumentTypeInactive` (o. Ä.) zusätzlich zu `MissingSegmentTypes` — „bewusst deaktiviert" ≠ „Referenz kaputt". *Frühphase (keine Migration):* Betroffene Datei `bpm.db` — User löscht sie, BPM erzeugt sie beim nächsten Start neu.
+
+9. **Rule Mining (Stufe B):** Harte Regel: **Mining darf nur Muster erzeugen, die verlustfrei in eine explizite BPM-Regel übersetzbar sind** — kein verstecktes Feature-Modell. Katalog schmal starten: `ExactTokenAtPosition`, `TokenPrefix`, `TokenSuffix`, `TokenShape`, `ExactToken`. `ExactToken` nur mit Token-Grenzen-Semantik, deren Boundary-Pattern aus der `TokenizationConfig` des Profils generiert wird (regex-escaped) — NIE als Substring (kein `contains`-Revival, BPM-082) und NIE aus einer hardcodierten Delimiter-Klasse. **Invariante: Mining und Runtime-Recognition verwenden dieselbe Token-Grenzsemantik wie `FileNameParser`.** `TokenOrderPair`/`TokenCount`/`DelimiterPattern` warten auf `FieldExtractionRule` (post-V1) statt in Regex-Konstrukte gepresst zu werden.
+
+10. **Mining-Ausführung („event-invalidiert, UI-demand-berechnet"):** Import-Batch-Abschluss setzt nur ein Dirty-Flag; die Berechnung läuft beim Öffnen des Erkennungs-Tabs (bzw. bei offenem Tab nach Batch-Ende). Anzeige als Badge/Karte — nie Modal/Popup im Radial-/Erfassungs-Flow. **Invariante: Mining ist niemals Teil der Import-Transaktion und niemals Voraussetzung für den Import-Erfolg** (ADR-064-konform). Kein Timer, kein App-Start-Scan, kein Hintergrunddienst.
+
+11. **`recognition_feedback` (eine schlanke Tabelle, mit Stufe B):** in `planmanager.db`; konzeptionell `project_id`, `profile_id`, `field_type_id`, `proposal_source`, `proposal_fingerprint`, `proposed_value`, `confirmed_value`, `outcome` (`confirmed`/`corrected`/`rejected`), `created_at`. Zweck: Korrektur-Signal (welches Muster erzeugte welchen falschen Vorschlag) für Rule-Review, False-Positive-Rate, Drift, Akzeptanzrate — `plan_document_segments` bleibt die Wahrheit über bestätigte Werte (kein Sample-Duplikat, kein Modellzustand). `proposal_fingerprint`: menschenlesbarer kanonischer String, versioniert (`v1|l2a|exact_token_at_pos|tok=…;pos=2;token=gr|document_type`), reservierte Zeichen escaped, Tokenization-Parameter enthalten; Audit-/Gruppierungsschlüssel, KEIN rückparsbares Domain-Protokoll. Feedback-Gewichtung: `manual_corrected` = positive Evidenz für den korrigierten Wert + doppelte Gegen-Evidenz gegen das erzeugende Muster; betrifft es eine gemined-te Regel → Review-Flag (nie Auto-Löschung). Ausreißer fängt die Purity-Schwelle.
+
+12. **`profileLineageId` (Stufe C2):** Stabile ULID, bei Profil-Erstanlage erzeugt, bei „Kopieren"/„Als Vorlage verwenden" vererbt — nie heuristisch (kein Namens-/Fingerprint-Matching). Familien-Evidenz (L2b) läuft ausschließlich über Lineage. **`PatternTemplate`-Cross-Project-Identität wird `profileLineageId`** — NICHT `DocumentTypeId` (projektlokale ULID; der heutige Zustand mit `AddOrUpdate` per ID und `GetSuggestions` per Name ist inkonsistent und wird in C2 bereinigt). Im Template bleibt `DocumentTypeName` reines Anzeige-Metadatum; `SourceDocumentTypeId` höchstens Provenance. ADR-010-Präzisierung: `RecognitionProfile` = projektlokale ausführbare Recognition-Konfiguration (referenziert lokalen `DocumentTypeId`); `PatternTemplate` = projektübergreifende Vorlage (Identität über Lineage). **`DocumentTypeName` wird beim nächsten ohnehin nötigen Profil-Schema-Bump aus `RecognitionProfile` entfernt** (Name/Farbe aus `document_types`; Frühphase: SchemaVersion++, alte Profile löschen, neu erzeugen).
+
+13. **Drift:** Zwei Beobachtungsfenster (LongTerm/Recent), Zustände `Stable`/`DriftSuspected`/`ReviewRequired`. Eine L1-Regel wird nie automatisch geändert oder gelöscht — Drift erzeugt einen Review-Hinweis; bei bestätigtem Schemawechsel neue Regel-/Profilgeneration statt Evidenz-Vernichtung.
+
+14. **Aliasse (Stufe C1, vor Lineage):** Segmentwert-Aliasse nach dem Muster `building_part_aliases` (ADR-058, BPM-109.06): exakte Normalisierung, User-bestätigt, kein Fuzzy. Verbessert die lokale Evidenzqualität („H64"/„Haus64"/„Haus 64" = ein Sample-Strom) und damit auch spätere Familien-Evidenz. Embeddings sind dafür das falsche Werkzeug (geschlossenes Mini-Vokabular, False-Friend-Risiko).
+
+15. **Quellen-Dimension:** YAGNI. Services so schneiden, dass ein optionaler Evidence-Context (`ProfileLineageId?`, später `SourceId?`) ergänzbar bleibt; Persistenz erst, wenn BPM real mehrere Eingangskanäle unterscheidet.
+
+**Roadmap (Reihenfolge pragmatisch anpassbar, kein harter Dependency-Graph):**
+
+```text
+V1        L0 + L1 + Radial — DocumentType = gemeinsame Typ-Wahrheit,
+          manuelle Aufnahme sammelt bestätigte Roh-Evidenz (kein neuer Scope)
+Stufe A   L2a Projekt × DocumentTypeId — profilunabhängige lokale Evidenz,
+          Radial-/Panel-Vorfüllung
+Stufe B   Rule Mining (schmaler Katalog, Tokenization on demand via FileNameParser)
+          + recognition_feedback + Erkennungs-Tab als DocumentType-View
+Stufe C1  Segmentwert-Aliasse (exakt + userbestätigt)
+Stufe C2  profileLineageId + L2b Familien-Evidenz
+          + PatternTemplate-Identität auf Lineage + DocumentTypeName-Entfernung
+Stufe D   global kuratiertes Lexikon + Tokenformen (L2c)
+danach    ML-Experiment ausschließlich bei gemessenem Bedarf, offline
+```
+
+Messgröße ab Stufe A: Akzeptanzrate der Vorschläge (Anteil Erstaufnahmen, bei denen der User nur bestätigt statt korrigiert).
+
+**Bei Umsetzung festzuziehen (bewusst offen, keine Architektur-Blocker):** Support-/Purity-Kalibrierung nach realen Samples; exakte Veto-Schwelle (2/2 vs. 3/3); Recent-/LongTerm-Fenster; UI-Darstellung der Begründungen; maximale Fingerprint-Länge; genaue Auswahl profilunabhängiger Stufe-A-Features; Mining-Performance-Caching; Zeitpunkt des ersten Mining-Vorschlags je Typ; Detailverhalten Typ-Deaktivierung; finale UI-Wortwahl.
+
+**Konsequenzen:**
+
+- Das Dokumenttyp-Zielbild (Punkt 7) gilt ab sofort für alle Arbeiten an ProfileWizard (BPM-080.05-Wiederaufnahme), Erkennungs-Tab und Ring-1-Verwaltung — es darf keine weitere getrennte Profil-/Typ-Verwaltung entstehen.
+- V1-Scope ändert sich NICHT; V1 sammelt die Trainingsdaten bereits nebenbei (Radial/Bucket C → `plan_document_segments`).
+- `PatternTemplateService` behält bis Stufe C2 seinen inkonsistenten Doppel-Abgleich (bekannt, dokumentiert); Bereinigung kommt mit Lineage.
+- Bewusst NICHT gebaut: ML.NET-Klassifikator, lokale Embeddings, ONNX-Modelle, LLM im Importpfad, Modell-Versionierung/-Training, globaler Lern-Aggregator, Token-Snapshot-Persistenz, Dummy-Profile.
+
+**DSGVO:** Klasse A (technische Erkennung/Evidenz, kein Personenbezug; alles lokal). Ein späteres externes LLM-Assistenzfeature wäre Klasse C und liefe zwingend über `IExternalCommunicationService` + `DataClassification`.
+
+**Betrifft:** ADR-010 (Profil/Template-Präzisierung, Punkt 12), ADR-056 (Segmenttypen als Feld-Vokabular), ADR-058 (`plan_document_segments` = Sample-Store, `building_part_aliases`-Muster), ADR-059 (Assist-Grenze bleibt; Punkt 1), ADR-061 (ID-Auflösung lokal, Fail-Fast), ADR-064 (Mining außerhalb der Import-Transaktion), DB-SCHEMA.md (`document_types.is_active` jetzt dokumentieren; `recognition_feedback` mit Stufe B), PlanManager.md (Erkennungs-Tab/Profil-Kapitel bei Umsetzung).
+
+**Referenz:** [Docs/Referenz/chatgpt-reviews/CGR-2026-08-27-plan-erkennung/](../Referenz/chatgpt-reviews/CGR-2026-08-27-plan-erkennung/) — 3 Runden Cross-Review (r1 Grundsatz ML vs. Deterministik + Hierarchie-Modell, r2 Sign-off + Dokumenttyp-Zielbild, r3 Konkretisierung K1–K6 + Tokenization-Bootstrap + finales Sign-off).
 
 ---
 

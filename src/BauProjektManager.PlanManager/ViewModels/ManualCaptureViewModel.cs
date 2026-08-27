@@ -252,7 +252,9 @@ public partial class ManualCaptureViewModel : ObservableObject
     /// <summary>
     /// Release im Radial: Pending Assignment fuer alle ausgewaehlten Zeilen
     /// (PlanNr/Index je Zeile aus den eigenen Kandidaten — ManualConfirmed
-    /// erfolgt spaeter beim Bestaetigen/Panel-Edit).
+    /// erfolgt spaeter beim Bestaetigen/Panel-Edit). 111.07 Slice A:
+    /// nicht-selektierte PDF/DWG-Partner werden automatisch mit zugeordnet
+    /// (gleicher Stamm -> gleiche Identitaet -> EINE Revision, zwei Dateien).
     /// </summary>
     public void CompleteCapture(RadialSelectionController controller)
     {
@@ -260,7 +262,11 @@ public partial class ManualCaptureViewModel : ObservableObject
             return;
 
         var targetDir = controller.BuildTargetDirectory(_plansRelativePath);
-        foreach (var row in SelectedRows.Where(r => !r.IsDuplicate && !r.IsUpdate))
+        var selected = SelectedRows.Where(r => !r.IsDuplicate && !r.IsUpdate).ToList();
+        var rows = ExpandWithPairedRows(selected, Rows);
+        var pairedCount = rows.Count - selected.Count;
+
+        foreach (var row in rows)
         {
             var c = row.Item.Candidates;
             _pending.Assign(new PendingAssignment(
@@ -275,6 +281,8 @@ public partial class ManualCaptureViewModel : ObservableObject
             row.PendingTarget = targetDir;
             row.IsSelected = false;
         }
+        if (pairedCount > 0)
+            StatusText = $"⛓ {pairedCount} gepaarte Datei(en) automatisch mit zugeordnet";
         UpdatePendingState();
     }
 
@@ -466,12 +474,44 @@ public partial class ManualCaptureViewModel : ObservableObject
     /// </summary>
     public static CaptureRowViewModel? FindPairedPdfRow(
         CaptureRowViewModel dwgRow, IEnumerable<CaptureRowViewModel> rows)
+        => FindPairedRow(dwgRow, rows, ".pdf");
+
+    /// <summary>Paar-Partner mit gewünschter Extension und gleichem Dateinamens-Stamm (111.07 Slice A).</summary>
+    public static CaptureRowViewModel? FindPairedRow(
+        CaptureRowViewModel row, IEnumerable<CaptureRowViewModel> rows, string pairedExtension)
     {
-        var stem = FileNameStem(dwgRow.Item.File.Scan);
+        var stem = FileNameStem(row.Item.File.Scan);
         return rows.FirstOrDefault(r =>
-            !ReferenceEquals(r, dwgRow)
-            && r.Item.File.Scan.Extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase)
+            !ReferenceEquals(r, row)
+            && r.Item.File.Scan.Extension.Equals(pairedExtension, StringComparison.OrdinalIgnoreCase)
             && FileNameStem(r.Item.File.Scan).Equals(stem, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// 111.07 Slice A: ergänzt die Zuordnungs-Liste um nicht-selektierte
+    /// PDF/DWG-Partner (gleicher Dateinamens-Stamm) — beide Dateien landen so
+    /// in derselben Radial-Zuordnung und werden EIN Dokument mit EINER Revision
+    /// und zwei Dateien. Duplikate/Updates werden nicht mitgenommen.
+    /// </summary>
+    public static List<CaptureRowViewModel> ExpandWithPairedRows(
+        IReadOnlyList<CaptureRowViewModel> selected, IEnumerable<CaptureRowViewModel> allRows)
+    {
+        var result = new List<CaptureRowViewModel>(selected);
+        foreach (var row in selected)
+        {
+            var extension = row.Item.File.Scan.Extension;
+            var pairedExtension = extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase) ? ".dwg"
+                : extension.Equals(".dwg", StringComparison.OrdinalIgnoreCase) ? ".pdf"
+                : null;
+            if (pairedExtension is null)
+                continue;
+
+            var partner = FindPairedRow(row, allRows, pairedExtension);
+            if (partner is null || partner.IsDuplicate || partner.IsUpdate || result.Contains(partner))
+                continue;
+            result.Add(partner);
+        }
+        return result;
     }
 
     private static string FileNameStem(ScannedFile scan)

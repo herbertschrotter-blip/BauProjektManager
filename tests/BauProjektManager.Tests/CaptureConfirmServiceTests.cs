@@ -117,6 +117,27 @@ public class CaptureConfirmServiceTests
     }
 
     [Fact]
+    public void BuildDecisions_PdfSortedBeforeDwg_ForStablePrimaryFile()
+    {
+        // 111.07 Slice A: DWG steht ZUERST im Pending — die Sortierung muss die
+        // PDF nach vorn ziehen, damit sie die Revision anlegt (is_primary).
+        var dwg = new PendingAssignment(
+            File("5998-300_OG2.dwg"), CaptureBucket.NewCapture,
+            "polierplan", "Polierplan", "Haus 2", "OG2", "5998-300", null,
+            "Pläne/Polierplan/Haus 2/OG2", Match: null);
+        var pdf = new PendingAssignment(
+            File("5998-300_OG2.pdf"), CaptureBucket.NewCapture,
+            "polierplan", "Polierplan", "Haus 2", "OG2", "5998-300", null,
+            "Pläne/Polierplan/Haus 2/OG2", Match: null);
+
+        var decisions = CaptureConfirmService.BuildDecisions([dwg, pdf], _normalizer);
+
+        Assert.Equal(".pdf", decisions[0].File.Parsed.Extension);
+        Assert.Equal(".dwg", decisions[1].File.Parsed.Extension);
+        Assert.Equal(decisions[0].DocumentKey, decisions[1].DocumentKey);
+    }
+
+    [Fact]
     public void BuildDecisions_KeyIsIndexFree()
     {
         // Invariante: Index ist NIE Teil des document_key

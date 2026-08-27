@@ -62,9 +62,15 @@ public class CaptureConfirmService
     public static List<ImportDecision> BuildDecisions(
         IReadOnlyList<PendingAssignment> pending, IPlanValueNormalizer normalizer)
     {
-        var decisions = new List<ImportDecision>(pending.Count);
+        // 111.07 Slice A: PDFs zuerst (stabil) — bei PDF/DWG-Paaren mit gleichem
+        // document_key legt so IMMER die PDF die Revision an (is_primary) und
+        // die DWG dockt in der Execution als Zusatzdatei an (FileLinked-Zweig).
+        var ordered = pending
+            .OrderBy(p => p.File.Scan.Extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+            .ToList();
+        var decisions = new List<ImportDecision>(ordered.Count);
 
-        foreach (var p in pending)
+        foreach (var p in ordered)
         {
             var scan = p.File.Scan;
             var isUpdate = p.Match is not null;

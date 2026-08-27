@@ -11,7 +11,8 @@ namespace BauProjektManager.Tests;
 /// </summary>
 public class PreviewSourceTests
 {
-    private static CaptureRowViewModel Row(string fileName, string extension)
+    private static CaptureRowViewModel Row(
+        string fileName, string extension, CaptureBucket bucket = CaptureBucket.NewCapture)
     {
         var scan = new ScannedFile($"_Eingang/{fileName}", fileName, extension, 100, DateTime.UtcNow);
         var candidates = new PlanFileCandidates(
@@ -20,7 +21,7 @@ public class PreviewSourceTests
             DateCandidate: null, HasCopyMarker: false, IsCombi: false);
         var item = new CaptureItem(
             new FingerprintedFile(scan, "md5-" + fileName),
-            candidates, CaptureBucket.NewCapture, Match: null, Reason: null);
+            candidates, bucket, Match: null, Reason: null);
         return new CaptureRowViewModel(item);
     }
 
@@ -53,5 +54,46 @@ public class PreviewSourceTests
         var sameStemDwg = Row("5998-202_EG.dxf", ".dxf");
 
         Assert.Null(ManualCaptureViewModel.FindPairedPdfRow(dwg, [otherPdf, sameStemDwg, dwg]));
+    }
+
+    // ── 111.07 Slice A: Partner-Mitnahme bei der Radial-Zuordnung ────
+
+    [Fact]
+    public void ExpandWithPairedRows_PdfSelected_TakesUnselectedDwgPartner()
+    {
+        var pdf = Row("5998-202_EG.pdf", ".pdf");
+        var dwg = Row("5998-202_EG.dwg", ".dwg");
+        var other = Row("5998-306_OG1.pdf", ".pdf");
+
+        var result = ManualCaptureViewModel.ExpandWithPairedRows([pdf], [pdf, dwg, other]);
+
+        Assert.Equal(2, result.Count);
+        Assert.Contains(pdf, result);
+        Assert.Contains(dwg, result);
+    }
+
+    [Fact]
+    public void ExpandWithPairedRows_BothSelected_NoDuplicateEntry()
+    {
+        var pdf = Row("5998-202_EG.pdf", ".pdf");
+        var dwg = Row("5998-202_EG.dwg", ".dwg");
+
+        var result = ManualCaptureViewModel.ExpandWithPairedRows([pdf, dwg], [pdf, dwg]);
+
+        Assert.Equal(2, result.Count);
+    }
+
+    [Fact]
+    public void ExpandWithPairedRows_PartnerIsDuplicateOrUpdate_NotTaken()
+    {
+        var pdf = Row("5998-202_EG.pdf", ".pdf");
+        var dupDwg = Row("5998-202_EG.dwg", ".dwg", CaptureBucket.Duplicate);
+        var pdf2 = Row("5998-306_OG1.pdf", ".pdf");
+        var updateDwg = Row("5998-306_OG1.dwg", ".dwg", CaptureBucket.UpdateProposal);
+
+        var result = ManualCaptureViewModel.ExpandWithPairedRows(
+            [pdf, pdf2], [pdf, dupDwg, pdf2, updateDwg]);
+
+        Assert.Equal(2, result.Count);
     }
 }

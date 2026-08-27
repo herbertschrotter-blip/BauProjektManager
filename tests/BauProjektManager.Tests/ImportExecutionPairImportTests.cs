@@ -1,0 +1,88 @@
+using System.IO;
+using BauProjektManager.Domain.Enums.PlanManager;
+using BauProjektManager.Domain.Interfaces;
+using BauProjektManager.Domain.Models.PlanManager;
+using BauProjektManager.Infrastructure.Services;
+using BauProjektManager.PlanManager.Services;
+using Microsoft.Data.Sqlite;
+
+namespace BauProjektManager.Tests;
+
+/// <summary>
+/// E2E-Test des PDF+DWG-Paar-Imports (BPM-111.07 Slice A): zwei Pending
+/// Assignments mit gleicher Identität → EIN Dokument, EINE Revision, zwei
+/// Dateien — die PDF legt die Revision an (Sortierung in BuildDecisions),
+/// die DWG dockt über den FileLinked-Zweig der Execution an.
+/// Echte SQLite-DB + Temp-Projektverzeichnis, analog ImportUndoServiceTests.
+/// </summary>
+public class ImportExecutionPairImportTests
+{
+    private sealed class TestEnv : IDisposable
+    {
+        public PlanManagerDatabase Repo { get; }
+        public string Root { get; }
+        private readonly string _dbFolder;
+
+        public TestEnv()
+        {
+            IIdGenerator idGen = new UlidIdGenerator();
+            var projectId = idGen.NewId();
+            _dbFolder = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "BauProjektManager", "Projects", projectId);
+            Repo = new PlanManagerDatabase(projectId, idGen);
+            Root = Path.Combine(Path.GetTempPath(), "bpm-pair-test-" + projectId);
+            Directory.CreateDirectory(Path.Combine(Root, "_Eingang"));
+        }
+
+        public void Dispose()
+        {
+            Repo.Dispose();
+            SqliteConnection.ClearAllPools();
+            try { if (Directory.Exists(_dbFolder)) Directory.Delete(_dbFolder, recursive: true); } catch { }
+            try { if (Directory.Exists(Root)) Directory.Delete(Root, recursive: true); } catch { }
+        }
+    }
+
+    private static PendingAssignment Pending(string fileName, string md5)
+    {
+        var scan = new ScannedFile(
+            Path.Combine("_Eingang", fileName), fileName,
+            Path.GetExtension(fileName), 12, DateTime.UtcNow);
+        return new PendingAssignment(
+            new FingerprintedFile(scan, md5), CaptureBucket.NewCapture,
+            "polierplan", "Polierplan", "Haus 2", "OG2", "5998-300", null,
+            Path.Combine("Pläne", "Polierplan", "Haus 2", "OG2"), Match: null);
+    }
+
+    [Fact]
+    public void Execute_PdfDwgPair_CreatesOneRevisionWithBothFiles()
+    {
+        using var env = new TestEnv();
+        File.WriteAllText(Path.Combine(env.Root, "_Eingang", "5998-300_OG2.pdf"), "pdf-content");
+        File.WriteAllText(Path.Combine(env.Root, "_Eingang", "5998-300_OG2.dwg"), "dwg-content");
+
+        // DWG bewusst ZUERST im Pending — die PDF-vor-DWG-Sortierung muss greifen.
+        var decisions = CaptureConfirmService.BuildDecisions(
+            [Pending("5998-300_OG2.dwg", "md5-dwg"), Pending("5998-300_OG2.pdf", "md5-pdf")],
+            new PlanValueNormalizer());
+        var result = new ImportExecutionService(env.Repo, new UlidIdGenerator())
+            .Execute(decisions, env.Root, "_Eingang");
+
+        Assert.Equal(0, result.Failed);
+        Assert.Equal(2, result.Succeeded);
+
+        var doc = env.Repo.GetDocumentByKey(decisions[0].DocumentKey!);
+        Assert.NotNull(doc);
+        var rev = Assert.Single(env.Repo.GetRevisionsForDocument(doc!.Id));
+        Assert.Equal(
+            Path.Combine("Pläne", "Polierplan", "Haus 2", "OG2", "5998-300_OG2.pdf"),
+            env.Repo.GetPdfPathForRevision(rev.Id));
+
+        var targetDir = Path.Combine(env.Root, "Pläne", "Polierplan", "Haus 2", "OG2");
+        Assert.True(File.Exists(Path.Combine(targetDir, "5998-300_OG2.pdf")));
+        Assert.True(File.Exists(Path.Combine(targetDir, "5998-300_OG2.dwg")));
+        Assert.False(File.Exists(Path.Combine(env.Root, "_Eingang", "5998-300_OG2.pdf")));
+        Assert.False(File.Exists(Path.Combine(env.Root, "_Eingang", "5998-300_OG2.dwg")));
+    }
+}

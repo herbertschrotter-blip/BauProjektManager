@@ -31,6 +31,62 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.129] — 2026-08-27
+
+### Docs: CGR-2026-08-27-bpm-architektur Review-Paket
+
+ChatGPT-Cross-Review-Paket abgelegt (3 Runden r1–r3: Prompts, Responses, Analysen, Entscheidungen + README) + Routing-Zeile im chatgpt-reviews-INDEX. (Commit `70949a2`)
+
+---
+
+## [v0.28.128] — 2026-08-27
+
+### Feature: BPM-111.07 Slice A3 — Paar-UX (Badge + Panel-Hinweis)
+
+Die Paar-Mechanik ist jetzt sichtbar (nach Mockup-Spez v0.28.127): **⛓ „Paar"-Pill-Badge** an beiden Zeilen der Eingangs-Tabelle (Stil der Eingang-Badges der Projektliste: `CornerRadius=8`, `BpmInfo` + `BpmTextBright`), **Paar-Hinweis im Detail-Panel** („Import als EINE Revision mit zwei Dateien — PDF führend, DWG angehängt", blaue Akzentkante). Neu: `CaptureRowViewModel.PairedFileName`/`IsPaired` + zentrales `UpdatePairFlags` nach jeder Rows-Änderung; `PairedExtensionFor` als gemeinsamer Helfer. (Commit `861179d`)
+
+---
+
+## [v0.28.127] — 2026-08-27
+
+### Docs: Mockup ManuellSortieren — PDF+DWG-Paar-Spez
+
+`02_ManuellSortieren.html` um die verbindliche Paar-Spez erweitert (BPM-111.07 Slice A): Spez-Header-Block, Beispiel-Paar `5998-202_OG2` in den Demo-Daten, Pill-Badge in der Tabelle, Panel-Hinweis, interaktive Partner-Mitnahme mit „⛓ …"-Meldung. (Commit `f49a11e`)
+
+---
+
+## [v0.28.126] — 2026-08-27
+
+### Feature: BPM-111.07 Slice A2 — Update-Paar + Import-Guard
+
+„⬆ Update übernehmen" nimmt den PDF/DWG-Partner (gleicher Dateinamens-Stamm) automatisch mit. Dazu **Import-Guard in der Execution**: Bei `UpdateNewerIndex` wird nur supersedet, wenn die current-Revision nicht aus demselben Import stammt (`LastImportId`-Vergleich) — das entschärft einen schon vorher auslösbaren Bug (zweite Update-Aktion desselben Dokuments supersedete die frisch angelegte Revision und legte eine DWG-primäre Zweitrevision an). E2E-Test mit DWG-zuerst-Reihenfolge. (Commit `a673e94`)
+
+---
+
+## [v0.28.125] — 2026-08-27
+
+### Feature: BPM-111.07 Slice A1 — PDF+DWG-Paar-Import
+
+Ein PDF+DWG-Paar (gleicher Dateinamens-Stamm) wird als **EIN Dokument mit EINER Revision und zwei Dateien** importiert: Die Radial-Zuordnung nimmt den nicht selektierten Partner automatisch mit (`ExpandWithPairedRows`, Statushinweis „⛓ N gepaarte Datei(en) automatisch mit zugeordnet"; Duplikate/Updates ausgenommen), `BuildDecisions` sortiert PDFs stabil nach vorn — die PDF legt die Revision an (`is_primary`), die DWG dockt über den bestehenden FileLinked-Zweig an. (Commit `6ea9e77`)
+
+---
+
+## [v0.28.124] — 2026-08-27
+
+### Feature: BPM-111.06 Slice C3 — DWG-Vorschau via gepaarte PDF
+
+Rechtsklick „Vorschau" funktioniert jetzt auch auf DWG-Zeilen: zuerst wird ein **Eingangs-Partner** mit gleichem Dateinamens-Stamm gesucht (Vorschau + Text-Zuweisung laufen dann auf der PDF-Zeile), sonst die PDF der **aktuellen Archiv-Revision** des bekannten Dokuments (read-only — neue Lesemethode `GetPdfPathForRevision`, bevorzugt `is_primary`). Ohne Paar bleibt der Menüpunkt inaktiv. Paar-Findung ohne System.IO (ADR-060-konform). BPM-111.06 damit komplett; Archiv-Sub-Tabs in BPM-111.07 verschoben. (Commit `c2a47f1`)
+
+---
+
+## [v0.28.123] — 2026-08-27
+
+### Docs: CHANGELOG-Nachzug + ADR-Addenda Engine-Konsolidierung + DB-SCHEMA
+
+CHANGELOG v0.28.114–.122, **ADR-062/063-Addenda „Engine-Konsolidierung"** (EINE Engine PDFium/Docnet für beide Ports, BGRA statt PNG, App-TFM-Bump zurückgebaut, PdfPig nur Test-Builder inkl. ⚠ Paket-ID-Warnung), DB-SCHEMA `plan_revisions.change_note` + `released_at`-Quellen, INDEX-Routing ADR-063. (Commit `ae7a98c`)
+
+---
+
 ## [v0.28.122] — 2026-08-27
 
 ### Feature: BPM-118 Teil 3 — Persistenz der Text-Zuweisungen

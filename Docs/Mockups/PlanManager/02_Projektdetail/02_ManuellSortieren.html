@@ -92,6 +92,13 @@ WORKFLOW (BPM-111.04):
   Projektübersicht). Detail-Panel: Paar-Hinweis "eine Revision, zwei
   Dateien". Vorschau einer DWG zeigt die gepaarte PDF (Slice C3, read-only
   bei Archiv-Revision).
+- KOMBI-PLAENE (BPM-111.07 Slice C, Teil 48): IsCombi (mehrere Plantyp-
+  Keywords im Dateinamen, Extractor BPM-111.02) wird sichtbar: "⚠ Kombi"-
+  Pill-Badge in der Tabelle + Warnhinweis im Detail-Panel. V1: KEIN
+  Auto-Split in mehrere plan_documents — als EIN Dokument erfassen,
+  Empfehlung Typ "Kombiplan/Sonstiges" (via "+ Neu…" anlegbar), Inhalte
+  per Text-Zuweisung als Segmente (plan_document_segments). Radial-Zentrum
+  zeigt "⚠ Kombi-Plan" als Untertitel, solange kein Typ gewählt ist.
 ═══════════════════════════════════════════════════════════════════════════
 -->
 <style>
@@ -218,6 +225,7 @@ var FILES=[
 {id:3,n:'5998-203_OG3_Polierplan.dwg',s:'148 KB',g:'OG3',t:'Polierplan',nr:'5998-203',idx:'—',bez:'Polierplan OG3'},
 {id:11,n:'5998-202_OG2_Polierplan.pdf',s:'146 KB',g:'OG2',t:'Polierplan',nr:'5998-202',idx:'—',bez:'Polierplan OG2'},
 {id:12,n:'5998-202_OG2_Polierplan.dwg',s:'151 KB',g:'OG2',t:'Polierplan',nr:'5998-202',idx:'—',bez:'Polierplan OG2'},
+{id:13,n:'5998-150_Polierplan+Schalung_H1_EG.pdf',s:'188 KB',g:'EG',t:'Polierplan',nr:'5998-150',idx:'—',bez:'Polierplan + Schalung EG',combi:1},
 {id:5,n:'5998-100-B_KG_Polierplan.dwg',s:'151 KB',kind:'update',newIdx:'B',newD:'heute',newC:'',nr:'5998-100',idx:'B',bez:'Polierplan KG',target:'Pläne/Polierplan/Haus 1/KG/',hist:[{i:'A',d:'12.05.2026',c:'Seilsicherungssystem durch Auflastgeländer ersetzt'},{i:'—',d:'02.04.2026',c:'Erstausgabe'}]},
 {id:6,n:'B-101_Bewehrung_OG1.pdf',s:'98 KB',g:'OG1',t:'Bewehrung',nr:'B-101',idx:'—',bez:'Bewehrung Decke OG1'},
 {id:7,n:'FT_W04_Wandelemente_H2.pdf',s:'204 KB',g:'',t:'Fertigteile',nr:'FT-W04',idx:'—',bez:'Wandelemente Haus 2'},
@@ -249,6 +257,7 @@ function pairOf(f){var e=ext(f.n),want=e==='.pdf'?'.dwg':e==='.dwg'?'.pdf':null;
 if(!want)return null;
 return FILES.find(function(o){return o.id!==f.id&&ext(o.n)===want&&stem(o.n)===stem(f.n);})||null;}
 var PAIRBADGE=' <span style="background:#85b8d9;color:#1E1E1E;font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;font-family:\'Segoe UI\',sans-serif">⛓ Paar</span>';
+var COMBIBADGE=' <span style="background:#F0AD4E;color:#1E1E1E;font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;font-family:\'Segoe UI\',sans-serif">⚠ Kombi</span>';
 function arcById(id){return ARCHIV.find(function(a){return a.f.id===id;});}
 function anyById(id){return byId(id)||(arcById(id)||{}).f;}
 function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');}
@@ -335,7 +344,7 @@ var bg=on?'#04395E':p?'#2a2418':f.kind==='update'?'#0c2438':'transparent';
 var bl=p?'3px solid #F0AD4E':f.kind==='update'?'3px solid #3794FF':'3px solid transparent';
 var zu=p?'<span style="color:#F0AD4E">⏳ '+p+'</span>':f.kind==='update'?'<span style="color:#3794FF">⬆ Index '+f.newIdx+' neu — bekannter Plan</span>':(f.t?'<span style="color:#5a5a5a">Kandidat: '+f.t+(f.g?' / '+f.g:'')+'</span>':'<span style="color:#5a5a5a">—</span>');
 h+='<tr data-i="'+f.id+'" style="cursor:pointer;background:'+bg+';height:36px"><td style="padding:6px 6px 6px 8px;border-left:'+bl+';color:'+(on?'#0078D4':'#5a5a5a')+'">'+(on?'✓':'☐')+'</td>'+
-'<td style="padding:6px 8px;color:#FFF;font-family:Consolas,monospace;font-size:12px">'+f.n+(pairOf(f)?PAIRBADGE:'')+'</td>'+
+'<td style="padding:6px 8px;color:#FFF;font-family:Consolas,monospace;font-size:12px">'+f.n+(pairOf(f)?PAIRBADGE:'')+(f.combi?COMBIBADGE:'')+'</td>'+
 '<td style="padding:6px 8px;color:#858585;font-size:12px">'+f.s+'</td>'+
 '<td style="padding:6px 8px;font-size:11px">'+zu+'</td></tr>';});
 document.getElementById('tbl').innerHTML=h;}
@@ -371,6 +380,7 @@ ed.innerHTML='<div style="display:grid;grid-template-columns:1fr 64px;gap:8px;ma
 '<div style="margin-bottom:8px"><div class="lbl">Bezeichnung</div><input class="inp" value="'+esc(f.bez)+'" onchange="updF('+f.id+',\'bez\',this.value)"></div>'+
 (a?'<div style="color:#858585;font-size:12px">Ordner: <span style="color:#CCC">'+a.target+'</span></div><div style="color:#858585;font-size:12px;margin-bottom:8px">Hinzugefügt: <span style="color:'+(a.last?'#4EC94E':'#CCC')+'">'+a.date+'</span></div>':'')+
 (function(){var pr=a?null:pairOf(f);return pr?'<div style="background:#1c2b38;border-left:3px solid #3794FF;padding:7px 9px;font-size:11px;color:#85b8d9;line-height:1.5;margin-bottom:8px">⛓ Gepaart mit <span style="font-family:Consolas,monospace;color:#CCC">'+pr.n+'</span><br>Import als <span style="color:#FFF">EINE Revision mit zwei Dateien</span> (PDF führend, DWG angehängt)</div>':'';})()+
+(f.combi&&!a?'<div style="background:#2a2418;border-left:3px solid #F0AD4E;padding:7px 9px;font-size:11px;color:#F0AD4E;line-height:1.5;margin-bottom:8px">⚠ <span style="color:#FFF">Kombi-Plan erkannt</span> (mehrere Plantypen im Namen)<br>V1: kein Auto-Split — als EIN Dokument erfassen, Typ „Kombiplan/Sonstiges" empfohlen (+ Neu…), Inhalte per Text-Zuweisung als Segmente</div>':'')+
 (pend[f.id]?'<div style="color:#F0AD4E;font-size:12px;margin-bottom:8px">⏳ '+pend[f.id]+'</div>':'');
 var ctx=f.kind==='update'?' · Haus 1/KG':(a?' · '+a.target.replace('Pläne/',''):'');
 hd.innerHTML='<div class="lbl">Index-Historie · '+(f.nr||'—')+ctx+'</div>'+
@@ -472,7 +482,7 @@ var t1=document.createElementNS('http://www.w3.org/2000/svg','text');
 t1.setAttribute('x',CX);t1.setAttribute('y',CX-4);t1.setAttribute('text-anchor','middle');t1.setAttribute('font-size','13');t1.setAttribute('fill','#FFF');
 t1.textContent=R.move!=null?'Verschieben':sel.size+' Datei(en)';svg.appendChild(t1);
 var t2=document.createElementNS('http://www.w3.org/2000/svg','text');
-t2.setAttribute('x',CX);t2.setAttribute('y',CX+14);t2.setAttribute('text-anchor','middle');t2.setAttribute('font-size','11');t2.setAttribute('fill','#85b8d9');t2.textContent=(R.typ||'')+(R.bau?' › '+R.bau:'');svg.appendChild(t2);
+t2.setAttribute('x',CX);t2.setAttribute('y',CX+14);t2.setAttribute('text-anchor','middle');t2.setAttribute('font-size','11');t2.setAttribute('fill',R.typ||!R.combi?'#85b8d9':'#F0AD4E');t2.textContent=R.typ?(R.typ+(R.bau?' › '+R.bau:'')):(R.combi?'⚠ Kombi-Plan':'');svg.appendChild(t2);
 ring(svg,RING1,ring1Items(),'typ',R.typ,R.cand,false);
 var showBau=!!R.typ;
 if(showBau)ring(svg,RING2,ring2Items(),'bau',R.bau,null,!vis.bau);
@@ -492,7 +502,7 @@ g.style.left=(cx-fr.left+16)+'px';g.style.top=(cy-fr.top+14)+'px';}
 function showGhost(cx,cy,label){document.getElementById('ghostTxt').textContent=label;
 document.getElementById('ghost').style.display='flex';moveGhost(cx,cy);}
 function startRadial(f,moveId){R.open=true;R.move=moveId!=null?moveId:null;
-R.typ=null;R.bau=null;R.ges=null;R.hov=null;R.cand=f.t||null;R.candG=f.g||null;
+R.typ=null;R.bau=null;R.ges=null;R.hov=null;R.cand=f.t||null;R.candG=f.g||null;R.combi=!!f.combi;
 vis={bau:false,ges:false};rotOff={typ:0,bau:0,ges:0};
 var fr=frame.getBoundingClientRect();var x=downXY[0]-fr.left,y=downXY[1]-fr.top;
 x=Math.max(255,Math.min(fr.width-255,x));y=Math.max(252,Math.min(fr.height-252,y));

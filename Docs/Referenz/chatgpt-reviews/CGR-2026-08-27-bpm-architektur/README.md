@@ -3,7 +3,7 @@
 **Thema:** Review der ChatGPT-Gesamtauswertung (12-Diagramm-Serie, externer ChatGPT-Chat „Softwareentwicklungsdiagramme") gegen den beschlossenen Architektur-Rahmen. Kernfrage: Wie ordnen sich die 🔴-Recovery-/Journal-Befunde in ADR-060 (FS-Ports, BPM-112), ADR-061 (Transaktionalität, BPM-113) und den laufenden BPM-111-Track ein? Plus Dateibrowser-Konzept vs. ADR-061 Modell A.
 **Zeitraum:** 2026-08-27
 **Ursprungs-Chat:** ChatGPT-Share „Softwareentwicklungsdiagramme" (Diagramme 10–12 + Gesamtauswertung + Dateibrowser-Diskussion); Claude-Verifikation der Befunde gegen Code-Stand v0.28.120
-**Status:** Runde 3 (Sign-off) offen
+**Status:** ✅ Abgeschlossen (beidseitiges Sign-off in r3, 2026-08-27)
 
 ---
 
@@ -38,4 +38,15 @@ Zusätzlicher Claude-Befund: **ADR-061 Punkt 5** (Journal VOR Move + temp `.bpm_
 ### Runde 3 — Beidseitiges Sign-off
 - **Artefakte:** [r3/](./r3/)
 - **Fokus:** Sign-off der Slice-Folge H0+T0–T8 und der 11 Invarianten; 10–15 testbare Akzeptanzkriterien fürs ClickUp-Ticket; finaler Vollständigkeits-Check über die gesamte 12-Diagramm-Analyse.
-- **Kernergebnis:** _(offen)_
+- **Kernergebnis:** ✅ **Beidseitiges Sign-off** (ChatGPT explizit, Claude nach Verifikation, Herbert bestätigt). Zwei nicht-blockierende Präzisierungen übernommen: (A) skipDuplicate-Undo-Semantik für gemischte/reine Dubletten-Imports explizit definiert; (B) beide `destination_path`-Spalten (`import_actions` + `import_action_files`) werden nullable via DB-Reset. **15 testbare Akzeptanzkriterien** geliefert (decken H0–T8 + Bucket A vollständig ab). Vollständigkeits-Check: kein unowned V1-Blocker aus der 12-Diagramm-Serie; einziger externer offener Punkt: **ID-basierter `document_key`** (`BuildManualDocumentKey` nutzt verifiziert noch Namen statt Stammdaten-IDs, `CaptureConfirmService.cs:132–147`) = bestehender ADR-059/BPM-111-Abnahmepunkt.
+
+---
+
+## Endergebnis der Serie
+
+1. **Neuer Task „Import-Transaktions-Härtung"** — Slices H0 (Alt-Import-Cutover) + T0–T8, BPM-112 Slice 3 = T1. Start nach Abschluss BPM-111.06. PDF-Port-Arbeit (ADR-062/063) parallel erlaubt, solange Importpfad unberührt. → **Angelegt als BPM-120** (ClickUp `86cbavt73`, 2026-08-27).
+2. **11 Architektur-Invarianten** (r3-Prompt Kap. „Zu signierendes Gesamtergebnis" + Präzisierungen A/B) → **Verankert als ADR-064** (2026-08-27).
+3. **15 Akzeptanzkriterien** (r3/02, Kap. 2) — 1:1 in die BPM-120-Description übernommen.
+4. **Für V1 gestrichen:** Skip-only-Fix, IsConflict-Fix, Preview-UX-Ausbau (alter Dialog), LearnIndex-Profil-Lernen, Papierkorb für Dubletten, Diagramm 13 (vertagt bis Explorer-Start).
+5. **Extern offen:** ID-basierter `document_key` als BPM-111-Abnahmepunkt; Bucket-B/D-Warn-UX bleibt BPM-111-Arbeit.
+6. **Neue verifizierte Befunde der Serie:** Radial-Confirm läuft über ungehärteten `ImportExecutionService` (`CaptureConfirmService.cs:26/46`); `ImportUndoService` mit 5 Problemen (kritischster: bedingungsloser DB-Rollback + `MarkImportUndone` nach Disk-Fehlern); ADR-061 P5 beschlossen aber im Import-Pfad nicht umgesetzt.

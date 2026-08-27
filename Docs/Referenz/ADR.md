@@ -16,7 +16,7 @@ supersedes: []
 - Autorität: source_of_truth
 - Lesen wenn: Neue Architekturentscheidung treffen, bestehende ADR prüfen, Status ändern, Entscheidung nachschlagen
 - Nicht zuständig für: Implementierungs-Details (→ jeweilige Modul-Docs), Code-Standards (→ CODING_STANDARDS.md)
-- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-063)
+- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-064)
 - Pflichtlesen: keine (gezieltes Nachschlagen per ADR-Nummer)
 - Fachliche Invarianten:
   - Statusmodell: Decision Status (Proposed/Accepted/Superseded/Deprecated) getrennt von Implementation Status (Not Started/Partial/Implemented)
@@ -110,6 +110,7 @@ Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheid
 | 061 | DB als einzige Ordner-Wahrheit + DocumentTargetPathResolver | ✅ Entschieden | 2026-06 |
 | 062 | Zentraler PDF-Render-Port (IPdfRenderService) | ✅ Entschieden | 2026-08 |
 | 063 | PDF-Text-Port (IPdfTextService) + PdfPig-Freigabe | ✅ Entschieden | 2026-08 |
+| 064 | Import-Transaktions-Härtung — idempotente Journal-/Recovery-/Undo-Semantik | ✅ Entschieden | 2026-08 |
 
 ---
 
@@ -3012,6 +3013,58 @@ Die Plan-Vorschau (BPM-111.06) braucht In-App-PDF-Rendering; die Spez (Mockup 02
 **Betrifft:** ADR-062 (gemeinsames mm-Koordinatensystem), ADR-045 (bekommt sein Extraktions-Werkzeug), ADR-056 (Segmenttypen als Zuweisungsziele), DB-SCHEMA.md (plan_revisions.change_note), Mockup-Spez 02_ManuellSortieren.
 
 **Referenz:** ClickUp BPM-118, Teil 47.
+
+---
+
+## ADR-064: Import-Transaktions-Härtung — idempotente Journal-/Recovery-/Undo-Semantik
+
+**Datum:** 2026-08-27
+**Status:** ✅ Entschieden (beidseitiges Sign-off via CGR-2026-08-27-bpm-architektur r3: ChatGPT GPT-5.4 + Claude + Herbert)
+**Implementierung:** Not Started — ClickUp **BPM-120** (Slices H0 + T0–T8, 15 Akzeptanzkriterien im Ticket); BPM-112 Slice 3 (= BPM-112.03) wird als T1 miterledigt. Start nach BPM-111.06 (done), Empfehlung: vor weiteren Slices auf dem mutierenden Importpfad.
+**Herkunft:** Review einer externen ChatGPT-12-Diagramm-Analyse des Gesamtprojekts, 3 Runden Cross-Review mit Code-Verifikation (Stand v0.28.120). Auslöser: Der Crash-Korridor zwischen Dateisystem-Mutation und `planmanager.db`-Update ist der größte offene technische Befund vor V1.
+
+**Kontext:**
+
+ADR-061 Punkt 5 (Journal vor Move + `.bpm_tmp` + atomic rename + idempotente Recovery) ist beschlossen, aber im Import-Pfad **nicht umgesetzt** — BPM-113 lieferte Resolver/Schema, nicht die Transaktions-Härtung. Verifizierte Lücken (Code-Stand v0.28.120):
+
+- `import_actions` werden einzeln unmittelbar vor jeder Operation angelegt, nicht vollständig vorab; `archive_path` wird als `null` journalisiert, der echte Archivpfad entsteht ad hoc.
+- `ImportExecutionService` verschiebt direkt per `File.Move` (kein Temp, kein atomic rename); Dubletten-Löschung läuft unjournalisiert nach dem Action-Loop.
+- Recovery sieht nur `journal.status = 'pending'` (teilweise fehlgeschlagene Imports werden terminal `failed` und ignoriert) und wiederholt nur Datei-Moves, stellt das Planarchiv (Revision/Supersede/Events) nicht her.
+- `ImportUndoService` führt nach fehlgeschlagenen Datei-Reverses den DB-Rollback und `MarkImportUndone` **bedingungslos** aus (Disk halb zurück, DB komplett zurück, Import „undone").
+- Der V1-Radial-Workflow (ADR-059) läuft real über genau diese Strecke (`CaptureConfirmService` → `ImportExecutionService.Execute`, Konstruktion per `new`).
+
+Das sind die ADR-058-Stop-Fälle („Import-Journal/Undo wackelt → sofort Stopp", „Dateiverschiebung + DB-Commit inkonsistent → sofort Stopp").
+
+**Entscheidung:**
+
+Elf verbindliche Invarianten (Sign-off r3), umzusetzen via BPM-120:
+
+1. **Idempotenz-Kerninvariante:** Eine journalisierte ImportAction muss aus jedem zulässigen Zwischenzustand idempotent auf den definierten Endzustand gebracht werden können — Dateisystem UND Plan-Cache. (Die konkrete Klasse — z.B. `ImportActionExecutor` — ist Implementierungsdetail, kein Architekturvertrag.)
+2. **Vorab-Journalisierung:** Alle geplanten Actions stehen VOR der ersten Mutation vollständig im Journal, inkl. deterministischer `source_path`/`destination_path`/`archive_path`.
+3. **Atomarer Action-Abschluss:** `action_status = completed` wird in derselben SQLite-Transaction gesetzt wie die zugehörigen fachlichen Writes (Document/Revision/File/Link/Events).
+4. **Gemeinsamer Apply-Pfad:** Normaler Import und Recovery Forward nutzen dieselbe fachliche Apply-Logik; `RecoveryExecutorService` verliert seine vereinfachte Move-Eigenlogik.
+5. **Undo-Reihenfolge:** DB-Rollback + `MarkImportUndone` NUR nach vollständig erfolgreichem Disk-Reverse (LIFO, nach Preflight); scheitert ein Disk-Reverse, bleibt der Vorgang reparierbar. DB-Rollback läuft in einer Transaction. Gemeinsamer Kern `ApplyForward`/`ApplyReverse` — kein Framework, kein Command-Bus.
+6. **Status-Semantik:** `pending` = recovery-pflichtig (blockiert neuen Confirm); `failed` erst terminal nach vollständigem Rollback oder bewusster Cleanup-/Abbruchentscheidung.
+7. **`skipDuplicate` (Bucket A):** Bestätigte MD5-Dubletten werden als echte Action (`action_type = skipDuplicate`, Source-Pfad + MD5 + Größe) journalisiert und beim Confirm direkt gelöscht — journalisiert + recovery-fähig, aber **bewusst nicht undo-bar** (journalisiert ≠ undo-bar; Inhalt liegt MD5-identisch im Bestand, kein Papierkorb). Recovery-Endzustand: redundante Inbox-Kopie existiert nicht mehr UND gleicher MD5 im getrackten Bestand verifiziert (Lookup über die getrackte Teilmenge nach ADR-061 Modell A, kein Verzeichnis-Scan); sonst RecoveryConflict, nie blind `completed`. Undo-Präzisierung: gemischter Import → undo-fähige Actions zurück, skipDuplicate bleibt gelöscht, Journal darf `undone` werden; reiner skipDuplicate-Import → kein Undo anbieten.
+8. **Schema-Änderung (Frühphase, keine Migration):** `import_actions.destination_path` und (bei Nutzung) `import_action_files.destination_path` werden nullable. Betroffene Datei: projektbezogene `planmanager.db` — User löscht sie, BPM erzeugt sie beim nächsten Start neu.
+9. **H0 — ein V1-Importweg:** Der klassische Profil-Import („Import starten" / `OnStartImport` / `ImportPreviewDialog`) wird VOR der Härtung aus dem V1-Nutzerpfad genommen (Legacy-Klassen bleiben vorerst im Repo). Damit für V1 gestrichen: Skip-only-Fix, `DocumentTypeRecognizer.IsConflict`-Fix, Preview-UX-Ausbau des alten Dialogs, LearnIndex-Profil-Lernen.
+10. **Parallelität:** PDF-Port-Arbeit (ADR-062/063) darf parallel laufen, solange sie den Importpfad nicht berührt. Keine weiteren Features, die auf dem mutierenden Import-/Undo-/Recovery-Pfad aufbauen, bevor die Invarianten erfüllt sind; reine UI-/Preview-/PDF-Arbeit ist entkoppelt.
+11. **Explorer-Abgrenzung:** In-App-Dateibrowser folgt ADR-061 Modell A (Live-FS + kuratierter Planindex; getrackte Pläne nur über journalisierte Operationen) und startet erst nach stabilen Ports (ADR-060 Slice 6). Reklassifizierung getrackter Pläne (physischer Move ändert fachliche Zuordnung) ist ein eigener Domain-Workflow, kein Explorer-Feature. Architektur-Diagramm dazu erst bei Feature-Start.
+
+**Umsetzung (Slice-Folge BPM-120, jeder Zwischenstand baubar + grün):** H0 Cutover → T0 Characterization-Tests (bekannte Fehler NICHT als Soll festschreiben) → T1 FS-Ports + fault-fähiger `FakeFileStore` + lokale Constructor Injection (= ADR-060 Slice 3; kein Composition-Root-Großumbau) → T2 Vorab-Journalisierung → T3 `.bpm_tmp` + atomic rename + 3× Lock-Retry → T4 DB-Transaction pro Action + idempotenter DB-Apply → T5 Recovery Forward über gemeinsamen Apply-Pfad → T6 failed/pending-Semantik → T7 Undo-Härtung → T8 Fault-/Crash-Matrix (Abbruch nach jedem Schritt × Forward/Rollback/Undo).
+
+**Konsequenzen:**
+
+- Die ADR-058-Stop-Invarianten werden erstmals technisch einlösbar; die Crash-Fenster FS ↔ DB sind testbar (Fault-Injection via FakeFileStore + Temp-/SQLite-Integrationstests).
+- `CaptureConfirmService` erhält den Executor via Constructor Injection statt internem `new` (eine Instanz-Welt für klassischen und Radial-Pfad, solange beide existieren).
+- Bewusst NICHT gebaut: 2PC, verteilte Locks, FileSystemWatcher-Sync-Engine, OneDrive-API, Papierkorb/Quarantäne für Dubletten, Event Sourcing.
+- Außerhalb des Scopes, aber im Review festgehalten: ID-basierter `document_key` (`BuildManualDocumentKey` nutzt noch Bauteil-/Geschoss-NAMEN statt Stammdaten-IDs) bleibt ADR-059/BPM-111-Abnahmepunkt (Kommentar an BPM-111).
+
+**DSGVO:** Klasse A (technische Import-/Journal-Persistenz, kein Personenbezug). Pfad-Logging über die ADR-060-Ports zentral maskierbar.
+
+**Betrifft:** ADR-058 (Stop-Punkte + Journal-Haltbarkeit), ADR-059 (ein V1-Importweg, Buckets), ADR-060 (Slice 3 wird in BPM-120 erledigt), ADR-061 (P5 wird umgesetzt und DB-seitig präzisiert), DB-SCHEMA.md Kap. 6 (`import_actions`/`import_action_files` — `destination_path` nullable, mit BPM-120 nachziehen), PlanManager.md (Import-/Recovery-/Undo-Kapitel).
+
+**Referenz:** [Docs/Referenz/chatgpt-reviews/CGR-2026-08-27-bpm-architektur/](../Referenz/chatgpt-reviews/CGR-2026-08-27-bpm-architektur/) — 3 Runden Cross-Review (r1 Delta-Analyse + Task-Schnitt, r2 Diagramm-Nachlieferung + Undo-Befund + H0, r3 Sign-off + 15 Akzeptanzkriterien). ClickUp: BPM-120.
 
 ---
 

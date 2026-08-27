@@ -31,6 +31,78 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.122] — 2026-08-27
+
+### Feature: BPM-118 Teil 3 — Persistenz der Text-Zuweisungen
+
+Die per Text-Zuweisung erfassten Werte fließen jetzt beim „Import bestätigen" bis in die DB: `PendingAssignment` und `ClassifiedImportFile` tragen **`ChangeNote`/`ReleasedAt`/`AssignedSegments`** (neues Domain-Record `AssignedSegmentValue` mit SegmentTypeId + TokenKey + Wert — TokenKey kommt aus dem Zuweisungs-Menü mit, kein Cross-DB-Lookup). `ImportExecutionService` übergibt `released_at`/`change_note` an `InsertRevision` und schreibt Segmente per neuem **`UpsertSegment`** (ON CONFLICT auf UNIQUE document_id+segment_type_id — letzte Zuweisung gewinnt, auch im Update-Fall); dazu `GetSegmentsForDocument` als Lese-API. Beide Assign-Stellen + Confirm-Sync im `ManualCaptureViewModel` reichen die Row-Werte durch (Muster Slice A3). Wizard-Import unverändert (Defaults + Regressionstest). 414/414 Tests (4 neue). BPM-118 damit komplett. (Commit `07e9efb`)
+
+---
+
+## [v0.28.121] — 2026-08-27
+
+### Feature: BPM-118 Teil 1+2 — Text-Zuweisung aus PDF-Vorschau + Engine-Wechsel PDFium
+
+Text in der PDF-Vorschau **wie in Word markieren** (I-Beam-Cursor, Auswahl in Leserichtung, durchgehender Balken je Zeile, Theme-Blau) und per Rechtsklick zuweisen: Gruppen **REVISION** (Änderungshinweis → `Row.ChangeNote`, Index-Datum → `Row.ReleasedAtIso`) und **ZUWEISEN ALS SEGMENT** dynamisch aus `ISegmentTypeCatalog`; Plannummer/Index füllen die Panel-Edit-Felder (Re-Match), Bezeichnung → Title. **ENGINE-WECHSEL:** Windows.Data.Pdf + PdfPig-Mapping traf daneben → **EINE Engine PDFium via Docnet.Core 2.6.0** — `PdfiumPdfService` (Infrastructure) bedient `IPdfRenderService` UND `IPdfTextService` aus derselben Pipeline; `RenderPageAsync` liefert BGRA32-Pixel statt PNG; App-TFM-Bump zurückgebaut; adaptives Nachrendern ~7 px/mm (Deckel 7200 px), Box-Normalisierung + Alpha-Compositing auf Weiß. PdfPig nur noch Test-Builder (⚠ Paket-ID „PdfPig", NICHT „UglyToad.PdfPig" — gekapert). (Commit `3207834`)
+
+---
+
+## [v0.28.120] — 2026-08-27
+
+### Feature: BPM-111.06 — Detail-Panel-Breite anpassbar + persistent
+
+Zweiter Splitter zwischen Detail-Panel und Vorschau: Detail-Breite per Maus anpassbar (320–900 px) und geräte-lokal persistent (`device-settings.json` → `uiLayout`, wie die Vorschau-Breite). Die Aktions-Buttons im Panel bleiben fix 296 px. (Commit `02e808a`)
+
+---
+
+## [v0.28.119] — 2026-08-27
+
+### Feature: BPM-111.06 Slice D — Detail-Panel-Redesign (Historie immer sichtbar)
+
+Index-Historie im Detail-Panel **immer sichtbar und 3-spaltig** (Revision | Datum | Änderung): erste Zeile = die einlaufende Datei selbst („(neu)", hervorgehoben), Datum bevorzugt `released_at` (dd.MM.yyyy, sonst `current_from`), Spalte „Änderung" aus neuem DB-Feld **`plan_revisions.change_note`** (Frühphase: `planmanager.db` löschen statt Migration). Panel-Grundbreite 320 px. (Commit `b6f46c1`)
+
+---
+
+## [v0.28.118] — 2026-08-26
+
+### Docs: Mockup ManuellSortieren komplett gemergt
+
+`02_ManuellSortieren.html` als verbindliche Gesamt-Spez konsolidiert: 3-Spalten-Layout (Tabelle | Detail | Vorschau), Detail-Panel-Redesign, Vorschau mit Text-Zuweisung, Radial übernommen — interaktiv in einem Mockup. (Commit `c3da74f`)
+
+---
+
+## [v0.28.117] — 2026-08-26
+
+### Docs: ADR-063 PDF-Text-Port + PdfPig-Freigabe
+
+ADR-063 (IPdfTextService: Wort-Text mit mm-Koordinaten, KEIN OCR, `change_note`-Schema) inkl. Library-Freigabe PdfPig (MIT) + Mockup-Spez Detail-Panel-Redesign und Text-Zuweisung. (Commit `f1b11ac`)
+
+---
+
+## [v0.28.116] — 2026-08-26
+
+### Feature: BPM-111.06 — Vorschau-Breite persistent + Fensterplatzierungs-Fix
+
+Vorschau-Panel-Breite geräte-lokal persistent (`device-settings.json` → neue Sektion `uiLayout`), Default 520 px. Dazu Bugfix: `AppSettingsService.Save(AppSettings)` verwarf `MainWindowPlacement` — Fensterposition/-größe überlebt jetzt jeden Settings-Save. (Commit `0f4d575`)
+
+---
+
+## [v0.28.115] — 2026-08-26
+
+### Change: BPM-111.06 Slice C — Vorschau als integriertes Panel (Variante B)
+
+Die PDF-Vorschau ist kein separates Fenster mehr, sondern eine **integrierte Panel-Spalte rechts außen** im Tab „Manuell sortieren" (Tabelle | Detail | Vorschau, per Splitter): `PlanPreviewWindow` → `PlanPreviewPanel`, Ghost-/Secondary-Buttons, ✕ schließt die Spalte. „Andocken ans MainWindow" ist damit entfallen. (Commit `126245f`)
+
+---
+
+## [v0.28.114] — 2026-08-26
+
+### Docs: CHANGELOG v0.28.105–.113 + ADR-062-Addendum + Mockup Variante B
+
+CHANGELOG-Nachzug .105–.113, ADR-062-Addendum (Bearbeitung dauerhaft extern via IFileLauncher, `PdfPageRender` mit Blattgröße in mm) + Mockup-Spez Vorschau als integriertes Panel (Variante B). (Commit `093c187`)
+
+---
+
 ## [v0.28.113] — 2026-08-26
 
 ### Feature: BPM-111.06 Slice B — Kontextmenü „Datei öffnen" + „Im Explorer zeigen"

@@ -111,7 +111,7 @@ Bei UI-Änderungen zusätzlich:
 ### Plan-Management
 - Primary: `Docs/Module/PlanManager.md`
 - Secondary: `Docs/Kern/DB-SCHEMA.md` (Kap. 6.7 = Schema v2.0 / Plan-Archiv-Persistenz), `Docs/Kern/BauProjektManager_Architektur.md`
-- Reference: `Docs/Referenz/UI_Navigation.md`, `Docs/Referenz/ADR.md` (ADR-010 Recognition, ADR-056 Segmenttypen, ADR-058 Plan-Archiv, ADR-059 Plan-Erfassung, ADR-060 Dateisystem-Ports, ADR-061 Ordner-Wahrheit/Resolver, ADR-062 PDF-Render-Port)
+- Reference: `Docs/Referenz/UI_Navigation.md`, `Docs/Referenz/ADR.md` (ADR-010 Recognition, ADR-056 Segmenttypen, ADR-058 Plan-Archiv, ADR-059 Plan-Erfassung, ADR-060 Dateisystem-Ports, ADR-061 Ordner-Wahrheit/Resolver, ADR-062 PDF-Render-Port, ADR-063 PDF-Text-Port/Text-Zuweisung — beide Ports: EINE Engine PDFium/Docnet, siehe Addenda)
 - Bei Cross-Modul-Anbindung (Bautagebuch/Foto/Vorlagen → Pläne): `IPlanLookupService` ist die öffentliche API, NICHT direkter SQL-Zugriff auf `plan_documents`. Snapshot-Pflicht `fixed_revision` (ADR-058)
 
 ### Einstellungen / Projekt-UI

@@ -2943,8 +2943,8 @@ Zwei getrennte Ordner-Wahrheiten, die sich nicht kennen: `AppSettings.FolderTemp
 ## ADR-062: Zentraler PDF-Render-Port (IPdfRenderService)
 
 **Datum:** 2026-08-26
-**Status:** ✅ Entschieden (Herbert, Teil 47)
-**Implementierung:** 🟡 In Progress — C1+C2 umgesetzt (v0.28.112, `5c782ef`): Port + `WindowsPdfRenderService` + `PlanPreviewWindow` (Plankopf-Start A4 rechts unten, Zoom/Pan/Blättern) + `IFileLauncher`/`LocalFileLauncher`; offen: Andocken ans MainWindow + DWG-Pairing (C3)
+**Status:** ✅ Entschieden (Herbert, Teil 47) — Engine seit v0.28.121 PDFium/Docnet (siehe Addendum Engine-Konsolidierung)
+**Implementierung:** 🟡 In Progress — Port + Vorschau umgesetzt (v0.28.112–.121): `PlanPreviewPanel` als integrierte Panel-Spalte (Variante B statt Fenster, v0.28.115), Plankopf-Start A4 rechts unten, Zoom/Pan/Blättern, `IFileLauncher`/`LocalFileLauncher`; Engine-Wechsel auf `PdfiumPdfService` (v0.28.121); offen: DWG-Pairing (C3 — „Andocken ans MainWindow" ist durch den Panel-Umbau entfallen)
 **Herkunft:** BPM-111.06 Slice C (angedockte PDF-Vorschau) + Herberts Frage: zentrales PDF-System für alle Module statt Modul-Einzellösungen?
 
 **Kontext:**
@@ -2966,6 +2966,8 @@ Die Plan-Vorschau (BPM-111.06) braucht In-App-PDF-Rendering; die Spez (Mockup 02
 
 **Addendum (Teil 47, Herbert):** PDF-**Bearbeitung** erfolgt bewusst dauerhaft **extern** — das Vorschau-Fenster bietet „In Standard-App öffnen" (via `IFileLauncher`, ADR-060), Windows-Standardprogramm übernimmt. Ein In-App-Edit-Port ist nicht mehr geplant, solange kein konkreter Bedarf entsteht (Punkt 4 bleibt als Fallback-Option dokumentiert). Außerdem liefert `RenderPageAsPngAsync` seit v0.28.112 ein `PdfPageRender`-Record (PNG **+ physische Blattgröße in mm**, rotationsbereinigt aus der MediaBox) statt nackter PNG-Bytes — Grundlage für viewer-seitige Ausschnitte in Realgrößen (Plankopf-Start = A4 rechts unten).
 
+**Addendum Engine-Konsolidierung (Teil 47, v0.28.121, BPM-118):** Die Punkte 1–3 gelten unverändert (Port in Domain, Module konsumieren nur den Port) — die **Engine dahinter wurde ersetzt**. Beim Umsetzen der Text-Zuweisung (ADR-063) traf das Koordinaten-Mapping zwischen zwei getrennten Engines (`Windows.Data.Pdf` fürs Rendern, PdfPig für Text) wiederholt daneben. Konsequenz — fachliche Invariante: **nie wieder zwei PDF-Engines mit eigenem Koordinaten-Mapping.** Seither bedient **EINE Engine — PDFium via `Docnet.Core` 2.6.0 (MIT, Freigabe Herbert Teil 47)** — beide Ports: `PdfiumPdfService` (**Infrastructure**, nicht mehr App) implementiert `IPdfRenderService` UND `IPdfTextService`; Pixel und Text-Boxen stammen aus derselben Pipeline („Acrobat-Weg"), Viewer-Pixel ↔ mm bleibt eine einzige lineare Umrechnung. Details: `RenderPageAsync` liefert seither **rohe BGRA32-Pixel** (`PdfPageRender.PixelsBgra`, top-down, Stride = Breite×4) statt PNG-Bytes — der Viewer baut daraus direkt sein Bitmap; der **App-TFM-Bump aus v0.28.112 wurde zurückgebaut** (kein Windows-SDK-TFM mehr nötig, alle Projekte wieder einheitlich); `WindowsPdfRenderService` ist entfernt. Docnet-Fallstricke sind im Service dokumentiert (Box-Normalisierung Top/Bottom, Alpha-Compositing auf Weiß, adaptives Nachrendern ~7 px/mm mit Deckel 7200 px).
+
 **Alternativen verworfen:** Implementierung in Infrastructure (TFM-Bump machte Infrastructure Windows-SDK-gebunden, Tests-Kette müsste mitziehen); Drittanbieter-Renderer wie PdfiumViewer (Lib-Regel: keine neuen Libraries ohne Freigabe, für reines Rendern unnötig); Rendering direkt im PlanManager (TFM-Bump aller Referenzierer + Modul-Silo statt zentralem Dienst).
 
 **DSGVO:** Klasse A — rein lokales Rendering, keine externen Verbindungen; Planinhalte verlassen das Gerät nicht.
@@ -2979,8 +2981,8 @@ Die Plan-Vorschau (BPM-111.06) braucht In-App-PDF-Rendering; die Spez (Mockup 02
 ## ADR-063: PDF-Text-Port (IPdfTextService) + PdfPig-Freigabe
 
 **Datum:** 2026-08-26
-**Status:** ✅ Entschieden (Herbert, Teil 47 — inkl. Library-Freigabe PdfPig)
-**Implementierung:** 🔴 Not Started — geplant als BPM-118
+**Status:** ✅ Entschieden (Herbert, Teil 47 — inkl. Library-Freigabe PdfPig); Implementierungs-Engine abweichend von Punkt 2 (siehe Addendum)
+**Implementierung:** ✅ Fertig — BPM-118 (v0.28.121 UI-Fluss, v0.28.122 Persistenz); Engine = PDFium/Docnet statt PdfPig (Addendum Engine-Konsolidierung)
 **Herkunft:** Wunsch Teil 47: Plandaten (Änderungshinweis, Index-Datum, Segmente) direkt aus der PDF-Vorschau per Text-Markieren + Rechtsklick zuweisen, statt sie abzutippen.
 
 **Kontext:**
@@ -2997,9 +2999,11 @@ Die Plan-Vorschau (BPM-111.06) braucht In-App-PDF-Rendering; die Spez (Mockup 02
 
 **Konsequenzen:**
 
-- Zwei PDF-Engines parallel — bewusst: Rendern (`Windows.Data.Pdf`, App) und Textlesen (PdfPig, Infrastructure) sind getrennte Ports und einzeln austauschbar.
+- Zwei PDF-Engines parallel — bewusst: Rendern (`Windows.Data.Pdf`, App) und Textlesen (PdfPig, Infrastructure) sind getrennte Ports und einzeln austauschbar. *(Superseded durch Addendum: eine Engine für beide Ports.)*
 - Erster konkreter Baustein Richtung ADR-045-Plankopf-Extraktion (gleicher Port, später automatisiert statt manuell markiert).
 - Erste neue Drittanbieter-Library seit Projektregel-Einführung — Freigabeprozess (Herbert) durchlaufen und hier dokumentiert.
+
+**Addendum Engine-Konsolidierung (Teil 47/48, v0.28.121–.122, BPM-118):** Die „zwei Engines parallel"-Annahme hat sich in der Umsetzung **nicht bewährt**: Das Koordinaten-Mapping zwischen `Windows.Data.Pdf`-Pixeln und PdfPig-Textboxen traf wiederholt daneben (unterschiedliche Rotations-/MediaBox-Behandlung). Entscheidung Teil 47: **EINE Engine — PDFium via `Docnet.Core` 2.6.0 (MIT, Freigabe Herbert)** bedient beide Ports; `PdfiumPdfService` (Infrastructure) implementiert `IPdfRenderService` und `IPdfTextService` aus derselben Pipeline. Der Port-Schnitt aus Punkt 1 blieb dabei unverändert gültig — genau er hat den Engine-Tausch ohne Modul-Änderungen ermöglicht. **PdfPig bleibt freigegeben, aber nur als Test-Builder** (PDF-Erzeugung in Unit-Tests, Version 0.1.16). ⚠️ **Paket-ID-Warnung:** Das korrekte NuGet-Paket heißt **„PdfPig"** — die ID **„UglyToad.PdfPig" ist gekapert** und darf NICHT referenziert werden. Der UI-Fluss aus Punkt 3 wurde als **klassische Word-Textauswahl** (I-Beam, Leserichtung, durchgehender Balken je Zeile) statt Rechteck-Aufziehen umgesetzt; das Zuweisungs-Menü (Revision / Zuweisen als Segment aus `ISegmentTypeCatalog`) wie entschieden. Persistenz komplett seit v0.28.122: `change_note`/`released_at` via `InsertRevision`, Segmentwerte via `UpsertSegment` (`plan_document_segments`, letzte Zuweisung gewinnt).
 
 **Alternativen verworfen:** iText 7 (AGPL — für Closed-Source-Verkauf teure Kommerzlizenz nötig); PDFium-Wrapper (native DLLs, Deployment-Aufwand, Wrapper-Pflege); PDFsharp (keine verlässlichen Text-Koordinaten); OCR-Ansatz (unnötig bei vorhandener Textebene, deutlich schwergewichtiger).
 

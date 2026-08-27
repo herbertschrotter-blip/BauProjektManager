@@ -1077,7 +1077,8 @@ CREATE TABLE plan_revisions (
     current_from TEXT NOT NULL,         -- UTC, wann diese Revision aktuell wurde (Gültigkeitsfenster)
     superseded_at TEXT,                 -- UTC, wann durch Nächste ersetzt (NULL solange current)
     received_at TEXT NOT NULL,          -- UTC, wann importiert (Hinzufügedatum)
-    released_at TEXT,                   -- UTC, Freigabedatum des Index (BPM-109.04b); NULL bis OCR/manuell (post-V1)
+    released_at TEXT,                   -- UTC, Freigabedatum des Index (BPM-109.04b); Quelle: Text-Zuweisung (BPM-118) > OCR/manuell (post-V1); NULL wenn unbekannt
+    change_note TEXT NOT NULL DEFAULT '', -- Änderungshinweis der Revision (BPM-118 Text-Zuweisung); '' wenn keiner
     last_import_id TEXT,
     created_at TEXT NOT NULL,
     created_by TEXT,
@@ -1105,8 +1106,12 @@ ON plan_revisions(document_id, current_from, superseded_at, is_deleted);
 **Drei-Zeiten-Modell (BPM-109.04/.04b):**
 - `current_from` / `superseded_at` — technisches **Gültigkeitsfenster** (Supersede-Kette). Invariante: `superseded_at`(alt) == `current_from`(neu) → Zeitreise lückenlos (ein `actionTime` pro Import-Aktion).
 - `received_at` — **Hinzufügedatum** (Import), immer bekannt.
-- `released_at` — **Freigabedatum** des Index, fachlich präziser. Quelle: Plankopf-OCR (post-V1) > manuell (post-V1) > Dateiname (selten). NULL solange unbekannt.
+- `released_at` — **Freigabedatum** des Index, fachlich präziser. Quelle: **Text-Zuweisung aus der PDF-Vorschau (BPM-118, seit v0.28.122)** > Plankopf-OCR (post-V1) > manuell (post-V1) > Dateiname (selten). NULL solange unbekannt.
 - **Bautagebuch-Priorisierung (post-V1, BPM-056):** effektives Datum = `released_at` wenn vorhanden, sonst `received_at` — bei Fallback **visuell markiert** (andere Farbe + Hinweis „Importdatum"). Geliefert über `IPlanLookupService` (`EffectiveDate`/`IsDateFallback`).
+
+**Änderungshinweis (BPM-118, v0.28.119/.122):**
+- `change_note` — Freitext-Änderungshinweis der Revision (z. B. aus dem Plankopf markiert und per Text-Zuweisung übernommen). `''` wenn keiner erfasst. Anzeige: Detail-Panel-Historie, Spalte „Änderung" (Fallback: „Erstausgabe" bei Index NULL, sonst „—").
+- Schreibpfad: `PendingAssignment.ChangeNote` → `ClassifiedImportFile.ChangeNote` → `InsertRevision(change_note)`. Frühphasen-Hinweis: Spalte kam in v0.28.119 — bestehende `planmanager.db` löschen statt Migration (INDEX.md-Frühphasenregel).
 
 #### 6.7.3 plan_document_segments (NEU)
 

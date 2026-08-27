@@ -59,8 +59,8 @@ public partial class CaptureRowViewModel : ObservableObject
     [ObservableProperty]
     private string? _releasedAtIso;
 
-    /// <summary>Per Text-Zuweisung vorgemerkte Segmentwerte (SegmentTypeId → Wert, BPM-118).</summary>
-    public Dictionary<string, string> AssignedSegments { get; } = new();
+    /// <summary>Per Text-Zuweisung vorgemerkte Segmentwerte (Key = SegmentTypeId, BPM-118).</summary>
+    public Dictionary<string, AssignedSegmentValue> AssignedSegments { get; } = new();
 
     /// <summary>Pending-Zielordner (NULL = nicht zugeordnet) — steuert die Gelb-Markierung.</summary>
     [ObservableProperty]
@@ -256,7 +256,10 @@ public partial class ManualCaptureViewModel : ObservableObject
                 controller.SelectedType.Id, controller.SelectedType.Name,
                 controller.SelectedPart, controller.SelectedLevel,
                 c.PlanNumber, c.Index, targetDir, Match: null,
-                Title: NormalizeTitle(row.Title)));
+                Title: NormalizeText(row.Title),
+                ChangeNote: NormalizeText(row.ChangeNote),
+                ReleasedAt: row.ReleasedAtIso,
+                AssignedSegments: [.. row.AssignedSegments.Values]));
             row.PendingTarget = targetDir;
             row.IsSelected = false;
         }
@@ -278,7 +281,10 @@ public partial class ManualCaptureViewModel : ObservableObject
             row.Item.Match.DocumentId, row.Item.Match.DocumentType,
             BuildingPart: null, Level: null,
             c.PlanNumber ?? row.Item.Match.PlanNumber, c.Index,
-            row.Item.Match.RelativeDirectory, row.Item.Match));
+            row.Item.Match.RelativeDirectory, row.Item.Match,
+            ChangeNote: NormalizeText(row.ChangeNote),
+            ReleasedAt: row.ReleasedAtIso,
+            AssignedSegments: [.. row.AssignedSegments.Values]));
         row.PendingTarget = row.Item.Match.RelativeDirectory;
         UpdatePendingState();
         SetSelectedRow();
@@ -371,15 +377,20 @@ public partial class ManualCaptureViewModel : ObservableObject
             return;
         }
 
-        // Slice A3: Panel-Bezeichnungen in die Pending Assignments uebernehmen
-        // (deckt Titel-Edits NACH der Radial-Zuordnung ab — Store haelt sonst den
-        // Stand vom Zuordnungszeitpunkt).
+        // Slice A3 + BPM-118: Panel-/Vorschau-Eingaben in die Pending Assignments
+        // uebernehmen (deckt Edits NACH der Radial-Zuordnung ab — Store haelt
+        // sonst den Stand vom Zuordnungszeitpunkt).
         foreach (var row in Rows.Where(r => r.IsPending))
         {
             var p = _pending.Get(row.RelativePath);
-            var title = NormalizeTitle(row.Title);
-            if (p is not null && p.Title != title)
-                _pending.Assign(p with { Title = title });
+            if (p is not null)
+                _pending.Assign(p with
+                {
+                    Title = NormalizeText(row.Title),
+                    ChangeNote = NormalizeText(row.ChangeNote),
+                    ReleasedAt = row.ReleasedAtIso,
+                    AssignedSegments = [.. row.AssignedSegments.Values]
+                });
         }
 
         var result = _confirm.ConfirmAll(_projectRootPath, _inboxRelativePath);
@@ -403,9 +414,9 @@ public partial class ManualCaptureViewModel : ObservableObject
 
     private void UpdatePendingState() => PendingCount = _pending.Count;
 
-    /// <summary>Leere/Whitespace-Bezeichnung -> NULL, sonst getrimmt (Slice A3).</summary>
-    private static string? NormalizeTitle(string? title)
-        => string.IsNullOrWhiteSpace(title) ? null : title.Trim();
+    /// <summary>Leerer/Whitespace-Text -> NULL, sonst getrimmt (Slice A3, BPM-118).</summary>
+    private static string? NormalizeText(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     /// <summary>
     /// Baut den Detail-Panel-Inhalt für die aktuelle Auswahl (BPM-111.06 Slice A):

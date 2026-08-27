@@ -18,7 +18,10 @@ public sealed record ClassifiedImportFile(
     ImportStage Stage,
     IReadOnlyDictionary<string, string> IdentityFields,
     IReadOnlyList<ResolutionEvidence> Evidence,
-    string? Title = null);
+    string? Title = null,
+    string? ChangeNote = null,
+    string? ReleasedAt = null,
+    IReadOnlyList<AssignedSegmentValue>? AssignedSegments = null);
 
 /// <summary>
 /// Final import decision for one file — ready for preview UI.

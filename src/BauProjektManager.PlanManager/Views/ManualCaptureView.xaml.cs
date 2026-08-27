@@ -491,7 +491,10 @@ public partial class ManualCaptureView : UserControl
                 break;
 
             case PdfAssignKind.Segment when e.SegmentTypeId is not null:
-                row.AssignedSegments[e.SegmentTypeId] = text;
+                row.AssignedSegments[e.SegmentTypeId] = new AssignedSegmentValue(
+                    e.SegmentTypeId,
+                    string.IsNullOrEmpty(e.SegmentTypeTokenKey) ? e.SegmentTypeId : e.SegmentTypeTokenKey,
+                    text);
                 ViewModel.StatusText = $"✓ Segment „{e.SegmentTypeName}\" für den Import vorgemerkt";
                 break;
         }

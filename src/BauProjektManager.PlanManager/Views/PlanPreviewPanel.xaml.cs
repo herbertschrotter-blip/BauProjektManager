@@ -29,6 +29,8 @@ public sealed class PdfTextAssignedEventArgs : EventArgs
     public required PdfAssignKind Kind { get; init; }
     public string? SegmentTypeId { get; init; }
     public string? SegmentTypeName { get; init; }
+    /// <summary>token_key des Segmenttyps (Denormalisierung für plan_document_segments.segment_key, BPM-118 Teil 3).</summary>
+    public string? SegmentTypeTokenKey { get; init; }
     public required string Text { get; init; }
 }
 
@@ -441,7 +443,8 @@ public partial class PlanPreviewPanel : UserControl
             var segItem = Item(seg.Name);
             var id = seg.Id;
             var name = seg.Name;
-            segItem.Click += (_, _) => RaiseAssign(PdfAssignKind.Segment, id, name);
+            var tokenKey = seg.TokenKey;
+            segItem.Click += (_, _) => RaiseAssign(PdfAssignKind.Segment, id, name, tokenKey);
             menu.Items.Add(segItem);
         }
 
@@ -456,7 +459,9 @@ public partial class PlanPreviewPanel : UserControl
         }
     }
 
-    private void RaiseAssign(PdfAssignKind kind, string? segmentTypeId, string? segmentTypeName)
+    private void RaiseAssign(
+        PdfAssignKind kind, string? segmentTypeId, string? segmentTypeName,
+        string? segmentTypeTokenKey = null)
     {
         if (_selectedText.Length == 0)
             return;
@@ -465,6 +470,7 @@ public partial class PlanPreviewPanel : UserControl
             Kind = kind,
             SegmentTypeId = segmentTypeId,
             SegmentTypeName = segmentTypeName,
+            SegmentTypeTokenKey = segmentTypeTokenKey,
             Text = _selectedText
         });
     }

@@ -20,6 +20,9 @@ namespace BauProjektManager.Domain.Models.PlanManager;
 /// <param name="TargetRelativeDirectory">Zielordner relativ zum Projekt (z. B. "Pläne/Polierplan/Haus 1/OG3").</param>
 /// <param name="Match">Bekanntes Dokument bei Update-Uebernahme (Bucket B), sonst NULL.</param>
 /// <param name="Title">Vom User erfasste Bezeichnung (BPM-111.06 Slice A3) — fliesst bei Erstaufnahmen in plan_documents.title. NULL = keine.</param>
+/// <param name="ChangeNote">Aenderungshinweis der einlaufenden Revision (BPM-118) — fliesst in plan_revisions.change_note. NULL = keiner.</param>
+/// <param name="ReleasedAt">Index-Datum der einlaufenden Revision als ISO-UTC (BPM-118) — fliesst in plan_revisions.released_at. NULL = unbekannt.</param>
+/// <param name="AssignedSegments">Per Text-Zuweisung vorgemerkte Segmentwerte (BPM-118) — fliessen in plan_document_segments. NULL/leer = keine.</param>
 public sealed record PendingAssignment(
     FingerprintedFile File,
     CaptureBucket SourceBucket,
@@ -31,7 +34,21 @@ public sealed record PendingAssignment(
     string? Index,
     string TargetRelativeDirectory,
     KnownPlanDocument? Match,
-    string? Title = null);
+    string? Title = null,
+    string? ChangeNote = null,
+    string? ReleasedAt = null,
+    IReadOnlyList<AssignedSegmentValue>? AssignedSegments = null);
+
+/// <summary>
+/// Ein per Text-Zuweisung (BPM-118) vorgemerkter Segmentwert. TokenKey wird
+/// vom Segmenttyp-Katalog mitgegeben (Denormalisierung fuer
+/// plan_document_segments.segment_key) — die Import-Ausfuehrung braucht so
+/// kein Cross-DB-Lookup auf bpm.db.segment_types.
+/// </summary>
+public sealed record AssignedSegmentValue(
+    string SegmentTypeId,
+    string TokenKey,
+    string Value);
 
 /// <summary>Konflikt einer Undo-Preflight-Pruefung (eine Journal-Aktion).</summary>
 public sealed record UndoActionConflict(string ActionId, string FileName, string Issue);

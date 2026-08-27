@@ -95,6 +95,28 @@ public class CaptureConfirmServiceTests
     }
 
     [Fact]
+    public void BuildDecisions_Bpm118FieldsFlowIntoClassifiedFile()
+    {
+        // BPM-118 Teil 3: Text-Zuweisungen (change_note/released_at/Segmente)
+        // wandern vom Pending Assignment in die ClassifiedImportFile.
+        var p = new PendingAssignment(
+            File("5998-300-B_OG2.pdf"), CaptureBucket.NewCapture,
+            "polierplan", "Polierplan", "Haus 2", "OG2", "5998-300", "B",
+            "Pläne/Polierplan/Haus 2/OG2", Match: null,
+            ChangeNote: "Achsraster geändert",
+            ReleasedAt: "2026-08-20T00:00:00Z",
+            AssignedSegments: [new AssignedSegmentValue("planart", "planart", "Statik")]);
+
+        var d = Assert.Single(CaptureConfirmService.BuildDecisions([p], _normalizer));
+
+        Assert.Equal("Achsraster geändert", d.File.ChangeNote);
+        Assert.Equal("2026-08-20T00:00:00Z", d.File.ReleasedAt);
+        var seg = Assert.Single(d.File.AssignedSegments!);
+        Assert.Equal("planart", seg.SegmentTypeId);
+        Assert.Equal("Statik", seg.Value);
+    }
+
+    [Fact]
     public void BuildDecisions_KeyIsIndexFree()
     {
         // Invariante: Index ist NIE Teil des document_key

@@ -426,6 +426,61 @@ public class PlanManagerDatabase : IDisposable
         return id;
     }
 
+    /// <summary>
+    /// Setzt einen Segmentwert für ein Dokument (BPM-118): Insert, oder Update bei
+    /// bestehendem Wert desselben Segmenttyps (UNIQUE document_id+segment_type_id) —
+    /// die letzte User-Zuweisung gewinnt.
+    /// </summary>
+    public void UpsertSegment(
+        string documentId, string segmentTypeId, string segmentKey,
+        string rawValue, string normalizedValue)
+    {
+        var conn = GetConnection();
+        var id = _idGenerator.NewId();
+        var now = DateTime.UtcNow.ToString("o");
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            INSERT INTO plan_document_segments (id, document_id, segment_type_id, segment_key,
+                raw_value, normalized_value, created_at, last_modified_at, sync_version, is_deleted)
+            VALUES (@id, @did, @sti, @sk, @rv, @nv, @ca, @ua, 0, 0)
+            ON CONFLICT (document_id, segment_type_id) DO UPDATE SET
+                segment_key = @sk, raw_value = @rv, normalized_value = @nv,
+                last_modified_at = @ua, is_deleted = 0
+            """;
+        cmd.Parameters.AddWithValue("@id", id);
+        cmd.Parameters.AddWithValue("@did", documentId);
+        cmd.Parameters.AddWithValue("@sti", segmentTypeId);
+        cmd.Parameters.AddWithValue("@sk", segmentKey);
+        cmd.Parameters.AddWithValue("@rv", rawValue);
+        cmd.Parameters.AddWithValue("@nv", normalizedValue);
+        cmd.Parameters.AddWithValue("@ca", now);
+        cmd.Parameters.AddWithValue("@ua", now);
+        cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>Lädt die Segmentwerte eines Dokuments (BPM-118), sortiert nach segment_key.</summary>
+    public List<PlanDocumentSegment> GetSegmentsForDocument(string documentId)
+    {
+        var conn = GetConnection();
+        var result = new List<PlanDocumentSegment>();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT id, document_id, segment_type_id, segment_key, raw_value, normalized_value
+            FROM plan_document_segments
+            WHERE document_id = @did AND is_deleted = 0
+            ORDER BY segment_key ASC
+            """;
+        cmd.Parameters.AddWithValue("@did", documentId);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            result.Add(new PlanDocumentSegment(
+                reader.GetString(0), reader.GetString(1), reader.GetString(2),
+                reader.GetString(3), reader.GetString(4), reader.GetString(5)));
+        }
+        return result;
+    }
+
     /// <summary>Fügt einen Revisions-Event ein (Audit-Trail). Gibt die event-id zurück.</summary>
     public string InsertRevisionEvent(
         string revisionId, string? importId, string eventType, string note = "")

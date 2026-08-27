@@ -102,7 +102,10 @@ public class CaptureConfirmService
                 Stage: ImportStage.Unknown,
                 IdentityFields: fields,
                 Evidence: [],
-                Title: p.Title);
+                Title: p.Title,
+                ChangeNote: p.ChangeNote,
+                ReleasedAt: p.ReleasedAt,
+                AssignedSegments: p.AssignedSegments);
 
             decisions.Add(new ImportDecision(
                 File: classified,

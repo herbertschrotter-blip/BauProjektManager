@@ -139,6 +139,20 @@ public class PlanArchiveRepositoryTests
     }
 
     [Fact]
+    public void UpsertSegment_SecondWriteSameType_ReplacesValue()
+    {
+        using var f = new TestDb();
+        var docId = CreateDoc(f.Repo);
+        f.Repo.UpsertSegment(docId, segmentTypeId: "haus", segmentKey: "haus", rawValue: "H5", normalizedValue: "h5");
+        f.Repo.UpsertSegment(docId, "haus", "haus", "H6", "h6");
+
+        // BPM-118: letzte Zuweisung gewinnt — genau eine Zeile je Segmenttyp.
+        var seg = Assert.Single(f.Repo.GetSegmentsForDocument(docId));
+        Assert.Equal("H6", seg.RawValue);
+        Assert.Equal("h6", seg.NormalizedValue);
+    }
+
+    [Fact]
     public void InsertRevisionEvent_PersistsWithoutError()
     {
         using var f = new TestDb();

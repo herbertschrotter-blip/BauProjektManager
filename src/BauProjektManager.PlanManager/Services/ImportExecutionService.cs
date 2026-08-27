@@ -2,6 +2,7 @@ using System.IO;
 using BauProjektManager.Domain.Enums.PlanManager;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models.PlanManager;
+using BauProjektManager.Infrastructure.Services;
 using BauProjektManager.PlanManager.Services;
 using Serilog;
 
@@ -13,6 +14,7 @@ namespace BauProjektManager.PlanManager.Services;
 /// </summary>
 public class ImportExecutionService
 {
+    private static readonly IPlanValueNormalizer _normalizer = new PlanValueNormalizer();
     private readonly PlanManagerDatabase _db;
     private readonly IIdGenerator _idGenerator;
 
@@ -211,7 +213,9 @@ public class ImportExecutionService
                     actionTime,                                  // current_from == actionTime
                     null,                                        // superseded_at
                     actionTime,                                  // received_at
-                    importId);                                   // last_import_id
+                    importId,                                    // last_import_id
+                    decision.File.ReleasedAt,                    // released_at (BPM-118 Text-Zuweisung)
+                    decision.File.ChangeNote ?? "");             // change_note (BPM-118 Text-Zuweisung)
                 _db.InsertRevisionEvent(revisionId, importId,
                     PlanArchive.EventType.Created, "Neue Revision angelegt");
                 _db.InsertFileForRevision(revisionId,
@@ -220,6 +224,13 @@ public class ImportExecutionService
                     decision.File.Parsed.Md5, decision.File.Parsed.FileSize,
                     isPrimary: true);
             }
+
+            // Vorgemerkte Segmentwerte (BPM-118 Text-Zuweisung) — haengen am
+            // Dokument, nicht an der Revision. Upsert: UNIQUE(document_id,
+            // segment_type_id), die letzte User-Zuweisung gewinnt.
+            foreach (var seg in decision.File.AssignedSegments ?? [])
+                _db.UpsertSegment(documentId, seg.SegmentTypeId, seg.TokenKey,
+                    seg.Value, _normalizer.NormalizeForMatch(seg.Value));
 
             _db.CompleteImportAction(actionId, true);
             return new ActionResult(true, null);

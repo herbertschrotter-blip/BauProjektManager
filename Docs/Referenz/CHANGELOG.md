@@ -31,6 +31,54 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.135] — 2026-08-27
+
+### Feature: BPM-111.07 Slice D2 — Archiv-Verschieben per Radial
+
+Kurzes Halten auf einer Archiv-Zeile öffnet das Radial im **Move-Modus** (Zentrum „Verschieben"); die Zuordnung verschiebt sofort — kein Pending. Neuer **`ArchiveMoveService`**: Journal-Action VOR jedem Move (Aktionstyp `moved`), **alle** Dateien der current-Revision ziehen gemeinsam um (PDF+DWG), `plan_files.relative_path` + `plan_documents`-Ablage werden aktualisiert (ADR-061: DB = Ordner-Wahrheit), `manual_override`-Event an der Revision. Journal endet mit Status **`moved`** statt `completed` — Import-Undo und „letzter Import"-Kennzeichnung bleiben bewusst unberührt (testverifiziert). „+ Neu…" im Move-Radial legt Stammdaten an und verschiebt dorthin. BPM-111.07 damit komplett (A–D). (Commit `72a18af`)
+
+---
+
+## [v0.28.134] — 2026-08-27
+
+### Feature: BPM-111.07 Slice D1 — Archiv-Sub-Tabs (read-only)
+
+Sub-Tabs **„Neue Pläne (N) / Archiv (M)"** oberhalb der Tabelle (BpmTabControl-Default-Styles): Der Archiv-Tab zeigt den Bestand aus der DB (neue Query `GetArchiveEntries`: Dokument + current-Revision + Primärdatei, neueste zuerst) mit Spalten Datei | Ordner | Hinzugefügt. **Grün** = letzter Import (`GetLastCompletedImportId`-Abgleich) inkl. ↩-Button (macht den letzten Import komplett rückgängig — Undo-Invariante). Rechtsklick-Kontextmenü mit read-only-Vorschau (bei DWG-Dokumenten die gepaarte PDF), Datei öffnen, Im Explorer zeigen. (Commit `53a1219`)
+
+---
+
+## [v0.28.133] — 2026-08-27
+
+### Feature: BPM-111.07 Slice C — Kombi-Pläne sichtbar
+
+`IsCombi` (mehrere Plantyp-Keywords im Dateinamen, Extractor BPM-111.02) ist jetzt sichtbar: **„⚠ Kombi"-Pill-Badge** in der Tabelle, **Panel-Warnhinweis** mit der V1-Regel (kein Auto-Split — als EIN Dokument erfassen, Typ „Kombiplan/Sonstiges" via „+ Neu…", Inhalte per Text-Zuweisung als Segmente) und **Radial-Zentrum-Hinweis**. Bewusst kein Auto-Seed (ADR-061) und keine Auto-Segmente (ADR-059). (Commit `7473e17`)
+
+---
+
+## [v0.28.132] — 2026-08-27
+
+### Docs: Mockup ManuellSortieren — Kombi-Plan-Spez
+
+Verbindliche Spez um Kombi-Pläne erweitert: Spez-Header-Block, Demo-Datei mit `combi`-Flag, „⚠ Kombi"-Pill-Badge, Panel-Warnhinweis, Radial-Zentrum-Untertitel. (Commit `2634ab8`)
+
+---
+
+## [v0.28.131] — 2026-08-27
+
+### Feature: BPM-111.07 Slice B — Bulk-Vorprüfung („Hinweis + Deckel")
+
+Neue pure **`BulkPrecheck`** beim Radial-Start über die effektive Zuordnungsliste (inkl. Paar-Partner): bis 8 wie bisher, **ab 9** deutliche Mengenwarnung in der Statuszeile (die echte Bestätigung bleibt „Import bestätigen" — Entscheidung: das Pending-Modell ersetzt die Teil-43-Zusatzbestätigung), **über 20** öffnet das Radial nicht (Deckel + Hinweis). Kompatibilitäts-Warnungen: gemischte Nicht-Plan-Dateitypen, gleiche Plannummer bei gleichem Dateityp (würde an EINE Revision andocken; PDF+DWG-Paare ausgenommen). (Commit `b063942`)
+
+---
+
+## [v0.28.130] — 2026-08-27
+
+### Docs: CHANGELOG-Nachzug v0.28.123–.129
+
+Einträge für Slice C3, Paar-Strecke A1–A3, Engine-Addenda und CGR-Paket nachgezogen. (Commit `898ee27`)
+
+---
+
 ## [v0.28.129] — 2026-08-27
 
 ### Docs: CGR-2026-08-27-bpm-architektur Review-Paket

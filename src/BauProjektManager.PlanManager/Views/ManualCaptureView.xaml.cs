@@ -60,7 +60,7 @@ public partial class ManualCaptureView : UserControl
     /// <summary>Geräte-lokale Settings (device-settings.json) — merkt die Vorschau-Breite.</summary>
     public Infrastructure.Persistence.AppSettingsService? SettingsService { get; set; }
 
-    private const double DetailPanelWidth = 280;
+    private const double DetailPanelWidth = 320;
     private const double PreviewDefaultWidth = 520;
     private const double PreviewMinWidth = 260;
     private const double PreviewMaxWidth = 1600;

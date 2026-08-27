@@ -224,4 +224,24 @@ public class PlanArchiveRepositoryTests
         // received_at ist immer gesetzt (Fallback fürs Bautagebuch wenn released_at NULL)
         Assert.Equal(now, all.Single(r => r.Id == rev1).ReceivedAt);
     }
+
+    [Fact]
+    public void InsertRevision_ChangeNote_DefaultsEmpty_AndRoundTrips()
+    {
+        // Slice D (ADR-063): change_note der Revision — leer per Default,
+        // befüllt via BPM-118 Text-Zuweisung aus der PDF-Vorschau
+        using var f = new TestDb();
+        var docId = CreateDoc(f.Repo);
+        var now = DateTime.UtcNow.ToString("o");
+
+        var rev1 = f.Repo.InsertRevision(docId, "A", "FileName", PlanArchive.Status.Superseded, now, now, now, null);
+        var rev2 = f.Repo.InsertRevision(docId, "B", "FileName", PlanArchive.Status.Current, now, null, now, null,
+            changeNote: "erg. Deckendurchbruch 20/20cm (S2)");
+
+        var all = f.Repo.GetRevisionsForDocument(docId);
+        Assert.Equal(string.Empty, all.Single(r => r.Id == rev1).ChangeNote);
+        Assert.Equal("erg. Deckendurchbruch 20/20cm (S2)", all.Single(r => r.Id == rev2).ChangeNote);
+        Assert.Equal("erg. Deckendurchbruch 20/20cm (S2)",
+            f.Repo.GetCurrentRevisionForDocument(docId)!.ChangeNote);
+    }
 }

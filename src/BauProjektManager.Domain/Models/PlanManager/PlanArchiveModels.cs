@@ -55,7 +55,8 @@ public sealed record PlanRevision(
     string? SupersededAt,
     string ReceivedAt,
     string? ReleasedAt,
-    string? LastImportId);
+    string? LastImportId,
+    string ChangeNote = "");
 
 /// <summary>
 /// Extrahierter Segmentwert eines Dokuments (Tabelle plan_document_segments).

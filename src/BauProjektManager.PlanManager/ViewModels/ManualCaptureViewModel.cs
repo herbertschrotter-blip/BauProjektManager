@@ -410,23 +410,51 @@ public partial class ManualCaptureViewModel : ObservableObject
         }
     }
 
-    /// <summary>Index-Historie (plan_revisions) des zugeordneten Dokuments; leer ohne Match.</summary>
+    /// <summary>
+    /// Index-Historie (Slice D): IMMER befüllt, neueste oben. Erste Zeile = die
+    /// einlaufende Datei selbst ("(neu)", hervorgehoben) — außer bei Dubletten,
+    /// die nicht importiert werden. Danach die plan_revisions des bekannten
+    /// Dokuments: Revision | Datum (released_at, sonst current_from) | Änderung
+    /// (change_note, sonst "Erstausgabe"/"—").
+    /// </summary>
     private IReadOnlyList<PlanRevisionHistoryRow> BuildHistory(CaptureRowViewModel row)
     {
+        var rows = new List<PlanRevisionHistoryRow>();
         var match = row.Item.Match;
-        if (match is null)
-            return [];
 
-        var revisions = _planDb.GetRevisionsForDocument(match.DocumentId);
-        return [.. revisions.Select(r => new PlanRevisionHistoryRow(
-            r.PlanIndex ?? "Erstausgabe",
-            r.RevisionStatus,
-            FormatRevisionDate(r.CurrentFrom)))];
+        if (!row.IsDuplicate)
+        {
+            var newIndex = row.Item.Candidates.Index ?? "—";
+            rows.Add(new PlanRevisionHistoryRow(
+                match is null ? newIndex : $"{newIndex} (neu)",
+                "heute",
+                match is null ? "Erstausgabe" : "—",
+                IsNew: true));
+        }
+
+        if (match is not null)
+        {
+            var revisions = _planDb.GetRevisionsForDocument(match.DocumentId);
+            for (var i = revisions.Count - 1; i >= 0; i--)
+            {
+                var r = revisions[i];
+                var change = !string.IsNullOrWhiteSpace(r.ChangeNote)
+                    ? r.ChangeNote
+                    : r.PlanIndex is null ? "Erstausgabe" : "—";
+                rows.Add(new PlanRevisionHistoryRow(
+                    r.PlanIndex ?? "—",
+                    FormatRevisionDate(r.ReleasedAt ?? r.CurrentFrom),
+                    change,
+                    IsNew: false));
+            }
+        }
+
+        return rows;
     }
 
     private static string FormatRevisionDate(string isoUtc)
         => DateTime.TryParse(isoUtc, null,
                 System.Globalization.DateTimeStyles.RoundtripKind, out var dt)
-            ? dt.ToLocalTime().ToString("yyyy-MM-dd")
+            ? dt.ToLocalTime().ToString("dd.MM.yyyy")
             : string.Empty;
 }

@@ -8,10 +8,11 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </UserControl.Resources>
-    <!-- Spalten (Variante B, Teil 47): Tabelle | Splitter | [Detail-Panel + Vorschau-Panel] -->
+    <!-- Spalten (Variante B, Teil 47): Tabelle | Detail-Splitter | [Detail-Panel + Vorschau-Panel]
+         Beide Panel-Breiten sind per Splitter anpassbar und werden geräte-lokal gemerkt. -->
     <Grid x:Name="RootGrid">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*" MinWidth="220"/>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition x:Name="RightColumn" Width="320"/>
         </Grid.ColumnDefinitions>
@@ -99,22 +100,22 @@
             </ListBox>
         </DockPanel>
 
-        <!-- Splitter für die Vorschau-Breite (nur sichtbar bei offener Vorschau) -->
-        <GridSplitter x:Name="PreviewSplitter"
+        <!-- Splitter für die Detail-Panel-Breite (immer sichtbar) -->
+        <GridSplitter x:Name="DetailSplitter"
                       Grid.Column="1"
                       Width="5"
                       HorizontalAlignment="Stretch"
                       VerticalAlignment="Stretch"
                       Background="{DynamicResource BpmBorderSubtle}"
                       ResizeBehavior="PreviousAndNext"
-                      ResizeDirection="Columns"
-                      Visibility="Collapsed"/>
+                      ResizeDirection="Columns"/>
 
-        <!-- Rechte Seite (Variante B): Detail-Panel + einblendbares Vorschau-Panel -->
+        <!-- Rechte Seite (Variante B): Detail-Panel (dehnt sich) + einblendbares Vorschau-Panel -->
         <Grid Grid.Column="2">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="320"/>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*" MinWidth="320"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition x:Name="PreviewColumnInner" Width="0"/>
         </Grid.ColumnDefinitions>
 
         <!-- Detail-Panel (BPM-111.06 Slice A: MVVM Detail-VM + Index-Historie) -->
@@ -139,14 +140,17 @@
                     <Button Style="{DynamicResource BpmButtonPrimary}"
                             Command="{Binding ConfirmImportCommand}"
                             Margin="0,0,0,6"
+                            MaxWidth="296" MinWidth="296" HorizontalAlignment="Left"
                             Content="Import bestätigen"/>
                     <Button Command="{Binding DiscardPendingCommand}"
                             Margin="0,0,0,6"
                             Style="{DynamicResource BpmButtonSecondary}"
+                            MaxWidth="296" MinWidth="296" HorizontalAlignment="Left"
                             Content="Pending verwerfen"/>
                     <Button Command="{Binding UndoLastImportCommand}"
                             IsEnabled="{Binding CanUndoLastImport}"
                             Style="{DynamicResource BpmButtonSecondary}"
+                            MaxWidth="296" MinWidth="296" HorizontalAlignment="Left"
                             Content="↩ Letzten Import rückgängig"/>
 
                     <TextBlock Text="{Binding StatusText}"
@@ -240,6 +244,7 @@
                                         </Grid>
                                         <Button Content="Re-Match anwenden"
                                                 Margin="0,6,0,0"
+                                                MaxWidth="296" MinWidth="296" HorizontalAlignment="Left"
                                                 Style="{DynamicResource BpmButtonSecondary}"
                                                 Command="{Binding DataContext.ApplyIdentityEditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
                                     </StackPanel>
@@ -337,6 +342,7 @@
                                     <Button Content="⬆ Update übernehmen"
                                             Style="{DynamicResource BpmButtonPrimary}"
                                             Margin="0,0,0,12"
+                                            MaxWidth="296" MinWidth="296" HorizontalAlignment="Left"
                                             Visibility="{Binding CanTakeUpdate, Converter={StaticResource BoolToVis}}"
                                             Command="{Binding DataContext.TakeUpdateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
                                 </StackPanel>
@@ -347,9 +353,20 @@
             </DockPanel>
         </Border>
 
+        <!-- Splitter für die Vorschau-Breite (nur sichtbar bei offener Vorschau) -->
+        <GridSplitter x:Name="PreviewSplitter"
+                      Grid.Column="1"
+                      Width="5"
+                      HorizontalAlignment="Stretch"
+                      VerticalAlignment="Stretch"
+                      Background="{DynamicResource BpmBorderSubtle}"
+                      ResizeBehavior="PreviousAndNext"
+                      ResizeDirection="Columns"
+                      Visibility="Collapsed"/>
+
         <!-- Vorschau-Panel (BPM-111.06 Slice C, Variante B): eingeblendet per Rechtsklick "Vorschau" -->
         <Border x:Name="PreviewHost"
-                Grid.Column="1"
+                Grid.Column="2"
                 BorderBrush="{DynamicResource BpmBorderSubtle}"
                 BorderThickness="1,0,0,0"
                 Visibility="Collapsed">

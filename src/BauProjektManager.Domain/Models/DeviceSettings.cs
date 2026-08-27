@@ -65,6 +65,12 @@ public class UiLayoutSettings
     /// per Splitter angepasst). Null = noch nie verändert → Default-Breite.
     /// </summary>
     public double? PlanPreviewWidth { get; set; }
+
+    /// <summary>
+    /// Breite des Detail-Panels im Tab "Manuell sortieren" (BPM-111.06 Slice D,
+    /// per Splitter angepasst). Null = noch nie verändert → Default-Breite.
+    /// </summary>
+    public double? PlanDetailWidth { get; set; }
 }
 
 /// <summary>

@@ -60,16 +60,23 @@ public partial class ManualCaptureView : UserControl
     /// <summary>Geräte-lokale Settings (device-settings.json) — merkt die Vorschau-Breite.</summary>
     public Infrastructure.Persistence.AppSettingsService? SettingsService { get; set; }
 
-    private const double DetailPanelWidth = 320;
+    private const double DetailDefaultWidth = 320;
+    private const double DetailMinWidth = 320;
+    private const double DetailMaxWidth = 900;
     private const double PreviewDefaultWidth = 520;
     private const double PreviewMinWidth = 260;
     private const double PreviewMaxWidth = 1600;
+    private const double SplitterThickness = 5;
 
     public ManualCaptureView()
     {
         InitializeComponent();
         PreviewPanel.CloseRequested += (_, _) => SetPreviewVisible(false);
         PreviewSplitter.DragCompleted += OnPreviewSplitterDragCompleted;
+        DetailSplitter.DragCompleted += OnDetailSplitterDragCompleted;
+        // Gemerkte Detail-Breite erst nach dem Setzen von SettingsService anwenden
+        // (Property kommt per Objekt-Initialisierer nach dem Konstruktor)
+        Loaded += (_, _) => ApplyStoredWidths();
         _holdTimer = new DispatcherTimer
         {
             Interval = TimeSpan.FromMilliseconds(HoldMilliseconds)
@@ -417,25 +424,58 @@ public partial class ManualCaptureView : UserControl
         await PreviewPanel.ShowFileAsync(absolutePath);
     }
 
+    private double StoredDetailWidth()
+        => Math.Clamp(
+            SettingsService?.LoadDevice().UiLayout.PlanDetailWidth ?? DetailDefaultWidth,
+            DetailMinWidth, DetailMaxWidth);
+
+    private double StoredPreviewWidth()
+        => Math.Clamp(
+            SettingsService?.LoadDevice().UiLayout.PlanPreviewWidth ?? PreviewDefaultWidth,
+            PreviewMinWidth, PreviewMaxWidth);
+
+    /// <summary>Gemerkte Panel-Breiten beim Laden anwenden (Vorschau ist da noch zu).</summary>
+    private void ApplyStoredWidths()
+        => RightColumn.Width = new GridLength(StoredDetailWidth());
+
     /// <summary>
-    /// Vorschau-Spalte ein-/ausblenden: RightColumn = Detail-Panel (280) plus
-    /// Vorschau-Breite (gemerkt in device-settings.json, sonst Default);
-    /// der Splitter ist nur bei offener Vorschau sichtbar.
+    /// Vorschau-Spalte ein-/ausblenden: RightColumn = Detail-Breite plus
+    /// Splitter + Vorschau-Breite (beide geräte-lokal gemerkt); der innere
+    /// Vorschau-Splitter ist nur bei offener Vorschau sichtbar.
     /// </summary>
     private void SetPreviewVisible(bool visible)
     {
         PreviewHost.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
         PreviewSplitter.Visibility = PreviewHost.Visibility;
 
-        var stored = SettingsService?.LoadDevice().UiLayout.PlanPreviewWidth;
-        var previewWidth = Math.Clamp(stored ?? PreviewDefaultWidth, PreviewMinWidth, PreviewMaxWidth);
+        var detailWidth = StoredDetailWidth();
+        var previewWidth = StoredPreviewWidth();
+        PreviewColumnInner.Width = new GridLength(visible ? previewWidth : 0);
         RightColumn.Width = new GridLength(
-            visible ? DetailPanelWidth + previewWidth : DetailPanelWidth);
+            visible ? detailWidth + SplitterThickness + previewWidth : detailWidth);
+    }
+
+    /// <summary>Aktuelle Detail-Breite aus dem Layout ableiten (RightColumn minus Vorschau-Anteil).</summary>
+    private double CurrentDetailWidth()
+        => PreviewHost.Visibility == Visibility.Visible
+            ? RightColumn.ActualWidth - SplitterThickness - PreviewColumnInner.ActualWidth
+            : RightColumn.ActualWidth;
+
+    /// <summary>Detail-Splitter losgelassen: Detail-Breite geräte-lokal merken.</summary>
+    private void OnDetailSplitterDragCompleted(
+        object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+    {
+        if (SettingsService is null)
+            return;
+        var device = SettingsService.LoadDevice();
+        device.UiLayout.PlanDetailWidth =
+            Math.Clamp(CurrentDetailWidth(), DetailMinWidth, DetailMaxWidth);
+        SettingsService.SaveDevice(device);
     }
 
     /// <summary>
-    /// Splitter losgelassen: aktuelle Vorschau-Breite geräte-lokal merken
-    /// (device-settings.json, uiLayout.planPreviewWidth).
+    /// Vorschau-Splitter losgelassen: er verschiebt die Grenze Detail ↔ Vorschau
+    /// innerhalb der rechten Spalte — beide Breiten geräte-lokal merken.
     /// </summary>
     private void OnPreviewSplitterDragCompleted(
         object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
@@ -443,10 +483,11 @@ public partial class ManualCaptureView : UserControl
         if (SettingsService is null || PreviewHost.Visibility != Visibility.Visible)
             return;
 
-        var width = Math.Clamp(
-            RightColumn.ActualWidth - DetailPanelWidth, PreviewMinWidth, PreviewMaxWidth);
         var device = SettingsService.LoadDevice();
-        device.UiLayout.PlanPreviewWidth = width;
+        device.UiLayout.PlanPreviewWidth =
+            Math.Clamp(PreviewColumnInner.ActualWidth, PreviewMinWidth, PreviewMaxWidth);
+        device.UiLayout.PlanDetailWidth =
+            Math.Clamp(CurrentDetailWidth(), DetailMinWidth, DetailMaxWidth);
         SettingsService.SaveDevice(device);
     }
 

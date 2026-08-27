@@ -176,7 +176,8 @@ public partial class ProjectDetailView : UserControl
 
         var pending = db.GetPendingImports();
         var decisionService = new RecoveryDecisionService();
-        var executor = new RecoveryExecutorService(db);
+        var fs = new Infrastructure.Services.LocalFileSystem();
+        var executor = new RecoveryExecutorService(db, fs, fs, fs);
 
         Log.Information("Recovery: {Count} pending Imports gefunden", pending.Count);
 

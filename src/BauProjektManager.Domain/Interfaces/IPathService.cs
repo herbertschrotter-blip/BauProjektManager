@@ -19,6 +19,9 @@ public interface IPathService
     /// <summary>Dateiendung inkl. fuehrendem Punkt (z. B. ".pdf").</summary>
     string GetExtension(string path);
 
+    /// <summary>Dateiname ohne Endung (BPM-120 T1, fuer Archivnamen).</summary>
+    string GetFileNameWithoutExtension(string path);
+
     /// <summary>Relativer Pfad von <paramref name="relativeTo"/> nach <paramref name="path"/>.</summary>
     string GetRelativePath(string relativeTo, string path);
 }

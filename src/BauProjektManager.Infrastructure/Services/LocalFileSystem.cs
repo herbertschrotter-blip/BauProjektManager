@@ -82,6 +82,8 @@ public sealed class LocalFileSystem : IFileSystemReader, IFileSystemWriter, IPat
 
     public string GetExtension(string path) => Path.GetExtension(path);
 
+    public string GetFileNameWithoutExtension(string path) => Path.GetFileNameWithoutExtension(path);
+
     public string GetRelativePath(string relativeTo, string path) => Path.GetRelativePath(relativeTo, path);
 
     // --- intern ---

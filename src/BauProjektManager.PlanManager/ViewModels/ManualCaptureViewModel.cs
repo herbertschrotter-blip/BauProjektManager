@@ -128,8 +128,12 @@ public partial class ManualCaptureViewModel : ObservableObject
         _planDb = planDb;
         _capture = new ManualFirstCaptureService(planDb);
         _pending = new PendingAssignmentStore();
-        _confirm = new CaptureConfirmService(planDb, idGenerator, _pending);
-        _undo = new ImportUndoService(planDb);
+        // BPM-120 T1: eine FS-Port-Instanz-Welt fuer Execution/Undo (ADR-060/064,
+        // lokale Constructor Injection — DI-Container kommt post-V1).
+        var fs = new LocalFileSystem();
+        _confirm = new CaptureConfirmService(
+            new ImportExecutionService(planDb, idGenerator, fs, fs, fs), _pending);
+        _undo = new ImportUndoService(planDb, fs, fs, fs);
         _move = new ArchiveMoveService(planDb);
         _bpmDb = bpmDb;
         _seed = new DocumentTypeSeedService(bpmDb);

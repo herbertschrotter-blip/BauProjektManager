@@ -46,7 +46,8 @@ public sealed class RecoveryTestFixture : IDisposable
             "BauProjektManager", "Projects", ProjectId);
 
         Db = new PlanManagerDatabase(ProjectId, IdGenerator);
-        Executor = new RecoveryExecutorService(Db);
+        var fs = new LocalFileSystem();
+        Executor = new RecoveryExecutorService(Db, fs, fs, fs);
     }
 
     /// <summary>

@@ -1,4 +1,4 @@
-using System.IO;
+using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models.PlanManager;
 using Serilog;
 
@@ -16,10 +16,18 @@ namespace BauProjektManager.PlanManager.Services;
 public class ImportUndoService
 {
     private readonly PlanManagerDatabase _db;
+    private readonly IFileSystemReader _reader;
+    private readonly IFileSystemWriter _writer;
+    private readonly IPathService _path;
 
-    public ImportUndoService(PlanManagerDatabase db)
+    public ImportUndoService(
+        PlanManagerDatabase db,
+        IFileSystemReader reader, IFileSystemWriter writer, IPathService path)
     {
         _db = db;
+        _reader = reader;
+        _writer = writer;
+        _path = path;
     }
 
     /// <summary>
@@ -37,20 +45,20 @@ public class ImportUndoService
 
         foreach (var action in actions)
         {
-            var destination = Path.Combine(projectRootPath, action.DestinationPath);
-            var source = Path.Combine(projectRootPath, action.SourcePath);
-            var fileName = Path.GetFileName(action.DestinationPath);
+            var destination = _path.Combine(projectRootPath, action.DestinationPath);
+            var source = _path.Combine(projectRootPath, action.SourcePath);
+            var fileName = _path.GetFileName(action.DestinationPath);
 
-            if (!File.Exists(destination))
+            if (!_reader.FileExists(destination))
                 conflicts.Add(new UndoActionConflict(action.Id, fileName,
                     "Zieldatei wurde extern verschoben oder geloescht"));
 
-            if (File.Exists(source))
+            if (_reader.FileExists(source))
                 conflicts.Add(new UndoActionConflict(action.Id, fileName,
                     "Eingangs-Pfad ist bereits wieder belegt"));
 
             if (action.ArchivePath is not null
-                && !File.Exists(Path.Combine(projectRootPath, action.ArchivePath)))
+                && !_reader.FileExists(_path.Combine(projectRootPath, action.ArchivePath)))
                 conflicts.Add(new UndoActionConflict(action.Id, fileName,
                     "Archivierte Vorgaenger-Datei fehlt"));
         }
@@ -84,27 +92,27 @@ public class ImportUndoService
         {
             try
             {
-                var destination = Path.Combine(projectRootPath, action.DestinationPath);
-                var source = Path.Combine(projectRootPath, action.SourcePath);
+                var destination = _path.Combine(projectRootPath, action.DestinationPath);
+                var source = _path.Combine(projectRootPath, action.SourcePath);
 
-                var sourceDir = Path.GetDirectoryName(source);
+                var sourceDir = _path.GetDirectoryName(source);
                 if (!string.IsNullOrEmpty(sourceDir))
-                    Directory.CreateDirectory(sourceDir);
+                    _writer.CreateDirectory(sourceDir);
 
-                File.Move(destination, source);
+                _writer.MoveFile(destination, source);
                 restored++;
 
                 // Archivierte Vorgaenger-Revision zurueck an den Zielort
                 if (action.ArchivePath is not null)
                 {
-                    var archive = Path.Combine(projectRootPath, action.ArchivePath);
-                    File.Move(archive, destination);
+                    var archive = _path.Combine(projectRootPath, action.ArchivePath);
+                    _writer.MoveFile(archive, destination);
                 }
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "Undo-Dateioperation fehlgeschlagen: {Path}", action.DestinationPath);
-                errors.Add($"{Path.GetFileName(action.DestinationPath)}: {ex.Message}");
+                errors.Add($"{_path.GetFileName(action.DestinationPath)}: {ex.Message}");
             }
         }
 

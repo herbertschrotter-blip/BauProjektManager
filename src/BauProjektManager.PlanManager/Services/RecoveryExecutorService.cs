@@ -1,5 +1,5 @@
-using System.IO;
 using BauProjektManager.Domain.Enums.PlanManager;
+using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models.PlanManager;
 using Serilog;
 
@@ -19,10 +19,18 @@ namespace BauProjektManager.PlanManager.Services;
 public class RecoveryExecutorService
 {
     private readonly PlanManagerDatabase _db;
+    private readonly IFileSystemReader _reader;
+    private readonly IFileSystemWriter _writer;
+    private readonly IPathService _path;
 
-    public RecoveryExecutorService(PlanManagerDatabase db)
+    public RecoveryExecutorService(
+        PlanManagerDatabase db,
+        IFileSystemReader reader, IFileSystemWriter writer, IPathService path)
     {
         _db = db;
+        _reader = reader;
+        _writer = writer;
+        _path = path;
     }
 
     /// <summary>
@@ -137,26 +145,26 @@ public class RecoveryExecutorService
     /// Forward-Move: Source → Destination. Bei archive_path: existing destination zuerst dorthin
     /// archivieren. Returns null bei Erfolg, Fehler-Text bei Problem.
     /// </summary>
-    private static string? TryMoveSourceToDestination(ImportActionRow action, string projectRootPath)
+    private string? TryMoveSourceToDestination(ImportActionRow action, string projectRootPath)
     {
         try
         {
-            var sourceAbs = Path.Combine(projectRootPath, action.SourcePath);
-            var destAbs = Path.Combine(projectRootPath, action.DestinationPath);
+            var sourceAbs = _path.Combine(projectRootPath, action.SourcePath);
+            var destAbs = _path.Combine(projectRootPath, action.DestinationPath);
 
-            if (!File.Exists(sourceAbs))
+            if (!_reader.FileExists(sourceAbs))
                 return $"Source-Datei nicht mehr da: {action.SourcePath}";
 
             // Archive vorhandene Destination falls verlangt
-            if (!string.IsNullOrEmpty(action.ArchivePath) && File.Exists(destAbs))
+            if (!string.IsNullOrEmpty(action.ArchivePath) && _reader.FileExists(destAbs))
             {
-                var archiveAbs = Path.Combine(projectRootPath, action.ArchivePath);
-                Directory.CreateDirectory(Path.GetDirectoryName(archiveAbs)!);
-                File.Move(destAbs, archiveAbs, overwrite: false);
+                var archiveAbs = _path.Combine(projectRootPath, action.ArchivePath);
+                _writer.CreateDirectory(_path.GetDirectoryName(archiveAbs)!);
+                _writer.MoveFile(destAbs, archiveAbs, overwrite: false);
             }
 
-            Directory.CreateDirectory(Path.GetDirectoryName(destAbs)!);
-            File.Move(sourceAbs, destAbs, overwrite: false);
+            _writer.CreateDirectory(_path.GetDirectoryName(destAbs)!);
+            _writer.MoveFile(sourceAbs, destAbs, overwrite: false);
             return null;
         }
         catch (Exception ex)
@@ -169,26 +177,26 @@ public class RecoveryExecutorService
     /// Rollback-Move: Destination → Source. Bei archive_path: archivierte Datei zurück nach Destination.
     /// Returns null bei Erfolg, Fehler-Text bei Problem.
     /// </summary>
-    private static string? TryRollbackSingle(ImportActionRow action, string projectRootPath)
+    private string? TryRollbackSingle(ImportActionRow action, string projectRootPath)
     {
         try
         {
-            var sourceAbs = Path.Combine(projectRootPath, action.SourcePath);
-            var destAbs = Path.Combine(projectRootPath, action.DestinationPath);
+            var sourceAbs = _path.Combine(projectRootPath, action.SourcePath);
+            var destAbs = _path.Combine(projectRootPath, action.DestinationPath);
 
-            if (!File.Exists(destAbs))
+            if (!_reader.FileExists(destAbs))
                 return $"Destination-Datei nicht mehr da: {action.DestinationPath}";
 
             // Erst Datei zurück nach source
-            Directory.CreateDirectory(Path.GetDirectoryName(sourceAbs)!);
-            File.Move(destAbs, sourceAbs, overwrite: false);
+            _writer.CreateDirectory(_path.GetDirectoryName(sourceAbs)!);
+            _writer.MoveFile(destAbs, sourceAbs, overwrite: false);
 
             // Archive-File zurück an destination
             if (!string.IsNullOrEmpty(action.ArchivePath))
             {
-                var archiveAbs = Path.Combine(projectRootPath, action.ArchivePath);
-                if (File.Exists(archiveAbs))
-                    File.Move(archiveAbs, destAbs, overwrite: false);
+                var archiveAbs = _path.Combine(projectRootPath, action.ArchivePath);
+                if (_reader.FileExists(archiveAbs))
+                    _writer.MoveFile(archiveAbs, destAbs, overwrite: false);
             }
 
             return null;

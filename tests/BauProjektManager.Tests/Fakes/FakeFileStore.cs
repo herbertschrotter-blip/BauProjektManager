@@ -15,9 +15,21 @@ namespace BauProjektManager.Tests.Fakes;
 /// </summary>
 public sealed class FakeFileStore : IFileSystemReader, IFileSystemWriter, IPathService
 {
+    /// <summary>Dateioperationen, auf die per <see cref="FailNext"/> Fehler injiziert werden koennen.</summary>
+    public enum FileOp { Move, Copy, Delete, CreateDirectory, OpenRead }
+
+    private sealed class FaultRule
+    {
+        public required FileOp Op { get; init; }
+        public required string PathContains { get; init; }
+        public required Exception Exception { get; init; }
+        public int Remaining { get; set; }
+    }
+
     private readonly Dictionary<string, byte[]> _files = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, DateTime> _times = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _dirs = new(StringComparer.OrdinalIgnoreCase);
+    private readonly List<FaultRule> _faults = [];
 
     // Fester Zeitstempel statt DateTime.UtcNow — deterministische Tests.
     private static readonly DateTime SeedTime = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -29,6 +41,31 @@ public sealed class FakeFileStore : IFileSystemReader, IFileSystemWriter, IPathS
         EnsureDir(Norm(Path.GetDirectoryName(norm) ?? string.Empty));
         _files[norm] = content ?? Array.Empty<byte>();
         _times[norm] = SeedTime;
+    }
+
+    /// <summary>
+    /// Fault-Injektion (BPM-120 T1, AK 3): laesst die naechsten <paramref name="times"/>
+    /// Aufrufe von <paramref name="op"/>, deren Pfad (Quelle ODER Ziel)
+    /// <paramref name="pathContains"/> enthaelt, mit <paramref name="exception"/>
+    /// fehlschlagen — VOR jeder Mutation des Stores.
+    /// </summary>
+    public void FailNext(FileOp op, string pathContains, Exception? exception = null, int times = 1)
+        => _faults.Add(new FaultRule
+        {
+            Op = op,
+            PathContains = pathContains,
+            Exception = exception ?? new IOException($"Injizierter Fehler: {op} auf '{pathContains}'"),
+            Remaining = times
+        });
+
+    private void ThrowIfFault(FileOp op, params string[] paths)
+    {
+        var rule = _faults.FirstOrDefault(f => f.Op == op && f.Remaining > 0
+            && paths.Any(p => p.Contains(f.PathContains, StringComparison.OrdinalIgnoreCase)));
+        if (rule is null)
+            return;
+        rule.Remaining--;
+        throw rule.Exception;
     }
 
     // --- IFileSystemReader ---
@@ -75,6 +112,7 @@ public sealed class FakeFileStore : IFileSystemReader, IFileSystemWriter, IPathS
     public Stream OpenRead(string path)
     {
         var norm = Norm(path);
+        ThrowIfFault(FileOp.OpenRead, norm);
         if (!_files.TryGetValue(norm, out var bytes))
             throw new FileNotFoundException("Datei nicht im Fake-Store.", norm);
 
@@ -83,12 +121,18 @@ public sealed class FakeFileStore : IFileSystemReader, IFileSystemWriter, IPathS
 
     // --- IFileSystemWriter ---
 
-    public void CreateDirectory(string path) => EnsureDir(Norm(path));
+    public void CreateDirectory(string path)
+    {
+        var norm = Norm(path);
+        ThrowIfFault(FileOp.CreateDirectory, norm);
+        EnsureDir(norm);
+    }
 
     public void MoveFile(string sourcePath, string destinationPath, bool overwrite = false)
     {
         var src = Norm(sourcePath);
         var dst = Norm(destinationPath);
+        ThrowIfFault(FileOp.Move, src, dst);
         RequireSource(src);
         RequireDestinationDirectory(dst);
         RequireFreeOrOverwrite(dst, overwrite);
@@ -103,6 +147,7 @@ public sealed class FakeFileStore : IFileSystemReader, IFileSystemWriter, IPathS
     {
         var src = Norm(sourcePath);
         var dst = Norm(destinationPath);
+        ThrowIfFault(FileOp.Copy, src, dst);
         RequireSource(src);
         RequireDestinationDirectory(dst);
         RequireFreeOrOverwrite(dst, overwrite);
@@ -114,6 +159,7 @@ public sealed class FakeFileStore : IFileSystemReader, IFileSystemWriter, IPathS
     public void DeleteFile(string path)
     {
         var norm = Norm(path);
+        ThrowIfFault(FileOp.Delete, norm);
         _files.Remove(norm);
         _times.Remove(norm);
     }
@@ -127,6 +173,8 @@ public sealed class FakeFileStore : IFileSystemReader, IFileSystemWriter, IPathS
     public string GetFileName(string path) => Path.GetFileName(path);
 
     public string GetExtension(string path) => Path.GetExtension(path);
+
+    public string GetFileNameWithoutExtension(string path) => Path.GetFileNameWithoutExtension(path);
 
     public string GetRelativePath(string relativeTo, string path) => Path.GetRelativePath(relativeTo, path);
 

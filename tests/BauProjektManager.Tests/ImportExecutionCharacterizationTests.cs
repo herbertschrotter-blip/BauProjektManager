@@ -25,6 +25,9 @@ namespace BauProjektManager.Tests;
 /// </summary>
 public class ImportExecutionCharacterizationTests
 {
+    // BPM-120 T1: E2E-Tests laufen bewusst auf echter Disk — eine Port-Instanz.
+    private static readonly LocalFileSystem Fs = new();
+
     private sealed class TestEnv : IDisposable
     {
         public PlanManagerDatabase Repo { get; }
@@ -109,7 +112,7 @@ public class ImportExecutionCharacterizationTests
 
         var decisions = CaptureConfirmService.BuildDecisions(
             [NewPending("5998-300_OG2.pdf", "md5-pdf")], new PlanValueNormalizer());
-        var result = new ImportExecutionService(env.Repo, new UlidIdGenerator())
+        var result = new ImportExecutionService(env.Repo, new UlidIdGenerator(), Fs, Fs, Fs)
             .Execute(decisions, env.Root, "_Eingang");
 
         Assert.Equal(1, result.Succeeded);
@@ -173,7 +176,7 @@ public class ImportExecutionCharacterizationTests
 
         var decisions = CaptureConfirmService.BuildDecisions(
             [pending], new PlanValueNormalizer());
-        var result = new ImportExecutionService(env.Repo, new UlidIdGenerator())
+        var result = new ImportExecutionService(env.Repo, new UlidIdGenerator(), Fs, Fs, Fs)
             .Execute(decisions, env.Root, "_Eingang");
 
         Assert.Equal(0, result.Failed);
@@ -233,7 +236,7 @@ public class ImportExecutionCharacterizationTests
 
         var decisions = CaptureConfirmService.BuildDecisions(
             [pending], new PlanValueNormalizer());
-        var result = new ImportExecutionService(env.Repo, new UlidIdGenerator())
+        var result = new ImportExecutionService(env.Repo, new UlidIdGenerator(), Fs, Fs, Fs)
             .Execute(decisions, env.Root, "_Eingang");
 
         Assert.Equal(0, result.Failed);
@@ -269,7 +272,7 @@ public class ImportExecutionCharacterizationTests
             skipDecision
         };
 
-        var result = new ImportExecutionService(env.Repo, new UlidIdGenerator())
+        var result = new ImportExecutionService(env.Repo, new UlidIdGenerator(), Fs, Fs, Fs)
             .Execute(mixed, env.Root, "_Eingang");
 
         Assert.Equal(1, result.Succeeded);

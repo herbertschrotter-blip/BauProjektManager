@@ -1,4 +1,3 @@
-using System.IO;
 using BauProjektManager.Domain.Enums.PlanManager;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models.PlanManager;
@@ -11,17 +10,27 @@ namespace BauProjektManager.PlanManager.Services;
 /// <summary>
 /// Executes the import plan: moves files, creates _Archiv/, writes journal.
 /// Invariant: Journal is written BEFORE files are moved (pending → completed/failed).
+/// BPM-120 T1 (ADR-060/064): alle Datei-/Pfadoperationen laufen ueber die
+/// FS-Ports — testbar mit fault-faehigem FakeFileStore.
 /// </summary>
 public class ImportExecutionService
 {
     private static readonly IPlanValueNormalizer _normalizer = new PlanValueNormalizer();
     private readonly PlanManagerDatabase _db;
     private readonly IIdGenerator _idGenerator;
+    private readonly IFileSystemReader _reader;
+    private readonly IFileSystemWriter _writer;
+    private readonly IPathService _path;
 
-    public ImportExecutionService(PlanManagerDatabase db, IIdGenerator idGenerator)
+    public ImportExecutionService(
+        PlanManagerDatabase db, IIdGenerator idGenerator,
+        IFileSystemReader reader, IFileSystemWriter writer, IPathService path)
     {
         _db = db;
         _idGenerator = idGenerator;
+        _reader = reader;
+        _writer = writer;
+        _path = path;
     }
 
     /// <summary>
@@ -79,10 +88,10 @@ public class ImportExecutionService
         {
             try
             {
-                var sourcePath = Path.Combine(projectRootPath, skip.File.Parsed.RelativePath);
-                if (File.Exists(sourcePath))
+                var sourcePath = _path.Combine(projectRootPath, skip.File.Parsed.RelativePath);
+                if (_reader.FileExists(sourcePath))
                 {
-                    File.Delete(sourcePath);
+                    _writer.DeleteFile(sourcePath);
                     skipped++;
                     Log.Debug("Identische Datei aus Eingang entfernt: {File}", skip.File.Parsed.FileName);
                 }
@@ -107,13 +116,13 @@ public class ImportExecutionService
         ImportDecision decision, string projectRootPath,
         string importId, int actionOrder)
     {
-        var sourcePath = Path.Combine(projectRootPath, decision.File.Parsed.RelativePath);
+        var sourcePath = _path.Combine(projectRootPath, decision.File.Parsed.RelativePath);
         var targetRelPath = decision.TargetRelativePath;
 
         if (string.IsNullOrEmpty(targetRelPath))
             return new ActionResult(false, "Kein Zielpfad berechnet");
 
-        var targetPath = Path.Combine(projectRootPath, targetRelPath);
+        var targetPath = _path.Combine(projectRootPath, targetRelPath);
 
         // Write journal action (pending) BEFORE moving
         var actionType = decision.Status switch
@@ -138,9 +147,9 @@ public class ImportExecutionService
         try
         {
             // Create target directory
-            var targetDir = Path.GetDirectoryName(targetPath);
+            var targetDir = _path.GetDirectoryName(targetPath);
             if (!string.IsNullOrEmpty(targetDir))
-                Directory.CreateDirectory(targetDir);
+                _writer.CreateDirectory(targetDir);
 
             // --- EIN Zeitstempel pro Aktion (Zeitreise-Konsistenz, BPM-109.04):
             //     superseded_at der alten == current_from der neuen → kein Loch, keine Überlappung. ---
@@ -169,9 +178,9 @@ public class ImportExecutionService
             }
 
             // Move file from inbox to target
-            if (File.Exists(sourcePath))
+            if (_reader.FileExists(sourcePath))
             {
-                File.Move(sourcePath, targetPath, overwrite: true);
+                _writer.MoveFile(sourcePath, targetPath, overwrite: true);
                 Log.Information("Datei verschoben: {Source} → {Target}",
                     decision.File.Parsed.FileName, targetRelPath);
             }
@@ -180,7 +189,7 @@ public class ImportExecutionService
             // ADR-061 Slice 0.6c: target_folder kommt aus dem aufgeloesten Zielpfad
             // (Root-Segment = root_relative_path des Dokumenttyps), NICHT mehr aus dem
             // entfernten profile.TargetFolder. relative_directory = voller aufgeloester Ordner.
-            var resolvedDir = Path.GetDirectoryName(targetRelPath) ?? "";
+            var resolvedDir = _path.GetDirectoryName(targetRelPath) ?? "";
             var rootParts = resolvedDir.Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries);
             var rootFolder = rootParts.Length > 0 ? rootParts[0] : "";
 
@@ -252,21 +261,21 @@ public class ImportExecutionService
     /// <summary>
     /// Archives an existing file by moving it to _Archiv/ subfolder.
     /// </summary>
-    private static void ArchiveExistingFile(string targetPath, string projectRootPath)
+    private void ArchiveExistingFile(string targetPath, string projectRootPath)
     {
-        if (!File.Exists(targetPath))
+        if (!_reader.FileExists(targetPath))
             return;
 
-        var targetDir = Path.GetDirectoryName(targetPath)!;
-        var archiveDir = Path.Combine(targetDir, "_Archiv");
-        Directory.CreateDirectory(archiveDir);
+        var targetDir = _path.GetDirectoryName(targetPath)!;
+        var archiveDir = _path.Combine(targetDir, "_Archiv");
+        _writer.CreateDirectory(archiveDir);
 
-        var fileName = Path.GetFileName(targetPath);
+        var fileName = _path.GetFileName(targetPath);
         var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        var archiveName = $"{Path.GetFileNameWithoutExtension(fileName)}_{timestamp}{Path.GetExtension(fileName)}";
-        var archivePath = Path.Combine(archiveDir, archiveName);
+        var archiveName = $"{_path.GetFileNameWithoutExtension(fileName)}_{timestamp}{_path.GetExtension(fileName)}";
+        var archivePath = _path.Combine(archiveDir, archiveName);
 
-        File.Move(targetPath, archivePath);
+        _writer.MoveFile(targetPath, archivePath);
         Log.Information("Datei archiviert: {Source} → {Archive}", fileName, archiveName);
     }
 

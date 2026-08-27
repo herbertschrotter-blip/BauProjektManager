@@ -20,10 +20,12 @@ public class CaptureConfirmService
     private readonly ImportExecutionService _execution;
     private readonly PendingAssignmentStore _store;
 
-    public CaptureConfirmService(
-        PlanManagerDatabase db, IIdGenerator idGenerator, PendingAssignmentStore store)
+    // BPM-120 T1 (ADR-064/AK 3): Executor kommt per Constructor Injection —
+    // eine Instanz-Welt, fault-faehig testbar. Die statischen Mapper unten
+    // nutzen weiterhin System.IO.Path (pure Stringoperationen, kein Disk-Zugriff).
+    public CaptureConfirmService(ImportExecutionService execution, PendingAssignmentStore store)
     {
-        _execution = new ImportExecutionService(db, idGenerator);
+        _execution = execution;
         _store = store;
     }
 

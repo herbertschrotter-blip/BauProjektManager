@@ -45,6 +45,9 @@ public class ImportUndoServiceTests
         }
     }
 
+    // BPM-120 T1: E2E-Tests laufen bewusst auf echter Disk — eine Port-Instanz.
+    private static readonly LocalFileSystem Fs = new();
+
     /// <summary>Simuliert einen abgeschlossenen Import: Datei am Ziel + Journal + Revision.</summary>
     private static (string ImportId, string DocId, string RevId) SeedCompletedImport(
         TestEnv env, string fileName = "5998-200_EG.pdf")
@@ -78,7 +81,7 @@ public class ImportUndoServiceTests
         using var env = new TestEnv();
         SeedCompletedImport(env);
 
-        var report = new ImportUndoService(env.Repo).Preflight(env.Root);
+        var report = new ImportUndoService(env.Repo, Fs, Fs, Fs).Preflight(env.Root);
 
         Assert.True(report.CanUndo);
         Assert.Equal(1, report.ActionCount);
@@ -92,7 +95,7 @@ public class ImportUndoServiceTests
         SeedCompletedImport(env);
         File.Delete(Path.Combine(env.Root, "Pläne", "Polierplan", "Haus 1", "5998-200_EG.pdf"));
 
-        var report = new ImportUndoService(env.Repo).Preflight(env.Root);
+        var report = new ImportUndoService(env.Repo, Fs, Fs, Fs).Preflight(env.Root);
 
         Assert.False(report.CanUndo);
         Assert.Contains(report.Conflicts, c => c.Issue.Contains("extern"));
@@ -104,7 +107,7 @@ public class ImportUndoServiceTests
         using var env = new TestEnv();
         var (_, docId, _) = SeedCompletedImport(env);
 
-        var result = new ImportUndoService(env.Repo).UndoLastImport(env.Root);
+        var result = new ImportUndoService(env.Repo, Fs, Fs, Fs).UndoLastImport(env.Root);
 
         Assert.True(result.Success);
         Assert.Equal(1, result.RestoredFiles);
@@ -147,7 +150,7 @@ public class ImportUndoServiceTests
             "2026-06-11T00:00:00Z", null, "2026-06-11T00:00:00Z", lastImportId: importId);
         env.Repo.CompleteImportJournal(importId, true);
 
-        var result = new ImportUndoService(env.Repo).UndoLastImport(env.Root);
+        var result = new ImportUndoService(env.Repo, Fs, Fs, Fs).UndoLastImport(env.Root);
 
         Assert.True(result.Success);
         // Revision A ist wieder current, B ist weg

@@ -17,6 +17,9 @@ namespace BauProjektManager.Tests;
 /// </summary>
 public class ImportExecutionPairImportTests
 {
+    // BPM-120 T1: E2E-Tests laufen bewusst auf echter Disk — eine Port-Instanz.
+    private static readonly LocalFileSystem Fs = new();
+
     private sealed class TestEnv : IDisposable
     {
         public PlanManagerDatabase Repo { get; }
@@ -69,7 +72,7 @@ public class ImportExecutionPairImportTests
         var decisions = CaptureConfirmService.BuildDecisions(
             [Pending("5998-300_OG2.dwg", "md5-dwg"), Pending("5998-300_OG2.pdf", "md5-pdf")],
             new PlanValueNormalizer());
-        var result = new ImportExecutionService(env.Repo, new UlidIdGenerator())
+        var result = new ImportExecutionService(env.Repo, new UlidIdGenerator(), Fs, Fs, Fs)
             .Execute(decisions, env.Root, "_Eingang");
 
         Assert.Equal(0, result.Failed);
@@ -131,7 +134,7 @@ public class ImportExecutionPairImportTests
         var decisions = CaptureConfirmService.BuildDecisions(
             [UpdatePending("5998-300-B_OG2.dwg", "md5-dwg-b"), UpdatePending("5998-300-B_OG2.pdf", "md5-pdf-b")],
             new PlanValueNormalizer());
-        var result = new ImportExecutionService(env.Repo, new UlidIdGenerator())
+        var result = new ImportExecutionService(env.Repo, new UlidIdGenerator(), Fs, Fs, Fs)
             .Execute(decisions, env.Root, "_Eingang");
 
         Assert.Equal(0, result.Failed);

@@ -433,6 +433,60 @@ public partial class ManualCaptureView : UserControl
     }
 
     /// <summary>
+    /// Kontextmenü einer Archiv-Zeile (111.07 Slice D): Vorschau (read-only,
+    /// bei DWG-Dokumenten die gepaarte PDF) + Datei öffnen / Im Explorer
+    /// zeigen via IFileLauncher.
+    /// </summary>
+    private void OnArchiveRowContextMenu(object sender, MouseButtonEventArgs e)
+    {
+        if (e.OriginalSource is not DependencyObject source)
+            return;
+        var container = ItemsControl.ContainerFromElement(ArchiveList, source) as ListBoxItem;
+        if (container?.DataContext is not ArchiveRowViewModel row)
+            return;
+        row.IsSelected = true;
+
+        var itemStyle = TryFindResource("BpmMenuItem") as Style;
+        MenuItem Item(string header, bool enabled)
+            => new() { Header = header, IsEnabled = enabled, Style = itemStyle };
+
+        var previewSource = PdfRenderService is null
+            ? null : ViewModel.ResolveArchivePreviewSource(row);
+        var previewItem = Item("Vorschau", previewSource is not null);
+        previewItem.Click += async (_, _) => await OpenPreviewAsync(previewSource!);
+
+        var hasFile = row.RelativePath is not null;
+        var openItem = Item("Datei öffnen", FileLauncher is not null && hasFile);
+        openItem.Click += (_, _) => LaunchArchiveRow(row, reveal: false);
+        var revealItem = Item("Im Explorer zeigen", FileLauncher is not null && hasFile);
+        revealItem.Click += (_, _) => LaunchArchiveRow(row, reveal: true);
+
+        var menu = new ContextMenu { PlacementTarget = container };
+        if (TryFindResource("BpmContextMenu") is Style menuStyle)
+            menu.Style = menuStyle;
+        var separator = new Separator();
+        if (TryFindResource("BpmMenuSeparator") is Style separatorStyle)
+            separator.Style = separatorStyle;
+
+        menu.Items.Add(previewItem);
+        menu.Items.Add(separator);
+        menu.Items.Add(openItem);
+        menu.Items.Add(revealItem);
+        menu.IsOpen = true;
+        e.Handled = true;
+    }
+
+    private void LaunchArchiveRow(ArchiveRowViewModel row, bool reveal)
+    {
+        if (FileLauncher is null || row.RelativePath is null)
+            return;
+        var absolutePath = Path.Combine(ViewModel.ProjectRootPath, row.RelativePath);
+        var ok = reveal ? FileLauncher.RevealInExplorer(absolutePath) : FileLauncher.OpenFile(absolutePath);
+        if (!ok)
+            ViewModel.StatusText = $"⚠ {(reveal ? "Explorer" : "Öffnen")} fehlgeschlagen: {row.FileName}";
+    }
+
+    /// <summary>
     /// Blendet das Vorschau-Panel ein (Variante B) und zeigt die aufgelöste
     /// Quelle an (Slice C3): bei DWG-Zeilen die gepaarte PDF; Zuweisungsziel
     /// ist source.Row (NULL bei Archiv-Anzeige = Zuweisen inaktiv).

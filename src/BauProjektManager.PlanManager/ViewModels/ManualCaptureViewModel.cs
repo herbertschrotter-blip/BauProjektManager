@@ -136,6 +136,17 @@ public partial class ManualCaptureViewModel : ObservableObject
 
     public ObservableCollection<CaptureRowViewModel> Rows { get; } = [];
 
+    /// <summary>Archiv-Bestand (Sub-Tab „Archiv", 111.07 Slice D) — read-only aus der DB.</summary>
+    public ObservableCollection<ArchiveRowViewModel> ArchiveRows { get; } = [];
+
+    /// <summary>Tab-Header „Neue Pläne (N)" (111.07 Slice D).</summary>
+    [ObservableProperty]
+    private string _inboxTabHeader = "Neue Pläne";
+
+    /// <summary>Tab-Header „Archiv (M)" (111.07 Slice D).</summary>
+    [ObservableProperty]
+    private string _archiveTabHeader = "Archiv";
+
     /// <summary>Projekt-Root für absolute Pfade (Vorschau/Launcher, BPM-111.06 Slice C).</summary>
     public string ProjectRootPath => _projectRootPath;
 
@@ -187,11 +198,24 @@ public partial class ManualCaptureViewModel : ObservableObject
         }
         UpdatePairFlags();
         UpdatePendingState();
+        LoadArchive();
         StatusText = $"{result.TotalFiles} Dateien — {result.DuplicateCount} Dubletten, " +
                      $"{result.UpdateProposalCount} Updates, {result.NewCaptureCount} neu, " +
                      $"{result.ConflictCount} Konflikte";
         CanUndoLastImport = _undo.Preflight(_projectRootPath).CanUndo;
         SetSelectedRow();
+    }
+
+    /// <summary>Archiv-Bestand + Tab-Header neu laden (111.07 Slice D).</summary>
+    private void LoadArchive()
+    {
+        var lastImportId = _planDb.GetLastCompletedImportId();
+        ArchiveRows.Clear();
+        foreach (var entry in _planDb.GetArchiveEntries())
+            ArchiveRows.Add(new ArchiveRowViewModel(
+                entry, lastImportId is not null && entry.LastImportId == lastImportId));
+        InboxTabHeader = $"Neue Pläne ({Rows.Count})";
+        ArchiveTabHeader = $"Archiv ({ArchiveRows.Count})";
     }
 
     // ── Radial-Orchestrierung (vom Gesten-Host aufgerufen) ─────────
@@ -515,6 +539,23 @@ public partial class ManualCaptureViewModel : ObservableObject
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Vorschau-Quelle einer Archiv-Zeile (111.07 Slice D): Primärdatei wenn
+    /// PDF, sonst die gepaarte PDF der Revision. Immer read-only (Row NULL —
+    /// Text-Zuweisung gilt nur für Eingangs-Zeilen). NULL = keine Vorschau.
+    /// </summary>
+    public PreviewSource? ResolveArchivePreviewSource(ArchiveRowViewModel row)
+    {
+        var relativePath = row.Entry.RelativePath;
+        if (relativePath is not null
+            && relativePath.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+            return new PreviewSource(Row: null, relativePath, Note: null);
+
+        var pairedPdf = _planDb.GetPdfPathForRevision(row.Entry.RevisionId);
+        return pairedPdf is null ? null
+            : new PreviewSource(Row: null, pairedPdf, "Vorschau zeigt die gepaarte PDF der Revision");
     }
 
     /// <summary>

@@ -76,6 +76,32 @@ public sealed record PlanDocumentSegment(
     string NormalizedValue);
 
 /// <summary>
+/// Archiv-Zeile des Sub-Tabs „Archiv" (BPM-111.07 Slice D): Dokument +
+/// current-Revision + Primärdatei — read-only Sicht für die Bestandsliste.
+/// </summary>
+/// <param name="DocumentId">plan_documents.id.</param>
+/// <param name="PlanNumber">Plannummer des Dokuments.</param>
+/// <param name="Title">Bezeichnung (plan_documents.title, ggf. leer).</param>
+/// <param name="DocumentType">Anzeigename des Dokumenttyps.</param>
+/// <param name="RevisionId">plan_revisions.id der current-Revision.</param>
+/// <param name="PlanIndex">Index der current-Revision (NULL bei Erstausgabe).</param>
+/// <param name="ReceivedAt">UTC-Hinzufügedatum der current-Revision.</param>
+/// <param name="LastImportId">Import-Journal-Id der current-Revision (für die Grün-Kennzeichnung „letzter Import").</param>
+/// <param name="FileName">Primärdatei-Name (NULL wenn keine Datei verknüpft).</param>
+/// <param name="RelativePath">Primärdatei-Pfad relativ zum Projekt (NULL wenn keine).</param>
+public sealed record PlanArchiveEntry(
+    string DocumentId,
+    string PlanNumber,
+    string Title,
+    string DocumentType,
+    string RevisionId,
+    string? PlanIndex,
+    string ReceivedAt,
+    string? LastImportId,
+    string? FileName,
+    string? RelativePath);
+
+/// <summary>
 /// Minimaler Audit-Trail-Eintrag für einen Revisions-Statuswechsel (Tabelle plan_revision_events).
 /// </summary>
 /// <param name="Id">ULID.</param>

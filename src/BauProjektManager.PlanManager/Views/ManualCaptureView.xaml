@@ -17,8 +17,11 @@
             <ColumnDefinition x:Name="RightColumn" Width="320"/>
         </Grid.ColumnDefinitions>
 
+        <!-- Sub-Tabs Neue Pläne / Archiv (111.07 Slice D) — Styles via Default BpmTabControl/BpmTabItem -->
+        <TabControl Grid.Column="0" Margin="0,0,8,0">
+        <TabItem Header="{Binding InboxTabHeader}">
         <!-- Eingangs-Tabelle (Hold-Geste startet das Radial, siehe Code-Behind) -->
-        <DockPanel Grid.Column="0" Margin="0,0,8,0">
+        <DockPanel Margin="0,8,0,0">
             <TextBlock DockPanel.Dock="Top" Margin="0,0,0,6"
                        Foreground="{DynamicResource BpmTextSecondary}"
                        FontSize="{DynamicResource BpmFontSizeCaption}">
@@ -122,6 +125,90 @@
                 </ListBox.ItemTemplate>
             </ListBox>
         </DockPanel>
+        </TabItem>
+
+        <!-- Archiv-Tab (111.07 Slice D): Bestand aus der DB, grün = letzter Import -->
+        <TabItem Header="{Binding ArchiveTabHeader}">
+        <DockPanel Margin="0,8,0,0">
+            <TextBlock DockPanel.Dock="Top" Margin="0,0,0,6"
+                       Foreground="{DynamicResource BpmTextSecondary}"
+                       FontSize="{DynamicResource BpmFontSizeCaption}">
+                <Run Text="Alle importierten Dokumente · "/><Run FontWeight="SemiBold" Foreground="{DynamicResource BpmSuccess}" Text="grün"/><Run Text=" = letzter Import (↩ macht ihn komplett rückgängig)"/>
+            </TextBlock>
+
+            <ListBox x:Name="ArchiveList"
+                     ItemsSource="{Binding ArchiveRows}"
+                     SelectionMode="Single"
+                     Background="{DynamicResource BpmBgBase}"
+                     BorderThickness="0"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     MouseRightButtonUp="OnArchiveRowContextMenu">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="Padding" Value="0"/>
+                        <Setter Property="Margin" Value="0,0,0,2"/>
+                        <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
+                        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Border x:Name="ArcRowBorder"
+                                Background="{DynamicResource BpmBgSurface}"
+                                BorderThickness="3,0,0,0"
+                                BorderBrush="Transparent"
+                                Padding="8,6"
+                                MinHeight="36">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="230"/>
+                                    <ColumnDefinition Width="84"/>
+                                    <ColumnDefinition Width="40"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Text="{Binding FileName}"
+                                           Foreground="{DynamicResource BpmTextBright}"
+                                           FontFamily="Consolas"
+                                           FontSize="{DynamicResource BpmFontSizeSmall}"
+                                           TextTrimming="CharacterEllipsis"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding DirectoryText}"
+                                           Foreground="{DynamicResource BpmTextSecondary}"
+                                           FontSize="{DynamicResource BpmFontSizeCaption}"
+                                           TextTrimming="CharacterEllipsis"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" x:Name="ArcDate"
+                                           Text="{Binding DateText}"
+                                           Foreground="{DynamicResource BpmTextSecondary}"
+                                           FontSize="{DynamicResource BpmFontSizeCaption}"
+                                           VerticalAlignment="Center"/>
+                                <Button Grid.Column="3"
+                                        Content="↩"
+                                        Style="{DynamicResource BpmButtonSecondary}"
+                                        Padding="4,0" Height="24" MinWidth="30"
+                                        IsEnabled="{Binding IsLastImport}"
+                                        ToolTip="Macht den LETZTEN Import komplett rückgängig (Undo nur letzter Import)"
+                                        Command="{Binding DataContext.UndoLastImportCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                            </Grid>
+                        </Border>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsLastImport}" Value="True">
+                                <Setter TargetName="ArcRowBorder" Property="BorderBrush" Value="{DynamicResource BpmSuccess}"/>
+                                <Setter TargetName="ArcDate" Property="Foreground" Value="{DynamicResource BpmSuccess}"/>
+                            </DataTrigger>
+                            <Trigger SourceName="ArcRowBorder" Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ArcRowBorder" Property="Background" Value="{DynamicResource BpmBgHover}"/>
+                            </Trigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </DockPanel>
+        </TabItem>
+        </TabControl>
 
         <!-- Splitter für die Detail-Panel-Breite (immer sichtbar) -->
         <GridSplitter x:Name="DetailSplitter"

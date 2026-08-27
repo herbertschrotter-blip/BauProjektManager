@@ -458,6 +458,41 @@ public class PlanManagerDatabase : IDisposable
         cmd.ExecuteNonQuery();
     }
 
+    /// <summary>
+    /// Archiv-Bestandsliste (111.07 Slice D): alle Dokumente mit current-Revision
+    /// und Primärdatei, neueste Importe zuerst.
+    /// </summary>
+    public List<PlanArchiveEntry> GetArchiveEntries()
+    {
+        var conn = GetConnection();
+        var result = new List<PlanArchiveEntry>();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT pd.id, pd.plan_number, pd.title, pd.document_type, pr.id, pr.plan_index,
+                   pr.received_at, pr.last_import_id, pf.file_name, pf.relative_path
+            FROM plan_documents pd
+            JOIN plan_revisions pr ON pr.document_id = pd.id
+                AND pr.revision_status = 'current' AND pr.is_deleted = 0
+            LEFT JOIN revision_file_links rfl ON rfl.revision_id = pr.id AND rfl.is_primary = 1
+            LEFT JOIN plan_files pf ON pf.id = rfl.file_id
+            WHERE pd.is_deleted = 0
+            ORDER BY pr.received_at DESC, pd.plan_number ASC
+            """;
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            result.Add(new PlanArchiveEntry(
+                reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3),
+                reader.GetString(4),
+                reader.IsDBNull(5) ? null : reader.GetString(5),
+                reader.GetString(6),
+                reader.IsDBNull(7) ? null : reader.GetString(7),
+                reader.IsDBNull(8) ? null : reader.GetString(8),
+                reader.IsDBNull(9) ? null : reader.GetString(9)));
+        }
+        return result;
+    }
+
     /// <summary>Lädt die Segmentwerte eines Dokuments (BPM-118), sortiert nach segment_key.</summary>
     public List<PlanDocumentSegment> GetSegmentsForDocument(string documentId)
     {

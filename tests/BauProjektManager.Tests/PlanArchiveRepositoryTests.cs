@@ -178,6 +178,26 @@ public class PlanArchiveRepositoryTests
     }
 
     [Fact]
+    public void GetArchiveEntries_ReturnsCurrentRevisionWithPrimaryFile()
+    {
+        using var f = new TestDb();
+        var docId = CreateDoc(f.Repo);
+        var now = DateTime.UtcNow.ToString("o");
+        var revId = f.Repo.InsertRevision(docId, "A", "FileName",
+            PlanArchive.Status.Current, now, null, now, null);
+        f.Repo.InsertFileForRevision(revId, "103_H5.dwg", "Plans/H5/103_H5.dwg", ".dwg", "md5-dwg", 10, isPrimary: false);
+        f.Repo.InsertFileForRevision(revId, "103_H5.pdf", "Plans/H5/103_H5.pdf", ".pdf", "md5-pdf", 20, isPrimary: true);
+
+        var entry = Assert.Single(f.Repo.GetArchiveEntries());
+
+        Assert.Equal("103", entry.PlanNumber);
+        Assert.Equal(revId, entry.RevisionId);
+        Assert.Equal("A", entry.PlanIndex);
+        Assert.Equal("103_H5.pdf", entry.FileName);            // Primärdatei, nicht die DWG
+        Assert.Equal("Plans/H5/103_H5.pdf", entry.RelativePath);
+    }
+
+    [Fact]
     public void InsertRevisionEvent_PersistsWithoutError()
     {
         using var f = new TestDb();

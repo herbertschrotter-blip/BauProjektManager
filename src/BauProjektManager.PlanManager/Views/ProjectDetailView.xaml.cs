@@ -79,7 +79,16 @@ public partial class ProjectDetailView : UserControl
 
         _manualSortInitialized = true;
         _manualSortDb = new PlanManagerDatabase(project.Id, _idGenerator, _persistenceRegistry);
+
+        // BPM-120 H0: Der Recovery-Einstieg (BPM-016) haengt seit dem Alt-Import-Cutover
+        // an der Radial-Strecke — pending Imports (App-Crash, via Cloud gesyncter
+        // Fremd-Stand) werden beim Oeffnen des Tabs behandelt. Bei "Spaeter" laedt
+        // der Tab trotzdem; das Bestaetigen bleibt durch den PreImportCheck blockiert.
+        HandleRecoveryIfPending(_manualSortDb, project.Paths.Root);
+        ViewModel.RefreshInboxCommand.Execute(null);
+
         var captureVm = new ManualCaptureViewModel(_manualSortDb, _bpmDb, _idGenerator);
+        captureVm.RecoveryRequested += (_, _) => OnManualSortRecoveryRequested(captureVm, project);
         ManualSortHost.Content = new ManualCaptureView
         {
             DataContext = captureVm,
@@ -116,86 +125,34 @@ public partial class ProjectDetailView : UserControl
         dialog.ShowDialog();
     }
 
-    private async void OnStartImport(object sender, RoutedEventArgs e)
+    /// <summary>
+    /// BPM-120 H0: Fallback-Recovery beim blockierten Bestaetigen — deckt pending
+    /// Imports ab, die erst NACH dem Tab-Oeffnen auftauchen (z.B. via Cloud-Sync).
+    /// Nach erfolgreicher Behandlung wird die Eingangs-Tabelle neu geladen;
+    /// das Bestaetigen loest der User danach erneut aus.
+    /// </summary>
+    private void OnManualSortRecoveryRequested(ManualCaptureViewModel vm, Project project)
     {
-        var project = ViewModel.Project;
-        if (string.IsNullOrWhiteSpace(project.Paths.Root))
-        {
-            MessageBox.Show("Projektpfad nicht gesetzt.", "Import",
-                MessageBoxButton.OK, MessageBoxImage.Warning);
+        if (_manualSortDb is null)
             return;
-        }
+        if (!HandleRecoveryIfPending(_manualSortDb, project.Paths.Root))
+            return; // "Spaeter" — Bestaetigen bleibt blockiert
 
+        ViewModel.RefreshInboxCommand.Execute(null);
+        _ = ReloadManualSortAsync(vm);
+    }
+
+    private static async Task ReloadManualSortAsync(ManualCaptureViewModel vm)
+    {
         try
         {
-            using var db = new PlanManagerDatabase(project.Id, _idGenerator, _persistenceRegistry);
-
-            // BPM-016 / 016.04: Recovery-Check vor neuem Import.
-            // Nicht abgeschlossene Vorgänge (App-Crash, Power-Off etc.) müssen erst
-            // behandelt werden bevor ein neuer Import läuft — sonst kollidieren
-            // pending Aktionen mit dem neuen Import-Plan.
-            if (!HandleRecoveryIfPending(db, project.Paths.Root))
-            {
-                // User wählte "Später" — neuer Import wird nicht gestartet
-                return;
-            }
-
-            if (_bpmDb is null)
-            {
-                MessageBox.Show("Stammdaten-Datenbank nicht verfügbar — Import nicht möglich.",
-                    "Import", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            // ADR-061 Slice 0.6a: bpmDb (Dokumenttyp-/Bauteil-Stammdaten) + projectId
-            // für die Resolver-basierte Zielpfad-Berechnung.
-            var workflow = new ImportWorkflowService(_profileManager, db, _bpmDb);
-            var result = await workflow.AnalyzeAsync(
-                project.Id,
-                project.Paths.Root,
-                project.Paths.Inbox,
-                project.Paths.Plans);
-
-            if (result.TotalFiles == 0)
-            {
-                MessageBox.Show("Keine Dateien im Eingang.", "Import",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
-
-            // Show preview dialog
-            var vm = new ImportPreviewViewModel(result);
-            var dialog = new ImportPreviewDialog(vm);
-            dialog.Owner = Window.GetWindow(this);
-            dialog.ShowDialog();
-
-            // Phase H: Execute import if user confirmed
-            if (dialog.ExecuteRequested)
-            {
-                var executor = new ImportExecutionService(db, _idGenerator);
-                var execResult = executor.Execute(
-                    result.Decisions, project.Paths.Root, project.Paths.Inbox);
-
-                var msg = $"Import abgeschlossen:\n\n" +
-                    $"✅ {execResult.Succeeded} sortiert\n" +
-                    $"⏭️ {execResult.Skipped} identisch (entfernt)\n" +
-                    $"❌ {execResult.Failed} fehlgeschlagen";
-
-                if (execResult.Errors.Count > 0)
-                    msg += "\n\nFehler:\n" + string.Join("\n", execResult.Errors.Take(5));
-
-                MessageBox.Show(msg, "Import", MessageBoxButton.OK,
-                    execResult.Failed > 0 ? MessageBoxImage.Warning : MessageBoxImage.Information);
-
-                // Refresh inbox count
-                ViewModel.RefreshInboxCommand.Execute(null);
-            }
+            await vm.RefreshCommand.ExecuteAsync(null);
+            vm.StatusText = "Wiederherstellung abgeschlossen — bitte erneut bestätigen.";
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Import-Analyse fehlgeschlagen");
-            MessageBox.Show($"Fehler bei Import-Analyse:\n{ex.Message}",
-                "Import", MessageBoxButton.OK, MessageBoxImage.Error);
+            Log.Error(ex, "ManuellSortieren-Aktualisierung nach Recovery fehlgeschlagen");
+            vm.StatusText = $"Fehler: {ex.Message}";
         }
     }
 

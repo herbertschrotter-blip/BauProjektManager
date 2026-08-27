@@ -24,6 +24,6 @@ public sealed record PreImportCheckResult(
             CanConfirm: false,
             BlockingImports: pending,
             Message: $"{pending.Count} nicht abgeschlossene(r) Import(e) gefunden. " +
-                     "Bitte zuerst die Wiederherstellung über \"Import starten\" abschließen, " +
+                     "Bitte zuerst die Wiederherstellung abschließen, " +
                      "bevor ein neuer Import bestätigt wird.");
 }

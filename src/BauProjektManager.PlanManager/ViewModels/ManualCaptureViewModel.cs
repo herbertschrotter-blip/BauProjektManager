@@ -169,6 +169,13 @@ public partial class ManualCaptureViewModel : ObservableObject
     [ObservableProperty]
     private string _detailPlaceholder = "Keine Auswahl";
 
+    /// <summary>
+    /// BPM-120 H0: Bestätigen ist durch pending Imports blockiert — die View
+    /// öffnet darauf die Recovery-Strecke (BPM-016). Seit dem Alt-Import-Cutover
+    /// ist die Radial-Strecke der einzige Recovery-Einstieg.
+    /// </summary>
+    public event EventHandler? RecoveryRequested;
+
     /// <summary>Projekt-Kontext setzen und Eingang analysieren.</summary>
     public async Task InitializeAsync(
         string projectId, string projectRootPath,
@@ -489,17 +496,18 @@ public partial class ManualCaptureViewModel : ObservableObject
     [RelayCommand]
     private async Task ConfirmImportAsync()
     {
-        // BPM-111.05 Slice 3d: Recovery-Check vor dem Bestätigen. Existiert noch ein
-        // pending Import (App-Crash im letzten Confirm, via Cloud gesyncter Fremd-Stand),
-        // darf kein neuer Journal-Vorgang starten — der Altvorgang muss zuerst über die
-        // Recovery-Strecke (BPM-016, "Import starten") behandelt werden, sonst kollidieren
-        // die pending Aktionen mit dem neuen Import.
+        // BPM-111.05 Slice 3d + BPM-120 H0: Recovery-Check vor dem Bestätigen. Existiert
+        // noch ein pending Import (App-Crash im letzten Confirm, via Cloud gesyncter
+        // Fremd-Stand), darf kein neuer Journal-Vorgang starten — sonst kollidieren die
+        // pending Aktionen mit dem neuen Import. RecoveryRequested informiert die View,
+        // die darauf den BPM-016-Dialog-Flow öffnet (Forward/Rollback/Cleanup/Später).
         var check = _preImportCheck.Evaluate(_planDb.GetPendingImports());
         if (!check.CanConfirm)
         {
             StatusText = $"⛔ {check.Message}";
             Log.Warning("ManualCapture-Bestaetigung blockiert: {Count} pending Import(e)",
                 check.BlockingImports.Count);
+            RecoveryRequested?.Invoke(this, EventArgs.Empty);
             return;
         }
 

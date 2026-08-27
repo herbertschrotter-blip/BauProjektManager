@@ -8,28 +8,23 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Toolbar: ← Zurück + Projektname + Import starten -->
+        <!-- Toolbar: ← Zurück + Projektname (BPM-120 H0: "Import starten" entfernt —
+             der Radial-/Bucket-Workflow im Tab "Manuell sortieren" ist der einzige
+             V1-Importweg, ADR-064 P.9) -->
         <Border Grid.Row="0" Background="{DynamicResource BpmBgSurface}"
                 Padding="8,6" Margin="0,0,0,8">
-            <Grid>
-                <StackPanel Orientation="Horizontal">
-                    <Button Content="← Zurück"
-                            Style="{DynamicResource BpmButtonGhost}"
-                            Command="{Binding GoBackCommand}"
-                            Foreground="{DynamicResource BpmTextSecondary}"
-                            VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding Project.Name}"
-                               FontSize="15" FontWeight="SemiBold"
-                               Foreground="{DynamicResource BpmTextBright}"
-                               VerticalAlignment="Center"
-                               Margin="12,0,0,0"/>
-                </StackPanel>
-                <Button Content="Import starten"
-                        Style="{DynamicResource BpmButtonPrimary}"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Center"
-                        Click="OnStartImport"/>
-            </Grid>
+            <StackPanel Orientation="Horizontal">
+                <Button Content="← Zurück"
+                        Style="{DynamicResource BpmButtonGhost}"
+                        Command="{Binding GoBackCommand}"
+                        Foreground="{DynamicResource BpmTextSecondary}"
+                        VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding Project.Name}"
+                           FontSize="15" FontWeight="SemiBold"
+                           Foreground="{DynamicResource BpmTextBright}"
+                           VerticalAlignment="Center"
+                           Margin="12,0,0,0"/>
+            </StackPanel>
         </Border>
 
         <!-- Eingang-Banner (nur wenn Dateien im Eingang) -->

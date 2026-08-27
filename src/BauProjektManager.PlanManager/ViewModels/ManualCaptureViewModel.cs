@@ -73,6 +73,18 @@ public partial class CaptureRowViewModel : ObservableObject
 }
 
 /// <summary>
+/// Quelle einer Plan-Vorschau (BPM-111.06 Slice C3): welcher relative Pfad
+/// gezeigt wird und welche Zeile Ziel der Text-Zuweisung ist (NULL bei
+/// Archiv-Anzeige — dort ist Zuweisen bewusst inaktiv, die gezeigte Datei
+/// ist die ALTE Revision). Note = Statuszeilen-Hinweis wenn nicht die
+/// geklickte Datei selbst gezeigt wird.
+/// </summary>
+public sealed record PreviewSource(
+    CaptureRowViewModel? Row,
+    string RelativePath,
+    string? Note);
+
+/// <summary>
 /// ViewModel der manuellen Plan-Erfassung (BPM-111.05 Slice 2b, ADR-059):
 /// Eingangs-Tabelle aus den ManualFirstCapture-Buckets, Radial-Ebenenlogik
 /// via <see cref="RadialSelectionController"/>, Pending Assignments +
@@ -413,6 +425,59 @@ public partial class ManualCaptureViewModel : ObservableObject
     }
 
     private void UpdatePendingState() => PendingCount = _pending.Count;
+
+    // ── Vorschau-Quelle (BPM-111.06 Slice C3) ───────────────────────
+
+    /// <summary>
+    /// Löst die Vorschau-Quelle einer Zeile auf: PDFs direkt; für DWGs die
+    /// gepaarte PDF — Eingangs-Partner (gleicher Dateinamens-Stamm) vor
+    /// Archiv-PDF der aktuellen Revision des bekannten Dokuments.
+    /// NULL = keine Vorschau möglich (Menüpunkt bleibt inaktiv).
+    /// </summary>
+    public PreviewSource? ResolvePreviewSource(CaptureRowViewModel row)
+    {
+        var extension = row.Item.File.Scan.Extension;
+        if (extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase))
+            return new PreviewSource(row, row.RelativePath, Note: null);
+
+        if (!extension.Equals(".dwg", StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        var partner = FindPairedPdfRow(row, Rows);
+        if (partner is not null)
+            return new PreviewSource(partner, partner.RelativePath,
+                $"Vorschau zeigt gepaartes PDF: {partner.FileName}");
+
+        var match = row.Item.Match;
+        if (match is not null)
+        {
+            var archivePdf = _planDb.GetPdfPathForRevision(match.CurrentRevisionId);
+            if (archivePdf is not null)
+                return new PreviewSource(Row: null, archivePdf,
+                    $"Vorschau zeigt aktuelle Archiv-Revision (Index {match.CurrentIndex ?? "Erstausgabe"})");
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Pure Paar-Findung (Slice C3): PDF-Zeile mit gleichem Dateinamens-Stamm
+    /// wie die DWG-Zeile (ordinal, case-insensitiv) — ohne System.IO (ADR-060).
+    /// </summary>
+    public static CaptureRowViewModel? FindPairedPdfRow(
+        CaptureRowViewModel dwgRow, IEnumerable<CaptureRowViewModel> rows)
+    {
+        var stem = FileNameStem(dwgRow.Item.File.Scan);
+        return rows.FirstOrDefault(r =>
+            !ReferenceEquals(r, dwgRow)
+            && r.Item.File.Scan.Extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase)
+            && FileNameStem(r.Item.File.Scan).Equals(stem, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string FileNameStem(ScannedFile scan)
+        => scan.FileName.Length > scan.Extension.Length
+            ? scan.FileName[..^scan.Extension.Length]
+            : scan.FileName;
 
     /// <summary>Leerer/Whitespace-Text -> NULL, sonst getrimmt (Slice A3, BPM-118).</summary>
     private static string? NormalizeText(string? value)

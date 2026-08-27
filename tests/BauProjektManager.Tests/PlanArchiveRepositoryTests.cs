@@ -153,6 +153,31 @@ public class PlanArchiveRepositoryTests
     }
 
     [Fact]
+    public void GetPdfPathForRevision_PrefersPrimaryPdf_IgnoresDwg()
+    {
+        using var f = new TestDb();
+        var docId = CreateDoc(f.Repo);
+        var now = DateTime.UtcNow.ToString("o");
+        var revId = f.Repo.InsertRevision(docId, "A", "FileName", PlanArchive.Status.Current, now, null, now, null);
+        f.Repo.InsertFileForRevision(revId, "103_H5.dwg", "Plans/H5/103_H5.dwg", ".dwg", "md5-dwg", 10, isPrimary: false);
+        f.Repo.InsertFileForRevision(revId, "103_H5.pdf", "Plans/H5/103_H5.pdf", ".pdf", "md5-pdf", 20, isPrimary: true);
+
+        Assert.Equal("Plans/H5/103_H5.pdf", f.Repo.GetPdfPathForRevision(revId));
+    }
+
+    [Fact]
+    public void GetPdfPathForRevision_NoPdfLinked_ReturnsNull()
+    {
+        using var f = new TestDb();
+        var docId = CreateDoc(f.Repo);
+        var now = DateTime.UtcNow.ToString("o");
+        var revId = f.Repo.InsertRevision(docId, "A", "FileName", PlanArchive.Status.Current, now, null, now, null);
+        f.Repo.InsertFileForRevision(revId, "103_H5.dwg", "Plans/H5/103_H5.dwg", ".dwg", "md5-dwg", 10, isPrimary: true);
+
+        Assert.Null(f.Repo.GetPdfPathForRevision(revId));
+    }
+
+    [Fact]
     public void InsertRevisionEvent_PersistsWithoutError()
     {
         using var f = new TestDb();

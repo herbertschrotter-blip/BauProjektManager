@@ -481,6 +481,26 @@ public class PlanManagerDatabase : IDisposable
         return result;
     }
 
+    /// <summary>
+    /// Relativer Pfad der PDF-Datei einer Revision (BPM-111.06 Slice C3, DWG-Paarung):
+    /// bevorzugt die Primärdatei, sonst die zuerst verknüpfte PDF. NULL wenn keine.
+    /// </summary>
+    public string? GetPdfPathForRevision(string revisionId)
+    {
+        var conn = GetConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT pf.relative_path
+            FROM plan_files pf
+            JOIN revision_file_links rfl ON rfl.file_id = pf.id
+            WHERE rfl.revision_id = @rid AND LOWER(pf.file_type) = '.pdf'
+            ORDER BY rfl.is_primary DESC, pf.created_at ASC
+            LIMIT 1
+            """;
+        cmd.Parameters.AddWithValue("@rid", revisionId);
+        return cmd.ExecuteScalar() as string;
+    }
+
     /// <summary>Fügt einen Revisions-Event ein (Audit-Trail). Gibt die event-id zurück.</summary>
     public string InsertRevisionEvent(
         string revisionId, string? importId, string eventType, string note = "")

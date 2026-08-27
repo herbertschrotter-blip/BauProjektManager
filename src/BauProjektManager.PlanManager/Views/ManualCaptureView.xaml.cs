@@ -384,10 +384,12 @@ public partial class ManualCaptureView : UserControl
         MenuItem Item(string header, bool enabled)
             => new() { Header = header, IsEnabled = enabled, Style = itemStyle };
 
-        var isPdf = row.Item.File.Scan.Extension
-            .Equals(".pdf", StringComparison.OrdinalIgnoreCase);
-        var previewItem = Item("Vorschau", PdfRenderService is not null && isPdf);
-        previewItem.Click += async (_, _) => await OpenPreviewAsync(row);
+        // Slice C3: PDFs direkt; DWGs über die gepaarte PDF (Eingangs-Partner
+        // oder Archiv-Revision) — sonst bleibt der Menüpunkt inaktiv.
+        var previewSource = PdfRenderService is null
+            ? null : ViewModel.ResolvePreviewSource(row);
+        var previewItem = Item("Vorschau", previewSource is not null);
+        previewItem.Click += async (_, _) => await OpenPreviewAsync(previewSource!);
 
         var openItem = Item("Datei öffnen", FileLauncher is not null);
         openItem.Click += (_, _) => LaunchRow(row, reveal: false);
@@ -421,8 +423,12 @@ public partial class ManualCaptureView : UserControl
             ViewModel.StatusText = $"⚠ {(reveal ? "Explorer" : "Öffnen")} fehlgeschlagen: {row.FileName}";
     }
 
-    /// <summary>Blendet das Vorschau-Panel ein (Variante B) und zeigt die Zeile an.</summary>
-    private async Task OpenPreviewAsync(CaptureRowViewModel row)
+    /// <summary>
+    /// Blendet das Vorschau-Panel ein (Variante B) und zeigt die aufgelöste
+    /// Quelle an (Slice C3): bei DWG-Zeilen die gepaarte PDF; Zuweisungsziel
+    /// ist source.Row (NULL bei Archiv-Anzeige = Zuweisen inaktiv).
+    /// </summary>
+    private async Task OpenPreviewAsync(PreviewSource source)
     {
         if (PdfRenderService is null)
             return;
@@ -431,10 +437,13 @@ public partial class ManualCaptureView : UserControl
         PreviewPanel.FileLauncher = FileLauncher;
         PreviewPanel.PdfTextService = PdfTextService;
         PreviewPanel.SegmentTypeCatalog = SegmentTypeCatalog;
-        _previewRow = row;
+        _previewRow = source.Row;
         SetPreviewVisible(true);
 
-        var absolutePath = Path.Combine(ViewModel.ProjectRootPath, row.RelativePath);
+        if (source.Note is not null)
+            ViewModel.StatusText = source.Note;
+
+        var absolutePath = Path.Combine(ViewModel.ProjectRootPath, source.RelativePath);
         await PreviewPanel.ShowFileAsync(absolutePath);
     }
 

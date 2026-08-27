@@ -3,6 +3,7 @@ using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models.PlanManager;
 using BauProjektManager.Infrastructure.Services;
 using BauProjektManager.PlanManager.Services;
+using BauProjektManager.Tests.Fakes;
 using Microsoft.Data.Sqlite;
 
 namespace BauProjektManager.Tests;
@@ -19,16 +20,14 @@ public class ImportUndoServiceTests
     {
         public PlanManagerDatabase Repo { get; }
         public string Root { get; }
-        private readonly string _dbFolder;
 
         public TestEnv()
         {
             IIdGenerator idGen = new UlidIdGenerator();
             var projectId = idGen.NewId();
-            _dbFolder = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "BauProjektManager", "Projects", projectId);
-            Repo = new PlanManagerDatabase(projectId, idGen);
+            // BPM-123: Test-DB unter %TEMP% via dbPathOverride — nie in LocalAppData\Projects.
+            Repo = new PlanManagerDatabase(projectId, idGen,
+                dbPathOverride: TempDb.NewTempDbPath(projectId));
             Root = Path.Combine(Path.GetTempPath(), "bpm-undo-test-" + projectId);
             Directory.CreateDirectory(Path.Combine(Root, "_Eingang"));
         }
@@ -40,7 +39,7 @@ public class ImportUndoServiceTests
             // BPM-120 T0: gezielter Pool-Clear statt ClearAllPools (Parallellast-Flaky)
             using (var pc = new SqliteConnection($"Data Source={dbPath}"))
                 SqliteConnection.ClearPool(pc);
-            try { if (Directory.Exists(_dbFolder)) Directory.Delete(_dbFolder, recursive: true); } catch { }
+            TempDb.Delete(dbPath);
             try { if (Directory.Exists(Root)) Directory.Delete(Root, recursive: true); } catch { }
         }
     }

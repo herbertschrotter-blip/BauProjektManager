@@ -28,11 +28,26 @@ public class PlanManagerDatabase : IDisposable
     /// <summary>Projekt-ID dieser DB (für plan_documents.project_id, BPM-109).</summary>
     public string ProjectId => _projectId;
 
-    public PlanManagerDatabase(string projectId, IIdGenerator idGenerator, IPersistenceRegistry? persistenceRegistry = null)
+    public PlanManagerDatabase(
+        string projectId, IIdGenerator idGenerator,
+        IPersistenceRegistry? persistenceRegistry = null, string? dbPathOverride = null)
     {
         _projectId = projectId;
         _idGenerator = idGenerator;
         _persistenceRegistry = persistenceRegistry;
+
+        // BPM-123: Tests setzen dbPathOverride (%TEMP%) — Test-DBs landen nie
+        // im echten App-Datenbereich unter LocalAppData\Projects, unabhaengig
+        // davon, ob ihr Cleanup gelingt. Muster analog ProjectDatabase.
+        if (dbPathOverride is not null)
+        {
+            var overrideDir = Path.GetDirectoryName(dbPathOverride);
+            if (!string.IsNullOrEmpty(overrideDir))
+                Directory.CreateDirectory(overrideDir);
+            _dbPath = dbPathOverride;
+            return;
+        }
+
         var projectDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "BauProjektManager", "Projects", projectId);

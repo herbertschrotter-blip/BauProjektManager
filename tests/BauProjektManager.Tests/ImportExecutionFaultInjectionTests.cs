@@ -22,16 +22,14 @@ public class ImportExecutionFaultInjectionTests
         public PlanManagerDatabase Repo { get; }
         /// <summary>Virtueller Projekt-Root — existiert NUR im FakeFileStore.</summary>
         public string Root { get; } = Path.Combine(Path.GetTempPath(), "bpm-fault-virtual");
-        private readonly string _dbFolder;
 
         public TestEnv()
         {
             IIdGenerator idGen = new UlidIdGenerator();
             var projectId = idGen.NewId();
-            _dbFolder = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "BauProjektManager", "Projects", projectId);
-            Repo = new PlanManagerDatabase(projectId, idGen);
+            // BPM-123: Test-DB unter %TEMP% via dbPathOverride — nie in LocalAppData\Projects.
+            Repo = new PlanManagerDatabase(projectId, idGen,
+                dbPathOverride: TempDb.NewTempDbPath(projectId));
         }
 
         public void Dispose()
@@ -40,7 +38,7 @@ public class ImportExecutionFaultInjectionTests
             Repo.Dispose();
             using (var pc = new SqliteConnection($"Data Source={dbPath}"))
                 SqliteConnection.ClearPool(pc);
-            try { if (Directory.Exists(_dbFolder)) Directory.Delete(_dbFolder, recursive: true); } catch { }
+            TempDb.Delete(dbPath);
         }
     }
 

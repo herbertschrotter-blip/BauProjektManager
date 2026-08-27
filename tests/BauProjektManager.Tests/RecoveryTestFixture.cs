@@ -2,6 +2,7 @@ using System.IO;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Infrastructure.Services;
 using BauProjektManager.PlanManager.Services;
+using BauProjektManager.Tests.Fakes;
 using Microsoft.Data.Sqlite;
 
 namespace BauProjektManager.Tests;
@@ -27,7 +28,6 @@ public sealed class RecoveryTestFixture : IDisposable
     public RecoveryExecutorService Executor { get; }
     public IIdGenerator IdGenerator { get; }
 
-    private readonly string _localAppDataProjectFolder;
 
     public RecoveryTestFixture()
     {
@@ -40,12 +40,9 @@ public sealed class RecoveryTestFixture : IDisposable
         Directory.CreateDirectory(Path.Combine(ProjectRoot, InboxRel));
         Directory.CreateDirectory(Path.Combine(ProjectRoot, PlansRel));
 
-        // Db wird unter %LocalAppData%\BauProjektManager\Projects\{projectId}\ angelegt
-        _localAppDataProjectFolder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "BauProjektManager", "Projects", ProjectId);
-
-        Db = new PlanManagerDatabase(ProjectId, IdGenerator);
+        // BPM-123: Test-DB unter %TEMP% via dbPathOverride — nie in LocalAppData\Projects.
+        Db = new PlanManagerDatabase(ProjectId, IdGenerator,
+            dbPathOverride: TempDb.NewTempDbPath(ProjectId));
         var fs = new LocalFileSystem();
         Executor = new RecoveryExecutorService(Db, fs, fs, fs);
     }
@@ -141,15 +138,6 @@ public sealed class RecoveryTestFixture : IDisposable
                 $"RecoveryTestFixture: ProjectRoot cleanup fehlgeschlagen ({ProjectRoot}): {ex.Message}");
         }
 
-        try
-        {
-            if (Directory.Exists(_localAppDataProjectFolder))
-                Directory.Delete(_localAppDataProjectFolder, recursive: true);
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine(
-                $"RecoveryTestFixture: LocalAppData cleanup fehlgeschlagen ({_localAppDataProjectFolder}): {ex.Message}");
-        }
+        TempDb.Delete(dbPath);
     }
 }

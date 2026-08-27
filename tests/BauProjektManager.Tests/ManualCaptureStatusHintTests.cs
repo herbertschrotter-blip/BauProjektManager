@@ -7,6 +7,7 @@ using BauProjektManager.Infrastructure.Persistence;
 using BauProjektManager.Infrastructure.Services;
 using BauProjektManager.PlanManager.Services;
 using BauProjektManager.PlanManager.ViewModels;
+using BauProjektManager.Tests.Fakes;
 using Microsoft.Data.Sqlite;
 
 namespace BauProjektManager.Tests;
@@ -35,17 +36,15 @@ public class ManualCaptureStatusHintTests : IDisposable
     private readonly string _bpmDbPath;
     private readonly ProjectDatabase _bpmDb;
     private readonly PlanManagerDatabase _planDb;
-    private readonly string _planDbFolder;
     private readonly ManualCaptureViewModel _vm;
 
     public ManualCaptureStatusHintTests()
     {
         IIdGenerator idGen = new UlidIdGenerator();
         var projectId = idGen.NewId();
-        _planDbFolder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "BauProjektManager", "Projects", projectId);
-        _planDb = new PlanManagerDatabase(projectId, idGen);
+        // BPM-123: Test-DB unter %TEMP% via dbPathOverride — nie in LocalAppData\Projects.
+        _planDb = new PlanManagerDatabase(projectId, idGen,
+            dbPathOverride: TempDb.NewTempDbPath(projectId));
         _bpmDbPath = Path.Combine(Path.GetTempPath(), $"bpm-statushint-{Guid.NewGuid():N}.db");
         _bpmDb = new ProjectDatabase(new UlidIdGenerator(), new FakeUserContext(),
             new FakeDeviceContext(), persistenceRegistry: null, dbPathOverride: _bpmDbPath);
@@ -62,7 +61,7 @@ public class ManualCaptureStatusHintTests : IDisposable
             SqliteConnection.ClearPool(pc);
         using (var pc = new SqliteConnection($"Data Source={_bpmDbPath}"))
             SqliteConnection.ClearPool(pc);
-        try { if (Directory.Exists(_planDbFolder)) Directory.Delete(_planDbFolder, recursive: true); } catch { }
+        TempDb.Delete(planDbPath);
         try { if (File.Exists(_bpmDbPath)) File.Delete(_bpmDbPath); } catch { }
     }
 

@@ -159,6 +159,15 @@ public partial class ManualCaptureViewModel : ObservableObject
     [ObservableProperty]
     private string _statusText = "bereit";
 
+    /// <summary>Neutrale Zusammenfassung des letzten Refresh — Restore-Ziel für Bulk-Hinweise (BPM-122).</summary>
+    private string _summaryStatusText = "bereit";
+
+    /// <summary>True solange StatusText einen Bulk-Hinweis aus BeginCapture zeigt (BPM-122).</summary>
+    private bool _statusIsBulkHint;
+
+    // Jede andere Meldung beendet den Bulk-Hinweis-Zustand automatisch.
+    partial void OnStatusTextChanged(string value) => _statusIsBulkHint = false;
+
     [ObservableProperty]
     private int _pendingCount;
 
@@ -212,9 +221,10 @@ public partial class ManualCaptureViewModel : ObservableObject
         UpdatePairFlags();
         UpdatePendingState();
         LoadArchive();
-        StatusText = $"{result.TotalFiles} Dateien — {result.DuplicateCount} Dubletten, " +
+        _summaryStatusText = $"{result.TotalFiles} Dateien — {result.DuplicateCount} Dubletten, " +
                      $"{result.UpdateProposalCount} Updates, {result.NewCaptureCount} neu, " +
                      $"{result.ConflictCount} Konflikte";
+        StatusText = _summaryStatusText;
         CanUndoLastImport = _undo.Preflight(_projectRootPath).CanUndo;
         SetSelectedRow();
     }
@@ -253,10 +263,14 @@ public partial class ManualCaptureViewModel : ObservableObject
         if (check.Gate == BulkGate.Blocked)
         {
             StatusText = $"⛔ {check.BlockReason}";
+            _statusIsBulkHint = true; // BPM-122: verschwindet bei Auswahländerung
             return null;
         }
         if (check.Warnings.Count > 0)
+        {
             StatusText = "⚠ " + string.Join(" · ", check.Warnings);
+            _statusIsBulkHint = true;
+        }
 
         var controller = new RadialSelectionController(_types, _parts);
         controller.Reset();
@@ -685,6 +699,12 @@ public partial class ManualCaptureViewModel : ObservableObject
     /// </summary>
     public void SetSelectedRow()
     {
+        // BPM-122: Bulk-Hinweise (⚠/⛔ aus BeginCapture) gelten nur für die
+        // Auswahl, mit der das Radial gestartet wurde — bei Auswahländerung
+        // kehrt die neutrale Zusammenfassung zurück.
+        if (_statusIsBulkHint)
+            StatusText = _summaryStatusText;
+
         var selected = SelectedRows;
         if (selected.Count == 1)
         {

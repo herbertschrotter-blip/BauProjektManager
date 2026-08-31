@@ -276,6 +276,7 @@ public class PlanManagerDatabase : IDisposable
                 archive_path TEXT,
                 md5 TEXT,
                 file_size INTEGER,
+                document_type_id TEXT,
                 error_message TEXT,
                 FOREIGN KEY (import_id) REFERENCES import_journal(id)
             );
@@ -958,12 +959,15 @@ public class PlanManagerDatabase : IDisposable
     /// Inserts an import action (one file operation).
     /// BPM-120 T2: destination_path nullable (skipDuplicate hat kein Ziel);
     /// md5 + file_size fuer Bucket A / Recovery-Verifikation.
+    /// BPM-120 T5: document_type_id journalisiert, damit Recovery Forward die
+    /// Dokument-Struktur vollstaendig herstellen kann (AK 9).
     /// </summary>
     public string InsertImportAction(
         string importId, int actionOrder, string actionType,
         string? documentKey, string planNumber, string? planIndex,
         string? oldIndex, string sourcePath, string? destinationPath,
-        string? archivePath, string? md5 = null, long? fileSize = null)
+        string? archivePath, string? md5 = null, long? fileSize = null,
+        string? documentTypeId = null)
     {
         var conn = GetConnection();
         var id = _idGenerator.NewId();
@@ -971,8 +975,8 @@ public class PlanManagerDatabase : IDisposable
         cmd.CommandText = """
             INSERT INTO import_actions (id, import_id, action_order, action_type,
                 action_status, document_key, plan_number, plan_index, old_index,
-                source_path, destination_path, archive_path, md5, file_size)
-            VALUES (@id, @iid, @ao, @at, 'pending', @dk, @pn, @pi, @oi, @sp, @dp, @ap, @md5, @fs)
+                source_path, destination_path, archive_path, md5, file_size, document_type_id)
+            VALUES (@id, @iid, @ao, @at, 'pending', @dk, @pn, @pi, @oi, @sp, @dp, @ap, @md5, @fs, @dti)
             """;
         cmd.Parameters.AddWithValue("@id", id);
         cmd.Parameters.AddWithValue("@iid", importId);
@@ -987,6 +991,7 @@ public class PlanManagerDatabase : IDisposable
         cmd.Parameters.AddWithValue("@ap", (object?)archivePath ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@md5", (object?)md5 ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@fs", (object?)fileSize ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@dti", (object?)documentTypeId ?? DBNull.Value);
         cmd.ExecuteNonQuery();
         return id;
     }
@@ -1023,7 +1028,8 @@ public class PlanManagerDatabase : IDisposable
         {
             cmd.CommandText = """
                 SELECT id, action_type, action_status, source_path, destination_path,
-                    archive_path, md5, file_size
+                    archive_path, md5, file_size, document_key, plan_number, plan_index,
+                    document_type_id
                 FROM import_actions WHERE import_id = @iid
                 ORDER BY action_order ASC
                 """;
@@ -1032,7 +1038,8 @@ public class PlanManagerDatabase : IDisposable
         {
             cmd.CommandText = """
                 SELECT id, action_type, action_status, source_path, destination_path,
-                    archive_path, md5, file_size
+                    archive_path, md5, file_size, document_key, plan_number, plan_index,
+                    document_type_id
                 FROM import_actions WHERE import_id = @iid AND action_status = @st
                 ORDER BY action_order ASC
                 """;
@@ -1060,7 +1067,19 @@ public class PlanManagerDatabase : IDisposable
                     : reader.GetString(reader.GetOrdinal("md5")),
                 FileSize: reader.IsDBNull(reader.GetOrdinal("file_size"))
                     ? null
-                    : reader.GetInt64(reader.GetOrdinal("file_size"))));
+                    : reader.GetInt64(reader.GetOrdinal("file_size")),
+                DocumentKey: reader.IsDBNull(reader.GetOrdinal("document_key"))
+                    ? null
+                    : reader.GetString(reader.GetOrdinal("document_key")),
+                PlanNumber: reader.IsDBNull(reader.GetOrdinal("plan_number"))
+                    ? null
+                    : reader.GetString(reader.GetOrdinal("plan_number")),
+                PlanIndex: reader.IsDBNull(reader.GetOrdinal("plan_index"))
+                    ? null
+                    : reader.GetString(reader.GetOrdinal("plan_index")),
+                DocumentTypeId: reader.IsDBNull(reader.GetOrdinal("document_type_id"))
+                    ? null
+                    : reader.GetString(reader.GetOrdinal("document_type_id"))));
         }
         return result;
     }

@@ -125,7 +125,8 @@ public class ImportExecutionDiskProtocolTests
             Path.Combine("_Eingang", "5998-300_OG2.pdf"), destRel,
             archivePath: null, md5: "md5-pdf", fileSize: 3);
 
-        var result = new RecoveryExecutorService(env.Repo, fake, fake, fake)
+        var result = new RecoveryExecutorService(env.Repo, fake, fake, fake,
+                new ImportExecutionService(env.Repo, new UlidIdGenerator(), fake, fake, fake))
             .ExecuteForward(importId, env.Root);
 
         Assert.Equal(0, result.FailedCount);

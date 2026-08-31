@@ -118,7 +118,8 @@ public class ImportExecutionService
                 targetRelPath,
                 archiveRelPath,
                 decision.File.Parsed.Md5,
-                decision.File.Parsed.FileSize);
+                decision.File.Parsed.FileSize,
+                decision.File.DocumentTypeId);
             planned.Add((decision, actionId, archiveRelPath));
         }
 
@@ -222,6 +223,117 @@ public class ImportExecutionService
             _db.CompleteImportAction(actionId, false, ex.Message);
             return new ActionResult(false, ex.Message);
         }
+    }
+
+    /// <summary>
+    /// Recovery Forward einer journalisierten Action (BPM-120 T5, ADR-064 P.4):
+    /// DERSELBE Disk- und DB-Apply-Pfad wie der normale Import, idempotent aus
+    /// jedem zulaessigen Zwischenzustand (AK 8/9/11/12). Liefert null bei
+    /// Erfolg, sonst den Fehlertext (Recovery-Fehlermodell).
+    /// </summary>
+    public string? RecoverActionForward(
+        ImportActionRow action, string projectRootPath, string importId)
+    {
+        try
+        {
+            var targetRelPath = action.DestinationPath!;
+            var targetAbs = _path.Combine(projectRootPath, targetRelPath);
+            var sourceAbs = _path.Combine(projectRootPath, action.SourcePath);
+            var tmpAbs = targetAbs + TmpSuffix;
+
+            var targetDir = _path.GetDirectoryName(targetAbs);
+            if (!string.IsNullOrEmpty(targetDir))
+                _writer.CreateDirectory(targetDir);
+
+            // ── Disk-Forward (idempotent) ──
+            // AK 8: Vorgaenger nur archivieren, wenn er noch am Ziel liegt, die
+            // neue Datei noch aussteht (source/tmp) UND das Archiv fehlt —
+            // nie eine zweite Archivkopie, nie Verlust des Vorgaengers.
+            if (action.ArchivePath is not null)
+            {
+                var archiveAbs = _path.Combine(projectRootPath, action.ArchivePath);
+                if (!_reader.FileExists(archiveAbs)
+                    && _reader.FileExists(targetAbs)
+                    && (_reader.FileExists(sourceAbs) || _reader.FileExists(tmpAbs)))
+                    ArchiveExistingFile(targetAbs, archiveAbs);
+            }
+
+            if (_reader.FileExists(sourceAbs))
+                PublishIncomingFile(sourceAbs, targetAbs);
+            else if (_reader.FileExists(tmpAbs))
+                // Crash zwischen tmp-Move und finalem Rename (T3): Rename nachholen.
+                WithLockRetry(() => _writer.MoveFile(tmpAbs, targetAbs, overwrite: true));
+            else if (!_reader.FileExists(targetAbs))
+                return $"RecoveryConflict: Datei weder an Quelle noch am Ziel ({action.SourcePath})";
+            // Datei liegt am Ziel (AK 9): nicht erneut verschieben.
+
+            // ── DB-Forward: gemeinsamer Apply-Pfad (AK 9/11/12) ──
+            // Actions ohne journalisierten document_key (Altbestand/Test-Seeds)
+            // koennen nur den Datei-Endzustand herstellen — Status finalisieren.
+            var actionTime = DateTime.UtcNow.ToString("o");
+            if (action.DocumentKey is null)
+            {
+                _db.CompleteImportAction(action.Id, true);
+                return null;
+            }
+
+            var decision = BuildRecoveryDecision(action, targetRelPath);
+            _db.ExecuteInTransaction(() =>
+                ApplyActionToDatabase(decision, importId, action.Id, targetRelPath, actionTime));
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Recovery Forward fehlgeschlagen: {Source}", action.SourcePath);
+            return ex.Message;
+        }
+    }
+
+    /// <summary>
+    /// Rekonstruiert die fachliche Decision aus dem Journal (T5). Nicht
+    /// journalisierte BPM-118-Metadaten (Title/ChangeNote/ReleasedAt/Segmente)
+    /// sind nach einem Crash bewusst nicht wiederherstellbar — der definierte
+    /// Recovery-Endzustand ist die Kern-Struktur (Document/Revision/File/Events).
+    /// </summary>
+    private ImportDecision BuildRecoveryDecision(ImportActionRow action, string targetRelPath)
+    {
+        var fileName = _path.GetFileName(targetRelPath);
+        var parsed = new ParsedImportFile(
+            RelativePath: action.SourcePath,
+            FileName: fileName,
+            Extension: _path.GetExtension(fileName),
+            FileSize: action.FileSize ?? 0,
+            Md5: action.Md5 ?? "",
+            MatchedProfile: null,
+            ExtractedFields: new Dictionary<string, string>(),
+            Confidence: ParseConfidence.High,
+            Warnings: []);
+        var classified = new ClassifiedImportFile(
+            Parsed: parsed,
+            DocumentTypeId: action.DocumentTypeId,
+            DocumentTypeDisplayName: null,
+            DocumentKey: action.DocumentKey,
+            PlanNumber: action.PlanNumber,
+            RevisionToken: action.PlanIndex,
+            RevisionKind: RevisionKindDetector.Detect(action.PlanIndex),
+            RevisionSource: action.PlanIndex is null ? IndexSourceType.None : IndexSourceType.FileName,
+            Stage: ImportStage.Unknown,
+            IdentityFields: new Dictionary<string, string>(),
+            Evidence: []);
+        var status = action.ActionType switch
+        {
+            "indexUpdate" => ImportStatus.UpdateNewerIndex,
+            "changed" => ImportStatus.ChangedNoIndex,
+            "learnIndex" => ImportStatus.LearnIndex,
+            _ => ImportStatus.New
+        };
+        return new ImportDecision(
+            File: classified,
+            Status: status,
+            DocumentKey: action.DocumentKey,
+            ExistingRevisionId: null,
+            TargetRelativePath: targetRelPath,
+            Reasons: ["Recovery Forward (gemeinsamer Apply-Pfad, T5)"]);
     }
 
     /// <summary>

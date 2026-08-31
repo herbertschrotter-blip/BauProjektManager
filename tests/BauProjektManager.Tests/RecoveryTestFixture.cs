@@ -44,7 +44,8 @@ public sealed class RecoveryTestFixture : IDisposable
         Db = new PlanManagerDatabase(ProjectId, IdGenerator,
             dbPathOverride: TempDb.NewTempDbPath(ProjectId));
         var fs = new LocalFileSystem();
-        Executor = new RecoveryExecutorService(Db, fs, fs, fs);
+        Executor = new RecoveryExecutorService(Db, fs, fs, fs,
+            new ImportExecutionService(Db, IdGenerator, fs, fs, fs));
     }
 
     /// <summary>

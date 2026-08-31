@@ -177,7 +177,9 @@ public partial class ProjectDetailView : UserControl
         var pending = db.GetPendingImports();
         var decisionService = new RecoveryDecisionService();
         var fs = new Infrastructure.Services.LocalFileSystem();
-        var executor = new RecoveryExecutorService(db, fs, fs, fs);
+        // T5: Recovery Forward laeuft ueber denselben Executor wie der Import.
+        var executor = new RecoveryExecutorService(db, fs, fs, fs,
+            new ImportExecutionService(db, _idGenerator, fs, fs, fs));
 
         Log.Information("Recovery: {Count} pending Imports gefunden", pending.Count);
 

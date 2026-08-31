@@ -19,4 +19,10 @@ public sealed record ImportActionRow(
     string? DestinationPath,
     string? ArchivePath,
     string? Md5 = null,
-    long? FileSize = null);
+    long? FileSize = null,
+    // BPM-120 T5: fachlicher Kern der Action — Recovery Forward stellt damit
+    // die Dokument-/Revisions-Struktur ueber den gemeinsamen Apply-Pfad her.
+    string? DocumentKey = null,
+    string? PlanNumber = null,
+    string? PlanIndex = null,
+    string? DocumentTypeId = null);

@@ -238,7 +238,8 @@ public class ImportExecutionPreJournalTests
             null, oldIndex: null, sourceRel, destinationPath: null, archivePath: null,
             md5: "md5-dup", fileSize: 34);
 
-        var result = new RecoveryExecutorService(env.Repo, fake, fake, fake)
+        var result = new RecoveryExecutorService(env.Repo, fake, fake, fake,
+                new ImportExecutionService(env.Repo, new UlidIdGenerator(), fake, fake, fake))
             .ExecuteForward(importId, env.Root);
 
         var action = env.GetAction("skipDuplicate");

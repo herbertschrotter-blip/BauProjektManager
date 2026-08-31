@@ -22,15 +22,20 @@ public class RecoveryExecutorService
     private readonly IFileSystemReader _reader;
     private readonly IFileSystemWriter _writer;
     private readonly IPathService _path;
+    private readonly ImportExecutionService _executor;
 
+    // BPM-120 T5 (ADR-064 P.4): Recovery Forward laeuft ueber den Executor —
+    // derselbe Disk-/DB-Apply-Pfad wie der normale Import, keine Eigenlogik.
     public RecoveryExecutorService(
         PlanManagerDatabase db,
-        IFileSystemReader reader, IFileSystemWriter writer, IPathService path)
+        IFileSystemReader reader, IFileSystemWriter writer, IPathService path,
+        ImportExecutionService executor)
     {
         _db = db;
         _reader = reader;
         _writer = writer;
         _path = path;
+        _executor = executor;
     }
 
     /// <summary>
@@ -57,7 +62,9 @@ public class RecoveryExecutorService
                 error = TryRecoverSkipDuplicate(action, projectRootPath, knownMd5);
             }
             else
-                error = TryMoveSourceToDestination(action, projectRootPath);
+                // T5: gemeinsamer Apply-Pfad — Disk (Archiv/.bpm_tmp/Rename) + DB
+                // (Document/Revision/File/Events + completed in einer Transaction).
+                error = _executor.RecoverActionForward(action, projectRootPath, importId);
             if (error is null)
             {
                 _db.CompleteImportAction(action.Id, success: true);
@@ -181,45 +188,6 @@ public class RecoveryExecutorService
             if (_reader.FileExists(sourceAbs))
                 _writer.DeleteFile(sourceAbs);
             // Source bereits weg + MD5 im Bestand -> idempotent erfuellt
-            return null;
-        }
-        catch (Exception ex)
-        {
-            return ex.Message;
-        }
-    }
-
-    private string? TryMoveSourceToDestination(ImportActionRow action, string projectRootPath)
-    {
-        try
-        {
-            var sourceAbs = _path.Combine(projectRootPath, action.SourcePath);
-            var destAbs = _path.Combine(projectRootPath, action.DestinationPath!);
-
-            // BPM-120 T3: Crash zwischen tmp-Move und finalem Rename — die Quelle
-            // liegt bereits als <ziel>.bpm_tmp im Zielbereich. Idempotentes
-            // Forward = finalen Rename nachholen (AK 9-Vorbereitung).
-            var tmpAbs = destAbs + ImportExecutionService.TmpSuffix;
-            if (!_reader.FileExists(sourceAbs) && _reader.FileExists(tmpAbs))
-            {
-                ImportExecutionService.WithLockRetry(
-                    () => _writer.MoveFile(tmpAbs, destAbs, overwrite: true));
-                return null;
-            }
-
-            if (!_reader.FileExists(sourceAbs))
-                return $"Source-Datei nicht mehr da: {action.SourcePath}";
-
-            // Archive vorhandene Destination falls verlangt
-            if (!string.IsNullOrEmpty(action.ArchivePath) && _reader.FileExists(destAbs))
-            {
-                var archiveAbs = _path.Combine(projectRootPath, action.ArchivePath);
-                _writer.CreateDirectory(_path.GetDirectoryName(archiveAbs)!);
-                _writer.MoveFile(destAbs, archiveAbs, overwrite: false);
-            }
-
-            _writer.CreateDirectory(_path.GetDirectoryName(destAbs)!);
-            _writer.MoveFile(sourceAbs, destAbs, overwrite: false);
             return null;
         }
         catch (Exception ex)

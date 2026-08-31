@@ -956,6 +956,23 @@ public class PlanManagerDatabase : IDisposable
     }
 
     /// <summary>
+    /// Vermerkt einen Fehler am Journal, OHNE den Status zu aendern (BPM-120 T6,
+    /// ADR-064 P.6/AK 13): ein Import mit fehlgeschlagenen Actions bleibt
+    /// 'pending' — recovery-pflichtig und blockiert den naechsten Confirm.
+    /// 'failed' ist erst nach vollstaendigem Rollback oder bewusstem Cleanup
+    /// terminal (siehe CompleteImportJournal).
+    /// </summary>
+    public void SetImportJournalError(string importId, string errorMessage)
+    {
+        var conn = GetConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = "UPDATE import_journal SET error_message = @err WHERE id = @id";
+        cmd.Parameters.AddWithValue("@id", importId);
+        cmd.Parameters.AddWithValue("@err", errorMessage);
+        cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>
     /// Inserts an import action (one file operation).
     /// BPM-120 T2: destination_path nullable (skipDuplicate hat kein Ziel);
     /// md5 + file_size fuer Bucket A / Recovery-Verifikation.

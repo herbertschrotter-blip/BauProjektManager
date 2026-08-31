@@ -46,7 +46,13 @@ public class RecoveryExecutorService
     public RecoveryResult ExecuteForward(string importId, string projectRootPath)
     {
         Log.Information("Recovery Forward gestartet fuer Import {Id}", importId);
-        var pending = _db.GetImportActions(importId, statusFilter: "pending");
+        // T6/AK 13: auch 'failed' Actions erneut versuchen — failed ist auf
+        // Action-Ebene nicht terminal, solange kein Rollback/Cleanup entschieden
+        // wurde. Sonst wuerde ein zweiter Forward-Lauf ein Journal mit
+        // unerfuellten Actions faelschlich abschliessen.
+        var pending = _db.GetImportActions(importId)
+            .Where(a => a.ActionStatus is "pending" or "failed")
+            .ToList();
 
         int processed = 0;
         int failed = 0;
@@ -78,9 +84,13 @@ public class RecoveryExecutorService
             }
         }
 
-        var journalSuccess = failed == 0;
-        var journalError = failed > 0 ? $"Recovery Forward: {failed} Aktion(en) fehlgeschlagen." : null;
-        _db.CompleteImportJournal(importId, journalSuccess, journalError);
+        // T6/AK 13: Restfehler -> Journal bleibt 'pending' (erneute Recovery
+        // moeglich, Confirm bleibt blockiert); erst der volle Erfolg completed.
+        if (failed == 0)
+            _db.CompleteImportJournal(importId, success: true);
+        else
+            _db.SetImportJournalError(importId,
+                $"Recovery Forward: {failed} Aktion(en) fehlgeschlagen — erneute Recovery erforderlich");
 
         Log.Information("Recovery Forward fertig: {OK} ok, {Fail} fehler", processed, failed);
         return new RecoveryResult(RecoveryAction.Forward, importId, processed, failed, errors);
@@ -127,15 +137,23 @@ public class RecoveryExecutorService
             }
         }
 
-        // Pending Aktionen ebenfalls als failed markieren (sie wurden nie ausgeführt → einfach Status setzen)
-        var pending = _db.GetImportActions(importId, statusFilter: "pending");
-        foreach (var action in pending)
-            _db.CompleteImportAction(action.Id, success: false, errorMessage: "cancelled by rollback");
-
-        var journalError = failed > 0
-            ? $"Recovery Rollback: {failed} Aktion(en) konnten nicht zurueckgesetzt werden."
-            : "Recovery Rollback erfolgreich.";
-        _db.CompleteImportJournal(importId, success: false, errorMessage: journalError);
+        // T6/AK 13: 'failed' ist erst nach VOLLSTAENDIGEM Rollback terminal.
+        // Scheitert ein Disk-Reverse, bleibt der Vorgang 'pending' (reparierbar)
+        // und wird nicht faelschlich als sauber markiert; pending Actions
+        // bleiben dann ebenfalls unangetastet fuer den naechsten Versuch.
+        if (failed == 0)
+        {
+            var pending = _db.GetImportActions(importId, statusFilter: "pending");
+            foreach (var action in pending)
+                _db.CompleteImportAction(action.Id, success: false, errorMessage: "cancelled by rollback");
+            _db.CompleteImportJournal(importId, success: false,
+                errorMessage: "Recovery Rollback erfolgreich.");
+        }
+        else
+        {
+            _db.SetImportJournalError(importId,
+                $"Recovery Rollback: {failed} Aktion(en) konnten nicht zurueckgesetzt werden — Vorgang bleibt recovery-pflichtig");
+        }
 
         Log.Information("Recovery Rollback fertig: {OK} ok, {Fail} fehler", processed, failed);
         return new RecoveryResult(RecoveryAction.Rollback, importId, processed, failed, errors);

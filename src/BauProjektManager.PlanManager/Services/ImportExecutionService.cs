@@ -166,9 +166,14 @@ public class ImportExecutionService
             }
         }
 
-        // Journal abschliessen
-        _db.CompleteImportJournal(importId, failed == 0,
-            failed > 0 ? $"{failed} Aktionen fehlgeschlagen" : null);
+        // Journal abschliessen (T6/AK 13): mit fehlgeschlagenen Actions bleibt
+        // der Import 'pending' — recovery-pflichtig, blockiert neuen Confirm.
+        // 'failed' ist erst nach vollem Rollback/bewusstem Cleanup terminal.
+        if (failed == 0)
+            _db.CompleteImportJournal(importId, success: true);
+        else
+            _db.SetImportJournalError(importId,
+                $"{failed} Aktionen fehlgeschlagen — Recovery erforderlich");
 
         Log.Information("Import abgeschlossen: {Ok} OK, {Fail} Fehler, {Skip} übersprungen",
             succeeded, failed, skipped);

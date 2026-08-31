@@ -982,6 +982,8 @@ CREATE TABLE import_actions (
     md5 TEXT,                           -- BPM-120 T2: Fingerprint der Quelldatei
                                        -- (Pflichtinhalt bei skipDuplicate — Recovery-Verify P.7)
     file_size INTEGER,                  -- BPM-120 T2: Groesse der Quelldatei
+    document_type_id TEXT,              -- BPM-120 T5: fuer die vollstaendige
+                                       -- Struktur-Herstellung im Recovery Forward (AK 9)
     error_message TEXT,
     FOREIGN KEY (import_id) REFERENCES import_journal(id)
 );
@@ -996,10 +998,10 @@ MD5-Dubletten sind echte Actions (`action_type = 'skipDuplicate'`, `destination_
 NULL, `md5` + `file_size` gesetzt): beim Confirm direktes Delete der Eingangs-Kopie,
 journalisiert + recovery-fähig (ADR-064 P.7), bewusst NICHT undo-bar.
 
-**Schema-Änderung mit BPM-120 T2 (Frühphase, keine Migration):**
+**Schema-Änderung mit BPM-120 T2/T5 (Frühphase, keine Migration):**
 Betroffene Datei: `%LocalAppData%\BauProjektManager\Projects\<ProjektID>\planmanager.db`.
 Aktion: User löscht die Datei → BPM erstellt sie beim nächsten App-Start neu
-(`destination_path` nullable, neue Spalten `md5` + `file_size`).
+(`destination_path` nullable, neue Spalten `md5` + `file_size` + `document_type_id`).
 
 ### 6.6 import_action_files
 

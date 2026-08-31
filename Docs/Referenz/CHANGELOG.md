@@ -31,6 +31,126 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.153] — 2026-08-27
+
+### Refactor: BPM-120 T8 — Fault-/Crash-Matrix
+
+Abschluss-Suite `ImportCrashMatrixTests`: 5 Crash-Punkte einer Update-Action (nach Journal / Archivierung / tmp-Move / finalem Rename / DB-Commit) als Theory — Recovery Forward erreicht aus **jedem** Zwischenzustand denselben Endzustand (Datei am Ziel, genau eine Archivkopie, kein tmp, alte Revision superseded / neue current mit genau einer Datei, Journal completed). Dazu Rollback-aus-C0 (terminal `failed`, Dateien unberührt) und Undo mit scheiterndem Archiv-Restore (DB bleibt auf Import-Endzustand, AK 14). **BPM-120 damit komplett (H0 + T0–T8, alle 15 Akzeptanzkriterien).** (Commit `81b49e8`)
+
+---
+
+## [v0.28.152] — 2026-08-27
+
+### Fix: BPM-120 T7 — Undo-Härtung
+
+CGR-Kernbefund behoben: Scheitert irgendein Disk-Reverse, kehrt `UndoLastImport` sofort zurück — **keine Revision soft-deleted/restored, kein `MarkImportUndone`** (vorher: Disk halb zurück, DB komplett zurück, Import fälschlich „undone"). Abbruch beim ersten Reverse-Fehler (minimale Drift); DB-Rollback + `undone` in **einer** SQLite-Transaction. (Commit `5408dc4`)
+
+---
+
+## [v0.28.151] — 2026-08-27
+
+### Change: BPM-120 T6 — failed/pending-Semantik
+
+`pending` = recovery-pflichtig (AK 13): Ein Import mit fehlgeschlagenen Actions bleibt `pending` (neue `SetImportJournalError`) — blockiert den nächsten Confirm, Recovery-Dialog beim Tab-Öffnen. `failed` erst terminal nach **vollständigem** Rollback oder bewusstem Cleanup; scheitert ein Reverse, bleibt der Vorgang reparierbar. `failed`-Actions sind wiederholbar (Forward verarbeitet pending + failed). (Commit `5c645dd`)
+
+---
+
+## [v0.28.150] — 2026-08-27
+
+### Change: BPM-120 T5 — Recovery Forward über gemeinsamen Apply-Pfad
+
+`RecoveryExecutorService` verliert seine vereinfachte Move-Eigenlogik: Forward läuft über `ImportExecutionService.RecoverActionForward` — idempotenter Disk-Forward (Archiv-Guard = nie zweite Archivkopie, source/tmp/target-Fälle) + derselbe DB-Apply wie der Import (AK 8/9/11/12). Journal um `document_type_id` erweitert (+ `ImportActionRow` trägt DocumentKey/PlanNumber/PlanIndex) → Recovery stellt die volle Dokument-Struktur her. **planmanager.db-Reset.** (Commit `f90b599`)
+
+---
+
+## [v0.28.149] — 2026-08-27
+
+### Change: BPM-120 T4 — DB-Transaction pro Action
+
+Disk-Phase komplett vor DB-Phase; alle fachlichen Writes + `action_status = completed` laufen in **derselben** SQLite-Transaction (`ExecuteInTransaction` via BEGIN IMMEDIATE — Microsoft.Data.Sqlite erzwingt sonst cmd.Transaction überall). Supersede in die Transaction verlegt. `ApplyActionToDatabase` = gemeinsamer Apply-Pfad mit Already-Linked-Guard (idempotenter Re-Apply). Injizierter DB-Fehler rollt Document/Revision/File und sogar den Supersede zurück (AK 10). (Commit `264e696`)
+
+---
+
+## [v0.28.148] — 2026-08-27
+
+### Change: BPM-120 T3 — ADR-061-Disk-Protokoll
+
+Publish-Move zweistufig: Inbox → `<ziel>.bpm_tmp` → atomarer Rename im Zielverzeichnis (Crash hinterlässt nur eine tmp-Datei, nie ein halbes Ziel). `WithLockRetry`: max. 3 Versuche bei Lock-/Sharing-IOExceptions (nicht bei FileNotFound) für Publish/Archiv/Delete. Recovery holt den finalen Rename nach tmp-Crash idempotent nach (AK 7). (Commit `7da97a9`)
+
+---
+
+## [v0.28.147] — 2026-08-27
+
+### Change: BPM-111 — document_key ID-basiert (Abnahmepunkt erfüllt)
+
+`BuildManualDocumentKey` baut den Key jetzt aus Stammdaten-IDs: `document_type_id | plannummer | building_part_id/category_id [| building_level_id]` — umbenennungsstabil (ADR-059 P.3). `PendingAssignment` trägt die IDs (neue Controller-Properties `SelectedBuildingLevel`/`SelectedCategory`). **BPM-111 damit komplett** (alle 7 Subtasks + Abnahmepunkt). (Commit `45b82ea`)
+
+---
+
+## [v0.28.146] — 2026-08-27
+
+### Docs: DB-SCHEMA — import_actions T2-Nachzug
+
+Kap. 6.5 auf Ist-Stand: `destination_path` nullable, neue Spalten `md5`/`file_size`, `action_type` `skipDuplicate`, Vorab-Journalisierungs-Absatz + Reset-Anweisung nach Frühphasen-Regel. (Commit `a41a627`)
+
+---
+
+## [v0.28.145] — 2026-08-27
+
+### Refactor: BPM-123 — Test-DBs nach Temp
+
+`PlanManagerDatabase` bekommt `dbPathOverride` (Muster `ProjectDatabase`); alle 11 Test-Fixtures nutzen den neuen `TempDb`-Helfer → Test-Datenbanken liegen unter `%TEMP%` statt im echten `%LocalAppData%\BauProjektManager\Projects\` (dort hatten sich seit Mai 31 Müll-Ordner aus Testläufen angesammelt — aufgeräumt, PersistenceRegistry/DevTools wieder sauber). Nachweis: kompletter Suite-Lauf erzeugt 0 neue Ordner. (Commit `834ebf4`)
+
+---
+
+## [v0.28.144] — 2026-08-27
+
+### Change: BPM-120 T2 — Vorab-Journalisierung + skipDuplicate (Bucket A)
+
+`Execute` zweiphasig: Phase 1 plant alle Actions (inkl. deterministischem `archive_path`) und journalisiert Header + **alle** Actions vor der ersten Mutation (AK 4/5, bewiesen per Probe-Writer); Phase 2 führt aus. Bestätigte MD5-Dubletten sind echte `skipDuplicate`-Actions (Source, MD5, Größe, kein Ziel) und werden beim Radial-Confirm gelöscht — „✓ N importiert · M Dublette(n) entfernt" (AK 6). Undo-/Recovery-Guards nach ADR-064 P.7 (MD5-Bestandscheck, „RecoveryConflict, nie blind completed"). Schema: `destination_path` nullable + `md5`/`file_size` → **planmanager.db-Reset**. (Commit `b26a9b7`)
+
+---
+
+## [v0.28.143] — 2026-08-27
+
+### Fix: BPM-122 — Bulk-Warnung hängt nach Abwahl
+
+Praxis-Test-Befund: ⚠/⛔-Hinweise aus der Bulk-Vorprüfung blieben in der Statuszeile stehen. Jetzt gelten sie nur für die Auswahl, mit der das Radial gestartet wurde — bei Auswahländerung kehrt die neutrale Zusammenfassung zurück; andere Meldungen bleiben unberührt. (Commit `d0d802c`)
+
+---
+
+## [v0.28.142] — 2026-08-27
+
+### Refactor: BPM-120 T1 — FS-Ports im Importpfad
+
+`ImportExecutionService`, `RecoveryExecutorService`, `ImportUndoService` komplett auf `IFileSystemReader`/`IFileSystemWriter`/`IPathService` (kein `File.`/`Directory.` mehr im Hochrisikopfad); `CaptureConfirmService` bekommt den Executor per Constructor Injection statt internem `new` (CGR-Befund). `FakeFileStore` fault-fähig (`FailNext`). Schließt **BPM-112.03** mit ab (ADR-060 Slice 3). (Commit `05551df`)
+
+---
+
+## [v0.28.141] — 2026-08-27
+
+### Refactor: BPM-120 T0 — Characterization-Tests + Flaky-Fix
+
+Ist-Verhalten des Importpfads gepinnt (New-/Update-Happy-Path inkl. Journal-Asserts, Zeitinvariante `superseded_at == current_from` erstmals E2E, Datenverlust-Schutz bei Namenskollision) — bekannte Fehler bewusst NICHT als Soll. Flaky-Ursache gefunden + behoben: globales `SqliteConnection.ClearAllPools()` in 14 Test-Disposes riss unter xunit-Parallellast fremde Pools mit → gezieltes `ClearPool`. (Commit `af430cb`)
+
+---
+
+## [v0.28.140] — 2026-08-27
+
+### Change: BPM-120 H0 — Alt-Import-Cutover
+
+„Import starten"/`OnStartImport`/`ImportPreviewDialog` aus dem V1-Nutzerpfad entfernt (ADR-064 P.9) — der Radial-/Bucket-Workflow ist der einzige V1-Importweg. Der Recovery-Einstieg (BPM-016) hängt jetzt an der Radial-Strecke: proaktiv beim Tab-Öffnen + Fallback beim blockierten Bestätigen (Event `RecoveryRequested`). Legacy-Klassen bleiben unreferenziert im Repo. (Commit `6d5d44d`)
+
+---
+
+## [v0.28.139] — 2026-08-27
+
+### Docs: CHANGELOG-Nachzug v0.28.136–.138
+
+Einträge für ADR-064/065-Verankerung + CGR-Abschlüsse + BPM-121 nachgezogen. (Commit `23d8acb`)
+
+---
+
 ## [v0.28.138] — 2026-08-27
 
 ### Docs: ADR-065 Lernende Planerkennung + CGR-2026-08-27-plan-erkennung Abschluss

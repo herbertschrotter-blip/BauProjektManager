@@ -3021,7 +3021,7 @@ Die Plan-Vorschau (BPM-111.06) braucht In-App-PDF-Rendering; die Spez (Mockup 02
 
 **Datum:** 2026-08-27
 **Status:** ✅ Entschieden (beidseitiges Sign-off via CGR-2026-08-27-bpm-architektur r3: ChatGPT GPT-5.4 + Claude + Herbert)
-**Implementierung:** Not Started — ClickUp **BPM-120** (Slices H0 + T0–T8, 15 Akzeptanzkriterien im Ticket); BPM-112 Slice 3 (= BPM-112.03) wird als T1 miterledigt. Start nach BPM-111.06 (done), Empfehlung: vor weiteren Slices auf dem mutierenden Importpfad.
+**Implementierung:** ✅ **Umgesetzt** (Teil 49, v0.28.140–.153, Commits `6d5d44d`…`81b49e8`) — ClickUp **BPM-120** komplett: Slices H0 + T0–T8, alle 15 Akzeptanzkriterien testverifiziert (u. a. Crash-Matrix `ImportCrashMatrixTests`: 5 Crash-Punkte × Forward/Rollback/Undo mit Endzustands-Äquivalenz). BPM-112 Slice 3 (= BPM-112.03) mit T1 miterledigt; ADR-061 P5 damit im Importpfad umgesetzt. Journal zusätzlich um `md5`/`file_size`/`document_type_id` erweitert (Recovery-Verifikation + vollständige Struktur-Herstellung).
 **Herkunft:** Review einer externen ChatGPT-12-Diagramm-Analyse des Gesamtprojekts, 3 Runden Cross-Review mit Code-Verifikation (Stand v0.28.120). Auslöser: Der Crash-Korridor zwischen Dateisystem-Mutation und `planmanager.db`-Update ist der größte offene technische Befund vor V1.
 
 **Kontext:**

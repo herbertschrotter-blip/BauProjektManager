@@ -80,6 +80,10 @@ public sealed class LocalFileSystem : IFileSystemReader, IFileSystemWriter, IPat
 
     public string GetFileName(string path) => Path.GetFileName(path);
 
+    public string ReadAllText(string path) => File.ReadAllText(path);
+
+    public void WriteAllText(string path, string content) => File.WriteAllText(path, content);
+
     public string GetExtension(string path) => Path.GetExtension(path);
 
     public string GetFileNameWithoutExtension(string path) => Path.GetFileNameWithoutExtension(path);

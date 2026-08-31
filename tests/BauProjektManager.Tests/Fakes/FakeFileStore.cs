@@ -16,7 +16,7 @@ namespace BauProjektManager.Tests.Fakes;
 public sealed class FakeFileStore : IFileSystemReader, IFileSystemWriter, IPathService
 {
     /// <summary>Dateioperationen, auf die per <see cref="FailNext"/> Fehler injiziert werden koennen.</summary>
-    public enum FileOp { Move, Copy, Delete, CreateDirectory, OpenRead }
+    public enum FileOp { Move, Copy, Delete, CreateDirectory, OpenRead, Write }
 
     private sealed class FaultRule
     {
@@ -119,7 +119,26 @@ public sealed class FakeFileStore : IFileSystemReader, IFileSystemWriter, IPathS
         return new MemoryStream(bytes, writable: false);
     }
 
+    public string ReadAllText(string path)
+    {
+        var norm = Norm(path);
+        ThrowIfFault(FileOp.OpenRead, norm);
+        if (!_files.TryGetValue(norm, out var bytes))
+            throw new FileNotFoundException("Datei nicht im Fake-Store.", norm);
+        return System.Text.Encoding.UTF8.GetString(bytes);
+    }
+
     // --- IFileSystemWriter ---
+
+    public void WriteAllText(string path, string content)
+    {
+        var norm = Norm(path);
+        ThrowIfFault(FileOp.Write, norm);
+        // Verhaltenstreue: File.WriteAllText verlangt ein existierendes Verzeichnis.
+        RequireDestinationDirectory(norm);
+        _files[norm] = System.Text.Encoding.UTF8.GetBytes(content);
+        _times[norm] = SeedTime;
+    }
 
     public void CreateDirectory(string path)
     {

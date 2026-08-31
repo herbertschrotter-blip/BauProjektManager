@@ -3,6 +3,7 @@ using System.Text.Json;
 using BauProjektManager.Domain.Enums.PlanManager;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models.PlanManager;
+using BauProjektManager.Infrastructure.Services;
 using BauProjektManager.PlanManager.Services;
 
 namespace BauProjektManager.Tests;
@@ -50,7 +51,9 @@ public class ProfileHealthTests : IDisposable
         _profilesDir = Path.Combine(_tempRoot, ".bpm", "profiles");
         Directory.CreateDirectory(_profilesDir);
         _catalog = new FakeCatalog();
-        _sut = new ProfileManager(new StubIdGenerator(), persistenceRegistry: null, segmentTypeCatalog: _catalog);
+        var fs = new LocalFileSystem();
+        _sut = new ProfileManager(new StubIdGenerator(), fs, fs, fs,
+            persistenceRegistry: null, segmentTypeCatalog: _catalog);
     }
 
     public void Dispose()
@@ -161,7 +164,8 @@ public class ProfileHealthTests : IDisposable
     public void Load_WithoutCatalog_HealthAlwaysValid()
     {
         // ProfileManager ohne Catalog → keine Health-Berechnung
-        var managerOhneCatalog = new ProfileManager(new StubIdGenerator());
+        var fs2 = new LocalFileSystem();
+        var managerOhneCatalog = new ProfileManager(new StubIdGenerator(), fs2, fs2, fs2);
         WriteProfile("PROF-1.json", ProfileWithSegment);
 
         var profile = managerOhneCatalog.LoadById(_tempRoot, "PROF-1");

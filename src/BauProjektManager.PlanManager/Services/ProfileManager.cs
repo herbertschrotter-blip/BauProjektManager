@@ -1,4 +1,3 @@
-using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using BauProjektManager.Domain.Enums;
@@ -33,6 +32,9 @@ public class ProfileManager : IProfileManager
     private readonly IIdGenerator _idGenerator;
     private readonly IPersistenceRegistry? _persistenceRegistry;
     private readonly ISegmentTypeCatalog? _segmentTypeCatalog;
+    private readonly IFileSystemReader _reader;
+    private readonly IFileSystemWriter _writer;
+    private readonly IPathService _path;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -42,12 +44,17 @@ public class ProfileManager : IProfileManager
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
     };
 
+    // BPM-112.01 (ADR-060 Slice 1): Profil-JSON-Persistenz laeuft ueber die FS-Ports.
     public ProfileManager(
         IIdGenerator idGenerator,
+        IFileSystemReader reader, IFileSystemWriter writer, IPathService path,
         IPersistenceRegistry? persistenceRegistry = null,
         ISegmentTypeCatalog? segmentTypeCatalog = null)
     {
         _idGenerator = idGenerator;
+        _reader = reader;
+        _writer = writer;
+        _path = path;
         _persistenceRegistry = persistenceRegistry;
         _segmentTypeCatalog = segmentTypeCatalog;
     }
@@ -56,10 +63,10 @@ public class ProfileManager : IProfileManager
     /// Returns the .bpm/profiles/ directory path for a project.
     /// Creates the directory if it does not exist.
     /// </summary>
-    private static string GetProfilesDirectory(string projectRootPath)
+    private string GetProfilesDirectory(string projectRootPath)
     {
-        var dir = Path.Combine(projectRootPath, ".bpm", "profiles");
-        Directory.CreateDirectory(dir);
+        var dir = _path.Combine(projectRootPath, ".bpm", "profiles");
+        _writer.CreateDirectory(dir);
         return dir;
     }
 
@@ -77,11 +84,11 @@ public class ProfileManager : IProfileManager
         var dir = GetProfilesDirectory(projectRootPath);
         var profiles = new List<RecognitionProfile>();
 
-        foreach (var file in Directory.GetFiles(dir, "*.json"))
+        foreach (var file in _reader.EnumerateFiles(dir, "*.json"))
         {
             try
             {
-                var json = File.ReadAllText(file);
+                var json = _reader.ReadAllText(file);
                 var profile = JsonSerializer.Deserialize<RecognitionProfile>(json, JsonOptions);
                 if (profile is null)
                     continue;
@@ -118,16 +125,16 @@ public class ProfileManager : IProfileManager
     /// </summary>
     public RecognitionProfile? LoadById(string projectRootPath, string profileId)
     {
-        var filePath = Path.Combine(GetProfilesDirectory(projectRootPath),
+        var filePath = _path.Combine(GetProfilesDirectory(projectRootPath),
             $"{profileId}.json");
 
-        if (!File.Exists(filePath))
+        if (!_reader.FileExists(filePath))
         {
             Log.Warning("Profil nicht gefunden: {Id}", profileId);
             return null;
         }
 
-        var json = File.ReadAllText(filePath);
+        var json = _reader.ReadAllText(filePath);
         var profile = JsonSerializer.Deserialize<RecognitionProfile>(json, JsonOptions);
         if (profile is null)
             return null;
@@ -295,13 +302,13 @@ public class ProfileManager : IProfileManager
         profile.UpdatedAt = now;
 
         var dir = GetProfilesDirectory(projectRootPath);
-        var filePath = Path.Combine(dir, $"{profile.Id}.json");
+        var filePath = _path.Combine(dir, $"{profile.Id}.json");
 
         // Atomic write: temp file → replace
         var tempPath = filePath + ".tmp";
         var json = JsonSerializer.Serialize(profile, JsonOptions);
-        File.WriteAllText(tempPath, json);
-        File.Move(tempPath, filePath, overwrite: true);
+        _writer.WriteAllText(tempPath, json);
+        _writer.MoveFile(tempPath, filePath, overwrite: true);
 
         // BPM-107: registriere bei IPersistenceRegistry
         _persistenceRegistry?.Register(new PersistenceEntry(
@@ -320,16 +327,16 @@ public class ProfileManager : IProfileManager
     /// </summary>
     public bool Delete(string projectRootPath, string profileId)
     {
-        var filePath = Path.Combine(GetProfilesDirectory(projectRootPath),
+        var filePath = _path.Combine(GetProfilesDirectory(projectRootPath),
             $"{profileId}.json");
 
-        if (!File.Exists(filePath))
+        if (!_reader.FileExists(filePath))
         {
             Log.Warning("Profil zum Loeschen nicht gefunden: {Id}", profileId);
             return false;
         }
 
-        File.Delete(filePath);
+        _writer.DeleteFile(filePath);
         _persistenceRegistry?.Unregister(filePath);
         Log.Information("Profil geloescht: {Id}", profileId);
         return true;

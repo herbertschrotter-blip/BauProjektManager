@@ -1,4 +1,3 @@
-using System.IO;
 using System.Text.Json;
 using BauProjektManager.Domain.Interfaces;
 using Serilog;
@@ -19,23 +18,36 @@ public class ProfileArchiveService : IProfileArchiveService
         CommentHandling = JsonCommentHandling.Skip
     };
 
+    private readonly IFileSystemReader _reader;
+    private readonly IFileSystemWriter _writer;
+    private readonly IPathService _path;
+
+    // BPM-112.01 (ADR-060 Slice 1): Archiv-Moves laufen ueber die FS-Ports.
+    public ProfileArchiveService(
+        IFileSystemReader reader, IFileSystemWriter writer, IPathService path)
+    {
+        _reader = reader;
+        _writer = writer;
+        _path = path;
+    }
+
     /// <inheritdoc />
     public int ArchiveOutdatedProfiles(string projectRootPath)
     {
-        var profilesDir = Path.Combine(projectRootPath, ".bpm", "profiles");
-        if (!Directory.Exists(profilesDir))
+        var profilesDir = _path.Combine(projectRootPath, ".bpm", "profiles");
+        if (!_reader.DirectoryExists(profilesDir))
         {
             Log.Information("ProfileArchiveService: kein profiles-Verzeichnis in {Root} — nichts zu tun.", projectRootPath);
             return 0;
         }
 
-        var archiveDir = Path.Combine(
+        var archiveDir = _path.Combine(
             profilesDir,
             "_archiv",
             $"schema-reset-{DateTime.UtcNow:yyyyMMdd-HHmmss}");
 
         int moved = 0;
-        foreach (var file in Directory.GetFiles(profilesDir, "*.json"))
+        foreach (var file in _reader.EnumerateFiles(profilesDir, "*.json"))
         {
             var version = TryReadSchemaVersion(file);
             if (version == ProfileManager.CurrentSchemaVersion)
@@ -43,12 +55,12 @@ public class ProfileArchiveService : IProfileArchiveService
 
             try
             {
-                Directory.CreateDirectory(archiveDir);
-                var target = Path.Combine(archiveDir, Path.GetFileName(file));
-                File.Move(file, target);
+                _writer.CreateDirectory(archiveDir);
+                var target = _path.Combine(archiveDir, _path.GetFileName(file));
+                _writer.MoveFile(file, target);
                 moved++;
                 Log.Information("ProfileArchiveService: archiviert {File} (SchemaVersion={Version}) → {Target}",
-                    Path.GetFileName(file), version, target);
+                    _path.GetFileName(file), version, target);
             }
             catch (Exception ex)
             {
@@ -63,8 +75,8 @@ public class ProfileArchiveService : IProfileArchiveService
     /// <inheritdoc />
     public bool ArchiveOutdatedPatternTemplates(string appDataCloudSharedPath)
     {
-        var filePath = Path.Combine(appDataCloudSharedPath, "pattern-templates.json");
-        if (!File.Exists(filePath))
+        var filePath = _path.Combine(appDataCloudSharedPath, "pattern-templates.json");
+        if (!_reader.FileExists(filePath))
         {
             Log.Information("ProfileArchiveService: keine pattern-templates.json in {Path} — nichts zu tun.", appDataCloudSharedPath);
             return false;
@@ -77,16 +89,16 @@ public class ProfileArchiveService : IProfileArchiveService
             return false;
         }
 
-        var archiveDir = Path.Combine(
+        var archiveDir = _path.Combine(
             appDataCloudSharedPath,
             "_archiv",
             $"schema-reset-{DateTime.UtcNow:yyyyMMdd-HHmmss}");
 
         try
         {
-            Directory.CreateDirectory(archiveDir);
-            var target = Path.Combine(archiveDir, "pattern-templates.json");
-            File.Move(filePath, target);
+            _writer.CreateDirectory(archiveDir);
+            var target = _path.Combine(archiveDir, "pattern-templates.json");
+            _writer.MoveFile(filePath, target);
             Log.Information("ProfileArchiveService: pattern-templates.json archiviert → {Target}", target);
             return true;
         }
@@ -101,11 +113,11 @@ public class ProfileArchiveService : IProfileArchiveService
     /// Liest nur das Feld <c>schemaVersion</c> aus einer Profil-JSON. Bei Fehlern liefert
     /// -1, damit der Aufrufer die Datei als veraltet behandelt.
     /// </summary>
-    private static int TryReadSchemaVersion(string filePath)
+    private int TryReadSchemaVersion(string filePath)
     {
         try
         {
-            using var stream = File.OpenRead(filePath);
+            using var stream = _reader.OpenRead(filePath);
             using var doc = JsonDocument.Parse(stream, JsonDocOptions);
             if (doc.RootElement.TryGetProperty("schemaVersion", out var versionEl)
                 && versionEl.ValueKind == JsonValueKind.Number)
@@ -123,11 +135,11 @@ public class ProfileArchiveService : IProfileArchiveService
     /// <summary>
     /// Prueft ob alle Templates in <c>pattern-templates.json</c> die aktuelle Schema-Version haben.
     /// </summary>
-    private static bool AllTemplatesCurrent(string filePath)
+    private bool AllTemplatesCurrent(string filePath)
     {
         try
         {
-            using var stream = File.OpenRead(filePath);
+            using var stream = _reader.OpenRead(filePath);
             using var doc = JsonDocument.Parse(stream, JsonDocOptions);
             if (doc.RootElement.ValueKind != JsonValueKind.Array)
                 return false;

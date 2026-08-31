@@ -156,13 +156,25 @@ public partial class App : Application
         sc.AddSingleton<SegmentTypeSeedService>();
         sc.AddSingleton<ISegmentTypeCatalog, SegmentTypeCatalog>();
 
+        // BPM-112.01 (ADR-060): EINE LocalFileSystem-Instanz bedient alle drei FS-Ports.
+        sc.AddSingleton<LocalFileSystem>();
+        sc.AddSingleton<IFileSystemReader>(sp => sp.GetRequiredService<LocalFileSystem>());
+        sc.AddSingleton<IFileSystemWriter>(sp => sp.GetRequiredService<LocalFileSystem>());
+        sc.AddSingleton<IPathService>(sp => sp.GetRequiredService<LocalFileSystem>());
+
         sc.AddSingleton<IProfileManager>(sp => new ProfileManager(
             sp.GetRequiredService<IIdGenerator>(),
+            sp.GetRequiredService<IFileSystemReader>(),
+            sp.GetRequiredService<IFileSystemWriter>(),
+            sp.GetRequiredService<IPathService>(),
             sp.GetService<IPersistenceRegistry>(),
             sp.GetService<ISegmentTypeCatalog>()));
 
         // BPM-108 Phase B: DevTool-Befehl fuer Schema-v4-Reset
-        sc.AddSingleton<IProfileArchiveService, ProfileArchiveService>();
+        sc.AddSingleton<IProfileArchiveService>(sp => new ProfileArchiveService(
+            sp.GetRequiredService<IFileSystemReader>(),
+            sp.GetRequiredService<IFileSystemWriter>(),
+            sp.GetRequiredService<IPathService>()));
 
         var logDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),

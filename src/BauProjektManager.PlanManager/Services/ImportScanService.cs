@@ -1,4 +1,4 @@
-using System.IO;
+using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models.PlanManager;
 using Serilog;
 
@@ -8,6 +8,7 @@ namespace BauProjektManager.PlanManager.Services;
 /// Scans the _Eingang/ folder recursively for plan files.
 /// Step 1 of the 7-stage analysis pipeline.
 /// Returns ScannedFile records with filesystem metadata.
+/// BPM-112.01 (ADR-060 Slice 1): laeuft komplett ueber die FS-Ports.
 /// </summary>
 public class ImportScanService
 {
@@ -15,6 +16,15 @@ public class ImportScanService
     {
         ".pdf", ".dwg", ".dxf", ".jpg", ".jpeg", ".png", ".tif", ".tiff"
     };
+
+    private readonly IFileSystemReader _reader;
+    private readonly IPathService _path;
+
+    public ImportScanService(IFileSystemReader reader, IPathService path)
+    {
+        _reader = reader;
+        _path = path;
+    }
 
     /// <summary>
     /// Scans the inbox folder recursively.
@@ -25,9 +35,9 @@ public class ImportScanService
         string inboxRelativePath,
         CancellationToken ct = default)
     {
-        var inboxPath = Path.Combine(projectRootPath, inboxRelativePath);
+        var inboxPath = _path.Combine(projectRootPath, inboxRelativePath);
 
-        if (!Directory.Exists(inboxPath))
+        if (!_reader.DirectoryExists(inboxPath))
         {
             Log.Warning("Eingang nicht gefunden: {Path}", inboxPath);
             return [];
@@ -37,24 +47,23 @@ public class ImportScanService
 
         await Task.Run(() =>
         {
-            foreach (var filePath in Directory.EnumerateFiles(
-                inboxPath, "*", SearchOption.AllDirectories))
+            foreach (var filePath in _reader.EnumerateFiles(inboxPath, "*", recursive: true))
             {
                 ct.ThrowIfCancellationRequested();
 
-                var ext = Path.GetExtension(filePath);
+                var ext = _path.GetExtension(filePath);
                 if (!SupportedExtensions.Contains(ext))
                     continue;
 
-                var fileInfo = new FileInfo(filePath);
-                var relativePath = Path.GetRelativePath(projectRootPath, filePath);
+                var info = _reader.GetFileInfo(filePath);
+                var relativePath = _path.GetRelativePath(projectRootPath, filePath);
 
                 files.Add(new ScannedFile(
                     RelativePath: relativePath,
-                    FileName: fileInfo.Name,
+                    FileName: _path.GetFileName(filePath),
                     Extension: ext.ToLowerInvariant(),
-                    FileSize: fileInfo.Length,
-                    LastWriteTimeUtc: fileInfo.LastWriteTimeUtc));
+                    FileSize: info.Length,
+                    LastWriteTimeUtc: info.LastWriteTimeUtc));
             }
         }, ct);
 

@@ -80,6 +80,7 @@ public class ImportExecutionPreJournalTests
         public void MoveFile(string s, string d, bool overwrite = false) { Record(); inner.MoveFile(s, d, overwrite); }
         public void CopyFile(string s, string d, bool overwrite = false) { Record(); inner.CopyFile(s, d, overwrite); }
         public void DeleteFile(string path) { Record(); inner.DeleteFile(path); }
+        public void WriteAllText(string path, string content) { Record(); inner.WriteAllText(path, content); }
     }
 
     private static PendingAssignment NewPending(string fileName, string md5, string planNumber)

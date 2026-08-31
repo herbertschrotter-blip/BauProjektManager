@@ -14,8 +14,11 @@ namespace BauProjektManager.PlanManager.Services;
 /// </summary>
 public class ImportWorkflowService
 {
-    private readonly ImportScanService _scan = new();
-    private readonly FileFingerprintService _fingerprint = new();
+    // BPM-112.01: Ports-Ctors — Legacy-Service (seit H0 nicht mehr im V1-Pfad)
+    // bleibt pragmatisch auf der echten Disk.
+    private static readonly Infrastructure.Services.LocalFileSystem _fs = new();
+    private readonly ImportScanService _scan = new(_fs, _fs);
+    private readonly FileFingerprintService _fingerprint = new(_fs, _fs);
     private readonly FileParseService _parse = new();
     private readonly ImportContextResolver _resolver = new();
     private readonly DocumentKeyBuilder _keyBuilder = new();

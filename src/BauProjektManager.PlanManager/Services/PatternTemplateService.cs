@@ -1,4 +1,3 @@
-using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using BauProjektManager.Domain.Enums;
@@ -25,6 +24,9 @@ public class PatternTemplateService
 
     private readonly IIdGenerator _idGenerator;
     private readonly IPersistenceRegistry? _persistenceRegistry;
+    private readonly IFileSystemReader _reader;
+    private readonly IFileSystemWriter _writer;
+    private readonly IPathService _path;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -34,9 +36,16 @@ public class PatternTemplateService
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
     };
 
-    public PatternTemplateService(IIdGenerator idGenerator, IPersistenceRegistry? persistenceRegistry = null)
+    // BPM-112.01 (ADR-060 Slice 1): JSON-Persistenz laeuft ueber die FS-Ports.
+    public PatternTemplateService(
+        IIdGenerator idGenerator,
+        IFileSystemReader reader, IFileSystemWriter writer, IPathService path,
+        IPersistenceRegistry? persistenceRegistry = null)
     {
         _idGenerator = idGenerator;
+        _reader = reader;
+        _writer = writer;
+        _path = path;
         _persistenceRegistry = persistenceRegistry;
     }
 
@@ -50,12 +59,12 @@ public class PatternTemplateService
     public List<PatternTemplate> LoadAll(string appDataPath)
     {
         var filePath = GetFilePath(appDataPath);
-        if (!File.Exists(filePath))
+        if (!_reader.FileExists(filePath))
             return [];
 
         try
         {
-            var json = File.ReadAllText(filePath);
+            var json = _reader.ReadAllText(filePath);
             var templates = JsonSerializer.Deserialize<List<PatternTemplate>>(json, JsonOptions);
             if (templates is null) return [];
 
@@ -88,11 +97,11 @@ public class PatternTemplateService
     public void SaveAll(string appDataPath, List<PatternTemplate> templates)
     {
         var filePath = GetFilePath(appDataPath);
-        Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+        _writer.CreateDirectory(_path.GetDirectoryName(filePath)!);
         var tempPath = filePath + ".tmp";
         var json = JsonSerializer.Serialize(templates, JsonOptions);
-        File.WriteAllText(tempPath, json);
-        File.Move(tempPath, filePath, overwrite: true);
+        _writer.WriteAllText(tempPath, json);
+        _writer.MoveFile(tempPath, filePath, overwrite: true);
 
         // BPM-107: registriere bei IPersistenceRegistry
         _persistenceRegistry?.Register(new PersistenceEntry(
@@ -164,8 +173,8 @@ public class PatternTemplateService
             .ToList();
     }
 
-    private static string GetFilePath(string appDataPath)
+    private string GetFilePath(string appDataPath)
     {
-        return Path.Combine(appDataPath, "pattern-templates.json");
+        return _path.Combine(appDataPath, "pattern-templates.json");
     }
 }

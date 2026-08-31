@@ -18,15 +18,24 @@ namespace BauProjektManager.PlanManager.Services;
 /// </summary>
 public class ManualFirstCaptureService
 {
-    private readonly ImportScanService _scan = new();
-    private readonly FileFingerprintService _fingerprint = new();
+    private readonly ImportScanService _scan;
+    private readonly FileFingerprintService _fingerprint;
     private readonly LightweightPlanExtractor _extractor = new();
     private static readonly IPlanValueNormalizer _normalizer = new PlanValueNormalizer();
     private readonly PlanManagerDatabase _db;
 
-    public ManualFirstCaptureService(PlanManagerDatabase db)
+    // BPM-112.01: Scanner/Fingerprint laufen ueber die FS-Ports. Default =
+    // LocalFileSystem (echte Disk) — Tests koennen den FakeFileStore reichen.
+    public ManualFirstCaptureService(
+        PlanManagerDatabase db,
+        IFileSystemReader? reader = null, IPathService? path = null)
     {
         _db = db;
+        var fs = new LocalFileSystem();
+        var effectiveReader = reader ?? fs;
+        var effectivePath = path ?? fs;
+        _scan = new ImportScanService(effectiveReader, effectivePath);
+        _fingerprint = new FileFingerprintService(effectiveReader, effectivePath);
     }
 
     /// <summary>

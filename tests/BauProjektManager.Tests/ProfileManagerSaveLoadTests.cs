@@ -2,6 +2,7 @@ using System.IO;
 using System.Text.Json;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models.PlanManager;
+using BauProjektManager.Infrastructure.Services;
 using BauProjektManager.PlanManager.Services;
 
 namespace BauProjektManager.Tests;
@@ -32,7 +33,8 @@ public class ProfileManagerSaveLoadTests : IDisposable
             Path.GetTempPath(),
             "bpm-tests-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_tempRoot);
-        _sut = new ProfileManager(new FixedIdGenerator("TEST-ID-01"));
+        var fs = new LocalFileSystem();
+        _sut = new ProfileManager(new FixedIdGenerator("TEST-ID-01"), fs, fs, fs);
     }
 
     public void Dispose()

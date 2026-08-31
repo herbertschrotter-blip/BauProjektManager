@@ -55,6 +55,41 @@ public abstract class FileSystemPortsContractTests
         Assert.False(Reader.FileExists(Path.Combine(Root, "gibtsnicht.txt")));
     }
 
+    // --- ReadAllText / WriteAllText (BPM-112.01, JSON-Konfigs) ---
+
+    [Fact]
+    public void WriteAllText_ReadAllText_RoundtripsUtf8()
+    {
+        Writer.CreateDirectory(Root);
+        var file = Path.Combine(Root, "konfig.json");
+
+        Writer.WriteAllText(file, "{\"name\":\"Pläne ÄÖÜ\"}");
+
+        Assert.True(Reader.FileExists(file));
+        Assert.Equal("{\"name\":\"Pläne ÄÖÜ\"}", Reader.ReadAllText(file));
+    }
+
+    [Fact]
+    public void WriteAllText_OverwritesExistingContent()
+    {
+        Writer.CreateDirectory(Root);
+        var file = Path.Combine(Root, "konfig2.json");
+        Writer.WriteAllText(file, "alt");
+
+        Writer.WriteAllText(file, "neu");
+
+        Assert.Equal("neu", Reader.ReadAllText(file));
+    }
+
+    [Fact]
+    public void WriteAllText_MissingDirectory_Throws()
+    {
+        var file = Path.Combine(Root, "fehlt", "konfig.json");
+
+        Assert.Throws<DirectoryNotFoundException>(
+            () => Writer.WriteAllText(file, "x"));
+    }
+
     // --- Move ---
 
     [Fact]

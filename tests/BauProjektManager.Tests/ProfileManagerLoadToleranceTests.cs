@@ -1,5 +1,6 @@
 using System.IO;
 using BauProjektManager.Domain.Interfaces;
+using BauProjektManager.Infrastructure.Services;
 using BauProjektManager.PlanManager.Services;
 
 namespace BauProjektManager.Tests;
@@ -32,7 +33,8 @@ public class ProfileManagerLoadToleranceTests : IDisposable
         Directory.CreateDirectory(_tempRoot);
         _profilesDir = Path.Combine(_tempRoot, ".bpm", "profiles");
         Directory.CreateDirectory(_profilesDir);
-        _sut = new ProfileManager(new StubIdGenerator());
+        var fs = new LocalFileSystem();
+        _sut = new ProfileManager(new StubIdGenerator(), fs, fs, fs);
     }
 
     public void Dispose()

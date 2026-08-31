@@ -1,4 +1,5 @@
 using System.IO;
+using BauProjektManager.Infrastructure.Services;
 using BauProjektManager.PlanManager.Services;
 
 namespace BauProjektManager.Tests;
@@ -11,7 +12,8 @@ public class ProfileArchiveServiceTests : IDisposable
 {
     private readonly string _tempRoot;
     private readonly string _profilesDir;
-    private readonly ProfileArchiveService _sut = new();
+    private static readonly LocalFileSystem Fs = new();
+    private readonly ProfileArchiveService _sut = new(Fs, Fs, Fs);
 
     public ProfileArchiveServiceTests()
     {

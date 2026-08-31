@@ -1,10 +1,11 @@
 namespace BauProjektManager.Domain.Interfaces;
 
 /// <summary>
-/// Schreibender Dateisystem-Port (ADR-060, BPM-112). Bewusst schmal: BPM erzeugt
-/// keine Dateiinhalte, sondern legt Ordner an und verschiebt/kopiert/loescht
-/// vorhandene Dateien (Import aus dem Eingang). Kein WriteAllBytes — Inhalte
-/// kommen von aussen (der Nutzer legt Dateien ab).
+/// Schreibender Dateisystem-Port (ADR-060, BPM-112). Bewusst schmal: fuer
+/// PLANDATEIEN erzeugt BPM keine Inhalte, sondern legt Ordner an und
+/// verschiebt/kopiert/loescht vorhandene Dateien (Import aus dem Eingang).
+/// Einzige Inhalts-Schreiboperation ist <see cref="WriteAllText"/> fuer
+/// App-eigene JSON-Konfigs (Profile, pattern-templates — BPM-112.01).
 /// </summary>
 public interface IFileSystemWriter
 {
@@ -25,4 +26,10 @@ public interface IFileSystemWriter
 
     /// <summary>Loescht eine Datei. Kein Fehler, wenn sie nicht existiert (No-Op).</summary>
     void DeleteFile(string path);
+
+    /// <summary>
+    /// Schreibt Text (UTF-8) in eine Datei, ueberschreibt vorhandenen Inhalt.
+    /// NUR fuer App-eigene JSON-Konfigs — nie fuer Plandateien (BPM-112.01).
+    /// </summary>
+    void WriteAllText(string path, string content);
 }

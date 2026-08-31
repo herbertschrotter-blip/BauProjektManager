@@ -35,4 +35,7 @@ public interface IFileSystemReader
 
     /// <summary>Oeffnet einen lesenden Stream auf die Datei (z. B. fuer Hashing).</summary>
     Stream OpenRead(string path);
+
+    /// <summary>Liest den gesamten Textinhalt (UTF-8) — BPM-112.01 fuer JSON-Konfigs.</summary>
+    string ReadAllText(string path);
 }

@@ -1,5 +1,5 @@
-using System.IO;
 using System.Security.Cryptography;
+using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models.PlanManager;
 using Serilog;
 
@@ -9,10 +9,20 @@ namespace BauProjektManager.PlanManager.Services;
 /// Computes MD5 hashes for scanned files (bounded parallel).
 /// Step 2 of the 7-stage analysis pipeline.
 /// MD5 + file_size are ALWAYS mandatory (PlanManager invariant).
+/// BPM-112.01 (ADR-060 Slice 1): liest ueber die FS-Ports.
 /// </summary>
 public class FileFingerprintService
 {
     private const int MaxParallelism = 4;
+
+    private readonly IFileSystemReader _reader;
+    private readonly IPathService _path;
+
+    public FileFingerprintService(IFileSystemReader reader, IPathService path)
+    {
+        _reader = reader;
+        _path = path;
+    }
 
     /// <summary>
     /// Enriches scanned files with MD5 hashes.
@@ -33,7 +43,7 @@ public class FileFingerprintService
             try
             {
                 ct.ThrowIfCancellationRequested();
-                var fullPath = Path.Combine(projectRootPath, file.RelativePath);
+                var fullPath = _path.Combine(projectRootPath, file.RelativePath);
                 var md5 = await ComputeMd5Async(fullPath, ct);
 
                 lock (results)
@@ -64,12 +74,10 @@ public class FileFingerprintService
         return results;
     }
 
-    private static async Task<string> ComputeMd5Async(string filePath, CancellationToken ct)
+    private async Task<string> ComputeMd5Async(string filePath, CancellationToken ct)
     {
         using var md5 = MD5.Create();
-        await using var stream = new FileStream(
-            filePath, FileMode.Open, FileAccess.Read, FileShare.Read,
-            bufferSize: 8192, useAsync: true);
+        await using var stream = _reader.OpenRead(filePath);
         var hash = await md5.ComputeHashAsync(stream, ct);
         return Convert.ToHexString(hash).ToLowerInvariant();
     }

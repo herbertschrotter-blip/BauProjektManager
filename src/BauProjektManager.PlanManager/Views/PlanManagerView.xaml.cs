@@ -98,7 +98,9 @@ public partial class PlanManagerView : UserControl
         _fileLauncher = fileLauncher;
         _settingsService = settingsService;
         _pdfTextService = pdfTextService;
-        _templateService = new PatternTemplateService(_idGenerator, persistenceRegistry);
+        // BPM-112.01: JSON-Persistenz ueber FS-Ports (eine LocalFileSystem-Instanz).
+        var fs = new Infrastructure.Services.LocalFileSystem();
+        _templateService = new PatternTemplateService(_idGenerator, fs, fs, fs, persistenceRegistry);
         Resources.Add("BoolToVis", _boolToVis);
         Resources.Add("InverseBoolToVis", new InverseBoolToVisConverter());
         Resources.Add("CountToVis", new CountToVisConverter());

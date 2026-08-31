@@ -7,6 +7,8 @@ namespace BauProjektManager.PlanManager.Services;
 /// Splittet Dateinamen an konfigurierbaren Trennzeichen in Segmente.
 /// Supports TokenizationConfig (v2): collapseRepeatedDelimiters, firstTokenDelimiter.
 /// Reine Logik, keine Abhängigkeiten. (ADR-022)
+/// BPM-112.02: nutzt bewusst System.IO.Path — pure Stringoperationen ohne
+/// Disk-Zugriff fallen nicht unter die ADR-060-Port-Pflicht (Präzisierung).
 /// </summary>
 public static class FileNameParser
 {

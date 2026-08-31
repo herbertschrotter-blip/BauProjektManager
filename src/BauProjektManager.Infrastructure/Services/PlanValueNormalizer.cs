@@ -41,6 +41,8 @@ public class PlanValueNormalizer : IPlanValueNormalizer
 
     public string NormalizeForFolderName(string value)
     {
+        // BPM-112.02: bewusst System.IO.Path — reine Zeichensatz-Abfrage ohne
+        // Disk-Zugriff, zudem Infrastructure-Schicht (adapter-nah).
         var invalid = Path.GetInvalidFileNameChars();
         var sb = new StringBuilder(value.Length);
         var lastWasSpace = false;

@@ -136,6 +136,8 @@ public class ImportContextResolver
             Warnings: warnings);
     }
 
+    // BPM-112.02: bewusst System.IO.Path — pure Stringoperation ohne
+    // Disk-Zugriff (ADR-060-Präzisierung, keine Port-Pflicht).
     private static List<string> GetFolderSegments(string relativePath)
     {
         var dir = Path.GetDirectoryName(relativePath);

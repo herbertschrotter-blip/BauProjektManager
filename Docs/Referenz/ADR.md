@@ -2860,7 +2860,9 @@ Das bisherige Erkennungs-Modell extrahiert Identitätsfelder (haus/geschoss/plan
 
 **Datum:** 2026-06-24
 **Status:** ✅ Entschieden (Sign-off via CGR-2026-06-22-bpm-architektur, 4 Runden)
-**Implementierung:** 🟡 In Progress — BPM-112: Slice 0 (FS-Ports + `LocalFileSystem`-Adapter + DI + `FakeFileStore`/Contract-Tests) done (v0.28.85, `e60fa3c`); Slices 1–6 (System.IO-Migration, ~29 Stellen) offen.
+**Implementierung:** 🟡 In Progress — BPM-112: Slice 0 (FS-Ports + `LocalFileSystem`-Adapter + DI + `FakeFileStore`/Contract-Tests) done (v0.28.85, `e60fa3c`); Slice 3 done via BPM-120 T1 (v0.28.142, Import/Recovery/Undo); Slice 1 done (v0.28.155, Scanner/Reader + Profil-JSON inkl. `ReadAllText`/`WriteAllText`-Port-Erweiterung); Slice 2 done als Linien-Entscheidung (Teil 49, siehe Präzisierung); Slices 4–6 offen.
+
+**Präzisierung (BPM-112.02, Teil 49):** Die Port-Pflicht gilt **Disk-Zugriffen** (`File`/`Directory`/`FileInfo`/Streams). **Pure Pfad-String-Operationen ohne Disk-Zugriff** (`Path.GetExtension`/`Combine`/`GetFileNameWithoutExtension`/`GetInvalidFileNameChars` in statischen Pure-Logic-Klassen wie `FileNameParser`, `ImportContextResolver`, `CaptureConfirmService`-Mapper, `PlanValueNormalizer`) bleiben bewusst auf `System.IO.Path` — deterministisch, testbar, „keine Abhängigkeiten"-Design (ADR-022/ADR-065-Reparse-Basis). Kennzeichnung per Code-Kommentar an den Stellen. VM-Pfadaufrufe, die mit File-Ops verwoben sind, wandern geschlossen mit Slice 5.
 **Herkunft:** Live-Test BPM-111.05 (Teil 44) → Herberts Ausgangsfrage: braucht BPM ein vereinheitlichtes Dateisystem-Interface für alle Module? 4-Runden-Cross-Review mit ChatGPT GPT-5 Thinking.
 
 **Kontext:**

@@ -25,6 +25,8 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     private readonly AppSettingsService _settingsService;
     private readonly ProjectFolderService _folderService;
     private readonly BpmManifestService _manifestService;
+    // BPM-112.05 (ADR-060 Slice 5): FS-Ports statt direktem System.IO in der VM.
+    private static readonly Infrastructure.Services.LocalFileSystem _fs = new();
     private readonly IDialogService _dialogService;
     private readonly IPersistenceRegistry? _persistenceRegistry;
     private AppSettings? _settings;
@@ -161,13 +163,14 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         var settings = _settingsService.Load();
         var exportDir = !string.IsNullOrEmpty(settings.ExportPath)
             ? settings.ExportPath
-            : Path.Combine(
+            : _fs.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "BauProjektManager");
-        var registryPath = Path.Combine(exportDir, "registry.json");
+        var registryPath = _fs.Combine(exportDir, "registry.json");
 
         _exporter = new RegistryJsonExporter(registryPath, persistenceRegistry);
-        _folderService = new ProjectFolderService(_settingsService);
+        // BPM-112.05: FS-Ports fuer den High-Level-Service (eine Adapter-Instanz).
+        _folderService = new ProjectFolderService(_settingsService, _fs, _fs, _fs);
 
         Log.Information("Registry export path: {Path}", registryPath);
 
@@ -691,7 +694,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         }
 
         var path = SelectedProject.Paths?.Root;
-        if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
+        if (string.IsNullOrEmpty(path) || !_fs.DirectoryExists(path))
         {
             _dialogService.ShowWarning("Der Projektordner existiert nicht oder ist nicht konfiguriert.",
                 "Ordner nicht gefunden");

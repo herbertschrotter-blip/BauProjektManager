@@ -47,6 +47,9 @@ public sealed class PdfTextAssignedEventArgs : EventArgs
 /// </summary>
 public partial class PlanPreviewPanel : UserControl
 {
+    // BPM-112.05 (ADR-060 Slice 5): FS-Ports statt direktem System.IO in der View.
+    private static readonly Infrastructure.Services.LocalFileSystem _fs = new();
+
     private const int RenderPixelWidth = 3600;
     private const double TargetPixelsPerMm = 7.0; // ~180 DPI — scharf bis in den Plankopf
     private const int MaxRenderWidth = 7200;      // Speicher-Deckel (A0 ≈ 146 MB BGRA)
@@ -119,8 +122,7 @@ public partial class PlanPreviewPanel : UserControl
         var generation = ++_renderGeneration;
         try
         {
-            // Direktes File.OpenRead: System.IO-Migration des PlanManagers folgt mit BPM-112.
-            await using (var stream = File.OpenRead(absolutePath))
+            await using (var stream = _fs.OpenRead(absolutePath))
                 _pageCount = await PdfRenderService.GetPageCountAsync(stream);
             if (generation != _renderGeneration)
                 return;
@@ -132,7 +134,7 @@ public partial class PlanPreviewPanel : UserControl
         {
             if (generation != _renderGeneration)
                 return;
-            Log.Warning(ex, "PDF-Vorschau fehlgeschlagen fuer {Name}", Path.GetFileName(absolutePath));
+            Log.Warning(ex, "PDF-Vorschau fehlgeschlagen fuer {Name}", _fs.GetFileName(absolutePath));
             StatusText.Text = $"⚠ Vorschau nicht möglich: {ex.Message}";
         }
     }
@@ -147,7 +149,7 @@ public partial class PlanPreviewPanel : UserControl
         StatusText.Text = "Rendere …";
 
         PdfPageRender page;
-        await using (var stream = File.OpenRead(_currentPath))
+        await using (var stream = _fs.OpenRead(_currentPath))
             page = await PdfRenderService.RenderPageAsync(stream, _currentPage, RenderPixelWidth);
         if (generation != _renderGeneration)
             return;
@@ -158,7 +160,7 @@ public partial class PlanPreviewPanel : UserControl
             (int)(page.PageWidthMm * TargetPixelsPerMm), RenderPixelWidth, MaxRenderWidth);
         if (targetWidth > page.PixelWidth * 12 / 10)
         {
-            await using var stream = File.OpenRead(_currentPath);
+            await using var stream = _fs.OpenRead(_currentPath);
             page = await PdfRenderService.RenderPageAsync(stream, _currentPage, targetWidth);
             if (generation != _renderGeneration)
                 return;
@@ -174,7 +176,7 @@ public partial class PlanPreviewPanel : UserControl
         PageLabel.Text = $"{_currentPage + 1}/{_pageCount}";
         PrevPageButton.IsEnabled = _currentPage > 0;
         NextPageButton.IsEnabled = _currentPage < _pageCount - 1;
-        StatusText.Text = $"{Path.GetFileName(_currentPath)} · Seite {_currentPage + 1} von {_pageCount} · {InteractionHint}";
+        StatusText.Text = $"{_fs.GetFileName(_currentPath)} · Seite {_currentPage + 1} von {_pageCount} · {InteractionHint}";
         _ = EnsureWordsAsync(); // Textebene proaktiv laden → Markieren startet ohne Verzögerung
 
         if (startWithPlankopf)
@@ -253,12 +255,12 @@ public partial class PlanPreviewPanel : UserControl
             return;
         try
         {
-            await using var stream = File.OpenRead(_currentPath);
+            await using var stream = _fs.OpenRead(_currentPath);
             _words = await PdfTextService.GetWordsAsync(stream, _currentPage);
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "PDF-Textebene nicht lesbar fuer {Name}", Path.GetFileName(_currentPath));
+            Log.Warning(ex, "PDF-Textebene nicht lesbar fuer {Name}", _fs.GetFileName(_currentPath));
             _words = [];
         }
     }

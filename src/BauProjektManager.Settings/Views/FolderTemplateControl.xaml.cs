@@ -78,21 +78,24 @@ public partial class FolderTemplateControl : UserControl
         }
     }
 
+    // BPM-112.05 (ADR-060 Slice 5): FS-Ports statt direktem System.IO in der View.
+    private static readonly Infrastructure.Services.LocalFileSystem _fs = new();
+
     /// <summary>Baut den Tree aus einem tatsächlichen Ordner auf der Platte.</summary>
     public void LoadFromDisk(string projectFolderPath)
     {
         _folderTreeItems.Clear();
 
-        if (!Directory.Exists(projectFolderPath))
+        if (!_fs.DirectoryExists(projectFolderPath))
         {
             TvFolders.ItemsSource = _folderTreeItems;
             return;
         }
 
         int mainPos = 0;
-        foreach (var dir in Directory.GetDirectories(projectFolderPath).OrderBy(d => d))
+        foreach (var dir in _fs.EnumerateDirectories(projectFolderPath).OrderBy(d => d))
         {
-            var dirName = Path.GetFileName(dir);
+            var dirName = _fs.GetFileName(dir);
             var cleanName = StripNumericPrefix(dirName);
 
             var mainItem = new FolderTreeItem
@@ -101,7 +104,7 @@ public partial class FolderTemplateControl : UserControl
                 Position = mainPos++,
                 IsMainFolder = true,
                 IsExisting = true,
-                HasInbox = Directory.Exists(Path.Combine(dir, "_Eingang"))
+                HasInbox = _fs.DirectoryExists(_fs.Combine(dir, "_Eingang"))
             };
 
             LoadSubFoldersFromDisk(mainItem.Children, dir);
@@ -117,9 +120,9 @@ public partial class FolderTemplateControl : UserControl
     private void LoadSubFoldersFromDisk(ObservableCollection<FolderTreeItem> target, string parentPath)
     {
         int subPos = 0;
-        foreach (var subDir in Directory.GetDirectories(parentPath).OrderBy(d => d))
+        foreach (var subDir in _fs.EnumerateDirectories(parentPath).OrderBy(d => d))
         {
-            var subName = Path.GetFileName(subDir);
+            var subName = _fs.GetFileName(subDir);
             if (subName == "_Eingang") continue;
 
             var cleanSubName = StripNumericPrefix(subName);

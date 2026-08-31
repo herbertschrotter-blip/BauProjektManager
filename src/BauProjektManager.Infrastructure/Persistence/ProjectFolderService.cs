@@ -1,4 +1,4 @@
-﻿using System.IO;
+﻿using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models;
 using Serilog;
 
@@ -8,14 +8,23 @@ namespace BauProjektManager.Infrastructure.Persistence;
 /// Creates project folder structures on disk.
 /// Uses FolderTemplate entries and generates numbered folders (00, 01, 02...).
 /// Supports subfolders with optional prefix numbering.
+/// BPM-112.05 (ADR-060 Slice 5/P.4): High-Level-Service laeuft ueber die FS-Ports.
 /// </summary>
 public class ProjectFolderService
 {
     private readonly AppSettingsService _settingsService;
+    private readonly IFileSystemReader _reader;
+    private readonly IFileSystemWriter _writer;
+    private readonly IPathService _path;
 
-    public ProjectFolderService(AppSettingsService settingsService)
+    public ProjectFolderService(
+        AppSettingsService settingsService,
+        IFileSystemReader reader, IFileSystemWriter writer, IPathService path)
     {
         _settingsService = settingsService;
+        _reader = reader;
+        _writer = writer;
+        _path = path;
     }
 
     /// <summary>
@@ -33,17 +42,17 @@ public class ProjectFolderService
         }
 
         var template = folderTemplate ?? settings.FolderTemplate;
-        var projectRoot = Path.Combine(settings.BasePath, project.FolderName);
+        var projectRoot = _path.Combine(settings.BasePath, project.FolderName);
 
         Log.Debug("Creating folder structure for project {ProjectId} at {Path}", project.Id, projectRoot);
 
-        if (Directory.Exists(projectRoot))
+        if (_reader.DirectoryExists(projectRoot))
         {
             Log.Warning("Project folder already exists: {Path}", projectRoot);
         }
         else
         {
-            Directory.CreateDirectory(projectRoot);
+            _writer.CreateDirectory(projectRoot);
             Log.Information("Project folder created: {Path}", projectRoot);
         }
 
@@ -52,21 +61,21 @@ public class ProjectFolderService
         {
             var entry = template[i];
             var numberedName = entry.GetNumberedName(i);
-            var subPath = Path.Combine(projectRoot, numberedName);
+            var subPath = _path.Combine(projectRoot, numberedName);
 
-            if (!Directory.Exists(subPath))
+            if (!_reader.DirectoryExists(subPath))
             {
-                Directory.CreateDirectory(subPath);
+                _writer.CreateDirectory(subPath);
                 Log.Information("  Folder created: {Name}", numberedName);
             }
 
             // Create _Eingang subfolder if configured
             if (entry.HasInbox)
             {
-                var inboxPath = Path.Combine(subPath, "_Eingang");
-                if (!Directory.Exists(inboxPath))
+                var inboxPath = _path.Combine(subPath, "_Eingang");
+                if (!_reader.DirectoryExists(inboxPath))
                 {
-                    Directory.CreateDirectory(inboxPath);
+                    _writer.CreateDirectory(inboxPath);
                     Log.Information("  Inbox created: {Name}/_Eingang", numberedName);
                 }
 
@@ -75,7 +84,7 @@ public class ProjectFolderService
                 // waehrend physisch z. B. "01 Planunterlagen\_Eingang" existiert — Import,
                 // ManuellSortieren und Wizard finden den Eingang dann nicht.
                 project.Paths.Plans = numberedName;
-                project.Paths.Inbox = Path.Combine(numberedName, "_Eingang");
+                project.Paths.Inbox = _path.Combine(numberedName, "_Eingang");
             }
 
             // Create subfolders
@@ -83,11 +92,11 @@ public class ProjectFolderService
             foreach (var sub in entry.SubFolders)
             {
                 var subName = sub.GetDisplayName(subPosition);
-                var subFolderPath = Path.Combine(subPath, subName);
+                var subFolderPath = _path.Combine(subPath, subName);
 
-                if (!Directory.Exists(subFolderPath))
+                if (!_reader.DirectoryExists(subFolderPath))
                 {
-                    Directory.CreateDirectory(subFolderPath);
+                    _writer.CreateDirectory(subFolderPath);
                     Log.Information("    Subfolder created: {Parent}/{Name}", numberedName, subName);
                     Log.Debug("Created subfolder {Folder}", subName);
                 }
@@ -112,7 +121,7 @@ public class ProjectFolderService
     public void SyncNewFolders(Project project, List<FolderTemplateEntry> template)
     {
         var root = project.Paths?.Root;
-        if (string.IsNullOrEmpty(root) || !Directory.Exists(root))
+        if (string.IsNullOrEmpty(root) || !_reader.DirectoryExists(root))
         {
             Log.Warning("SyncNewFolders skipped — root path does not exist: {Path}", root);
             return;
@@ -121,8 +130,8 @@ public class ProjectFolderService
         Log.Debug("Syncing new folders for project {Id} at {Path}", project.Id, root);
 
         // Existierende Hauptordner einmalig sammeln (Name ohne Prefix als Match-Key)
-        var existingMains = Directory.GetDirectories(root)
-            .Select(p => new DirectoryInfo(p).Name)
+        var existingMains = _reader.EnumerateDirectories(root)
+            .Select(p => _path.GetFileName(p))
             .ToList();
 
         int mainPos = 0;
@@ -137,22 +146,22 @@ public class ProjectFolderService
             string mainPath;
             if (existingName is not null)
             {
-                mainPath = Path.Combine(root, existingName);
+                mainPath = _path.Combine(root, existingName);
             }
             else
             {
                 var newName = $"{mainPos:D2} {entry.Name}";
-                mainPath = Path.Combine(root, newName);
-                Directory.CreateDirectory(mainPath);
+                mainPath = _path.Combine(root, newName);
+                _writer.CreateDirectory(mainPath);
                 Log.Debug("Created main folder: {Path}", mainPath);
             }
 
             if (entry.HasInbox)
             {
-                var inboxPath = Path.Combine(mainPath, "_Eingang");
-                if (!Directory.Exists(inboxPath))
+                var inboxPath = _path.Combine(mainPath, "_Eingang");
+                if (!_reader.DirectoryExists(inboxPath))
                 {
-                    Directory.CreateDirectory(inboxPath);
+                    _writer.CreateDirectory(inboxPath);
                     Log.Debug("Created inbox: {Path}", inboxPath);
                 }
             }
@@ -164,11 +173,11 @@ public class ProjectFolderService
 
     private void SyncSubFolders(string parentPath, List<SubFolderEntry> subs)
     {
-        if (!Directory.Exists(parentPath))
+        if (!_reader.DirectoryExists(parentPath))
             return;
 
-        var existingSubs = Directory.GetDirectories(parentPath)
-            .Select(p => new DirectoryInfo(p).Name)
+        var existingSubs = _reader.EnumerateDirectories(parentPath)
+            .Select(p => _path.GetFileName(p))
             .ToList();
 
         int subPos = 0;
@@ -181,13 +190,13 @@ public class ProjectFolderService
             string subPath;
             if (existingName is not null)
             {
-                subPath = Path.Combine(parentPath, existingName);
+                subPath = _path.Combine(parentPath, existingName);
             }
             else
             {
                 var newName = sub.HasPrefix ? $"{subPos:D2} {sub.Name}" : sub.Name;
-                subPath = Path.Combine(parentPath, newName);
-                Directory.CreateDirectory(subPath);
+                subPath = _path.Combine(parentPath, newName);
+                _writer.CreateDirectory(subPath);
                 Log.Debug("Created subfolder: {Path}", subPath);
             }
 

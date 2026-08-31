@@ -27,6 +27,9 @@ namespace BauProjektManager.PlanManager.ViewModels;
 /// </remarks>
 public partial class ProfileWizardViewModel : ObservableObject
 {
+    // BPM-112.05 (ADR-060 Slice 5): FS-Ports statt direktem System.IO in der VM.
+    private static readonly Infrastructure.Services.LocalFileSystem _fs = new();
+
     [ObservableProperty]
     private int _currentStep = 1;
 
@@ -315,12 +318,12 @@ public partial class ProfileWizardViewModel : ObservableObject
             if (string.IsNullOrWhiteSpace(project.Paths.Root))
                 return;
 
-            var inboxPath = Path.Combine(project.Paths.Root, project.Paths.Inbox);
-            if (!Directory.Exists(inboxPath))
+            var inboxPath = _fs.Combine(project.Paths.Root, project.Paths.Inbox);
+            if (!_fs.DirectoryExists(inboxPath))
                 return;
 
-            var files = Directory.GetFiles(inboxPath, "*", SearchOption.AllDirectories)
-                .Select(Path.GetFileName)
+            var files = _fs.EnumerateFiles(inboxPath, "*", recursive: true)
+                .Select(f => _fs.GetFileName(f))
                 .Where(f => f is not null)
                 .Cast<string>()
                 .OrderBy(f => f)

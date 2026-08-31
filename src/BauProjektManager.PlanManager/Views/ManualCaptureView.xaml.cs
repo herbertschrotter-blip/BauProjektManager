@@ -25,6 +25,9 @@ namespace BauProjektManager.PlanManager.Views;
 /// </summary>
 public partial class ManualCaptureView : UserControl
 {
+    // BPM-112.05 (ADR-060 Slice 5): FS-Ports statt direktem System.IO in der View.
+    private static readonly Infrastructure.Services.LocalFileSystem _fs = new();
+
     private const int HoldMilliseconds = 260;
     private const double HoldCancelDistance = 40;
     private const double RadialSize = 460;
@@ -495,7 +498,7 @@ public partial class ManualCaptureView : UserControl
     {
         if (FileLauncher is null)
             return;
-        var absolutePath = Path.Combine(ViewModel.ProjectRootPath, row.RelativePath);
+        var absolutePath = _fs.Combine(ViewModel.ProjectRootPath, row.RelativePath);
         var ok = reveal ? FileLauncher.RevealInExplorer(absolutePath) : FileLauncher.OpenFile(absolutePath);
         if (!ok)
             ViewModel.StatusText = $"⚠ {(reveal ? "Explorer" : "Öffnen")} fehlgeschlagen: {row.FileName}";
@@ -549,7 +552,7 @@ public partial class ManualCaptureView : UserControl
     {
         if (FileLauncher is null || row.RelativePath is null)
             return;
-        var absolutePath = Path.Combine(ViewModel.ProjectRootPath, row.RelativePath);
+        var absolutePath = _fs.Combine(ViewModel.ProjectRootPath, row.RelativePath);
         var ok = reveal ? FileLauncher.RevealInExplorer(absolutePath) : FileLauncher.OpenFile(absolutePath);
         if (!ok)
             ViewModel.StatusText = $"⚠ {(reveal ? "Explorer" : "Öffnen")} fehlgeschlagen: {row.FileName}";
@@ -575,7 +578,7 @@ public partial class ManualCaptureView : UserControl
         if (source.Note is not null)
             ViewModel.StatusText = source.Note;
 
-        var absolutePath = Path.Combine(ViewModel.ProjectRootPath, source.RelativePath);
+        var absolutePath = _fs.Combine(ViewModel.ProjectRootPath, source.RelativePath);
         await PreviewPanel.ShowFileAsync(absolutePath);
     }
 

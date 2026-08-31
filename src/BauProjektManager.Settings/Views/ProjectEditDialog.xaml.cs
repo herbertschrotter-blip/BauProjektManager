@@ -847,7 +847,7 @@ public partial class ProjectEditDialog : Window
 
         try
         {
-            var json = File.ReadAllText(dlg.FileName);
+            var json = _fs.ReadAllText(dlg.FileName);
             var imported = System.Text.Json.JsonSerializer.Deserialize<List<ProjectParticipant>>(json,
                 new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             if (imported is null || imported.Count == 0)
@@ -1225,9 +1225,13 @@ public partial class ProjectEditDialog : Window
     private void OnCancel(object sender, RoutedEventArgs e) { DialogResult = false; Close(); }
 
     // ── FileSystemWatcher für Live-Ordnerstruktur ────────────
+    // BPM-112.05: FS-Ports fuer die Zugriffe; der FileSystemWatcher selbst
+    // bleibt System.IO (UI-Live-Refresh, kein Port-Aequivalent — bewusst).
+    private static readonly Infrastructure.Services.LocalFileSystem _fs = new();
+
     private void StartFolderWatcher(string rootPath)
     {
-        if (!Directory.Exists(rootPath)) return;
+        if (!_fs.DirectoryExists(rootPath)) return;
 
         _folderWatcher = new FileSystemWatcher(rootPath)
         {

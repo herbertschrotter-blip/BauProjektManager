@@ -12,6 +12,9 @@ namespace BauProjektManager.PlanManager.ViewModels;
 /// </summary>
 public partial class ProjectDetailViewModel : ObservableObject
 {
+    // BPM-112.05 (ADR-060 Slice 5): FS-Ports statt direktem System.IO in der VM.
+    private static readonly Infrastructure.Services.LocalFileSystem _fs = new();
+
     [ObservableProperty]
     private Project _project;
 
@@ -51,15 +54,16 @@ public partial class ProjectDetailViewModel : ObservableObject
                 return;
             }
 
-            var inboxPath = Path.Combine(Project.Paths.Root, Project.Paths.Inbox);
-            if (!Directory.Exists(inboxPath))
+
+            var inboxPath = _fs.Combine(Project.Paths.Root, Project.Paths.Inbox);
+            if (!_fs.DirectoryExists(inboxPath))
             {
                 InboxCount = 0;
                 InboxInfo = "";
                 return;
             }
 
-            InboxCount = Directory.GetFiles(inboxPath).Length;
+            InboxCount = _fs.EnumerateFiles(inboxPath).Count();
             InboxInfo = InboxCount > 0
                 ? $"{InboxCount} Dateien im Eingang"
                 : "";

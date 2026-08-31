@@ -68,6 +68,8 @@ public partial class PlanManagerView : UserControl
     private readonly IIdGenerator _idGenerator;
     private readonly IProfileManager _profileManager;
     private readonly PatternTemplateService _templateService;
+    // BPM-112.05 (ADR-060 Slice 5): FS-Ports statt direktem System.IO in der View.
+    private static readonly Infrastructure.Services.LocalFileSystem _fs = new();
     private readonly IPersistenceRegistry? _persistenceRegistry;
     private readonly ISegmentTypeCatalog? _segmentTypeCatalog;
     private readonly ISegmentTypeRepository? _segmentTypeRepository;
@@ -98,9 +100,8 @@ public partial class PlanManagerView : UserControl
         _fileLauncher = fileLauncher;
         _settingsService = settingsService;
         _pdfTextService = pdfTextService;
-        // BPM-112.01: JSON-Persistenz ueber FS-Ports (eine LocalFileSystem-Instanz).
-        var fs = new Infrastructure.Services.LocalFileSystem();
-        _templateService = new PatternTemplateService(_idGenerator, fs, fs, fs, persistenceRegistry);
+        // BPM-112.01/.05: JSON-Persistenz + Pfade ueber FS-Ports (eine Instanz).
+        _templateService = new PatternTemplateService(_idGenerator, _fs, _fs, _fs, persistenceRegistry);
         Resources.Add("BoolToVis", _boolToVis);
         Resources.Add("InverseBoolToVis", new InverseBoolToVisConverter());
         Resources.Add("CountToVis", new CountToVisConverter());
@@ -132,7 +133,7 @@ public partial class PlanManagerView : UserControl
     private void NavigateToDetail(Project project)
     {
         var appDataPath = !string.IsNullOrEmpty(project.Paths.Root)
-            ? Path.Combine(Path.GetDirectoryName(project.Paths.Root) ?? "", ".AppData", "BauProjektManager")
+            ? _fs.Combine(_fs.GetDirectoryName(project.Paths.Root) ?? "", ".AppData", "BauProjektManager")
             : null;
 
         var detailView = new ProjectDetailView(

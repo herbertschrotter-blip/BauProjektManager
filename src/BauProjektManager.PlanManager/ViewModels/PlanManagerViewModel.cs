@@ -119,6 +119,9 @@ public partial class PlanManagerViewModel : ObservableObject
         ProjectCountText = $"{FilteredProjects.Count} Projekte geladen";
     }
 
+    // BPM-112.05 (ADR-060 Slice 5): FS-Ports statt direktem System.IO in der VM.
+    private static readonly Infrastructure.Services.LocalFileSystem _fs = new();
+
     private static int CountInboxFiles(Project project)
     {
         try
@@ -126,11 +129,11 @@ public partial class PlanManagerViewModel : ObservableObject
             if (string.IsNullOrWhiteSpace(project.Paths.Root))
                 return 0;
 
-            var inboxPath = Path.Combine(project.Paths.Root, project.Paths.Inbox);
-            if (!Directory.Exists(inboxPath))
+            var inboxPath = _fs.Combine(project.Paths.Root, project.Paths.Inbox);
+            if (!_fs.DirectoryExists(inboxPath))
                 return 0;
 
-            return Directory.GetFiles(inboxPath, "*", SearchOption.AllDirectories).Length;
+            return _fs.EnumerateFiles(inboxPath, "*", recursive: true).Count();
         }
         catch (Exception ex)
         {

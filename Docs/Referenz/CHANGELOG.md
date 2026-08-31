@@ -31,6 +31,30 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.161] — 2026-08-31
+
+### Fix: Eingang-Banner sofort aktuell nach Import/Undo
+
+Praxis-Test-Befund Teil 50 (Runde 1, Block 7): Das gelbe Eingang-Banner der Projekt-Detailansicht zählte nach „Import bestätigen"/Undo erst beim Neu-Betreten der Ansicht um. Neues Event `ManualCaptureViewModel.InboxChanged` nach jeder Eingang-Neuanalyse (`RefreshAsync`) → `ProjectDetailView` stößt `RefreshInbox` an; zusätzlich fehlte `[NotifyPropertyChangedFor(nameof(HasInbox))]` an `InboxCount` (Banner-Sichtbarkeit hätte sonst auch mit Refresh nicht umgeschaltet). (Commit `6390031`)
+
+---
+
+## [v0.28.160] — 2026-08-31
+
+### Fix: Vorschau Text-Markierung — Zentrier-Versatz beim Hit-Test
+
+Praxis-Test-Befund Teil 50 (Runde 1, Block 6): Sobald das Blatt kleiner als der Vorschau-Viewport dargestellt wurde (rausgezoomt), zentrierte WPF das Bild im `SheetHost` — der Wort-Hit-Test rechnete aber ab Container-Ursprung links oben, alle Klicks gingen um den Zentrier-Versatz daneben (BPM-118-Markieren wirkte „tot", auch die Markierungs-Balken wären versetzt gemalt worden). Fix: `PageImage` + `SelectionCanvas` in bildgroßem, zentriertem `SheetContent`-Grid; `GetPosition` misst an `SheetContent`. Engine-Koordinaten (ADR-063) unverändert korrekt — per temporärem Diagnose-Test gegen die echte Testdatei verifiziert. (Commit `580cd63`)
+
+---
+
+## [v0.28.159] — 2026-08-31
+
+### Docs: CHANGELOG-Nachzug v0.28.154–.158
+
+Einträge der BPM-112-Slices 1/2/4/5 (FS-Ports-Migration inkl. ADR-060-Präzisierung Pure-Statics) + BPM-120-Doc-Abschluss. (Commit `70ba582`)
+
+---
+
 ## [v0.28.158] — 2026-08-27
 
 ### Refactor: BPM-112.05 — Settings/Views + ProjectFolderService auf FS-Ports

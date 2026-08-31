@@ -31,6 +31,46 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.158] — 2026-08-27
+
+### Refactor: BPM-112.05 — Settings/Views + ProjectFolderService auf FS-Ports
+
+`ProjectFolderService` (26 Stellen, ADR-060 P.4) vollständig auf injizierte Ports; Settings (`SettingsViewModel`, `FolderTemplateControl`, `ProjectEditDialog`) und PlanManager-Views/VMs (`PlanPreviewPanel` mit 4× `OpenRead`, `ManualCaptureView`, `PlanManagerView`, drei VMs inkl. der aus 112.02 verschobenen Path-Aufrufe) System.IO-frei. Bewusst belassen: `FileSystemWatcher` (UI-Live-Refresh, kein Port-Äquivalent) und `App.xaml.cs` (Composition Root). **Die ADR-060-Ports-Migration ist damit abgeschlossen — von BPM-112 bleibt nur der In-App-Explorer (112.06, Feature).** (Commit `c8787ab`)
+
+---
+
+## [v0.28.157] — 2026-08-27
+
+### Refactor: BPM-112.04 — DB-Pfadanlage auf FS-Ports
+
+Pfad-/Ordneranlage in den Ctors von `ProjectDatabase` (bpm.db) und `PlanManagerDatabase` (planmanager.db, inkl. BPM-123-Override-Zweig) über die Ports (lokale Adapter-Instanz — DB-Klassen sind selbst Infrastruktur, kein Signatur-Churn); SQLite-Connection bewusst unverändert. (Commit `ac37a3c`)
+
+---
+
+## [v0.28.156] — 2026-08-27
+
+### Docs: BPM-112.02 — Pure-Statics-Linie (ADR-060-Präzisierung)
+
+Entscheidung Herbert: Die Port-Pflicht gilt **Disk-Zugriffen** — pure Pfad-String-Operationen in statischen Pure-Logic-Klassen (`FileNameParser`, `ImportContextResolver`, `CaptureConfirmService`-Mapper, `PlanValueNormalizer`) bleiben bewusst auf `System.IO.Path` (deterministisch, „keine Abhängigkeiten"-Design ADR-022, ADR-065-Reparse-Basis). In ADR-060 verankert, Stellen per Code-Kommentar gekennzeichnet; die mit File-Ops verwobenen VM-Pfadaufrufe wanderten geschlossen zu Slice 5. (Commit `8510059`)
+
+---
+
+## [v0.28.155] — 2026-08-27
+
+### Refactor: BPM-112.01 — Scanner/Reader + Profil-JSON auf FS-Ports
+
+`ImportScanService` + `FileFingerprintService` (MD5 via `OpenRead`-Port) und die Profil-JSON-Persistenz (`ProfileManager`, `PatternTemplateService`, `ProfileArchiveService`) komplett auf die Ports. Dafür Port-Erweiterung `ReadAllText`/`WriteAllText` (einzige Inhalts-Schreiboperation, nur App-eigene JSON-Konfigs) inkl. FakeFileStore-Fault-Op `Write` + 3 neue Contract-Tests × beide Implementierungen. App-DI registriert EINE `LocalFileSystem`-Instanz für alle drei Ports. (Commit `0b98714`)
+
+---
+
+## [v0.28.154] — 2026-08-27
+
+### Docs: BPM-120-Abschluss — CHANGELOG .139–.153 + ADR-064 „Umgesetzt" + DB-SCHEMA
+
+CHANGELOG-Nachzug der kompletten Härtungs-Serie; ADR-064-Implementierungszeile auf ✅ Umgesetzt (alle 15 AKs testverifiziert, ADR-061 P5 erledigt); DB-SCHEMA 6.5 um `document_type_id` (T5) ergänzt, Reset-Anweisung auf T2/T5 erweitert. (Commit `eb82450`)
+
+---
+
 ## [v0.28.153] — 2026-08-27
 
 ### Refactor: BPM-120 T8 — Fault-/Crash-Matrix

@@ -194,31 +194,12 @@ public class ImportExecutionService
             //     superseded_at der alten == current_from der neuen → kein Loch, keine Überlappung. ---
             var actionTime = DateTime.UtcNow.ToString("o");
 
-            // --- Supersede + Archiv VOR dem Move (Parität zur bisherigen Reihenfolge) ---
-            // Schema v2.0: bei Index-Update alte current-Revision auf superseded setzen + Event.
-            if (decision.Status == ImportStatus.UpdateNewerIndex)
-            {
-                // T2/AK 5: Archiv-Ziel kommt aus dem Journal (Planung), nie ad hoc.
-                if (archiveRelPath is not null)
-                    ArchiveExistingFile(targetPath, _path.Combine(projectRootPath, archiveRelPath));
-                var existingDoc = _db.GetDocumentByKey(decision.DocumentKey!);
-                if (existingDoc is not null)
-                {
-                    var oldCurrent = _db.GetCurrentRevisionForDocument(existingDoc.Id);
-                    // 111.07 Slice A2: Zweite Datei desselben Dokuments im SELBEN
-                    // Import (PDF+DWG-Paar) darf die gerade angelegte Revision
-                    // nicht gleich wieder ablösen — sie dockt unten als
-                    // Zusatzdatei an (FileLinked-Zweig).
-                    if (oldCurrent is not null && oldCurrent.LastImportId != importId)
-                    {
-                        _db.SupersedeCurrentRevision(existingDoc.Id, actionTime);
-                        _db.InsertRevisionEvent(oldCurrent.Id, importId,
-                            PlanArchive.EventType.Superseded, "Durch neue Revision ersetzt");
-                    }
-                }
-            }
+            // --- Disk-Phase komplett VOR der DB-Phase (BPM-120 T4, ADR-064):
+            //     Archiv an den journalisierten Pfad (AK 5) + Publish via .bpm_tmp (T3).
+            //     Crash nach der Disk-Phase: Recovery schreibt die DB nach (AK 9). ---
+            if (decision.Status == ImportStatus.UpdateNewerIndex && archiveRelPath is not null)
+                ArchiveExistingFile(targetPath, _path.Combine(projectRootPath, archiveRelPath));
 
-            // Move file from inbox to target (T3: .bpm_tmp + atomic rename)
             if (_reader.FileExists(sourcePath))
             {
                 PublishIncomingFile(sourcePath, targetPath);
@@ -226,28 +207,84 @@ public class ImportExecutionService
                     decision.File.Parsed.FileName, targetRelPath);
             }
 
-            // --- Cache-DB-Write NACH dem Move (Schema v2.0 Drei-Ebenen-Modell, BPM-109.03/.04) ---
-            // ADR-061 Slice 0.6c: target_folder kommt aus dem aufgeloesten Zielpfad
-            // (Root-Segment = root_relative_path des Dokumenttyps), NICHT mehr aus dem
-            // entfernten profile.TargetFolder. relative_directory = voller aufgeloester Ordner.
-            var resolvedDir = _path.GetDirectoryName(targetRelPath) ?? "";
-            var rootParts = resolvedDir.Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries);
-            var rootFolder = rootParts.Length > 0 ? rootParts[0] : "";
+            // --- DB-Phase (T4/AK 10): ALLE fachlichen Writes + action_status =
+            //     completed in DERSELBEN SQLite-Transaction. Wirft ein Write,
+            //     rollt alles zurueck — weder partielle Aenderungen noch eine
+            //     completed-Action bleiben stehen. ---
+            _db.ExecuteInTransaction(() =>
+                ApplyActionToDatabase(decision, importId, actionId, targetRelPath, actionTime));
 
-            var documentId = _db.ResolveOrCreateDocument(
-                _db.ProjectId,
-                decision.DocumentKey!,
-                decision.File.DocumentTypeId ?? "",
-                decision.File.PlanNumber ?? "",
-                decision.File.DocumentTypeDisplayName ?? "unknown",
-                decision.File.Title ?? "",                   // title (Panel-Bezeichnung, Slice A3)
-                rootFolder,                                  // target_folder = root_relative_path (ADR-061)
-                resolvedDir,                                 // relative_directory (voller aufgeloester Ordner)
-                null,                                        // building_part_id — SoftRef-Auflösung post-V1 (BPM-109.06)
-                null);                                       // building_level_id — dito
+            return new ActionResult(true, null);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Import-Aktion fehlgeschlagen: {File}", decision.File.Parsed.FileName);
+            _db.CompleteImportAction(actionId, false, ex.Message);
+            return new ActionResult(false, ex.Message);
+        }
+    }
 
-            var currentRev = _db.GetCurrentRevisionForDocument(documentId);
-            if (currentRev is not null)
+    /// <summary>
+    /// Fachlicher DB-Apply einer Action (BPM-120 T4): Supersede + Document/
+    /// Revision/File/Events/Segmente + Action-Abschluss. Laeuft IMMER innerhalb
+    /// einer Transaction (siehe Aufrufer) und ist idempotent: eine bereits
+    /// angewandte Action (Datei haengt schon an der current-Revision) schreibt
+    /// nichts erneut, sondern finalisiert nur den Status — Basis fuer AK 11/12;
+    /// Recovery Forward nutzt ab T5 denselben Pfad.
+    /// </summary>
+    private void ApplyActionToDatabase(
+        ImportDecision decision, string importId, string actionId,
+        string targetRelPath, string actionTime)
+    {
+        // Supersede: bei Index-Update die alte current-Revision abloesen — seit
+        // T4 NACH der Disk-Phase, innerhalb der Action-Transaction.
+        if (decision.Status == ImportStatus.UpdateNewerIndex)
+        {
+            var existingDoc = _db.GetDocumentByKey(decision.DocumentKey!);
+            if (existingDoc is not null)
+            {
+                var oldCurrent = _db.GetCurrentRevisionForDocument(existingDoc.Id);
+                // 111.07 Slice A2: Zweite Datei desselben Dokuments im SELBEN
+                // Import (PDF+DWG-Paar) darf die gerade angelegte Revision
+                // nicht gleich wieder ablösen — sie dockt unten als
+                // Zusatzdatei an (FileLinked-Zweig).
+                if (oldCurrent is not null && oldCurrent.LastImportId != importId)
+                {
+                    _db.SupersedeCurrentRevision(existingDoc.Id, actionTime);
+                    _db.InsertRevisionEvent(oldCurrent.Id, importId,
+                        PlanArchive.EventType.Superseded, "Durch neue Revision ersetzt");
+                }
+            }
+        }
+
+        // ADR-061 Slice 0.6c: target_folder kommt aus dem aufgeloesten Zielpfad
+        // (Root-Segment = root_relative_path des Dokumenttyps), NICHT mehr aus dem
+        // entfernten profile.TargetFolder. relative_directory = voller aufgeloester Ordner.
+        var resolvedDir = _path.GetDirectoryName(targetRelPath) ?? "";
+        var rootParts = resolvedDir.Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries);
+        var rootFolder = rootParts.Length > 0 ? rootParts[0] : "";
+
+        var documentId = _db.ResolveOrCreateDocument(
+            _db.ProjectId,
+            decision.DocumentKey!,
+            decision.File.DocumentTypeId ?? "",
+            decision.File.PlanNumber ?? "",
+            decision.File.DocumentTypeDisplayName ?? "unknown",
+            decision.File.Title ?? "",                   // title (Panel-Bezeichnung, Slice A3)
+            rootFolder,                                  // target_folder = root_relative_path (ADR-061)
+            resolvedDir,                                 // relative_directory (voller aufgeloester Ordner)
+            null,                                        // building_part_id — SoftRef-Auflösung post-V1 (BPM-109.06)
+            null);                                       // building_level_id — dito
+
+        var currentRev = _db.GetCurrentRevisionForDocument(documentId);
+        if (currentRev is not null)
+        {
+            // Idempotenz-Guard (T4): haengt die Datei bereits an der current-
+            // Revision (Re-Apply nach Crash hinter dem DB-Commit), nichts
+            // erneut schreiben — nur den Action-Status finalisieren.
+            var alreadyLinked = _db.GetFilesForRevision(currentRev.Id)
+                .Any(f => f.FileName == decision.File.Parsed.FileName);
+            if (!alreadyLinked)
             {
                 // Zusatzdatei zur bestehenden current-Revision (ChangedNoIndex/LearnIndex, z.B. DWG nach PDF)
                 _db.InsertFileForRevision(currentRev.Id,
@@ -258,45 +295,38 @@ public class ImportExecutionService
                 _db.InsertRevisionEvent(currentRev.Id, importId,
                     PlanArchive.EventType.FileLinked, decision.File.Parsed.FileName);
             }
-            else
-            {
-                // Neue current-Revision (New oder nach Supersede bei UpdateNewerIndex)
-                var revisionId = _db.InsertRevision(
-                    documentId,
-                    decision.File.RevisionToken,                 // plan_index
-                    decision.File.RevisionSource.ToString(),     // index_source
-                    PlanArchive.Status.Current,
-                    actionTime,                                  // current_from == actionTime
-                    null,                                        // superseded_at
-                    actionTime,                                  // received_at
-                    importId,                                    // last_import_id
-                    decision.File.ReleasedAt,                    // released_at (BPM-118 Text-Zuweisung)
-                    decision.File.ChangeNote ?? "");             // change_note (BPM-118 Text-Zuweisung)
-                _db.InsertRevisionEvent(revisionId, importId,
-                    PlanArchive.EventType.Created, "Neue Revision angelegt");
-                _db.InsertFileForRevision(revisionId,
-                    decision.File.Parsed.FileName, targetRelPath,
-                    decision.File.Parsed.Extension,
-                    decision.File.Parsed.Md5, decision.File.Parsed.FileSize,
-                    isPrimary: true);
-            }
-
-            // Vorgemerkte Segmentwerte (BPM-118 Text-Zuweisung) — haengen am
-            // Dokument, nicht an der Revision. Upsert: UNIQUE(document_id,
-            // segment_type_id), die letzte User-Zuweisung gewinnt.
-            foreach (var seg in decision.File.AssignedSegments ?? [])
-                _db.UpsertSegment(documentId, seg.SegmentTypeId, seg.TokenKey,
-                    seg.Value, _normalizer.NormalizeForMatch(seg.Value));
-
-            _db.CompleteImportAction(actionId, true);
-            return new ActionResult(true, null);
         }
-        catch (Exception ex)
+        else
         {
-            Log.Error(ex, "Import-Aktion fehlgeschlagen: {File}", decision.File.Parsed.FileName);
-            _db.CompleteImportAction(actionId, false, ex.Message);
-            return new ActionResult(false, ex.Message);
+            // Neue current-Revision (New oder nach Supersede bei UpdateNewerIndex)
+            var revisionId = _db.InsertRevision(
+                documentId,
+                decision.File.RevisionToken,                 // plan_index
+                decision.File.RevisionSource.ToString(),     // index_source
+                PlanArchive.Status.Current,
+                actionTime,                                  // current_from == actionTime
+                null,                                        // superseded_at
+                actionTime,                                  // received_at
+                importId,                                    // last_import_id
+                decision.File.ReleasedAt,                    // released_at (BPM-118 Text-Zuweisung)
+                decision.File.ChangeNote ?? "");             // change_note (BPM-118 Text-Zuweisung)
+            _db.InsertRevisionEvent(revisionId, importId,
+                PlanArchive.EventType.Created, "Neue Revision angelegt");
+            _db.InsertFileForRevision(revisionId,
+                decision.File.Parsed.FileName, targetRelPath,
+                decision.File.Parsed.Extension,
+                decision.File.Parsed.Md5, decision.File.Parsed.FileSize,
+                isPrimary: true);
         }
+
+        // Vorgemerkte Segmentwerte (BPM-118 Text-Zuweisung) — haengen am
+        // Dokument, nicht an der Revision. Upsert: UNIQUE(document_id,
+        // segment_type_id), die letzte User-Zuweisung gewinnt.
+        foreach (var seg in decision.File.AssignedSegments ?? [])
+            _db.UpsertSegment(documentId, seg.SegmentTypeId, seg.TokenKey,
+                seg.Value, _normalizer.NormalizeForMatch(seg.Value));
+
+        _db.CompleteImportAction(actionId, true);
     }
 
     /// <summary>

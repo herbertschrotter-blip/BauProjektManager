@@ -920,6 +920,41 @@ public class PlanManagerDatabase : IDisposable
     }
 
     /// <summary>
+    /// Fuehrt fachliche Writes in EINER SQLite-Transaction aus (BPM-120 T4,
+    /// ADR-064 P.3): alle Kommandos dieser Connection laufen im expliziten
+    /// BEGIN IMMEDIATE; Exception -> ROLLBACK. Bewusst rohes SQL statt
+    /// SqliteTransaction: Microsoft.Data.Sqlite erzwingt sonst cmd.Transaction
+    /// auf jedem Command — das wuerde jede bestehende Write-Methode anfassen.
+    /// Kein Nesting (Import laeuft single-threaded pro Action).
+    /// </summary>
+    public void ExecuteInTransaction(Action work)
+    {
+        var conn = GetConnection();
+        ExecuteRaw(conn, "BEGIN IMMEDIATE");
+        try
+        {
+            work();
+            ExecuteRaw(conn, "COMMIT");
+        }
+        catch
+        {
+            try { ExecuteRaw(conn, "ROLLBACK"); }
+            catch (Exception rollbackEx)
+            {
+                Log.Error(rollbackEx, "Transaction-Rollback fehlgeschlagen");
+            }
+            throw;
+        }
+    }
+
+    private static void ExecuteRaw(SqliteConnection conn, string sql)
+    {
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = sql;
+        cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>
     /// Inserts an import action (one file operation).
     /// BPM-120 T2: destination_path nullable (skipDuplicate hat kein Ziel);
     /// md5 + file_size fuer Bucket A / Recovery-Verifikation.

@@ -30,12 +30,16 @@ public class ProjectDatabase : IDisposable
         _idGenerator = idGenerator;
         _userContext = userContext;
         _deviceContext = deviceContext;
-        var appData = Path.Combine(
+        // BPM-112.04 (ADR-060 Slice 4): Pfad-/Ordneranlage ueber die FS-Ports
+        // (lokale Adapter-Instanz — DB-Klasse ist selbst Infrastruktur, kein
+        // Signatur-Churn); die SQLite-Connection bleibt Microsoft.Data.Sqlite.
+        var fs = new Services.LocalFileSystem();
+        var appData = fs.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "BauProjektManager");
-        Directory.CreateDirectory(appData);
+        fs.CreateDirectory(appData);
         // dbPathOverride nur fuer Tests (BPM-111.05) — Produktion immer LocalAppData\bpm.db
-        _dbPath = dbPathOverride ?? Path.Combine(appData, "bpm.db");
+        _dbPath = dbPathOverride ?? fs.Combine(appData, "bpm.db");
 
         // BPM-104.02: bei IPersistenceRegistry registrieren (optional fuer Tests)
         persistenceRegistry?.Register(new PersistenceEntry(

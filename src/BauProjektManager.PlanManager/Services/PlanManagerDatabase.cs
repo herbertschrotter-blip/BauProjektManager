@@ -36,23 +36,28 @@ public class PlanManagerDatabase : IDisposable
         _idGenerator = idGenerator;
         _persistenceRegistry = persistenceRegistry;
 
+        // BPM-112.04 (ADR-060 Slice 4): Pfad-/Ordneranlage ueber die FS-Ports
+        // (lokale Adapter-Instanz — kein Signatur-Churn ueber alle Call-Sites);
+        // die SQLite-Connection bleibt Microsoft.Data.Sqlite.
+        var fs = new Infrastructure.Services.LocalFileSystem();
+
         // BPM-123: Tests setzen dbPathOverride (%TEMP%) — Test-DBs landen nie
         // im echten App-Datenbereich unter LocalAppData\Projects, unabhaengig
         // davon, ob ihr Cleanup gelingt. Muster analog ProjectDatabase.
         if (dbPathOverride is not null)
         {
-            var overrideDir = Path.GetDirectoryName(dbPathOverride);
+            var overrideDir = fs.GetDirectoryName(dbPathOverride);
             if (!string.IsNullOrEmpty(overrideDir))
-                Directory.CreateDirectory(overrideDir);
+                fs.CreateDirectory(overrideDir);
             _dbPath = dbPathOverride;
             return;
         }
 
-        var projectDir = Path.Combine(
+        var projectDir = fs.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "BauProjektManager", "Projects", projectId);
-        Directory.CreateDirectory(projectDir);
-        _dbPath = Path.Combine(projectDir, "planmanager.db");
+        fs.CreateDirectory(projectDir);
+        _dbPath = fs.Combine(projectDir, "planmanager.db");
     }
 
     private SqliteConnection GetConnection()

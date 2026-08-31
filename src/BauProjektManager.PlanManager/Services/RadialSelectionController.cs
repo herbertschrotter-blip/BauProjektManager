@@ -62,6 +62,18 @@ public class RadialSelectionController
     public BuildingPart? SelectedBuildingPart =>
         SelectedPart is null ? null : _parts.FirstOrDefault(p => EffectivePartName(p) == SelectedPart);
 
+    /// <summary>Gewaehltes Geschoss als Objekt (BPM-111-Abnahmepunkt: Stammdaten-IDs im document_key).</summary>
+    public BuildingLevel? SelectedBuildingLevel =>
+        SelectedLevel is null
+            ? null
+            : SelectedBuildingPart?.Levels.FirstOrDefault(l => l.Name == SelectedLevel);
+
+    /// <summary>Gewaehlte Kategorie als Objekt (Ring2Source.Categories; analog Bauteil-ID im Key).</summary>
+    public PlanDocumentTypeCategory? SelectedCategory =>
+        SelectedType?.Ring2Source == Ring2Source.Categories && SelectedPart is not null
+            ? SelectedType.Categories.FirstOrDefault(c => c.Name == SelectedPart)
+            : null;
+
     /// <summary>
     /// Aktualisiert die Stammdaten nach einer Schnellanlage ("+ Neu…", Slice 3)
     /// und re-bindet <see cref="SelectedType"/> an das neu geladene Objekt

@@ -37,7 +37,12 @@ public sealed record PendingAssignment(
     string? Title = null,
     string? ChangeNote = null,
     string? ReleasedAt = null,
-    IReadOnlyList<AssignedSegmentValue>? AssignedSegments = null);
+    IReadOnlyList<AssignedSegmentValue>? AssignedSegments = null,
+    // BPM-111-Abnahmepunkt (ADR-059 P.3): gewaehlte Stammdaten-IDs fuer den
+    // ID-basierten document_key — umbenennungsstabil, projektlokal (ADR-061).
+    string? BuildingPartId = null,
+    string? BuildingLevelId = null,
+    string? CategoryId = null);
 
 /// <summary>
 /// Ein per Text-Zuweisung (BPM-118) vorgemerkter Segmentwert. TokenKey wird

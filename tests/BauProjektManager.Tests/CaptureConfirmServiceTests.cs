@@ -75,6 +75,52 @@ public class CaptureConfirmServiceTests
     }
 
     [Fact]
+    public void BuildManualDocumentKey_WithMasterDataIds_UsesIdsInsteadOfNames()
+    {
+        // BPM-111-Abnahmepunkt (ADR-059 P.3): Stammdaten-IDs statt normalisierter Namen.
+        var p = new PendingAssignment(
+            File("5998-300_OG2.pdf"), CaptureBucket.NewCapture,
+            "polierplan", "Polierplan", "Haus 2", "OG2", "5998-300", null,
+            "Pläne/Polierplan/Haus 2/OG2", Match: null,
+            BuildingPartId: "01PART", BuildingLevelId: "01LEVEL");
+
+        var key = CaptureConfirmService.BuildManualDocumentKey(p, _normalizer);
+
+        Assert.Equal("polierplan|5998_300|01PART|01LEVEL", key);
+    }
+
+    [Fact]
+    public void BuildManualDocumentKey_RenamedMasterData_KeepsSameKey()
+    {
+        // Umbenennungsstabilitaet: gleiche IDs, andere Anzeigenamen -> gleicher Key
+        // (mit Namens-Keys wuerde ein umbenanntes Bauteil ein NEUES Dokument erzeugen).
+        PendingAssignment Make(string part, string level) => new(
+            File("5998-300_OG2.pdf"), CaptureBucket.NewCapture,
+            "polierplan", "Polierplan", part, level, "5998-300", null,
+            "egal", Match: null,
+            BuildingPartId: "01PART", BuildingLevelId: "01LEVEL");
+
+        Assert.Equal(
+            CaptureConfirmService.BuildManualDocumentKey(Make("Haus 2", "OG2"), _normalizer),
+            CaptureConfirmService.BuildManualDocumentKey(Make("Bauteil B", "Obergeschoss 2"), _normalizer));
+    }
+
+    [Fact]
+    public void BuildManualDocumentKey_CategoryId_UsedAsRing2()
+    {
+        // Kategorien-Modus (Protokolle/Fertigteile): category_id analog zur Bauteil-ID.
+        var p = new PendingAssignment(
+            File("BB_2026-04-15_Baubesprechung.pdf"), CaptureBucket.NewCapture,
+            "protokolle", "Protokolle", "Baubesprechung", null, null, null,
+            "Pläne/Protokolle/Baubesprechung", Match: null,
+            CategoryId: "01CAT");
+
+        var key = CaptureConfirmService.BuildManualDocumentKey(p, _normalizer);
+
+        Assert.Equal("protokolle|bb_2026_04_15_baubesprechung|01CAT", key);
+    }
+
+    [Fact]
     public void BuildDecisions_TitleFlowsIntoClassifiedFile()
     {
         // Slice A3: Panel-Bezeichnung landet in ClassifiedImportFile.Title

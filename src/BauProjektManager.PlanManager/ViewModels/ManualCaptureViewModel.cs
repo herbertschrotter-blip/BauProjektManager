@@ -387,7 +387,11 @@ public partial class ManualCaptureViewModel : ObservableObject
                 Title: NormalizeText(row.Title),
                 ChangeNote: NormalizeText(row.ChangeNote),
                 ReleasedAt: row.ReleasedAtIso,
-                AssignedSegments: [.. row.AssignedSegments.Values]));
+                AssignedSegments: [.. row.AssignedSegments.Values],
+                // BPM-111-Abnahmepunkt: Stammdaten-IDs fuer den ID-basierten Key
+                BuildingPartId: controller.SelectedBuildingPart?.Id,
+                BuildingLevelId: controller.SelectedBuildingLevel?.Id,
+                CategoryId: controller.SelectedCategory?.Id));
             row.PendingTarget = targetDir;
             row.IsSelected = false;
         }

@@ -181,12 +181,13 @@ public class CaptureConfirmService
     }
 
     /// <summary>
-    /// Manueller document_key fuer Erstaufnahmen: Dokumenttyp + Plannummer +
-    /// Bauteil/Kategorie [+ Geschoss]. Bei nummernlosen Typen (Protokolle)
-    /// ersetzt der Dateiname die Plannummer (Eindeutigkeit).
-    /// HINWEIS ADR-059: Ziel ist ID-basiert (building_part_id etc.) — solange
-    /// die Stammdaten-IDs fehlen (ADR-Addendum offen, siehe 111.03-Notiz),
-    /// werden normalisierte Namen verwendet.
+    /// Manueller document_key fuer Erstaufnahmen (ADR-059 P.3, BPM-111-Abnahmepunkt):
+    /// document_type_id + Plannummer + building_part_id/category_id [+ building_level_id].
+    /// Stammdaten-IDs sind umbenennungsstabil — ein umbenanntes Bauteil aendert die
+    /// Dokument-Identitaet nicht. Bei nummernlosen Typen (Protokolle) ersetzt der
+    /// Dateiname die Plannummer (Eindeutigkeit). Namens-Fallback greift NUR, wenn
+    /// keine ID mitkommt (Altbestand/Test-Konstruktionen ohne Stammdaten) — der
+    /// Radial-Fluss speist Ring 2/3 aus Stammdaten und liefert immer IDs.
     /// </summary>
     public static string BuildManualDocumentKey(
         PendingAssignment p, IPlanValueNormalizer normalizer)
@@ -197,9 +198,15 @@ public class CaptureConfirmService
             ?? Path.GetFileNameWithoutExtension(p.File.Scan.FileName);
         parts.Add(normalizer.NormalizeForKey(number));
 
-        if (!string.IsNullOrWhiteSpace(p.BuildingPart))
+        var ring2Id = p.BuildingPartId ?? p.CategoryId;
+        if (ring2Id is not null)
+            parts.Add(ring2Id);
+        else if (!string.IsNullOrWhiteSpace(p.BuildingPart))
             parts.Add(normalizer.NormalizeForKey(p.BuildingPart));
-        if (!string.IsNullOrWhiteSpace(p.Level))
+
+        if (p.BuildingLevelId is not null)
+            parts.Add(p.BuildingLevelId);
+        else if (ring2Id is null && !string.IsNullOrWhiteSpace(p.Level))
             parts.Add(normalizer.NormalizeForKey(p.Level));
 
         return string.Join("|", parts);

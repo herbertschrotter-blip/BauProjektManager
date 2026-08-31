@@ -89,6 +89,7 @@ public partial class ProjectDetailView : UserControl
 
         var captureVm = new ManualCaptureViewModel(_manualSortDb, _bpmDb, _idGenerator);
         captureVm.RecoveryRequested += (_, _) => OnManualSortRecoveryRequested(captureVm, project);
+        captureVm.InboxChanged += (_, _) => ViewModel.RefreshInboxCommand.Execute(null);
         ManualSortHost.Content = new ManualCaptureView
         {
             DataContext = captureVm,

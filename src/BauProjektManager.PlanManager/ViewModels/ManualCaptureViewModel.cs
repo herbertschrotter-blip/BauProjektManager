@@ -189,6 +189,12 @@ public partial class ManualCaptureViewModel : ObservableObject
     /// </summary>
     public event EventHandler? RecoveryRequested;
 
+    /// <summary>
+    /// Nach jeder Eingang-Neuanalyse (Import bestätigt, Undo, Tab-Refresh) —
+    /// der Host hält damit das Eingang-Banner synchron zum Tab-Stand.
+    /// </summary>
+    public event EventHandler? InboxChanged;
+
     /// <summary>Projekt-Kontext setzen und Eingang analysieren.</summary>
     public async Task InitializeAsync(
         string projectId, string projectRootPath,
@@ -227,6 +233,7 @@ public partial class ManualCaptureViewModel : ObservableObject
         StatusText = _summaryStatusText;
         CanUndoLastImport = _undo.Preflight(_projectRootPath).CanUndo;
         SetSelectedRow();
+        InboxChanged?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>Archiv-Bestand + Tab-Header neu laden (111.07 Slice D).</summary>

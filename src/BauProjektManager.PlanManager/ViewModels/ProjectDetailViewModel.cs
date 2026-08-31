@@ -19,6 +19,7 @@ public partial class ProjectDetailViewModel : ObservableObject
     private Project _project;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasInbox))]
     private int _inboxCount;
 
     [ObservableProperty]

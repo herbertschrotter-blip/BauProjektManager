@@ -70,10 +70,17 @@
                 <Grid.LayoutTransform>
                     <ScaleTransform x:Name="ZoomTransform" ScaleX="1" ScaleY="1"/>
                 </Grid.LayoutTransform>
-                <Image x:Name="PageImage"
-                       Stretch="None"
-                       RenderOptions.BitmapScalingMode="HighQuality"/>
-                <Canvas x:Name="SelectionCanvas" IsHitTestVisible="False"/>
+                <!-- SheetContent ist exakt bildgroß und zentriert: Hit-Test und
+                     Markierungs-Balken rechnen in Bild-Pixeln ab SheetContent-Ursprung —
+                     auch wenn das Blatt kleiner als der Viewport ist (Zentrier-Versatz). -->
+                <Grid x:Name="SheetContent"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center">
+                    <Image x:Name="PageImage"
+                           Stretch="None"
+                           RenderOptions.BitmapScalingMode="HighQuality"/>
+                    <Canvas x:Name="SelectionCanvas" IsHitTestVisible="False"/>
+                </Grid>
             </Grid>
         </ScrollViewer>
     </DockPanel>

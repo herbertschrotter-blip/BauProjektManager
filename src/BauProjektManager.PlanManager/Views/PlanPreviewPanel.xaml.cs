@@ -529,7 +529,7 @@ public partial class PlanPreviewPanel : UserControl
                 return;
             }
 
-            var idx = HitWordIndex(e.GetPosition(SheetHost), strict: true);
+            var idx = HitWordIndex(e.GetPosition(SheetContent), strict: true);
             if (idx < 0)
                 return; // Klick neben den Text = Auswahl aufheben
 
@@ -554,7 +554,7 @@ public partial class PlanPreviewPanel : UserControl
 
         if (_selecting)
         {
-            var idx = HitWordIndex(e.GetPosition(SheetHost), strict: false);
+            var idx = HitWordIndex(e.GetPosition(SheetContent), strict: false);
             if (idx >= 0 && idx != _selCursor)
             {
                 _selCursor = idx;

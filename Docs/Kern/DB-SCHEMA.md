@@ -968,21 +968,38 @@ CREATE TABLE import_actions (
     import_id TEXT NOT NULL,
     action_order INTEGER NOT NULL,
     action_type TEXT NOT NULL,          -- "new", "indexUpdate", "changed", "changedSameIdx",
-                                       -- "olderRevision", "skip", "manual", "learnIndex"
+                                       -- "olderRevision", "skip", "manual", "learnIndex",
+                                       -- "skipDuplicate" (BPM-120 T2, Bucket A)
     action_status TEXT NOT NULL,        -- "pending", "completed", "failed"
     document_key TEXT,
     plan_number TEXT NOT NULL,
     plan_index TEXT,
     old_index TEXT,
     source_path TEXT NOT NULL,          -- relativ zum Projektordner
-    destination_path TEXT NOT NULL,     -- relativ
-    archive_path TEXT,                  -- relativ
+    destination_path TEXT,              -- relativ; NULL bei skipDuplicate (BPM-120 T2)
+    archive_path TEXT,                  -- relativ; bei indexUpdate deterministisch VOR
+                                       -- der ersten Mutation journalisiert (ADR-064 AK 5)
+    md5 TEXT,                           -- BPM-120 T2: Fingerprint der Quelldatei
+                                       -- (Pflichtinhalt bei skipDuplicate — Recovery-Verify P.7)
+    file_size INTEGER,                  -- BPM-120 T2: Groesse der Quelldatei
     error_message TEXT,
     FOREIGN KEY (import_id) REFERENCES import_journal(id)
 );
 
 CREATE INDEX idx_actions_import ON import_actions(import_id);
 ```
+
+**Vorab-Journalisierung (BPM-120 T2, ADR-064 P.2):** Journal-Header + ALLE Actions
+eines Imports werden vollständig geschrieben, BEVOR die erste Datei mutiert wird —
+inkl. deterministischer `source_path`/`destination_path`/`archive_path`. Bestätigte
+MD5-Dubletten sind echte Actions (`action_type = 'skipDuplicate'`, `destination_path`
+NULL, `md5` + `file_size` gesetzt): beim Confirm direktes Delete der Eingangs-Kopie,
+journalisiert + recovery-fähig (ADR-064 P.7), bewusst NICHT undo-bar.
+
+**Schema-Änderung mit BPM-120 T2 (Frühphase, keine Migration):**
+Betroffene Datei: `%LocalAppData%\BauProjektManager\Projects\<ProjektID>\planmanager.db`.
+Aktion: User löscht die Datei → BPM erstellt sie beim nächsten App-Start neu
+(`destination_path` nullable, neue Spalten `md5` + `file_size`).
 
 ### 6.6 import_action_files
 
@@ -1018,7 +1035,8 @@ Betroffene Datei: `%LocalAppData%\BauProjektManager\Projects\<ProjektID>\planman
 Aktion: User löscht die Datei → BPM erstellt sie beim nächsten App-Start neu mit Schema v2.0. Keine Migration, keine Backward-Compatibility.
 
 **Bestehende Tabellen aus v1.0 die UNVERÄNDERT bleiben:**
-`plan_files` (Kap. 6.2), `revision_file_links` (Kap. 6.3), `import_journal` (Kap. 6.4), `import_actions` (Kap. 6.5), `import_action_files` (Kap. 6.6).
+`plan_files` (Kap. 6.2), `revision_file_links` (Kap. 6.3), `import_journal` (Kap. 6.4), `import_action_files` (Kap. 6.6).
+`import_actions` (Kap. 6.5) wurde mit **BPM-120 T2** erweitert (destination_path nullable, md5 + file_size) — siehe dort.
 
 **`plan_revisions` (Kap. 6.1) wird UMGEBAUT** — siehe 6.7.2 unten.
 

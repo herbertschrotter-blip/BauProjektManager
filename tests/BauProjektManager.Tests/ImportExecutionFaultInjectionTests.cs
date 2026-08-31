@@ -60,7 +60,9 @@ public class ImportExecutionFaultInjectionTests
         var fake = new FakeFileStore();
         var inboxAbs = Path.Combine(env.Root, "_Eingang", "5998-300_OG2.pdf");
         fake.AddFile(inboxAbs);
-        fake.FailNext(FakeFileStore.FileOp.Move, "5998-300_OG2.pdf");
+        // T3: ein einzelner Lock-Fault wird vom Retry geheilt — erst 3 Faults
+        // erschoepfen die Versuche (siehe ImportExecutionDiskProtocolTests).
+        fake.FailNext(FakeFileStore.FileOp.Move, "5998-300_OG2.pdf", times: 3);
 
         var decisions = CaptureConfirmService.BuildDecisions(
             [NewPending("5998-300_OG2.pdf", "md5-pdf")], new PlanValueNormalizer());

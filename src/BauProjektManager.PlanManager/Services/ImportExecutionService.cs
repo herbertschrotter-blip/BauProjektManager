@@ -1,3 +1,4 @@
+using System.IO;
 using BauProjektManager.Domain.Enums.PlanManager;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models.PlanManager;
@@ -217,10 +218,10 @@ public class ImportExecutionService
                 }
             }
 
-            // Move file from inbox to target
+            // Move file from inbox to target (T3: .bpm_tmp + atomic rename)
             if (_reader.FileExists(sourcePath))
             {
-                _writer.MoveFile(sourcePath, targetPath, overwrite: true);
+                PublishIncomingFile(sourcePath, targetPath);
                 Log.Information("Datei verschoben: {Source} → {Target}",
                     decision.File.Parsed.FileName, targetRelPath);
             }
@@ -310,7 +311,7 @@ public class ImportExecutionService
         {
             var sourcePath = _path.Combine(projectRootPath, decision.File.Parsed.RelativePath);
             if (_reader.FileExists(sourcePath))
-                _writer.DeleteFile(sourcePath);
+                WithLockRetry(() => _writer.DeleteFile(sourcePath));
             _db.CompleteImportAction(actionId, true);
             Log.Debug("Dublette aus Eingang entfernt: {File}", decision.File.Parsed.FileName);
             return new ActionResult(true, null);
@@ -347,9 +348,52 @@ public class ImportExecutionService
             return;
 
         _writer.CreateDirectory(_path.GetDirectoryName(archiveAbsPath)!);
-        _writer.MoveFile(targetPath, archiveAbsPath);
+        WithLockRetry(() => _writer.MoveFile(targetPath, archiveAbsPath));
         Log.Information("Datei archiviert: {Source} → {Archive}",
             _path.GetFileName(targetPath), _path.GetFileName(archiveAbsPath));
+    }
+
+    /// <summary>
+    /// ADR-061 P5 / ADR-064 AK 7 (BPM-120 T3): eingehende Datei zunaechst als
+    /// <c>&lt;ziel&gt;.bpm_tmp</c> in den Zielbereich holen, dann atomarer Rename
+    /// im selben Verzeichnis. Ein Crash zwischen den Schritten hinterlaesst nur
+    /// eine tmp-Datei — nie ein halb geschriebenes Ziel; die Recovery holt den
+    /// finalen Rename idempotent nach. Eine tmp-Leiche aus einem frueheren
+    /// Abbruch wird ueberschrieben (Source ist die Wahrheit).
+    /// </summary>
+    private void PublishIncomingFile(string sourcePath, string targetPath)
+    {
+        var tmpPath = targetPath + TmpSuffix;
+        WithLockRetry(() => _writer.MoveFile(sourcePath, tmpPath, overwrite: true));
+        WithLockRetry(() => _writer.MoveFile(tmpPath, targetPath, overwrite: true));
+    }
+
+    /// <summary>Temp-Suffix des Disk-Protokolls (auch von der Recovery verwendet).</summary>
+    public const string TmpSuffix = ".bpm_tmp";
+
+    /// <summary>
+    /// Lock-Retry nach beschlossener Regel (ADR-061 P5 / ADR-064 AK 7): max. 3
+    /// Versuche bei Lock-/Sharing-Verletzungen, kurzer wachsender Backoff.
+    /// Fehlende Datei/Verzeichnis wird NICHT wiederholt (kein Lock-Fall).
+    /// Keine 2PC, keine verteilten Locks.
+    /// </summary>
+    internal static void WithLockRetry(Action fileOp)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                fileOp();
+                return;
+            }
+            catch (IOException ex) when (attempt < 3
+                && ex is not FileNotFoundException and not DirectoryNotFoundException)
+            {
+                Log.Warning("Dateioperation gesperrt (Versuch {Attempt}/3): {Message}",
+                    attempt, ex.Message);
+                Thread.Sleep(150 * attempt);
+            }
+        }
     }
 
     private sealed record ActionResult(bool Success, string? Error);

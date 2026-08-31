@@ -196,6 +196,17 @@ public class RecoveryExecutorService
             var sourceAbs = _path.Combine(projectRootPath, action.SourcePath);
             var destAbs = _path.Combine(projectRootPath, action.DestinationPath!);
 
+            // BPM-120 T3: Crash zwischen tmp-Move und finalem Rename — die Quelle
+            // liegt bereits als <ziel>.bpm_tmp im Zielbereich. Idempotentes
+            // Forward = finalen Rename nachholen (AK 9-Vorbereitung).
+            var tmpAbs = destAbs + ImportExecutionService.TmpSuffix;
+            if (!_reader.FileExists(sourceAbs) && _reader.FileExists(tmpAbs))
+            {
+                ImportExecutionService.WithLockRetry(
+                    () => _writer.MoveFile(tmpAbs, destAbs, overwrite: true));
+                return null;
+            }
+
             if (!_reader.FileExists(sourceAbs))
                 return $"Source-Datei nicht mehr da: {action.SourcePath}";
 

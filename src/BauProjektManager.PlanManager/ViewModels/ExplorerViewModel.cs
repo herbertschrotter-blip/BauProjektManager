@@ -22,18 +22,24 @@ public partial class ExplorerViewModel : ObservableObject
     private readonly IFileLauncher? _launcher;
     private readonly PlanManagerDatabase? _db;
     private readonly ArchiveMoveService? _move;
+    private readonly PlanReconcileService? _reconcile;
     private string _rootPath = "";
     private string _inboxFullPath = "";
+    private string _driftSummary = "";
 
     // Getrackt-Lookup (112.06b): normalisierter relativer Pfad -> Archiv-Eintrag.
     // Die DB bleibt kuratierter Index — der Explorer fragt nur nach, spiegelt nicht.
     private readonly Dictionary<string, PlanArchiveEntry> _tracked = new(StringComparer.OrdinalIgnoreCase);
+
+    // Drift-Lookup (112.06c): normalisierter relativer Pfad -> Reconcile-Befund.
+    private readonly Dictionary<string, DriftEntry> _drift = new(StringComparer.OrdinalIgnoreCase);
 
     public ExplorerViewModel(IFileLauncher? launcher = null, PlanManagerDatabase? db = null)
     {
         _launcher = launcher;
         _db = db;
         _move = db is null ? null : new ArchiveMoveService(db);
+        _reconcile = db is null ? null : new PlanReconcileService(db, _fs);
     }
 
     public ObservableCollection<ExplorerFolderNode> RootNodes { get; } = [];
@@ -72,9 +78,36 @@ public partial class ExplorerViewModel : ObservableObject
         }
 
         BuildTrackedIndex();
+        RunReconcile();
         foreach (var node in BuildChildNodes(rootPath))
             RootNodes.Add(node);
-        StatusText = $"{RootNodes.Count} Ordner im Projektroot";
+        StatusText = _driftSummary.Length > 0
+            ? $"{RootNodes.Count} Ordner im Projektroot · ⚠ {_driftSummary}"
+            : $"{RootNodes.Count} Ordner im Projektroot";
+    }
+
+    /// <summary>
+    /// Startup-Reconcile (112.06c): Drift-Befunde der getrackten Teilmenge einsammeln.
+    /// Läuft bei Initialize und jedem Refresh — nie automatisch reparierend.
+    /// </summary>
+    private void RunReconcile()
+    {
+        _drift.Clear();
+        _driftSummary = "";
+        if (_reconcile is null)
+            return;
+        var result = _reconcile.Reconcile(_rootPath);
+        foreach (var entry in result.Drift)
+            _drift[Normalize(entry.RelativePath)] = entry;
+
+        var missing = result.Drift.Count(d => d.Kind is DriftKind.MissingOnDisk or DriftKind.RelinkCandidate);
+        var changed = result.Drift.Count(d => d.Kind == DriftKind.ChangedOnDisk);
+        List<string> parts = [];
+        if (missing > 0)
+            parts.Add($"{missing}× fehlt auf Disk");
+        if (changed > 0)
+            parts.Add($"{changed}× geändert");
+        _driftSummary = string.Join(" · ", parts);
     }
 
     /// <summary>
@@ -99,6 +132,13 @@ public partial class ExplorerViewModel : ObservableObject
     }
 
     private static string Normalize(string relativePath) => relativePath.Replace('/', '\\');
+
+    private static string GetDirectory(string relativePath)
+    {
+        var normalized = Normalize(relativePath);
+        var idx = normalized.LastIndexOf('\\');
+        return idx < 0 ? "" : normalized[..idx];
+    }
 
     /// <summary>Kinder eines Knotens nachladen (lazy beim Aufklappen).</summary>
     public void LoadChildren(ExplorerFolderNode node)
@@ -129,17 +169,46 @@ public partial class ExplorerViewModel : ObservableObject
                          .OrderBy(p => _fs.GetFileName(p), StringComparer.OrdinalIgnoreCase))
             {
                 var info = _fs.GetFileInfo(path);
-                var entry = _tracked.GetValueOrDefault(Normalize(ToRelative(path)));
+                var rel = Normalize(ToRelative(path));
+                var entry = _tracked.GetValueOrDefault(rel);
+                var drift = _drift.GetValueOrDefault(rel);
+                var (statusText, statusKind, tooltip) = drift?.Kind == DriftKind.ChangedOnDisk
+                    ? ("Geändert auf Disk", "changed",
+                       "Dateigröße weicht vom erfassten Stand ab — Inhalt wurde außerhalb der App verändert.")
+                    : entry is null
+                        ? ("", "", "")
+                        : ($"Getrackt · {entry.PlanIndex ?? "Erstausg."}", "tracked", "");
                 Files.Add(new ExplorerFileRow(
                     _fs.GetFileName(path), path, FormatSize(info.Length),
                     info.Exists ? info.LastWriteTimeUtc.ToLocalTime().ToString("dd.MM.yy") : "",
-                    entry is null ? "" : $"Getrackt · {entry.PlanIndex ?? "Erstausg."}",
-                    entry));
+                    statusText, entry, statusKind, tooltip));
             }
+
+            // Geisterzeilen (112.06c): getrackte Dateien dieses Ordners, die auf
+            // Disk fehlen — Relink ist nur ein Hinweis, nie eine Aktion.
+            var folderRel = Normalize(ToRelative(value.FullPath));
+            foreach (var drift in _drift.Values.Where(d =>
+                         d.Kind is DriftKind.MissingOnDisk or DriftKind.RelinkCandidate
+                         && string.Equals(GetDirectory(d.RelativePath), folderRel,
+                             StringComparison.OrdinalIgnoreCase)))
+            {
+                Files.Add(new ExplorerFileRow(
+                    drift.FileName, _fs.Combine(_rootPath, drift.RelativePath), "—", "—",
+                    drift.Kind == DriftKind.RelinkCandidate ? "Fehlt · Relink?" : "Fehlt auf Disk",
+                    null, "missing",
+                    drift.Kind == DriftKind.RelinkCandidate
+                        ? $"Gleicher Inhalt gefunden unter: {drift.RelinkPath} — Relink erfolgt nicht automatisch (ADR-061)."
+                        : $"Getrackter Plan {drift.PlanNumber} ({drift.PlanIndex ?? "Erstausg."}) liegt nicht mehr am erfassten Ort."));
+            }
+
             var trackedCount = Files.Count(f => f.IsTracked);
-            StatusText = trackedCount > 0
-                ? $"{Files.Count} Datei(en) · {trackedCount} getrackt"
-                : $"{Files.Count} Datei(en)";
+            var driftCount = Files.Count(f => f.StatusKind is "missing" or "changed");
+            StatusText = (trackedCount, driftCount) switch
+            {
+                (_, > 0) => $"{Files.Count} Datei(en) · {trackedCount} getrackt · ⚠ {driftCount} Drift-Hinweis(e)",
+                ( > 0, _) => $"{Files.Count} Datei(en) · {trackedCount} getrackt",
+                _ => $"{Files.Count} Datei(en)"
+            };
         }
         catch (Exception ex)
         {
@@ -203,6 +272,7 @@ public partial class ExplorerViewModel : ObservableObject
         {
             var folder = SelectedFolder;
             BuildTrackedIndex();
+            RunReconcile();
             OnSelectedFolderChanged(folder);
         }
     }
@@ -292,10 +362,15 @@ public partial class ExplorerFolderNode : ObservableObject
     private string _badgeText = "";
 }
 
-/// <summary>Zeile der Dateiliste (rechte Seite); Entry gesetzt = getrackter Plan (112.06b).</summary>
+/// <summary>
+/// Zeile der Dateiliste (rechte Seite); Entry gesetzt = getrackter Plan (112.06b).
+/// StatusKind steuert die Badge-Farbe: "tracked" (Info) / "changed" (Warnung) /
+/// "missing" (Fehler, Geisterzeile ohne Disk-Datei) — 112.06c.
+/// </summary>
 public sealed record ExplorerFileRow(
     string Name, string FullPath, string SizeText, string ChangedText,
-    string StatusText = "", PlanArchiveEntry? Entry = null)
+    string StatusText = "", PlanArchiveEntry? Entry = null,
+    string StatusKind = "", string StatusTooltip = "")
 {
     public bool IsTracked => Entry is not null;
 }

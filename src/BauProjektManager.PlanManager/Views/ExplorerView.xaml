@@ -126,12 +126,24 @@
                                         IsReadOnly="True"/>
                     <DataGridTextColumn Header="Geändert" Binding="{Binding ChangedText}" Width="90"
                                         IsReadOnly="True"/>
-                    <!-- Status: Getrackt (Info-Blau, 112.06b) · Drift-Badges folgen mit 112.06c -->
-                    <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="120"
+                    <!-- Status (112.06b/c): Getrackt = Info · Geändert = Warnung · Fehlt = Fehler -->
+                    <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="130"
                                         IsReadOnly="True">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="{DynamicResource BpmInfo}"/>
+                                <Setter Property="ToolTip" Value="{Binding StatusTooltip}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding StatusKind}" Value="changed">
+                                        <Setter Property="Foreground" Value="{DynamicResource BpmWarning}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding StatusKind}" Value="missing">
+                                        <Setter Property="Foreground" Value="{DynamicResource BpmError}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding StatusTooltip}" Value="">
+                                        <Setter Property="ToolTip" Value="{x:Null}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>

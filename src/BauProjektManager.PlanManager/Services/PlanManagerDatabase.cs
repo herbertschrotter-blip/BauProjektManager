@@ -538,6 +538,37 @@ public class PlanManagerDatabase : IDisposable
         return result;
     }
 
+    /// <summary>
+    /// Reconcile-Grundlage (112.06c, ADR-061 P.6): alle Dateien der current-Revisionen
+    /// mit Fingerprint (md5_hash/file_size) — der Reconcile prüft NUR diese getrackte
+    /// Teilmenge gegen die Disk, nie den ganzen Projektbaum.
+    /// </summary>
+    public List<TrackedFileRecord> GetTrackedFilesForReconcile()
+    {
+        var conn = GetConnection();
+        var result = new List<TrackedFileRecord>();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT pf.relative_path, pf.file_name, pf.md5_hash, pf.file_size,
+                   pd.plan_number, pr.plan_index
+            FROM plan_documents pd
+            JOIN plan_revisions pr ON pr.document_id = pd.id
+                AND pr.revision_status = 'current' AND pr.is_deleted = 0
+            JOIN revision_file_links rfl ON rfl.revision_id = pr.id
+            JOIN plan_files pf ON pf.id = rfl.file_id
+            WHERE pd.is_deleted = 0
+            """;
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+            result.Add(new TrackedFileRecord(
+                reader.GetString(0), reader.GetString(1),
+                reader.IsDBNull(2) ? "" : reader.GetString(2),
+                reader.IsDBNull(3) ? 0 : reader.GetInt64(3),
+                reader.GetString(4),
+                reader.IsDBNull(5) ? null : reader.GetString(5)));
+        return result;
+    }
+
     /// <summary>Aktualisiert den relativen Pfad einer Datei nach einem Archiv-Move (111.07 Slice D).</summary>
     public void UpdateFilePath(string fileId, string newRelativePath)
     {

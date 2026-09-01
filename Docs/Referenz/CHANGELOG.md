@@ -31,6 +31,48 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.167] — 2026-09-01
+
+### Feature: Explorer-Live-Aktualisierung + Fix: wirkungsloser Refresh
+
+Praxis-Test-Befund Teil 50 (Test 04, Punkt 11): Drift-Zeilen erschienen erst nach erneutem Öffnen des Projekts. Ursache: `Refresh()` baute den Baum komplett neu auf und suchte die vorherige Ordnerauswahl nur auf der Wurzelebene — bei tief liegenden Ordnern (`…\H1\00 EG`) blieb `SelectedFolder` null und die Liste leer. Refresh frischt jetzt nur noch Daten auf (Getrackt-Index, Reconcile, Eingang-Zähler, aktuelle Liste), Baum und Auswahl bleiben; für strukturelle Änderungen gibt es `ReloadTree()` (läuft automatisch nach Import/Undo). Dazu **Live-Überwachung** (Wunsch Herbert): zwei `FileSystemWatcher` auf dem Projektroot — Datei-Events → Daten-Refresh, Ordner-Events → Baum-Neuaufbau, beide durch ein 750-ms-Debounce-Fenster (ein Import erzeugt Dutzende Events; der Reconcile rechnet bei fehlenden Dateien MD5). Puffer-Überlauf → Vollaktualisierung; verweigerte Watcher (Netz/Cloud) werden protokolliert, ⟳ bleibt Fallback; Freigabe beim Verlassen der Projektansicht. Watcher bleibt bewusst `System.IO` (ADR-060-Präzisierung). (Commit `e3e3c0f`)
+
+---
+
+## [v0.28.166] — 2026-09-01
+
+### Feature: BPM-112.06c — Startup-Reconcile + Drift-Anzeige
+
+Neuer `PlanReconcileService` (ADR-061 P.6): prüft **nur die getrackte Teilmenge** (current-Revisionen) gegen die Disk — Exists + `file_size` zuerst, MD5 ausschließlich für die Relink-Suche fehlender Dateien. Drift-Status `MissingOnDisk` / `ChangedOnDisk` / `RelinkCandidate`; fehlende Pläne erscheinen als rote Geisterzeilen im erfassten Ordner, Relink-Fundorte stehen im Tooltip — **nie automatisch reparierend**. Dazu `GetTrackedFilesForReconcile` in `PlanManagerDatabase` und 4 neue Tests (Kein-Drift / Fehlt / Relink / Größenabweichung). **Damit ist BPM-112.06 und die gesamte BPM-112-Kette abgeschlossen.** (Commit `bb15b57`)
+
+---
+
+## [v0.28.165] — 2026-09-01
+
+### Feature: BPM-112.06b — Getrackt-Badges + journalisiertes Verschieben
+
+Der Explorer löst jede Datei gegen den kuratierten Planindex auf und zeigt „Getrackt · Index"; Kontextmenü mit Öffnen / Im Windows-Explorer / Pfad kopieren / Im PlanManager anzeigen / **Verschieben (journalisiert)** über den bestehenden `ArchiveMoveService` (alle Dateien der Revision gemeinsam, Journal vor Move) — Löschen gesperrt, kein freies Verschieben (ADR-061 P.6). Neuer `FolderPickerDialog` für die Zielordner-Wahl; die `planmanager.db` wird beim Projektöffnen geöffnet und mit dem ManuellSortieren-Tab geteilt. (Commits `c2422c6` + `98892f4`)
+
+> ⚠️ **Historie:** `98892f4` trägt versehentlich dieselbe Message/Version, enthält aber bereits die 06c-Drift-Integration in `ExplorerViewModel`/`ExplorerView` (Doppel-Commit, bereits gepusht — bewusst nicht umgeschrieben).
+
+---
+
+## [v0.28.164] — 2026-09-01
+
+### Feature: BPM-112.06a — In-App-Explorer (Basis)
+
+Neuer Explorer-Tab als **Start-Tab** der Projekt-Detailansicht (neue Reihenfolge: Explorer · Manuell sortieren · Profile · Sync; „Plandaten" folgt mit BPM-126). Live-Ansicht des Projektordners über `IFileSystemReader` (ADR-061 Modell A — die DB bleibt kuratierter Index, kein Vollspiegel): Baum mit Lazy-Load, Dateiliste im BPM-DataGrid-Stil, Breadcrumb, Screen States. Toolbar über `IFileLauncher` (Öffnen, Im Windows-Explorer) plus Pfad-in-Zwischenablage (UI-nah gelöst, wie im Port-Kommentar vorgesehen). Der `_Eingang`-Knoten trägt den Dateizähler und zieht bei Import/Undo automatisch nach. (Commit `496bef1`)
+
+---
+
+## [v0.28.163] — 2026-09-01
+
+### Docs: Mockups In-App-Explorer + Plandaten-Tab
+
+`02_Projektdetail/04_Explorer.html` (BPM-112.06, Variante A = Tab statt eigener View) und `05_Plandaten.html` (neu, BPM-126): tabellarische DB-Sicht mit Detail-Panel (Dokument / Ablage+Dateien / Revisionen), Segment-Editor im **Wizard-Muster** (eine kombinierte Fläche: Token-Kacheln mit klickbaren Trennzeichen, Drag & Drop aus der Segmenttyp-Palette, Anbindung an den bestehenden FeldtypManager) sowie **Tags** als neues Konzept (BPM-127, ≠ Dateinamens-Segmente). Neue Tab-Reihenfolge in allen Projektdetail-Mockups, Sitemap um alle Kanten ergänzt. (Commit `32966a0`)
+
+---
+
 ## [v0.28.161] — 2026-08-31
 
 ### Fix: Eingang-Banner sofort aktuell nach Import/Undo

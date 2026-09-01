@@ -86,7 +86,30 @@
                       RowStyle="{DynamicResource BpmDataGridRow}"
                       CellStyle="{DynamicResource BpmDataGridCell}"
                       BorderThickness="0"
-                      MouseDoubleClick="OnFileDoubleClick">
+                      MouseDoubleClick="OnFileDoubleClick"
+                      ContextMenuOpening="OnListContextMenuOpening">
+                <DataGrid.ContextMenu>
+                    <ContextMenu Style="{DynamicResource BpmContextMenu}">
+                        <MenuItem Header="↗ Öffnen" Style="{DynamicResource BpmMenuItem}"
+                                  Click="OnCtxOpenClick"/>
+                        <MenuItem Header="📂 Im Windows-Explorer zeigen" Style="{DynamicResource BpmMenuItem}"
+                                  Click="OnCtxRevealClick"/>
+                        <MenuItem Header="📋 Pfad kopieren" Style="{DynamicResource BpmMenuItem}"
+                                  Click="OnCopyPathClick"/>
+                        <MenuItem x:Name="CtxShowInPlanManager" Style="{DynamicResource BpmMenuItem}"
+                                  Header="Im PlanManager anzeigen (Archiv)"
+                                  Click="OnCtxShowInPlanManagerClick"/>
+                        <Separator Style="{DynamicResource BpmMenuSeparator}"/>
+                        <MenuItem x:Name="CtxMove" Style="{DynamicResource BpmMenuItem}"
+                                  Header="➔ Verschieben… (journalisiert)"
+                                  Click="OnCtxMoveClick"/>
+                        <MenuItem Style="{DynamicResource BpmMenuItem}"
+                                  Header="🔒 Löschen — nicht im Explorer"
+                                  IsEnabled="False"
+                                  ToolTipService.ShowOnDisabled="True"
+                                  ToolTip="Kein Lösch-Workflow in V1 — nur Import-Undo (ADR-061/064)."/>
+                    </ContextMenu>
+                </DataGrid.ContextMenu>
                 <DataGrid.Columns>
                     <DataGridTemplateColumn Header="Name" Width="*" IsReadOnly="True">
                         <DataGridTemplateColumn.CellTemplate>
@@ -103,9 +126,15 @@
                                         IsReadOnly="True"/>
                     <DataGridTextColumn Header="Geändert" Binding="{Binding ChangedText}" Width="90"
                                         IsReadOnly="True"/>
-                    <!-- Status: Getrackt-/Drift-Badges folgen mit 112.06b/c -->
-                    <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="110"
-                                        IsReadOnly="True"/>
+                    <!-- Status: Getrackt (Info-Blau, 112.06b) · Drift-Badges folgen mit 112.06c -->
+                    <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="120"
+                                        IsReadOnly="True">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{DynamicResource BpmInfo}"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
                 </DataGrid.Columns>
             </DataGrid>
         </Grid>

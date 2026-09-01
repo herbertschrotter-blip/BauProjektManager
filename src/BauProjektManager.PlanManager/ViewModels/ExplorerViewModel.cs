@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using BauProjektManager.Domain.Interfaces;
+using BauProjektManager.Domain.Models.PlanManager;
+using BauProjektManager.PlanManager.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Serilog;
@@ -18,12 +20,20 @@ public partial class ExplorerViewModel : ObservableObject
     private static readonly Infrastructure.Services.LocalFileSystem _fs = new();
 
     private readonly IFileLauncher? _launcher;
+    private readonly PlanManagerDatabase? _db;
+    private readonly ArchiveMoveService? _move;
     private string _rootPath = "";
     private string _inboxFullPath = "";
 
-    public ExplorerViewModel(IFileLauncher? launcher = null)
+    // Getrackt-Lookup (112.06b): normalisierter relativer Pfad -> Archiv-Eintrag.
+    // Die DB bleibt kuratierter Index — der Explorer fragt nur nach, spiegelt nicht.
+    private readonly Dictionary<string, PlanArchiveEntry> _tracked = new(StringComparer.OrdinalIgnoreCase);
+
+    public ExplorerViewModel(IFileLauncher? launcher = null, PlanManagerDatabase? db = null)
     {
         _launcher = launcher;
+        _db = db;
+        _move = db is null ? null : new ArchiveMoveService(db);
     }
 
     public ObservableCollection<ExplorerFolderNode> RootNodes { get; } = [];
@@ -61,10 +71,34 @@ public partial class ExplorerViewModel : ObservableObject
             return;
         }
 
+        BuildTrackedIndex();
         foreach (var node in BuildChildNodes(rootPath))
             RootNodes.Add(node);
         StatusText = $"{RootNodes.Count} Ordner im Projektroot";
     }
+
+    /// <summary>
+    /// Getrackt-Index neu aufbauen: alle Dateien der current-Revisionen
+    /// (plan_documents/plan_revisions) nach relativem Pfad aufloesbar machen.
+    /// </summary>
+    private void BuildTrackedIndex()
+    {
+        _tracked.Clear();
+        if (_db is null)
+            return;
+        try
+        {
+            foreach (var entry in _db.GetArchiveEntries())
+                foreach (var file in _db.GetFilesForRevision(entry.RevisionId))
+                    _tracked[Normalize(file.RelativePath)] = entry;
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Explorer: Getrackt-Index nicht ladbar");
+        }
+    }
+
+    private static string Normalize(string relativePath) => relativePath.Replace('/', '\\');
 
     /// <summary>Kinder eines Knotens nachladen (lazy beim Aufklappen).</summary>
     public void LoadChildren(ExplorerFolderNode node)
@@ -95,11 +129,17 @@ public partial class ExplorerViewModel : ObservableObject
                          .OrderBy(p => _fs.GetFileName(p), StringComparer.OrdinalIgnoreCase))
             {
                 var info = _fs.GetFileInfo(path);
+                var entry = _tracked.GetValueOrDefault(Normalize(ToRelative(path)));
                 Files.Add(new ExplorerFileRow(
                     _fs.GetFileName(path), path, FormatSize(info.Length),
-                    info.Exists ? info.LastWriteTimeUtc.ToLocalTime().ToString("dd.MM.yy") : ""));
+                    info.Exists ? info.LastWriteTimeUtc.ToLocalTime().ToString("dd.MM.yy") : "",
+                    entry is null ? "" : $"Getrackt · {entry.PlanIndex ?? "Erstausg."}",
+                    entry));
             }
-            StatusText = $"{Files.Count} Datei(en)";
+            var trackedCount = Files.Count(f => f.IsTracked);
+            StatusText = trackedCount > 0
+                ? $"{Files.Count} Datei(en) · {trackedCount} getrackt"
+                : $"{Files.Count} Datei(en)";
         }
         catch (Exception ex)
         {
@@ -142,6 +182,30 @@ public partial class ExplorerViewModel : ObservableObject
 
     /// <summary>Pfad, den "Pfad kopieren" in die Zwischenablage legt (Datei vor Ordner).</summary>
     public string? PathForClipboard => SelectedFile?.FullPath ?? SelectedFolder?.FullPath;
+
+    /// <summary>Absoluter Projektroot (fuer den Zielordner-Dialog des Hosts).</summary>
+    public string ProjectRootPath => _rootPath;
+
+    /// <summary>
+    /// Getrackten Plan journalisiert verschieben (112.06b, ADR-061 P.6):
+    /// laeuft ueber den ArchiveMoveService — alle Dateien der current-Revision
+    /// ziehen gemeinsam um, Journal-Action VOR jedem Move, nicht undo-bar.
+    /// </summary>
+    public void MoveTracked(ExplorerFileRow row, string targetRelativeDirectory)
+    {
+        if (_move is null || row.Entry is null)
+            return;
+        var result = _move.MoveDocument(row.Entry, targetRelativeDirectory, _rootPath);
+        StatusText = result.Success
+            ? $"✓ {row.Entry.PlanNumber} verschoben nach {targetRelativeDirectory} ({result.MovedFiles} Datei(en))"
+            : $"⚠ Verschieben fehlgeschlagen: {result.Error}";
+        if (result.Success)
+        {
+            var folder = SelectedFolder;
+            BuildTrackedIndex();
+            OnSelectedFolderChanged(folder);
+        }
+    }
 
     private IEnumerable<ExplorerFolderNode> BuildChildNodes(string parentPath)
     {
@@ -228,6 +292,10 @@ public partial class ExplorerFolderNode : ObservableObject
     private string _badgeText = "";
 }
 
-/// <summary>Zeile der Dateiliste (rechte Seite). StatusText füllt 112.06b/c (Getrackt/Drift).</summary>
+/// <summary>Zeile der Dateiliste (rechte Seite); Entry gesetzt = getrackter Plan (112.06b).</summary>
 public sealed record ExplorerFileRow(
-    string Name, string FullPath, string SizeText, string ChangedText, string StatusText = "");
+    string Name, string FullPath, string SizeText, string ChangedText,
+    string StatusText = "", PlanArchiveEntry? Entry = null)
+{
+    public bool IsTracked => Entry is not null;
+}

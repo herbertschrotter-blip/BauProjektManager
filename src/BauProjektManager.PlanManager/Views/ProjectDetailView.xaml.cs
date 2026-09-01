@@ -58,10 +58,15 @@ public partial class ProjectDetailView : UserControl
         var vm = new ProjectDetailViewModel(project);
         DataContext = vm;
 
-        // BPM-112.06a: Explorer ist Start-Tab — Live-FS-Baum laedt sofort
+        // BPM-112.06a/b: Explorer ist Start-Tab — Live-FS-Baum laedt sofort
         // (nur Top-Level, lazy); die Eingang-Analyse bleibt beim
-        // ManuellSortieren-Tab (lazy via OnTabChanged).
-        ExplorerHost.Initialize(project.Paths.Root, _fileLauncher, project.Paths.Inbox);
+        // ManuellSortieren-Tab (lazy via OnTabChanged). Die planmanager.db
+        // wird hier bereits geoeffnet (Getrackt-Badges + journalisiertes
+        // Verschieben) und vom ManuellSortieren-Tab mitgenutzt.
+        if (_bpmDb is not null && !string.IsNullOrWhiteSpace(project.Paths.Root))
+            _manualSortDb = new PlanManagerDatabase(project.Id, _idGenerator, _persistenceRegistry);
+        ExplorerHost.Initialize(project.Paths.Root, _fileLauncher, project.Paths.Inbox, _manualSortDb);
+        ExplorerHost.PlanManagerRequested += (_, _) => DetailTabs.SelectedItem = ManualSortTab;
 
         // PlanManagerDatabase des ManuellSortieren-Tabs beim Verlassen schliessen
         Unloaded += (_, _) => { _manualSortDb?.Dispose(); _manualSortDb = null; };
@@ -83,7 +88,9 @@ public partial class ProjectDetailView : UserControl
             return; // Platzhalter-Hinweis im Tab bleibt stehen
 
         _manualSortInitialized = true;
-        _manualSortDb = new PlanManagerDatabase(project.Id, _idGenerator, _persistenceRegistry);
+        // DB kommt seit 112.06b bereits aus dem Konstruktor (Explorer teilt sie);
+        // Fallback nur falls der Ctor sie nicht anlegen konnte.
+        _manualSortDb ??= new PlanManagerDatabase(project.Id, _idGenerator, _persistenceRegistry);
 
         // BPM-120 H0: Der Recovery-Einstieg (BPM-016) haengt seit dem Alt-Import-Cutover
         // an der Radial-Strecke — pending Imports (App-Crash, via Cloud gesyncter

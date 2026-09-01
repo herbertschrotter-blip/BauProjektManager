@@ -1,0 +1,129 @@
+<UserControl x:Class="BauProjektManager.PlanManager.Views.ExplorerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:BauProjektManager.PlanManager.ViewModels">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar: Breadcrumb + Aktionen (IFileLauncher, ADR-060 P.3) -->
+        <Border Grid.Row="0" Background="{DynamicResource BpmBgSurface}"
+                BorderBrush="{DynamicResource BpmBorderSubtle}" BorderThickness="0,0,0,1"
+                Padding="10,6">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button Content="⟳" Width="26" Padding="0,2"
+                            Style="{DynamicResource BpmButtonGhost}"
+                            ToolTip="Neu laden"
+                            Command="{Binding RefreshCommand}"/>
+                    <Button Content="↗ Öffnen" Padding="10,3" Margin="8,0,0,0"
+                            Style="{DynamicResource BpmButtonSecondary}"
+                            ToolTip="Datei in der Standard-App öffnen"
+                            Command="{Binding OpenFileCommand}"/>
+                    <Button Content="📂 Im Windows-Explorer" Padding="10,3" Margin="4,0,0,0"
+                            Style="{DynamicResource BpmButtonSecondary}"
+                            ToolTip="Auswahl im Windows-Explorer zeigen"
+                            Command="{Binding RevealInExplorerCommand}"/>
+                    <Button Content="📋 Pfad kopieren" Padding="10,3" Margin="4,0,0,0"
+                            Style="{DynamicResource BpmButtonSecondary}"
+                            ToolTip="Pfad der Auswahl in die Zwischenablage"
+                            Click="OnCopyPathClick"/>
+                </StackPanel>
+                <TextBlock Text="{Binding Breadcrumb}"
+                           Foreground="{DynamicResource BpmTextPrimary}"
+                           FontSize="12" VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"/>
+            </DockPanel>
+        </Border>
+
+        <!-- Live-FS-Ansicht: Baum links, Dateiliste rechts (Modell A, ADR-061 P.6) -->
+        <Grid Grid.Row="1"
+              Visibility="{Binding HasRoot, Converter={StaticResource BoolToVis}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="240"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <TreeView Grid.Column="0" x:Name="FolderTree"
+                      ItemsSource="{Binding RootNodes}"
+                      Style="{DynamicResource BpmTreeView}"
+                      ItemContainerStyle="{DynamicResource BpmTreeViewItem}"
+                      BorderThickness="0,0,0.5,0"
+                      TreeViewItem.Expanded="OnFolderExpanded"
+                      SelectedItemChanged="OnFolderSelected">
+                <TreeView.ItemTemplate>
+                    <HierarchicalDataTemplate DataType="{x:Type vm:ExplorerFolderNode}"
+                                              ItemsSource="{Binding Children}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Name}" FontSize="12"/>
+                            <TextBlock Text="{Binding BadgeText}" FontSize="11"
+                                       Foreground="{DynamicResource BpmWarning}"
+                                       Margin="6,0,0,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding BadgeText}" Value="">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
+
+            <!-- Dateiliste: kompletter BPM-DataGrid-Style-Satz (Zebra + Header + Row + Cell) -->
+            <DataGrid Grid.Column="1" x:Name="FileList"
+                      ItemsSource="{Binding Files}"
+                      SelectedItem="{Binding SelectedFile}"
+                      Style="{DynamicResource BpmDataGridZebra}"
+                      ColumnHeaderStyle="{DynamicResource BpmDataGridColumnHeader}"
+                      RowStyle="{DynamicResource BpmDataGridRow}"
+                      CellStyle="{DynamicResource BpmDataGridCell}"
+                      BorderThickness="0"
+                      MouseDoubleClick="OnFileDoubleClick">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="Name" Width="*" IsReadOnly="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="📄" FontSize="12" Margin="0,0,6,0"
+                                               Foreground="{DynamicResource BpmTextSecondary}"/>
+                                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="Größe" Binding="{Binding SizeText}" Width="85"
+                                        IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Geändert" Binding="{Binding ChangedText}" Width="90"
+                                        IsReadOnly="True"/>
+                    <!-- Status: Getrackt-/Drift-Badges folgen mit 112.06b/c -->
+                    <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="110"
+                                        IsReadOnly="True"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+
+        <!-- Empty-State: kein Projektroot -->
+        <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
+                    Visibility="{Binding HasRoot, Converter={StaticResource InverseBoolToVis}}">
+            <TextBlock Text="Kein Projektordner"
+                       Foreground="{DynamicResource BpmTextSecondary}"
+                       FontSize="14" HorizontalAlignment="Center"/>
+            <TextBlock Text="Projektpfad nicht gesetzt oder nicht erreichbar — bitte in den Einstellungen hinterlegen."
+                       Foreground="{DynamicResource BpmTextSecondary}"
+                       FontSize="11" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+        </StackPanel>
+
+        <!-- Statuszeile -->
+        <TextBlock Grid.Row="2" Text="{Binding StatusText}"
+                   Foreground="{DynamicResource BpmTextSecondary}"
+                   FontSize="11" Padding="10,4"/>
+    </Grid>
+</UserControl>

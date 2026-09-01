@@ -58,6 +58,11 @@ public partial class ProjectDetailView : UserControl
         var vm = new ProjectDetailViewModel(project);
         DataContext = vm;
 
+        // BPM-112.06a: Explorer ist Start-Tab — Live-FS-Baum laedt sofort
+        // (nur Top-Level, lazy); die Eingang-Analyse bleibt beim
+        // ManuellSortieren-Tab (lazy via OnTabChanged).
+        ExplorerHost.Initialize(project.Paths.Root, _fileLauncher, project.Paths.Inbox);
+
         // PlanManagerDatabase des ManuellSortieren-Tabs beim Verlassen schliessen
         Unloaded += (_, _) => { _manualSortDb?.Dispose(); _manualSortDb = null; };
     }
@@ -89,7 +94,12 @@ public partial class ProjectDetailView : UserControl
 
         var captureVm = new ManualCaptureViewModel(_manualSortDb, _bpmDb, _idGenerator);
         captureVm.RecoveryRequested += (_, _) => OnManualSortRecoveryRequested(captureVm, project);
-        captureVm.InboxChanged += (_, _) => ViewModel.RefreshInboxCommand.Execute(null);
+        captureVm.InboxChanged += (_, _) =>
+        {
+            ViewModel.RefreshInboxCommand.Execute(null);
+            // Eingang-Zaehler im Explorer-Baum mitziehen (112.06a)
+            ExplorerHost.ViewModel?.RefreshCommand.Execute(null);
+        };
         ManualSortHost.Content = new ManualCaptureView
         {
             DataContext = captureVm,

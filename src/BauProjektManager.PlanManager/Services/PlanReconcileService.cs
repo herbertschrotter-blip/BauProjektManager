@@ -59,9 +59,8 @@ public class PlanReconcileService
                     file.PlanNumber, file.PlanIndex, RelinkPath: null));
         }
 
-        if (drift.Count > 0)
-            Log.Information("Reconcile: {Checked} getrackte Dateien, {Drift} Drift-Hinweis(e)",
-                tracked.Count, drift.Count);
+        Log.Debug("Reconcile: {Checked} getrackte Dateien geprueft, {Drift} Drift-Hinweis(e)",
+            tracked.Count, drift.Count);
         return new ReconcileResult(tracked.Count, drift);
     }
 

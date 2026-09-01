@@ -1,7 +1,9 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.PlanManager.Services;
 using BauProjektManager.PlanManager.ViewModels;
@@ -16,6 +18,19 @@ namespace BauProjektManager.PlanManager.Views;
 /// </summary>
 public partial class ExplorerView : UserControl
 {
+    // BPM-112.05 (ADR-060 Slice 5): FS-Port fuer Zugriffe; der FileSystemWatcher
+    // selbst bleibt System.IO (UI-Live-Refresh, kein Port-Aequivalent — bewusst,
+    // gleiches Muster wie ProjectEditDialog).
+    private static readonly Infrastructure.Services.LocalFileSystem _fs = new();
+
+    /// <summary>Sammelfenster fuer FS-Events (Import erzeugt Dutzende, OneDrive rauscht).</summary>
+    private static readonly TimeSpan DebounceInterval = TimeSpan.FromMilliseconds(750);
+
+    private FileSystemWatcher? _fileWatcher;
+    private FileSystemWatcher? _dirWatcher;
+    private DispatcherTimer? _debounce;
+    private bool _pendingTreeReload;
+
     public ExplorerView()
     {
         Resources.Add("BoolToVis", new BoolToVisConverter());
@@ -36,6 +51,112 @@ public partial class ExplorerView : UserControl
         var vm = new ExplorerViewModel(fileLauncher, planDb);
         DataContext = vm;
         vm.Initialize(projectRootPath, inboxRelativePath);
+        StartWatching(projectRootPath);
+    }
+
+    // ── Live-Aktualisierung (BPM-112.06d) ───────────────────────────
+
+    /// <summary>
+    /// Ueberwacht den Projektordner und frischt Liste/Badges/Drift automatisch auf.
+    /// Zwei Watcher, damit Datei- und Struktur-Aenderungen unterscheidbar bleiben:
+    /// Dateien -> Daten-Refresh (Auswahl bleibt), Ordner -> Baum-Neuaufbau.
+    /// Alle Events laufen durch ein Debounce-Fenster, weil ein Import Dutzende
+    /// Events erzeugt und der Reconcile bei fehlenden Dateien MD5 rechnet.
+    /// </summary>
+    private void StartWatching(string projectRootPath)
+    {
+        StopWatching();
+        if (string.IsNullOrWhiteSpace(projectRootPath) || !_fs.DirectoryExists(projectRootPath))
+            return;
+
+        try
+        {
+            _debounce = new DispatcherTimer { Interval = DebounceInterval };
+            _debounce.Tick += OnDebounceTick;
+
+            _fileWatcher = new FileSystemWatcher(projectRootPath)
+            {
+                IncludeSubdirectories = true,
+                NotifyFilter = NotifyFilters.FileName | NotifyFilters.Size | NotifyFilters.LastWrite,
+                EnableRaisingEvents = true
+            };
+            _fileWatcher.Created += (_, _) => Bump(structureChanged: false);
+            _fileWatcher.Deleted += (_, _) => Bump(structureChanged: false);
+            _fileWatcher.Changed += (_, _) => Bump(structureChanged: false);
+            _fileWatcher.Renamed += (_, _) => Bump(structureChanged: false);
+            _fileWatcher.Error += OnWatcherError;
+
+            _dirWatcher = new FileSystemWatcher(projectRootPath)
+            {
+                IncludeSubdirectories = true,
+                NotifyFilter = NotifyFilters.DirectoryName,
+                EnableRaisingEvents = true
+            };
+            _dirWatcher.Created += (_, _) => Bump(structureChanged: true);
+            _dirWatcher.Deleted += (_, _) => Bump(structureChanged: true);
+            _dirWatcher.Renamed += (_, _) => Bump(structureChanged: true);
+            _dirWatcher.Error += OnWatcherError;
+        }
+        catch (Exception ex)
+        {
+            // Netzlaufwerke/Cloud koennen Watcher verweigern — dann bleibt der
+            // Refresh-Button der Weg (kein Funktionsverlust).
+            Log.Warning(ex, "Explorer: Live-Ueberwachung nicht moeglich");
+            StopWatching();
+        }
+    }
+
+    /// <summary>Vom Host beim Verlassen der Projektansicht aufgerufen.</summary>
+    public void StopWatching()
+    {
+        if (_debounce is not null)
+        {
+            _debounce.Stop();
+            _debounce.Tick -= OnDebounceTick;
+            _debounce = null;
+        }
+        foreach (var watcher in new[] { _fileWatcher, _dirWatcher })
+        {
+            if (watcher is null)
+                continue;
+            watcher.EnableRaisingEvents = false;
+            watcher.Dispose();
+        }
+        _fileWatcher = null;
+        _dirWatcher = null;
+        _pendingTreeReload = false;
+    }
+
+    /// <summary>Event vom Worker-Thread: Debounce-Fenster auf dem UI-Thread neu starten.</summary>
+    private void Bump(bool structureChanged)
+        => Dispatcher.InvokeAsync(() =>
+        {
+            _pendingTreeReload |= structureChanged;
+            _debounce?.Stop();
+            _debounce?.Start();
+        });
+
+    private void OnWatcherError(object sender, ErrorEventArgs e)
+    {
+        // Puffer-Ueberlauf: Einzelevents sind verloren -> sicherheitshalber alles neu.
+        Log.Warning(e.GetException(), "Explorer: Watcher-Fehler — vollstaendige Aktualisierung");
+        Bump(structureChanged: true);
+    }
+
+    private void OnDebounceTick(object? sender, EventArgs e)
+    {
+        _debounce?.Stop();
+        if (ViewModel is not { } vm)
+            return;
+        if (_pendingTreeReload)
+        {
+            _pendingTreeReload = false;
+            vm.ReloadTree();
+        }
+        else
+        {
+            vm.RefreshCommand.Execute(null);
+        }
     }
 
     private void OnFolderExpanded(object sender, RoutedEventArgs e)

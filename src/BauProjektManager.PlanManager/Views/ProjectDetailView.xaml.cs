@@ -68,8 +68,13 @@ public partial class ProjectDetailView : UserControl
         ExplorerHost.Initialize(project.Paths.Root, _fileLauncher, project.Paths.Inbox, _manualSortDb);
         ExplorerHost.PlanManagerRequested += (_, _) => DetailTabs.SelectedItem = ManualSortTab;
 
-        // PlanManagerDatabase des ManuellSortieren-Tabs beim Verlassen schliessen
-        Unloaded += (_, _) => { _manualSortDb?.Dispose(); _manualSortDb = null; };
+        // PlanManagerDatabase + Explorer-Watcher beim Verlassen der Ansicht freigeben
+        Unloaded += (_, _) =>
+        {
+            ExplorerHost.StopWatching();
+            _manualSortDb?.Dispose();
+            _manualSortDb = null;
+        };
     }
 
     /// <summary>
@@ -104,8 +109,8 @@ public partial class ProjectDetailView : UserControl
         captureVm.InboxChanged += (_, _) =>
         {
             ViewModel.RefreshInboxCommand.Execute(null);
-            // Eingang-Zaehler im Explorer-Baum mitziehen (112.06a)
-            ExplorerHost.ViewModel?.RefreshCommand.Execute(null);
+            // Explorer-Baum komplett neu (Import legt neue Zielordner an) — 112.06a/c
+            ExplorerHost.ViewModel?.ReloadTree();
         };
         ManualSortHost.Content = new ManualCaptureView
         {

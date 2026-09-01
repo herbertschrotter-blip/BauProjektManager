@@ -24,6 +24,7 @@ public partial class ExplorerViewModel : ObservableObject
     private readonly ArchiveMoveService? _move;
     private readonly PlanReconcileService? _reconcile;
     private string _rootPath = "";
+    private string _inboxRelativePath = "";
     private string _inboxFullPath = "";
     private string _driftSummary = "";
 
@@ -65,6 +66,7 @@ public partial class ExplorerViewModel : ObservableObject
     public void Initialize(string rootPath, string inboxRelativePath = "")
     {
         _rootPath = rootPath;
+        _inboxRelativePath = inboxRelativePath;
         _inboxFullPath = string.IsNullOrWhiteSpace(inboxRelativePath)
             ? ""
             : _fs.Combine(rootPath, inboxRelativePath.Replace('/', '\\'));
@@ -217,14 +219,53 @@ public partial class ExplorerViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// ⟳: Daten auffrischen (Getrackt-Index, Reconcile, Eingang-Zähler, aktuelle
+    /// Dateiliste) — Baum und Auswahl bleiben stehen. Der frühere Komplett-Neuaufbau
+    /// verlor die Auswahl tiefer Ordner (Drift wurde dadurch erst nach erneutem
+    /// Projekt-Öffnen sichtbar).
+    /// </summary>
     [RelayCommand]
     private void Refresh()
     {
-        var selectedPath = SelectedFolder?.FullPath;
-        Initialize(_rootPath);
-        if (selectedPath is not null)
-            SelectedFolder = RootNodes.FirstOrDefault(n =>
-                string.Equals(n.FullPath, selectedPath, StringComparison.OrdinalIgnoreCase));
+        if (!HasRoot)
+        {
+            ReloadTree();
+            return;
+        }
+
+        BuildTrackedIndex();
+        RunReconcile();
+        UpdateInboxBadge(RootNodes);
+        if (SelectedFolder is { ChildrenLoaded: true } node)
+            LoadChildrenForce(node); // neue Unterordner im offenen Zweig
+        OnSelectedFolderChanged(SelectedFolder);
+    }
+
+    /// <summary>
+    /// Kompletter Neuaufbau inkl. Baum — für strukturelle Änderungen von außen
+    /// (z. B. nach einem Import, der neue Zielordner angelegt hat).
+    /// </summary>
+    public void ReloadTree() => Initialize(_rootPath, _inboxRelativePath);
+
+    private void LoadChildrenForce(ExplorerFolderNode node)
+    {
+        node.Children.Clear();
+        foreach (var child in BuildChildNodes(node.FullPath))
+            node.Children.Add(child);
+    }
+
+    /// <summary>Eingang-Zähler am _Eingang-Knoten nachziehen (rekursiv, nur geladene Zweige).</summary>
+    private void UpdateInboxBadge(IEnumerable<ExplorerFolderNode> nodes)
+    {
+        if (_inboxFullPath.Length == 0)
+            return;
+        foreach (var node in nodes)
+        {
+            if (string.Equals(node.FullPath, _inboxFullPath, StringComparison.OrdinalIgnoreCase))
+                node.BadgeText = $"({CountFiles(node.FullPath)})";
+            UpdateInboxBadge(node.Children);
+        }
     }
 
     [RelayCommand]

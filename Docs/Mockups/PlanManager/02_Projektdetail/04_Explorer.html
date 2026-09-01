@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>BPM PlanManager — Projektdetail Explorer</title>
+<!--
+  BPM-112.06 In-App-Explorer (ADR-060 Slice 6) — Variante A: 4. Tab in Projektdetail.
+  Spezifikation:
+  - Live-Dateisystem des Projektroots via IFileSystemReader (ADR-061 P.6 Modell A:
+    DB = kuratierter Index NUR der erfassten Plandokumente, KEIN Vollspiegel).
+  - Getrackte Dateien (plan_documents/plan_revisions) tragen Badge "Getrackt · <Index>";
+    Verschieben AKTIV über den journalisierten ArchiveMoveService (Ordner-Wahl, alle Dateien
+    der Revision gemeinsam, Journal-Action VOR Move — Entscheidung Herbert Teil 50).
+    Freies Verschieben und Löschen GESPERRT (kein Lösch-Workflow in V1 außer Import-Undo).
+    Reklassifizierung (Move ändert fachliche Zuordnung) bleibt Domain-Workflow, ADR-064 P.11.
+  - Drift-Badges aus Startup-Reconcile (nur getrackte Teilmenge, Exists+Size first):
+    "Fehlt auf Disk" (MissingOnDisk, rot) · "Geändert" (ChangedOnDisk, orange) ·
+    RelinkCandidate erscheint als Vorschlag im PlanManager, nicht als Explorer-Aktion.
+  - Toolbar: Öffnen (IFileLauncher.OpenFile) · Im Windows-Explorer (RevealInExplorer/OpenFolder)
+    · Pfad kopieren (CopyPathToClipboard) — ADR-060 P.3-Ergänzungen.
+  - IShareService (Windows-Share-Sheet) später; Cloud-Share-Links out-of-scope (ADR-064 P.11).
+-->
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#111;display:flex;justify-content:center;padding:40px;font-family:'Segoe UI',sans-serif}
+.shell{background:#1E1E1E;border-radius:10px;overflow:hidden;border:1px solid #2D2D30;font-size:13px;color:#CCC;display:flex;flex-direction:column;width:1100px;min-height:560px}
+.tree-row{padding:3px 12px;font-size:11px;color:#CCC;cursor:pointer;white-space:nowrap}
+.tree-row:hover{background:#37373D}
+.file-row{display:flex;align-items:center;padding:5px 12px;font-size:11px;color:#CCC;cursor:default}
+.file-row:hover{background:#37373D}
+.badge{border-radius:3px;padding:1px 7px;font-size:9px;font-weight:600}
+.tbtn{background:transparent;color:#CCC;border:1px solid #3C3C3C;padding:4px 10px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit}
+.tbtn:hover{background:#37373D}
+.menu-item{padding:6px 12px;font-size:11px;color:#CCC;cursor:pointer}
+.menu-item:hover{background:#04395E}
+.menu-item.locked{color:#5A5A5A;cursor:not-allowed}
+</style>
+</head>
+<body>
+<div class="shell">
+<div style="display:flex;flex:1;min-height:0">
+
+<div style="width:200px;background:#252526;border-right:1px solid #2D2D30;display:flex;flex-direction:column;padding:12px 0;flex-shrink:0">
+<div style="font-size:13px;font-weight:600;color:#FFF;padding:4px 16px 14px">BauProjektManager</div>
+<div style="background:#04395E;color:#0078D4;padding:7px 16px;font-size:12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="location.href='../01_Projektuebersicht/01_Projektuebersicht.html'">
+<span>&#128193; PlanManager</span>
+<span style="background:#F0AD4E;color:#1E1E1E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px">15</span>
+</div>
+<div style="color:#858585;padding:7px 16px;font-size:12px;cursor:pointer" onclick="location.href='../../Settings/01_Einstellungen/01_Allgemein.html'">&#9881; Einstellungen</div>
+</div>
+
+<div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+<div style="display:flex;align-items:center;gap:8px;padding:6px 14px;background:#252526;border-bottom:1px solid #2D2D30;min-height:36px">
+<button style="background:none;border:none;color:#858585;cursor:pointer;font-size:14px;font-family:inherit;padding:2px 6px;border-radius:3px" onclick="location.href='../01_Projektuebersicht/01_Projektuebersicht.html'">&#8592;</button>
+<span style="font-size:13px;font-weight:500;color:#FFF;flex:1">&#214;WG Dobl-Zwaring</span>
+</div>
+<div style="padding:5px 14px;background:#2a2418;border-bottom:1px solid #2D2D30;font-size:11px;color:#F0AD4E">&#9889; 15 im Eingang &middot; 3 vom Server-Sync</div>
+<div style="display:flex;gap:0;border-bottom:1px solid #2D2D30;background:#252526">
+<button style="background:none;border:none;color:#0078D4;padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px solid #0078D4;font-family:inherit">Explorer</button>
+<button style="background:none;border:none;color:#858585;padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit" onclick="location.href='./02_ManuellSortieren.html'">Manuell sortieren</button>
+<button style="background:none;border:none;color:#858585;padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit" onclick="location.href='./05_Plandaten.html'">Plandaten</button>
+<button style="background:none;border:none;color:#858585;padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit" onclick="location.href='./01_Profile.html'">Profile</button>
+<button style="background:none;border:none;color:#858585;padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px dashed #858585;opacity:0.7;font-family:inherit" onclick="alert('Mockup folgt: 02_Projektdetail/03_Sync.html (BPM-005)')">Sync</button>
+</div>
+
+<div style="display:flex;align-items:center;gap:8px;padding:7px 14px;background:#1E1E1E;border-bottom:1px solid #2D2D30">
+<span style="font-size:11px;color:#CCC">01 Planunterlagen &#8250; 01 Polierpl&#228;ne &#8250; H68 &#8250; EG</span>
+<span style="flex:1"></span>
+<button class="tbtn" onclick="alert('App-Aktion: Datei in Standard-App öffnen (IFileLauncher.OpenFile)')">&#8599; &#214;ffnen</button>
+<button class="tbtn" onclick="alert('App-Aktion: Ordner im Windows-Explorer zeigen (RevealInExplorer / OpenFolder)')">&#128194; Im Windows-Explorer</button>
+<button class="tbtn" onclick="alert('App-Aktion: Pfad in Zwischenablage (CopyPathToClipboard)')">&#128203; Pfad kopieren</button>
+</div>
+
+<div style="display:flex;flex:1;min-height:0;position:relative">
+<div style="width:230px;background:#252526;border-right:1px solid #2D2D30;padding:8px 0;overflow-y:auto;flex-shrink:0">
+<div class="tree-row">&#9662; 01 Planunterlagen</div>
+<div class="tree-row" style="padding-left:26px;color:#858585">_Eingang <span style="color:#F0AD4E">(15)</span></div>
+<div class="tree-row" style="padding-left:26px">&#9662; 01 Polierpl&#228;ne</div>
+<div class="tree-row" style="padding-left:40px">&#9662; H68</div>
+<div class="tree-row" style="padding-left:54px;background:#04395E;color:#FFF">EG</div>
+<div class="tree-row" style="padding-left:54px;color:#858585">OG1</div>
+<div class="tree-row" style="padding-left:54px;color:#858585">KG</div>
+<div class="tree-row" style="padding-left:40px;color:#858585">&#9656; H69</div>
+<div class="tree-row" style="padding-left:26px;color:#858585">&#9656; 02 Schalungspl&#228;ne</div>
+<div class="tree-row" style="padding-left:26px;color:#858585">&#9656; 03 Bewehrungspl&#228;ne</div>
+<div class="tree-row" style="color:#858585">&#9656; 02 Fotos</div>
+<div class="tree-row" style="color:#858585">&#9656; 04 Lieferscheine</div>
+<div class="tree-row" style="color:#858585">&#9656; 06 Protokolle</div>
+</div>
+
+<div style="flex:1;background:#1E1E1E;overflow-y:auto">
+<div style="display:flex;padding:6px 12px;color:#858585;border-bottom:1px solid #2D2D30;font-size:10px;text-transform:uppercase;letter-spacing:.4px">
+<span style="flex:1">Name</span><span style="width:64px">Gr&#246;&#223;e</span><span style="width:76px">Ge&#228;ndert</span><span style="width:110px">Status</span>
+</div>
+<div class="file-row" style="background:#37373D">
+<span style="flex:1;color:#FFF">&#128196; 5998-101_Polierplan_H1_EG.pdf</span>
+<span style="width:64px;color:#858585">412 KB</span><span style="width:76px;color:#858585">31.08.26</span>
+<span style="width:110px"><span class="badge" style="background:#223794FF;color:#3794FF">Getrackt &middot; B</span></span>
+</div>
+<div class="file-row">
+<span style="flex:1">&#128196; 5998-101_Polierplan_H1_EG.dwg</span>
+<span style="width:64px;color:#858585">1,2 MB</span><span style="width:76px;color:#858585">31.08.26</span>
+<span style="width:110px"><span class="badge" style="background:#223794FF;color:#3794FF">Getrackt &middot; B</span></span>
+</div>
+<div class="file-row">
+<span style="flex:1">&#128196; 5998-102_Polierplan_H1_EG_alt.pdf</span>
+<span style="width:64px;color:#858585">398 KB</span><span style="width:76px;color:#858585">12.06.26</span>
+<span style="width:110px"><span class="badge" style="background:#22F0AD4E;color:#F0AD4E">Ge&#228;ndert</span></span>
+</div>
+<div class="file-row" style="opacity:0.65">
+<span style="flex:1">&#128196; 5998-103_Polierplan_H1_OG1.pdf</span>
+<span style="width:64px;color:#858585">&#8212;</span><span style="width:76px;color:#858585">&#8212;</span>
+<span style="width:110px"><span class="badge" style="background:#22F44747;color:#F44747">Fehlt auf Disk</span></span>
+</div>
+<div class="file-row">
+<span style="flex:1;color:#858585">&#128196; Notiz_Polier_Achse2.txt</span>
+<span style="width:64px;color:#858585">2 KB</span><span style="width:76px;color:#858585">14.07.26</span>
+<span style="width:110px"></span>
+</div>
+<div class="file-row">
+<span style="flex:1;color:#858585">&#128196; Aufmass_EG_Skizze.jpg</span>
+<span style="width:64px;color:#858585">3,4 MB</span><span style="width:76px;color:#858585">02.08.26</span>
+<span style="width:110px"></span>
+</div>
+<div style="margin:10px 12px;padding:7px 10px;background:#252526;border-left:3px solid #F0AD4E;color:#CCC;font-size:10px">
+&#128274; Getrackte Pl&#228;ne: Verschieben l&#228;uft journalisiert &#252;ber den PlanManager-Dienst (ADR-061) &mdash; freies Verschieben und L&#246;schen sind im Explorer gesperrt.
+</div>
+</div>
+
+<div style="position:absolute;right:36px;top:44px;width:230px;background:#2D2D30;border:1px solid #3C3C3C;border-radius:6px;padding:4px 0;box-shadow:0 4px 14px rgba(0,0,0,.5)">
+<div style="padding:4px 12px 6px;font-size:9px;color:#858585;border-bottom:1px solid #3C3C3C">5998-101_Polierplan_H1_EG.pdf &middot; getrackt</div>
+<div class="menu-item" onclick="alert('App-Aktion: Datei öffnen')">&#8599; &#214;ffnen</div>
+<div class="menu-item" onclick="alert('App-Aktion: Im Windows-Explorer zeigen')">&#128194; Im Windows-Explorer zeigen</div>
+<div class="menu-item" onclick="alert('App-Aktion: Pfad kopieren')">&#128203; Pfad kopieren</div>
+<div class="menu-item" onclick="location.href='./02_ManuellSortieren.html'">&#128203; Im PlanManager anzeigen (Archiv)</div>
+<div style="height:1px;background:#3C3C3C;margin:3px 0"></div>
+<div class="menu-item" onclick="alert('App-Aktion: Journalisierter Move — Ordner-Wahl, alle Dateien der Revision ziehen gemeinsam um (ArchiveMoveService, ADR-061)')">&#10132; Verschieben&#8230; <span style="color:#858585;font-size:9px">(journalisiert)</span></div>
+<div class="menu-item locked" title="Kein L&#246;sch-Workflow in V1 &mdash; nur Import-Undo (ADR-061/064)">&#128274; L&#246;schen &mdash; nicht im Explorer</div>
+</div>
+
+</div>
+</div>
+</div>
+<div style="height:24px;background:#0078D4;display:flex;align-items:center;padding:0 12px;font-size:10px;color:#fff;flex-shrink:0">
+<span>&#214;WG &middot; Explorer: EG &middot; 6 Elemente &middot; 4 getrackt</span>
+<span style="margin-left:auto">1&#215; fehlt auf Disk &middot; 1&#215; ge&#228;ndert</span>
+</div>
+</div>
+</body>
+</html>

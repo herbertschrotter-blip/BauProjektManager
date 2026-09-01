@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>BPM PlanManager — Projektdetail Plandaten</title>
+<!--
+  BPM-112.06-Umfeld — DB-Ansicht "Plandaten" (eigener Tab in Projektdetail).
+  Spezifikation:
+  - Read-only-Tabellensicht auf den kuratierten Planindex (plan_documents + aktuelle
+    plan_revisions + plan_document_segments, Schema v2.0 / ADR-058).
+  - Spalten: Plan-Nr · Idx · Bezeichnung · Typ · Bauteil · Geschoss · Index-Datum ·
+    Änderungshinweis · Dateien · Segmente (Anzahl-Chip; Details im Panel).
+  - KLARSTELLUNG (Herbert, Teil 50): Segmente = DATEINAMENS-Segmente (BPM-108-Typen:
+    Plannummer/Planindex/Planart/Bauteil/Geschoss/Bezeichnung...) mit Wert + Quelle
+    (Dateiname geparst / Radial-Zuordnung / PDF-Markierung / manuell). Inhaltliche
+    Auszeichnungen wie "Beton: C25/30" sind TAGS — NEUES Konzept (Entscheidung Herbert
+    Teil 50, eigener Task): freie Tags pro Dokument, neue Tabelle plan_document_tags,
+    Vorschläge aus bereits verwendeten Projekt-Tags, Filter-/Suchintegration im Tab.
+  - Zeile selektieren -> Detail-Panel unten: alle Eigenschaften (document_key, Pfad,
+    Dateien mit Größe/MD5, Revisions-Historie, Segmente mit Quelle/Datum, Import-Info).
+  - Toolbar: Suche + Filter (Dokumenttyp, Bauteil) + Excel-Export (ClosedXML).
+  - Segmente nachträglich editierbar (Entscheidung Herbert Teil 50) — Interaktionsmuster
+    = Segment-Wizard aus ProfilWizard Schritt 2 (02_Segmente.html), NICHT neu erfinden.
+    EINE kombinierte Fläche (Entscheidung Herbert Teil 50):
+    (1) Token-Flächen (Wert + Typ-Label, Feldtyp-Farben aus Colors.xaml) tragen die
+        klickbaren TRENNZEICHEN direkt zwischen sich — Trenner-Klick deaktiviert ihn
+        (Nachbar-Segmente verschmelzen) bzw. aktiviert ihn wieder (teilen). Globale
+        Trenner-Chips (- _ . Leerzeichen) rechts. Beispiel "5998-130" = Plannr.-Token
+        mit intern deaktiviertem '-'.
+    (2) Segmenttyp per Drag & Drop aus der Chip-Palette auf eine Token-Fläche ziehen.
+    (3) "⚙ Segmenttypen verwalten…" öffnet den BESTEHENDEN FeldtypManager (BPM-108);
+        Palette aus ISegmentTypeCatalog.GetEffectiveActive(), "+ Eigenes" = Inline-Popover.
+    WPF: Wizard-Segmentfläche als wiederverwendbares Control bauen (080.05 steht noch aus —
+    ein Control für Wizard UND Plandaten). Persistenz via PlanManagerDatabase.UpsertSegment
+    (reiner DB-Write, kein Journal — BPM-118-Metadaten bewusst außerhalb der Import-TX, ADR-064).
+  - Struktur-Änderungen (Pfad, Revision, Dateien) weiter NUR über Import/Radial/Archiv-Workflows.
+-->
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#111;display:flex;justify-content:center;padding:40px;font-family:'Segoe UI',sans-serif}
+.shell{background:#1E1E1E;border-radius:10px;overflow:hidden;border:1px solid #2D2D30;font-size:13px;color:#CCC;display:flex;flex-direction:column;width:1100px;min-height:600px}
+.tbtn{background:transparent;color:#CCC;border:1px solid #3C3C3C;padding:4px 10px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit}
+.tbtn:hover{background:#37373D}
+table{border-collapse:collapse;width:100%;font-size:11px}
+th{text-align:left;color:#858585;font-size:10px;text-transform:uppercase;letter-spacing:.4px;padding:6px 8px;border-bottom:1px solid #2D2D30;white-space:nowrap;font-weight:600}
+td{padding:5px 8px;border-bottom:1px solid #252526;white-space:nowrap;vertical-align:top}
+tr.sel td{background:#04395E;color:#FFF}
+tr:hover td{background:#37373D}
+.chip{display:inline-block;background:#1F7280;color:#D6F2F7;border-radius:3px;padding:1px 6px;font-size:9px;margin:1px 2px 1px 0}
+.chip2{display:inline-block;background:#0F6E56;color:#D9F4E9;border-radius:3px;padding:1px 6px;font-size:9px;margin:1px 2px 1px 0}
+.chip3{display:inline-block;background:#534AB7;color:#E7E5FA;border-radius:3px;padding:1px 6px;font-size:9px;margin:1px 2px 1px 0}
+.klabel{color:#858585;font-size:10px;width:130px;display:inline-block}
+.raw{display:inline-block;background:#2D2D30;border:1px solid #3C3C3C;border-radius:3px;padding:3px 8px;font-family:Consolas,monospace;font-size:11px;color:#FFF;cursor:pointer}
+.raw:hover{border-color:#0078D4}
+.raw.joined{border-color:#0078D4;border-style:solid}
+.rawsep{color:#0078D4;font-family:Consolas,monospace;font-size:12px;padding:0 3px;cursor:pointer;font-weight:600}
+.rawsep.off{color:#555;font-weight:400}
+.sepchip{display:inline-block;background:#2D2D30;border:1px solid #3C3C3C;border-radius:3px;padding:1px 7px;font-family:Consolas,monospace;font-size:10px;color:#CCC;cursor:pointer;margin-right:3px}
+.sepchip.on{background:#04395E;color:#0078D4;border-color:#04395E}
+.token{display:inline-flex;flex-direction:column;align-items:center;padding:4px 9px;border-radius:4px;min-width:44px;cursor:pointer;vertical-align:middle}
+.token:hover{transform:translateY(-1px);box-shadow:0 2px 6px rgba(0,120,212,0.3)}
+.token-val{color:#FFF;font-size:11px;font-family:Consolas,monospace;font-weight:500}
+.token-type{color:#FFF;font-size:8px;opacity:0.85;margin-top:1px}
+.token.unset{background:#2D2D30;border:1px dashed #858585}
+.token.unset .token-val{color:#CCC}
+.token.unset .token-type{color:#858585;font-style:italic}
+.t-num{background:#0F6E56}.t-idx{background:#993C1D}.t-gesch{background:#185FA5}.t-art{background:#1F7280}.t-bez{background:#555}.t-ign{background:#3C3C3C;opacity:0.55}
+.sep{font-size:12px;color:#555;padding:0 1px;font-family:Consolas,monospace}
+.type-chip{display:inline-block;background:#2D2D30;color:#CCC;font-size:10px;padding:3px 8px;border-radius:3px;cursor:grab;border:1px solid transparent;user-select:none;margin:0 3px 3px 0}
+.type-chip:hover{background:#37373D;border-color:#0078D4}
+.type-chip.assigned{background:#04395E;color:#0078D4;border-color:#04395E}
+.type-chip.custom{color:#F0AD4E;border:1px dashed #F0AD4E;background:transparent}
+</style>
+</head>
+<body>
+<div class="shell">
+<div style="display:flex;flex:1;min-height:0">
+
+<div style="width:200px;background:#252526;border-right:1px solid #2D2D30;display:flex;flex-direction:column;padding:12px 0;flex-shrink:0">
+<div style="font-size:13px;font-weight:600;color:#FFF;padding:4px 16px 14px">BauProjektManager</div>
+<div style="background:#04395E;color:#0078D4;padding:7px 16px;font-size:12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="location.href='../01_Projektuebersicht/01_Projektuebersicht.html'">
+<span>&#128193; PlanManager</span>
+<span style="background:#F0AD4E;color:#1E1E1E;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px">15</span>
+</div>
+<div style="color:#858585;padding:7px 16px;font-size:12px;cursor:pointer" onclick="location.href='../../Settings/01_Einstellungen/01_Allgemein.html'">&#9881; Einstellungen</div>
+</div>
+
+<div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+<div style="display:flex;align-items:center;gap:8px;padding:6px 14px;background:#252526;border-bottom:1px solid #2D2D30;min-height:36px">
+<button style="background:none;border:none;color:#858585;cursor:pointer;font-size:14px;font-family:inherit;padding:2px 6px;border-radius:3px" onclick="location.href='../01_Projektuebersicht/01_Projektuebersicht.html'">&#8592;</button>
+<span style="font-size:13px;font-weight:500;color:#FFF;flex:1">&#214;WG Dobl-Zwaring</span>
+</div>
+<div style="padding:5px 14px;background:#2a2418;border-bottom:1px solid #2D2D30;font-size:11px;color:#F0AD4E">&#9889; 15 im Eingang &middot; 3 vom Server-Sync</div>
+<div style="display:flex;gap:0;border-bottom:1px solid #2D2D30;background:#252526">
+<button style="background:none;border:none;color:#858585;padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit" onclick="location.href='./04_Explorer.html'">Explorer</button>
+<button style="background:none;border:none;color:#858585;padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit" onclick="location.href='./02_ManuellSortieren.html'">Manuell sortieren</button>
+<button style="background:none;border:none;color:#0078D4;padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px solid #0078D4;font-family:inherit">Plandaten</button>
+<button style="background:none;border:none;color:#858585;padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit" onclick="location.href='./01_Profile.html'">Profile</button>
+<button style="background:none;border:none;color:#858585;padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px dashed #858585;opacity:0.7;font-family:inherit" onclick="alert('Mockup folgt: 02_Projektdetail/03_Sync.html (BPM-005)')">Sync</button>
+</div>
+
+<div style="display:flex;align-items:center;gap:8px;padding:7px 14px;background:#1E1E1E;border-bottom:1px solid #2D2D30">
+<input style="background:#3C3C3C;border:1px solid #3C3C3C;color:#CCC;border-radius:4px;padding:4px 10px;font-size:11px;width:200px;font-family:inherit" placeholder="&#128269; Suchen (Nr, Bezeichnung, Hinweis)">
+<select style="background:#3C3C3C;border:1px solid #3C3C3C;color:#CCC;border-radius:4px;padding:4px 6px;font-size:11px;font-family:inherit"><option>Typ: alle</option><option>Polierplan</option><option>Schalungsplan</option><option>Bewehrungsplan</option></select>
+<select style="background:#3C3C3C;border:1px solid #3C3C3C;color:#CCC;border-radius:4px;padding:4px 6px;font-size:11px;font-family:inherit"><option>Bauteil: alle</option><option>H68</option><option>H69</option></select>
+<span style="flex:1"></span>
+<button class="tbtn" onclick="alert('App-Aktion: Tabelle als Excel exportieren (ClosedXML)')">&#128202; Excel-Export</button>
+</div>
+
+<div style="flex:1;overflow:auto;min-height:0">
+<table>
+<tr><th>Plan-Nr</th><th>Idx</th><th>Bezeichnung</th><th>Typ</th><th>Bauteil</th><th>Geschoss</th><th>Index-Datum</th><th>&#196;nderungshinweis</th><th>Dateien</th><th>Segmente</th><th>Tags</th></tr>
+<tr class="sel">
+<td>5998-130</td><td>B</td><td>Polierplan Haus 1 KG</td><td>Polierplan</td><td>H68</td><td>KG</td><td>20.08.2026</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis">Deckendurchbruch 20/20 bei Achse S2</td><td>PDF &#9679; DWG &#9679;</td>
+<td><span class="chip" style="background:#2D2D30;color:#CCC">6 Segmente</span></td>
+<td><span class="chip" style="background:#37373D;color:#CCC;border:1px solid #3C3C3C">Beton C25/30</span><span class="chip" style="background:#37373D;color:#CCC;border:1px solid #3C3C3C">Deckendurchbruch</span></td>
+</tr>
+<tr>
+<td>5998-101</td><td>B</td><td>Polierplan Haus 1 EG</td><td>Polierplan</td><td>H68</td><td>EG</td><td>18.08.2026</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis">W&#228;nde Achse 1&#8211;4 angepasst</td><td>PDF &#9679; DWG &#9679;</td>
+<td><span class="chip" style="background:#2D2D30;color:#CCC">6 Segmente</span></td>
+<td></td>
+</tr>
+<tr>
+<td>5998-110</td><td>&#8212;</td><td>Schalung Haus 1 EG</td><td>Schalungsplan</td><td>H68</td><td>EG</td><td>02.07.2026</td><td style="color:#858585">Erstausgabe</td><td>PDF &#9679;</td>
+<td><span class="chip" style="background:#2D2D30;color:#CCC">5 Segmente</span></td>
+<td><span class="chip" style="background:#37373D;color:#CCC;border:1px solid #3C3C3C">Beton C30/37</span></td>
+</tr>
+<tr>
+<td>5998-111</td><td>&#8212;</td><td>Bewehrung Haus 1 EG</td><td>Bewehrungsplan</td><td>H68</td><td>EG</td><td>02.07.2026</td><td style="color:#858585">Erstausgabe</td><td>PDF &#9679;</td>
+<td><span class="chip" style="background:#2D2D30;color:#CCC">4 Segmente</span></td>
+<td></td>
+</tr>
+<tr>
+<td>5998-210</td><td>A</td><td>Polierplan Haus 2 KG</td><td>Polierplan</td><td>H69</td><td>KG</td><td>11.08.2026</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis">Fundamentplatte verst&#228;rkt</td><td>PDF &#9679;</td>
+<td><span class="chip" style="background:#2D2D30;color:#CCC">5 Segmente</span></td>
+<td><span class="chip" style="background:#37373D;color:#CCC;border:1px solid #3C3C3C">Fundament</span></td>
+</tr>
+</table>
+</div>
+
+<div style="border-top:1px solid #2D2D30;background:#252526;padding:10px 14px;max-height:380px;overflow-y:auto;flex-shrink:0">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+<span style="color:#FFF;font-size:12px;font-weight:500">5998-130 &middot; Index B &middot; Polierplan Haus 1 KG</span>
+<span style="background:#224EC94E;color:#4EC94E;border-radius:3px;padding:1px 7px;font-size:9px">aktuelle Revision</span>
+<span style="flex:1"></span>
+<button class="tbtn" onclick="alert('App-Aktion: PDF-Vorschau (read-only)')">Vorschau</button>
+<button class="tbtn" onclick="location.href='./04_Explorer.html'">Im Explorer zeigen</button>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:8px;margin-bottom:8px">
+
+<div style="background:#1E1E1E;border:1px solid #2D2D30;border-radius:5px;padding:8px 10px">
+<div style="font-size:9px;color:#858585;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Dokument</div>
+<div style="display:grid;grid-template-columns:78px 1fr;gap:3px 8px;font-size:10px;color:#CCC">
+<span style="color:#858585">Plan-Nr</span><span style="color:#FFF">5998-130 &middot; Index B</span>
+<span style="color:#858585">Bezeichnung</span><span>Polierplan Haus 1 KG</span>
+<span style="color:#858585">Typ</span><span>Polierplan</span>
+<span style="color:#858585">Bauteil</span><span>H68 &middot; KG</span>
+<span style="color:#858585">Key</span><span style="font-family:Consolas,monospace;font-size:9px;color:#858585">polierplan|5998-130|h68|kg</span>
+</div>
+</div>
+
+<div style="background:#1E1E1E;border:1px solid #2D2D30;border-radius:5px;padding:8px 10px">
+<div style="font-size:9px;color:#858585;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Ablage &amp; Dateien</div>
+<div style="display:grid;grid-template-columns:78px 1fr;gap:3px 8px;font-size:10px;color:#CCC">
+<span style="color:#858585">Pfad</span><span>01 Planunterlagen\01 Polierpl&#228;ne\H68\KG</span>
+<span style="color:#858585">PDF</span><span>412 KB <span style="color:#858585;font-size:9px">&middot; md5 9f3a&#8230;</span></span>
+<span style="color:#858585">DWG</span><span>1,2 MB <span style="color:#858585;font-size:9px">&middot; md5 77c1&#8230;</span></span>
+<span style="color:#858585">Importiert</span><span>31.08.2026 <span style="color:#858585;font-size:9px">&middot; Import #12 &middot; Radial</span></span>
+</div>
+</div>
+
+<div style="background:#1E1E1E;border:1px solid #2D2D30;border-radius:5px;padding:8px 10px">
+<div style="font-size:9px;color:#858585;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Revisionen</div>
+<div style="display:grid;grid-template-columns:24px 66px 1fr;gap:3px 8px;font-size:10px;color:#CCC">
+<span style="color:#4EC94E;font-weight:600">B</span><span style="color:#858585">20.08.2026</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Deckendurchbruch 20/20 bei Achse S2</span>
+<span style="color:#858585">A</span><span style="color:#858585">05.06.2026</span><span style="color:#858585;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">W&#228;nde Achse 1&#8211;4 angepasst</span>
+<span style="color:#858585">&#8212;</span><span style="color:#858585">12.04.2026</span><span style="color:#858585">Erstausgabe</span>
+</div>
+</div>
+
+</div>
+
+<div style="background:#1E1E1E;border:1px solid #2D2D30;border-radius:5px;padding:8px 10px">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+<span style="font-size:9px;color:#858585;text-transform:uppercase;letter-spacing:.4px">Dateinamens-Segmente</span>
+<span style="flex:1"></span>
+<span style="color:#0078D4;font-size:10px;cursor:pointer" onclick="location.href='../04_FeldtypManager/01_Uebersicht.html'">&#9881; Segmenttypen verwalten&#8230;</span>
+</div>
+
+<div style="font-size:9px;color:#858585;margin-bottom:4px">Trennzeichen klicken = teilen/verbinden &middot; Segmenttyp per Drag &amp; Drop auf eine Fl&#228;che ziehen (wie im Profil-Wizard)</div>
+<div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap;background:#252526;border:1px solid #2D2D30;border-radius:4px;padding:8px 10px;margin-bottom:10px">
+<span class="token t-num" title="Aus '5998' + '-' + '130' verbunden — Trenner-Klick trennt wieder"><span class="token-val">5998-130</span><span class="token-type">Plannr. &#9733;</span></span>
+<span class="rawsep" title="Aktiver Trenner — Klick deaktiviert (Teile verschmelzen)" onclick="alert('App-Aktion: Trenner deaktivieren — Nachbar-Segmente verschmelzen')">_</span>
+<span class="token t-idx"><span class="token-val">B</span><span class="token-type">Index</span></span>
+<span class="rawsep" onclick="alert('App-Aktion: Trenner deaktivieren — Nachbar-Segmente verschmelzen')">_</span>
+<span class="token t-art"><span class="token-val">Polierplan</span><span class="token-type">Planart</span></span>
+<span class="rawsep" onclick="alert('App-Aktion: Trenner deaktivieren — Nachbar-Segmente verschmelzen')">_</span>
+<span class="token unset"><span class="token-val">H1</span><span class="token-type">? Typ w&#228;hlen</span></span>
+<span class="rawsep" onclick="alert('App-Aktion: Trenner deaktivieren — Nachbar-Segmente verschmelzen')">_</span>
+<span class="token t-gesch"><span class="token-val">KG</span><span class="token-type">Geschoss</span></span>
+<span class="rawsep" onclick="alert('App-Aktion: Trenner deaktivieren — Nachbar-Segmente verschmelzen')">.</span>
+<span class="token t-ign"><span class="token-val">pdf</span><span class="token-type">Ignorieren</span></span>
+<span style="flex:1"></span>
+<span style="font-size:9px;color:#858585">Trenner:</span>
+<span class="sepchip on" title="Innerhalb 'Plannr.' deaktiviert (verbunden)" onclick="alert('App-Aktion: Trenner - global umschalten')">-</span>
+<span class="sepchip on" onclick="alert('App-Aktion: Trenner _ global umschalten')">_</span>
+<span class="sepchip on" onclick="alert('App-Aktion: Trenner . global umschalten')">.</span>
+<span class="sepchip" onclick="alert('App-Aktion: Trenner Leerzeichen global umschalten')">&#9251;</span>
+</div>
+
+<div style="display:flex;align-items:center;flex-wrap:wrap;margin-bottom:2px">
+<span class="type-chip assigned">Plannummer</span>
+<span class="type-chip assigned">Index</span>
+<span class="type-chip">Projektnummer</span>
+<span class="type-chip">Bezeichnung</span>
+<span class="type-chip">Datum</span>
+<span class="type-chip assigned">Geschoss</span>
+<span class="type-chip">Haus</span>
+<span class="type-chip assigned">Planart</span>
+<span class="type-chip">Bauteil</span>
+<span class="type-chip">Stiege</span>
+<span class="type-chip assigned">Ignorieren</span>
+<span class="type-chip custom" onclick="alert('App-Aktion: Eigenen Segmenttyp anlegen (Inline-Popover, BPM-108)')">+ Eigenes</span>
+</div>
+</div>
+
+<div style="background:#1E1E1E;border:1px solid #2D2D30;border-radius:5px;padding:8px 10px;margin-top:8px">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+<span style="font-size:9px;color:#858585;text-transform:uppercase;letter-spacing:.4px">Tags (2)</span>
+<span style="flex:1"></span>
+<button class="tbtn" style="padding:2px 8px;font-size:9px" onclick="alert('App-Aktion: Tag hinzufuegen — Freitext mit Vorschlaegen aus bereits verwendeten Projekt-Tags')">+ Tag</button>
+</div>
+<div>
+<span class="chip" style="background:#37373D;color:#CCC;border:1px solid #3C3C3C;font-size:10px;padding:2px 8px">Beton C25/30 <span style="cursor:pointer;color:#858585" onclick="alert('App-Aktion: Tag entfernen')">&#10005;</span></span>
+<span class="chip" style="background:#37373D;color:#CCC;border:1px solid #3C3C3C;font-size:10px;padding:2px 8px">Deckendurchbruch <span style="cursor:pointer;color:#858585" onclick="alert('App-Aktion: Tag entfernen')">&#10005;</span></span>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+<div style="height:24px;background:#0078D4;display:flex;align-items:center;padding:0 12px;font-size:10px;color:#fff;flex-shrink:0">
+<span>&#214;WG &middot; Plandaten: 119 Dokumente &middot; Filter: alle</span>
+<span style="margin-left:auto">Segmente editierbar &middot; Struktur-&#196;nderungen &#252;ber Import/Archiv-Workflows</span>
+</div>
+</div>
+</body>
+</html>

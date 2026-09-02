@@ -328,7 +328,7 @@ Exportiert alle Projekte als flaches JSON nach `Cloud-Speicher .AppData/BauProje
 
 ---
 
-## 7. UI: ProjectEditDialog (5-Tab-Dialog, 1050×780)
+## 7. UI: ProjectEditDialog (5-Tab-Dialog, 1100×900, seit BPM-073 vergrößerbar — Größe gerätelokal gemerkt)
 
 ### Tab 1 — Stammdaten (2-Spalten)
 
@@ -380,6 +380,8 @@ Exportiert alle Projekte als flaches JSON nach `Cloud-Speicher .AppData/BauProje
 ---
 
 ## 8. FolderTemplateControl (Shared UserControl)
+
+**Layout (seit BPM-073, v0.28.185):** links Baum + Button-Leiste, rechts Vorschau, dazwischen ein GridSplitter. Verhältnis Baum:Vorschau standardmäßig 3:2, per Splitter änderbar; der Host (ProjectEditDialog, SettingsView) liest TreeSplitRatio und speichert es nach SplitChanged gerätelokal in UiLayout.FolderTemplateTreeRatio.
 
 Gemeinsame Komponente, verwendet in:
 - **SettingsView Tab 2** — globales Standard-Template bearbeiten
@@ -473,7 +475,7 @@ Diese Listen sind vom User anpassbar und werden als ComboBox-Quellen im Dialog v
 | ULID-Migration | Alle IDs auf ULID umstellen (IIdGenerator, Cysharp/Ulid) | ADR-039 v2 beschlossen |
 | Adressbuch | Zentrale contacts-Tabelle, Wiederverwendung über Projekte | Backlog |
 | Suchfeld Projektliste | Suchfeld + Statusfilter mit CollectionView | ✅ v0.22.0 |
-| 2-Spalten Layout Dialog | Breitere rechte Spalte, mehr Platz für Ordnerstruktur | Backlog |
+| Ordnerstruktur-Baum breiter | BPM-073: Dialog resizable (Min 1000×760, Größe in `UiLayout`), Splitter Baum/Vorschau im FolderTemplateControl (Default 3:2, `UiLayout.FolderTemplateTreeRatio`, gilt auch im Einstellungen-Tab) | ✅ v0.28.185 |
 | Token-Migration | Hardcoded Colors → DynamicResource Token-Referenzen | Teilweise erledigt, Rest geplant |
 | FolderTemplateControl Fix | BPM-066: `.bpm/` im Baum ✅ v0.28.179; Watcher-Reload + wirkungsloses Umsortieren offen (post-V1) | Teilweise |
 

@@ -31,6 +31,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.185] — 2026-09-02
+
+### Feature: BPM-073 — Ordnerstruktur-Baum breiter: Dialog vergrößerbar + Splitter Baum/Vorschau
+
+Altlasten-Prüfung Teil 52: Der Task „2-Spalten-Layout mit breiterer rechter Spalte" beschrieb einen seit v0.11.1 erledigten Zustand; die echte Ursache für den engen Ordnerbaum war die 1:1-Teilung im `FolderTemplateControl` plus der nicht vergrößerbare Dialog. Jetzt: `ProjectEditDialog` mit `CanResizeWithGrip` (Min 1000×760), gezogene Größe gerätelokal in `UiLayout.ProjectEditDialogWidth/Height`; im `FolderTemplateControl` liegen Baum und Button-Leiste links, rechts die Vorschau, dazwischen ein `GridSplitter` (Default 3:2). Das Verhältnis wird über `TreeSplitRatio`/`SplitChanged` vom Host gespeichert (`UiLayout.FolderTemplateTreeRatio`) und gilt im Projektdialog wie im Einstellungen-Tab „Standard-Ordnerstruktur". Keine Logikänderung, nur Theme-Tokens. Docs: ModuleProjekt.md Kap. 7/8/12.
+
+---
 ## [v0.28.184] — 2026-09-02
 
 ### Change: BPM-072 — Projektnotizen in registry.json: Whitelist-Eintrag + Hinweis am Feld

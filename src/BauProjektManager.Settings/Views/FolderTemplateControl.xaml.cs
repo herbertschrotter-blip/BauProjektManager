@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using BauProjektManager.Domain.Models;
 using Serilog;
@@ -27,6 +28,32 @@ public partial class FolderTemplateControl : UserControl
 
     /// <summary>Wenn true, ist Löschen deaktiviert (Projekt-Bearbeitungsmodus).</summary>
     public bool IsProjectMode { get; set; }
+
+    /// <summary>Wird nach dem Ziehen des Splitters ausgelöst (BPM-073) — der Host persistiert das Verhältnis.</summary>
+    public event Action? SplitChanged;
+
+    /// <summary>
+    /// Anteil des Baums an Baum + Vorschau (0.3–0.8, Default 0.6). Liest die Star-Werte
+    /// der Spalten, die der GridSplitter beim Ziehen fortschreibt — unabhängig davon,
+    /// ob das Control schon gemessen wurde.
+    /// </summary>
+    public double TreeSplitRatio
+    {
+        get
+        {
+            var tree = ColTree.Width.IsStar ? ColTree.Width.Value : 3;
+            var preview = ColPreview.Width.IsStar ? ColPreview.Width.Value : 2;
+            return tree + preview > 0 ? tree / (tree + preview) : 0.6;
+        }
+        set
+        {
+            var ratio = Math.Clamp(value, 0.3, 0.8);
+            ColTree.Width = new GridLength(ratio, GridUnitType.Star);
+            ColPreview.Width = new GridLength(1 - ratio, GridUnitType.Star);
+        }
+    }
+
+    private void OnSplitDragCompleted(object sender, DragCompletedEventArgs e) => SplitChanged?.Invoke();
 
     public FolderTemplateControl()
     {

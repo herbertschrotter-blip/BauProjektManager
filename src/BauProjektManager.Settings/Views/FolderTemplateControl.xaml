@@ -16,15 +16,22 @@
                    FontSize="11"
                    Margin="0,0,0,8" />
 
-        <!-- Hauptbereich: Tree | Buttons | Vorschau -->
+        <!-- Hauptbereich: [Tree | Buttons] | Splitter | Vorschau (BPM-073: Verhaeltnis per Splitter, Default 3:2) -->
         <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="ColTree" Width="3*" MinWidth="280" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition x:Name="ColPreview" Width="2*" MinWidth="180" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Links: TreeView + Buttons -->
+            <Grid Grid.Column="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="48" />
-                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <!-- Links: TreeView -->
+            <!-- TreeView -->
             <TreeView x:Name="TvFolders"
                       Grid.Column="0"
                       Style="{StaticResource BpmTreeView}"
@@ -117,6 +124,14 @@
                         Style="{StaticResource BpmButtonGhost}"
                         Click="OnTogglePrefix" />
             </StackPanel>
+            </Grid>
+
+            <!-- Splitter zwischen Baum und Vorschau (BPM-073) -->
+            <GridSplitter Grid.Column="1" Width="5" Margin="4,0"
+                          HorizontalAlignment="Center" VerticalAlignment="Stretch"
+                          ResizeDirection="Columns" ResizeBehavior="PreviousAndNext"
+                          Background="{StaticResource BpmBorderSubtle}" Cursor="SizeWE"
+                          DragCompleted="OnSplitDragCompleted" />
 
             <!-- Rechts: Vorschau -->
             <Border Grid.Column="2"

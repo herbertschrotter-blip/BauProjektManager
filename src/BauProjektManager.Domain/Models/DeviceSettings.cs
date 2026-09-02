@@ -92,6 +92,13 @@ public class UiLayoutSettings
     /// Default false = aufgeklappt beim ersten Start (Entscheidung Herbert, Teil 52).
     /// </summary>
     public bool SidebarCollapsed { get; set; }
+
+    /// <summary>Zuletzt gezogene Groesse des ProjectEditDialog (BPM-073). NULL = Standard 1100x900.</summary>
+    public double? ProjectEditDialogWidth { get; set; }
+    public double? ProjectEditDialogHeight { get; set; }
+
+    /// <summary>Anteil des Ordnerbaums an Baum + Vorschau im FolderTemplateControl (BPM-073). NULL = 0.6.</summary>
+    public double? FolderTemplateTreeRatio { get; set; }
 }
 
 /// <summary>

@@ -111,6 +111,14 @@ public partial class SettingsView : UserControl
         {
             vm.SaveFolderTemplateFrom(GlobalFolderTemplate.ToTemplate());
         };
+        // BPM-073: Baum/Vorschau-Verhaeltnis geraetelokal, geteilt mit dem ProjectEditDialog
+        GlobalFolderTemplate.TreeSplitRatio = settingsService.LoadDevice().UiLayout.FolderTemplateTreeRatio ?? 0.6;
+        GlobalFolderTemplate.SplitChanged += () =>
+        {
+            var device = settingsService.LoadDevice();
+            device.UiLayout.FolderTemplateTreeRatio = GlobalFolderTemplate.TreeSplitRatio;
+            settingsService.SaveDevice(device);
+        };
 
         // Filter-Buttons initial stylen
         UpdateFilterButtonStyles("Alle");

@@ -2,6 +2,7 @@
 using BauProjektManager.Domain.Models;
 using BauProjektManager.Infrastructure.Persistence;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Windows;
@@ -41,6 +42,7 @@ public partial class ProjectEditDialog : Window
         Project = project;
         _settingsService = settingsService;
         _isNewProject = folderTemplate is not null;
+        RestoreDialogLayout();
 
         ProjectFolderTemplate.IsProjectMode = !_isNewProject;
 
@@ -144,4 +146,36 @@ public partial class ProjectEditDialog : Window
     }
 
     private void OnCancel(object sender, RoutedEventArgs e) { DialogResult = false; Close(); }
+
+    // ── Dialoggroesse + Baum/Vorschau-Verhaeltnis geraetelokal (BPM-073) ──
+
+    private void RestoreDialogLayout()
+    {
+        var ui = _settingsService.LoadDevice().UiLayout;
+        if (ui.ProjectEditDialogWidth is { } w && w >= MinWidth) Width = w;
+        if (ui.ProjectEditDialogHeight is { } h && h >= MinHeight) Height = h;
+        ProjectFolderTemplate.TreeSplitRatio = ui.FolderTemplateTreeRatio ?? 0.6;
+        ProjectFolderTemplate.SplitChanged += SaveDialogLayout;
+        Closing += (_, _) => SaveDialogLayout();
+    }
+
+    private void SaveDialogLayout()
+    {
+        try
+        {
+            var device = _settingsService.LoadDevice();
+            var ui = device.UiLayout;
+            if (WindowState == WindowState.Normal && ActualWidth > 0)
+            {
+                ui.ProjectEditDialogWidth = ActualWidth;
+                ui.ProjectEditDialogHeight = ActualHeight;
+            }
+            ui.FolderTemplateTreeRatio = ProjectFolderTemplate.TreeSplitRatio;
+            _settingsService.SaveDevice(device);
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Warning(ex, "Dialog-Layout konnte nicht gespeichert werden");
+        }
+    }
 }

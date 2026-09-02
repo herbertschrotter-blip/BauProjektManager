@@ -31,6 +31,40 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.176] — 2026-09-02
+
+### Docs: CHANGELOG-Nachzug v0.28.173–.175 (BPM-129)
+
+Nachtrag der Einträge für den DB-SCHEMA-Docs-Commit, die BPM-126d-Streichung und den BPM-006 Profile-Tab. Keine Code-Änderung.
+
+---
+
+## [v0.28.175] — 2026-09-02
+
+### Feature: BPM-006 — Profile-Tab als Dokumenttyp-Übersicht
+
+Der Tab **Profile** zeigt jetzt die **Dokumenttyp-Übersicht** statt einer eigenen Profil-Verwaltung — Zielbild ADR-065 Punkt 7: `document_types` ist das fachliche Hauptobjekt, ein RecognitionProfile hängt 0..1 daran. Neues `DocumentTypeOverviewViewModel` gruppiert die Typen nach Ablagebereich (`root_relative_path`, alphabetisch) und zeigt je Typ Name, Typordner („— direkt im Ablagebereich" bei Root-Typen wie Protokollen), Kategorien-Anzahl, Builtin-Kennzeichen und einen **Erkennungs-Status als Platzhalter** („nicht angelernt") — die echten Zustände nicht angelernt / lernend / aktiv folgen mit BPM-121 Stufe B. Empty-State verweist auf Projekt-Setup bzw. „+ Neu…" im Radialmenü; dafür wurde `InverseBoolToVisConverter` in der `ProjectDetailView` registriert (StaticResource-Falle: fehlende Registrierung fällt erst zur Laufzeit auf).
+
+**Bewusst ausgeklammert:** Ring 2 (Bauteil/Geschoss) — das sind Stammdaten ohne Erkennungsbedarf (Klarstellung Herbert, Teil 51). (Commit `6e192e3`)
+
+---
+
+## [v0.28.174] — 2026-09-02
+
+### Change: BPM-126d — Excel-Export aus dem Plandaten-Tab gestrichen
+
+Der für Slice d vorgesehene Excel-Export (ClosedXML) der Plandaten-Tabelle entfällt: Planlisten-Export (Excel + PDF) ist ein eigener Task **BPM-031, post-V1** und gehört nicht in die Toolbar des Plandaten-Tabs. Kommentare in `PlanDataView` und Mockup `05_Plandaten.html` angepasst — **BPM-126 damit komplett** (a Tabelle/Filter, b Detail-Panel, c Segment-Editor). (Commit `796714f`)
+
+---
+
+## [v0.28.173] — 2026-09-02
+
+### Docs: DB-SCHEMA `plan_document_tags` + CHANGELOG-Nachzug v0.28.171–.172
+
+Kapitel 6.7.3b in `DB-SCHEMA.md` um die Tag-Tabelle aus BPM-127 ergänzt (Spalten, Soft Delete, Normalisierung, additive Anlage per `CREATE TABLE IF NOT EXISTS`). Dazu die CHANGELOG-Einträge v0.28.171/.172 nachgetragen. (Commit `1dec4e5`)
+
+---
+
 ## [v0.28.172] — 2026-09-02
 
 ### Feature: BPM-127 Tag-System + Plandaten-Panel im Karten-Layout

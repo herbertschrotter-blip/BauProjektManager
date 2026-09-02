@@ -31,6 +31,38 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.170] — 2026-09-02
+
+### Feature: BPM-126b/c — Detail-Panel + wiederverwendbarer Segment-Editor
+
+**Detail-Panel** unter der Plandaten-Tabelle mit drei Boxen (Dokument inkl. `document_key` · Ablage und Dateien mit Größe/MD5 je Revisionsdatei · Revisionshistorie mit grün markierter current-Revision), dazu „Vorschau" und „Im Explorer zeigen". Neue DB-Methode `GetFileDetailsForRevision` (Fingerprint-Daten, die der Archiv-Move nicht braucht).
+
+**Segment-Editor** (`SegmentEditorControl`) im Muster des ProfilWizard-Schritts 2 — bewusst als **eigenständiges Control für Plandaten UND Wizard (BPM-080.05)**: EINE Fläche aus Token-Kacheln mit klickbaren Trennzeichen; deaktivierte Trenner bleiben **innerhalb** der verschmolzenen Kachel klickbar (unterstrichen) und trennen dort wieder auf. Globale Trenner-Chips (`-` `_` `.` `␣`), Typ-Zuweisung per Drag & Drop aus der Katalog-Palette (`ISegmentTypeCatalog`, BPM-108) mit Feldtyp-Farbe, Rechtsklick entfernt; „Segmenttypen verwalten…" öffnet den **bestehenden** `SegmentTypeManagerDialog`. Persistenz via `UpsertSegment` (reiner DB-Write, kein Journal — ADR-064). Pure Zerlegungs-Logik in `FileNameSegmentation` (Atome + Trennerzustände, stabiler Atom-Anker für Zuweisungen) mit 8 Tests.
+
+**Panel-Höhe** per `GridSplitter` verstellbar und gerätelokal gemerkt (`UiLayout.PlanDataDetailHeight`, gleiches Muster wie die Vorschau-Breiten).
+
+**Praxis-Befund (Herbert):** Nach jeder Zuweisung klappte das Panel zu — Ursache war das vollständige Neuladen der Liste, bei dem das DataGrid seine Auswahl verwirft. Statt dagegen anzuarbeiten wird jetzt nur die Segment-Anzahl der betroffenen Zeile aktualisiert (`PlanDataRowViewModel` beobachtbar); Auswahl und Panel bleiben stehen.
+
+---
+
+## [v0.28.169] — 2026-09-02
+
+### Feature: BPM-126a — Plandaten-Tab + Stammdaten-IDs im Import
+
+Neuer Tab **Plandaten** (Position 3: Explorer · Manuell sortieren · Plandaten · Profile · Sync): read-only Sicht auf den kuratierten Planindex mit zehn Spalten (Plan-Nr, Index, Bezeichnung, Typ, Bauteil, Geschoss, Index-Datum, Änderungshinweis, Dateitypen, Segment-Anzahl), Suche über Nummer/Bezeichnung/Typ/Änderungshinweis sowie Filter nach Dokumenttyp und Bauteil; aktualisiert sich nach Import und Undo. Neue DB-Abfrage `GetPlanDataRows` (Dateitypen via GROUP_CONCAT, Segment-Anzahl als Subselect).
+
+**Nebenbefund mit Substanz:** Der Import schrieb `building_part_id`/`building_level_id` bewusst als `null` („SoftRef-Auflösung post-V1") — seit BPM-111 sind die IDs zum Zuordnungszeitpunkt aber bekannt und flossen bereits in den `document_key`. Ohne sie blieben Bauteil und Geschoss in der neuen Ansicht leer. `ClassifiedImportFile` trägt die IDs jetzt bis in `plan_documents` (CaptureConfirmService → ImportExecutionService); bei Recovery bleiben sie null, da das Journal sie nicht führt. 4 neue Tests. **Bestehende Dokumente brauchen einen Re-Import**, um die IDs zu erhalten (Frühphase, keine Migration).
+
+---
+
+## [v0.28.168] — 2026-09-01
+
+### Docs: CHANGELOG-Nachzug v0.28.163–.167
+
+Mockups (Explorer + Plandaten), BPM-112.06a/b/c und die Explorer-Live-Aktualisierung nachgetragen. (Commit `1a15987`)
+
+---
+
 ## [v0.28.167] — 2026-09-01
 
 ### Feature: Explorer-Live-Aktualisierung + Fix: wirkungsloser Refresh

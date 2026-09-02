@@ -168,6 +168,41 @@ public partial class PlanDataView : UserControl
         LoadSegmentEditor(); // Palette nach moeglichen Aenderungen neu aufbauen
     }
 
+    // ── Tags (BPM-127) ──────────────────────────────────────────────
+
+    private void OnAddTagClick(object sender, RoutedEventArgs e) => CommitTagInput();
+
+    /// <summary>Enter im Eingabefeld setzt den Tag (schnelles Erfassen mehrerer Tags).</summary>
+    private void OnTagInputKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key != System.Windows.Input.Key.Enter)
+            return;
+        CommitTagInput();
+        e.Handled = true;
+    }
+
+    private void CommitTagInput()
+    {
+        var text = TagInput.Text;
+        if (ViewModel is not { } vm || string.IsNullOrWhiteSpace(text))
+            return;
+        vm.AddTag(text);
+        TagInput.Text = "";
+    }
+
+    /// <summary>Klick auf einen Vorschlag setzt den Tag direkt.</summary>
+    private void OnSuggestionClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: string tag } && ViewModel is { } vm)
+            vm.AddTag(tag);
+    }
+
+    private void OnRemoveTagClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: string tag } && ViewModel is { } vm)
+            vm.RemoveTag(tag);
+    }
+
     // ── Aktionen des Detail-Panels ──────────────────────────────────
 
     /// <summary>Primaerdatei der gewaehlten Revision in der Standard-App oeffnen.</summary>

@@ -18,17 +18,21 @@ public static class FileNameSegmentation
     public const string SeparatorChars = "-_. ";
 
     /// <summary>
-    /// Zerlegt den Dateinamen. Die Extension wird als eigenes Atom gefuehrt
-    /// (der Punkt davor ist ein regulaerer Trenner) — so kann sie wie im
-    /// Wizard als "Ignorieren" markiert werden.
+    /// Zerlegt den Dateinamen. Die **Dateiendung ist KEIN Segment** — sie wird
+    /// abgetrennt und separat gefuehrt (der Punkt davor ist kein Trenner):
+    /// sie beschreibt das Format, nicht den Inhalt des Namens.
     /// </summary>
     public static SegmentationResult Split(string fileName)
     {
+        // Pure String-Operation (ADR-060-Praezisierung): kein Disk-Zugriff.
+        var extension = System.IO.Path.GetExtension(fileName);
+        var stem = extension.Length > 0 ? fileName[..^extension.Length] : fileName;
+
         List<string> atoms = [];
         List<char> separators = [];
         var current = new System.Text.StringBuilder();
 
-        foreach (var c in fileName)
+        foreach (var c in stem)
         {
             if (SeparatorChars.Contains(c))
             {
@@ -42,7 +46,7 @@ public static class FileNameSegmentation
             }
         }
         atoms.Add(current.ToString());
-        return new SegmentationResult(atoms, separators);
+        return new SegmentationResult(atoms, separators, extension);
     }
 
     /// <summary>
@@ -89,8 +93,15 @@ public static class FileNameSegmentation
         => [.. source.Separators.Select(activeChars.Contains)];
 }
 
-/// <summary>Zerlegung eines Dateinamens: n Atome, n-1 Trennzeichen dazwischen.</summary>
-public sealed record SegmentationResult(IReadOnlyList<string> Atoms, IReadOnlyList<char> Separators);
+/// <summary>
+/// Zerlegung eines Dateinamens: n Atome, n-1 Trennzeichen dazwischen.
+/// <paramref name="Extension"/> ist die abgetrennte Dateiendung inkl. Punkt
+/// (leer wenn keine) — sie ist bewusst KEIN Segment.
+/// </summary>
+public sealed record SegmentationResult(
+    IReadOnlyList<string> Atoms,
+    IReadOnlyList<char> Separators,
+    string Extension = "");
 
 /// <summary>
 /// Ein sichtbares Segment nach dem Verschmelzen. <paramref name="StartAtomIndex"/>

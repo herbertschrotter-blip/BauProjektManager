@@ -109,6 +109,7 @@ public sealed record PlanArchiveEntry(
 /// </summary>
 /// <param name="FileTypes">Kommaliste der Dateiendungen der Revision (z. B. "PDF,DWG").</param>
 /// <param name="SegmentCount">Anzahl zugewiesener Dateinamens-Segmente (BPM-108).</param>
+/// <param name="Tags">Kommaliste der freien Tags (BPM-127), NULL wenn keine.</param>
 public sealed record PlanDataRow(
     string DocumentId,
     string DocumentKey,
@@ -124,7 +125,8 @@ public sealed record PlanDataRow(
     string ChangeNote,
     string ReceivedAt,
     string? FileTypes,
-    int SegmentCount);
+    int SegmentCount,
+    string? Tags = null);
 
 /// <summary>Eine mit einer Revision verknüpfte Datei (plan_files via revision_file_links) — für den Archiv-Move (111.07 Slice D).</summary>
 public sealed record PlanRevisionFile(

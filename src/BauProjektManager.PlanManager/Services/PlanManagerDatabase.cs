@@ -88,7 +88,7 @@ public class PlanManagerDatabase : IDisposable
 
     private void EnsureTables()
     {
-        Log.Debug("Creating planmanager.db tables (Schema v2.0, 11 tables)");
+        Log.Debug("Creating planmanager.db tables (Schema v2.0, 12 Tabellen inkl. plan_document_tags)");
         var conn = _connection!;
         var cmd = conn.CreateCommand();
         // === Schema v2.0 (BPM-109 Drei-Ebenen-Modell) ===
@@ -200,6 +200,26 @@ public class PlanManagerDatabase : IDisposable
 
             CREATE INDEX IF NOT EXISTS idx_plan_document_segments_lookup
             ON plan_document_segments(segment_type_id, normalized_value, is_deleted);
+
+            -- Plan Document Tags (BPM-127) — freie inhaltliche Auszeichnungen,
+            -- BEWUSST getrennt von plan_document_segments (das ist die strukturierte
+            -- Zerlegung des Dateinamens, BPM-108). Additive Tabelle: entsteht per
+            -- IF NOT EXISTS auch in bestehenden DBs, kein Reset noetig.
+            CREATE TABLE IF NOT EXISTS plan_document_tags (
+                id TEXT PRIMARY KEY,
+                document_id TEXT NOT NULL,
+                tag TEXT NOT NULL,                  -- Anzeigetext wie eingegeben
+                normalized_tag TEXT NOT NULL,       -- lowercase/getrimmt fuer Vergleich + Vorschlaege
+                created_at TEXT NOT NULL,
+                created_by TEXT,
+                sync_version INTEGER NOT NULL DEFAULT 0,
+                is_deleted INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY (document_id) REFERENCES plan_documents(id),
+                UNIQUE (document_id, normalized_tag)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_plan_document_tags_lookup
+            ON plan_document_tags(normalized_tag, is_deleted);
 
             -- Plan Revision Events (NEU v2.0) — minimaler Audit-Trail für Statuswechsel
             CREATE TABLE IF NOT EXISTS plan_revision_events (
@@ -557,7 +577,9 @@ public class PlanManagerDatabase : IDisposable
                       JOIN plan_files pf ON pf.id = rfl.file_id
                      WHERE rfl.revision_id = pr.id),
                    (SELECT COUNT(*) FROM plan_document_segments s
-                     WHERE s.document_id = pd.id AND s.is_deleted = 0)
+                     WHERE s.document_id = pd.id AND s.is_deleted = 0),
+                   (SELECT GROUP_CONCAT(t.tag, ', ') FROM plan_document_tags t
+                     WHERE t.document_id = pd.id AND t.is_deleted = 0)
             FROM plan_documents pd
             JOIN plan_revisions pr ON pr.document_id = pd.id
                 AND pr.revision_status = 'current' AND pr.is_deleted = 0
@@ -577,7 +599,8 @@ public class PlanManagerDatabase : IDisposable
                 reader.GetString(11),
                 reader.GetString(12),
                 reader.IsDBNull(13) ? null : reader.GetString(13),
-                reader.GetInt32(14)));
+                reader.GetInt32(14),
+                reader.IsDBNull(15) ? null : reader.GetString(15)));
         return result;
     }
 
@@ -1380,6 +1403,96 @@ public class PlanManagerDatabase : IDisposable
                 reader.IsDBNull(2) ? "" : reader.GetString(2),
                 reader.IsDBNull(3) ? 0 : reader.GetInt64(3),
                 reader.GetInt64(4) != 0));
+        return result;
+    }
+
+    // === PLAN DOCUMENT TAGS (BPM-127) ===
+    //
+    // Freie Schlagworte je Dokument — NICHT zu verwechseln mit den Dateinamens-
+    // Segmenten (plan_document_segments, BPM-108). Normalisierung (trim + lower)
+    // dient dem Duplikat-Schutz und den Vorschlaegen; angezeigt wird der Rohtext.
+
+    /// <summary>Tags eines Dokuments (alphabetisch).</summary>
+    public List<string> GetTagsForDocument(string documentId)
+    {
+        var conn = GetConnection();
+        var result = new List<string>();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT tag FROM plan_document_tags
+            WHERE document_id = @did AND is_deleted = 0
+            ORDER BY normalized_tag ASC
+            """;
+        cmd.Parameters.AddWithValue("@did", documentId);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+            result.Add(reader.GetString(0));
+        return result;
+    }
+
+    /// <summary>
+    /// Tag setzen. Leer/nur Leerzeichen wird ignoriert; ein bereits vorhandener
+    /// (normalisiert gleicher) Tag wird reaktiviert statt doppelt angelegt.
+    /// Liefert false, wenn nichts zu tun war.
+    /// </summary>
+    public bool AddTag(string documentId, string tag)
+    {
+        var trimmed = tag.Trim();
+        if (trimmed.Length == 0)
+            return false;
+
+        var conn = GetConnection();
+        var now = DateTime.UtcNow.ToString("o");
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            INSERT INTO plan_document_tags
+                (id, document_id, tag, normalized_tag, created_at, sync_version, is_deleted)
+            VALUES (@id, @did, @tag, @norm, @ca, 0, 0)
+            ON CONFLICT (document_id, normalized_tag) DO UPDATE SET
+                tag = excluded.tag,
+                is_deleted = 0
+            """;
+        cmd.Parameters.AddWithValue("@id", _idGenerator.NewId());
+        cmd.Parameters.AddWithValue("@did", documentId);
+        cmd.Parameters.AddWithValue("@tag", trimmed);
+        cmd.Parameters.AddWithValue("@norm", trimmed.ToLowerInvariant());
+        cmd.Parameters.AddWithValue("@ca", now);
+        cmd.ExecuteNonQuery();
+        return true;
+    }
+
+    /// <summary>Tag entfernen (Soft Delete — bleibt fuer Sync nachvollziehbar).</summary>
+    public void RemoveTag(string documentId, string tag)
+    {
+        var conn = GetConnection();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            UPDATE plan_document_tags SET is_deleted = 1
+            WHERE document_id = @did AND normalized_tag = @norm
+            """;
+        cmd.Parameters.AddWithValue("@did", documentId);
+        cmd.Parameters.AddWithValue("@norm", tag.Trim().ToLowerInvariant());
+        cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>
+    /// Alle im Projekt bereits verwendeten Tags — Vorschlagsliste bei der Eingabe
+    /// (haeufigste zuerst, dann alphabetisch).
+    /// </summary>
+    public List<string> GetAllTags()
+    {
+        var conn = GetConnection();
+        var result = new List<string>();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT tag, COUNT(*) AS uses FROM plan_document_tags
+            WHERE is_deleted = 0
+            GROUP BY normalized_tag
+            ORDER BY uses DESC, normalized_tag ASC
+            """;
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+            result.Add(reader.GetString(0));
         return result;
     }
 }

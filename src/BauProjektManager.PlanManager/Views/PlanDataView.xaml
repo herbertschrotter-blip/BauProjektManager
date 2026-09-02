@@ -14,34 +14,35 @@
         <!-- Toolbar: Suche + Filter (Excel-Export folgt mit Slice d) -->
         <Border Grid.Row="0" Background="{DynamicResource BpmBgSurface}"
                 BorderBrush="{DynamicResource BpmBorderSubtle}" BorderThickness="0,0,0,1"
-                Padding="10,6">
+                Padding="10,7">
             <DockPanel>
                 <TextBlock DockPanel.Dock="Left" Text="Suche"
                            Foreground="{DynamicResource BpmTextSecondary}"
-                           FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                <TextBox DockPanel.Dock="Left" Width="220"
+                           FontSize="12" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <TextBox DockPanel.Dock="Left" Width="220" Height="26"
                          Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=200}"
                          Background="{DynamicResource BpmBgInput}"
                          Foreground="{DynamicResource BpmTextPrimary}"
                          BorderBrush="{DynamicResource BpmBorderDefault}"
-                         BorderThickness="1" Padding="6,3" FontSize="11"
-                         ToolTip="Sucht in Plannummer, Bezeichnung, Typ und Änderungshinweis"/>
+                         BorderThickness="1" Padding="6,0" FontSize="12"
+                         VerticalContentAlignment="Center"
+                         ToolTip="Sucht in Plannummer, Bezeichnung, Typ, Änderungshinweis und Tags"/>
 
                 <TextBlock DockPanel.Dock="Left" Text="Typ"
                            Foreground="{DynamicResource BpmTextSecondary}"
-                           FontSize="11" VerticalAlignment="Center" Margin="14,0,6,0"/>
-                <ComboBox DockPanel.Dock="Left" Width="150"
+                           FontSize="12" VerticalAlignment="Center" Margin="14,0,6,0"/>
+                <ComboBox DockPanel.Dock="Left" Width="150" Height="26"
                           ItemsSource="{Binding TypeFilters}"
                           SelectedItem="{Binding SelectedTypeFilter}"
-                          FontSize="11"/>
+                          FontSize="12"/>
 
                 <TextBlock DockPanel.Dock="Left" Text="Bauteil"
                            Foreground="{DynamicResource BpmTextSecondary}"
-                           FontSize="11" VerticalAlignment="Center" Margin="14,0,6,0"/>
-                <ComboBox DockPanel.Dock="Left" Width="110"
+                           FontSize="12" VerticalAlignment="Center" Margin="14,0,6,0"/>
+                <ComboBox DockPanel.Dock="Left" Width="110" Height="26"
                           ItemsSource="{Binding PartFilters}"
                           SelectedItem="{Binding SelectedPartFilter}"
-                          FontSize="11"/>
+                          FontSize="12"/>
 
                 <Button DockPanel.Dock="Right" Content="⟳" Width="26" Padding="0,2"
                         Style="{DynamicResource BpmButtonGhost}"
@@ -72,6 +73,7 @@
                 <DataGridTextColumn Header="Änderungshinweis" Binding="{Binding ChangeNote}" Width="200"/>
                 <DataGridTextColumn Header="Dateien" Binding="{Binding FileTypes}" Width="90"/>
                 <DataGridTextColumn Header="Segmente" Binding="{Binding SegmentText}" Width="95"/>
+                <DataGridTextColumn Header="Tags" Binding="{Binding TagsText}" Width="160"/>
             </DataGrid.Columns>
         </DataGrid>
 
@@ -83,187 +85,269 @@
                        FontSize="14" HorizontalAlignment="Center"/>
             <TextBlock Text="{Binding StatusText}"
                        Foreground="{DynamicResource BpmTextSecondary}"
-                       FontSize="11" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                       FontSize="12" HorizontalAlignment="Center" Margin="0,8,0,0"/>
         </StackPanel>
 
-        <!-- Detail-Panel der gewählten Zeile (BPM-126b) -->
         <GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch"
                       VerticalAlignment="Center" ResizeDirection="Rows" ResizeBehavior="PreviousAndNext"
                       Background="{DynamicResource BpmBorderSubtle}" Cursor="SizeNS"
                       DragCompleted="OnDetailSplitterDragCompleted"
                       Visibility="{Binding HasSelection, Converter={StaticResource BoolToVis}}"/>
 
+        <!-- Detail-Panel (BPM-126b/c + BPM-127) — Layout-Variante A:
+             Info links schmal, Arbeitsbereich rechts breit. Jeder Bereich ist eine
+             abgesetzte Karte (runde Ecken, eigener Rahmen, Abstand dazwischen). -->
         <Border Grid.Row="3" Background="{DynamicResource BpmBgSurface}"
                 BorderBrush="{DynamicResource BpmBorderSubtle}" BorderThickness="0,1,0,0"
-                Padding="10,8"
                 Visibility="{Binding HasSelection, Converter={StaticResource BoolToVis}}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <DockPanel Margin="0,0,0,8">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Kopfzeile über die volle Breite -->
+                <Border Grid.Row="0" Padding="10,8,10,4">
+                    <DockPanel>
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                            <Button Content="Vorschau" Padding="10,3"
+                            <Button Content="Vorschau" Padding="12,4"
                                     Style="{DynamicResource BpmButtonSecondary}"
                                     ToolTip="Primärdatei in der Standard-App öffnen"
                                     Click="OnPreviewClick"/>
-                            <Button Content="Im Explorer zeigen" Padding="10,3" Margin="6,0,0,0"
+                            <Button Content="Im Explorer zeigen" Padding="12,4" Margin="6,0,0,0"
                                     Style="{DynamicResource BpmButtonSecondary}"
                                     ToolTip="Ablageordner im Windows-Explorer öffnen"
                                     Click="OnRevealClick"/>
                         </StackPanel>
                         <TextBlock VerticalAlignment="Center"
                                    Foreground="{DynamicResource BpmTextBright}"
-                                   FontSize="13" FontWeight="SemiBold">
+                                   FontSize="14" FontWeight="SemiBold">
                             <Run Text="{Binding SelectedRow.PlanNumber, Mode=OneWay}"/>
                             <Run Text=" · Index "/>
                             <Run Text="{Binding SelectedRow.PlanIndex, Mode=OneWay}"/>
                         </TextBlock>
                     </DockPanel>
+                </Border>
 
-                    <Grid>
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,0,4">
+                    <Grid Margin="10,4,10,8">
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="340"/>
                             <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="1.2*"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- Box 1: Dokument -->
-                        <Border Grid.Column="0" Background="{DynamicResource BpmBgBase}"
-                                BorderBrush="{DynamicResource BpmBorderSubtle}" BorderThickness="1"
-                                CornerRadius="3" Padding="8,6" Margin="0,0,4,0">
-                            <StackPanel>
-                                <TextBlock Text="DOKUMENT" FontSize="9"
-                                           Foreground="{DynamicResource BpmTextSecondary}" Margin="0,0,0,5"/>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="78"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
-                                    </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Bezeichnung" FontSize="10"
-                                               Foreground="{DynamicResource BpmTextSecondary}"/>
-                                    <TextBlock Grid.Row="0" Grid.Column="1" FontSize="10" TextTrimming="CharacterEllipsis"
+                        <!-- ══ Links: Information (drei Karten untereinander) ══ -->
+                        <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                            <Border Background="{DynamicResource BpmBgBase}"
+                                    BorderBrush="{DynamicResource BpmBorderSubtle}" BorderThickness="1"
+                                    CornerRadius="4" Padding="10,8" Margin="0,0,0,8">
+                                <StackPanel>
+                                    <TextBlock Text="DOKUMENT" FontSize="10"
+                                               Foreground="{DynamicResource BpmTextSecondary}" Margin="0,0,0,6"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="78"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Bezeichnung" FontSize="11"
+                                                   Foreground="{DynamicResource BpmTextSecondary}" Margin="0,1"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1" FontSize="11" TextTrimming="CharacterEllipsis"
+                                                   Foreground="{DynamicResource BpmTextPrimary}" Margin="0,1"
+                                                   Text="{Binding SelectedRow.Title, Mode=OneWay}"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Typ" FontSize="11"
+                                                   Foreground="{DynamicResource BpmTextSecondary}" Margin="0,1"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" FontSize="11" Margin="0,1"
+                                                   Foreground="{DynamicResource BpmTextPrimary}"
+                                                   Text="{Binding SelectedRow.DocumentType, Mode=OneWay}"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Bauteil" FontSize="11"
+                                                   Foreground="{DynamicResource BpmTextSecondary}" Margin="0,1"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" FontSize="11" Margin="0,1"
+                                                   Foreground="{DynamicResource BpmTextPrimary}">
+                                            <Run Text="{Binding SelectedRow.BuildingPart, Mode=OneWay}"/>
+                                            <Run Text=" · "/>
+                                            <Run Text="{Binding SelectedRow.BuildingLevel, Mode=OneWay}"/>
+                                        </TextBlock>
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Key" FontSize="11"
+                                                   Foreground="{DynamicResource BpmTextSecondary}" Margin="0,1"/>
+                                        <TextBlock Grid.Row="3" Grid.Column="1" FontSize="10" Margin="0,1"
+                                                   FontFamily="Consolas" TextTrimming="CharacterEllipsis"
+                                                   Foreground="{DynamicResource BpmTextSecondary}"
+                                                   Text="{Binding SelectedRow.Row.DocumentKey, Mode=OneWay}"
+                                                   ToolTip="{Binding SelectedRow.Row.DocumentKey, Mode=OneWay}"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="{DynamicResource BpmBgBase}"
+                                    BorderBrush="{DynamicResource BpmBorderSubtle}" BorderThickness="1"
+                                    CornerRadius="4" Padding="10,8" Margin="0,0,0,8">
+                                <StackPanel>
+                                    <TextBlock Text="ABLAGE UND DATEIEN" FontSize="10"
+                                               Foreground="{DynamicResource BpmTextSecondary}" Margin="0,0,0,6"/>
+                                    <TextBlock FontSize="11" TextTrimming="CharacterEllipsis"
                                                Foreground="{DynamicResource BpmTextPrimary}"
-                                               Text="{Binding SelectedRow.Title, Mode=OneWay}"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Typ" FontSize="10"
-                                               Foreground="{DynamicResource BpmTextSecondary}"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="1" FontSize="10"
-                                               Foreground="{DynamicResource BpmTextPrimary}"
-                                               Text="{Binding SelectedRow.DocumentType, Mode=OneWay}"/>
-                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Bauteil" FontSize="10"
-                                               Foreground="{DynamicResource BpmTextSecondary}"/>
-                                    <TextBlock Grid.Row="2" Grid.Column="1" FontSize="10"
-                                               Foreground="{DynamicResource BpmTextPrimary}">
-                                        <Run Text="{Binding SelectedRow.BuildingPart, Mode=OneWay}"/>
-                                        <Run Text=" · "/>
-                                        <Run Text="{Binding SelectedRow.BuildingLevel, Mode=OneWay}"/>
-                                    </TextBlock>
-                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Key" FontSize="10"
-                                               Foreground="{DynamicResource BpmTextSecondary}"/>
-                                    <TextBlock Grid.Row="3" Grid.Column="1" FontSize="9"
-                                               FontFamily="Consolas" TextTrimming="CharacterEllipsis"
-                                               Foreground="{DynamicResource BpmTextSecondary}"
-                                               Text="{Binding SelectedRow.Row.DocumentKey, Mode=OneWay}"
-                                               ToolTip="{Binding SelectedRow.Row.DocumentKey, Mode=OneWay}"/>
-                                </Grid>
-                            </StackPanel>
-                        </Border>
+                                               Text="{Binding SelectedRow.Row.RelativeDirectory, Mode=OneWay}"
+                                               ToolTip="{Binding SelectedRow.Row.RelativeDirectory, Mode=OneWay}"/>
+                                    <ItemsControl ItemsSource="{Binding DetailFiles}" Margin="0,5,0,0">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <DockPanel Margin="0,2">
+                                                    <TextBlock DockPanel.Dock="Right" FontSize="10"
+                                                               Foreground="{DynamicResource BpmTextSecondary}"
+                                                               Text="{Binding Md5Short}"
+                                                               ToolTip="{Binding Detail.Md5}"/>
+                                                    <TextBlock FontSize="11" TextTrimming="CharacterEllipsis"
+                                                               Foreground="{DynamicResource BpmTextPrimary}">
+                                                        <Run Text="{Binding FileName, Mode=OneWay}"/>
+                                                        <Run Text=" · "/>
+                                                        <Run Text="{Binding SizeText, Mode=OneWay}"/>
+                                                    </TextBlock>
+                                                </DockPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
 
-                        <!-- Box 2: Ablage und Dateien -->
-                        <Border Grid.Column="1" Background="{DynamicResource BpmBgBase}"
-                                BorderBrush="{DynamicResource BpmBorderSubtle}" BorderThickness="1"
-                                CornerRadius="3" Padding="8,6" Margin="4,0">
-                            <StackPanel>
-                                <TextBlock Text="ABLAGE UND DATEIEN" FontSize="9"
-                                           Foreground="{DynamicResource BpmTextSecondary}" Margin="0,0,0,5"/>
-                                <TextBlock FontSize="10" TextTrimming="CharacterEllipsis"
-                                           Foreground="{DynamicResource BpmTextPrimary}"
-                                           Text="{Binding SelectedRow.Row.RelativeDirectory, Mode=OneWay}"
-                                           ToolTip="{Binding SelectedRow.Row.RelativeDirectory, Mode=OneWay}"/>
-                                <ItemsControl ItemsSource="{Binding DetailFiles}" Margin="0,4,0,0">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <DockPanel Margin="0,1">
-                                                <TextBlock DockPanel.Dock="Right" FontSize="9"
-                                                           Foreground="{DynamicResource BpmTextSecondary}"
-                                                           Text="{Binding Md5Short}"
-                                                           ToolTip="{Binding Detail.Md5}"/>
-                                                <TextBlock FontSize="10"
-                                                           Foreground="{DynamicResource BpmTextPrimary}">
-                                                    <Run Text="{Binding FileName, Mode=OneWay}"/>
-                                                    <Run Text=" · "/>
-                                                    <Run Text="{Binding SizeText, Mode=OneWay}"/>
-                                                </TextBlock>
-                                            </DockPanel>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Box 3: Revisionen -->
-                        <Border Grid.Column="2" Background="{DynamicResource BpmBgBase}"
-                                BorderBrush="{DynamicResource BpmBorderSubtle}" BorderThickness="1"
-                                CornerRadius="3" Padding="8,6" Margin="4,0,0,0">
-                            <StackPanel>
-                                <TextBlock Text="REVISIONEN" FontSize="9"
-                                           Foreground="{DynamicResource BpmTextSecondary}" Margin="0,0,0,5"/>
-                                <ItemsControl ItemsSource="{Binding DetailRevisions}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid Margin="0,1">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="30"/>
-                                                    <ColumnDefinition Width="72"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" FontSize="10" FontWeight="SemiBold"
-                                                           Text="{Binding IndexText}">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock">
-                                                            <Setter Property="Foreground" Value="{DynamicResource BpmTextSecondary}"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding IsCurrent}" Value="True">
-                                                                    <Setter Property="Foreground" Value="{DynamicResource BpmSuccess}"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
-                                                <TextBlock Grid.Column="1" FontSize="10"
-                                                           Foreground="{DynamicResource BpmTextSecondary}"
-                                                           Text="{Binding DateText}"/>
-                                                <TextBlock Grid.Column="2" FontSize="10" TextTrimming="CharacterEllipsis"
-                                                           Foreground="{DynamicResource BpmTextPrimary}"
-                                                           Text="{Binding ChangeNote}"
-                                                           ToolTip="{Binding ChangeNote}"/>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Border>
-                    </Grid>
-
-                    <!-- Segment-Editor (BPM-126c): Dateinamens-Segmente im Wizard-Muster -->
-                    <Border Background="{DynamicResource BpmBgBase}"
-                            BorderBrush="{DynamicResource BpmBorderSubtle}" BorderThickness="1"
-                            CornerRadius="3" Padding="8,6" Margin="0,8,0,0">
-                        <StackPanel>
-                            <TextBlock Text="DATEINAMENS-SEGMENTE" FontSize="9"
-                                       Foreground="{DynamicResource BpmTextSecondary}" Margin="0,0,0,5"/>
-                            <views:SegmentEditorControl x:Name="SegmentEditor"/>
+                            <Border Background="{DynamicResource BpmBgBase}"
+                                    BorderBrush="{DynamicResource BpmBorderSubtle}" BorderThickness="1"
+                                    CornerRadius="4" Padding="10,8">
+                                <StackPanel>
+                                    <TextBlock Text="REVISIONEN" FontSize="10"
+                                               Foreground="{DynamicResource BpmTextSecondary}" Margin="0,0,0,6"/>
+                                    <ItemsControl ItemsSource="{Binding DetailRevisions}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,2">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="28"/>
+                                                        <ColumnDefinition Width="74"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" FontSize="11" FontWeight="SemiBold"
+                                                               Text="{Binding IndexText}">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Foreground" Value="{DynamicResource BpmTextSecondary}"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                                                                        <Setter Property="Foreground" Value="{DynamicResource BpmSuccess}"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                    <TextBlock Grid.Column="1" FontSize="11"
+                                                               Foreground="{DynamicResource BpmTextSecondary}"
+                                                               Text="{Binding DateText}"/>
+                                                    <TextBlock Grid.Column="2" FontSize="11" TextTrimming="CharacterEllipsis"
+                                                               Foreground="{DynamicResource BpmTextPrimary}"
+                                                               Text="{Binding ChangeNote}"
+                                                               ToolTip="{Binding ChangeNote}"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
-                    </Border>
-                </StackPanel>
-            </ScrollViewer>
+
+                        <!-- ══ Rechts: Arbeitsbereich (zwei Karten) ══ -->
+                        <Grid Grid.Column="1">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Tags (BPM-127) -->
+                            <Border Grid.Row="0" Background="{DynamicResource BpmBgBase}"
+                                    BorderBrush="{DynamicResource BpmBorderSubtle}" BorderThickness="1"
+                                    CornerRadius="4" Padding="10,8" Margin="0,0,0,8">
+                                <StackPanel>
+                                    <DockPanel Margin="0,0,0,6">
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                            <TextBox x:Name="TagInput" Width="200" Height="26"
+                                                     FontSize="12" VerticalContentAlignment="Center"
+                                                     Background="{DynamicResource BpmBgInput}"
+                                                     Foreground="{DynamicResource BpmTextPrimary}"
+                                                     BorderBrush="{DynamicResource BpmBorderDefault}"
+                                                     BorderThickness="1" Padding="8,0"
+                                                     ToolTip="Schlagwort eingeben und Enter drücken"
+                                                     KeyDown="OnTagInputKeyDown"/>
+                                            <Button Content="+ Tag" Padding="12,4" Margin="6,0,0,0"
+                                                    Style="{DynamicResource BpmButtonSecondary}"
+                                                    Click="OnAddTagClick"/>
+                                        </StackPanel>
+                                        <TextBlock Text="TAGS" FontSize="10" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource BpmTextSecondary}"/>
+                                    </DockPanel>
+
+                                    <ItemsControl ItemsSource="{Binding DetailTags}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><WrapPanel Orientation="Horizontal"/></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="{DynamicResource BpmBgElevated}"
+                                                        BorderBrush="{DynamicResource BpmBorderDefault}" BorderThickness="1"
+                                                        CornerRadius="3" Padding="9,3" Margin="0,0,5,5">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding}" FontSize="11"
+                                                                   Foreground="{DynamicResource BpmTextPrimary}"/>
+                                                        <TextBlock Text="✕" FontSize="11" Margin="7,0,0,0" Cursor="Hand"
+                                                                   Foreground="{DynamicResource BpmTextSecondary}"
+                                                                   ToolTip="Tag entfernen"
+                                                                   MouseLeftButtonUp="OnRemoveTagClick"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <!-- Projektweite Vorschläge: Klick übernimmt den Tag -->
+                                    <ItemsControl ItemsSource="{Binding TagSuggestions}" Margin="0,3,0,0">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><WrapPanel Orientation="Horizontal"/></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="Transparent"
+                                                        BorderBrush="{DynamicResource BpmBorderSubtle}" BorderThickness="1"
+                                                        CornerRadius="3" Padding="7,2" Margin="0,0,5,5" Cursor="Hand"
+                                                        ToolTip="Vorschlag übernehmen"
+                                                        MouseLeftButtonUp="OnSuggestionClick">
+                                                    <TextBlock Text="{Binding}" FontSize="10"
+                                                               Foreground="{DynamicResource BpmTextSecondary}"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Segment-Editor (BPM-126c) -->
+                            <Border Grid.Row="1" Background="{DynamicResource BpmBgBase}"
+                                    BorderBrush="{DynamicResource BpmBorderSubtle}" BorderThickness="1"
+                                    CornerRadius="4" Padding="10,8">
+                                <StackPanel>
+                                    <TextBlock Text="DATEINAMENS-SEGMENTE" FontSize="10"
+                                               Foreground="{DynamicResource BpmTextSecondary}" Margin="0,0,0,6"/>
+                                    <views:SegmentEditorControl x:Name="SegmentEditor"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </ScrollViewer>
+            </Grid>
         </Border>
 
         <!-- Statuszeile -->
         <Border Grid.Row="4" Background="{DynamicResource BpmBgSurface}"
                 BorderBrush="{DynamicResource BpmBorderSubtle}" BorderThickness="0,1,0,0"
-                Padding="10,4">
+                Padding="10,5">
             <DockPanel>
                 <TextBlock DockPanel.Dock="Right"
                            Text="Read-only · Änderungen über Import-/Archiv-Workflows"

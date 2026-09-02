@@ -12,10 +12,10 @@
             <TextBlock DockPanel.Dock="Right"
                        Text="⚙ Segmenttypen verwalten…"
                        Foreground="{DynamicResource BpmAccentPrimary}"
-                       FontSize="10" Cursor="Hand"
+                       FontSize="11" Cursor="Hand"
                        MouseLeftButtonUp="OnManageTypesClick"/>
             <TextBlock Text="Trennzeichen klicken = teilen/verbinden · Segmenttyp auf eine Fläche ziehen"
-                       Foreground="{DynamicResource BpmTextSecondary}" FontSize="9"/>
+                       Foreground="{DynamicResource BpmTextSecondary}" FontSize="10"/>
         </DockPanel>
 
         <!-- EINE kombinierte Fläche: Token-Kacheln mit klickbaren Trennern dazwischen -->
@@ -25,7 +25,7 @@
             <DockPanel>
                 <!-- Globale Trenner-Chips -->
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="Trenner:" FontSize="9" VerticalAlignment="Center"
+                    <TextBlock Text="Trenner:" FontSize="10" VerticalAlignment="Center"
                                Foreground="{DynamicResource BpmTextSecondary}" Margin="8,0,4,0"/>
                     <ItemsControl ItemsSource="{Binding SeparatorChoices}">
                         <ItemsControl.ItemsPanel>
@@ -48,7 +48,7 @@
                                             </Style.Triggers>
                                         </Style>
                                     </Border.Style>
-                                    <TextBlock Text="{Binding Label}" FontSize="10" FontFamily="Consolas"
+                                    <TextBlock Text="{Binding Label}" FontSize="11" FontFamily="Consolas"
                                                Foreground="{DynamicResource BpmTextPrimary}"/>
                                 </Border>
                             </DataTemplate>
@@ -57,7 +57,7 @@
                 </StackPanel>
 
                 <!-- Token + Trenner in einer Zeile -->
-                <ItemsControl ItemsSource="{Binding Elements}">
+                <ItemsControl ItemsSource="{Binding Elements}" DockPanel.Dock="Left">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate><WrapPanel Orientation="Horizontal"/></ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
@@ -102,11 +102,11 @@
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
                                                     <Grid>
-                                                        <TextBlock Text="{Binding Text}" FontFamily="Consolas" FontSize="11"
+                                                        <TextBlock Text="{Binding Text}" FontFamily="Consolas" FontSize="12"
                                                                    FontWeight="SemiBold"
                                                                    Foreground="{DynamicResource BpmTextBright}"
                                                                    Visibility="{Binding IsText, Converter={StaticResource BoolToVis}}"/>
-                                                        <TextBlock Text="{Binding Text}" FontFamily="Consolas" FontSize="11"
+                                                        <TextBlock Text="{Binding Text}" FontFamily="Consolas" FontSize="12"
                                                                    FontWeight="SemiBold" Cursor="Hand" Opacity="0.75"
                                                                    Foreground="{DynamicResource BpmTextBright}"
                                                                    TextDecorations="Underline"
@@ -117,7 +117,7 @@
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
-                                        <TextBlock Text="{Binding TypeLabel}" FontSize="8"
+                                        <TextBlock Text="{Binding TypeLabel}" FontSize="9"
                                                    HorizontalAlignment="Center" Opacity="0.85"
                                                    Foreground="{DynamicResource BpmTextPrimary}"/>
                                     </StackPanel>
@@ -126,6 +126,12 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+
+                <!-- Dateiendung: gehoert NICHT zu den Segmenten (Format, kein Inhalt) -->
+                <TextBlock Text="{Binding Extension}" FontFamily="Consolas" FontSize="12"
+                           VerticalAlignment="Center" Margin="2,0,0,0" HorizontalAlignment="Left"
+                           Foreground="{DynamicResource BpmTextSecondary}"
+                           ToolTip="Dateiendung — wird nicht als Segment zugewiesen"/>
             </DockPanel>
         </Border>
 
@@ -141,7 +147,7 @@
                             CornerRadius="3" Padding="8,3" Margin="0,0,4,4" Cursor="Hand"
                             ToolTip="Auf eine Segment-Fläche ziehen"
                             PreviewMouseLeftButtonDown="OnPaletteDragStart">
-                        <TextBlock Text="{Binding Name}" FontSize="10"
+                        <TextBlock Text="{Binding Name}" FontSize="11"
                                    Foreground="{DynamicResource BpmTextPrimary}"/>
                     </Border>
                 </DataTemplate>

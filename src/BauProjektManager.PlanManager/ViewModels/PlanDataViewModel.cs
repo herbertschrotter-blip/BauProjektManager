@@ -68,6 +68,12 @@ public partial class PlanDataViewModel : ObservableObject
     /// <summary>Revisions-Historie des gewaehlten Dokuments (neueste zuerst).</summary>
     public ObservableCollection<PlanRevisionDisplay> DetailRevisions { get; } = [];
 
+    /// <summary>Tags des gewaehlten Dokuments (BPM-127).</summary>
+    public ObservableCollection<string> DetailTags { get; } = [];
+
+    /// <summary>Projektweite Tag-Vorschlaege fuer die Eingabe (haeufigste zuerst).</summary>
+    public ObservableCollection<string> TagSuggestions { get; } = [];
+
     [ObservableProperty]
     private bool _hasSelection;
 
@@ -77,6 +83,7 @@ public partial class PlanDataViewModel : ObservableObject
     {
         DetailFiles.Clear();
         DetailRevisions.Clear();
+        DetailTags.Clear();
         HasSelection = row is not null;
         if (row is null)
             return;
@@ -87,6 +94,8 @@ public partial class PlanDataViewModel : ObservableObject
             foreach (var rev in _planDb.GetRevisionsForDocument(row.Row.DocumentId)
                          .OrderByDescending(r => r.CurrentFrom))
                 DetailRevisions.Add(new PlanRevisionDisplay(rev));
+            foreach (var tag in _planDb.GetTagsForDocument(row.Row.DocumentId))
+                DetailTags.Add(tag);
         }
         catch (Exception ex)
         {
@@ -118,11 +127,62 @@ public partial class PlanDataViewModel : ObservableObject
         }
 
         RebuildFilterLists();
+        LoadTagSuggestions();
         // Auswahl ueber die Dokument-Id halten — sonst klappt das Detail-Panel
         // nach jeder Aktion (Segment speichern, Import, Undo) zu.
         LastSelectedDocumentId = SelectedRow?.Row.DocumentId;
         ApplyFilter();
         RestoreSelection();
+    }
+
+
+    // ── Tags (BPM-127) ──────────────────────────────────────────────
+
+    /// <summary>
+    /// Tag setzen und die Ansicht aktualisieren — bewusst OHNE Neuladen der
+    /// Liste (sonst verliert das DataGrid seine Auswahl, siehe BPM-126b).
+    /// </summary>
+    public void AddTag(string tag)
+    {
+        if (SelectedRow is not { } row || !_planDb.AddTag(row.Row.DocumentId, tag))
+            return;
+        RefreshTagsForSelection(row);
+        StatusText = $"Tag '{tag.Trim()}' gesetzt.";
+    }
+
+    /// <summary>Tag vom gewaehlten Dokument entfernen.</summary>
+    public void RemoveTag(string tag)
+    {
+        if (SelectedRow is not { } row)
+            return;
+        _planDb.RemoveTag(row.Row.DocumentId, tag);
+        RefreshTagsForSelection(row);
+        StatusText = $"Tag '{tag}' entfernt.";
+    }
+
+    /// <summary>Tags der Auswahl + Zeilen-Anzeige + Vorschlagsliste neu einlesen.</summary>
+    private void RefreshTagsForSelection(PlanDataRowViewModel row)
+    {
+        var tags = _planDb.GetTagsForDocument(row.Row.DocumentId);
+        DetailTags.Clear();
+        foreach (var t in tags)
+            DetailTags.Add(t);
+        row.TagsText = tags.Count == 0 ? "" : string.Join(", ", tags);
+        LoadTagSuggestions();
+    }
+
+    private void LoadTagSuggestions()
+    {
+        TagSuggestions.Clear();
+        try
+        {
+            foreach (var tag in _planDb.GetAllTags())
+                TagSuggestions.Add(tag);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Plandaten: Tag-Vorschlaege nicht ladbar");
+        }
     }
 
     /// <summary>Dokument-Id der letzten Auswahl — Anker fuer RestoreSelection.</summary>
@@ -215,7 +275,8 @@ public partial class PlanDataViewModel : ObservableObject
         => row.PlanNumber.Contains(search, StringComparison.OrdinalIgnoreCase)
            || row.Title.Contains(search, StringComparison.OrdinalIgnoreCase)
            || row.ChangeNote.Contains(search, StringComparison.OrdinalIgnoreCase)
-           || row.DocumentType.Contains(search, StringComparison.OrdinalIgnoreCase);
+           || row.DocumentType.Contains(search, StringComparison.OrdinalIgnoreCase)
+           || (row.Tags?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false);
 
     private string ResolvePart(string? id)
         => id is not null && _partNames.TryGetValue(id, out var name) ? name : "";
@@ -233,6 +294,7 @@ public sealed partial class PlanDataRowViewModel : ObservableObject
         BuildingPart = partName;
         BuildingLevel = levelName;
         _segmentCount = row.SegmentCount;
+        _tagsText = row.Tags ?? "";
     }
 
     public PlanDataRow Row { get; }
@@ -265,6 +327,10 @@ public sealed partial class PlanDataRowViewModel : ObservableObject
     private int _segmentCount;
 
     public string SegmentText => SegmentCount == 0 ? "—" : $"{SegmentCount} Segmente";
+
+    /// <summary>Tags als Anzeigetext (BPM-127) — nach Aenderung direkt aktualisierbar.</summary>
+    [ObservableProperty]
+    private string _tagsText = "";
 }
 
 /// <summary>Anzeige-Wrapper einer Revision für die Historie im Detail-Panel (BPM-126b).</summary>

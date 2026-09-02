@@ -41,6 +41,10 @@ public partial class SegmentEditorViewModel : ObservableObject
     [ObservableProperty]
     private bool _hasContent;
 
+    /// <summary>Dateiendung inkl. Punkt — wird angezeigt, ist aber KEIN Segment.</summary>
+    [ObservableProperty]
+    private string _extension = "";
+
     /// <summary>
     /// Editor auf eine Datei setzen. <paramref name="existing"/> sind bereits
     /// gespeicherte Segmentwerte — sie werden ueber den Rohwert den Token zugeordnet.
@@ -59,6 +63,7 @@ public partial class SegmentEditorViewModel : ObservableObject
             Palette.Add(type);
 
         _source = FileNameSegmentation.Split(fileName);
+        Extension = _source.Extension;
         _separatorState = FileNameSegmentation.InitialState(_source, FileNameSegmentation.SeparatorChars);
 
         SeparatorChoices.Clear();

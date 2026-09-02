@@ -31,6 +31,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.180] — 2026-09-02
+
+### Docs: BPM-067 — Mockup klappbare Sidebar (App/01_Shell)
+
+BPM-067 wurde in Teil 52 umgeschnitten: statt eines festen Umbaus auf die 56px-Icon-Leiste aus UI_Navigation.md wird die Sidebar **klappbar** — Zustand A aufgeklappt (220px, Emoji + Text, Badge neben dem Text, Default beim ersten Start) und Zustand B zugeklappt (56px, Emoji mit Tooltip, Badge als Ecke am Icon), umschaltbar per Chevron, Zustand gerätelokal. Neuer Mockup-Modul-Ordner `Docs/Mockups/App/` mit `01_Shell/01_Sidebar.html` (Klick-Umschaltung, Navigation zu PlanManager/Settings-Mockups) und eigener `_SITEMAP.md`. Sidebar-Inhalt nach Entscheidung Herbert: 🏠 Home oben, 📁 PlanManager, dann alle Post-V1-Module ausgegraut (Fotos, Zeiterfassung, Bautagebuch, Kalkulation, Wetter, Outlook, Vorlagen, Aufgaben, GIS, KI-Assistent — Sichtbarkeit später über Ansichtsprofile, Architektur Kap. 1.4), unten ⚙ Einstellungen und 🛠 Dev Tools, darunter Benutzer + Version. Fünf Emoji (🏠 🧮 📋 🗺 🤖) sind neu und beim WPF-Umbau in `Icons.xaml` anzulegen. WPF-Umsetzung folgt als BPM-067 Schritt 2.
+
+---
 ## [v0.28.179] — 2026-09-02
 
 ### Fix: BPM-066 (Teil 1) — versteckter `.bpm/`-Ordner erschien in der Ordnerstruktur

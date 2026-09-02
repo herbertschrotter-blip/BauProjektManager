@@ -78,4 +78,11 @@ public partial class ProjectDetailViewModel : ObservableObject
     }
 
     public bool HasInbox => InboxCount > 0;
+
+    /// <summary>
+    /// Dokumenttyp-Uebersicht des Profile-Tabs (BPM-006). Wird vom Host gesetzt,
+    /// sobald die Projektdatenbank steht.
+    /// </summary>
+    [ObservableProperty]
+    private DocumentTypeOverviewViewModel? _documentTypes;
 }

@@ -53,6 +53,9 @@ public partial class ProjectDetailView : UserControl
         _settingsService = settingsService;
         _pdfTextService = pdfTextService;
         Resources.Add("BoolToVis", boolToVis);
+        // BPM-006: der Profile-Tab braucht zusaetzlich den inversen Converter
+        // (Empty-State), den diese View bisher nicht registriert hatte.
+        Resources.Add("InverseBoolToVis", new InverseBoolToVisConverter());
         InitializeComponent();
 
         var vm = new ProjectDetailViewModel(project);
@@ -72,6 +75,10 @@ public partial class ProjectDetailView : UserControl
         if (_manualSortDb is not null)
             PlanDataHost.Initialize(_manualSortDb, project.Id, _bpmDb, project.Paths.Root, _fileLauncher,
                 _segmentTypeCatalog, _segmentTypeRepository, _idGenerator, _settingsService);
+
+        // BPM-006: Dokumenttyp-Uebersicht im Profile-Tab (Zielbild ADR-065 P.7)
+        vm.DocumentTypes = new DocumentTypeOverviewViewModel(project.Id, _bpmDb);
+        vm.DocumentTypes.Load();
 
         // PlanManagerDatabase + Explorer-Watcher beim Verlassen der Ansicht freigeben
         Unloaded += (_, _) =>

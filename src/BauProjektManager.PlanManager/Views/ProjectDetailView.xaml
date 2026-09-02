@@ -72,25 +72,111 @@
                 <views:PlanDataView x:Name="PlanDataHost" Margin="0,12,0,0"/>
             </TabItem>
 
-            <!-- Tab 4: Profile -->
+            <!-- Tab 4: Profile — Dokumenttyp-Übersicht (BPM-006, Zielbild ADR-065 P.7:
+                 document_types ist das fachliche Hauptobjekt, keine getrennte
+                 Profil-Verwaltung). Ring 2 (Bauteil/Geschoss) bleibt bewusst draußen —
+                 das sind Stammdaten ohne Erkennung. Der Erkennungs-Status wird erst
+                 mit BPM-121 Stufe B (Mining) echt. -->
             <TabItem Header="Profile">
-                <Grid Margin="0,12,0,0">
-                    <Button Content="+ Neuer Dokumenttyp"
-                            Style="{DynamicResource BpmButtonSecondary}"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            Click="OnNewProfile"/>
-                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <TextBlock Text="Noch keine Profile angelegt."
+                <Grid Margin="0,12,0,0" DataContext="{Binding DocumentTypes}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <DockPanel Grid.Row="0" Margin="0,0,0,8">
+                        <Button DockPanel.Dock="Right" Content="⟳" Width="26" Padding="0,2"
+                                Style="{DynamicResource BpmButtonGhost}"
+                                ToolTip="Neu laden"
+                                Command="{Binding LoadCommand}"/>
+                        <Button DockPanel.Dock="Left" Content="+ Neuer Dokumenttyp"
+                                Style="{DynamicResource BpmButtonSecondary}"
+                                Padding="12,4"
+                                Click="OnNewProfile"/>
+                        <TextBlock/>
+                    </DockPanel>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                                  Visibility="{Binding HasTypes, Converter={StaticResource BoolToVis}}">
+                        <ItemsControl ItemsSource="{Binding Groups}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,0,0,14">
+                                        <TextBlock Text="{Binding RootPath}" FontSize="11"
+                                                   FontWeight="SemiBold" Margin="0,0,0,5"
+                                                   Foreground="{DynamicResource BpmTextSecondary}"/>
+                                        <ItemsControl ItemsSource="{Binding Types}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="{DynamicResource BpmBgBase}"
+                                                            BorderBrush="{DynamicResource BpmBorderSubtle}"
+                                                            BorderThickness="1" CornerRadius="4"
+                                                            Padding="12,8" Margin="0,0,0,6">
+                                                        <DockPanel>
+                                                            <TextBlock DockPanel.Dock="Right" FontSize="11"
+                                                                       VerticalAlignment="Center"
+                                                                       Foreground="{DynamicResource BpmTextSecondary}"
+                                                                       Text="{Binding RecognitionText}"
+                                                                       ToolTip="Die Erkennung lernt aus den manuellen Zuordnungen (BPM-121) — noch nicht aktiv"/>
+                                                            <StackPanel>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock Text="{Binding Name}" FontSize="13"
+                                                                               FontWeight="SemiBold"
+                                                                               Foreground="{DynamicResource BpmTextBright}"/>
+                                                                    <Border Background="{DynamicResource BpmBgElevated}"
+                                                                            CornerRadius="3" Padding="6,1" Margin="8,0,0,0"
+                                                                            VerticalAlignment="Center">
+                                                                        <Border.Style>
+                                                                            <Style TargetType="Border">
+                                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                                                <Style.Triggers>
+                                                                                    <DataTrigger Binding="{Binding IsBuiltin}" Value="True">
+                                                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                                                    </DataTrigger>
+                                                                                </Style.Triggers>
+                                                                            </Style>
+                                                                        </Border.Style>
+                                                                        <TextBlock Text="Vorlage" FontSize="9"
+                                                                                   Foreground="{DynamicResource BpmTextSecondary}"/>
+                                                                    </Border>
+                                                                </StackPanel>
+                                                                <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                                                    <TextBlock Text="{Binding FolderText}" FontSize="11"
+                                                                               Foreground="{DynamicResource BpmTextPrimary}"/>
+                                                                    <TextBlock Text="{Binding CategoryText}" FontSize="11"
+                                                                               Margin="10,0,0,0"
+                                                                               Foreground="{DynamicResource BpmTextSecondary}"/>
+                                                                </StackPanel>
+                                                            </StackPanel>
+                                                        </DockPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                Visibility="{Binding HasTypes, Converter={StaticResource InverseBoolToVis}}">
+                        <TextBlock Text="Noch keine Dokumenttypen"
                                    Foreground="{DynamicResource BpmTextSecondary}"
-                                   FontSize="13" HorizontalAlignment="Center"/>
-                        <TextBlock Text="Klicke + Neuer Dokumenttyp um einen Dateinamen anzulernen."
+                                   FontSize="14" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding StatusText}"
                                    Foreground="{DynamicResource BpmTextSecondary}"
-                                   FontSize="11" HorizontalAlignment="Center"
-                                   Margin="0,8,0,0"/>
+                                   FontSize="11" HorizontalAlignment="Center" Margin="0,8,0,0"
+                                   TextWrapping="Wrap" MaxWidth="420" TextAlignment="Center"/>
                     </StackPanel>
+
+                    <TextBlock Grid.Row="2" Text="{Binding StatusText}" FontSize="11" Margin="0,6,0,0"
+                               Foreground="{DynamicResource BpmTextSecondary}"
+                               Visibility="{Binding HasTypes, Converter={StaticResource BoolToVis}}"/>
                 </Grid>
             </TabItem>
+
 
             <!-- Tab 5: Sync -->
             <TabItem Header="Sync">

@@ -1355,4 +1355,31 @@ public class PlanManagerDatabase : IDisposable
         _connection?.Dispose();
         _connection = null;
     }
+
+    /// <summary>
+    /// Dateien einer Revision inkl. Fingerprint (BPM-126b Detail-Panel):
+    /// wie GetFilesForRevision, zusätzlich md5_hash und file_size.
+    /// </summary>
+    public List<PlanFileDetail> GetFileDetailsForRevision(string revisionId)
+    {
+        var conn = GetConnection();
+        var result = new List<PlanFileDetail>();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT pf.file_name, pf.relative_path, pf.md5_hash, pf.file_size, rfl.is_primary
+            FROM plan_files pf
+            JOIN revision_file_links rfl ON rfl.file_id = pf.id
+            WHERE rfl.revision_id = @rid
+            ORDER BY rfl.is_primary DESC, pf.file_name ASC
+            """;
+        cmd.Parameters.AddWithValue("@rid", revisionId);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+            result.Add(new PlanFileDetail(
+                reader.GetString(0), reader.GetString(1),
+                reader.IsDBNull(2) ? "" : reader.GetString(2),
+                reader.IsDBNull(3) ? 0 : reader.GetInt64(3),
+                reader.GetInt64(4) != 0));
+        return result;
+    }
 }

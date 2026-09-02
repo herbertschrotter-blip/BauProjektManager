@@ -71,6 +71,12 @@ public class UiLayoutSettings
     /// per Splitter angepasst). Null = noch nie verändert → Default-Breite.
     /// </summary>
     public double? PlanDetailWidth { get; set; }
+
+    /// <summary>
+    /// Hoehe des Detail-/Segment-Panels im Plandaten-Tab (BPM-126b/c).
+    /// NULL = Standardhoehe.
+    /// </summary>
+    public double? PlanDataDetailHeight { get; set; }
 }
 
 /// <summary>

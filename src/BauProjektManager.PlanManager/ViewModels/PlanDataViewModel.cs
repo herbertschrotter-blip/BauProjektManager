@@ -60,6 +60,40 @@ public partial class PlanDataViewModel : ObservableObject
     [ObservableProperty]
     private bool _hasRows;
 
+    // ── Detail-Panel (BPM-126b) ─────────────────────────────────────
+
+    /// <summary>Dateien der current-Revision mit Groesse/MD5.</summary>
+    public ObservableCollection<PlanFileDisplay> DetailFiles { get; } = [];
+
+    /// <summary>Revisions-Historie des gewaehlten Dokuments (neueste zuerst).</summary>
+    public ObservableCollection<PlanRevisionDisplay> DetailRevisions { get; } = [];
+
+    [ObservableProperty]
+    private bool _hasSelection;
+
+    partial void OnSelectedRowChanged(PlanDataRowViewModel? value) => LoadDetails(value);
+
+    private void LoadDetails(PlanDataRowViewModel? row)
+    {
+        DetailFiles.Clear();
+        DetailRevisions.Clear();
+        HasSelection = row is not null;
+        if (row is null)
+            return;
+        try
+        {
+            foreach (var file in _planDb.GetFileDetailsForRevision(row.Row.RevisionId))
+                DetailFiles.Add(new PlanFileDisplay(file));
+            foreach (var rev in _planDb.GetRevisionsForDocument(row.Row.DocumentId)
+                         .OrderByDescending(r => r.CurrentFrom))
+                DetailRevisions.Add(new PlanRevisionDisplay(rev));
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Plandaten: Detaildaten nicht ladbar");
+        }
+    }
+
     partial void OnSearchTextChanged(string value) => ApplyFilter();
 
     partial void OnSelectedTypeFilterChanged(string value) => ApplyFilter();
@@ -84,7 +118,28 @@ public partial class PlanDataViewModel : ObservableObject
         }
 
         RebuildFilterLists();
+        // Auswahl ueber die Dokument-Id halten — sonst klappt das Detail-Panel
+        // nach jeder Aktion (Segment speichern, Import, Undo) zu.
+        LastSelectedDocumentId = SelectedRow?.Row.DocumentId;
         ApplyFilter();
+        RestoreSelection();
+    }
+
+    /// <summary>Dokument-Id der letzten Auswahl — Anker fuer RestoreSelection.</summary>
+    public string? LastSelectedDocumentId { get; private set; }
+
+    /// <summary>
+    /// Auswahl nach einem Neuladen wiederherstellen. Das DataGrid setzt seine
+    /// Selektion beim Leeren der Liste asynchron zurueck — der Host ruft das
+    /// deshalb zusaetzlich verzoegert auf (sonst klappt das Detail-Panel zu).
+    /// </summary>
+    public void RestoreSelection()
+    {
+        if (LastSelectedDocumentId is null || SelectedRow is not null)
+            return;
+        var match = Rows.FirstOrDefault(r => r.Row.DocumentId == LastSelectedDocumentId);
+        if (match is not null)
+            SelectedRow = match;
     }
 
     /// <summary>Bauteil-/Geschoss-Namen aus der bpm.db für die Anzeige auflösen.</summary>
@@ -170,16 +225,24 @@ public partial class PlanDataViewModel : ObservableObject
 }
 
 /// <summary>Anzeige-Zeile der Plandaten-Tabelle (BPM-126).</summary>
-public sealed class PlanDataRowViewModel(PlanDataRow row, string partName, string levelName)
+public sealed partial class PlanDataRowViewModel : ObservableObject
 {
-    public PlanDataRow Row { get; } = row;
+    public PlanDataRowViewModel(PlanDataRow row, string partName, string levelName)
+    {
+        Row = row;
+        BuildingPart = partName;
+        BuildingLevel = levelName;
+        _segmentCount = row.SegmentCount;
+    }
+
+    public PlanDataRow Row { get; }
 
     public string PlanNumber => Row.PlanNumber;
     public string PlanIndex => Row.PlanIndex ?? "—";
     public string Title => Row.Title;
     public string DocumentType => Row.DocumentType;
-    public string BuildingPart { get; } = partName;
-    public string BuildingLevel { get; } = levelName;
+    public string BuildingPart { get; }
+    public string BuildingLevel { get; }
     public string ChangeNote => Row.ChangeNote.Length > 0 ? Row.ChangeNote : "Erstausgabe";
 
     /// <summary>Index-Datum lokal formatiert; leer wenn (noch) nicht gesetzt.</summary>
@@ -192,5 +255,52 @@ public sealed class PlanDataRowViewModel(PlanDataRow row, string partName, strin
         ? "—"
         : string.Join(" · ", Row.FileTypes.Split(',', StringSplitOptions.RemoveEmptyEntries));
 
-    public string SegmentText => Row.SegmentCount == 0 ? "—" : $"{Row.SegmentCount} Segmente";
+    /// <summary>
+    /// Segment-Anzahl — nach einer Zuweisung im Editor wird NUR dieser Wert
+    /// aktualisiert (kein Neuladen der Liste, sonst verliert das DataGrid
+    /// seine Auswahl und das Detail-Panel klappt zu).
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SegmentText))]
+    private int _segmentCount;
+
+    public string SegmentText => SegmentCount == 0 ? "—" : $"{SegmentCount} Segmente";
+}
+
+/// <summary>Anzeige-Wrapper einer Revision für die Historie im Detail-Panel (BPM-126b).</summary>
+public sealed class PlanRevisionDisplay(PlanRevision revision)
+{
+    public PlanRevision Revision { get; } = revision;
+
+    public string IndexText => Revision.PlanIndex ?? "—";
+
+    /// <summary>Freigabedatum, sonst Hinzufügedatum (BPM-109.04b-Reihenfolge).</summary>
+    public string DateText => DateTime.TryParse(Revision.ReleasedAt ?? Revision.ReceivedAt, out var d)
+        ? d.ToLocalTime().ToString("dd.MM.yyyy")
+        : "—";
+
+    public string ChangeNote => Revision.ChangeNote.Length > 0 ? Revision.ChangeNote : "Erstausgabe";
+
+    /// <summary>true = aktuelle Revision (in der Historie hervorgehoben).</summary>
+    public bool IsCurrent => Revision.RevisionStatus == "current";
+}
+
+/// <summary>Anzeige-Wrapper einer Revisionsdatei im Detail-Panel (BPM-126b).</summary>
+public sealed class PlanFileDisplay(PlanFileDetail detail)
+{
+    public PlanFileDetail Detail { get; } = detail;
+
+    public string FileName => Detail.FileName;
+    public string RelativePath => Detail.RelativePath;
+    public bool IsPrimary => Detail.IsPrimary;
+
+    public string SizeText => Detail.FileSize switch
+    {
+        < 1024 => $"{Detail.FileSize} B",
+        < 1024 * 1024 => $"{Detail.FileSize / 1024} KB",
+        _ => $"{Detail.FileSize / 1024.0 / 1024.0:0.#} MB"
+    };
+
+    /// <summary>Gekürzter Fingerprint für die Anzeige (voller Wert im Tooltip).</summary>
+    public string Md5Short => Detail.Md5.Length >= 8 ? "md5 " + Detail.Md5[..8].ToLowerInvariant() + "…" : "";
 }

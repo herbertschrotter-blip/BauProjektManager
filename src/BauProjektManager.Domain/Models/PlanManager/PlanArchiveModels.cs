@@ -205,3 +205,15 @@ public static class PlanArchive
         public const string Attachment = "attachment";
     }
 }
+
+/// <summary>
+/// Datei einer Revision mit Fingerprint — für das Detail-Panel der Plandaten-Ansicht
+/// (BPM-126b). Ergänzt <see cref="PlanRevisionFile"/> um Größe und MD5, die beim
+/// Archiv-Move nicht gebraucht werden.
+/// </summary>
+public sealed record PlanFileDetail(
+    string FileName,
+    string RelativePath,
+    string Md5,
+    long FileSize,
+    bool IsPrimary);

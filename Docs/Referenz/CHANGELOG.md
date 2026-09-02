@@ -31,6 +31,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.177] — 2026-09-02
+
+### Docs: BACKLOG #30/#31/#33/#34 bereinigt (BPM-017 erledigt; BPM-018, BPM-020, BPM-021 gestrichen)
+
+BPM-017 „Undo (Import rückgängig machen)" war seit BPM-111.04 (v0.28.73, `22ebcc4`) umgesetzt und durch BPM-120 T7 (Undo-Härtung nach ADR-064) sowie BPM-111.07 D (↩ im Archiv-Tab) abgerundet — der ClickUp-Task hing nur noch als Planungsrest. Ohne Code-Änderung geschlossen, BACKLOG-Zeile 30 mit ✅ und Verweisen versehen. Bewusst nicht enthalten (ADR-064): Undo älterer Importe, `skipDuplicate` und Archiv-Moves.
+
+**BPM-018 „Backup vor Import (SQLite + JSON)" gestrichen** (Entscheidung Herbert): nie umgesetzt, Begründung durch ADR-064 weggefallen (Vorab-Journal, Transaktion je Aktion, idempotente Recovery, gehärtetes Undo). Die JSON-Hälfte ist seit ADR-064 P.9 gegenstandslos (kein Profil-Import, kein LearnIndex-Lernen), und ein Restore einer älteren `planmanager.db` widerspräche ADR-061 (Drift gegen die Ordnerwahrheit, Journal weg). Rest-Idee für post-V1: bewusster manueller DB-Snapshot in den DevTools. ADR-040 (Backup vor Migration) bleibt unberührt.
+
+**BPM-020 „Erkennungs-Konflikt (User wählt Profil)" gestrichen** (Entscheidung Herbert): Die Konflikt-Erkennung (`DocumentTypeRecognizer.IsConflict`, Status „Mehrere Profile" in der Vorschau) hing am klassischen Profil-Import, der laut ADR-064 P.9 aus dem V1-Pfad ist; der Auswahlschritt wurde nie gebaut, `ConflictPolicy` am Profil ist ungenutzt. Im Radial (ADR-059) wählt der Nutzer den Dokumenttyp selbst, ein Profil-Konflikt entsteht dort nicht. Der Restbedarf — bei mehrdeutiger Typ-Evidenz keine Ring-1-Vorbelegung, Kandidaten hervorheben (Veto-Regel ADR-065 P.4) — ist als Kommentar an BPM-121 übernommen.
+
+**BPM-021 „Plan-Sammler (Checkbox-Sortierung)" gestrichen** (Entscheidung Herbert): Backlog-Notiz aus v0.12.4 ohne Ausarbeitung. Einzig sinnvolle Auslegung wäre ein Plan-Paket-Sammler (Auswahl im Archiv → Sortierschema → Ordner/ZIP/Druckliste) gewesen — kein Bedarf: Einsortieren ist über Radial-Bulk und Move-Radial gelöst, Planlisten kommen mit BPM-031. BACKLOG Should-Tabelle #34 und PlanManager.md Kap. 19 markiert.
+
+---
 ## [v0.28.176] — 2026-09-02
 
 ### Docs: CHANGELOG-Nachzug v0.28.173–.175 (BPM-129)

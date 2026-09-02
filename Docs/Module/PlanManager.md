@@ -1219,7 +1219,7 @@ BauProjektManager.PlanManager/
 | PDF-Vorschau im Import + manueller Sortierung | PdfPig (Seite als Bild) | Hoch |
 | fieldRules (Regex/allowedValues pro Feld) | Profil-System V1 | Mittel |
 | Planlisten Import/Export | ClosedXML + QuestPDF | V1.1 |
-| Plan-Sammler (#34) | PlanManager Basis | Mittel |
+| ~~Plan-Sammler (#34)~~ | gestrichen Teil 52 (BPM-021, kein Bedarf) | — |
 | Schnellsuche Dokumente | plan_revisions + plan_files | Niedrig |
 | Batch-Umbenennung | FileRenamer + eigene rename_history Tabelle | Niedrig |
 | DB-Sync (planmanager.db über Cloud) | Event-Sync ADR-037 | Post-V1 |

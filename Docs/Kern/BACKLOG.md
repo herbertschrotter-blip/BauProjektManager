@@ -112,10 +112,10 @@ Details: [BauProjektManager_Architektur.md](BauProjektManager_Architektur.md) Ka
 | 27 | Index-Archivierung | Alte Indizes → _Archiv/ |
 | 28 | Undo-Journal | 3 SQLite-Tabellen (ADR-009) |
 | 29 | Recovery | Beim App-Start: pending → Reparatur |
-| 30 | Undo | Journal rückwärts, Dateien zurück |
-| 31 | Backup vor Import | SQLite + JSON als .bak |
+| 30 | Undo | Journal rückwärts, Dateien zurück ✅ v0.28.73 (BPM-111.04 ImportUndoService mit Preflight, nur letzter Import; gehärtet BPM-120 T7 nach ADR-064; ↩ im Archiv-Tab BPM-111.07 D) |
+| 31 | Backup vor Import | SQLite + JSON als .bak — ❌ gestrichen Teil 52 (BPM-018): obsolet durch ADR-064 (Import transaktional + Journal), JSON-Hälfte durch ADR-064 P.9 gegenstandslos, Restore widerspräche ADR-061; Rest-Idee manueller DB-Snapshot in DevTools post-V1 |
 | 32 | Unbekannte Dateien | Profil erweitern / Skip |
-| 33 | Erkennungs-Konflikt | Mehrere Profile → User wählt |
+| 33 | Erkennungs-Konflikt | Mehrere Profile → User wählt — ❌ gestrichen Teil 52 (BPM-020): hing am Profil-Import (ADR-064 P.9 aus V1); im Radial wählt der Nutzer den Typ selbst (ADR-059); Restbedarf = Veto-Regel ADR-065 P.4 (mehrdeutig → keine Ring-1-Vorbelegung) in BPM-121 |
 
 ---
 
@@ -131,7 +131,7 @@ Diese Features verbessern V1, sind aber kein Blocker für den Release.
 | Versionsnummer im Log (#16) | Aus Assembly, nicht hardcoded | ✅ v0.16.1 |
 | Bestehende Ordner zuweisen | Existierenden Ordner einem Projekt zuweisen statt neu anlegen. "Projekt importieren" Button mit Auto-Manifest-Erkennung. | ✅ v0.20.0 |
 | Ordner umbenennen auf Disk | Bei Sortierung/Präfix-Änderung Ordner auf Festplatte umbenennen | ⬜ |
-| Plan-Sammler (#34) | Pläne per Checkbox sammeln und nach Schema sortieren | ⬜ |
+| Plan-Sammler (#34) | Pläne per Checkbox sammeln und nach Schema sortieren | ❌ gestrichen Teil 52 (BPM-021): nie ausgearbeitet, kein Bedarf — Einsortieren via Radial-Bulk/Move-Radial, Planlisten via BPM-031 |
 | Ordner-Sync (#35) | Bidirektionaler Sync zwischen lokalem Projektordner und Remote (Firmenserver/Netzlaufwerk). Pro Projekt konfigurierbar: welche Ordner, welche Richtung (←→/←/→). Neue Dateien vom Remote landen im _Eingang/ → PlanManager sortiert. Sortierte zurücksynchen. Tab „Sync" im Projektdetail. **Sync-Tab-Mockup vertagt nach Spike 0 / ADR-053** (Inhalt ändert sich grundlegend von Cloud-Ordner-Polling zu Server Pull/Push). [ModuleOrdnerSync.md](../Konzepte/ModuleOrdnerSync.md) | ⬜ |
 
 ### Datenschutz-Infrastruktur (PFLICHT vor erstem Online-Modul — DSGVO-Architektur Kap. 15)

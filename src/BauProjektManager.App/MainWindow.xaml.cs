@@ -50,6 +50,9 @@ public partial class MainWindow : Window
             pdfTextService);
         _settingsView = new SettingsView(db, dialogService, settingsService, persistenceRegistry);
 
+        // BPM-067: Sidebar-Zustand (Text 220 / Icons 56) geraetelokal wiederherstellen
+        SidebarVersion.Text = "v" + AppVersionText();
+        ApplySidebarState(_settingsService.LoadDevice().UiLayout.SidebarCollapsed, persist: false);
         UpdateSidebarBadge();
 
         SourceInitialized += OnSourceInitialized;
@@ -212,6 +215,75 @@ public partial class MainWindow : Window
         {
             SidebarBadge.Visibility = Visibility.Collapsed;
         }
+
+        // Zugeklappt traegt der Tooltip die Zahl, weil neben dem Icon kein Platz fuer Text ist.
+        if (_sidebarCollapsed)
+            BtnPlans.ToolTip = MakeToolTip(count > 0 ? $"PlanManager · {count} im Eingang" : "PlanManager");
+    }
+
+    // ── Klappbare Sidebar (BPM-067, ADR-siehe UI_Navigation.md Kap. 2) ──
+    // Zustand A: 220px, Emoji + Text, Badge neben dem Text.
+    // Zustand B: 56px, nur Emoji mit Tooltip, Badge als Ecke am Icon.
+    // Default beim ersten Start: aufgeklappt; Zustand in device-settings.json.
+
+    private const double SidebarExpandedWidth = 220;
+    private const double SidebarCollapsedWidth = 56;
+    private bool _sidebarCollapsed;
+
+    private void OnToggleSidebar(object sender, RoutedEventArgs e)
+        => ApplySidebarState(!_sidebarCollapsed, persist: true);
+
+    private void ApplySidebarState(bool collapsed, bool persist)
+    {
+        _sidebarCollapsed = collapsed;
+        SidebarColumn.Width = new GridLength(collapsed ? SidebarCollapsedWidth : SidebarExpandedWidth);
+
+        var textVisibility = collapsed ? Visibility.Collapsed : Visibility.Visible;
+        SidebarTitle.Visibility = textVisibility;
+        SidebarVersion.Visibility = textVisibility;
+
+        BtnSidebarToggle.Content = FindResource(collapsed ? "IconNavExpand" : "IconNavCollapse");
+        BtnSidebarToggle.ToolTip = MakeToolTip(collapsed ? "Sidebar aufklappen" : "Sidebar zuklappen");
+        BtnSidebarToggle.HorizontalAlignment = collapsed ? HorizontalAlignment.Center : HorizontalAlignment.Right;
+
+        ApplyNavButtonState(BtnPlans, PlansText, "PlanManager", collapsed);
+        ApplyNavButtonState(BtnSettings, SettingsText, "Einstellungen", collapsed);
+        ApplyNavButtonState(BtnDevTools, DevToolsText, "Dev Tools", collapsed);
+
+        // Badge: neben dem Text (A) bzw. als Ecke oben rechts am Icon (B)
+        SidebarBadge.VerticalAlignment = collapsed ? VerticalAlignment.Top : VerticalAlignment.Center;
+        SidebarBadge.Margin = collapsed ? new Thickness(0, -6, -8, 0) : new Thickness(6, 0, 0, 0);
+        SidebarBadge.Padding = collapsed ? new Thickness(4, 0, 4, 0) : new Thickness(5, 1, 5, 1);
+
+        if (!persist) return;
+        try
+        {
+            var device = _settingsService.LoadDevice();
+            device.UiLayout.SidebarCollapsed = collapsed;
+            _settingsService.SaveDevice(device);
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Warning(ex, "Sidebar-Zustand konnte nicht gespeichert werden");
+        }
+    }
+
+    private void ApplyNavButtonState(Button button, TextBlock label, string name, bool collapsed)
+    {
+        label.Visibility = collapsed ? Visibility.Collapsed : Visibility.Visible;
+        // Aufgeklappt volle Breite, damit das Badge rechts am Rand sitzt statt ueber dem Text.
+        button.HorizontalContentAlignment = collapsed ? HorizontalAlignment.Center : HorizontalAlignment.Stretch;
+        button.Padding = collapsed ? new Thickness(0, 10, 0, 10) : new Thickness(15, 10, 15, 10);
+        button.ToolTip = collapsed ? MakeToolTip(name) : null;
+    }
+
+    private ToolTip MakeToolTip(string text)
+        => new() { Content = text, Style = (Style)FindResource("BpmToolTip") };
+
+    private static string AppVersionText()
+    {
+        var v = typeof(MainWindow).Assembly.GetName().Version;
+        return v is null ? "?" : $"{v.Major}.{v.Minor}.{v.Build}";
     }
 
     private void HighlightNavButton(Button active)

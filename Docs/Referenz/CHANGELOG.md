@@ -31,6 +31,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.181] — 2026-09-02
+
+### Feature: BPM-067 — klappbare Sidebar (220px Text ↔ 56px Icons)
+
+Die Shell-Sidebar lässt sich per Chevron im Kopf zwischen **Zustand A** (220px, Emoji + Text, Badge neben dem Text) und **Zustand B** (56px, nur Emoji mit Tooltip, Badge als Ecke oben rechts am Icon) umschalten. Default beim ersten Start: aufgeklappt; der Zustand wird gerätelokal in `DeviceSettings.UiLayout.SidebarCollapsed` gemerkt (gleiches Muster wie die Panel-Breiten). Unten zeigt die aufgeklappte Leiste die App-Version aus der Assembly. `MainWindow.xaml` neu aufgebaut (DockPanel: Kopf mit Titel + Toggle, Navigation, Versionszeile; `ColumnDefinition` per Name umschaltbar), Zustandslogik in `ApplySidebarState`/`ApplyNavButtonState`, Tooltips über `BpmToolTip`. `Icons.xaml` um die Chevrons und die Emoji-Keys aller geplanten Module aus dem Shell-Mockup ergänzt (`IconNav*`), damit Mockup und Code dieselben Zeichen nutzen. Bewusst **nicht** gebaut: Home und die ausgegrauten Platzhalter-Module — sie kommen mit ihren Views bzw. den Ansichtsprofilen (Architektur Kap. 1.4); keine Animation. Docs: UI_Navigation.md Kap. 2 und UI_UX_Guidelines 6.2 + Delta-Tabelle auf „klappbar" gestellt.
+
+---
 ## [v0.28.180] — 2026-09-02
 
 ### Docs: BPM-067 — Mockup klappbare Sidebar (App/01_Shell)

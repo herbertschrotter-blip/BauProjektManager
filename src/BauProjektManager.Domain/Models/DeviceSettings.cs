@@ -77,6 +77,12 @@ public class UiLayoutSettings
     /// NULL = Standardhoehe.
     /// </summary>
     public double? PlanDataDetailHeight { get; set; }
+
+    /// <summary>
+    /// Sidebar zugeklappt (56px Icon-Leiste) statt aufgeklappt (220px Text) — BPM-067.
+    /// Default false = aufgeklappt beim ersten Start (Entscheidung Herbert, Teil 52).
+    /// </summary>
+    public bool SidebarCollapsed { get; set; }
 }
 
 /// <summary>

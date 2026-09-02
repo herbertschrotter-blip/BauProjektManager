@@ -119,7 +119,7 @@ supersedes: []
 
 | Bereich | Aktuell | Ziel (diese Guideline) | Wann |
 |---------|---------|----------------------|------|
-| Sidebar | Fest 220px (Code) | 56px Icon-Leiste (UI_Navigation.md) | Code-Umbau nötig |
+| Sidebar | Klappbar 220px ↔ 56px (Code, BPM-067) | Klappbar (UI_Navigation.md) | ✅ v0.28.181 |
 | Toolbar | Nicht vorhanden | Modul-spezifische Aktionsleiste | UI-Refresh |
 | Breadcrumb | Nicht vorhanden | Oben über Content | UI-Refresh |
 | Toasts | Nicht vorhanden | Oben rechts, gestapelt | UI-Refresh |
@@ -354,9 +354,9 @@ Inverse Variante. Farb-Token bleiben gleich, nur Werte ändern sich.
 ### 6.2 Sidebar
 
 - **Position:** Links, immer sichtbar
-- **Breite:** 56px fest (Icon-Leiste, siehe UI_Navigation.md)
+- **Breite:** klappbar 220px (Emoji + Text, Default) ↔ 56px (Icon-Leiste mit Tooltips), Zustand gerätelokal — BPM-067, siehe UI_Navigation.md Kap. 2
 - **Hintergrund:** `bg-surface`
-- **Inhalt:** Modul-Icons (kein Text), nur aktive Module
+- **Inhalt:** Modul-Icons, Text nur im aufgeklappten Zustand; nur Module mit View
 - **Aktives Modul:** `accent-primary` Hintergrund + `text-bright`
 - **Icons:** Emoji (provisorisch), Segoe Fluent Icons (geplant)
 - **Unten:** User-Name + App-Version

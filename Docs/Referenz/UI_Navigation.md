@@ -57,9 +57,11 @@ supersedes: []
 └──────────────────────────────────────────────────┘
 ```
 
-## 2. Sidebar (immer sichtbar, 56px breit)
+## 2. Sidebar (immer sichtbar, klappbar: 220px Text ↔ 56px Icons)
 
-Vertikale Icon-Leiste links mit Modul-Icons + Text:
+Vertikale Modul-Leiste links, seit BPM-067 (v0.28.181) **klappbar**: Zustand A aufgeklappt (220px, Emoji + Text, Badge neben dem Text — Default beim ersten Start) und Zustand B zugeklappt (56px, nur Emoji mit Tooltip, Badge als Ecke oben rechts am Icon). Umschalten per Chevron im Kopf, Zustand gerätelokal in `device-settings.json` (`uiLayout.sidebarCollapsed`). Mockup: `Docs/Mockups/App/01_Shell/01_Sidebar.html`.
+
+Sollreihenfolge (Mockup, Entscheidung Herbert Teil 52): 🏠 Home oben, 📁 PlanManager, Separator, Post-V1-Module ausgegraut, Separator, ⚙ Einstellungen + 🛠 Dev Tools unten, darunter Benutzer + Version. Im Code stehen nur Module mit View (PlanManager, Einstellungen, Dev Tools im Debug); Home und die Platzhalter kommen mit ihren Modulen bzw. den Ansichtsprofilen (Architektur Kap. 1.4). Emoji-Keys für alle geplanten Module liegen in `Icons.xaml` (`IconNav*`).
 
 | Position | Icon | Text | Badge | Status |
 |----------|------|------|-------|--------|
@@ -72,11 +74,11 @@ Vertikale Icon-Leiste links mit Modul-Icons + Text:
 | unten | — | vX.Y | — | Versionsnummer |
 
 **Design:**
-- Breite: 56px fest
+- Breite: 220px (A) / 56px (B), umschaltbar; Chevron ◀/▶ im Kopf
 - Hintergrund: BpmBgSurface (#252526)
 - Aktives Modul: BpmBgActive (#04395E) + BpmAccent Text
 - Hover: BpmBgHover (#37373D)
-- Badges: BpmWarning (#F0AD4E) Hintergrund, 7px Font, Pill-Form, oben rechts am Icon
+- Badges: BpmWarning (#F0AD4E) Hintergrund, Pill-Form — A: neben dem Text, B: oben rechts am Icon
 - Post-V1 Module: opacity 0.35, nicht klickbar
 
 **Klick auf Sidebar-Icon:** Wechselt das Modul im Content-Bereich.

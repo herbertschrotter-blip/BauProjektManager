@@ -20,6 +20,22 @@
     <sys:String x:Key="IconNavPlans">📁</sys:String>
     <sys:String x:Key="IconNavSettings">⚙</sys:String>
     <sys:String x:Key="IconNavDevTools">🛠</sys:String>
+    <!-- BPM-067: Sidebar klappbar (Chevrons) + Platzhalter-Module aus dem Shell-Mockup
+         (Docs/Mockups/App/01_Shell/01_Sidebar.html). Module ohne View sind noch nicht
+         in der Sidebar — Keys stehen bereit, damit Mockup und Code dieselben Emoji nutzen. -->
+    <sys:String x:Key="IconNavCollapse">◀</sys:String>
+    <sys:String x:Key="IconNavExpand">▶</sys:String>
+    <sys:String x:Key="IconNavHome">🏠</sys:String>
+    <sys:String x:Key="IconNavPhotos">📷</sys:String>
+    <sys:String x:Key="IconNavTime">⏱</sys:String>
+    <sys:String x:Key="IconNavDiary">📓</sys:String>
+    <sys:String x:Key="IconNavCalc">🧮</sys:String>
+    <sys:String x:Key="IconNavWeather">🌤</sys:String>
+    <sys:String x:Key="IconNavOutlook">📧</sys:String>
+    <sys:String x:Key="IconNavTemplates">📄</sys:String>
+    <sys:String x:Key="IconNavTasks">📋</sys:String>
+    <sys:String x:Key="IconNavGis">🗺</sys:String>
+    <sys:String x:Key="IconNavAi">🤖</sys:String>
 
     <!-- ── Ordner / Dateien ────────────────────────────────────── -->
     <sys:String x:Key="IconFolder">📁</sys:String>

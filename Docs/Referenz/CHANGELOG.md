@@ -31,6 +31,26 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.172] — 2026-09-02
+
+### Feature: BPM-127 Tag-System + Plandaten-Panel im Karten-Layout
+
+**Tag-System (BPM-127):** Neue Tabelle `plan_document_tags` — freie inhaltliche Schlagworte je Plandokument, **bewusst getrennt von den Dateinamens-Segmenten** (BPM-108). Additiv über `CREATE TABLE IF NOT EXISTS`, entsteht also auch in bestehenden Projekt-DBs — **kein Reset nötig**. Operationen in `PlanManagerDatabase`: `AddTag` (Normalisierung trim+lower, leere Eingabe ignoriert, `ON CONFLICT` reaktiviert soft-gelöschte Tags), `RemoveTag` (Soft Delete), `GetTagsForDocument`, `GetAllTags` (projektweite Vorschläge nach Häufigkeit). UI: Tags-Karte im Detail-Panel mit Enter-Eingabe, Chips mit ✕ und klickbaren Vorschlägen; Tag-Spalte in der Übersicht; Tags in der Tab-Suche. 7 neue Tests. Bewusst **kein separater Tag-Service** — die Operationen liegen wie `UpsertSegment` in der DB-Klasse, eine eigene Klasse wäre eine leere Hülle.
+
+**Panel-Layout (Praxis-Feedback Herbert, Mockup-Auswahl Variante A):** Detail-Panel neu aufgeteilt — Info links schmal (Dokument · Ablage und Dateien · Revisionen), Arbeitsbereich rechts breit (Tags über Segment-Editor). Jeder Bereich ist eine abgesetzte Karte mit runden Ecken und Abstand; Schriftgrößen durchgehend eine Stufe höher; Tag-Eingabe mit fester Höhe und vertikal zentriert (war zu klein und oben ausgerichtet).
+
+**Dateiendung ist kein Segment mehr (Befund Herbert):** `FileNameSegmentation` trennt die Endung vorab ab — der Punkt davor ist kein Trenner, `.pdf`/`.dwg` erscheint als reiner Text hinter den Kacheln statt als zuweisbares Segment. Nur der **letzte** Punkt zählt als Endung, Punkte im Namen (`202401_P_014.plot.pdf`) bleiben normale Trenner. 3 neue Tests. (Commit `2617609`)
+
+---
+
+## [v0.28.171] — 2026-09-02
+
+### Docs: CHANGELOG-Nachzug v0.28.168–.170
+
+Nachtrag der BPM-126-Slices. ⚠️ Dieser Commit (`97ba399`) liegt in der Historie **vor** `cc1e75b` (v0.28.170) — die beiden Commit-Blöcke wurden in umgekehrter Reihenfolge ausgeführt, die Versionsnummern laufen dort einmal rückwärts. Inhaltlich vollständig, bewusst nicht umgeschrieben (bereits gepusht).
+
+---
+
 ## [v0.28.170] — 2026-09-02
 
 ### Feature: BPM-126b/c — Detail-Panel + wiederverwendbarer Segment-Editor

@@ -1163,6 +1163,37 @@ ON plan_document_segments(segment_type_id, normalized_value, is_deleted);
 **Verhältnis zu `building_part_id`/`building_level_id` in `plan_documents`:**
 Für die häufigen Modul-Filter (Haus + Geschoss) gibt es FK-Spalten direkt am Document. Alle weiteren Segmentwerte (Bauteil, Bauabschnitt, Zone, …) landen in `plan_document_segments`. Beide Wege koexistieren bewusst.
 
+#### 6.7.3b plan_document_tags (NEU — BPM-127)
+
+Freie Schlagworte je Dokument. **Bewusst getrennt von `plan_document_segments`:**
+Segmente sind die strukturierte Zerlegung des *Dateinamens* (Segmenttypen aus BPM-108),
+Tags sind frei vergebene inhaltliche Auszeichnungen ("Beton C25/30", "Deckendurchbruch").
+
+```sql
+CREATE TABLE plan_document_tags (
+    id TEXT PRIMARY KEY,                    -- ULID
+    document_id TEXT NOT NULL,              -- FK plan_documents (Innen-FK, hart)
+    tag TEXT NOT NULL,                      -- Anzeigetext wie eingegeben
+    normalized_tag TEXT NOT NULL,           -- trim + lowercase: Duplikatschutz + Vorschläge
+    created_at TEXT NOT NULL,
+    created_by TEXT,
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    is_deleted INTEGER NOT NULL DEFAULT 0,  -- Soft Delete (Sync-Nachvollziehbarkeit)
+    FOREIGN KEY (document_id) REFERENCES plan_documents(id),
+    UNIQUE (document_id, normalized_tag)    -- ein Tag je Dokument, unabhängig von Schreibweise
+);
+
+CREATE INDEX idx_plan_document_tags_lookup
+ON plan_document_tags(normalized_tag, is_deleted);
+```
+
+**Kein DB-Reset nötig:** Die Tabelle ist rein additiv und wird über `CREATE TABLE IF NOT EXISTS`
+beim nächsten Öffnen auch in bestehenden Projekt-Datenbanken angelegt.
+
+**Verhalten:** `AddTag` reaktiviert einen soft-gelöschten Tag (`ON CONFLICT … DO UPDATE`) statt
+einen zweiten Eintrag anzulegen; leere Eingaben werden ignoriert. `GetAllTags` liefert die
+projektweiten Vorschläge nach Häufigkeit.
+
 #### 6.7.4 plan_revision_events (NEU)
 
 Minimaler Audit-Trail für Statuswechsel. KEIN voller Before/After-Snapshot.

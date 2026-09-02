@@ -31,6 +31,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.184] — 2026-09-02
+
+### Change: BPM-072 — Projektnotizen in registry.json: Whitelist-Eintrag + Hinweis am Feld
+
+Altlasten-Prüfung Teil 52: `RegistryJsonExporter` schreibt `notes` (Freitext) und `tags` in die cloud-synchrone `registry.json`, die DSGVO-Whitelist Kap. 9.3 kannte beide Felder nicht. Entscheidung Herbert: `notes` bleibt, weil VBA-Makros es lesen (Entfernen wäre ein Breaking Change des Exportvertrags, Architektur 3.5). Stattdessen **Whitelist-Einträge** für Tags (Klasse A) und Notes (Klasse A bei bestimmungsgemäßer Nutzung) mit der Nutzerregel „keine Personendaten in Projektnotizen" und ein **Hinweistext unter dem Notizfeld** im ProjectEditDialog (Tab 1, `BpmCaption`/`BpmTextSecondary`, keine hardcoded Farben). Kein Export-Schema-Wechsel, `registryVersion` bleibt 1.0.
+
+---
 ## [v0.28.183] — 2026-09-02
 
 ### Refactor: BPM-070 — ProjectEditDialog Code-Behind in Partial Classes geteilt

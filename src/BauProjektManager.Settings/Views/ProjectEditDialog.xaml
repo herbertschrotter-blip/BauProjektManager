@@ -192,11 +192,16 @@
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Tags:" Style="{StaticResource FL}"/>
                                 <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtTags" Style="{StaticResource FTB}"/>
                                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Notizen:" Style="{StaticResource FL}"/>
                                 <TextBox Grid.Row="1" Grid.Column="1" x:Name="TxtNotes" Style="{StaticResource FTB}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
+                                <!-- BPM-072: Notizen landen in registry.json (Cloud-Sync, VBA) — DSGVO-Whitelist Kap. 9.3 -->
+                                <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource BpmCaption}"
+                                           Foreground="{DynamicResource BpmTextSecondary}" TextWrapping="Wrap" Margin="0,2,0,0"
+                                           Text="Wird in registry.json exportiert und über den Cloud-Speicher geteilt – bitte keine Personendaten (Namen, Telefon, E-Mail) eintragen."/>
                             </Grid>
                         </StackPanel>
                         <Rectangle Grid.Column="1" Width="1" Fill="{DynamicResource BpmBorderDefault}" Margin="9,0"/>

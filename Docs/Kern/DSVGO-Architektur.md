@@ -642,6 +642,8 @@ Kein Cloud-Zwang. Kein Account. Kein externer Datenspeicher.
 | Client.Email, Client.Phone | B | ⚠️ Erlaubt — nötig für VBA-Makros |
 | Pfade (root, plans, photos) | A | Technisch |
 | Buildings (Pipe-String) | A | Kein Personenbezug |
+| Tags (Komma-String) | A | Projekt-Schlagworte, kein Personenbezug |
+| Notes (Projektnotizen, Freitext) | A bei bestimmungsgemäßer Nutzung | ⚠️ Erlaubt — wird von VBA-Makros gelesen (Herbert, Teil 52, BPM-072). **Nutzerregel:** keine Personendaten (Namen, Telefon, E-Mail) in Projektnotizen; Hinweis steht seit v0.28.184 direkt am Notizfeld im ProjectEditDialog. Personenbezogene Vermerke gehören zu den Beteiligten (Tab 3) bzw. künftig ins Adressbuch. |
 
 **Verboten in registry.json:**
 

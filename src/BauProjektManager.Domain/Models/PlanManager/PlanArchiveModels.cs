@@ -101,6 +101,31 @@ public sealed record PlanArchiveEntry(
     string? FileName,
     string? RelativePath);
 
+/// <summary>
+/// Eine Zeile der Plandaten-Ansicht (BPM-126): Dokument + current-Revision mit
+/// allen Anzeige-Feldern. Bauteil/Geschoss stehen hier als IDs — die Klartext-Namen
+/// löst die View über die Stammdaten der bpm.db auf (Cross-DB Soft Reference,
+/// ADR-058-Addendum).
+/// </summary>
+/// <param name="FileTypes">Kommaliste der Dateiendungen der Revision (z. B. "PDF,DWG").</param>
+/// <param name="SegmentCount">Anzahl zugewiesener Dateinamens-Segmente (BPM-108).</param>
+public sealed record PlanDataRow(
+    string DocumentId,
+    string DocumentKey,
+    string PlanNumber,
+    string Title,
+    string DocumentType,
+    string RelativeDirectory,
+    string? BuildingPartId,
+    string? BuildingLevelId,
+    string RevisionId,
+    string? PlanIndex,
+    string? ReleasedAt,
+    string ChangeNote,
+    string ReceivedAt,
+    string? FileTypes,
+    int SegmentCount);
+
 /// <summary>Eine mit einer Revision verknüpfte Datei (plan_files via revision_file_links) — für den Archiv-Move (111.07 Slice D).</summary>
 public sealed record PlanRevisionFile(
     string FileId,

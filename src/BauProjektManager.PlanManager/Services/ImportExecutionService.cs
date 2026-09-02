@@ -390,8 +390,10 @@ public class ImportExecutionService
             decision.File.Title ?? "",                   // title (Panel-Bezeichnung, Slice A3)
             rootFolder,                                  // target_folder = root_relative_path (ADR-061)
             resolvedDir,                                 // relative_directory (voller aufgeloester Ordner)
-            null,                                        // building_part_id — SoftRef-Auflösung post-V1 (BPM-109.06)
-            null);                                       // building_level_id — dito
+            // BPM-126: Stammdaten-IDs der Radial-Zuordnung mitschreiben (Cross-DB
+            // SoftRef). Bei Recovery bleiben sie null — das Journal traegt sie nicht.
+            decision.File.BuildingPartId,
+            decision.File.BuildingLevelId);
 
         var currentRev = _db.GetCurrentRevisionForDocument(documentId);
         if (currentRev is not null)

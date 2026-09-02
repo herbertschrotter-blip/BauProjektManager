@@ -39,9 +39,9 @@
                        FontSize="12" FontWeight="SemiBold"/>
         </Border>
 
-        <!-- 4 Tabs (Style via Default aus Dialogs.xaml: BpmTabControl + BpmTabItem).
-             Reihenfolge Teil 50: Explorer (Start-Tab) · Manuell sortieren · Profile · Sync;
-             "Plandaten" folgt mit BPM-126. -->
+        <!-- 5 Tabs (Style via Default aus Dialogs.xaml: BpmTabControl + BpmTabItem).
+             Reihenfolge Teil 50: Explorer (Start-Tab) · Manuell sortieren · Plandaten ·
+             Profile · Sync. -->
         <TabControl Grid.Row="2"
                     x:Name="DetailTabs"
                     SelectionChanged="OnTabChanged"
@@ -67,7 +67,12 @@
                 </ContentControl>
             </TabItem>
 
-            <!-- Tab 3: Profile -->
+            <!-- Tab 3: Plandaten (BPM-126 — DB-Sicht auf den kuratierten Planindex) -->
+            <TabItem Header="Plandaten">
+                <views:PlanDataView x:Name="PlanDataHost" Margin="0,12,0,0"/>
+            </TabItem>
+
+            <!-- Tab 4: Profile -->
             <TabItem Header="Profile">
                 <Grid Margin="0,12,0,0">
                     <Button Content="+ Neuer Dokumenttyp"
@@ -87,7 +92,7 @@
                 </Grid>
             </TabItem>
 
-            <!-- Tab 4: Sync -->
+            <!-- Tab 5: Sync -->
             <TabItem Header="Sync">
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                     <TextBlock Text="Ordner-Sync"

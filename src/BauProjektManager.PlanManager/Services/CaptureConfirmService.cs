@@ -120,7 +120,9 @@ public class CaptureConfirmService
                 Title: p.Title,
                 ChangeNote: p.ChangeNote,
                 ReleasedAt: p.ReleasedAt,
-                AssignedSegments: p.AssignedSegments);
+                AssignedSegments: p.AssignedSegments,
+                BuildingPartId: p.BuildingPartId,
+                BuildingLevelId: p.BuildingLevelId);
 
             decisions.Add(new ImportDecision(
                 File: classified,

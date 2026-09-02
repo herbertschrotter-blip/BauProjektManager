@@ -68,6 +68,10 @@ public partial class ProjectDetailView : UserControl
         ExplorerHost.Initialize(project.Paths.Root, _fileLauncher, project.Paths.Inbox, _manualSortDb);
         ExplorerHost.PlanManagerRequested += (_, _) => DetailTabs.SelectedItem = ManualSortTab;
 
+        // BPM-126: Plandaten-Tab teilt dieselbe planmanager.db
+        if (_manualSortDb is not null)
+            PlanDataHost.Initialize(_manualSortDb, project.Id, _bpmDb);
+
         // PlanManagerDatabase + Explorer-Watcher beim Verlassen der Ansicht freigeben
         Unloaded += (_, _) =>
         {
@@ -111,6 +115,8 @@ public partial class ProjectDetailView : UserControl
             ViewModel.RefreshInboxCommand.Execute(null);
             // Explorer-Baum komplett neu (Import legt neue Zielordner an) — 112.06a/c
             ExplorerHost.ViewModel?.ReloadTree();
+            // Plandaten spiegeln den Bestand — nach Import/Undo nachziehen (BPM-126)
+            PlanDataHost.ViewModel?.Load();
         };
         ManualSortHost.Content = new ManualCaptureView
         {

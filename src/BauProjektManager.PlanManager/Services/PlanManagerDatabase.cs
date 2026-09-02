@@ -539,6 +539,49 @@ public class PlanManagerDatabase : IDisposable
     }
 
     /// <summary>
+    /// Plandaten-Ansicht (BPM-126): alle Dokumente mit ihrer current-Revision,
+    /// Dateitypen und Segment-Anzahl. Bauteil/Geschoss bleiben IDs — die Namen
+    /// löst die View über die bpm.db-Stammdaten auf (Cross-DB, ADR-058-Addendum).
+    /// </summary>
+    public List<PlanDataRow> GetPlanDataRows()
+    {
+        var conn = GetConnection();
+        var result = new List<PlanDataRow>();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT pd.id, pd.document_key, pd.plan_number, pd.title, pd.document_type,
+                   pd.relative_directory, pd.building_part_id, pd.building_level_id,
+                   pr.id, pr.plan_index, pr.released_at, pr.change_note, pr.received_at,
+                   (SELECT GROUP_CONCAT(DISTINCT UPPER(REPLACE(pf.file_type, '.', '')))
+                      FROM revision_file_links rfl
+                      JOIN plan_files pf ON pf.id = rfl.file_id
+                     WHERE rfl.revision_id = pr.id),
+                   (SELECT COUNT(*) FROM plan_document_segments s
+                     WHERE s.document_id = pd.id AND s.is_deleted = 0)
+            FROM plan_documents pd
+            JOIN plan_revisions pr ON pr.document_id = pd.id
+                AND pr.revision_status = 'current' AND pr.is_deleted = 0
+            WHERE pd.is_deleted = 0
+            ORDER BY pd.plan_number ASC
+            """;
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+            result.Add(new PlanDataRow(
+                reader.GetString(0), reader.GetString(1), reader.GetString(2),
+                reader.GetString(3), reader.GetString(4), reader.GetString(5),
+                reader.IsDBNull(6) ? null : reader.GetString(6),
+                reader.IsDBNull(7) ? null : reader.GetString(7),
+                reader.GetString(8),
+                reader.IsDBNull(9) ? null : reader.GetString(9),
+                reader.IsDBNull(10) ? null : reader.GetString(10),
+                reader.GetString(11),
+                reader.GetString(12),
+                reader.IsDBNull(13) ? null : reader.GetString(13),
+                reader.GetInt32(14)));
+        return result;
+    }
+
+    /// <summary>
     /// Reconcile-Grundlage (112.06c, ADR-061 P.6): alle Dateien der current-Revisionen
     /// mit Fingerprint (md5_hash/file_size) — der Reconcile prüft NUR diese getrackte
     /// Teilmenge gegen die Disk, nie den ganzen Projektbaum.

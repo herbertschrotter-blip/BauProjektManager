@@ -21,7 +21,12 @@ public sealed record ClassifiedImportFile(
     string? Title = null,
     string? ChangeNote = null,
     string? ReleasedAt = null,
-    IReadOnlyList<AssignedSegmentValue>? AssignedSegments = null);
+    IReadOnlyList<AssignedSegmentValue>? AssignedSegments = null,
+    // BPM-126: Stammdaten-IDs der Radial-Zuordnung werden bis in plan_documents
+    // durchgereicht (Cross-DB SoftRef, ADR-058-Addendum) — Grundlage fuer die
+    // Plandaten-Ansicht und spaetere Cross-Modul-Abfragen (IPlanLookupService).
+    string? BuildingPartId = null,
+    string? BuildingLevelId = null);
 
 /// <summary>
 /// Final import decision for one file — ready for preview UI.

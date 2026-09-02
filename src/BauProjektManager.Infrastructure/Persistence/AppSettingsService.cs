@@ -8,7 +8,10 @@ namespace BauProjektManager.Infrastructure.Persistence;
 
 /// <summary>
 /// Manages device-settings.json (local, per machine) and shared-config.json (cloud, synced).
-/// Migrates from legacy settings.json on first run after update.
+/// BPM-069: Die AppSettings-Fassade (Load()/Save(AppSettings)) und die settings.json-Migration
+/// sind entfernt — Aufrufer arbeiten direkt mit LoadDevice/SaveDevice bzw.
+/// LoadSharedOrDefault/SaveSharedOrDefault. Eine noch vorhandene Legacy-Datei wird beim
+/// ersten Start geloescht (Fruehphase, keine Migration mehr noetig).
 /// </summary>
 public class AppSettingsService
 {
@@ -18,9 +21,6 @@ public class AppSettingsService
 
     private DeviceSettings? _cachedDevice;
     private SharedConfig? _cachedShared;
-
-    // Legacy compatibility: old AppSettings cache for callers not yet migrated
-    private AppSettings? _cachedLegacy;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -48,12 +48,8 @@ public class AppSettingsService
         if (_cachedDevice is not null)
             return _cachedDevice;
 
-        // Migration: alte settings.json → neue Struktur
-        if (!File.Exists(_deviceSettingsPath) && File.Exists(_legacySettingsPath))
-        {
-            Log.Information("Legacy settings.json found — migrating to split format");
-            MigrateFromLegacy();
-        }
+        // BPM-069: Legacy settings.json wird nicht mehr migriert, nur entsorgt.
+        RemoveLegacySettingsFile();
 
         if (File.Exists(_deviceSettingsPath))
         {
@@ -93,8 +89,8 @@ public class AppSettingsService
             var sharedPath = Path.Combine(sharedDir, "shared-config.json");
             if (!File.Exists(sharedPath))
             {
-                Log.Information("shared-config.json missing, creating from defaults/legacy");
-                var shared = TryLoadSharedFromLegacy() ?? new SharedConfig();
+                Log.Information("shared-config.json missing, creating from defaults");
+                var shared = new SharedConfig();
                 SaveShared(shared, _cachedDevice.BasePath, _cachedDevice.DeviceId);
 
                 // Bind WorkspaceId to device
@@ -234,184 +230,45 @@ public class AppSettingsService
         }
     }
 
-    // ═══════════════════════════════════════════════════════════
-    //  Legacy Migration (settings.json → split)
-    // ═══════════════════════════════════════════════════════════
-
-    private void MigrateFromLegacy()
-    {
-        try
-        {
-            var legacy = LoadLegacySettingsFile();
-            if (legacy is null) return;
-
-            // Device-Settings aus Legacy extrahieren
-            var device = new DeviceSettings
-            {
-                SchemaVersion = "1.0",
-                MachineName = legacy.MachineName,
-                CloudStoragePath = legacy.OneDrivePath,
-                BasePath = legacy.BasePath,
-                ArchivePath = legacy.ArchivePath,
-                ExportPath = legacy.ExportPath,
-                IsFirstRun = legacy.IsFirstRun,
-                SetupCompletedAt = legacy.SetupCompletedAt
-            };
-            SaveDevice(device);
-
-            // SharedConfig aus Legacy extrahieren
-            var shared = new SharedConfig
-            {
-                SchemaVersion = "1.0",
-                FolderTemplate = legacy.FolderTemplate,
-                ProjectTypes = legacy.ProjectTypes,
-                BuildingTypes = legacy.BuildingTypes,
-                LevelNames = legacy.LevelNames,
-                ParticipantRoles = legacy.ParticipantRoles,
-                PortalTypes = legacy.PortalTypes
-            };
-
-            // SharedConfig nur speichern wenn BasePath bekannt
-            if (!string.IsNullOrEmpty(device.BasePath))
-            {
-                SaveShared(shared, device.BasePath);
-            }
-
-            _cachedDevice = device;
-            _cachedShared = shared;
-
-            Log.Information("Legacy settings.json migrated to device-settings.json + shared-config.json");
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Failed to migrate legacy settings.json");
-        }
-    }
-
-    private AppSettings? LoadLegacySettingsFile()
-    {
-        if (!File.Exists(_legacySettingsPath)) return null;
-        try
-        {
-            var json = File.ReadAllText(_legacySettingsPath);
-            return JsonSerializer.Deserialize<AppSettings>(json, JsonOptions);
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Failed to read legacy settings.json");
-            return null;
-        }
-    }
-
-    private SharedConfig? TryLoadSharedFromLegacy()
-    {
-        var legacy = LoadLegacySettingsFile();
-        if (legacy is null) return null;
-
-        return new SharedConfig
-        {
-            FolderTemplate = legacy.FolderTemplate,
-            ProjectTypes = legacy.ProjectTypes,
-            BuildingTypes = legacy.BuildingTypes,
-            LevelNames = legacy.LevelNames,
-            ParticipantRoles = legacy.ParticipantRoles,
-            PortalTypes = legacy.PortalTypes
-        };
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    //  Legacy Compatibility (für Caller die noch AppSettings nutzen)
-    // ═══════════════════════════════════════════════════════════
-
     /// <summary>
-    /// Legacy: Load old-style AppSettings. Builds from DeviceSettings + SharedConfig.
-    /// Used by callers not yet migrated to the split model.
+    /// SharedConfig zum BasePath der DeviceSettings. Ohne BasePath (vor der Ersteinrichtung)
+    /// liefert sie Defaults, die nicht gecacht werden — nach dem Setup wird echt geladen.
     /// </summary>
-    public AppSettings Load()
+    public SharedConfig LoadSharedOrDefault()
     {
-        if (_cachedLegacy is not null)
-            return _cachedLegacy;
+        var basePath = LoadDevice().BasePath;
+        return string.IsNullOrEmpty(basePath) ? new SharedConfig() : LoadShared(basePath);
+    }
 
+    /// <summary>Speichert die SharedConfig zum BasePath der DeviceSettings; ohne BasePath nur Warnung.</summary>
+    public void SaveSharedOrDefault(SharedConfig shared)
+    {
         var device = LoadDevice();
-        var shared = !string.IsNullOrEmpty(device.BasePath)
-            ? LoadShared(device.BasePath)
-            : new SharedConfig();
-
-        _cachedLegacy = new AppSettings
+        if (string.IsNullOrEmpty(device.BasePath))
         {
-            SchemaVersion = device.SchemaVersion,
-            MachineName = device.MachineName,
-            OneDrivePath = device.CloudStoragePath,
-            BasePath = device.BasePath,
-            ArchivePath = device.ArchivePath,
-            ExportPath = device.ExportPath,
-            IsFirstRun = device.IsFirstRun,
-            SetupCompletedAt = device.SetupCompletedAt,
-            FolderTemplate = shared.FolderTemplate,
-            ProjectTypes = shared.ProjectTypes,
-            BuildingTypes = shared.BuildingTypes,
-            LevelNames = shared.LevelNames,
-            ParticipantRoles = shared.ParticipantRoles,
-            PortalTypes = shared.PortalTypes
-        };
-
-        return _cachedLegacy;
+            Log.Warning("SharedConfig not saved — BasePath not configured yet");
+            _cachedShared = shared;
+            return;
+        }
+        SaveShared(shared, device.BasePath, device.DeviceId);
     }
 
-    /// <summary>
-    /// Legacy: Save old-style AppSettings. Splits into DeviceSettings + SharedConfig.
-    /// Used by callers not yet migrated to the split model.
-    /// </summary>
-    public void Save(AppSettings settings)
+    // ═══════════════════════════════════════════════════════════
+    //  Legacy settings.json (BPM-069: nur noch Entsorgung)
+    // ═══════════════════════════════════════════════════════════
+
+    private void RemoveLegacySettingsFile()
     {
-        // BPM-096: DeviceId und WorkspaceId aus bestehenden DeviceSettings übernehmen.
-        // BPM-102: DevTools (LogFilter etc.) ebenfalls übernehmen — sonst werden DevTools-Settings
-        // bei jedem Save(AppSettings) auf Defaults zurückgesetzt.
-        var existing = LoadDevice();
-
-        var device = new DeviceSettings
+        if (!File.Exists(_legacySettingsPath)) return;
+        try
         {
-            SchemaVersion = settings.SchemaVersion,
-            DeviceId = existing.DeviceId,
-            WorkspaceId = existing.WorkspaceId,
-            MachineName = settings.MachineName,
-            CloudStoragePath = settings.OneDrivePath,
-            BasePath = settings.BasePath,
-            ArchivePath = settings.ArchivePath,
-            ExportPath = settings.ExportPath,
-            IsFirstRun = settings.IsFirstRun,
-            SetupCompletedAt = settings.SetupCompletedAt,
-            DevTools = existing.DevTools,
-            // Wie DevTools aus existing uebernehmen — sonst verwirft ein
-            // Save(AppSettings) mid-session Fensterlage bzw. UI-Layout.
-            MainWindowPlacement = existing.MainWindowPlacement,
-            UiLayout = existing.UiLayout
-        };
-
-        // BPM-102: Diff-Check — SaveDevice nur wenn sich tatsächlich ein Device-Feld geändert hat.
-        // Verhindert unnötige device-settings.json Writes bei reinen Shared-Aktionen
-        // (z.B. FolderTemplate-Toggle in Settings-Tab "Standard-Ordnerstruktur").
-        if (!DeviceFieldsEqual(existing, device))
-            SaveDevice(device);
-        else
-            _cachedDevice = device;
-
-        var shared = new SharedConfig
-        {
-            FolderTemplate = settings.FolderTemplate,
-            ProjectTypes = settings.ProjectTypes,
-            BuildingTypes = settings.BuildingTypes,
-            LevelNames = settings.LevelNames,
-            ParticipantRoles = settings.ParticipantRoles,
-            PortalTypes = settings.PortalTypes
-        };
-
-        if (!string.IsNullOrEmpty(device.BasePath))
-        {
-            SaveShared(shared, device.BasePath);
+            File.Delete(_legacySettingsPath);
+            Log.Information("Legacy settings.json removed (BPM-069, split format is authoritative)");
         }
-
-        _cachedLegacy = settings;
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Legacy settings.json could not be removed");
+        }
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -560,10 +417,6 @@ public class AppSettingsService
         return found;
     }
 
-    /// <summary>
-    /// Legacy alias for DetectCloudStoragePath.
-    /// </summary>
-    public static string? DetectOneDrivePath() => DetectCloudStoragePath();
 
     // ═══════════════════════════════════════════════════════════
     //  Pfad-Validierung
@@ -572,24 +425,6 @@ public class AppSettingsService
     /// <summary>
     /// Check if all required paths exist and are accessible.
     /// Returns list of problems (empty = all OK).
-    /// </summary>
-    public static List<string> ValidatePaths(AppSettings settings)
-    {
-        var problems = new List<string>();
-
-        if (string.IsNullOrEmpty(settings.BasePath))
-            problems.Add("Arbeitsordner ist nicht konfiguriert");
-        else if (!Directory.Exists(settings.BasePath))
-            problems.Add($"Arbeitsordner nicht gefunden: {settings.BasePath}");
-
-        if (!string.IsNullOrEmpty(settings.ArchivePath) && !Directory.Exists(settings.ArchivePath))
-            problems.Add($"Archiv-Ordner nicht gefunden: {settings.ArchivePath}");
-
-        return problems;
-    }
-
-    /// <summary>
-    /// Overload for DeviceSettings validation.
     /// </summary>
     public static List<string> ValidatePaths(DeviceSettings device)
     {

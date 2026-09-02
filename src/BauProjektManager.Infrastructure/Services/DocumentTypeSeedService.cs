@@ -47,7 +47,7 @@ public class DocumentTypeSeedService
         if (_db.HasDocumentTypes(projectId))
             return;
 
-        var nodes = template ?? AppSettings.GetDefaultFolderTemplate();
+        var nodes = template ?? SharedConfigDefaults.GetDefaultFolderTemplate();
         var sortOrder = 0;
         var count = 0;
 

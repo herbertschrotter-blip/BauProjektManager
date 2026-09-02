@@ -8,12 +8,12 @@ namespace BauProjektManager.App;
 
 public partial class SetupDialog : Window
 {
-    public AppSettings Settings { get; private set; }
+    public DeviceSettings Settings { get; private set; }
     public bool SetupCompleted { get; private set; }
 
     private readonly AppSettingsService _settingsService;
 
-    public SetupDialog(AppSettingsService settingsService, AppSettings settings)
+    public SetupDialog(AppSettingsService settingsService, DeviceSettings settings)
     {
         InitializeComponent();
         _settingsService = settingsService;
@@ -38,7 +38,7 @@ public partial class SetupDialog : Window
         if (detectedCloud is not null)
         {
             TxtCloudStorage.Text = detectedCloud;
-            Settings.OneDrivePath = detectedCloud;
+            Settings.CloudStoragePath = detectedCloud;
 
             // Try to find common work folder
             var commonWorkFolders = new[]
@@ -73,7 +73,7 @@ public partial class SetupDialog : Window
         if (path is not null)
         {
             TxtCloudStorage.Text = path;
-            Settings.OneDrivePath = path;
+            Settings.CloudStoragePath = path;
         }
     }
 
@@ -132,7 +132,7 @@ public partial class SetupDialog : Window
         }
 
         // Save settings
-        Settings.OneDrivePath = TxtCloudStorage.Text;
+        Settings.CloudStoragePath = TxtCloudStorage.Text;
         Settings.BasePath = TxtBasePath.Text;
         Settings.ArchivePath = TxtArchivePath.Text;
         Settings.MachineName = Environment.MachineName;
@@ -144,7 +144,7 @@ public partial class SetupDialog : Window
 
         try
         {
-            _settingsService.Save(Settings);
+            _settingsService.SaveDevice(Settings);
             SetupCompleted = true;
             Log.Information("Setup completed: Base={Base}, Archive={Archive}, Export={Export}",
                 Settings.BasePath, Settings.ArchivePath, Settings.ExportPath);

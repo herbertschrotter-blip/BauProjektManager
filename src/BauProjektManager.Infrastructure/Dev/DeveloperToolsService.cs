@@ -537,7 +537,7 @@ public sealed class DeveloperToolsService : IDeveloperToolsService
         var pid = Environment.ProcessId;
         var bat = Path.Combine(Path.GetTempPath(), $"bpm_reset_{Guid.NewGuid():N}.bat");
 
-        // Für FirstRun-Reset: settings.json lesen, IsFirstRun setzen, neu schreiben
+        // Für FirstRun-Reset: device-settings.json lesen, IsFirstRun setzen, neu schreiben
         if (firstRunOnly)
         {
             try

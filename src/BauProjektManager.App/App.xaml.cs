@@ -59,7 +59,7 @@ public partial class App : Application
 
         // --- Settings laden ---
         var settingsService = new AppSettingsService();
-        var settings = settingsService.Load();
+        var settings = settingsService.LoadDevice();
 
         // --- First-Run / Setup ---
         if (settings.IsFirstRun)
@@ -75,7 +75,7 @@ public partial class App : Application
                 return;
             }
 
-            settings = settingsService.Load();
+            settings = settingsService.LoadDevice();
         }
         else
         {
@@ -122,11 +122,11 @@ public partial class App : Application
         var sc = new ServiceCollection();
 
         // Singleton: einmalig erstellt, überall dieselbe Instanz
-        sc.AddSingleton(settings);
+        // BPM-069: keine AppSettings-Fassade mehr — DeviceSettings kommt aus dem Service.
         sc.AddSingleton(settingsService);
         sc.AddSingleton<DeviceSettings>(sp => sp.GetRequiredService<AppSettingsService>().LoadDevice());
         sc.AddSingleton<IIdGenerator, UlidIdGenerator>();
-        sc.AddSingleton<IUserContext>(sp => new LocalUserContext(sp.GetRequiredService<AppSettings>()));
+        sc.AddSingleton<IUserContext>(sp => new LocalUserContext(sp.GetRequiredService<DeviceSettings>()));
         sc.AddSingleton<IDeviceContext>(sp => new LocalDeviceContext(sp.GetRequiredService<DeviceSettings>()));
         sc.AddSingleton<IDialogService, BpmDialogService>();
         sc.AddSingleton<IPersistenceRegistry, PersistenceRegistry>();
@@ -246,7 +246,7 @@ public partial class App : Application
     /// (device-settings, bpm.db, aktuelles Log-File, shared-config wenn BasePath gesetzt)
     /// und triggert einen FS-Scan ueber alle bekannten Patterns.
     /// </summary>
-    private static void InitializePersistenceRegistry(BauProjektManager.Domain.Models.AppSettings settings, string logDir)
+    private static void InitializePersistenceRegistry(DeviceSettings settings, string logDir)
     {
         try
         {

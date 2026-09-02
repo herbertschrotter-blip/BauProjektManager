@@ -31,6 +31,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.182] — 2026-09-02
+
+### Refactor: BPM-069 — AppSettings-Fassade und settings.json-Legacy abgebaut
+
+Die Übergangsklasse `AppSettings` (mit `OneDrivePath`, ADR-004-Verstoß) ist gelöscht — sie war seit dem Settings-Split (ADR-047 P.8) nur noch eine Fassade, die `AppSettingsService.Load()` bei jedem Aufruf aus `DeviceSettings` + `SharedConfig` zusammenbaute und `Save(AppSettings)` wieder zerlegte. Alle Aufrufer arbeiten jetzt direkt mit den Split-Modellen: `LoadDevice`/`SaveDevice` für Pfade, Gerät und Benutzer, neue Komfortmethoden `LoadSharedOrDefault`/`SaveSharedOrDefault` für FolderTemplate, Listen und Rollen (ohne BasePath Defaults, nichts wird gecacht). Umgestellt: `ProjectEditDialog` (16 Load-/4 Save-Stellen, Signaturen auf `SharedConfig`), `SettingsViewModel`, `App.xaml.cs` (DI ohne `AppSettings`, `InitializePersistenceRegistry(DeviceSettings)`), `SetupDialog` (`DeviceSettings`, `CloudStoragePath`), `ProjectFolderService`, `LocalUserContext`, `DocumentTypeSeedService`. `LocalUserId`/`LocalUserName` leben jetzt in `DeviceSettings` (waren in der Fassade nie persistiert). Die Template-/Listen-Klassen `FolderTemplateEntry`, `SubFolderEntry`, `LevelNameEntry`, `FolderTemplateCategory` sind unverändert nach `FolderTemplateEntry.cs` gezogen. Damit ist auch **BPM-068** (OneDrivePath → CloudStoragePath) erledigt.
+
+**Legacy `settings.json`:** kein Migrationscode mehr (`MigrateFromLegacy`, `LoadLegacySettingsFile`, `TryLoadSharedFromLegacy`, `DetectOneDrivePath`, `ValidatePaths(AppSettings)` entfernt) — eine noch vorhandene Datei wird beim ersten `LoadDevice()` gelöscht (Frühphase). `PersistenceRegistry` kennt „settings.json (legacy)" nicht mehr. Docs: DB-SCHEMA 10.2/10.4/10.7 + Dateitabelle, ModuleProjekt.md, ADR-047 P.8. Solution baut, 516/516 Tests grün.
+
+---
 ## [v0.28.181] — 2026-09-02
 
 ### Feature: BPM-067 — klappbare Sidebar (220px Text ↔ 56px Icons)

@@ -31,7 +31,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     private static readonly Infrastructure.Services.LocalFileSystem _fs = new();
     private readonly IDialogService _dialogService;
     private readonly IPersistenceRegistry? _persistenceRegistry;
-    private AppSettings? _settings;
+    private SharedConfig? _shared;
 
     [ObservableProperty]
     private ObservableCollection<Project> _projects = [];
@@ -165,9 +165,9 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         _folderScanner = new ProjectFolderScanner();
 
         // Registry-Exportpfad aus Settings (BasePath/.AppData/BauProjektManager/)
-        var settings = _settingsService.Load();
-        var exportDir = !string.IsNullOrEmpty(settings.ExportPath)
-            ? settings.ExportPath
+        var device = _settingsService.LoadDevice();
+        var exportDir = !string.IsNullOrEmpty(device.ExportPath)
+            ? device.ExportPath
             : _fs.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "BauProjektManager");
@@ -204,11 +204,12 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     private void LoadSettings()
     {
         Log.Debug("Settings tab loaded: {Tab}", "General");
-        _settings = _settingsService.Load();
-        BasePath = _settings.BasePath;
-        ArchivePath = _settings.ArchivePath;
-        CloudStoragePath = _settings.OneDrivePath;
-        BuildFolderTree(_settings.FolderTemplate);
+        var device = _settingsService.LoadDevice();
+        BasePath = device.BasePath;
+        ArchivePath = device.ArchivePath;
+        CloudStoragePath = device.CloudStoragePath;
+        _shared = _settingsService.LoadSharedOrDefault();
+        BuildFolderTree(_shared.FolderTemplate);
     }
 
     // === Folder Template Tree ===
@@ -251,7 +252,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     private void SaveFolderTemplate()
     {
         Log.Debug("Saving settings");
-        var settings = _settingsService.Load();
+        var settings = _settingsService.LoadSharedOrDefault();
         settings.FolderTemplate = FolderTreeItems.Select(main => new FolderTemplateEntry
         {
             Name = main.Name,
@@ -262,20 +263,21 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
                 HasPrefix = sub.HasPrefix
             }).ToList()
         }).ToList();
-        _settingsService.Save(settings);
+        _settingsService.SaveSharedOrDefault(settings);
+        _shared = settings;
         Log.Information("Folder template saved ({Count} main folders)", settings.FolderTemplate.Count);
     }
 
     public List<FolderTemplateEntry> GetFolderTemplate()
     {
-        return _settings?.FolderTemplate ?? new List<FolderTemplateEntry>();
+        return _shared?.FolderTemplate ?? new List<FolderTemplateEntry>();
     }
 
     public void SaveFolderTemplateFrom(List<FolderTemplateEntry> template)
     {
-        if (_settings == null) return;
-        _settings.FolderTemplate = template;
-        _settingsService.Save(_settings);
+        if (_shared == null) return;
+        _shared.FolderTemplate = template;
+        _settingsService.SaveSharedOrDefault(_shared);
         Log.Debug("Folder template saved from FolderTemplateControl");
     }
 
@@ -543,7 +545,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void AddProject()
     {
-        var settings = _settingsService.Load();
+        var shared = _settingsService.LoadSharedOrDefault();
 
         var newProject = new Project
         {
@@ -556,7 +558,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         };
         newProject.UpdateProjectNumberFromStart();
 
-        var dialog = new ProjectEditDialog(newProject, settings.FolderTemplate, _settingsService);
+        var dialog = new ProjectEditDialog(newProject, shared.FolderTemplate, _settingsService);
         dialog.Owner = Application.Current.MainWindow;
         if (dialog.ShowDialog() == true)
         {
@@ -641,9 +643,9 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
 
     public void UpdateBasePath(string path)
     {
-        var settings = _settingsService.Load();
-        settings.BasePath = path;
-        _settingsService.Save(settings);
+        var device = _settingsService.LoadDevice();
+        device.BasePath = path;
+        _settingsService.SaveDevice(device);
         BasePath = path;
         Log.Debug("Setting changed: {Key}", "BasePath");
         Log.Information("BasePath changed to {Path}", path);
@@ -651,9 +653,9 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
 
     public void UpdateArchivePath(string path)
     {
-        var settings = _settingsService.Load();
-        settings.ArchivePath = path;
-        _settingsService.Save(settings);
+        var device = _settingsService.LoadDevice();
+        device.ArchivePath = path;
+        _settingsService.SaveDevice(device);
         ArchivePath = path;
         Log.Debug("Setting changed: {Key}", "ArchivePath");
         Log.Information("ArchivePath changed to {Path}", path);

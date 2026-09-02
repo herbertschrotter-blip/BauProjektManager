@@ -36,6 +36,15 @@ public class DeviceSettings
     public DateTime? SetupCompletedAt { get; set; }
 
     /// <summary>
+    /// Technische User-ID fuer Modus A (Offline), ADR-052. Default "MachineName\UserName".
+    /// BPM-069: aus der entfernten AppSettings-Fassade hierher gezogen (geraetelokal).
+    /// </summary>
+    public string LocalUserId { get; set; } = $"{Environment.MachineName}\\{Environment.UserName}";
+
+    /// <summary>Lesbarer Anzeigename fuer created_by/last_modified_by. Default: Windows-Benutzername.</summary>
+    public string LocalUserName { get; set; } = Environment.UserName;
+
+    /// <summary>
     /// DevTools-Einstellungen — Filter und Diagnose-Optionen.
     /// Device-spezifisch; nicht ins shared-config übernehmen.
     /// </summary>

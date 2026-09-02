@@ -50,7 +50,7 @@ public partial class ProjectEditDialog : Window
         else
         {
             TxtDialogTitle.Text = "Projekt bearbeiten";
-            ProjectFolderTemplate.LoadFromTemplate(_settingsService.Load().FolderTemplate);
+            ProjectFolderTemplate.LoadFromTemplate(_settingsService.LoadSharedOrDefault().FolderTemplate);
         }
 
         ProjectFolderTemplate.PreviewRootName = $"{project.ProjectNumber}_{project.Name}";
@@ -79,7 +79,7 @@ public partial class ProjectEditDialog : Window
         DgCustomLinks.ItemsSource = _customLinks;
         RefreshLinkPreview();
 
-        var settings = _settingsService.Load();
+        var settings = _settingsService.LoadSharedOrDefault();
         ColLevelName.ItemsSource = settings.LevelNames.Select(l => l.ShortName).ToList();
 
         LoadDropdowns();
@@ -88,7 +88,7 @@ public partial class ProjectEditDialog : Window
 
     private void LoadDropdowns()
     {
-        var settings = _settingsService.Load();
+        var settings = _settingsService.LoadSharedOrDefault();
         CmbProjectType.ItemsSource = settings.ProjectTypes;
         if (!string.IsNullOrEmpty(Project.ProjectType))
             CmbProjectType.SelectedItem = Project.ProjectType;
@@ -100,13 +100,13 @@ public partial class ProjectEditDialog : Window
 
     private void OnEditProjectTypes(object sender, RoutedEventArgs e)
     {
-        var settings = _settingsService.Load();
+        var settings = _settingsService.LoadSharedOrDefault();
         var items = new ObservableCollection<string>(settings.ProjectTypes);
         if (ShowSimpleListEditDialog("Projektarten bearbeiten", items))
         {
             var selected = CmbProjectType.SelectedItem as string;
             settings.ProjectTypes = items.ToList();
-            _settingsService.Save(settings);
+            _settingsService.SaveSharedOrDefault(settings);
             CmbProjectType.ItemsSource = settings.ProjectTypes;
             if (selected is not null && settings.ProjectTypes.Contains(selected))
                 CmbProjectType.SelectedItem = selected;
@@ -178,7 +178,7 @@ public partial class ProjectEditDialog : Window
 
     private void RecalculateLevels(BuildingPart part)
     {
-        var settings = _settingsService.Load();
+        var settings = _settingsService.LoadSharedOrDefault();
         var levels = part.Levels;
 
         int egIndex = levels.FindIndex(l => l.Name.Equals("EG", StringComparison.OrdinalIgnoreCase));
@@ -251,7 +251,7 @@ public partial class ProjectEditDialog : Window
 
     private void OnAddPart(object sender, RoutedEventArgs e)
     {
-        var settings = _settingsService.Load();
+        var settings = _settingsService.LoadSharedOrDefault();
 
         bool addMore = true;
         while (addMore)
@@ -276,7 +276,7 @@ public partial class ProjectEditDialog : Window
     /// Geschoss-Eingabeschleife: Öffnet den Geschoss-Dialog wiederholt
     /// bis der User "Fertig" wählt.
     /// </summary>
-    private void AddLevelsLoop(BuildingPart part, AppSettings settings)
+    private void AddLevelsLoop(BuildingPart part, SharedConfig settings)
     {
         bool addMoreLevels = true;
         while (addMoreLevels)
@@ -310,7 +310,7 @@ public partial class ProjectEditDialog : Window
     private void OnEditPart(object sender, RoutedEventArgs e)
     {
         if (DgParts.SelectedItem is not BuildingPart part) return;
-        var settings = _settingsService.Load();
+        var settings = _settingsService.LoadSharedOrDefault();
         ShowPartEditDialog(part, settings, "Bauteil bearbeiten");
         DgParts.Items.Refresh();
         OnPartSelectionChanged(sender, null!);
@@ -329,7 +329,7 @@ public partial class ProjectEditDialog : Window
         }
     }
 
-    private bool ShowPartEditDialog(BuildingPart part, AppSettings settings, string title)
+    private bool ShowPartEditDialog(BuildingPart part, SharedConfig settings, string title)
     {
         var w = new Window
         {
@@ -418,7 +418,7 @@ public partial class ProjectEditDialog : Window
             return;
         }
 
-        var settings = _settingsService.Load();
+        var settings = _settingsService.LoadSharedOrDefault();
 
         // Nächstes logisches Geschoss vorschlagen
         string suggestedName;
@@ -442,7 +442,7 @@ public partial class ProjectEditDialog : Window
     {
         if (DgParts.SelectedItem is not BuildingPart) return;
         if (DgLevels.SelectedItem is not BuildingLevel level) return;
-        var settings = _settingsService.Load();
+        var settings = _settingsService.LoadSharedOrDefault();
         ShowLevelEditDialog(level, settings, "Geschoss bearbeiten");
         RefreshLevelsGrid();
     }
@@ -486,7 +486,7 @@ public partial class ProjectEditDialog : Window
     /// <summary>
     /// Dialog für Geschoss anlegen/bearbeiten — editierbares Dropdown + Höhenwerte.
     /// </summary>
-    private bool ShowLevelEditDialog(BuildingLevel level, AppSettings settings, string title)
+    private bool ShowLevelEditDialog(BuildingLevel level, SharedConfig settings, string title)
     {
         var w = new Window
         {
@@ -574,7 +574,7 @@ public partial class ProjectEditDialog : Window
     /// Geschoss-Dialog mit 2 Buttons: "+ Geschoss" (speichern + nächstes) und "Fertig" (speichern + schließen).
     /// Wird von AddLevelsLoop aufgerufen.
     /// </summary>
-    private LevelDialogResult ShowLevelEditDialogWithContinue(BuildingLevel level, AppSettings settings)
+    private LevelDialogResult ShowLevelEditDialogWithContinue(BuildingLevel level, SharedConfig settings)
     {
         var result = LevelDialogResult.Cancel;
 
@@ -681,7 +681,7 @@ public partial class ProjectEditDialog : Window
     /// </summary>
     private void OnEditLevelNames(object sender, RoutedEventArgs e)
     {
-        var settings = _settingsService.Load();
+        var settings = _settingsService.LoadSharedOrDefault();
         var items = new ObservableCollection<LevelNameEntry>(
             settings.LevelNames.Select(l => new LevelNameEntry(l.ShortName, l.LongName)));
 
@@ -769,7 +769,7 @@ public partial class ProjectEditDialog : Window
         if (w.ShowDialog() == true)
         {
             settings.LevelNames = items.ToList();
-            _settingsService.Save(settings);
+            _settingsService.SaveSharedOrDefault(settings);
             ColLevelName.ItemsSource = settings.LevelNames.Select(l => l.ShortName).ToList();
         }
     }
@@ -780,7 +780,7 @@ public partial class ProjectEditDialog : Window
 
     private void OnAddParticipant(object sender, RoutedEventArgs e)
     {
-        var settings = _settingsService.Load();
+        var settings = _settingsService.LoadSharedOrDefault();
         var p = new ProjectParticipant();
         if (ShowParticipantEditDialog(p, settings, "Beteiligten hinzufügen"))
         {
@@ -792,7 +792,7 @@ public partial class ProjectEditDialog : Window
     private void OnEditParticipant(object sender, RoutedEventArgs e)
     {
         if (DgParticipants.SelectedItem is not ProjectParticipant p) return;
-        var settings = _settingsService.Load();
+        var settings = _settingsService.LoadSharedOrDefault();
         ShowParticipantEditDialog(p, settings, "Beteiligten bearbeiten");
         DgParticipants.Items.Refresh();
     }
@@ -827,12 +827,12 @@ public partial class ProjectEditDialog : Window
 
     private void OnEditParticipantRoles(object sender, RoutedEventArgs e)
     {
-        var settings = _settingsService.Load();
+        var settings = _settingsService.LoadSharedOrDefault();
         var items = new ObservableCollection<string>(settings.ParticipantRoles);
         if (ShowSimpleListEditDialog("Rollen bearbeiten", items))
         {
             settings.ParticipantRoles = items.ToList();
-            _settingsService.Save(settings);
+            _settingsService.SaveSharedOrDefault(settings);
         }
     }
 
@@ -869,7 +869,7 @@ public partial class ProjectEditDialog : Window
         }
     }
 
-    private bool ShowParticipantEditDialog(ProjectParticipant p, AppSettings settings, string title)
+    private bool ShowParticipantEditDialog(ProjectParticipant p, SharedConfig settings, string title)
     {
         var w = new Window
         {
@@ -926,7 +926,7 @@ public partial class ProjectEditDialog : Window
 
     private void OnAddPortal(object sender, RoutedEventArgs e)
     {
-        var settings = _settingsService.Load();
+        var settings = _settingsService.LoadSharedOrDefault();
         var link = new ProjectLink { LinkType = "Portal" };
         if (ShowLinkEditDialog(link, settings.PortalTypes, "Portal hinzufügen", true))
         {
@@ -939,7 +939,7 @@ public partial class ProjectEditDialog : Window
     private void OnEditPortal(object sender, RoutedEventArgs e)
     {
         if (DgPortals.SelectedItem is not ProjectLink link) return;
-        var settings = _settingsService.Load();
+        var settings = _settingsService.LoadSharedOrDefault();
         ShowLinkEditDialog(link, settings.PortalTypes, "Portal bearbeiten", true);
         DgPortals.Items.Refresh();
         RefreshLinkPreview();
@@ -1000,12 +1000,12 @@ public partial class ProjectEditDialog : Window
 
     private void OnEditPortalTypes(object sender, RoutedEventArgs e)
     {
-        var settings = _settingsService.Load();
+        var settings = _settingsService.LoadSharedOrDefault();
         var items = new ObservableCollection<string>(settings.PortalTypes);
         if (ShowSimpleListEditDialog("Portal-Typen bearbeiten", items))
         {
             settings.PortalTypes = items.ToList();
-            _settingsService.Save(settings);
+            _settingsService.SaveSharedOrDefault(settings);
         }
     }
 

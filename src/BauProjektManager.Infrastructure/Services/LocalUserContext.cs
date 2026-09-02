@@ -6,15 +6,15 @@ namespace BauProjektManager.Infrastructure.Services;
 
 /// <summary>
 /// Lokaler Benutzerkontext für Modus A (Offline/Solo).
-/// Liest UserId und DisplayName aus AppSettings (settings.json).
+/// Liest UserId und DisplayName aus DeviceSettings (device-settings.json, BPM-069).
 /// Wird in Modus C durch JwtUserContext ersetzt.
 /// Siehe ADR-052.
 /// </summary>
 public class LocalUserContext : IUserContext
 {
-    private readonly AppSettings _settings;
+    private readonly DeviceSettings _settings;
 
-    public LocalUserContext(AppSettings settings)
+    public LocalUserContext(DeviceSettings settings)
     {
         _settings = settings;
     }

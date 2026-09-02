@@ -128,7 +128,7 @@ public sealed class PersistenceRegistry : IPersistenceRegistry
             "planmanager.db" => (PersistenceType.Database, "PlanManager-DB"),
             "device-settings.json" => (PersistenceType.Config, "device-settings.json"),
             "shared-config.json" => (PersistenceType.Config, "shared-config.json"),
-            "settings.json" => (PersistenceType.Config, "settings.json (legacy)"),
+
             "registry.json" => (PersistenceType.Cache, "registry.json"),
             "pattern-templates.json" => (PersistenceType.Cache, "pattern-templates.json"),
             "manifest.json" => (PersistenceType.Config, ".bpm/manifest.json"),

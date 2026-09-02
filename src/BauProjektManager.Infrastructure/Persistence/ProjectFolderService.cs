@@ -33,7 +33,7 @@ public class ProjectFolderService
     /// </summary>
     public string CreateProjectFolders(Project project, List<FolderTemplateEntry>? folderTemplate = null)
     {
-        var settings = _settingsService.Load();
+        var settings = _settingsService.LoadDevice();
 
         if (string.IsNullOrEmpty(settings.BasePath))
         {
@@ -41,7 +41,7 @@ public class ProjectFolderService
                 "Arbeitsordner (BasePath) ist nicht konfiguriert. Bitte zuerst Ersteinrichtung durchführen.");
         }
 
-        var template = folderTemplate ?? settings.FolderTemplate;
+        var template = folderTemplate ?? _settingsService.LoadSharedOrDefault().FolderTemplate;
         var projectRoot = _path.Combine(settings.BasePath, project.FolderName);
 
         Log.Debug("Creating folder structure for project {ProjectId} at {Path}", project.Id, projectRoot);

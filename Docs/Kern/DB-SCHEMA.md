@@ -30,10 +30,10 @@ supersedes: []
     - 10.1 Übersicht aller JSON-Konfig-Dateien
     - 10.2 device-settings.json — Feldschema
     - 10.3 shared-config.json — Feldschema
-    - 10.4 settings.json (legacy) — Feldschema
+    - 10.4 settings.json (legacy) — entfernt (BPM-069), Feldzuordnung als Historie
     - 10.5 Hilfsklassen für strukturierte Listen
     - 10.6 Default-Werte für SharedConfig
-    - 10.7 Migration von settings.json (legacy) zu Split-Format
+    - 10.7 Umgang mit einer alten settings.json (BPM-069: Löschung statt Migration)
     - 10.8 Geplante Schema-Erweiterungen (gemäß ADR-053)
 - Pflichtlesen:
   - Kapitel 4 (Tabellen-Schema) bei jeder Tabellen-/Spaltenänderung
@@ -1472,14 +1472,14 @@ ULIDs sind nicht menschenlesbar. Die Lesbarkeit wird über fachliche Felder sich
 |-------|------------|--------|-------------|-----------|
 | `device-settings.json` | Lokal `%LocalAppData%\BauProjektManager\` | **Nein** | Geräte-spezifische Einstellungen (Pfade, DeviceId, MachineName) — ADR-052 | `AppSettingsService` |
 | `shared-config.json` | Cloud `<basePath>/.AppData/BauProjektManager/` | **Ja** | Geteilte Konfiguration (FolderTemplate, Listen, Rollen) — ADR-052 | `AppSettingsService` |
-| `settings.json` *(legacy)* | Lokal `%LocalAppData%\BauProjektManager\` | Nein | **Veraltet** — wird beim ersten Start nach Update automatisch in `device-settings.json` + `shared-config.json` migriert | `AppSettingsService` (nur Migration-Lesen) |
+| ~~`settings.json`~~ *(legacy)* | Lokal `%LocalAppData%\BauProjektManager\` | Nein | **Entfernt (BPM-069, v0.28.182)** — wird beim ersten Start gelöscht, keine Migration | `AppSettingsService` |
 | `registry.json` | Cloud `<basePath>/.AppData/BauProjektManager/` | Ja | Generierter VBA-Export (read-only für VBA) | `RegistryJsonExporter` |
 | `pattern-templates.json` | Cloud `<basePath>/.AppData/BauProjektManager/` | Ja | Globale Musterbibliothek für Plan-Profile | PlanManager |
 | `.bpm/manifest.json` | Cloud Projektordner `.bpm/` (ADR-046) | Ja | Schlanker Projekt-Ausweis (`ProjectManifest`, SchemaVersion 2) | `ManifestService` |
 | `.bpm/project.json` | Cloud Projektordner `.bpm/` (ADR-046) | Ja | Vollständiger Projektexport | `ProjectExportService` |
 | `.bpm/profiles/*.json` | Cloud Projektordner `.bpm/profiles/` (ADR-046) | Ja | RecognitionProfile pro Dokumenttyp pro Projekt | PlanManager |
 
-> **Status `settings.json` Split:** ✅ Implementiert ab v0.25.x (ADR-052). Der `AppSettingsService` lädt zuerst `device-settings.json`, im Fehlerfall einer Migration aus `settings.json` (legacy). `shared-config.json` wird beim ersten Bind eines Workspaces erstellt (oder aus Legacy migriert).
+> **Status `settings.json` Split:** ✅ Implementiert ab v0.25.x (ADR-052). Der `AppSettingsService` lädt zuerst `device-settings.json`, im Fehlerfall einer Migration aus `settings.json` (legacy). `shared-config.json` wird beim ersten Bind eines Workspaces erstellt (oder aus Legacy migriert). **Seit v0.28.182 (BPM-069) ohne Fassade und ohne Migration** — `AppSettings` ist gelöscht, Aufrufer nutzen `LoadDevice`/`LoadSharedOrDefault` direkt.
 
 ### 10.2 device-settings.json — Feldschema
 
@@ -1500,6 +1500,8 @@ ULIDs sind nicht menschenlesbar. Die Lesbarkeit wird über fachliche Felder sich
 | `exportPath` | string | `""` | nein | Default-Zielordner für Exporte. Optional. |
 | `isFirstRun` | bool | `true` | ja (auto) | Wird nach erfolgreichem Erst-Setup auf `false` gesetzt. Steuert ob der Ersteinrichtungs-Dialog erscheint. |
 | `setupCompletedAt` | DateTime? | `null` | nein | UTC-Zeitstempel des abgeschlossenen Erst-Setups. |
+| `localUserId` | string | `MachineName\UserName` | nein | Technische User-ID für Modus A (ADR-052); BPM-069 aus der AppSettings-Fassade übernommen. |
+| `localUserName` | string | Windows-Benutzername | nein | Anzeigename für created_by/last_modified_by (BPM-069). |
 
 ### 10.3 shared-config.json — Feldschema
 
@@ -1524,9 +1526,9 @@ ULIDs sind nicht menschenlesbar. Die Lesbarkeit wird über fachliche Felder sich
 
 ### 10.4 settings.json (legacy) — Feldschema
 
-**Klasse:** `BauProjektManager.Domain.Models.AppSettings` 
-**Status:** ⚠️ **Veraltet ab v0.25.x.** Wird nur noch von der Migration in `AppSettingsService.MigrateFromLegacy()` gelesen. Neuer Code verwendet `DeviceSettings` + `SharedConfig`. 
-**Speicherort:** `%LocalAppData%\BauProjektManager\settings.json` *(falls vorhanden — wird nach Migration nicht mehr beschrieben)*
+**Klasse:** ~~`BauProjektManager.Domain.Models.AppSettings`~~ — **entfernt mit BPM-069 (v0.28.182)**. 
+**Status:** ❌ **Datei und Klasse gibt es nicht mehr.** Eine noch vorhandene `settings.json` wird beim ersten `LoadDevice()` gelöscht (Frühphase, kein Migrationscode). Sämtlicher Code arbeitet direkt mit `DeviceSettings` (`LoadDevice`/`SaveDevice`) und `SharedConfig` (`LoadSharedOrDefault`/`SaveSharedOrDefault`). Die Klassen `FolderTemplateEntry`, `SubFolderEntry`, `LevelNameEntry`, `FolderTemplateCategory` liegen jetzt in `FolderTemplateEntry.cs`. 
+**Historische Feldzuordnung** (zur Orientierung, wohin die alten Felder gewandert sind):
 
 Felder die aus `AppSettings` migrieren:
 
@@ -1617,15 +1619,14 @@ Definiert in `BauProjektManager.Domain.Models.SharedConfigDefaults`. Bei Reset o
 | 05 | `LV` | nein | — |
 | 06 | `Protokolle` | nein | — |
 
-### 10.7 Migration von settings.json (legacy) zu Split-Format
+### 10.7 Umgang mit einer alten settings.json (BPM-069: Löschung statt Migration)
 
-`AppSettingsService.LoadDevice()` führt die Migration automatisch beim ersten Start nach Update durch:
+Seit v0.28.182 (BPM-069) gibt es **keinen Migrationspfad** mehr — die Split-Dateien sind seit v0.25.x auf allen Geräten Herberts angekommen (Frühphasen-Prinzip):
 
-1. Wenn `device-settings.json` **nicht** existiert UND `settings.json` (legacy) **existiert** → Migration triggern
-2. Aus Legacy-`AppSettings` werden Felder in `DeviceSettings` und `SharedConfig` aufgeteilt (siehe 10.4)
-3. `device-settings.json` wird sofort geschrieben
-4. `shared-config.json` wird beim ersten `LoadShared()` geschrieben (sobald `basePath` bekannt ist)
-5. Legacy `settings.json` bleibt liegen, wird aber nicht mehr beschrieben
+1. `AppSettingsService.LoadDevice()` prüft, ob `%LocalAppData%\BauProjektManager\settings.json` existiert
+2. Falls ja: Datei löschen, Log-Eintrag „Legacy settings.json removed" — Inhalt wird **nicht** übernommen
+3. Fehlt `device-settings.json`, beginnt die App mit Defaults (Ersteinrichtung)
+4. `shared-config.json` wird beim ersten `LoadDevice()` mit bekanntem `basePath` aus Defaults erzeugt
 
 **Schreib-Strategie:** Beide Dateien werden atomisch geschrieben (Write-to-Temp → File.Move overwrite). Bei `shared-config.json` wird vor jedem Schreiben `revision++` und `updatedAtUtc = DateTime.UtcNow` gesetzt.
 

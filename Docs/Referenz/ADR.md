@@ -1984,7 +1984,7 @@ BPM wird nicht nur Solo-Betrieb sein — Multi-User mit 10+ Nutzern (Bauleiter, 
 
 7. **User-Modell jetzt** (users + user_devices + roles + project_memberships). Stabile Identitäten für Audit/Sync/Berechtigungen.
 
-8. **settings.json Split jetzt:** device-settings.json (lokal) + shared-config.json (Cloud).
+8. **settings.json Split jetzt:** device-settings.json (lokal) + shared-config.json (Cloud). *(Umgesetzt v0.25.x; die Übergangs-Fassade `AppSettings` samt Migrationscode ist seit BPM-069, v0.28.182, entfernt — alte `settings.json` wird beim Start gelöscht.)*
 
 9. **Phase 2 ist bewusst temporäre Übergangsarchitektur** für kleine Teams (2-3 User) mit projektbasierter Sichtbarkeit. Keine Sicherheits- oder Skalierungsarchitektur. Exit-Kriterien zu Phase 3 definiert.
 

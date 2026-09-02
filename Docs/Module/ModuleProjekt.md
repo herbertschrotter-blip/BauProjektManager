@@ -64,7 +64,7 @@ Das Projekt-Modul ist das Herzstück des BauProjektManager. Es verwaltet alle Ba
 | Domain | `Interfaces/IDialogService.cs` | Abstraktion für Info/Warn/Error/Confirm Dialoge |
 | Infrastructure | `Persistence/ProjectDatabase.cs` | SQLite Schema, CRUD für alle Tabellen |
 | Infrastructure | `Persistence/RegistryJsonExporter.cs` | Flacher JSON-Export für VBA |
-| Infrastructure | `Persistence/AppSettingsService.cs` | settings.json lesen/schreiben |
+| Infrastructure | `Persistence/AppSettingsService.cs` | device-settings.json (lokal) + shared-config.json (Cloud) lesen/schreiben — BPM-069: keine AppSettings-Fassade mehr |
 | Infrastructure | `Persistence/ProjectFolderService.cs` | Projektordner auf Disk erstellen/synchronisieren |
 | Infrastructure | `Persistence/ManifestService.cs` | .bpm/ Ordner lesen/schreiben/scannen (ADR-046), Hidden+ReadOnly |
 | App | `BpmDialogService.cs` | Implementation von IDialogService mit Dark Theme Dialogen |
@@ -98,7 +98,7 @@ Keine zusätzlichen NuGet-Pakete über die Basis hinaus (Microsoft.Data.Sqlite, 
 | `Name` | `string` | Kurzname (z.B. "ÖWG-Dobl-Zwaring") |
 | `FullName` | `string` | Voller Projektname |
 | `Status` | `ProjectStatus` | Active oder Completed |
-| `ProjectType` | `string` | Aus editierbarer Liste (settings.json) |
+| `ProjectType` | `string` | Aus editierbarer Liste (shared-config.json) |
 | `Location` | `ProjectLocation` | Adresse + Koordinaten + Grundstück |
 | `Timeline` | `ProjectTimeline` | 4 Datumswerte |
 | `Client` | `Client` | Auftraggeber |
@@ -144,7 +144,7 @@ Vorbereitet für späteres Adressbuch und Outlook-Sync. Aktuell eingebettet im P
 | `Id` | `string` | ID (z.B. `blvl_001`) |
 | `Prefix` | `int` | Sortier-Präfix (EG=0, UG=-01, OG1=01) |
 | `Name` | `string` | Kurzname (z.B. "EG", "OG1", "DG") |
-| `Description` | `string` | Langname (auto aus settings.json) |
+| `Description` | `string` | Langname (auto aus shared-config.json, LevelNames) |
 | `Rdok` | `double` | Rohdecke Oberkante (von ± 0,00) |
 | `Fbok` | `double` | Fertigfußboden Oberkante (von ± 0,00) |
 | `Rduk` | `double?` | Rohdecke Unterkante (nullable, z.B. bei Bodenplatte) |
@@ -165,7 +165,7 @@ Vorbereitet für späteres Adressbuch und Outlook-Sync. Aktuell eingebettet im P
 | Property | Typ | Beschreibung |
 |----------|-----|-------------|
 | `Id` | `string` | ID (z.B. `ppart_001`) |
-| `Role` | `string` | Rolle (Architekt, Statiker, ÖBA...) — editierbar (settings.json) |
+| `Role` | `string` | Rolle (Architekt, Statiker, ÖBA...) — editierbar (shared-config.json) |
 | `Company` | `string` | Firmenname |
 | `ContactPerson` | `string` | Ansprechperson |
 | `Phone` | `string` | Telefon |
@@ -260,9 +260,9 @@ Die DB verwendet WAL-Modus (`PRAGMA journal_mode=WAL`) für bessere Concurrency.
 
 ### AppSettingsService
 
-Liest und schreibt `settings.json` in Cloud-Speicher `.AppData/BauProjektManager/`. Post-V1: Split in `device-settings.json` (lokal) + `shared-config.json` (Cloud) geplant (ADR-047).
+Zwei Dateien (ADR-047 P.8, seit v0.25.x): `device-settings.json` lokal unter `%LocalAppData%\BauProjektManager\` (Pfade, Geräte-ID, Benutzer, DevTools, Fensterlage, UI-Layout) und `shared-config.json` im Cloud-Speicher unter `<BasePath>/.AppData/BauProjektManager/` (FolderTemplate, Listen, Rollen). Seit BPM-069 (v0.28.182) gibt es keine `AppSettings`-Fassade mehr: `ProjectEditDialog` und `SettingsViewModel` nutzen `LoadSharedOrDefault`/`SaveSharedOrDefault` für Listen und `LoadDevice`/`SaveDevice` für Pfade; eine alte `settings.json` wird beim Start gelöscht.
 
-**Inhalt von settings.json:**
+**Inhalt (Device → device-settings.json, Shared → shared-config.json):**
 - `BasePath` — Arbeitsordner (wo Projektordner erstellt werden)
 - `ArchivePath` — Archivordner
 - `CloudStoragePath` — Cloud-Speicher-Pfad

@@ -11,7 +11,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Toolbar: Suche + Filter (Excel-Export folgt mit Slice d) -->
+        <!-- Toolbar: Suche + Filter -->
         <Border Grid.Row="0" Background="{DynamicResource BpmBgSurface}"
                 BorderBrush="{DynamicResource BpmBorderSubtle}" BorderThickness="0,0,0,1"
                 Padding="10,7">

@@ -12,7 +12,7 @@ namespace BauProjektManager.PlanManager.Views;
 /// <summary>
 /// Plandaten-Tab (BPM-126 Slice a+b+c): tabellarische DB-Sicht auf den kuratierten
 /// Planindex, Detail-Panel (Dokument / Ablage+Dateien / Revisionen) und der
-/// wiederverwendbare Segment-Editor. Excel-Export (Slice d) folgt.
+/// wiederverwendbare Segment-Editor (BPM-126 komplett).
 /// </summary>
 public partial class PlanDataView : UserControl
 {

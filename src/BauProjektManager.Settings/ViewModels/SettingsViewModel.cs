@@ -24,7 +24,9 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     private readonly RegistryJsonExporter _exporter;
     private readonly AppSettingsService _settingsService;
     private readonly ProjectFolderService _folderService;
-    private readonly BpmManifestService _manifestService;
+    private readonly ManifestService _manifestService;
+    private readonly ProjectExportService _exportService;
+    private readonly ProjectFolderScanner _folderScanner;
     // BPM-112.05 (ADR-060 Slice 5): FS-Ports statt direktem System.IO in der VM.
     private static readonly Infrastructure.Services.LocalFileSystem _fs = new();
     private readonly IDialogService _dialogService;
@@ -157,7 +159,10 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         _dialogService = dialogService;
         _settingsService = settingsService;
         _persistenceRegistry = persistenceRegistry;
-        _manifestService = new BpmManifestService(persistenceRegistry);
+        // BPM-046 (ADR-046): Ausweis + Vollexport getrennt, Ordner-Scan eigenstaendig
+        _exportService = new ProjectExportService(persistenceRegistry);
+        _manifestService = new ManifestService(_exportService, persistenceRegistry);
+        _folderScanner = new ProjectFolderScanner();
 
         // Registry-Exportpfad aus Settings (BasePath/.AppData/BauProjektManager/)
         var settings = _settingsService.Load();
@@ -562,7 +567,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
                 dialog.Project.Paths.Root = projectRoot;
 
                 _db.SaveProject(dialog.Project);
-                _manifestService.WriteManifest(dialog.Project, projectRoot);
+                WriteBpmFolder(dialog.Project, projectRoot);
                 Projects.Add(dialog.Project);
                 SelectedProject = dialog.Project;
                 ExportRegistry();
@@ -576,6 +581,16 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
                 _dialogService.ShowError($"Fehler beim Speichern: {ex.Message}");
             }
         }
+    }
+
+    /// <summary>
+    /// Schreibt beide .bpm/-Dateien (ADR-046): project.json (Vollexport) und
+    /// manifest.json (schlanker Ausweis). Bringt aeltere Ordner damit auf das Split-Format.
+    /// </summary>
+    private void WriteBpmFolder(Project project, string projectRoot)
+    {
+        _exportService.WriteExport(project, projectRoot);
+        _manifestService.WriteManifest(project, projectRoot);
     }
 
     [RelayCommand]
@@ -602,7 +617,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
                 _db.SaveProject(dialog.Project);
                 if (!string.IsNullOrEmpty(dialog.Project.Paths?.Root))
                 {
-                    _manifestService.WriteManifest(dialog.Project, dialog.Project.Paths.Root);
+                    WriteBpmFolder(dialog.Project, dialog.Project.Paths.Root);
                 }
                 int index = Projects.IndexOf(SelectedProject);
                 if (index >= 0)
@@ -743,14 +758,16 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             return;
         }
 
-        var manifest = _manifestService.ReadManifest(folderPath);
-        if (manifest is null)
+        // BPM-046: alte Formate (.bpm-manifest, manifest.json v1) werden hier einmalig migriert
+        _manifestService.EnsureMigrated(folderPath);
+        var export = _exportService.ReadExport(folderPath);
+        if (export is null)
         {
-            _dialogService.ShowError("Manifest konnte nicht gelesen werden.");
+            _dialogService.ShowError("Projektexport (.bpm/project.json) konnte nicht gelesen werden.");
             return;
         }
 
-        var project = _manifestService.ManifestToProject(manifest, folderPath);
+        var project = _exportService.ExportToProject(export, folderPath);
 
         var confirmDialog = new ProjectEditDialog(project, _settingsService);
         confirmDialog.Owner = Application.Current.MainWindow;
@@ -759,7 +776,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             try
             {
                 _db.SaveProject(confirmDialog.Project);
-                _manifestService.WriteManifest(confirmDialog.Project, folderPath);
+                WriteBpmFolder(confirmDialog.Project, folderPath);
                 Projects.Add(confirmDialog.Project);
                 SelectedProject = confirmDialog.Project;
                 ExportRegistry();
@@ -783,7 +800,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             return;
         }
 
-        var project = _manifestService.ScanFolder(folderPath);
+        var project = _folderScanner.ScanFolder(folderPath);
 
         var editDialog = new ProjectEditDialog(project, _settingsService);
         editDialog.Owner = Application.Current.MainWindow;
@@ -792,7 +809,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             try
             {
                 _db.SaveProject(editDialog.Project);
-                _manifestService.WriteManifest(editDialog.Project, folderPath);
+                WriteBpmFolder(editDialog.Project, folderPath);
                 Projects.Add(editDialog.Project);
                 SelectedProject = editDialog.Project;
                 ExportRegistry();

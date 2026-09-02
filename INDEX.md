@@ -192,7 +192,7 @@ Bei UI-Änderungen zusätzlich:
 - **Enums/** — Status-Enums.
 
 ### src/BauProjektManager.Infrastructure
-- **Persistence/** — ProjectDatabase.cs (35KB), AppSettingsService, BpmManifestService, ProjectFolderService, RegistryJsonExporter.
+- **Persistence/** — ProjectDatabase.cs (35KB), AppSettingsService, ManifestService + ProjectExportService + ProjectFolderScanner (.bpm/, ADR-046), ProjectFolderService, RegistryJsonExporter.
 
 ### src/BauProjektManager.Settings
 - **SettingsViewModel.cs** (28KB) — Referenz MVVM.

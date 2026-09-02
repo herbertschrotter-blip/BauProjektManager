@@ -1848,6 +1848,7 @@ Pro Projekt und Plantyp (= im RecognitionProfile) wird ein `IndexSource` Feld ge
 
 **Datum:** 2026-04
 **Status:** ✅ Entschieden
+**Implementierung:** ✅ **Umgesetzt** (BPM-046, v0.28.178, Teil 52) — Klassen: `ProjectManifest` (das hier „ManifestV2" genannte schlanke Modell), `ProjectExport` (bisheriger `BpmManifest`-Inhalt), `ManifestService`, `ProjectExportService`, `ProjectFolderScanner`. Migration idempotent über `ManifestService.EnsureMigrated` beim Projekt-Import und beim Speichern. **`plan-index.json` entfällt** — seit ADR-061 ist `planmanager.db` der kuratierte Planindex, eine JSON-Kopie wäre ein zweiter Wahrheitsort.
 **Herkunft:** PlanManager-Entwicklung (Claude + Herbert, 10.04.2026), ChatGPT-Review Empfehlung Settings-Split
 **Supersedes:** ADR-013 v2 (einzelne `.bpm-manifest`-Datei)
 

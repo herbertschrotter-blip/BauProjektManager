@@ -31,6 +31,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.178] — 2026-09-02
+
+### Refactor: BPM-046 — .bpm/ Manifest-Split (ADR-046)
+
+Der versteckte `.bpm/`-Ordner trennt jetzt Ausweis und Vollexport, wie in ADR-046 beschlossen. **`manifest.json`** ist nur noch der schlanke Projekt-Ausweis (`ProjectManifest`, SchemaVersion 2: projectId, projectNumber, name, updatedAtUtc, createdByMachine, Modul-Flags) — keine Stammdaten, keine Personendaten mehr in der Ausweisdatei. **`project.json`** trägt den Vollexport (`ProjectExport`, der bisherige `BpmManifest`-Inhalt: Bauherr, Adresse, Beteiligte, Bauteile, Links, Pfade) und wird bei jedem Speichern erneuert. `BpmManifestService` ist in drei Klassen aufgegangen: `ManifestService` (Ausweis + Migration), `ProjectExportService` (Vollexport, Export → Project) und `ProjectFolderScanner` (Import ohne Ausweis); gemeinsame Pfad-/Schreibhelfer in `BpmFolder`. `SettingsViewModel` schreibt an allen vier Stellen beide Dateien.
+
+**Vorwärtsmigration** (`ManifestService.EnsureMigrated`, idempotent): alte `.bpm-manifest`-Einzeldatei → beide Dateien schreiben, alte Datei löschen (Fallback bleibt damit nicht mehr dauerhaft aktiv); `manifest.json` mit SchemaVersion 1 → in `project.json` + schlankes `manifest.json` aufteilen. Ein vorhandenes `project.json` wird nie überschrieben. Auslöser: Projekt-Import in den Einstellungen und jedes Speichern im Projektdialog. **`plan-index.json` entfällt** — seit ADR-061 ist `planmanager.db` der kuratierte Planindex. Infrastructure bleibt laut ADR-060 P.4 auf `System.IO`. 6 neue Tests (`BpmFolderManifestTests`), 513/513 grün. Docs: Architektur 3.6, INDEX, DB-SCHEMA-Dateitabelle, ADR-046 Implementierungsstatus, BACKLOG #11.
+
+> ⚠️ **Historie:** Die Löschung von `BpmManifest.cs` und `BpmManifestService.cs` ist versehentlich schon im Docs-Commit `7835373` (v0.28.177) gelandet (per `git rm` vorab gestaged, dann mit den Docs committet). Dieser Zwischenstand baut nicht; ab diesem Commit ist die Solution wieder vollständig. Bereits gepusht, bewusst nicht umgeschrieben.
+
+---
 ## [v0.28.177] — 2026-09-02
 
 ### Docs: BACKLOG #30/#31/#33/#34 bereinigt (BPM-017 erledigt; BPM-018, BPM-020, BPM-021 gestrichen)

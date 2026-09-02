@@ -507,14 +507,15 @@ public enum ProjectStatus { Active, Completed }
 
 Versteckter Ordner in jedem Projektordner — ersetzt die einzelne `.bpm-manifest`-Datei (ADR-013 v2):
 
+**Umgesetzt mit BPM-046 (v0.28.178):** `ManifestService` schreibt `manifest.json` (`ProjectManifest`, SchemaVersion 2), `ProjectExportService` schreibt `project.json` (`ProjectExport`), `ProjectFolderScanner` übernimmt den Import ohne Ausweis. Kein `plan-index.json` — die `planmanager.db` ist der kuratierte Planindex (ADR-061 Modell A).
+
 ```
 Projektordner/
 ├── .bpm/                          ← Hidden
 │   ├── manifest.json              ← Schlank: Identität + Module-Flags
 │   ├── project.json               ← Vollständiger Projektexport
-│   ├── profiles/                  ← PlanManager: Plantyp-Profile
-│   │   └── <profilname>.json
-│   └── plan-index.json            ← Bestandsmanifest (später)
+│   └── profiles/                  ← PlanManager: Plantyp-Profile
+│       └── <profilname>.json
 ```
 
 **manifest.json** (schlank — nur Ausweis): projectId, projectNumber, name, updatedAtUtc, createdByMachine, modules (Flags welche Module aktiv sind).
@@ -523,7 +524,7 @@ Projektordner/
 
 **profiles/**: Eine JSON-Datei pro Plantyp-Profil. Synct über Cloud-Speicher zwischen Geräten.
 
-Bei Ordner-Umbenennung: BPM sucht über `.bpm/manifest.json` automatisch den neuen Pfad und aktualisiert die DB. Vorwärtsmigration: Alte `.bpm-manifest`-Datei wird automatisch in `.bpm/`-Ordner migriert.
+Bei Ordner-Umbenennung: BPM sucht über `.bpm/manifest.json` automatisch den neuen Pfad und aktualisiert die DB. Vorwärtsmigration (`ManifestService.EnsureMigrated`, idempotent): alte `.bpm-manifest`-Datei → beide Dateien schreiben, alte Datei löschen; `manifest.json` mit SchemaVersion 1 (früherer Vollexport) → in `project.json` + schlankes `manifest.json` aufteilen. Ein bestehendes `project.json` wird nie überschrieben. Auslöser: Projekt-Import in den Einstellungen und jedes Speichern im Projektdialog.
 
 ### 3.6 Automatische Projektordner-Erstellung
 

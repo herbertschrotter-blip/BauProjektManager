@@ -1475,7 +1475,7 @@ ULIDs sind nicht menschenlesbar. Die Lesbarkeit wird über fachliche Felder sich
 | `settings.json` *(legacy)* | Lokal `%LocalAppData%\BauProjektManager\` | Nein | **Veraltet** — wird beim ersten Start nach Update automatisch in `device-settings.json` + `shared-config.json` migriert | `AppSettingsService` (nur Migration-Lesen) |
 | `registry.json` | Cloud `<basePath>/.AppData/BauProjektManager/` | Ja | Generierter VBA-Export (read-only für VBA) | `RegistryJsonExporter` |
 | `pattern-templates.json` | Cloud `<basePath>/.AppData/BauProjektManager/` | Ja | Globale Musterbibliothek für Plan-Profile | PlanManager |
-| `.bpm/manifest.json` | Cloud Projektordner `.bpm/` (ADR-046) | Ja | Schlanker Projekt-Ausweis | `BpmManifestService` |
+| `.bpm/manifest.json` | Cloud Projektordner `.bpm/` (ADR-046) | Ja | Schlanker Projekt-Ausweis (`ProjectManifest`, SchemaVersion 2) | `ManifestService` |
 | `.bpm/project.json` | Cloud Projektordner `.bpm/` (ADR-046) | Ja | Vollständiger Projektexport | `ProjectExportService` |
 | `.bpm/profiles/*.json` | Cloud Projektordner `.bpm/profiles/` (ADR-046) | Ja | RecognitionProfile pro Dokumenttyp pro Projekt | PlanManager |
 

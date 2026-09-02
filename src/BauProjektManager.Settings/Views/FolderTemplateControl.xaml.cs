@@ -96,6 +96,10 @@ public partial class FolderTemplateControl : UserControl
         foreach (var dir in _fs.EnumerateDirectories(projectFolderPath).OrderBy(d => d))
         {
             var dirName = _fs.GetFileName(dir);
+            // BPM-066: versteckte Ordner (.bpm/, ADR-046) sind keine Projektordner —
+            // sonst erscheint ".bpm" als Hauptordner 0 und verschiebt alle Praefixe.
+            if (IsInfrastructureFolder(dir, dirName)) continue;
+
             var cleanName = StripNumericPrefix(dirName);
 
             var mainItem = new FolderTreeItem
@@ -124,6 +128,7 @@ public partial class FolderTemplateControl : UserControl
         {
             var subName = _fs.GetFileName(subDir);
             if (subName == "_Eingang") continue;
+            if (IsInfrastructureFolder(subDir, subName)) continue;
 
             var cleanSubName = StripNumericPrefix(subName);
             var subHasPrefix = subName != cleanSubName;
@@ -141,6 +146,13 @@ public partial class FolderTemplateControl : UserControl
             target.Add(subItem);
         }
     }
+
+    /// <summary>
+    /// Versteckte Ordner und Punkt-Ordner (.bpm, .bpm_tmp, .git) gehoeren der App bzw.
+    /// dem Sync, nie der Projektstruktur (BPM-066).
+    /// </summary>
+    private static bool IsInfrastructureFolder(string path, string name)
+        => name.StartsWith('.') || _fs.IsHidden(path);
 
     /// <summary>Gibt die aktuelle Struktur als FolderTemplateEntry-Liste zurück.</summary>
     public List<FolderTemplateEntry> ToTemplate()

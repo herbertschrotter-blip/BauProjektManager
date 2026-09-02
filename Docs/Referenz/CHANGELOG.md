@@ -31,6 +31,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.179] — 2026-09-02
+
+### Fix: BPM-066 (Teil 1) — versteckter `.bpm/`-Ordner erschien in der Ordnerstruktur
+
+Altlasten-Prüfung Teil 52: Der nie reproduzierte „Editing Bug" im `FolderTemplateControl` hat drei konkrete Ursachen. Die erste ist behoben: Beim Bearbeiten eines bestehenden Projekts las das Control alle Unterordner von der Platte, auch den versteckten `.bpm/`-Ordner (ADR-046). Der stand als Hauptordner „.bpm" auf Position 0 und verschob die Präfixe aller weiteren Ordner um eins — neue Ordner bekamen ein zu hohes Präfix (das „00 .bpm, 01 Sonstiges"-Muster aus dem BPM-094-Befund). Jetzt werden versteckte Ordner und Punkt-Ordner (`.bpm`, `.bpm_tmp`, `.git`) auf allen Ebenen übersprungen. Dafür neue Port-Methode `IFileSystemReader.IsHidden(path)` (ADR-060; `LocalFileSystem` via Attribut, `FakeFileStore.SetHidden` für Tests) — die View bleibt `System.IO`-frei. 3 neue Tests.
+
+**Offen, post-V1 (BPM-066 bleibt open):** Der Live-Watcher des Projektdialogs lädt den Baum bei jeder Disk-Änderung neu und verwirft dabei ungespeicherte Knoten; Hoch/Runter bei bestehenden Ordnern ist wirkungslos, weil Umnummerierung auf der Platte bewusst nicht gebaut ist (BPM-094 Out-of-Scope).
+
+---
 ## [v0.28.178] — 2026-09-02
 
 ### Refactor: BPM-046 — .bpm/ Manifest-Split (ADR-046)

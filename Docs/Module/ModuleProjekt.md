@@ -456,7 +456,7 @@ Diese Listen sind vom User anpassbar und werden als ComboBox-Quellen im Dialog v
 - **DI ist Architekturstandard** (Architektur Kap. 5). SettingsViewModel instanziiert Services noch manuell (`new ProjectDatabase()`). DI-Migration geplant nach PlanManager V1.
 - **ProjectEditDialog.xaml.cs ist zu groß** (~46 KB, ~1200 Zeilen) — Refactoring/Split geplant aber depriorisiert hinter PlanManager.
 - **Code-Behind statt reines MVVM** — Der ProjectEditDialog verwendet Code-Behind für Tab-Logik. Akzeptabler Kompromiss für die Komplexität des 5-Tab-Dialogs.
-- **FolderTemplateControl Bug** — beim Bearbeiten bestehender Projekte "funktioniert noch nicht ganz so wie gewollt" (Herbert-Feedback, noch nicht debuggt).
+- **FolderTemplateControl im Bearbeiten-Modus** (BPM-066) — Befund 1 behoben v0.28.179 (versteckter `.bpm/`-Ordner erschien als Hauptordner 0 und verschob alle Präfixe). Offen post-V1: der Live-Watcher verwirft ungespeicherte Baum-Änderungen bei jeder Disk-Änderung; Hoch/Runter ist bei bestehenden Ordnern wirkungslos (keine Umnummerierung auf Disk).
 - **Suche durchsucht keine Bauteile/Geschosse** — nur Stammdaten, Auftraggeber, Adresse, Tags.
 - **Archivieren nicht implementiert** — Button existiert, ist disabled.
 - **Adressbuch fehlt** — Clients sind aktuell pro Projekt eingebettet. Zentrales Adressbuch mit Wiederverwendung geplant.
@@ -475,7 +475,7 @@ Diese Listen sind vom User anpassbar und werden als ComboBox-Quellen im Dialog v
 | Suchfeld Projektliste | Suchfeld + Statusfilter mit CollectionView | ✅ v0.22.0 |
 | 2-Spalten Layout Dialog | Breitere rechte Spalte, mehr Platz für Ordnerstruktur | Backlog |
 | Token-Migration | Hardcoded Colors → DynamicResource Token-Referenzen | Teilweise erledigt, Rest geplant |
-| FolderTemplateControl Fix | Bug beim Bearbeiten bestehender Projekte beheben | Offen |
+| FolderTemplateControl Fix | BPM-066: `.bpm/` im Baum ✅ v0.28.179; Watcher-Reload + wirkungsloses Umsortieren offen (post-V1) | Teilweise |
 
 ---
 

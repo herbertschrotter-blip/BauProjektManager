@@ -29,6 +29,7 @@ public sealed class FakeFileStore : IFileSystemReader, IFileSystemWriter, IPathS
     private readonly Dictionary<string, byte[]> _files = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, DateTime> _times = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _dirs = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _hidden = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<FaultRule> _faults = [];
 
     // Fester Zeitstempel statt DateTime.UtcNow — deterministische Tests.
@@ -73,6 +74,11 @@ public sealed class FakeFileStore : IFileSystemReader, IFileSystemWriter, IPathS
     public bool FileExists(string path) => _files.ContainsKey(Norm(path));
 
     public bool DirectoryExists(string path) => _dirs.Contains(Norm(path));
+
+    public bool IsHidden(string path) => _hidden.Contains(Norm(path));
+
+    /// <summary>Markiert einen (existierenden oder spaeter angelegten) Pfad als versteckt (BPM-066).</summary>
+    public void SetHidden(string path) => _hidden.Add(Norm(path));
 
     public IEnumerable<string> EnumerateFiles(string path, string searchPattern = "*", bool recursive = false)
     {

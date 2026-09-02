@@ -16,6 +16,13 @@ public interface IFileSystemReader
     bool DirectoryExists(string path);
 
     /// <summary>
+    /// Ob Datei oder Verzeichnis das Hidden-Attribut traegt (BPM-066: z. B. der
+    /// .bpm/-Ordner, der in Ordner-Ansichten nicht als Projektordner erscheinen darf).
+    /// false, wenn der Pfad nicht existiert.
+    /// </summary>
+    bool IsHidden(string path);
+
+    /// <summary>
     /// Dateien in einem Verzeichnis. <paramref name="recursive"/> = true bezieht
     /// alle Unterverzeichnisse ein.
     /// </summary>

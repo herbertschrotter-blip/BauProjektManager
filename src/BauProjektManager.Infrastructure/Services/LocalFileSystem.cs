@@ -22,6 +22,19 @@ public sealed class LocalFileSystem : IFileSystemReader, IFileSystemWriter, IPat
 
     public bool DirectoryExists(string path) => Directory.Exists(path);
 
+    public bool IsHidden(string path)
+    {
+        try
+        {
+            return (File.Exists(path) || Directory.Exists(path))
+                && File.GetAttributes(path).HasFlag(FileAttributes.Hidden);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
     public IEnumerable<string> EnumerateFiles(string path, string searchPattern = "*", bool recursive = false)
         => Directory.EnumerateFiles(path, searchPattern,
             recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);

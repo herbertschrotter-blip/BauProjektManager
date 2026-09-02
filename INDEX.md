@@ -196,7 +196,7 @@ Bei UI-Änderungen zusätzlich:
 
 ### src/BauProjektManager.Settings
 - **SettingsViewModel.cs** (28KB) — Referenz MVVM.
-- **ProjectEditDialog.xaml/.cs** (je ~58KB, nur SUCHE/ERSETZE)
+- **ProjectEditDialog.xaml** (~58KB, nur SUCHE/ERSETZE) + Code-Behind als Partial Classes je Tab: `.xaml.cs` (Ctor/Save), `.Stammdaten`, `.Bauwerk`, `.BauwerkDialoge`, `.Beteiligte`, `.PortaleLinks`, `.Ordnerstruktur`, `.Helpers` (BPM-070)
 
 ### src/BauProjektManager.PlanManager
 - **Views/PlanManagerView.xaml/.cs** — Im Aufbau.
@@ -211,7 +211,7 @@ Bei UI-Änderungen zusätzlich:
 | SettingsView + SettingsViewModel | MVVM-Pattern |
 | AppSettingsService.cs | Service-Pattern |
 
-NICHT als Referenz: ProjectEditDialog.xaml.cs (Refactoring geplant)
+NICHT als Referenz: ProjectEditDialog-Partials (Code-Behind statt MVVM, hardcoded Farben in den Unterdialogen)
 
 ---
 

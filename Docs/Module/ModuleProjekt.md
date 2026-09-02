@@ -72,7 +72,7 @@ Das Projekt-Modul ist das Herzstück des BauProjektManager. Es verwaltet alle Ba
 | App | `BpmConfirmDialog.xaml` + `.cs` | Ja/Nein-Dialog im BPM-Design |
 | Settings | `ViewModels/SettingsViewModel.cs` | ViewModel: Projekte, Pfade, Ordner-Template, Suche, Filter, Import |
 | Settings | `Views/SettingsView.xaml` + `.cs` | 2-Tab-Seite (Projekte + Ordnerstruktur) |
-| Settings | `Views/ProjectEditDialog.xaml` + `.cs` | 5-Tab-Dialog zum Anlegen/Bearbeiten |
+| Settings | `Views/ProjectEditDialog.xaml` + `.xaml.cs` + Partials (`.Stammdaten`, `.Bauwerk`, `.BauwerkDialoge`, `.Beteiligte`, `.PortaleLinks`, `.Ordnerstruktur`, `.Helpers`) | 5-Tab-Dialog zum Anlegen/Bearbeiten — Code-Behind je Tab geteilt (BPM-070) |
 | Settings | `Views/FolderTemplateControl.xaml` + `.cs` | Shared UserControl für Ordner-TreeView |
 
 ### Abhängigkeiten
@@ -454,7 +454,7 @@ Diese Listen sind vom User anpassbar und werden als ComboBox-Quellen im Dialog v
 ## 11. Bekannte Einschränkungen
 
 - **DI ist Architekturstandard** (Architektur Kap. 5). SettingsViewModel instanziiert Services noch manuell (`new ProjectDatabase()`). DI-Migration geplant nach PlanManager V1.
-- **ProjectEditDialog.xaml.cs ist zu groß** (~46 KB, ~1200 Zeilen) — Refactoring/Split geplant aber depriorisiert hinter PlanManager.
+- ~~**ProjectEditDialog.xaml.cs ist zu groß**~~ — seit BPM-070 (v0.28.183) in acht Partial-Dateien geteilt (größte 382 Zeilen: BauwerkDialoge). Die code-erzeugten Unterdialoge mit hardcoded Farben sind unverändert übernommen (Token-Migration, Kap. 12).
 - **Code-Behind statt reines MVVM** — Der ProjectEditDialog verwendet Code-Behind für Tab-Logik. Akzeptabler Kompromiss für die Komplexität des 5-Tab-Dialogs.
 - **FolderTemplateControl im Bearbeiten-Modus** (BPM-066) — Befund 1 behoben v0.28.179 (versteckter `.bpm/`-Ordner erschien als Hauptordner 0 und verschob alle Präfixe). Offen post-V1: der Live-Watcher verwirft ungespeicherte Baum-Änderungen bei jeder Disk-Änderung; Hoch/Runter ist bei bestehenden Ordnern wirkungslos (keine Umnummerierung auf Disk).
 - **Suche durchsucht keine Bauteile/Geschosse** — nur Stammdaten, Auftraggeber, Adresse, Tags.
@@ -469,7 +469,7 @@ Diese Listen sind vom User anpassbar und werden als ComboBox-Quellen im Dialog v
 | Verbesserung | Beschreibung | Status |
 |-------------|-------------|--------|
 | DI-Container | Services über DI statt manuellem `new` | Geplant nach PlanManager |
-| ProjectEditDialog Split | .xaml.cs aufteilen (Tab-Handler als Partial Classes oder eigene Klassen) | Geplant, depriorisiert |
+| ProjectEditDialog Split | .xaml.cs nach Tabs in Partial Classes geteilt (BPM-070) | ✅ v0.28.183 |
 | ULID-Migration | Alle IDs auf ULID umstellen (IIdGenerator, Cysharp/Ulid) | ADR-039 v2 beschlossen |
 | Adressbuch | Zentrale contacts-Tabelle, Wiederverwendung über Projekte | Backlog |
 | Suchfeld Projektliste | Suchfeld + Statusfilter mit CollectionView | ✅ v0.22.0 |
@@ -510,7 +510,8 @@ src/
         ├── SettingsView.xaml             (~290 Zeilen)
         ├── SettingsView.xaml.cs          (~95 Zeilen)
         ├── ProjectEditDialog.xaml        (~1400 Zeilen, 5 Tabs)
-        ├── ProjectEditDialog.xaml.cs     (~1200 Zeilen)
+        ├── ProjectEditDialog.xaml.cs     (147 Zeilen: Zustand, Ctor, Save — BPM-070)
+        ├── ProjectEditDialog.Stammdaten.cs / .Bauwerk.cs / .BauwerkDialoge.cs / .Beteiligte.cs / .PortaleLinks.cs / .Ordnerstruktur.cs / .Helpers.cs (84–382 Zeilen)
         ├── FolderTemplateControl.xaml    (~220 Zeilen)
         └── FolderTemplateControl.xaml.cs (~400 Zeilen)
 ```

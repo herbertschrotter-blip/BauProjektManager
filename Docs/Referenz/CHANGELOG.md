@@ -31,6 +31,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.183] — 2026-09-02
+
+### Refactor: BPM-070 — ProjectEditDialog Code-Behind in Partial Classes geteilt
+
+`ProjectEditDialog.xaml.cs` (1346 Zeilen, eine Klasse für alle fünf Tabs) ist nach Tabs geschnitten — **reine Verschiebung, keine Logikänderung**, alle 69 Methoden unverändert: `.xaml.cs` (147: Felder, Konstruktoren, Speichern/Abbrechen, FS-Adapter), `.Stammdaten` (84), `.Bauwerk` (316: Bauteil-/Geschoss-CRUD, Höhenberechnung, globales Nullniveau), `.BauwerkDialoge` (382: code-erzeugte Dialoge für Bauteil, Geschoss, Geschoss-Bezeichnungen), `.Beteiligte` (157), `.PortaleLinks` (215), `.Ordnerstruktur` (50: Live-Watcher, mit BPM-066-Hinweis), `.Helpers` (95). Coding-Standard 300–500 Zeilen je Datei damit eingehalten (ADR-043). Docs: ModuleProjekt.md Kap. 3/11/12/Dateibaum, INDEX Entry Points. Solution baut, 516/516 Tests grün.
+
+---
 ## [v0.28.182] — 2026-09-02
 
 ### Refactor: BPM-069 — AppSettings-Fassade und settings.json-Legacy abgebaut

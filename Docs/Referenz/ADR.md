@@ -2270,6 +2270,7 @@ Drei fundamentale Pivots im Lauf der Diskussion:
 11. **DataClassification + Whitelist** pro Sync-DTO (Klasse-A/B/C laut ADR-047)
 12. **`device_id`** in `device-settings.json` + separater `IDeviceContext` für Sync-History/Audit (zusätzlich zu `IUserContext` aus ADR-052)
 13. **`recognition_profiles`** wandert in DB-Tabelle (post Spike 0). `.bpm/profiles/*.json` bleibt im Servermodus Export/Backup, nicht Source of Truth.
+    *Ergänzung (ADR-058/BPM-109, nachgezogen Teil 53):* `planmanager.db` führt `project_id` redundant in `plan_documents` und im Import-Journal, obwohl die DB pro Projekt liegt — bewusst für Sync-DTOs, Export und den Server-Postgres, in dem alle Projekte in einer DB liegen.
 
 ### Hosting Phase 0/1 (Solo + Herberts eigene Firma, 24 Monate, 5-10 User)
 
@@ -2661,7 +2662,7 @@ Einführung eines Zwei-Schichten-Modells in `bpm.db` (Tabellen `segment_type_gro
 
 **Datum:** 2026-06-08
 **Status:** ✅ Entschieden (Sign-off via CGR-2026-06-08-plan-archiv-architektur r2)
-**Implementierung:** Not Started — Foundation Slice (.01–.04 + .05a Stub) ist V1-Sperrposten
+**Implementierung:** Foundation Slice (.01–.04 + .05a Stub) umgesetzt (Schema v2.0 seit v0.28.55, Drei-Zeiten-Modell .04/.04b, Import-Verdrahtung via ADR-064/BPM-120); Plandaten-Tab BPM-126/127 (v0.28.169–.172). Offen: .05 `IPlanLookupService`-Implementation (post-V1, mit dem ersten konsumierenden Modul BPM-056); .06 Stammdaten-Aliasse in BPM-121 Stufe C1 aufgegangen (Teil 53); .07 Docs-Rest erledigt Teil 53 (v0.28.187)
 **Herkunft:** BPM-109 — erkannt im Chat Teil 41 (Bautagesbericht-Use-Case „zeige damals aktuelle Pläne für Haus H1 EG"). Cross-Review mit ChatGPT (2 Runden) führte zur unten beschriebenen Architektur und Foundation-Slice-Begrenzung.
 
 **Kontext:**

@@ -31,6 +31,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.187] — 2026-09-03
+
+### Docs: BPM-109.07 Docs-Rest + Altlasten-Nachzüge Teil 53 (BPM-084, 086, 087, 092, 109.06)
+
+Docs-Batch aus der Altlasten-Prüfung Teil 53, keine Code-Änderung. **BPM-109.07:** ADR-058-Statuszeile von „Not Started" auf den realen Stand (Foundation Slice umgesetzt, .05 post-V1 mit BPM-056, .06 → BPM-121 C1, .07 erledigt); PlanManager.md Kap. 10 beschreibt die Document-Resolve-Logik jetzt am `ImportExecutionService` (`ResolveOrCreateDocument`, `UpsertSegment`) statt an der gelöschten Pipeline; ADR-053 P.13 um den Hinweis zur `project_id`-Redundanz in `planmanager.db` ergänzt. GLOSSAR (PlanDocumentSegment/PlanRevisionEvent/PlanContextLink) und ADR-010-Hinweis waren bereits vorhanden; die Test-Punkte aus 109.07 sind durch BPM-120 (Import-Charakterisierung), 109.05 (Zeitreise) und BPM-121 C1 (Stammdaten-Mapping) abgedeckt.
+
+**Nachzüge:** BACKLOG #21/#23 — `pattern-templates.json` ist write-only, Lesepfad „Vorlage übernehmen" + Lineage liegt in BPM-121 Stufe C2 (ex BPM-084, geschlossen). DB-SCHEMA `plan_documents.document_type_id` ist seit ADR-061 SoftRef auf `document_types(id)`, nicht „Profil-ID … FK auf recognition_profiles" (Kommentar korrigiert, BPM-092-Description nachgezogen). ClickUp Teil 53: BPM-086 (Save-Guard) und BPM-087 (ProfileBuilder) in BPM-130 Punkte 4/5 aufgegangen; 109.06 in BPM-121 C1; BPM-092 mit Schema nach ADR-065 P.7/P.12 und Dependency auf BPM-090.
+
+---
 ## [v0.28.186] — 2026-09-03
 
 ### Refactor: BPM-083 — Legacy-Importpfad entfernt (ImportWorkflowService, ImportPreviewDialog & Co.)

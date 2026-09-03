@@ -103,9 +103,9 @@ Details: [BauProjektManager_Architektur.md](BauProjektManager_Architektur.md) Ka
 | 18 | Dateinamen-Parser | Segmente splitten an Trennzeichen (ADR-022) ✅ v0.24.3 |
 | 19 | Segment-Zuweiser GUI | 5-Schritt-Wizard: Datei, Segmente, Index, Zielordner, Erkennung ✅ v0.24.10 (UI fertig, Speichern offen). **Mockup-Redesign v0.28.37** (Token-Drag&Drop in Schritt 2, Dropdown+Hierarchie in Schritt 4, Toggle Segmente/Regex in Schritt 5) — siehe [PlanManager.md Kap. 15.6](../Module/PlanManager.md). WPF-Umsetzung pending (Tracker BPM-080.05) |
 | 20 | Plantyp-Erkennung | Segment-basierte Erkennung (positionsgenau) + regex-Fallback ✅ v0.28.32 (BPM-082, ADR-010 erweitert, SchemaVersion 3) |
-| 21 | PatternTemplates | Vorschlagslogik (ADR-010) |
+| 21 | PatternTemplates | Vorschlagslogik (ADR-010) — Bibliothek wird beim Wizard-Save beschrieben; Lesepfad „Vorlage übernehmen" + Lineage → BPM-121 Stufe C2 (ex BPM-084, Teil 53) |
 | 22 | .bpm/profiles/*.json | Pro Projekt im .bpm/-Ordner (ADR-046) — ProfileManager Service |
-| 23 | pattern-templates.json | Globale Musterbibliothek |
+| 23 | pattern-templates.json | Globale Musterbibliothek ✅ v0.25.5 (Cloud `.AppData/`, derzeit write-only — Lesepfad BPM-121 C2) |
 | 24 | Import-Workflow 1-5 | Scan, Parse, Validate, Classify, Plan (ADR-008) — ❌ abgelöst: 7-Stufen-Pipeline (`ImportWorkflowService`) mit BPM-083 (v0.28.186) entfernt; V1-Importweg = Radial/ManualFirstCapture → CaptureConfirm → ImportExecution (ADR-059/064 P.9) |
 | 25 | Import-Vorschau | GUI mit Status, Rechtsklick-Korrektur — ❌ abgelöst: `ImportPreviewDialog` mit BPM-083 (v0.28.186) entfernt (ADR-064 P.9); Vorschau = Radial + Detail-Panel (BPM-111.06) |
 | 26 | Import-Execute | Dateien verschieben, Journal, Finalize |

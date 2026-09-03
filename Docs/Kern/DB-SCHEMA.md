@@ -1059,7 +1059,7 @@ CREATE TABLE plan_documents (
     id TEXT PRIMARY KEY,                -- ULID
     project_id TEXT NOT NULL,           -- redundant zu DB-Pfad, bewusst für Sync/Export
     document_key TEXT NOT NULL UNIQUE,  -- Natural Key vom DocumentKeyBuilder
-    document_type_id TEXT NOT NULL,     -- Profil-ID (aus JSON .bpm/profiles, post-V1 FK auf recognition_profiles BPM-092)
+    document_type_id TEXT NOT NULL,     -- SoftRef bpm.db.document_types(id) (ADR-061, kein FK, Cross-DB); Profil hängt 0..1 am Typ (ADR-065 P.7); post-V1 recognition_profiles BPM-092
     plan_number TEXT NOT NULL,
     document_type TEXT NOT NULL,
     title TEXT NOT NULL DEFAULT '',

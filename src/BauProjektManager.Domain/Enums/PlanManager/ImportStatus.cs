@@ -1,7 +1,7 @@
 namespace BauProjektManager.Domain.Enums.PlanManager;
 
 /// <summary>
-/// Result status of the import version decision (9 types).
+/// Result status of the import version decision (7 types).
 /// Maps to the decision matrix in PlanManager.md Kap. 5.3.
 /// </summary>
 public enum ImportStatus
@@ -19,9 +19,5 @@ public enum ImportStatus
     /// <summary>⚠ Incoming has lower index than existing.</summary>
     OlderRevision,
     /// <summary>Previously no index, now one detected — learn.</summary>
-    LearnIndex,
-    /// <summary>No profile matched — manual assignment needed.</summary>
-    Unknown,
-    /// <summary>Multiple profiles matched — user must choose.</summary>
-    Conflict
+    LearnIndex
 }

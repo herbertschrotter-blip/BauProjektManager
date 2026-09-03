@@ -22,7 +22,7 @@ supersedes: []
   - 3. Konzeptübersicht
   - 4. IndexSource — Dreistufiges Modell (ADR-045)
   - 5. Entscheidungsmatrix (Import-Versionierung)
-  - 6. Workflow — 6 Phasen (0–5), 10-Schritte-Pipeline (ADR-008), 7-Stufen-Analyse
+  - 6. Workflow — 6 Phasen (0–5): ManualFirstCapture-Analyse (ADR-059), Radial-Zuordnung, transaktionale Ausführung (ADR-064)
   - 7. Manueller Sortier-Modus
   - 8. DWG-Veraltet-Warnung
   - 9. Bestandsmanifest — .bpm/plan-index.json
@@ -202,7 +202,7 @@ Wenn ein Dokument bisher keinen Index hatte und plötzlich einer auftaucht:
 1. Import 1: `S-103_TG Wände.pdf` → Plannr 103 unbekannt → Erstversion
 2. Import 2: `S-103-B_TG Wände.pdf` → Plannr 103 bekannt, jetzt mit Index „B"
 
-→ Nachlern-Dialog in Import-Vorschau: „Plan 103 hat jetzt einen Index — Profil anpassen?"
+→ Status LEARN_INDEX. Das automatische Profil-Lernen daraus ist für V1 gestrichen (ADR-064 P.9); der Nutzer bestätigt den Index in der Update-Karte bzw. im Detail-Panel.
 → Bei Bestätigung: Profil erweitert, alte indexlose Datei ins `_Archiv/`
 
 **UI-Warnung:** „Diese Entscheidung ändert das Profil dauerhaft." Default konservativ.
@@ -225,7 +225,7 @@ Identität über `document_key` aus `identityFields` im Profil:
 string BuildDocumentKey(Profile profile, ParsedFile parsed)
 ```
 
-### 5.2 Status-Typen (9 Stück)
+### 5.2 Status-Typen (7 Stück — `UNKNOWN`/`CONFLICT` mit BPM-083 entfernt, ADR-064 P.9)
 
 | Status | Intern | UI-Text (deutsch) | Beschreibung |
 |--------|--------|-------------------|-------------|
@@ -236,8 +236,6 @@ string BuildDocumentKey(Profile profile, ParsedFile parsed)
 | `CHANGED_SAME_INDEX` | changedSameIdx | Geändert (gleicher Index) | ⚠ Warnung! Gleicher Index aber anderer MD5 |
 | `OLDER_REVISION` | olderRevision | Ältere Revision | Eingang bringt B, aber D liegt schon → Warnung |
 | `LEARN_INDEX` | learnIndex | Index erkannt | Bisher kein Index, jetzt einer → Nachanlernen |
-| `UNKNOWN` | unknown | Unklar | Kein Profil erkannt → manuell zuweisen |
-| `CONFLICT` | conflict | Mehrere Profile | Mehrere Profile matchen → User wählt |
 
 ### 5.3 Entscheidungsmatrix
 
@@ -250,8 +248,6 @@ string BuildDocumentKey(Profile profile, ParsedFile parsed)
 | Ja | Ja | Nein | IndexSource=None | **CHANGED_NO_INDEX** |
 | Ja | — | Nein | gleicher Index (FileName) | **CHANGED_SAME_INDEX** ⚠ |
 | Ja | Nein | — | vorher kein Index, jetzt schon | **LEARN_INDEX** |
-| — | — | — | kein Profil erkannt | **UNKNOWN** |
-| — | — | — | mehrere Profile matchen | **CONFLICT** |
 
 **Hinweise:**
 - Entscheidung läuft auf **Revisionsebene** für erkannte Dokumente, auf **Dateiebene** für standalone.
@@ -280,28 +276,33 @@ Ergebnis: RecognitionProfile in `.bpm/profiles/<n>.json` (ADR-046) + PatternTemp
 - Quellen: E-Mail, Portal-Download, USB, Scanner, Explorer
 - Beim App-Start: Alle `_Eingang/`-Ordner prüfen → Badge in Sidebar
 
-### Phase 2 — Import-Analyse (automatisch, 7-Stufen-Pipeline)
+### Phase 2 — Import-Analyse (ManualFirstCapture, ADR-059)
 
-Intern orchestriert durch `ImportWorkflowService.AnalyzeAsync()` (Cross-Review 15.04.2026):
+Seit ADR-064 P.9 (H0-Cutover) gibt es genau einen Importweg. Die frühere 7-Stufen-Pipeline
+(`ImportWorkflowService`: Scan → Fingerprint → Parse → ResolveContext → BuildIdentity →
+VersionDecision → Plan) wurde mit **BPM-083 (v0.28.186)** aus dem Repo entfernt. Aus ihr leben
+weiter: `ImportScanService`, `FileFingerprintService`, `DocumentKeyBuilder`, `RevisionKindDetector`
+sowie `DocumentTypeRecognizer` (L1-Regelauswertung für BPM-121, derzeit ohne Aufrufer).
 
-| Stufe | Service | Was passiert |
+Analyse heute (`ManualFirstCaptureService` — profilunabhängig, persistiert nichts, verschiebt nichts):
+
+| Schritt | Service | Was passiert |
 |-------|---------|-------------|
-| 1. Scan | `ImportScanService` | `_Eingang/` rekursiv durchsuchen, Dateiliste + Basis-Metadaten |
+| 1. Scan | `ImportScanService` | `_Eingang/` rekursiv durchsuchen (FS-Ports, ADR-060) |
 | 2. Fingerprint | `FileFingerprintService` | MD5-Hash + file_size berechnen (bounded parallel) |
-| 3. Parse | `FileParseService` | Dateinamen in Segmente splitten laut Profil-Tokenization |
-| 4. Resolve Context | `ImportContextResolver` | Ordner-Kontext + Profil-Match + Extension → ResolutionEvidence |
-| 5. Build Identity | `DocumentKeyBuilder` | document_key deterministisch aus resolved fields bilden |
-| 6. Version Decision | `RevisionDecisionService` | Entscheidungsmatrix (Kap. 5.3) → 9 Status-Typen |
-| 7. Execution Plan | `ImportPlanBuilder` | Zielpfade berechnen, Dateien gruppieren (nach fachlicher Identity) |
+| 3. Kandidaten | `LightweightPlanExtractor` | Plannummer-/Index-Kandidaten aus dem Dateinamen — ohne Profil |
+| 4. Matching | `ManualFirstCaptureService` | deterministisch gegen `plan_documents` (MD5-Lookup, document_key/Plannummer) → Buckets A Dublette / B Update / C Erstaufnahme / D Konflikt |
 
-**Fehler-/Abbruchstrategie:** Analyse-Fehler pro Datei → Warning/Unknown in Vorschau, kein Gesamtabbruch.
-**CancellationToken:** Durch alle 7 Stufen durchgereicht (async).
+### Phase 3 — Zuordnung (User entscheidet)
 
-### Phase 3 — Import-Vorschau (User entscheidet)
-
-Tabelle mit Status, Dateiname, Dokumenttyp, Nr, Index, Zielordner.
-User kann: Rechtsklick korrigieren, UNKNOWN → manuell zuweisen, LEARN_INDEX bestätigen.
-Import erst nach Bestätigung: Button „Import ausführen".
+Bucket C öffnet das Radial (Kap. 7, BPM-111): Dokumenttyp (Ring 1), Bauteil bzw. Kategorie (Ring 2)
+und Geschoss (Ring 3) kommen aus den Stammdaten; das Detail-Panel ergänzt Titel, Index und Segmente
+(BPM-111.06). Bucket B zeigt Update-Karten (Bestätigen/Überspringen), Bucket A wird als
+`skipDuplicate` journalisiert (ADR-064 P.7). `CaptureConfirmService` baut aus den bestätigten
+`PendingAssignment`s die `ImportDecision`s — document_key aus Stammdaten-IDs, Zielpfad über den
+`DocumentTargetPathResolver` (ADR-061) — erst danach beginnt Phase 4. Die frühere Import-Vorschau
+(`ImportPreviewDialog`) ist mit BPM-083 entfallen; die verbliebenen 7 Status-Typen (Kap. 5.2)
+verarbeitet der `ImportExecutionService`.
 
 ### Phase 4 — Ausführung
 
@@ -331,7 +332,7 @@ Für Scans (`20260409_143522.pdf`), Fotos, nicht erkannte Dateien.
 ### 7.1 Zugang
 
 - Tab „Manuell sortieren" im Projektdetail
-- Rechtsklick → „Manuell zuweisen" bei UNKNOWN in Import-Vorschau
+- Bucket C (Erstaufnahme) der Import-Analyse öffnet das Radial direkt (ADR-059); die frühere Import-Vorschau ist entfallen (BPM-083)
 
 ### 7.2 Dialog
 
@@ -434,7 +435,7 @@ Wird nach jedem Import automatisch aktualisiert.
 **Status:** Schema v1.0 war implementiert seit v0.25.15. **Schema v2.0 DDL implementiert in BPM-109.01 (v0.28.55)** — die Tabellen werden von `PlanManagerDatabase.EnsureTables()` erzeugt. **Models + Repository in BPM-109.02, Pipeline-Verdrahtung in .03 (Import reaktiviert, live verifiziert), Identity-Key-Fix .03b, Zeitlogik + Audit-Events .04, `released_at` .04b** (Stand v0.28.62). Import schreibt jetzt `plan_documents`/`plan_revisions`/`plan_files` über das Drei-Ebenen-Modell; Drei-Zeiten-Modell (`current_from`/`received_at`/`released_at`) aktiv. Offen im Foundation Slice nur noch **BPM-109.05a** (IPlanLookupService-Stub). Drei-Ebenen-Modell + Plan-Archiv-Persistenz — siehe **ADR-058** + **ADR-058-Addendum** und **DB-SCHEMA.md Kap. 6.7** für die vollständige v2.0-Definition mit `plan_documents` (NEU), `plan_revisions` (umgebaut mit FK + Zeitstempeln), `plan_document_segments`, `plan_revision_events`, `plan_context_links` und `building_part_aliases`.
 
 **Pipeline-Erweiterung mit Schema v2.0:**
-Nach Stage 5 (`DocumentKeyBuilder` produziert Natural Key) kommt eine neue **Document-Resolve-Stage**, die das `document_key` in `plan_documents.id` auflöst (Upsert). `ImportPlanBuilder` unterscheidet danach 4 Operationen: `NewDocument`, `NewRevision`, `SupersedeCurrent`, `FileLink`. Extrahierte Segmentwerte landen in `plan_document_segments` mit FK auf `segment_types` (ADR-056). Stammdaten-FKs `building_part_id`/`building_level_id` werden über exakte Normalisierung gegen `building_parts`/`building_levels` (+ `building_part_aliases` post-V1) aufgelöst.
+Nach Stage 5 (`DocumentKeyBuilder` produziert Natural Key) kommt eine neue **Document-Resolve-Stage**, die das `document_key` in `plan_documents.id` auflöst (Upsert). `ImportPlanBuilder` (entfernt mit BPM-083; heute `CaptureConfirmService`/`ImportExecutionService`) unterschied danach 4 Operationen: `NewDocument`, `NewRevision`, `SupersedeCurrent`, `FileLink`. Extrahierte Segmentwerte landen in `plan_document_segments` mit FK auf `segment_types` (ADR-056). Stammdaten-FKs `building_part_id`/`building_level_id` werden über exakte Normalisierung gegen `building_parts`/`building_levels` (+ `building_part_aliases` post-V1) aufgelöst.
 
 **Cross-Modul-API:**
 `IPlanLookupService` (Interface-Stub in V1, Implementation post-V1 parallel zu BPM-056) ist die öffentliche API für konsumierende Module (Bautagebuch, Foto, Vorlagen). Module schreiben Cross-Modul-Verweise in `plan_context_links` mit `resolution_mode = 'fixed_revision'` — alte Berichte zeigen immer dieselbe Revision (ADR-058 fachliche Invariante).
@@ -769,7 +770,7 @@ betroffene `.bpm/profiles/*.json`-Dateien loeschen, im Wizard neu anlegen.
 | `required` pro Segment | Pflicht vs. optional | Ja |
 | `indexMode` | required / optional | Ja |
 | `indexComparison` | Vergleichslogik (alphabetic/numeric) | Ja |
-| `recognitionPriority` | Auflösung bei CONFLICT | Ja |
+| `recognitionPriority` | Reihenfolge bei mehreren passenden Profilen (`DocumentTypeRecognizer`; Status CONFLICT mit BPM-083 entfernt) | Ja |
 | `grouping` | Wie Dateien zu Revisionen gruppiert werden | Ja |
 | `schemaVersion` | Für spätere Migration | Ja |
 | `renameSchema` | Template für manuelle Umbenennung | Ja |
@@ -785,7 +786,6 @@ betroffene `.bpm/profiles/*.json`-Dateien loeschen, im Wizard neu anlegen.
 |--------|-------------|
 | **Hauptseite** | Projektliste mit Eingang-Badge (amber/grün) |
 | **Projektdetail** | 3 Tabs: Profile (gruppiert nach Zielordner, ✎ Profil-Button), Manuell sortieren, Sync |
-| **Import-Vorschau** | DataGrid mit 9 Status-Typen, Zusammenfassungszeile, Rechtsklick-Korrekturen |
 | **Profil-Wizard** | 5 Schritte: Datei auswaehlen → Segmente zuweisen → IndexSource → Zielordner → Erkennung (klickbare Segment-Bloecke) |
 | **Manueller Sortier-Dialog** | Liste mit kontextuellem Radial-Menü beim Klick & Halten |
 
@@ -1138,13 +1138,11 @@ BauProjektManager.PlanManager/
 ├── ViewModels/
 │   ├── PlanManagerViewModel.cs
 │   ├── ProjectDetailViewModel.cs
-│   ├── ImportPreviewViewModel.cs
 │   ├── ManualSortViewModel.cs
 │   └── ProfileWizardViewModel.cs
 ├── Views/
 │   ├── PlanManagerView.xaml
 │   ├── ProjectDetailView.xaml
-│   ├── ImportPreviewDialog.xaml
 │   ├── ManualSortDialog.xaml
 │   └── ProfileWizardDialog.xaml
 ├── Services/
@@ -1153,11 +1151,6 @@ BauProjektManager.PlanManager/
 │   ├── DocumentKeyBuilder.cs          ← document_key deterministisch bilden
 │   ├── ImportScanService.cs           ← Eingang rekursiv scannen
 │   ├── FileFingerprintService.cs      ← MD5-Hashing (bounded parallel)
-│   ├── FileParseService.cs            ← Parser + Recognizer + Feld-Extraktion
-│   ├── ImportContextResolver.cs       ← Ordner-Kontext + Stage + Evidence
-│   ├── RevisionDecisionService.cs     ← 9-Status Entscheidungsmatrix
-│   ├── ImportPlanBuilder.cs           ← Zielpfade berechnen
-│   ├── ImportWorkflowService.cs       ← 7-Stufen-Pipeline Orchestrator
 │   ├── ImportExecutionService.cs      ← Dateien verschieben + Journal + DB
 │   ├── RecoveryDecisionService.cs     ← Recovery-Entscheidung beim App-Start (pending → Reparatur)
 │   ├── RecoveryExecutorService.cs     ← Recovery-Aktionen ausführen
@@ -1182,8 +1175,8 @@ BauProjektManager.PlanManager/
 | 4 | 21 | PatternTemplates (Vorschlagslogik) | ✅ v0.25.5 |
 | 5 | 22 | .bpm/profiles/ (Pro Projekt) — ProfileManager + v1→v2 Migration | ✅ v0.25.8 |
 | 6 | 23 | pattern-templates.json (Globale Bibliothek) | ✅ v0.25.5 |
-| 7 | 24 | Import-Pipeline 7 Services (Scan→Fingerprint→Parse→Resolve→Key→Decision→Plan) | ✅ v0.25.11 + v0.27.5 (BPM-001 DB-Anbindung) |
-| 8 | 25 | Import-Vorschau (DataGrid, 9 Status-Typen) | ✅ v0.25.14 |
+| 7 | 24 | Import-Pipeline 7 Services (Scan→Fingerprint→Parse→Resolve→Key→Decision→Plan) | ✅ v0.25.11 + v0.27.5 → ❌ entfernt BPM-083 (v0.28.186), ADR-064 P.9 |
+| 8 | 25 | Import-Vorschau (DataGrid, 9 Status-Typen) | ✅ v0.25.14 → ❌ entfernt BPM-083 (v0.28.186) |
 | 9 | 26 | Import-Execute (Verschieben, Journal, DB-Update) | ✅ v0.25.15 |
 | 10 | 27 | Index-Archivierung (_Archiv/) | ✅ v0.25.15 |
 | 11 | 28 | DB-Schema (6 SQLite-Tabellen, planmanager.db) | ✅ v0.25.13 |
@@ -1191,7 +1184,7 @@ BauProjektManager.PlanManager/
 | 13 | 30 | Undo (letzter Import + Preflight) | ⬜ |
 | 14 | 31 | Backup vor Import | ⬜ |
 | 15 | 32 | Manueller Sortier-Modus + Umbenennung | ⬜ |
-| 16 | 33 | Erkennungs-Konflikt (CONFLICT) | ⬜ |
+| 16 | 33 | Erkennungs-Konflikt (CONFLICT) | ❌ gestrichen Teil 52 (BPM-020); Status CONFLICT entfernt BPM-083 |
 
 ---
 

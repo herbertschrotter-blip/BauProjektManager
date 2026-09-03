@@ -83,22 +83,6 @@ public class PlanArchiveRepositoryTests
     }
 
     [Fact]
-    public void GetCurrentRevisionLookup_ReturnsCurrentRevision_KeyedByDocumentKey()
-    {
-        using var f = new TestDb();
-        var docId = CreateDoc(f.Repo);
-        var now = DateTime.UtcNow.ToString("o");
-        var revId = f.Repo.InsertRevision(docId, "A", "FileName",
-            PlanArchive.Status.Current, now, null, now, null);
-
-        var lookup = f.Repo.GetCurrentRevisionLookup();
-        Assert.True(lookup.ContainsKey(Key));
-        Assert.Equal(revId, lookup[Key].RevisionId);
-        Assert.Equal("A", lookup[Key].LatestIndex);
-        Assert.Equal("", lookup[Key].Md5);   // noch keine Datei verknüpft (LEFT JOIN)
-    }
-
-    [Fact]
     public void UxCurrentRevision_SecondCurrentForSameDocument_Throws()
     {
         using var f = new TestDb();

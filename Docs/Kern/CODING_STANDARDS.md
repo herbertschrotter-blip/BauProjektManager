@@ -740,18 +740,18 @@ PlanManager/
 ├── ViewModels/                     ← Logik + State für die GUI
 │   ├── PlanManagerViewModel.cs      ← partial class : ObservableObject
 │   ├── ProjectDetailViewModel.cs
-│   ├── ImportPreviewViewModel.cs
+│   ├── ManualCaptureViewModel.cs
 │   └── ProfileWizardViewModel.cs
 ├── Views/                          ← XAML Dateien (rein visuell)
 │   ├── MainWindow.xaml
 │   ├── MainWindow.xaml.cs          ← Minimal! Nur DataContext setzen
 │   ├── ProjectDetailView.xaml
-│   ├── ImportPreviewDialog.xaml
+│   ├── ManualCaptureView.xaml
 │   └── SegmentAssignerDialog.xaml
 ├── Services/                       ← Geschäftslogik (in Domain + Infrastructure)
 │   ├── FileNameParser.cs
 │   ├── DocumentTypeRecognizer.cs
-│   ├── ImportWorkflowService.cs
+│   ├── ImportExecutionService.cs
 │   └── ProfileManager.cs
 ├── Converters/                     ← WPF Value Converters
 │   ├── StatusToColorConverter.cs

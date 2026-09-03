@@ -28,7 +28,7 @@ supersedes: []
 - Fachliche Invarianten:
   - Sidebar links (56px) für Modul-Wechsel — keine Top-Level-Toolbar dafür
   - Toolbar nur innerhalb eines Moduls wenn es mehrere Seiten hat
-  - Modale Dialoge (Import, Wizard) überlagern das Hauptfenster
+  - Modale Dialoge (Wizard) überlagern das Hauptfenster
 
 ---
 
@@ -95,7 +95,7 @@ wenn dieses Modul mehrere Seiten hat und Navigation/Aktionen braucht.
 | Screen | Toolbar? | Inhalt |
 |--------|----------|--------|
 | PlanManager Projektliste | Minimal | Nur Titel „PlanManager" |
-| PlanManager Projektdetail | Ja | ← Zurück, Projektname, ↩ Rückgängig, [Import starten] |
+| PlanManager Projektdetail | Ja | ← Zurück, Projektname, ↩ Rückgängig |
 | Einstellungen | Minimal | Nur Titel „Einstellungen" |
 | Modal-Dialoge | Nein | Modal hat eigenen Header mit Titel + Buttons |
 
@@ -126,16 +126,12 @@ SIDEBAR                CONTENT
 [Einstell.] ──────►   Einstellungen (SettingsView)
 ```
 
-### 4.2 Modal-Dialoge (2 Stück)
+### 4.2 Modal-Dialoge (1 Stück — die Import-Vorschau ist mit BPM-083 entfallen, ADR-064 P.9)
 
 Öffnen sich über dem aktiven Hauptfenster. Dunkler Overlay-Hintergrund.
 
 ```
 Projektdetail
-    │
-    ├── [Import starten] ──►  Import-Vorschau (ImportPreviewDialog)
-    │                          Zusammenfassungszeile, DataGrid, 9 Status
-    │                          Buttons: Abbrechen + Import ausführen
     │
     ├── [✎ Profil]      ──►  Profil-Wizard (ProfileWizardDialog)
     │                          5 Schritte mit Progress-Bar:
@@ -157,9 +153,7 @@ Projektdetail
 | Sidebar | Einstellungen | Sidebar-Icon „Einstell." |
 | Projektliste | Projektdetail | Klick auf Projekt-Zeile |
 | Projektdetail | Projektliste | ← Zurück in Toolbar |
-| Projektdetail | Import-Vorschau | Button „Import starten" (Modal) |
 | Projektdetail | Profil-Wizard | Button „✎ Profil" oder „+ Neuer Typ" (Modal) |
-| Import-Vorschau | Projektdetail | Button „Abbrechen" (Modal schließen) |
 | Profil-Wizard | Projektdetail | Button „Abbrechen" oder „Speichern" (Modal schließen) |
 
 ---
@@ -188,7 +182,6 @@ Am unteren Rand der Shell. Zeigt kontextabhängig:
 | Projektliste | bpm.db · 3 Projekte | Bereit |
 | Projektdetail | ÖWG · 6 Profile · 119 Dok. | 15 im Eingang |
 | Einstellungen | Einstellungen | — |
-| Import-Vorschau | Import läuft... | Fortschritt |
 
 ---
 
@@ -197,10 +190,10 @@ Am unteren Rand der Shell. Zeigt kontextabhängig:
 1. **Sidebar = Modul-Wechsel.** Immer sichtbar, immer gleich.
 2. **Toolbar = Seiten-Navigation innerhalb eines Moduls.** Nur wenn nötig.
 3. **Tabs = Unter-Ansichten auf derselben Seite.** Kein neues Fenster.
-4. **Modals = Temporäre Aufgaben.** Import-Vorschau und Wizard.
+4. **Modals = Temporäre Aufgaben.** Profil-Wizard; die Import-Vorschau ist mit BPM-083 entfallen (Zuordnung läuft im Radial der Seite „Manuell sortieren").
 5. **Max. 1 Primary Button** pro sichtbarem Kontext (P2-Regel).
 6. **Badges in Sidebar** zeigen offene Aufgaben (Dateien im Eingang).
-7. **Keine verschachtelten Modals.** Wizard und Import sind eigenständige Dialoge.
+7. **Keine verschachtelten Modals.** Der Wizard ist ein eigenständiger Dialog.
 8. **Escape schließt Modal** (mit Dirty-Check bei ungespeicherten Änderungen).
 
 ---

@@ -4,8 +4,8 @@ namespace BauProjektManager.PlanManager.Services;
 
 /// <summary>
 /// Klassifiziert einen Index-/Revisions-Token (BPM-111.02).
-/// Zentralisiert die bisher private Logik aus dem ImportWorkflowService —
-/// eine Stelle fuer Pipeline UND Lightweight-Extractor.
+/// Zentralisiert die Index-Klassifikation (urspruenglich privat im mit BPM-083 entfernten ImportWorkflowService) —
+/// eine Stelle fuer Import UND Lightweight-Extractor.
 /// </summary>
 public static class RevisionKindDetector
 {

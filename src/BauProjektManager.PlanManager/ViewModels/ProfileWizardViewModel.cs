@@ -705,7 +705,7 @@ public partial class ProfileWizardViewModel : ObservableObject
                 .ToList();
 
             // BPM-113.06 Slice 0.6c: DocumentTypeId = stabile type.Id aus den Stammdaten
-            // (resolverbar in ImportPlanBuilder/DocumentTargetPathResolver). Kein TargetFolder
+            // (resolverbar im DocumentTargetPathResolver). Kein TargetFolder
             // mehr — der Zielordner kommt ausschliesslich aus der DB (ADR-061).
             var profile = _profileManager.BuildFromWizard(
                 documentTypeName: DocumentTypeName,

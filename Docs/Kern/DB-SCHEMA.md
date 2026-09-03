@@ -1121,7 +1121,7 @@ ON plan_revisions(document_id, current_from, superseded_at, is_deleted);
 **Status-Semantik:**
 - `current` — aktuelle gültige Revision (pro `document_id` maximal eine via UNIQUE-Index)
 - `superseded` — durch nächste Revision fachlich abgelöst, `superseded_at` gesetzt
-- `rejected` — bewusst verworfene Revision (z.B. ungültiger Vorabzug aus `RevisionDecisionService`), kein `current`, `superseded_at` als Verwerfungs-Zeitpunkt
+- `rejected` — bewusst verworfene Revision (z.B. bewusst verworfener Vorabzug), kein `current`, `superseded_at` als Verwerfungs-Zeitpunkt
 
 **Drei-Zeiten-Modell (BPM-109.04/.04b):**
 - `current_from` / `superseded_at` — technisches **Gültigkeitsfenster** (Supersede-Kette). Invariante: `superseded_at`(alt) == `current_from`(neu) → Zeitreise lückenlos (ein `actionTime` pro Import-Aktion).

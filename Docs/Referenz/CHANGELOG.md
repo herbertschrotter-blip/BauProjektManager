@@ -31,6 +31,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.186] — 2026-09-03
+
+### Refactor: BPM-083 — Legacy-Importpfad entfernt (ImportWorkflowService, ImportPreviewDialog & Co.)
+
+ADR-064 P.9 hatte den klassischen Profil-Import („Import starten" → Vorschau-Dialog) aus dem V1-Nutzerpfad genommen, die Klassen aber „vorerst" im Repo belassen. Dieses Vorerst endet hier: **gelöscht** sind `ImportWorkflowService` (7-Stufen-Pipeline inkl. Record `ImportAnalysisResult`), `FileParseService`, `ImportContextResolver` (inkl. `ResolvedContext`), `RevisionDecisionService` (inkl. `ExistingRevision`), `ImportPlanBuilder` (inkl. `MapRings`), `ImportPreviewDialog` + `ImportPreviewViewModel` sowie `PlanManagerDatabase.GetCurrentRevisionLookup()` — insgesamt 10 Dateien, ~920 Zeilen, keine DI-Registrierung, kein Aufrufer in App oder Views. Die Enum-Mitglieder ohne lebenden Aufrufer `ImportStatus.Unknown`/`Conflict` und `ImportWarningCode.MultipleProfileMatches` sind entfernt (Status-Matrix 9 → 7). Kommentar-Verweise in `SegmentTypeIds`, `PlanManagerDatabase`, `RevisionKindDetector`, `ProfileWizardViewModel`, `ClassifiedImportFile` bereinigt.
+
+**Entscheidungen Herbert:** `MapRings` (Felder → Ring 2/3) wird nicht in den `DocumentTargetPathResolver` gezogen — der Radial-Pfad liefert Ring 2/3 als Stammdaten-IDs; die Regel bleibt in ADR-061 dokumentiert, Merker-Kommentar an BPM-121 für die spätere Vorbelegung aus L1/L2a-Vorschlägen. `GetCurrentRevisionLookup` war eine dritte, redundante Bestandssicht (Live-Pfad: `GetKnownMd5Lookup`, `GetCurrentDocumentLookup`, `GetDocumentByKey`). **Bleibt:** `DocumentTypeRecognizer` + 23 Tests (L1-Regelauswertung für BPM-121, derzeit ohne Aufrufer). Geklärt: `ProfileWizardViewModel` nutzte `ImportPlanBuilder` nie (nur Kommentar) — keine Kopplung zu BPM-130. Tag post-v1 → v1 (vorgezogen).
+
+**Mit im Commit — Fix Regression aus BPM-069 (v0.28.182):** Beim Löschen von `AppSettings.cs` ging `GetDefaultFolderTemplate()` samt der Dokumenttyp-Metadaten (`CreatesDocumentType`, `DocumentTypeKey`, `Ring2Source`, `Categories` für 7 Typen, ADR-061 Slice 0.4a) verloren; der Seed lief seither auf `SharedConfigDefaults.GetDefaultFolderTemplate()` ohne diese Metadaten und legte für neue Projekte **0 Dokumenttypen** an (Ring 1 leer, Resolver Fail-Fast). Die „516/516 grün" nach v0.28.182 stammten aus veralteten Test-Binaries (`--no-build`). Die 7 Typ-Blöcke sind jetzt in `SharedConfigDefaults` wiederhergestellt. Tests: 516 − 9 gelöschte (ImportAnalysisResultTests 3, ImportPlanBuilderMappingTests 5, GetCurrentRevisionLookup 1) = **507/507 grün** nach vollständigem Neubau.
+
+Docs: PlanManager.md (Quickload Kap. 6, Kap. 4.4, 5.2/5.3, 6 Phase 2/3 auf ManualFirstCapture + Radial umgeschrieben, 7.1, 10, 14.2, 15.1, 16, 17), ADR-064 P.9, BACKLOG #24/#25, UI_Navigation (Modal-Dialoge 2 → 1), CODING_STANDARDS/WPF_UI_Architecture-Dateibäume, GLOSSAR/DB-SCHEMA „rejected"-Beispiel.
+
+---
 ## [v0.28.185] — 2026-09-02
 
 ### Feature: BPM-073 — Ordnerstruktur-Baum breiter: Dialog vergrößerbar + Splitter Baum/Vorschau

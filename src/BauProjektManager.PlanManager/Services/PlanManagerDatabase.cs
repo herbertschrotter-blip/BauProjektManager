@@ -339,7 +339,7 @@ public class PlanManagerDatabase : IDisposable
     // === PLAN ARCHIVE v2.0 (BPM-109.02 Repository-Primitive) ===
     //
     // Additive Document-zentrische Primitive gegen das Drei-Ebenen-Schema. Die Pipeline-Verdrahtung
-    // (ImportExecutionService/ImportWorkflowService auf diese Methoden) erfolgt in BPM-109.03, die
+    // (ImportExecutionService auf diese Methoden) erfolgt in BPM-109.03, die
     // Revision-Zeitlogik (Supersede-Übergänge) in BPM-109.04. Cross-DB-Bezüge sind Soft References
     // (kein FK), Validierung service-seitig. Audit-/Sync-Spalten werden hier gesetzt.
 
@@ -830,37 +830,6 @@ public class PlanManagerDatabase : IDisposable
                 reader.IsDBNull(9) ? null : reader.GetString(9),
                 reader.GetString(10)));
         }
-        return result;
-    }
-
-    /// <summary>
-    /// Lookup aller aktuellen Revisionen, keyed by document_key — der v2.0-Ersatz für die in .01
-    /// Fail-Fast gesetzte GetAllCurrentRevisions. Wird in BPM-109.03 vom RevisionDecisionService genutzt.
-    /// md5 kommt aus der primären Datei (LEFT JOIN — leer wenn noch keine Datei verknüpft).
-    /// </summary>
-    public Dictionary<string, ExistingRevision> GetCurrentRevisionLookup()
-    {
-        var conn = GetConnection();
-        var result = new Dictionary<string, ExistingRevision>();
-        var cmd = conn.CreateCommand();
-        cmd.CommandText = """
-            SELECT pd.document_key, pr.id, pr.plan_index, COALESCE(pf.md5_hash, '') AS md5
-            FROM plan_documents pd
-            JOIN plan_revisions pr ON pr.document_id = pd.id
-                AND pr.revision_status = 'current' AND pr.is_deleted = 0
-            LEFT JOIN revision_file_links rfl ON rfl.revision_id = pr.id AND rfl.is_primary = 1
-            LEFT JOIN plan_files pf ON pf.id = rfl.file_id
-            WHERE pd.is_deleted = 0
-            """;
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read())
-        {
-            result[reader.GetString(0)] = new ExistingRevision(
-                reader.GetString(1),
-                reader.IsDBNull(2) ? null : reader.GetString(2),
-                reader.GetString(3));
-        }
-        Log.Debug("planmanager.db: {Count} aktuelle Revisionen (v2.0 Lookup)", result.Count);
         return result;
     }
 

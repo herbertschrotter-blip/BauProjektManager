@@ -112,7 +112,7 @@ BauProjektManager.Settings/
 BauProjektManager.PlanManager/
 ├── Views/
 │   ├── PlanManagerView.xaml
-│   ├── ImportPreviewDialog.xaml
+│   ├── ManualCaptureView.xaml
 │   └── ...
 └── ViewModels/
     ├── PlanManagerViewModel.cs

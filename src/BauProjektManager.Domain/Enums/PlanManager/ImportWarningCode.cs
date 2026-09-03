@@ -7,7 +7,6 @@ namespace BauProjektManager.Domain.Enums.PlanManager;
 public enum ImportWarningCode
 {
     MissingFolderContext,
-    MultipleProfileMatches,
     MultiplePlanNumbers,
     IndexExtractedFromFallback,
     StageDerivedFromFolder,

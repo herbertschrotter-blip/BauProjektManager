@@ -5,8 +5,8 @@ namespace BauProjektManager.Domain.Models.PlanManager;
 /// Built-in-Segmenttypen (BPM-110). Diese IDs sind zugleich die Keys in
 /// <c>ParsedImportFile.ExtractedFields</c> und in <c>RecognitionProfile.IdentityFields</c>.
 ///
-/// Schreiber (FileParseService via <c>SegmentDefinition.FieldTypeId</c>) und Leser
-/// (ImportWorkflowService, DocumentKeyBuilder) MUESSEN dieselben Konstanten verwenden —
+/// Schreiber (CaptureConfirmService aus der Radial-Zuordnung) und Leser
+/// (DocumentKeyBuilder, ImportExecutionService) MUESSEN dieselben Konstanten verwenden —
 /// nie String-Literale. Custom-Segmenttypen verwenden ULIDs und sind hier nicht gelistet.
 /// </summary>
 public static class SegmentTypeIds

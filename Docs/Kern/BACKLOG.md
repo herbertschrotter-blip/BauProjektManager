@@ -106,8 +106,8 @@ Details: [BauProjektManager_Architektur.md](BauProjektManager_Architektur.md) Ka
 | 21 | PatternTemplates | Vorschlagslogik (ADR-010) |
 | 22 | .bpm/profiles/*.json | Pro Projekt im .bpm/-Ordner (ADR-046) — ProfileManager Service |
 | 23 | pattern-templates.json | Globale Musterbibliothek |
-| 24 | Import-Workflow 1-5 | Scan, Parse, Validate, Classify, Plan (ADR-008) |
-| 25 | Import-Vorschau | GUI mit Status, Rechtsklick-Korrektur |
+| 24 | Import-Workflow 1-5 | Scan, Parse, Validate, Classify, Plan (ADR-008) — ❌ abgelöst: 7-Stufen-Pipeline (`ImportWorkflowService`) mit BPM-083 (v0.28.186) entfernt; V1-Importweg = Radial/ManualFirstCapture → CaptureConfirm → ImportExecution (ADR-059/064 P.9) |
+| 25 | Import-Vorschau | GUI mit Status, Rechtsklick-Korrektur — ❌ abgelöst: `ImportPreviewDialog` mit BPM-083 (v0.28.186) entfernt (ADR-064 P.9); Vorschau = Radial + Detail-Panel (BPM-111.06) |
 | 26 | Import-Execute | Dateien verschieben, Journal, Finalize |
 | 27 | Index-Archivierung | Alte Indizes → _Archiv/ |
 | 28 | Undo-Journal | 3 SQLite-Tabellen (ADR-009) |

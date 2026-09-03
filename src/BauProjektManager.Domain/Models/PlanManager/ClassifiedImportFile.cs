@@ -29,7 +29,7 @@ public sealed record ClassifiedImportFile(
     string? BuildingLevelId = null);
 
 /// <summary>
-/// Final import decision for one file — ready for preview UI.
+/// Final import decision for one file — ready for execution (ImportExecutionService).
 /// Contains status, document key, target path, and human-readable reasons.
 /// </summary>
 public sealed record ImportDecision(

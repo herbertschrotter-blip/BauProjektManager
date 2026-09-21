@@ -31,6 +31,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.188] — 2026-09-16
+
+### Docs: Tracker-Profil in CLAUDE.md (tracker-Skill v0.35, Claude Code)
+
+Der tracker-Skill liest die Projekt-Config in Claude Code seit heute über einen Abschnitt `## Tracker-Profil` in der CLAUDE.md statt über Memory-Einträge (Skill-Repo `projects/bpm/`). Neuer Abschnitt mit Projekt-Kennung, Skill-Repo-Pfad (OneDrive-relativ), Config-Pfad, ClickUp-Spaces, Nummernschema (Next: BPM-131), Anker-Präfix und Status-Werten. Keine Code-Änderung. Nebenbei in ClickUp nach Skill-Regeln korrigiert: Meilenstein-Tags von den sechs BPM-121-Subtasks entfernt (nur Hauptaufgaben tragen Tags, Zielversion-Feld bleibt), Zielversion BPM-121 „post-v1" und BPM-130 „v1" vereinheitlicht, Commit-Text bei vier Zero-Change-Schließungen (084, 086, 087, 109.06) geleert.
+
+---
 ## [v0.28.187] — 2026-09-03
 
 ### Docs: BPM-109.07 Docs-Rest + Altlasten-Nachzüge Teil 53 (BPM-084, 086, 087, 092, 109.06)

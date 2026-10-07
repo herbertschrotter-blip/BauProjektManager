@@ -31,6 +31,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.189] — 2026-10-08
+
+### Docs: Skill-Profil v1 in CLAUDE.md + Tracker-Config im Repo (Next: BPM-131)
+
+Der tracker-Skill liest die Projekt-Config jetzt über das Skill-Profil v1: Abschnitt `## Skill-Profil` in der CLAUDE.md (Grundfelder Profil-Version, Projekt-ID, Repo, Branch-Policy `current` + `### Tracker` mit Provider `clickup` und Config-Pfad) ersetzt den Abschnitt `## Tracker-Profil` aus v0.28.188, der auf das inzwischen entfernte `projects/bpm/` im Skill-Repo verwies und die nächste Nummer doppelt führte. Die Config liegt neu unter `.claude/skill-config/tracker.md` (Provider, Nummernschema mit nächster freier Nummer BPM-131, Listen-Routing, Statusmodell, Feld- und Option-IDs, Quittungsformat, Meilenstein-Tags); die beim Übertrag fehlenden Aufwand-Option-IDs (S/M/L/XL) sind aus ClickUp nachgetragen. `.gitignore` versioniert jetzt `.claude/skill-config/`, alles andere unter `.claude/` bleibt lokal. Keine Code-Änderung.
+
+---
 ## [v0.28.188] — 2026-09-16
 
 ### Docs: Tracker-Profil in CLAUDE.md (tracker-Skill v0.35, Claude Code)

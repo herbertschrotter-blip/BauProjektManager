@@ -60,12 +60,13 @@ src/
 - UI/UX: Docs/Referenz/UI_UX_Guidelines.md
 - Backlog: Docs/Kern/BACKLOG.md
 
-## Tracker-Profil
+## Skill-Profil
 
-- Projekt: bpm
-- Skill-Repo (OneDrive-relativ): Dokumente\02 Arbeit\05 Vorlagen - Scripte\00_claude-skills-bpm
-- Projekt-Config: projects/bpm/
-- ClickUp: Space „BPM Entwicklung" 901510792907 (17 Modul-Listen, z.B. PlanManager 901522848097), Space „Claude Skills Entwicklung" 901510833068 (Skill-Issues-Ordner 901515724728)
-- Nummernschema: BPM-NNN | KÜRZEL | Titel, Next: BPM-131
-- Anker-Präfix: BPM (`[BPM-ANCHOR-<task-id>]`)
-- Status-Werte: open / in progress / done (Skill-Issue-Listen: to do / in progress / complete)
+- Profil-Version: 1
+- Projekt-ID: bpm
+- Repo: herbertschrotter-blip/BauProjektManager
+- Branch-Policy: current
+
+### Tracker
+- Provider: clickup
+- Config: .claude/skill-config/tracker.md

@@ -1479,9 +1479,11 @@ Im BPM-Projekt wird ein einheitliches single-line-Format verwendet:
 
 ### 15.3 Versionsbump-Regeln (SemVer)
 
-- **PATCH** (`0.27.25 → 0.27.26`): Bugfix, kleine Doc-Korrektur, kein Verhaltens-Change für User
-- **MINOR** (`0.27.x → 0.28.0`): neues Feature, neue Tabelle, Modul-Erweiterung — abwärtskompatibel
-- **MAJOR** (`0.x.x → 1.0.0`): Breaking Change, V1-Release, inkompatible API-Änderung
+Verbindlich ist die Versionsregel im Skill-Profil der `CLAUDE.md` (`### Commit`). Kurzfassung der gelebten Praxis seit v0.28.0:
+
+- **PATCH** (`0.28.188 → 0.28.189`): jeder Commit — Feature, Fix, Refactor, Docs — mit Eintrag in CHANGELOG.md
+- **MINOR** (`0.28.x → 0.29.0`): nur auf Ansage von Herbert (z.B. Meilenstein)
+- **MAJOR** (`0.x.x → 1.0.0`): nur auf Ansage von Herbert (V1-Release, Breaking Change)
 
 ### 15.4 Längere Commit-Bodies
 

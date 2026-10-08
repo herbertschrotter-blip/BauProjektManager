@@ -19,7 +19,7 @@ supersedes: []
 - Pflichtlesen: keine (gezieltes Nachschlagen per Version)
 - Fachliche Invarianten:
   - Keep-a-Changelog Format, chronologisch absteigend (neueste oben)
-  - Semantic Versioning: PATCH=Fix, MINOR=Feature, MAJOR=Breaking Change
+  - Versionsnummer x.y.z: jeder Commit +1 PATCH (auch Feature); MINOR/MAJOR nur auf Ansage (Regel: Skill-Profil der CLAUDE.md → Commit)
   - Jeder Commit = ein Eintrag mit Version, Datum und Beschreibung
 
 ---
@@ -31,6 +31,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.190] — 2026-10-08
+
+### Docs: Commit-Profil im Skill-Profil (Checks build/test, Versionsregel PATCH je Commit)
+
+`## Skill-Profil` in der CLAUDE.md um `### Checks` und `### Commit` ergänzt: Format mit kombinierbaren Modulen (z.B. `INF+Docs`), Modul-Liste mit Pfaden (App, DevTools, Domain, INF, PlanManager, Settings, Tests, Docs, Build), Versionsquelle `Directory.Build.props#Version`, Push-Policy `user-only`, Doku-Check per Verweis auf INDEX.md Kapitel 6. Neue Pre-Commit-Checks `build` und `test` (`dotnet build` / `dotnet test` auf `BauProjektManager.slnx`), nur bei Änderungen unter `src/**` oder `tests/**`. Versionsregel auf die gelebte Praxis seit v0.28.0 festgelegt: jeder Commit +1 PATCH (auch Feature) mit CHANGELOG-Eintrag, MINOR/MAJOR nur auf Ansage; CODING_STANDARDS 15.3 und der CHANGELOG-Quickload sind angeglichen, `## Git` in der CLAUDE.md verweist auf das Profil. ADR-023 bleibt als historische Entscheidung unverändert. Keine Code-Änderung.
+
+---
 ## [v0.28.189] — 2026-10-08
 
 ### Docs: Skill-Profil v1 in CLAUDE.md + Tracker-Config im Repo (Next: BPM-131)

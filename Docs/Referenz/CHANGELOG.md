@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.197] — 2026-11-12
+
+### Fix: Re-Import nach Undo scheitert nicht mehr am UNIQUE auf document_key (R01-006.01)
+
+Undo und Rollback nehmen ein Dokument per Soft-Delete zurück; `plan_documents.document_key` ist aber voll UNIQUE. `ResolveOrCreateDocument` suchte nur unter `is_deleted = 0` und versuchte deshalb ein INSERT mit demselben Schlüssel — SQLite Error 19, die Action wurde `failed`, das Journal blieb `pending` und blockierte den nächsten Confirm. Jetzt wird ein soft-gelöschtes Dokument mit gleichem Schlüssel reaktiviert (Klassifikation des neuen Imports, `last_modified_at`, `sync_version + 1`); die Dokument-ID bleibt über Undo und Re-Import stabil. Neuer Regressionstest „Import → Undo → gleicher Import“ (`ImportReverseEndStateTests`), 508/508 grün. (Audit Review 01, R01-006 / DB-01)
+
+---
 ## [v0.28.196] — 2026-11-12
 
 ### Fix: Release-Build bricht nicht mehr am DevTools-Handler (R01-010)

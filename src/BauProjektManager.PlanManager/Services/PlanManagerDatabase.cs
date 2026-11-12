@@ -346,6 +346,10 @@ public class PlanManagerDatabase : IDisposable
     /// <summary>
     /// Sucht ein plan_documents per document_key (find) oder legt es neu an (create).
     /// Gibt die document_id zurück. Idempotent bzgl. document_key (UNIQUE).
+    /// R01-006 (ADR-064 P.1): ein soft-geloeschtes Dokument mit gleichem Schluessel
+    /// (Undo/Rollback hat es zurueckgenommen) wird reaktiviert statt neu angelegt —
+    /// sonst scheitert der Re-Import am vollen UNIQUE auf document_key, und die
+    /// Dokument-ID bleibt ueber Undo + Re-Import stabil.
     /// </summary>
     public string ResolveOrCreateDocument(
         string projectId, string documentKey, string documentTypeId,
@@ -355,13 +359,29 @@ public class PlanManagerDatabase : IDisposable
     {
         var conn = GetConnection();
         var findCmd = conn.CreateCommand();
-        findCmd.CommandText = "SELECT id FROM plan_documents WHERE document_key = @dk AND is_deleted = 0";
+        findCmd.CommandText = "SELECT id, is_deleted FROM plan_documents WHERE document_key = @dk";
         findCmd.Parameters.AddWithValue("@dk", documentKey);
-        if (findCmd.ExecuteScalar() is string existingId)
+        string? existingId = null;
+        var existingDeleted = false;
+        using (var reader = findCmd.ExecuteReader())
+        {
+            if (reader.Read())
+            {
+                existingId = reader.GetString(0);
+                existingDeleted = reader.GetInt64(1) != 0;
+            }
+        }
+
+        var now = DateTime.UtcNow.ToString("o");
+        if (existingId is not null)
+        {
+            if (existingDeleted)
+                ReactivateDocument(existingId, documentTypeId, planNumber, documentType, title,
+                    targetFolder, relativeDirectory, buildingPartId, buildingLevelId, now);
             return existingId;
+        }
 
         var id = _idGenerator.NewId();
-        var now = DateTime.UtcNow.ToString("o");
         var cmd = conn.CreateCommand();
         cmd.CommandText = """
             INSERT INTO plan_documents (id, project_id, document_key, document_type_id,
@@ -386,6 +406,38 @@ public class PlanManagerDatabase : IDisposable
         cmd.ExecuteNonQuery();
         Log.Debug("plan_documents angelegt: {Key} -> {Id}", documentKey, id);
         return id;
+    }
+
+    /// <summary>
+    /// Reaktiviert ein soft-geloeschtes Dokument mit der Klassifikation des neuen Imports
+    /// (R01-006, Re-Import nach Undo/Rollback). Sync-Felder nach CODING_STANDARDS 19.
+    /// </summary>
+    private void ReactivateDocument(
+        string id, string documentTypeId, string planNumber, string documentType, string title,
+        string targetFolder, string relativeDirectory,
+        string? buildingPartId, string? buildingLevelId, string now)
+    {
+        var cmd = GetConnection().CreateCommand();
+        cmd.CommandText = """
+            UPDATE plan_documents SET is_deleted = 0,
+                document_type_id = @dti, plan_number = @pn, document_type = @dt, title = @ti,
+                target_folder = @tf, relative_directory = @rd,
+                building_part_id = @bp, building_level_id = @bl,
+                last_modified_at = @ua, sync_version = sync_version + 1
+            WHERE id = @id
+            """;
+        cmd.Parameters.AddWithValue("@id", id);
+        cmd.Parameters.AddWithValue("@dti", documentTypeId);
+        cmd.Parameters.AddWithValue("@pn", planNumber);
+        cmd.Parameters.AddWithValue("@dt", documentType);
+        cmd.Parameters.AddWithValue("@ti", title);
+        cmd.Parameters.AddWithValue("@tf", targetFolder);
+        cmd.Parameters.AddWithValue("@rd", relativeDirectory);
+        cmd.Parameters.AddWithValue("@bp", (object?)buildingPartId ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@bl", (object?)buildingLevelId ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@ua", now);
+        cmd.ExecuteNonQuery();
+        Log.Debug("plan_documents reaktiviert: {Id}", id);
     }
 
     /// <summary>Lädt ein plan_documents per document_key (oder null).</summary>

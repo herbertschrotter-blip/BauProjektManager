@@ -31,6 +31,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.191] — 2026-11-12
+
+### Docs: R01-001-Entscheidungen in ADR.md — Addenda + neues ADR-066
+
+Erster von vier Docs-Commits, die die 20 Grundsatzentscheidungen aus Audit Review 01 (R01-001, entschieden 2026-09-24) in die Regel-Docs übertragen. **Neu ist ADR-066:** `planmanager.db` gilt als autorierte, zu sichernde Projektdaten statt als rebuildbarer Cache; die ULIDs aller Stammdaten wandern in `.bpm/project.json` und werden beim Import übernommen, dazu Schutz der geteilten Dateien (WorkspaceId-Vergleich, Konfliktkopien, Temp-Dateien mit Gerätesuffix). **Neue Addenda** zu ADR-003 (registry.json-Vertrag aus den VBA-Makros), 004, 009, 045, 046, 050 (Löschen als Tombstone mit Anonymisierung), 054, 056, 058, 059 (Bucket-Modell als einzige V1-Statuslogik, Tokenisierung, Ordneranlage beim journalisierten Import), 060 (UI-Ausnahmen, zentrale Pfadmaskierung), 062, 064 (Recovery-Empfehlung, vollständiges Journal, Undo-Kette, Archiv-Move) und 065. Die ADR-047-Klassen heißen jetzt **Sync-Kategorien** (`local-only`/`shared-domain`/`shared-reference`/`restricted`), „Klasse A/B/C“ bezeichnet nur noch die DSGVO-Datenklassen; ADR-034/042 sind bei der Lizenzsignatur durch ADR-053 P.23 abgelöst; Frühphasen-Vermerke an ADR-040/054; ADR-016, 027, 028, 044 mit Hinweisen auf die neuen Regeln; ADR-057 im Index als nicht vergeben; Kapitelbereich ADR-001 bis ADR-066. Offen (Entscheidung Herbert): Bucket für „gleicher Dateiname, anderer MD5“ bei IndexSource None (ADR-045-Addendum). Keine Code-Änderung.
+
+**Richtigstellung zu v0.28.135:** Die dortige Aussage, Import-Undo bleibe vom Archiv-Move „bewusst unberührt“, gilt nicht mehr — nach ADR-064-Addendum P.4 ist das Undo eines Imports gesperrt, sobald ein Archiv-Move dessen Dateien verschoben hat (Code-Anpassung folgt mit R01-008).
+
+---
 ## [v0.28.190] — 2026-10-08
 
 ### Docs: Commit-Profil im Skill-Profil (Checks build/test, Versionsregel PATCH je Commit)

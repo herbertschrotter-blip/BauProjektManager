@@ -16,13 +16,14 @@ supersedes: []
 - Autorität: source_of_truth
 - Lesen wenn: Neue Architekturentscheidung treffen, bestehende ADR prüfen, Status ändern, Entscheidung nachschlagen
 - Nicht zuständig für: Implementierungs-Details (→ jeweilige Modul-Docs), Code-Standards (→ CODING_STANDARDS.md)
-- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-065)
+- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-066; ADR-057 nicht vergeben)
 - Pflichtlesen: keine (gezieltes Nachschlagen per ADR-Nummer)
 - Fachliche Invarianten:
   - Statusmodell: Decision Status (Proposed/Accepted/Superseded/Deprecated) getrennt von Implementation Status (Not Started/Partial/Implemented)
   - ADR-Nummern fortlaufend — nie wiederverwenden
   - Superseded-ADR bleibt erhalten mit Verweis auf Nachfolger
   - Jede ADR hat: Status, Kontext, Entscheidung, Konsequenzen
+  - Scope einer akzeptierten ADR ändert sich nur per Addendum; ClickUp folgt immer dem neuesten akzeptierten ADR (Audit Review 01, R01-001 E13, entschieden 2026-09-24)
 
 ---
 
@@ -81,7 +82,7 @@ Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheid
 | 031 | DB-SCHEMA.md als zentrales Leitdokument | ✅ Entschieden | 2026-03 |
 | 032 | ITaskManagementService — nicht an ClickUp gebunden | ✅ Accepted / Not Started | 2026-03 |
 | 033 | Multi-User: 3 Modi (eigene DB, geteilte DB, Server) | ⬅️ Superseded by ADR-053 | 2026-03 |
-| 034 | Modul-Aktivierung + Offline-Lizenzierung | 🟡 Konzept | 2026-03 |
+| 034 | Modul-Aktivierung + Offline-Lizenzierung | 🟡 Konzept — Lizenzsignatur ⬅️ Superseded by ADR-053 P.23 | 2026-03 |
 | 035 | IExternalCommunicationService — zentrales Privacy Gate | ✅ Entschieden | 2026-04 |
 | 036 | IPrivacyPolicy — austauschbare Policy für Internal/Commercial | ✅ Entschieden | 2026-04 |
 | 037 | ISyncTransport — austauschbarer Sync-Transport (Folder/HTTP) | ⬅️ Superseded by ADR-053 | 2026-04 |
@@ -89,7 +90,7 @@ Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheid
 | 039 | Einheitliches ID-Schema — ULID als Primärschlüssel | ✅ Accepted / Not Started | 2026-04 |
 | 040 | Migrations- und Versionierungsstrategie (DB + JSON) | ✅ Accepted / Not Started | 2026-04 |
 | 041 | Recovery / Degraded Mode | ✅ Accepted / Not Started | 2026-04 |
-| 042 | Secrets und Credentials | ✅ Accepted / Not Started | 2026-04 |
+| 042 | Secrets und Credentials | ✅ Accepted / Not Started — Lizenz-Secret ⬅️ Superseded by ADR-053 P.23 | 2026-04 |
 | 043 | Dev-Tools — Lokales Debug-Toolset für Entwicklung | ✅ Entschieden / Not Started | 2026-04 |
 | 044 | Icons.xaml — Zentrale Icon-Registry | ✅ Entschieden / Implemented | 2026-04 |
 | 045 | IndexSource — Dreistufiges Modell für Plan-Index-Erkennung | ✅ Entschieden | 2026-04 |
@@ -104,6 +105,7 @@ Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheid
 | 054 | PlanManager Import Identity & Gruppierung | ✅ Entschieden | 2026-04 |
 | 055 | IPersistenceRegistry — dynamisches Persistenz-Inventar als Single Source of Truth | ✅ Entschieden | 2026-05 |
 | 056 | Segmenttyp-Architektur (BPM-108) — fieldTypeId + SemanticRole Zwei-Schichten-Modell | ✅ Entschieden | 2026-05 |
+| 057 | *nicht vergeben* — Nummer übersprungen, kein ADR; wird nicht nachträglich belegt (Audit Review 01, R01-001 E20, entschieden 2026-09-24) | — | — |
 | 058 | Plan-Archiv-Persistenz (BPM-109) — Drei-Ebenen-Modell + Foundation Slice | ✅ Entschieden | 2026-06 |
 | 059 | Recognition v2 / Plan-Erfassung — Manuelle Erstaufnahme (Strategie B) + Radial-UI | ✅ Entschieden | 2026-06 |
 | 060 | Vereinheitlichte Dateisystem-Ports für alle Module | ✅ Entschieden | 2026-06 |
@@ -112,6 +114,7 @@ Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheid
 | 063 | PDF-Text-Port (IPdfTextService) + PdfPig-Freigabe | ✅ Entschieden | 2026-08 |
 | 064 | Import-Transaktions-Härtung — idempotente Journal-/Recovery-/Undo-Semantik | ✅ Entschieden | 2026-08 |
 | 065 | Lernende Planerkennung — hierarchisches Evidenz-Scoping + Dokumenttyp als Hauptobjekt | ✅ Accepted / Not Started (post-V1) | 2026-08 |
+| 066 | planmanager.db als autorierte Projektdaten + geräteübergreifendes Identitätsmodell (stabile ULIDs) | ✅ Accepted / Not Started | 2026-09 |
 
 ---
 
@@ -169,7 +172,7 @@ SQLite ist die einzige Wahrheitsquelle für alle BPM-Kerndaten (Projekte, Pläne
 **Konsequenzen:**
 
 - `bpm.db` (lokal) = Haupt-Datenbank für Projekte, Stammdaten
-- `planmanager.db` (lokal, pro Projekt) = Cache, Journal, Undo
+- `planmanager.db` (lokal, pro Projekt) = Cache, Journal, Undo *— Einstufung geändert: autorierte, zu sichernde Projektdaten, kein rebuildbarer Cache, siehe ADR-066 (Audit Review 01, R01-001 E4, entschieden 2026-09-24)*
 - `registry.json` wird bei jeder Projektänderung automatisch aus SQLite generiert
 - VBA liest nur den generierten Export, schreibt nie
 - Zwei SQLite-DBs statt einer, um Projekt-spezifische Daten zu trennen
@@ -201,6 +204,23 @@ Das interne C#-Modell ist sauber verschachtelt und stark typisiert (`Project.Loc
 - Buildings werden als Pipe-String serialisiert: `"H64:Haus Nr. 64:Reihenhaus:KG,EG,1.OG|H66:..."`
 - Koordinaten als separate Felder: `coordinateEast`, `coordinateNorth` statt verschachteltem Objekt
 - Pfade relativ zu `rootPath` — VBA baut zusammen mit `rootPath & "\" & plansPath`
+
+### ADR-003-Addendum: registry.json-Vertrag aus den VBA-Makros (2026-11-12, Audit Review 01)
+
+**Status:** ✅ Entschieden (Herbert, 2026-09-24, R01-001 E5)
+**Herkunft:** Konsistenz-Audit Audit Review 01 (Befunde DB-28, DS-12, K11-09, K15-09, K15-10): Docs (ADR-003, Architektur 3.3, ModuleProjekt 5) beschreiben einen `settings`-Block, `folderName` und eine Geschossliste im `buildings`-String; der Code liefert stattdessen `client*`- und Adressfelder, `rootPath`, keine Geschosse und eine hartcodierte `planTypes`-Liste. Welche Felder die VBA-Makros tatsächlich lesen, ist im Repo nicht belegt. (Audit Review 01, R01-001 E5, entschieden 2026-09-24)
+
+**Entscheidung:**
+
+1. **Vertrag 1.0 neu schneiden:** Der `registry.json`-Exportvertrag 1.0 wird aus einer Bestandsaufnahme der VBA-Makros abgeleitet — er enthält nur Felder, die die Makros lesen; der Rest entfällt. Danach gilt die Breaking-Change-Regel (Architektur 3.5).
+2. **`GeneratedAt`** als ISO 8601 **mit Offset** (eindeutig und für VBA lesbar) statt Lokalzeit ohne Zeitzone.
+3. **`planTypes`** wird gestrichen oder aus den Dokumenttyp-Stammdaten erzeugt (keine hartcodierte Liste).
+4. **Geschossliste** im `buildings`-String nur, wenn ein Makro sie nutzt. Die Konsequenz-Beispiele oben (Pipe-String mit `KG,EG,1.OG`) sind bis zum Neuschnitt Altbeschreibung.
+5. **Schreiber:** Bis ADR-053 exportiert nur ein Gerät mit passender WorkspaceId die geteilte Datei.
+
+**Offen:** Herbert liefert die VBA-Makros bzw. die Liste der gelesenen Felder; erst danach wird der Vertrag festgeschrieben.
+
+**Betrifft:** ADR-017 (VBA liest nur), ADR-040 (`registry.json` wird ohne Migration neu generiert), ADR-053 (Schreiber bis Server-Sync), ADR-066 (WorkspaceId-Vergleich), Architektur-Doc Kap. 3.3/3.5.
 
 ---
 
@@ -235,9 +255,22 @@ BPM funktioniert mit jedem Cloud-Speicher der sich als Ordner im Explorer einble
 **Konsequenzen:**
 
 - Import-History und Undo-Journal sind geräte-spezifisch (akzeptabel — ein Import läuft auf einem Gerät)
-- Auf dem zweiten Gerät wird der SQLite-Cache beim ersten Scan aus dem Dateisystem neu aufgebaut
+- Auf dem zweiten Gerät wird der SQLite-Cache beim ersten Scan aus dem Dateisystem neu aufgebaut *— überholt: `planmanager.db` ist autorierte Projektdaten und lässt sich nicht aus dem Dateisystem neu aufbauen, siehe ADR-066 (Audit Review 01, R01-001 E4, entschieden 2026-09-24)*
 - Atomische JSON-Writes (write-to-temp-then-rename) verhindern halbfertige Dateien
-- `.AppData/` Ordner ist Hidden+System, für User unsichtbar
+- `.AppData/` Ordner ist Hidden+System, für User unsichtbar *— System-Attribut gestrichen, siehe ADR-004-Addendum (Audit Review 01, R01-001 E4, entschieden 2026-09-24)*
+
+### ADR-004-Addendum: Geteilte Dateien ohne System-Attribut, kein Cache-Rebuild (2026-11-12, Audit Review 01)
+
+**Status:** ✅ Entschieden (Herbert, 2026-09-24, R01-001 E4)
+**Herkunft:** Konsistenz-Audit Audit Review 01 (Befunde K15-08, K11-06, K23-10, K23-11, AR-39): Der Code setzt nie ein Attribut auf `.AppData/`; einen Rebuild von `planmanager.db` aus dem Dateisystem gibt es nicht; für die geteilten JSON-Dateien fehlen gerätespezifische Temp-Namen und die Erkennung von Konfliktkopien. (Audit Review 01, R01-001 E4, entschieden 2026-09-24)
+
+**Entscheidung:**
+
+1. **`.AppData/` ohne System-Attribut:** Das System-Attribut wird gestrichen (Sync-Risiko beim Cloud-Speicher). Vorgesehen bleibt nur Hidden.
+2. **Kein Cache-Rebuild auf dem Zweitgerät:** `planmanager.db` enthält autorierte Daten (vom Menschen vergebene Plan-Identitäten) und wird nicht beim ersten Scan aus dem Dateisystem neu aufgebaut (ADR-066).
+3. **Schutz der geteilten Dateien** zusätzlich zu den atomischen Writes: Temp-Dateien mit Gerätesuffix + Lock-Retry, Konfliktkopien erkennen und nicht als Profile laden, WorkspaceId beim Laden vergleichen und warnen (Details ADR-066 P.4).
+
+**Betrifft:** ADR-041 (Recovery-Aktion für `planmanager.db`), ADR-046 (`.bpm/` im Projektordner), ADR-066, Architektur-Doc Kap. 1.6/2.6.
 
 ---
 
@@ -331,7 +364,7 @@ Ein Plan (Revision) besteht aus 1 bis n Dateien. Dateien werden über den gemein
 
 - Flexibleres Datenmodell (PlanRevision → List<PlanFile>)
 - Import-Workflow muss Gruppierung können (gleicher Stamm = gleiche Revision)
-- Undo-Journal muss pro Aktion mehrere Dateien tracken (→ 3 SQLite-Tabellen)
+- Undo-Journal muss pro Aktion mehrere Dateien tracken (→ 3 SQLite-Tabellen) *— überholt: eine Action je Datei, `import_action_files` gestrichen, siehe ADR-054-Addendum (Audit Review 01, R01-001 E10, entschieden 2026-09-24)*
 
 ---
 
@@ -347,14 +380,14 @@ Der Import von Plänen (Dateien von `_Eingang` in die Zielordner verschieben) is
 
 **Entscheidung:**
 
-10-Schritte-Workflow: Scan → Parse → Validate → Classify → Plan → Preview (User) → Execute (mit Journal) → Finalize → Recover (beim App-Start) → Undo.
+10-Schritte-Workflow: Scan → Parse → Validate → Classify → Plan → Preview (User) → Execute (mit Journal) → Finalize → Recover (beim App-Start) → Undo. *— Trigger geändert: beim Öffnen von „Manuell sortieren" bzw. bei blockiertem Bestätigen, siehe ADR-009-Addendum (Audit Review 01, R01-001 E10, entschieden 2026-09-24)*
 
 **Konsequenzen:**
 
 - Journal wird VOR Dateiverschiebung geschrieben (Status "pending")
-- Bei Abbruch: Beim nächsten App-Start Recovery anbieten
+- Bei Abbruch: Beim nächsten App-Start Recovery anbieten *— Trigger präzisiert: beim Öffnen von „Manuell sortieren" bzw. bei blockiertem Bestätigen, siehe ADR-009-Addendum (Audit Review 01, R01-001 E10, entschieden 2026-09-24)*
 - Undo ist möglich (Journal rückwärts lesen, Dateien zurückverschieben)
-- Backup von SQLite + JSON vor jedem Import
+- Backup von SQLite + JSON vor jedem Import *— gestrichen laut BACKLOG, bestätigt (Audit Review 01, R01-001 E7, entschieden 2026-09-24)*
 
 ---
 
@@ -370,13 +403,25 @@ Undo war ursprünglich als JSON geplant. Die Review forderte SQLite für Transak
 
 **Entscheidung:**
 
-3 SQLite-Tabellen in `planmanager.db`: `import_journal` (pro Import), `import_actions` (pro Aktion mit Reihenfolge), `import_action_files` (pro Datei pro Aktion). Status-Tracking: pending → completed → failed → undone.
+3 SQLite-Tabellen in `planmanager.db`: `import_journal` (pro Import), `import_actions` (pro Aktion mit Reihenfolge), `import_action_files` (pro Datei pro Aktion). Status-Tracking: pending → completed → failed → undone. *— `import_action_files` gestrichen, siehe ADR-054-Addendum (Audit Review 01, R01-001 E10, entschieden 2026-09-24)*
 
 **Konsequenzen:**
 
 - Robustes Undo auch nach App-Absturz
-- Journal unterstützt 1..n Dateien pro Aktion (wegen ADR-007)
-- Recovery beim App-Start prüft auf "pending"-Einträge
+- Journal unterstützt 1..n Dateien pro Aktion (wegen ADR-007) *— überholt: eine Action je Datei, `import_action_files` gestrichen, siehe ADR-054-Addendum (Audit Review 01, R01-001 E10, entschieden 2026-09-24)*
+- Recovery beim App-Start prüft auf "pending"-Einträge *— Trigger geändert, siehe ADR-009-Addendum (Audit Review 01, R01-001 E10, entschieden 2026-09-24)*
+
+### ADR-009-Addendum: Recovery-Trigger und Journal-Tabellen (2026-11-12, Audit Review 01)
+
+**Status:** ✅ Entschieden (Herbert, 2026-09-24, R01-001 E10)
+**Herkunft:** Konsistenz-Audit Audit Review 01 (Befunde PM-17, DB-33): Die Recovery läuft bewusst erst beim Öffnen des Tabs „Manuell sortieren" und bei blockiertem Bestätigen (BPM-120 H0), ADR-009 sagt dagegen App-Start; `import_action_files` wird angelegt, aber nie beschrieben oder gelesen. ADR-064 ist für Recovery/Undo maßgeblich. (Audit Review 01, R01-001 E10, entschieden 2026-09-24)
+
+**Entscheidung:**
+
+1. **Recovery-Trigger bestätigt:** Offene Imports (`pending`, recovery-pflichtig nach ADR-064 P.6) werden beim Öffnen des Tabs „Manuell sortieren" und bei blockiertem Bestätigen geprüft (BPM-120 H0) — nicht beim App-Start. Ersetzt „Recovery beim App-Start" in ADR-009 und ADR-008 sowie die App-Start-Begründung in ADR-054 P.7.
+2. **Journal ohne Datei-Tabelle:** `import_action_files` entfällt (Details und Frühphasen-Reset im ADR-054-Addendum); das Journal besteht aus `import_journal` und `import_actions`.
+
+**Betrifft:** ADR-008 (Schritt „Recover"), ADR-054 (P.1, P.7), ADR-064 (maßgebliche Recovery-/Undo-Semantik + ADR-064-Addendum), PlanManager.md (Recovery-Kapitel).
 
 ---
 
@@ -651,7 +696,7 @@ Die Review kritisierte fehlende Coding Standards für Nullable, Async, Logging-K
 
 **Entscheidung:**
 
-V1-Pflicht Standards: Nullable Reference Types (`<Nullable>enable</Nullable>`), `.editorconfig`, CancellationToken für alle async-Methoden, Verbot von `async void` (außer UI Event-Handler), `using`-Statement Pflicht für IDisposable, Schema-Version in jeder DB und JSON, atomische JSON-Writes (write-to-temp-then-rename).
+V1-Pflicht Standards: Nullable Reference Types (`<Nullable>enable</Nullable>`), `.editorconfig`, CancellationToken für alle async-Methoden *— präzisiert: CancellationToken nur für lang laufende Vorgänge (Import, Hashing, PDF-Rendern); Thread-Regel (CODING_STANDARDS Kap. 11.3) und Single-Writer-Mutex (V1-Pflicht) stammen nicht aus dieser ADR (Audit Review 01, R01-001 E7, entschieden 2026-09-24)*, Verbot von `async void` (außer UI Event-Handler), `using`-Statement Pflicht für IDisposable, Schema-Version in jeder DB und JSON, atomische JSON-Writes (write-to-temp-then-rename).
 
 Definition of Done pro Feature:
 - Code kompiliert ohne Fehler und Warnungen
@@ -849,7 +894,7 @@ Herbert hat keinen Programmier-Hintergrund. Claude schreibt allen Code. Herbert 
 **Konsequenzen:**
 
 - Commit-Format: `[vX.Y.Z] Modul, Typ: ShortTitle`
-- Semantic Versioning: Minor für Features, Patch für Fixes
+- Semantic Versioning: Minor für Features, Patch für Fixes *— geändert: jeder Commit +1 PATCH (auch Feature), MINOR/MAJOR nur auf Ansage; Commit-Typen Feature/Fix/Change/Refactor/Perf/Docs (Audit Review 01, R01-001 E18, entschieden 2026-09-24)*
 - Herbert hat volle Kontrolle über den Git-Verlauf
 - Bei Build-Fehlern nach neuen Dateien: "Erstellen → Projektmappe bereinigen" (Clean Solution)
 - GitHub-State immer verifizieren (Diskrepanzen zwischen lokalem und Remote-State sind vorgekommen)
@@ -947,7 +992,7 @@ Zweistufiger Ansatz:
 **Anwendungsfälle:**
 
 - Firmenliste importieren (Tab 3)
-- Plankopf-Extraktion (Index, Revision, Plannummer)
+- Plankopf-Extraktion (Index, Revision, Plannummer) *— nicht als automatischer KI-Aufruf (Phase 2) im Importpfad: keine KI im Importpfad (ADR-065 P.2); ein LLM nutzt nur der User extern beim Anlernen (Moduleplanheader Kap. 10) (Audit Review 01, R01-001 E17, entschieden 2026-09-24)*
 - Index-Import (Planlisten aus PDF)
 - Zukünftige Imports
 
@@ -985,7 +1030,7 @@ Zentrales Theme-System mit 8 Resource Dictionaries im Ordner `Themes/` des App-P
 
 Ursprünglich 5 Dictionaries. Erweitert um Inputs.xaml und Tabs.xaml (7), dann Icons.xaml (8, ADR-044).
 
-Alle Dictionaries werden in `App.xaml` per `MergedDictionaries` geladen. Views verwenden ausschließlich `{StaticResource TokenName}` statt hardcoded Werte.
+Alle Dictionaries werden in `App.xaml` per `MergedDictionaries` geladen. Views verwenden ausschließlich `{StaticResource TokenName}` statt hardcoded Werte. *— überholt: Welcher Resource-Typ gilt (Static-/DynamicResource, auch für Icons), regelt nur noch CODING_STANDARDS Kap. 10.5; „Tokens statt hardcoded Werte" bleibt (Audit Review 01, R01-001 E14, entschieden 2026-09-24)*
 
 **Alternativen:**
 
@@ -1180,8 +1225,10 @@ Technisch wird ein `IDataService` Interface eingeführt mit 3 Implementierungen:
 ## ADR-034: Modul-Aktivierung + Offline-Lizenzierung
 
 **Datum:** 2026-03
-**Status:** 🟡 Konzept
+**Status:** 🟡 Konzept — Lizenzsignatur ⬅️ **Superseded by ADR-053 P.23**
 **Herkunft:** Phase 1 Teil 2
+
+> **Hinweis:** Die Lizenzsignatur dieser ADR (HMAC-SHA256 mit eingebettetem Shared Secret) ist abgelöst durch ADR-053 P.23: **signierte Lizenzdatei mit asymmetrischer Signatur (Ed25519/RSA)** — ein in der EXE eingebettetes HMAC-Secret ist auslesbar. Die Modul-Aktivierung und das Verkaufsmodell bleiben Konzept (Audit Review 01, R01-001 E17, entschieden 2026-09-24).
 
 **Kontext:**
 
@@ -1191,7 +1238,7 @@ Herbert plant langfristig, BPM an andere Baufirmen zu verkaufen. Dafür braucht 
 
 **Modul-Aktivierung:** In den Systemeinstellungen gibt es eine Seite "Module" mit Ein/Aus-Schalter pro Modul. Nur aktive Module erscheinen in der Sidebar. Einstellungen und PlanManager sind immer an (Basis). Abhängigkeiten werden geprüft (z.B. Bautagebuch braucht Kalkulation).
 
-**Lizenzierung:** Offline-fähige Lizenzdateien (`.bpm-license`) pro Modul. Keine Online-Aktivierung — passt zur Offline-Philosophie. Technisch: JSON-Payload mit HMAC-SHA256 Signatur (shared secret). Enthält Kundenname, freigeschaltete Module, Ablaufdatum.
+**Lizenzierung:** Offline-fähige Lizenzdateien (`.bpm-license`) pro Modul. Keine Online-Aktivierung — passt zur Offline-Philosophie. Technisch: JSON-Payload mit HMAC-SHA256 Signatur (shared secret). Enthält Kundenname, freigeschaltete Module, Ablaufdatum. *— Signatur abgelöst durch ADR-053 P.23 (Ed25519/RSA) (Audit Review 01, R01-001 E17, entschieden 2026-09-24)*
 
 30-Tage-Testversion pro Modul: Erstaktivierung wird lokal gespeichert (verschlüsselt in `%LocalAppData%`). Nach 30 Tagen → Modul gesperrt bis Lizenz importiert wird.
 
@@ -1535,6 +1582,8 @@ VBA liest `registry.json` → sieht nur Strings. Egal ob `"proj_42"` oder `"01HV
 **Status:** ✅ Accepted / Not Started
 **Herkunft:** Kern-Dokumenten-Review + ADR-Review (Claude + ChatGPT)
 
+> **Hinweis (Frühphase):** Die Migrationsregeln dieser ADR gelten erst ab der Produktivphase. In der Frühphase (INDEX.md „Projekt-Phase") wird nicht migriert, sondern zurückgesetzt: betroffene Datei(en) nennen → User löscht sie → BPM erstellt sie beim nächsten Start neu (ADR-053 P.26/P.27). Einzige freigegebene Ausnahme: `ManifestService.EnsureMigrated` (ADR-046-Addendum) (Audit Review 01, R01-001 E6, entschieden 2026-09-24).
+
 **Kontext:**
 
 BPM hat mehrere persistente Datenquellen die sich über die Zeit strukturell ändern: SQLite-Datenbanken (`bpm.db`, `planmanager.db`) und JSON-Konfigurationsdateien (`settings.json`, `profiles.json`, `pattern-templates.json`, `registry.json`). Ohne definierte Migrationsstrategie drohen inkonsistente Zustände bei App-Updates — besonders kritisch bei einer Offline-Desktop-App ohne zentrale Updatekontrolle.
@@ -1603,7 +1652,7 @@ Dreistufiges Zustandsmodell bei App-Start:
 | `registry.json` | Fehlt oder korrupt | Aus SQLite neu generieren (ADR-002) |
 | `bpm.db` | Korrupt | Reparaturdialog: Backup anbieten, ggf. leere DB erstellen |
 | `bpm.db` | Zukunfts-Schema | App-Start blockieren, Update-Hinweis |
-| `planmanager.db` | Korrupt | Cache-Rebuild aus Dateisystem anbieten (ADR-004) |
+| `planmanager.db` | Korrupt | Cache-Rebuild aus Dateisystem anbieten (ADR-004) *— überholt: autorierte Daten, kein Rebuild möglich, siehe ADR-066 (Audit Review 01, R01-001 E4, entschieden 2026-09-24)* |
 | Cloud-Dateien | Nicht erreichbar | Weiterarbeiten mit lokalen Daten, Sync-Warnung |
 
 **Alternativen:**
@@ -1625,8 +1674,10 @@ Dreistufiges Zustandsmodell bei App-Start:
 ## ADR-042: Secrets und Credentials — zentrale Sicherheitsentscheidung
 
 **Datum:** 2026-04
-**Status:** ✅ Accepted / Not Started
+**Status:** ✅ Accepted / Not Started — Lizenz-Secret ⬅️ **Superseded by ADR-053 P.23**
 **Herkunft:** Kern-Dokumenten-Review + ADR-Review (Claude + ChatGPT)
+
+> **Hinweis:** Das eingebettete HMAC-Lizenz-Secret (Tabellenzeile „Lizenz-Signatur-Secret", Ausnahme im Verbot „Hardcoded Secrets", Sicherheitshinweis Lizenz-Secret) ist abgelöst durch ADR-053 P.23: **signierte Lizenzdatei mit asymmetrischer Signatur (Ed25519/RSA)** — die App prüft nur mit dem öffentlichen Schlüssel, ein auslesbares Shared Secret entfällt. Alle übrigen Secret-Regeln (DPAPI, Verbote, Backup/Export) gelten weiter (Audit Review 01, R01-001 E17, entschieden 2026-09-24).
 
 **Kontext:**
 
@@ -1764,6 +1815,8 @@ Drei Nutzungsmuster:
 var icon = (string)Application.Current.FindResource("IconStatusWarning");
 ```
 
+*Hinweis: Der Resource-Typ in den XAML-Beispielen ist nicht normativ — ob `StaticResource` oder `DynamicResource` gilt (auch für Icons, z. B. in Modul-XAML und Custom-Dialog-Windows), regelt nur CODING_STANDARDS Kap. 10.5 (Audit Review 01, R01-001 E14, entschieden 2026-09-24).*
+
 18 Icon-Definitionen in 5 Kategorien: Navigation (3), Ordner/Dateien (3), Aktionen (9), Richtung (2), Status/Personen (3).
 
 Beim späteren Umstieg auf Segoe Fluent Icons: Nur Icons.xaml anpassen (Emoji → Glyph-Codes) und ggf. `FontFamily` am Icon-`Run` setzen. Alle 40 Referenzen bleiben unverändert.
@@ -1806,15 +1859,15 @@ Pro Projekt und Plantyp (= im RecognitionProfile) wird ein `IndexSource` Feld ge
 
 | Wert | Verhalten | Archivierung | Wann |
 |------|-----------|-------------|------|
-| `FileName` | Index aus Dateinamen-Segment geparst (Pflichtfeld `planIndex` im Profil) | Alte Indizes → `_Archiv/` nach Buchstabe | Standard, wenn Index im Dateinamen steht |
-| `None` | Kein Index vorhanden. MD5-Hash-Vergleich bei gleichem Dateinamen | Bei geändertem Hash → alte Datei ins `_Archiv/` mit Timestamp-Suffix (z.B. `_2026-04-09`) | Wenn weder Dateiname noch PDF den Index liefert |
-| `PlanHeader` | Index wird aus dem Plankopf im PDF gelesen (PdfPig oder KI-API) | Wie `FileName` — Index ist bekannt, Archivierung nach Buchstabe | Post-V1 (Modul Plankopf-Extraktion) |
+| `FileName` | Index aus Dateinamen-Segment geparst (Pflichtfeld `planIndex` im Profil) | Alte Indizes → `_Archiv/` nach Buchstabe *— Archivname mit Zeitstempel, siehe ADR-045-Addendum (Audit Review 01, R01-001 E9, entschieden 2026-09-24)* | Standard, wenn Index im Dateinamen steht |
+| `None` | Kein Index vorhanden. MD5-Hash-Vergleich bei gleichem Dateinamen | Bei geändertem Hash → alte Datei ins `_Archiv/` mit Timestamp-Suffix (z.B. `_2026-04-09`) *— Code-Ist-Format `<Name>_<yyyyMMdd_HHmmss><ext>`, siehe ADR-045-Addendum P.1 (Audit Review 01, R01-001 E9, entschieden 2026-09-24)* | Wenn weder Dateiname noch PDF den Index liefert |
+| `PlanHeader` | Index wird aus dem Plankopf im PDF gelesen (PdfPig oder KI-API) *— ohne KI-API: keine KI im Importpfad (ADR-065 P.2) (Audit Review 01, R01-001 E17, entschieden 2026-09-24)* | Wie `FileName` — Index ist bekannt, Archivierung nach Buchstabe *— Archivname mit Zeitstempel, siehe ADR-045-Addendum (Audit Review 01, R01-001 E9, entschieden 2026-09-24)* | Post-V1 (Modul Plankopf-Extraktion) |
 
 **V1-Scope:** `FileName` und `None` werden implementiert. `PlanHeader` ist als Enum-Wert vorhanden, aber die Implementierung kommt mit dem Plankopf-Extraktions-Modul (siehe `Docs/Konzepte/Moduleplanheader.md`).
 
-**UI im Profil-Wizard:** Nach der Segment-Zuweisung (Schritt 1) zeigt der Wizard eine Frage: „Hat dieser Plantyp einen Index im Dateinamen?" — Toggle Ja/Nein. Bei „Ja" → `FileName`, Segment `planIndex` muss zugewiesen sein. Bei „Nein" → `None`. Später kommt eine dritte Option „Index aus Plankopf lesen" hinzu.
+**UI im Profil-Wizard:** Nach der Segment-Zuweisung (Schritt 1) zeigt der Wizard eine Frage: „Hat dieser Plantyp einen Index im Dateinamen?" — Toggle Ja/Nein. Bei „Ja" → `FileName`, Segment `planIndex` muss zugewiesen sein. Bei „Nein" → `None`. Später kommt eine dritte Option „Index aus Plankopf lesen" hinzu. *— Index optional: fehlendes `planIndex`-Segment warnt statt zu blockieren, siehe ADR-045-Addendum (Audit Review 01, R01-001 E11, entschieden 2026-09-24)*
 
-**Import-Vorschau bei `None`:**
+**Import-Vorschau bei `None`:** *— Statusbezeichnungen überholt, V1-Statuslogik = Bucket-Modell (ADR-059-Addendum Bucket-Modell) (Audit Review 01, R01-001 E9, entschieden 2026-09-24)*
 - Gleicher Dateiname + gleicher MD5 → Status „Identisch (übersprungen)"
 - Gleicher Dateiname + anderer MD5 → Status „Geändert — alte Version wird archiviert"
 - Neuer Dateiname → Status „Neu"
@@ -1835,12 +1888,28 @@ Pro Projekt und Plantyp (= im RecognitionProfile) wird ein `IndexSource` Feld ge
 - `IndexSource` Enum in Domain: `FileName`, `None`, `PlanHeader`
 - Feld `indexSource` im RecognitionProfile (profiles.json)
 - Import-Workflow Schritt 4 (Classify) berücksichtigt IndexSource für Versionierungs-Logik
-- Bei `None`: MD5-Hash wird in `import_action_files.md5_hash` gespeichert (Schema steht schon, ADR-009)
-- Bei `PlanHeader`: Abhängigkeit zu PdfPig oder KI-API (ADR-027) — erst Post-V1
+- Bei `None`: MD5-Hash wird in `import_action_files.md5_hash` gespeichert (Schema steht schon, ADR-009) *— überholt: `import_action_files` gestrichen, Hash in `plan_files.md5_hash` und `import_actions`, siehe ADR-045-Addendum P.4 (Audit Review 01, R01-001 E10, entschieden 2026-09-24)*
+- Bei `PlanHeader`: Abhängigkeit zu PdfPig oder KI-API (ADR-027) — erst Post-V1 *— KI-API entfällt: keine KI im Importpfad (ADR-065 P.2) (Audit Review 01, R01-001 E17, entschieden 2026-09-24)*
 - Profil-Wizard bekommt zusätzlichen Schritt/Toggle nach Segment-Zuweisung
 - BACKLOG.md: Feature #20 (Plantyp-Erkennung) und #22 (profiles.json) müssen IndexSource berücksichtigen
 
 **Betrifft:** ADR-008, ADR-009, ADR-010, ADR-022, ADR-027
+
+### ADR-045-Addendum: Archivregeln im Bucket-Modell (2026-11-12, Audit Review 01)
+
+**Status:** ✅ Entschieden (Herbert, 2026-09-24, R01-001 E9; Punkt 3 E11, Punkt 4 E10)
+**Herkunft:** Konsistenz-Audit Audit Review 01 (Befunde PM-51, LU7-01, LU5-29, DB-33): Der Code benennt Archivdateien unabhängig von der IndexSource mit Zeitstempel; bei einem Indexwechsel mit neuem Dateinamen bleibt die abgelöste Datei im Zielordner liegen, festgeschrieben durch einen Characterization-Test. Das Bucket-Modell aus ADR-059 ist die einzige V1-Statuslogik (ADR-059-Addendum Bucket-Modell).
+
+**Entscheidung:**
+
+1. **Archivname immer mit Zeitstempel:** Archivierte Dateien erhalten unabhängig von der IndexSource einen Zeitstempel im Namen (Code-Ist: `<Name>_<yyyyMMdd_HHmmss><ext>` im `_Archiv`-Unterordner) — deterministisch und journalisiert (ADR-064 P.2). Ersetzt „nach Buchstabe" in den Zeilen `FileName` und `PlanHeader` sowie das Beispielformat in der Zeile `None` der Tabelle oben. (Audit Review 01, R01-001 E9, entschieden 2026-09-24)
+2. **Alte Indexdatei nach `_Archiv`:** Bei einem Indexwechsel wird die Datei der abgelösten Revision nach `_Archiv` verschoben, auch wenn sich der Dateiname geändert hat (keine Archivierung nur bei Namenskollision). Code und Characterization-Test werden korrigiert. (Audit Review 01, R01-001 E9, entschieden 2026-09-24)
+3. **Index optional:** Ist im Profil kein `planIndex`-Segment zugewiesen, warnt der Wizard statt zu blockieren (Regel siehe ADR-059-Addendum Tokenisierung). (Audit Review 01, R01-001 E11, entschieden 2026-09-24)
+4. **MD5-Ablage:** Die Konsequenz „MD5-Hash wird in `import_action_files.md5_hash` gespeichert" ist überholt — `import_action_files` entfällt (ADR-054-Addendum); der Hash steht in `plan_files.md5_hash` (ADR-054 P.6) und im Journal in `import_actions`. (Audit Review 01, R01-001 E10, entschieden 2026-09-24)
+
+**Offen (Entscheidung Herbert):** In welchen Bucket (A–D) der Fall „gleicher Dateiname + anderer MD5" bei IndexSource `None` fällt, ist noch nicht festgelegt.
+
+**Betrifft:** ADR-054 (Statuslogik, Journal), ADR-059 (Bucket-Modell), ADR-064 (journalisierte `archive_path`), PlanManager.md (Archiv-/Versionierungskapitel), Characterization-Test des `ImportExecutionService`.
 
 ---
 
@@ -1893,7 +1962,7 @@ Projektordner/
 ```
 
 **project.json (Vollexport):**
-Enthält dieselben Daten wie die bisherige `.bpm-manifest` (Stammdaten, Client, Location, Timeline, BuildingParts, Participants, Links, Paths, Tags, Notes). Keine DB-IDs, eigene DTOs. Wird bei jedem Speichern aktualisiert.
+Enthält dieselben Daten wie die bisherige `.bpm-manifest` (Stammdaten, Client, Location, Timeline, BuildingParts, Participants, Links, Paths, Tags, Notes). Keine DB-IDs, eigene DTOs. Wird bei jedem Speichern aktualisiert. *— geändert: project.json führt die stabilen ULIDs aller Stammdaten, siehe ADR-046-Addendum und ADR-066 (Audit Review 01, R01-001 E4, entschieden 2026-09-24)*
 
 **profiles/ (PlanManager-Profile):**
 Pro Plantyp-Profil eine eigene JSON-Datei. Synct über Cloud-Speicher zwischen Geräten. Bisher in `.AppData/Projects/<P>/profiles.json` — wandert jetzt in den Projektordner, weil Profile zum Projekt gehören und zwischen Geräten verfügbar sein müssen.
@@ -1937,6 +2006,20 @@ Beim Öffnen eines Projekts prüft die App:
 
 **Betrifft:** ADR-004, ADR-010, ADR-013, ADR-039, ADR-040
 
+### ADR-046-Addendum: project.json mit stabilen IDs + EnsureMigrated als Frühphasen-Ausnahme (2026-11-12, Audit Review 01)
+
+**Status:** ✅ Entschieden (Herbert, 2026-09-24, R01-001 E4 und E6)
+**Herkunft:** Konsistenz-Audit Audit Review 01 (Befunde K11-02, K11-03, K11-05, DB-22, DD-79): `ExportToProject` leert die IDs von Bauteilen und Geschossen, Dokumenttypen, Kategorien und Custom-Segmenttypen fehlen im Export und werden beim Re-Import bzw. auf dem Zweitgerät neu geseedet — danach zeigen `document_key`, Soft-References und synchronisierte Profile ins Leere. `ManifestService.EnsureMigrated` migriert Altformate automatisch, obwohl die INDEX-Projekt-Phase Migrationen ohne ausdrückliches „Migration bauen" ausschließt.
+
+**Entscheidung:**
+
+1. **Export/Import mit stabilen IDs:** `.bpm/project.json` führt die ULIDs aller Stammdaten des Projekts, und der Import übernimmt sie (keine Neuvergabe). Ersetzt „Keine DB-IDs" (eigene DTOs bleiben, tragen aber die IDs). Dokumenttypen, Kategorien und Custom-Segmenttypen werden mitexportiert; Seeds laufen idempotent über `key`. Grundsatz und Schutzmaßnahmen: ADR-066. (Audit Review 01, R01-001 E4, entschieden 2026-09-24)
+2. **`ManifestService.EnsureMigrated` = freigegebene Frühphasen-Ausnahme:** Die automatische Formatmigration (`.bpm-manifest` → `.bpm/` sowie `manifest.json` v1 → schlankes `manifest.json` + `project.json`, jeweils mit Löschen der Altdatei) bleibt als einzige ausdrücklich freigegebene Ausnahme von der Projekt-Phase-Regel „keine Migration" bestehen — sie betrifft echte Projektordner im Cloud-Speicher, die sich nicht per DB-Reset neu erzeugen lassen. **Entfernungspunkt:** Die Migration wird entfernt, sobald die eigenen Projektordner umgestellt sind. (Audit Review 01, R01-001 E6, entschieden 2026-09-24)
+
+**Frühphase:** Für die ID-Umstellung (Punkt 1) gibt es keinen Migrationscode für bestehende `project.json` ohne IDs — Reset statt Migration (INDEX.md-Frühphasenregel).
+
+**Betrifft:** ADR-040 (Frühphasen-Hinweis), ADR-050-Addendum (Kontakte in project.json beim Löschen), ADR-056 (Custom-Segmenttypen), ADR-059 P.3 (ID-basierter `document_key`), ADR-066, INDEX.md (Projekt-Phase-Ausnahme), Architektur-Doc Kap. 3.6.
+
 ---
 
 ## ADR-047: Datenarchitektur + Sync — State-based lokal, change-based sync
@@ -1955,7 +2038,7 @@ Beim Öffnen eines Projekts prüft die App:
 >
 > **Was bleibt gültig (explizit bestätigt durch ADR-053):**
 > - **Punkt 1** (state-based lokal, change-based zwischen Clients)
-> - **Punkt 2** (4-Klassen-Datenmodell A/B/C/D)
+> - **Punkt 2** (4 Sync-Kategorien `local-only`/`shared-domain`/`shared-reference`/`restricted`, vormals A/B/C/D)
 > - **Punkt 3** (sensitive Daten in eigenen Tabellen)
 > - **Punkt 7** (User-Modell jetzt — durch ASP.NET Identity in ADR-053 konkretisiert)
 > - **Punkt 10** (Phase 3: PostgreSQL serverseitig — bestätigt)
@@ -1968,11 +2051,13 @@ BPM wird nicht nur Solo-Betrieb sein — Multi-User mit 10+ Nutzern (Bauleiter, 
 
 1. **State-based lokal, change-based zwischen Clients.** SQLite ist einzige lokale Wahrheit. Events sind Replikationsmechanismus, nicht Source of Truth. Kein Full Event Sourcing.
 
-2. **4-Klassen-Datenmodell:**
-   - A: Local-only (Logs, Undo, Caches, Device-Settings)
-   - B: Shared domain (Projekte, Bauteile, Bautagebuch, Arbeitseinteilung)
-   - C: Shared reference (ProjectTypes, BuildingTypes, FolderTemplate)
-   - D: Restricted (Lohnsätze, Einheitspreise — erst mit Server Phase 3)
+2. **4 Sync-Kategorien** (Merkmal „Sync-Kategorie" je Datenart):
+   - `local-only` (Logs, Undo, Caches, Device-Settings)
+   - `shared-domain` (Projekte, Bauteile, Bautagebuch, Arbeitseinteilung)
+   - `shared-reference` (ProjectTypes, BuildingTypes, FolderTemplate)
+   - `restricted` (Lohnsätze, Einheitspreise — erst mit Server Phase 3)
+
+   *Umbenannt: Die Kategorien hießen bisher Klasse A/B/C/D (in obiger Reihenfolge). „Klasse A/B/C" ist ausschließlich für die DSGVO-Datenklassen (`DataClassification`, ADR-035) reserviert (Audit Review 01, R01-001 E16, entschieden 2026-09-24).*
 
 3. **Sensitive Daten in eigenen Tabellen** (nicht als Spalten-Flags). `employees` + `employee_compensation`, `lv_positions` + `lv_pricing` etc.
 
@@ -2145,6 +2230,20 @@ Im Server-Modus gilt: "Server gewinnt" bei Daten-Konflikten. Der Server erzwingt
 
 **Betrifft:** ADR-033 (3 Modi), Architektur-Doc Kapitel 2 (Speicherstrategie)
 
+### ADR-050-Addendum: Löschen als Tombstone mit Anonymisierung (2026-11-12, Audit Review 01)
+
+**Status:** ✅ Entschieden (Herbert, 2026-09-24, R01-001 E3)
+**Herkunft:** Konsistenz-Audit Audit Review 01 (Befunde DS-10, K12-01, K12-03): Wegen des Soft-Deletes bleiben Firma, Kontaktperson, Telefon und E-Mail gelöschter Datensätze unbefristet in `bpm.db` stehen; `.bpm/project.json` behält die Kontakte nach dem Löschen im Cloud-Projektordner, ein Re-Import stellt sie wieder her; das DSGVO-Doc kennt `project.json` nicht. (Audit Review 01, R01-001 E3, entschieden 2026-09-24)
+
+**Entscheidung:**
+
+1. **Soft-Delete bleibt für den Sync:** Gelöschte Datensätze bleiben als Tombstone (`is_deleted = 1`) erhalten (ADR-053).
+2. **Anonymisieren beim Löschen:** Die Klasse-B-Felder (Firma, Kontaktperson, Telefon, E-Mail) werden beim Löschen geleert.
+3. **project.json bereinigen:** `DeleteProject` leert bzw. entfernt die Kontakte in `.bpm/project.json`, damit ein Re-Import sie nicht wiederherstellt.
+4. **DSGVO-Doc:** `project.json` wird mit Begründung (Re-Import, ADR-046) als Klasse-B-Datei in das DSGVO-Doc aufgenommen.
+
+**Betrifft:** ADR-046 (Inhalt von project.json), ADR-053 (Tombstones im Sync), ADR-066 (Export mit IDs), DSVGO-Architektur.md (Löschkonzept, Dateiliste).
+
 ---
 
 ## ADR-051: Client ist local-first — Server nur Auth + Sync + Autorität
@@ -2267,7 +2366,7 @@ Drei fundamentale Pivots im Lauf der Diskussion:
 
 ### Daten
 
-11. **DataClassification + Whitelist** pro Sync-DTO (Klasse-A/B/C laut ADR-047)
+11. **DataClassification + Whitelist** pro Sync-DTO (DSGVO-Datenklasse A/B/C nach ADR-035; welche Daten überhaupt synchronisieren, regelt die Sync-Kategorie nach ADR-047) *— präzisiert: bisher „Klasse-A/B/C laut ADR-047", Buchstaben nur noch für DSGVO-Datenklassen (Audit Review 01, R01-001 E16, entschieden 2026-09-24)*
 12. **`device_id`** in `device-settings.json` + separater `IDeviceContext` für Sync-History/Audit (zusätzlich zu `IUserContext` aus ADR-052)
 13. **`recognition_profiles`** wandert in DB-Tabelle (post Spike 0). `.bpm/profiles/*.json` bleibt im Servermodus Export/Backup, nicht Source of Truth.
     *Ergänzung (ADR-058/BPM-109, nachgezogen Teil 53):* `planmanager.db` führt `project_id` redundant in `plan_documents` und im Import-Journal, obwohl die DB pro Projekt liegt — bewusst für Sync-DTOs, Export und den Server-Postgres, in dem alle Projekte in einer DB liegen.
@@ -2286,7 +2385,7 @@ Drei fundamentale Pivots im Lauf der Diskussion:
 
 21. **Windows Server beim Kunden:** Windows 11 Pro für Kleinst-Kunden (1-5 User), Windows Server 2022/2025 ab 10 User
 22. **Inno Setup Installer** für Server + Client (kostenlos, scriptbar, etabliert in KMU-Markt)
-23. **Signierte Lizenzdatei** (Ed25519/RSA, offline-fähig, kein harter Stopp bei Wartungsablauf — Software läuft weiter, Updates/Support gesperrt)
+23. **Signierte Lizenzdatei** (Ed25519/RSA, offline-fähig, kein harter Stopp bei Wartungsablauf — Software läuft weiter, Updates/Support gesperrt) *— bestätigt; löst die HMAC-Lizenzsignatur aus ADR-034/ADR-042 ab (Audit Review 01, R01-001 E17, entschieden 2026-09-24)*
 24. **AD/LDAP-Integration optional** (Bauunternehmen mit AD)
 25. **Auto-Update** für WPF-Client (Velopack) + manueller Server-Update durch Admin
 
@@ -2312,7 +2411,7 @@ Drei fundamentale Pivots im Lauf der Diskussion:
 - DB-Schema bleibt gleich für Phase 0/1 + Phase Verkauf — nur Hosting unterscheidet sich
 - Keine Mobile-App in Phase 0/1 (BPM-Mobile bleibt post-v1, BACKLOG-Eintrag)
 - Recognition Profiles werden mittelfristig von `.bpm/profiles/*.json` in DB-Tabelle migriert (Frühphase: Reset, kein Migration-Code)
-- `DatenarchitekturSync.md` wird nicht komplett superseded, aber FolderSync/Event-Outbox-Pfad wird durch ADR-053 superseded. 4-Klassen-Datenmodell (ADR-047) und Local-First-Prinzip (ADR-051) bleiben gültig.
+- `DatenarchitekturSync.md` wird nicht komplett superseded, aber FolderSync/Event-Outbox-Pfad wird durch ADR-053 superseded. Sync-Kategorien (ADR-047, vormals 4-Klassen-Datenmodell) und Local-First-Prinzip (ADR-051) bleiben gültig.
 
 **Alternativen:**
 
@@ -2331,7 +2430,7 @@ Verworfene Optionen mit Begründung:
 - Vollständige Diskussion in [Docs/Referenz/chatgpt-reviews/CGR-2026-04-30-datenarchitektur-sync/](chatgpt-reviews/CGR-2026-04-30-datenarchitektur-sync/) mit 7 Runden + 28 archivierten Dateien
 - Kernergebnisse in [README.md](chatgpt-reviews/CGR-2026-04-30-datenarchitektur-sync/README.md) der Serie
 
-**Betrifft:** ADR-046 (.bpm/), ADR-047 (4-Klassen-Datenmodell), ADR-050 (DB-Schema v2.1), ADR-051 (Local-First), ADR-052 (IUserContext), `Docs/Konzepte/DatenarchitekturSync.md` (FolderSync-Pfad superseded), `Docs/Konzepte/ServerArchitektur.md` (bleibt relevant für Phase Verkauf)
+**Betrifft:** ADR-046 (.bpm/), ADR-047 (Sync-Kategorien), ADR-050 (DB-Schema v2.1), ADR-051 (Local-First), ADR-052 (IUserContext), `Docs/Konzepte/DatenarchitekturSync.md` (FolderSync-Pfad superseded), `Docs/Konzepte/ServerArchitektur.md` (bleibt relevant für Phase Verkauf)
 
 ### Erweiterung BPM-109: `project_id`-Redundanz in `planmanager.db` (2026-06)
 
@@ -2355,7 +2454,7 @@ nicht — diese hängen über FK an `plan_documents` und erben damit die Projekt
 
 **Datum:** 2026-04 (rückwirkend dokumentiert 2026-05)
 **Status:** ✅ Entschieden
-**Implementierung:** ✅ Implemented — Schema + 7-Stufen-Pipeline (v0.25.13, Phase F), Recovery-Workflow (v0.27.23–v0.27.24, RecoveryDecisionService + RecoveryExecutorService mit 10 Tests, BPM-016 done)
+**Implementierung:** ✅ Implemented — Schema + 7-Stufen-Pipeline (v0.25.13, Phase F) *— 7-Stufen-Pipeline mit BPM-083 entfernt, siehe ADR-054-Addendum (Audit Review 01, R01-001 E9, entschieden 2026-09-24)*, Recovery-Workflow (v0.27.23–v0.27.24, RecoveryDecisionService + RecoveryExecutorService mit 10 Tests, BPM-016 done)
 **Herkunft:** 3-Runden Cross-Review Claude/ChatGPT (10.04.2026, Teil 10), Praxis-Pipeline-Konzept (15.04.2026, Teil 17), Auto-Link-Regeln und Stage-Konzept (15.04.2026, Cross-Review-Konsens)
 
 **Hinweis zur Nummer:** Diese ADR war ursprünglich als ADR-050 reserviert (siehe Teil 17, 15.04.2026). Am gleichen Tag wurde ADR-050 jedoch im Konzept-Serverstruktur-Chat für „Source of Truth je Betriebsmodus" vergeben, ohne dass die ursprüngliche Reservierung berücksichtigt wurde. Da ADR-Nummern nicht wiederverwendet werden (Statusmodell-Regel im Kopf der ADR.md), erhält diese ADR jetzt die nächste freie Nummer (ADR-053 wurde inzwischen ebenfalls für die Server-Sync-Architektur vergeben).
@@ -2388,10 +2487,10 @@ Der Import wird über drei aufeinander aufbauende Tabellen abgebildet, jede mit 
 | Tabelle | Verantwortung | Beziehung |
 |---------|---------------|-----------|
 | `import_journal` | Ein Import-Vorgang (Batch) — Zeitpunkt, Status, Quellpfad, Profil, Maschine | 1 Journal hat n Actions |
-| `import_actions` | Eine fachliche Aktion pro Plan-Revision — Action-Typ, Status, document_key, Plannummer/Index | 1 Action hat 1..n Files |
-| `import_action_files` | Eine physische Datei pro Aktion — Name, Pfade, Hash, Größe | n:1 zu Action |
+| `import_actions` | Eine fachliche Aktion pro Plan-Revision — Action-Typ, Status, document_key, Plannummer/Index | 1 Action hat 1..n Files *— überholt: eine Action je Datei, `import_action_files` gestrichen, siehe ADR-054-Addendum (Audit Review 01, R01-001 E10, entschieden 2026-09-24)* |
+| `import_action_files` | Eine physische Datei pro Aktion — Name, Pfade, Hash, Größe *— gestrichen, siehe ADR-054-Addendum (Audit Review 01, R01-001 E10, entschieden 2026-09-24)* | n:1 zu Action |
 
-**Begründung:** Eine Revision besteht aus 1..n Dateien (ADR-007), daher reicht eine 2-Tabellen-Lösung mit Datei-pro-Action nicht. Die dritte Tabelle ermöglicht sauberes Rückwärts-Undo (über `action_order`) und Teilfehler-Handling (über `action_status` pro Aktion). Der separate `import_journal`-Eintrag erlaubt das Tracking der gesamten Batch-Operation unabhängig von Einzelaktionen.
+**Begründung:** Eine Revision besteht aus 1..n Dateien (ADR-007), daher reicht eine 2-Tabellen-Lösung mit Datei-pro-Action nicht. Die dritte Tabelle ermöglicht sauberes Rückwärts-Undo (über `action_order`) und Teilfehler-Handling (über `action_status` pro Aktion). Der separate `import_journal`-Eintrag erlaubt das Tracking der gesamten Batch-Operation unabhängig von Einzelaktionen. *— überholt: eine Action je Datei, `import_action_files` gestrichen, siehe ADR-054-Addendum (Audit Review 01, R01-001 E10, entschieden 2026-09-24)*
 
 Verworfene Alternativen:
 - 2-Tabellen-Lösung mit festem PDF/DWG-Paar (in der Praxis nicht haltbar — siehe ADR-007)
@@ -2407,7 +2506,7 @@ Beispiel: identityFields = ["documentType", "planNumber", "haus"]
        → document_key = "Polierplan_103_H64"
 ```
 
-Die Bildung erfolgt im `DocumentKeyBuilder`-Service (Stufe 5 der 7-Stufen-Pipeline) auf Basis der vom `ImportContextResolver` (Stufe 4) gelieferten Felder.
+Die Bildung erfolgt im `DocumentKeyBuilder`-Service (Stufe 5 der 7-Stufen-Pipeline) auf Basis der vom `ImportContextResolver` (Stufe 4) gelieferten Felder. *— 7-Stufen-Pipeline mit BPM-083 entfernt, siehe ADR-054-Addendum (Audit Review 01, R01-001 E9, entschieden 2026-09-24)*
 
 **Begründung:** Dateiname und Dateipfad sind keine zuverlässigen Identity-Indikatoren. Praxis-Beispiel aus Teil 17: gleiche Dateinamen in verschiedenen Ordnern können verschiedene Dokumente sein (z.B. `Wand_01.pdf` als Schalungsplan-Dokument vs. Bewehrungsplan-Dokument). Identity muss aus fachlichen Feldern (Plannummer, Geschoss, Bauteil etc.) gebildet werden, nicht aus Dateinamen-Stamm.
 
@@ -2450,7 +2549,7 @@ Eine Datei ohne Eintrag in `revision_file_links` ist standalone (taucht als „n
 
 - SKIP_IDENTICAL-Erkennung (Datei am Zielort bereits identisch vorhanden)
 - Wiedererkennung nach Umbenennung (Pfad ändert, Hash bleibt)
-- Cache-Rebuild auf zweitem Gerät (bekannte Dateien wiederfinden)
+- Cache-Rebuild auf zweitem Gerät (bekannte Dateien wiederfinden) *— entfällt: kein Cache-Rebuild aus dem Dateisystem, siehe ADR-066 (Audit Review 01, R01-001 E4, entschieden 2026-09-24)*
 - DWG-Veraltet-Warnung über die Link-Tabelle (Hash-Vergleich der verknüpften Dateien)
 
 Daher ist der Hash auch bei IndexSource=FileName Pflicht. Eine ältere Schema-Version hatte den Hash optional — diese Lockerung wurde im Cross-Review (10.04.2026, Teil 10) bewusst zurückgenommen.
@@ -2468,7 +2567,7 @@ Der Import-Status wird auf zwei Ebenen geführt:
 | Batch | `import_journal.status` | pending, completed, failed, undone | Recovery-Trigger („gibt es offene Batches?") |
 | Aktion | `import_actions.action_status` | pending, completed, failed | Recovery-Detail („welche Aktion war wo abgebrochen?") |
 
-**Begründung:** Bei Absturz während eines Imports (Stromausfall, App-Crash, Datei-Lock) muss der nächste App-Start unterscheiden können zwischen „kein Import läuft" und „Import war mittendrin". Der Journal-Status liefert den Trigger, der Action-Status liefert das Detail für eine punktgenaue Wiederaufnahme oder Reparatur.
+**Begründung:** Bei Absturz während eines Imports (Stromausfall, App-Crash, Datei-Lock) muss der nächste App-Start unterscheiden können zwischen „kein Import läuft" und „Import war mittendrin". Der Journal-Status liefert den Trigger, der Action-Status liefert das Detail für eine punktgenaue Wiederaufnahme oder Reparatur. *— Trigger geändert: beim Öffnen von „Manuell sortieren" bzw. bei blockiertem Bestätigen, siehe ADR-009-Addendum (Audit Review 01, R01-001 E10, entschieden 2026-09-24)*
 
 **Implementierungsstand (Stand 2026-05):** Recovery ist vollständig implementiert. `RecoveryDecisionService` (pure Funktion, 5 Unit-Tests) entscheidet auf Basis der Action-Status-Verteilung über Forward / Rollback / Cleanup. `RecoveryExecutorService` (Disk + DB, 5 Integration-Tests) führt die gewählte Strategie aus. Die Recovery-Szenarien sind als manueller Smoketest unter `Docs/Test/Recovery-Szenarien.md` dokumentiert. Diese ADR friert das Datenmodell-Konzept ein, BPM-016 ist done (v0.27.23–v0.27.24, Branch `feature/bugfixing`).
 
@@ -2501,7 +2600,7 @@ Die Bildung des `document_key` setzt eine korrekte Segmentierung des Dateinamens
 | Feld | Zweck |
 |------|-------|
 | `delimiters` | Liste der Trennzeichen (profilgebunden, nicht global) |
-| `collapseRepeatedDelimiters` | Mehrere aufeinanderfolgende Trenner als ein Trennblock behandeln |
+| `collapseRepeatedDelimiters` | Mehrere aufeinanderfolgende Trenner als ein Trennblock behandeln *— entfällt, leere Teile werden immer übersprungen, siehe ADR-059-Addendum Tokenisierung (Audit Review 01, R01-001 E11, entschieden 2026-09-24)* |
 | `firstTokenDelimiter` | Sondertrenner für das erste Token (z.B. Leerzeichen nach Plan-Code) |
 
 Punkt (`.`) ist als Trenner profilgebunden zulässig, nicht global. Leerzeichen als globaler Splitter ist verboten — ausschließlich als `firstTokenDelimiter` erlaubt (kontrollierter Sonderfall).
@@ -2529,17 +2628,17 @@ Der Benutzer entscheidet manuell in der Import-Vorschau. V2+ kann hier eine gef�
 
 **Konsequenzen:**
 
-- 6 Tabellen in `planmanager.db`: `plan_revisions`, `plan_files`, `revision_file_links` (Cache-Schicht) + `import_journal`, `import_actions`, `import_action_files` (Journal-Schicht). Implementiert in `PlanManagerDatabase.cs` (v0.25.13, Phase F).
-- 7-Stufen-Analyse-Pipeline ist die einzige Quelle der `document_key`-Bildung: Scan → Fingerprint → Parse → Resolve Context → Build Identity → Version Decision → Execution Plan.
-- RecognitionProfile-Schema v2 (Pflicht) mit `tokenization`, `indexExtraction`, `documentTypeId`, `includeInIdentity`. Migration v1→v2 erfolgt beim Laden alter Profile.
-- `md5_hash NOT NULL` auf allen Dateien — Migration bestehender Profile/Imports muss Hashes nachpflegen.
+- 6 Tabellen in `planmanager.db`: `plan_revisions`, `plan_files`, `revision_file_links` (Cache-Schicht) + `import_journal`, `import_actions`, `import_action_files` (Journal-Schicht). Implementiert in `PlanManagerDatabase.cs` (v0.25.13, Phase F). *— überholt: eine Action je Datei, `import_action_files` gestrichen, siehe ADR-054-Addendum (Audit Review 01, R01-001 E10, entschieden 2026-09-24)*
+- 7-Stufen-Analyse-Pipeline ist die einzige Quelle der `document_key`-Bildung: Scan → Fingerprint → Parse → Resolve Context → Build Identity → Version Decision → Execution Plan. *— 7-Stufen-Pipeline mit BPM-083 entfernt, siehe ADR-054-Addendum (Audit Review 01, R01-001 E9, entschieden 2026-09-24)*
+- RecognitionProfile-Schema v2 (Pflicht) mit `tokenization`, `indexExtraction`, `documentTypeId`, `includeInIdentity`. Migration v1→v2 erfolgt beim Laden alter Profile. *— gilt erst ab Produktivphase, in der Frühphase Reset (Audit Review 01, R01-001 E6, entschieden 2026-09-24)*
+- `md5_hash NOT NULL` auf allen Dateien — Migration bestehender Profile/Imports muss Hashes nachpflegen. *— gilt erst ab Produktivphase, in der Frühphase Reset (Audit Review 01, R01-001 E6, entschieden 2026-09-24)*
 - Recovery-Logik (BPM-016) baut auf der zweistufigen Status-Struktur auf — implementiert in `RecoveryDecisionService` + `RecoveryExecutorService` (v0.27.23–v0.27.24, 10 automatisierte Tests).
 - Stage und Custom-Identity-Felder sind eigenständige Aspekte, die orthogonal zur `document_key`-Bildung wirken — keine versteckten Kopplungen.
 - DocumentKey-Format („`A_B_C`") ist ein Implementation Detail des `DocumentKeyBuilder`. Wenn `planIndex` leer/null ist, wird das Feld NICHT angehängt (kein leerer Trenner-Tail).
 
 **Verworfene Alternativen (zusammengefasst):**
 
-- 2-Tabellen-Import-Hierarchie ohne separate Datei-Ebene → ADR-007 widerspricht
+- 2-Tabellen-Import-Hierarchie ohne separate Datei-Ebene → ADR-007 widerspricht *— überholt: eine Action je Datei, `import_action_files` gestrichen, siehe ADR-054-Addendum (Audit Review 01, R01-001 E10, entschieden 2026-09-24)*
 - Dateiname/Pfad als Identity → in der Praxis nicht eindeutig
 - 1:n Verknüpfung mit nullable revision_id → bildet Sammel-DWG nicht ab
 - md5_hash optional bei IndexSource=FileName → unterläuft SKIP/Cache/Veraltet-Warnung
@@ -2552,6 +2651,20 @@ Der Benutzer entscheidet manuell in der Import-Vorschau. V2+ kann hier eine gef�
 **Offen / spätere ADRs:**
 
 - IndexSource=PlanHeader und document_key-Bildung bei nachträglich erkanntem Index (Post-V1, mit Plankopf-Modul)
+
+### ADR-054-Addendum: Bucket-Modell als V1-Statuslogik, Journal ohne Datei-Tabelle, Frühphase (2026-11-12, Audit Review 01)
+
+**Status:** ✅ Entschieden (Herbert, 2026-09-24, R01-001 E9, E10 und E6)
+**Herkunft:** Konsistenz-Audit Audit Review 01 (Befunde PM-12, TE-05, K14-03, DB-33, DD-79): Der V1-Pfad erzeugt nur `New`, `UpdateNewerIndex` und `SkipIdentical`, nach BPM-083 sind tote Status-Enum-Werte und unerreichbare Ausführungszweige stehen geblieben; die 7-Stufen-Pipeline existiert seit BPM-083 nicht mehr; `import_action_files` wird nie beschrieben oder gelesen; Profil- und Hash-Migration stehen ohne Frühphasen-Vermerk. ADR-059/064 sind neuer und bewusst vereinfacht.
+
+**Entscheidung:**
+
+1. **Bucket-Modell = einzige V1-Statuslogik:** Die Buckets aus ADR-059 P.5 (A Dubletten / B Update-Karten / C manuelle Erstaufnahme / D Konflikte) ersetzen für V1 die 7-Status-Entscheidungsmatrix (PlanManager.md 5.2/5.3). Die toten Status-Enum-Werte (`ChangedSameIndex`, `OlderRevision`, `LearnIndex`, `ChangedNoIndex` …) und ihre unerreichbaren Ausführungszweige werden entfernt; BPM-121 legt Status bei Bedarf neu an. Regeln je Bucket: ADR-059-Addendum Bucket-Modell. (Audit Review 01, R01-001 E9, entschieden 2026-09-24)
+2. **Keine 7-Stufen-Pipeline mehr:** Die 7-Stufen-Analyse-Pipeline (Konsequenzen; `DocumentKeyBuilder` als Stufe 5 in P.2) wurde mit BPM-083 (v0.28.186, ADR-064 P.9) entfernt; `DocumentKeyBuilder` ist seither ohne Aufrufer. Der `document_key` entsteht in der manuellen Erstaufnahme ID-basiert nach ADR-059 P.3 bzw. ADR-059-Addendum Teil 43 P.6. (Audit Review 01, R01-001 E9, entschieden 2026-09-24)
+3. **`import_action_files` gestrichen:** Das Journal besteht aus `import_journal` und `import_actions`; dateibezogene Journal-Werte (Pfade, `md5`, `file_size`) stehen in `import_actions`. Eine Action führt genau eine Datei (Code-Ist). Eine Revision mit 1..n Dateien (ADR-007) wird über 1..n Actions journalisiert. Die Begründung zu P.1 und die verworfene Alternative „2-Tabellen-Import-Hierarchie" sind damit überholt. Hinfällig werden damit die Tabellenzeile in P.1, „6 Tabellen" in den Konsequenzen, die Erwähnungen in ADR-007, ADR-009, ADR-045 und ADR-058 P.7 sowie „(bei Nutzung) `import_action_files.destination_path`" in ADR-064 P.8. Frühphase: projektbezogene `planmanager.db` löschen, BPM erzeugt sie ohne die Tabelle neu. (Audit Review 01, R01-001 E10, entschieden 2026-09-24)
+4. **Migrationsaussagen erst ab Produktivphase:** „Migration v1→v2 beim Laden alter Profile" und „Migration … Hashes nachpflegen" (Konsequenzen) gelten erst ab der Produktivphase; in der Frühphase wird zurückgesetzt (ADR-053 P.26/P.27, ADR-056 P.7). (Audit Review 01, R01-001 E6, entschieden 2026-09-24)
+
+**Betrifft:** ADR-007 (Undo-Journal-Konsequenz), ADR-009 (Journal-Tabellen), ADR-040 (Frühphasen-Hinweis), ADR-045 (Archivregeln), ADR-058 P.7, ADR-059 (Bucket-Modell), ADR-064 (P.8, P.9), DB-SCHEMA.md Kap. 6 (`import_action_files`), PlanManager.md 5.2/5.3.
 
 ---
 
@@ -2597,7 +2710,7 @@ DevTools liest Inventar dynamisch im Reset-Tab und zeigt es mit Multi-Select-Che
 
 **Datum:** 2026-05-18
 **Status:** ✅ Entschieden (Sign-off via CGR-2026-05-12-segmenttyp-architektur r3)
-**Implementierung:** Phase A ✅ Implemented (v0.28.44) · Phase B ✅ Implemented (v0.28.45) · Phase C ✅ Implemented (v0.28.46–v0.28.50)
+**Implementierung:** Phase A ✅ Implemented (v0.28.44) · Phase B ✅ Implemented (v0.28.45) · Phase C ✅ Implemented (v0.28.46–v0.28.50) · ⚠️ Health-Gating (P.5) seit BPM-083 (v0.28.186) ohne Anbindung, post-V1 — siehe ADR-056-Addendum (Audit Review 01, R01-001 E13, entschieden 2026-09-24)
 **Herkunft:** BPM-108 — erkannt im Zuge BPM-080.05 Schritt 2 (Token-Drag&Drop, "+ Eigenes"-Chip). `FieldType`-Enum hardcoded an mehreren Stellen, User kann weder eigene Typen anlegen noch Reihenfolge ändern. Cross-Review mit ChatGPT (3 Runden) führte zur unten beschriebenen Architektur.
 
 **Kontext:**
@@ -2630,7 +2743,7 @@ Einführung eines Zwei-Schichten-Modells in `bpm.db` (Tabellen `segment_type_gro
 
 4. **Built-ins editierbar** für `name`, `color`, `group_id`, `sort_order`, `is_active`. Update-Policy via `user_modified_*`-Flags: App-Update überschreibt nur nicht user-modifizierte Felder.
 
-5. **Soft-Delete only.** Profile referenzieren `fieldTypeId`; gelöschte/deaktivierte Typen werden bei Wizard-Reopen mit Badge gerendert. Lookup ist ungefiltert. Auto-Import wird bei Missing-ID in `identityFields`/`folderHierarchy`/`renameSchema`/`indexExtraction` blockiert (`ProfileHealth = MissingSegmentTypes`).
+5. **Soft-Delete only.** Profile referenzieren `fieldTypeId`; gelöschte/deaktivierte Typen werden bei Wizard-Reopen mit Badge gerendert. Lookup ist ungefiltert. Auto-Import wird bei Missing-ID in `identityFields`/`folderHierarchy`/`renameSchema`/`indexExtraction` blockiert (`ProfileHealth = MissingSegmentTypes`). *— Gating post-V1, siehe ADR-056-Addendum (Audit Review 01, R01-001 E13, entschieden 2026-09-24)*
 
 6. **`RecognitionRule` bleibt unverändert** (BPM-082-kompatibel: `method`/`pattern`/`segmentPosition`). `fieldTypeId` gehört in `segments[]`, nicht in `recognition[]`.
 
@@ -2656,13 +2769,26 @@ Einführung eines Zwei-Schichten-Modells in `bpm.db` (Tabellen `segment_type_gro
 
 **Referenz:** [Docs/Referenz/chatgpt-reviews/CGR-2026-05-12-segmenttyp-architektur/](../Referenz/chatgpt-reviews/CGR-2026-05-12-segmenttyp-architektur/) — 3 Runden Cross-Review mit ChatGPT GPT-5.4 (16 Dateien).
 
+### ADR-056-Addendum: Unveränderliche Schlüssel, Health-Gating post-V1 (2026-11-12, Audit Review 01)
+
+**Status:** ✅ Entschieden (Herbert, 2026-09-24, R01-001 E11 und E13)
+**Herkunft:** Konsistenz-Audit Audit Review 01 (Befunde DB-25, LU5-34, K17-01): Der Seed korrigiert `token_key` und `semantic_role` von Built-ins, obwohl beide unveränderlich sind und `SaveType` sie nie schreibt (wirkungslos, `sync_version`-Drift); der Manager vergibt den `token_key` eines neuen Custom-Typs aus einem Platzhalternamen; das Health-Gating aus P.5 steckte in `ImportWorkflowService` und hängt seit dessen Entfernung (BPM-083) an keinem Code, trotzdem steht Phase C auf „Implemented".
+
+**Entscheidung:**
+
+1. **`token_key` und `semantic_role` unveränderlich:** Beide bleiben nach Anlage unveränderlich (P.2, P.3). Die Seed-Korrektur entfällt; bei Abweichung gilt in der Frühphase Reset statt Reparatur. (Audit Review 01, R01-001 E11, entschieden 2026-09-24)
+2. **Name vor Anlage:** Der Segmenttyp-Manager fragt den Namen eines Custom-Typs vor der Anlage ab, damit der `token_key` aus dem echten Namen entsteht (P.3). (Audit Review 01, R01-001 E11, entschieden 2026-09-24)
+3. **Health-Gating post-V1:** Das Blockieren des Auto-Imports bei fehlenden Segmenttyp-IDs (P.5, `ProfileHealth = MissingSegmentTypes`) ist post-V1 — in V1 gibt es keinen profilbasierten Auto-Import. Der Implementierungsstatus oben ist entsprechend korrigiert; Soft-Delete und ungefilterter Lookup aus P.5 bleiben gültig. (Audit Review 01, R01-001 E13, entschieden 2026-09-24)
+
+**Betrifft:** ADR-058-Addendum Cross-DB (Service-Härtung 109.03) bzw. Zusagen-Triage P.1, ADR-059-Addendum Tokenisierung (BPM-130), ADR-065 (P.7, BPM-121), PlanManager.md (Segmenttyp-/Profil-Kapitel).
+
 ---
 
 ## ADR-058: Plan-Archiv-Persistenz (BPM-109) — Drei-Ebenen-Modell + Foundation Slice
 
 **Datum:** 2026-06-08
 **Status:** ✅ Entschieden (Sign-off via CGR-2026-06-08-plan-archiv-architektur r2)
-**Implementierung:** Foundation Slice (.01–.04 + .05a Stub) umgesetzt (Schema v2.0 seit v0.28.55, Drei-Zeiten-Modell .04/.04b, Import-Verdrahtung via ADR-064/BPM-120); Plandaten-Tab BPM-126/127 (v0.28.169–.172). Offen: .05 `IPlanLookupService`-Implementation (post-V1, mit dem ersten konsumierenden Modul BPM-056); .06 Stammdaten-Aliasse in BPM-121 Stufe C1 aufgegangen (Teil 53); .07 Docs-Rest erledigt Teil 53 (v0.28.187)
+**Implementierung:** Foundation Slice (.01–.04 + .05a Stub) umgesetzt (Schema v2.0 seit v0.28.55, Drei-Zeiten-Modell .04/.04b, Import-Verdrahtung via ADR-064/BPM-120); Plandaten-Tab BPM-126/127 (v0.28.169–.172). Offen: .05 `IPlanLookupService`-Implementation (post-V1, mit dem ersten konsumierenden Modul BPM-056); .06 Stammdaten-Aliasse in BPM-121 Stufe C1 aufgegangen (Teil 53); .07 Docs-Rest erledigt Teil 53 (v0.28.187). ⚠️ Offene V1-Lücken (Import-Time-Validation .03, Warnbadge für verwaiste Referenzen, Quellen-Spalte für Segmente, P.8/Stub vor .05) siehe ADR-058-Addendum Zusagen-Triage (Audit Review 01, R01-001 E13, entschieden 2026-09-24).
 **Herkunft:** BPM-109 — erkannt im Chat Teil 41 (Bautagesbericht-Use-Case „zeige damals aktuelle Pläne für Haus H1 EG"). Cross-Review mit ChatGPT (2 Runden) führte zur unten beschriebenen Architektur und Foundation-Slice-Begrenzung.
 
 **Kontext:**
@@ -2689,11 +2815,13 @@ Drei-Ebenen-Modell analog Industrie-Standard (Procore, Aconex, think project!) �
 
 6. **`building_part_aliases` (NEU)** — relational, nicht JSON. Auto-Learn-Mapping für Stammdaten. Stufe 1: exakte Normalisierung + Preview-Warnung bei fehlendem Match. Kein Fuzzy-Match, kein Auto-Anlegen ohne User-Bestätigung.
 
-7. **Bestehend bleibt:** `plan_files`, `revision_file_links`, `import_journal`, `import_actions`, `import_action_files` — Import-Journal speichert „was hat dieser Import gemacht", `plan_revision_events` speichert „was ist mit dieser Revision passiert". Beide existieren parallel.
+7. **Bestehend bleibt:** `plan_files`, `revision_file_links`, `import_journal`, `import_actions`, `import_action_files` — Import-Journal speichert „was hat dieser Import gemacht", `plan_revision_events` speichert „was ist mit dieser Revision passiert". Beide existieren parallel. *— überholt: eine Action je Datei, `import_action_files` gestrichen, siehe ADR-054-Addendum (Audit Review 01, R01-001 E10, entschieden 2026-09-24)*
 
 8. **`IPlanLookupService`** — öffentliche API für konsumierende Module:
    - `FindCurrentPlansAsync(projectId, buildingPartId, buildingLevelId, documentTypeIds, atUtc)` — Zeitreise-Query
    - `CreatePlanContextSnapshotAsync(sourceModule, sourceId, atUtc, filters)` — schreibt `plan_context_links` mit `fixed_revision`
+
+   *— Vertrag und Stub (.05a) vor BPM-109.05 um `projectId` und `link_type` ergänzen, siehe ADR-058-Addendum Zusagen-Triage (Audit Review 01, R01-001 E13, entschieden 2026-09-24)*
 
 9. **Foundation Slice = V1-Sperrposten:**
    - `.01 Schema v2 neu erzeugen`
@@ -2748,6 +2876,8 @@ Das Modell entspricht den Drei-Ebenen-Mustern von Procore (Drawing/Revision/Shee
 
 ### ADR-058-Addendum: Cross-DB Soft References (2026-06-08, CGR r3)
 
+*Verweiskonvention (Audit Review 01): Ein unqualifiziertes „ADR-058-Addendum" (in ADR.md und anderen Docs) meint dieses Addendum; Verweise auf das spätere Addendum lauten „ADR-058-Addendum Zusagen-Triage".*
+
 **Status:** ✅ Entschieden (Sign-off via CGR-2026-06-08-plan-archiv-architektur r3)
 **Herkunft:** Beim Vorbereiten von BPM-109.01 aufgefallen — die in DB-SCHEMA Kap. 6.7 / ADR-058 skizzierten neuen Tabellen in `planmanager.db` deklarierten FKs auf `building_parts`/`building_levels`/`segment_types`, die in `bpm.db` liegen. Cross-Review r3 (Claude + ChatGPT GPT-5.4) bestätigte Option A.
 
@@ -2755,7 +2885,7 @@ Das Modell entspricht den Drei-Ebenen-Mustern von Procore (Drawing/Revision/Shee
 
 **Entscheidung (Option A — 2 DBs behalten):**
 
-1. **Architektur-Invariante:** `planmanager.db` bleibt pro Projekt lokale, rebuildbare PlanManager-Cache-/Journal-DB. Bezüge auf `bpm.db`-Tabellen sind **logische Referenzen** (`TEXT`-Spalten ohne `FOREIGN KEY`), die durch Import-/Lookup-Services validiert werden. Harte FKs bleiben **nur innerhalb derselben DB-Datei**.
+1. **Architektur-Invariante:** `planmanager.db` bleibt pro Projekt lokale, rebuildbare PlanManager-Cache-/Journal-DB. Bezüge auf `bpm.db`-Tabellen sind **logische Referenzen** (`TEXT`-Spalten ohne `FOREIGN KEY`), die durch Import-/Lookup-Services validiert werden. Harte FKs bleiben **nur innerhalb derselben DB-Datei**. *— Einstufung „rebuildbarer Cache" (auch in P.2/P.3) ersetzt durch ADR-066: `planmanager.db` = autorierte, zu sichernde Projektdaten; die DB-Grenze und die Soft-Reference-Regel bleiben unverändert (Audit Review 01, R01-001 E4, entschieden 2026-09-24)*
 
 2. **Muster:** *„System-of-record DB + rebuildable bounded cache DB"* — **nicht** „Database per Module" (das wäre ein Anti-Pattern beim modularen Monolithen). Der Split `bpm.db` ↔ `planmanager.db` ist durch **Disposability + Projektkardinalität + Sync-Politik** gerechtfertigt, nicht durch Modul-Trennung. Ein künftiges Modul (z.B. Foto) bekommt nur dann eine eigene DB, wenn es ebenfalls einen rebuildbaren lokalen Cache mit eigenem Lebenszyklus braucht.
 
@@ -2774,7 +2904,7 @@ Das Modell entspricht den Drei-Ebenen-Mustern von Procore (Drawing/Revision/Shee
 - **BPM-109.03:** Import-Time-Validation (`ResolveBuildingPart`/`ResolveSegmentType` gegen `bpm.db`; deckt sich mit ADR-056-Health-Logik).
 - **post-V1:** App-Level Delete Guard, `PlanReferenceHealth`-Revalidate-Command, `ATTACH bpm.db`-Kapselung ausschließlich in `IPlanLookupService` (kein UI-/Repo-SQL über die Grenze).
 
-**Offener Punkt:** `plan_context_links` ist **kein** rebuildbarer Cache, sondern autorierte Cross-Modul-Verknüpfung (nicht aus Dateisystem rekonstruierbar). Spannung zum „disposable cache"-Modell. Für den Foundation Slice bleibt die Tabelle wie in ADR-058 in `planmanager.db` (nur angelegt, aktiv erst mit BPM-056). **Heimat neu bewerten, wenn BPM-056-Sync kommt.**
+**Offener Punkt:** `plan_context_links` ist **kein** rebuildbarer Cache, sondern autorierte Cross-Modul-Verknüpfung (nicht aus Dateisystem rekonstruierbar). Spannung zum „disposable cache"-Modell. Für den Foundation Slice bleibt die Tabelle wie in ADR-058 in `planmanager.db` (nur angelegt, aktiv erst mit BPM-056). **Heimat neu bewerten, wenn BPM-056-Sync kommt.** *— Beantwortet durch ADR-066: `planmanager.db` gilt als autorierte, zu sichernde Projektdaten, damit entfällt die Spannung zum „disposable cache"-Modell; `plan_context_links` bleibt in `planmanager.db` (Audit Review 01, R01-001 E4, entschieden 2026-09-24)*
 
 **Erweiterung Drei-Zeiten-Modell (BPM-109.04/.04b, Teil 42):** Eine Plan-Revision trägt drei Zeiten:
 - **`current_from`/`superseded_at`** — technisches Gültigkeitsfenster (Supersede-Kette). Invariante: `superseded_at`(alt) == `current_from`(neu), ein `actionTime` pro Import-Aktion → Zeitreise lückenlos.
@@ -2783,6 +2913,20 @@ Das Modell entspricht den Drei-Ebenen-Mustern von Procore (Drawing/Revision/Shee
 - **Bautagebuch-Regel (post-V1):** effektives Datum = `released_at` wenn vorhanden, sonst `received_at`; bei Fallback **visuell markiert** (Farbe + Hinweis „Importdatum"). Geliefert via `IPlanLookupService` (`EffectiveDate`/`IsDateFallback`). Damit bleibt die `fixed_revision`-Invariante kompatibel: ein Bericht zeigt die festgezogene Revision mit ihrem effektiven Datum.
 
 **Referenz:** CGR-2026-06-08-plan-archiv-architektur **r3** (DB-Grenze).
+
+### ADR-058-Addendum: Zusagen-Triage für V1 (2026-11-12, Audit Review 01)
+
+**Status:** ✅ Entschieden (Herbert, 2026-09-24, R01-001 E13)
+**Herkunft:** Konsistenz-Audit Audit Review 01 (Befunde K17-05, K24-08, K25-06, K27-08): Die Import-Time-Validation (BPM-109.03) und der Warnbadge für verwaiste Bauteil-/Geschoss-Referenzen sind zugesagt, im Code aber nicht vorhanden; `plan_document_segments` führt keine Quelle; der `IPlanLookupService`-Stub übergibt `CreatePlanContextSnapshotAsync` weder `projectId` noch `link_type`, obwohl `plan_context_links.link_type` NOT NULL ist — BPM-109.05 ist so nicht umsetzbar. Triage-Regel: Datenintegrität/Datenverlust → für V1 nachbauen; Komfort-/Lernfunktionen → per Addendum post-V1. (Audit Review 01, R01-001 E13, entschieden 2026-09-24)
+
+**Entscheidung:**
+
+1. **Import-Time-Validation ist V1:** Die Prüfung der Cross-DB-Soft-References gegen `bpm.db` vor dem Schreiben (Service-Härtung BPM-109.03 oben) wird für V1 nachgebaut; sie war trotz erledigtem Task nicht umgesetzt.
+2. **Warnbadge für verwaiste Referenzen ist V1:** Pläne mit soft-gelöschten Bauteil-/Geschoss-Referenzen (Sub-Entscheidung (b)) zeigen in V1 Warnung + Badge. Der App-Level Delete Guard bleibt post-V1.
+3. **Quellen-Spalte für Segmente:** `plan_document_segments` erhält jetzt eine Spalte für die Quelle des Segmentwerts (Name bei Umsetzung). Frühphase: projektbezogene `planmanager.db` löschen, BPM erzeugt sie neu.
+4. **P.8/Stub vor BPM-109.05 anpassen:** Der Vertrag von `CreatePlanContextSnapshotAsync` und der Interface-Stub (.05a) werden vor der Umsetzung von BPM-109.05 um `projectId` und `link_type` ergänzt.
+
+**Betrifft:** ADR-056-Addendum (Health-Gating post-V1), ADR-065 (Segmentquelle als Lerngrundlage für BPM-121), DB-SCHEMA.md Kap. 6 (`plan_document_segments`, `plan_context_links`), ClickUp BPM-109.03/.05.
 
 ---
 
@@ -2809,12 +2953,12 @@ Das bisherige Erkennungs-Modell extrahiert Identitätsfelder (haus/geschoss/plan
 
 5. **V1-UI = Radial-/Nautilus-Menü** als primäre Erfassungsgeste (Herberts Mockup `02_ManuellSortieren.html`, überarbeitet zu echter konzentrischer Ring-/Fächer-Geometrie). Bedingungen:
    - **Pending Assignments:** Radial schreibt nur einen Vorschlag-Zustand; finaler Import erst nach Preview/Bestätigung (Journal vor Dateioperationen bleibt).
-   - **Harte Caps:** max. 3 Kaskadenringe (**Plantyp → Bauteil → Geschoss**); Plantyp ≤8 Segmente (~7 fix: Polierplan/Bewehrung/Schalung/Fertigteil/Doka-Schalung/Leica-Vermessung/Protokoll); Bauteil ≤8 direkt / 9–16 paginiert / ≥17 Favoriten+Quick-Filter / ≥25 Listen-Fallback Pflicht; Bulk 2–8 direkt / 9–20 Zusatzbestätigung / >20 Fallback.
-   - **Capture-vs-Update-Buckets:** A Dubletten / B Update-Karten / C manuelle Erstaufnahme (→ Radial) / D Konflikte. Nur Bucket C öffnet das Radial; matched Updates überspringen es.
+   - **Harte Caps:** max. 3 Kaskadenringe (**Plantyp[^plantyp] → Bauteil → Geschoss**); Plantyp ≤8 Segmente (~7 fix: Polierplan/Bewehrung/Schalung/Fertigteil/Doka-Schalung/Leica-Vermessung/Protokoll); Bauteil ≤8 direkt / 9–16 paginiert / ≥17 Favoriten+Quick-Filter / ≥25 Listen-Fallback Pflicht; Bulk 2–8 direkt / 9–20 Zusatzbestätigung / >20 Fallback.
+   - **Capture-vs-Update-Buckets:** A Dubletten / B Update-Karten / C manuelle Erstaufnahme (→ Radial) / D Konflikte. Nur Bucket C öffnet das Radial; matched Updates überspringen es. *— einzige V1-Statuslogik, Regeln je Bucket siehe ADR-059-Addendum Bucket-Modell (Audit Review 01, R01-001 E9, entschieden 2026-09-24)*
    - **Dauerhaftes rechtes Detail-Panel** als Kontroll-/Bulk-/Fallback-Fläche (PlanNummer/Index-Kandidaten, Zielpfad, editierbar).
    - **Undo zweistufig:** vor Import = Pending-Assignment rückgängig; nach Import = bestehendes Import-/Undo-Journal.
 
-6. **Design-Detail-Entscheidungen (Herbert):** Geschoss als **3. Radial-Ring** (≤6 direkt, ab 7 Liste); Bauteil-Sortierung **kontextbasiert** (Kandidat + zuletzt verwendet, dann natural sort); „+ Bauteil" als **Inline-Schnellanlage** (+ Link zu Projekt-Einstellungen); PDF+DWG default **„eine Revision"**-Vorschlag (im Panel bestätigt); Listen-Fallback als **dauerhaftes Panel** (kein separater Dialog).
+6. **Design-Detail-Entscheidungen (Herbert):** Geschoss als **3. Radial-Ring** (≤6 direkt, ab 7 Liste); Bauteil-Sortierung **kontextbasiert** (Kandidat + zuletzt verwendet, dann natural sort); „+ Bauteil" als **Inline-Schnellanlage** (+ Link zu Projekt-Einstellungen); PDF+DWG default **„eine Revision"**-Vorschlag (im Panel bestätigt) *— DXF gehört mit in die Paarung, siehe ADR-059-Addendum Bucket-Modell (Audit Review 01, R01-001 E9, entschieden 2026-09-24)*; Listen-Fallback als **dauerhaftes Panel** (kein separater Dialog).
 
 7. **Kombi-Pläne (mehrere Plantypen in einer Datei):** in V1 KEIN Auto-Split in mehrere `plan_documents`; stattdessen Plantyp „Kombiplan/Sonstiges" + Tags/`plan_document_segments`. Aufspaltung nur manuell/ausdrücklich.
 
@@ -2839,7 +2983,11 @@ Das bisherige Erkennungs-Modell extrahiert Identitätsfelder (haus/geschoss/plan
 
 **Referenz:** [Docs/Referenz/chatgpt-reviews/CGR-2026-06-09-plan-erkennung/](../Referenz/chatgpt-reviews/CGR-2026-06-09-plan-erkennung/) — 3 Runden Cross-Review mit ChatGPT GPT-5.4 (r1 Feld-Extraktionsmodell + Feldkey-Bug, r2 Strategie-Pivot A→B, r3 Radial-UI Sign-off).
 
+[^plantyp]: „Plantyp" meint in ADR-059 durchgehend den **Dokumenttyp** (`document_types`, siehe ADR-059-Addendum Teil 43, ADR-061, ADR-065 P.7). Der Begriff stammt aus der Zeit vor den Dokumenttyp-Stammdaten; der ADR-Text wird nicht umgeschrieben (Audit Review 01, R01-001 E16, entschieden 2026-09-24).
+
 ### ADR-059-Addendum: Typabhängiges Unterteilungs-Schema + Dokumenttyp-Stammdaten (2026-06-11, Teil 43)
+
+*Verweiskonvention (Audit Review 01): Ein unqualifiziertes „ADR-059-Addendum" (in ADR.md und anderen Docs) meint dieses Addendum (Teil 43); die späteren Addenda heißen „ADR-059-Addendum Bucket-Modell", „… Tokenisierung" und „… Ordneranlage".*
 
 **Kontext:** Die Mockup-Iteration zu BPM-111.01 ergab, dass Ring 2 des Radials NICHT immer „Bauteil" ist: Protokolle unterteilen nach Protokollart (Baubesprechung/Bautagesbericht/Sicherheit/Abnahme), Fertigteilpläne nach Kategorie (Wände/Decken/Stiegen). `building_parts`/`building_levels` existieren bereits als Stammdaten in `bpm.db` (Kap. 4.4/4.5) — was fehlt, sind Dokumenttyp-Stammdaten mit Unterteilungs-Konfiguration.
 
@@ -2848,13 +2996,60 @@ Das bisherige Erkennungs-Modell extrahiert Identitätsfelder (haus/geschoss/plan
 1. **Neue Tabelle `document_types` in bpm.db** (projekt-scoped wie `building_parts`, harter FK auf `projects`, ULID + 6 Sync-Spalten nach Kap. 9.3): `name`, `folder_name`, `color_hex` (Radial-Segmentfarbe), **`ring2_source` CHECK IN (`building_parts`, `categories`, `none`)**, `sort_order`, `is_builtin`. Ring 3 (Geschoss) gibt es implizit nur bei `ring2_source='building_parts'` (`building_levels` je Bauteil).
 2. **Neue Tabelle `document_type_categories` in bpm.db** (harter FK auf `document_types`): typgebundene Kategorien (`name`, `folder_name`, `sort_order` + Sync-Spalten).
 3. **Verortung bpm.db, nicht planmanager.db** — konsistent mit dem ADR-058-Addendum (Stammdaten zentral + syncbar, `planmanager.db` bleibt Plan-Archiv). `plan_documents.document_type_id` bleibt Cross-DB-Soft-Reference (TEXT, kein FK); die Anzahl der Soft-Refs steigt nicht.
-4. **Ordnernamen-Regel (verbindlich, aus Mockup-Spez):** `folder_name` wird genau EINMAL beim Anlegen erzeugt (`IPlanValueNormalizer.NormalizeForFolderName`) und gespeichert — Präfixe wie „00 " bleiben erhalten, Umbenennen des Anzeigenamens ändert den Ordnernamen nicht automatisch, nur die App legt Ordner an/um. Entscheidung: eigenes Feld statt Präfix-Template (Template optional später). **`building_parts` erhält dafür zusätzlich eine `folder_name`-Spalte** (bisher nur `short_name`).
-5. **Seed bei Projektanlage** (= „Default-Ordnerstruktur ist der Seed der Stammdaten", DB ab dann führend): Built-in-Typen Polierplan `#185FA5`, Statik `#534AB7`, Bewehrung `#993C1D`, Schalung `#1F7280`, Architektur `#0F6E56` (alle `building_parts`) · Fertigteile `#6E6E6E` (`categories`: Wände/Decken/Stiegen) · Protokolle `#555555` (`categories`: Baubesprechung/Bautagesbericht/Sicherheit/Abnahme). „+ Neu…" in jeder Ringebene = Schnellanlage in diese Stammdaten + sofortige physische Ordner-Anlage; Pflege (Umbenennen/Löschen/Sortieren) in den Projekt-Einstellungen.
-6. **document_key präzisiert:** räumlich = `document_type_id + building_part_id [+ building_level_id] + plan_number`; kategorial (Typen ohne Plannummer) = `document_type_id + category_id + (Datum ?? Dateiname)`. Die Erstaufnahme (CaptureConfirmService) stellt auf Stammdaten-IDs um, sobald die Ringe daraus gespeist werden (BPM-111.05 Slice 2).
+4. **Ordnernamen-Regel (verbindlich, aus Mockup-Spez):** `folder_name` wird genau EINMAL beim Anlegen erzeugt (`IPlanValueNormalizer.NormalizeForFolderName`) und gespeichert — Präfixe wie „00 " bleiben erhalten, Umbenennen des Anzeigenamens ändert den Ordnernamen nicht automatisch, nur die App legt Ordner an/um. Entscheidung: eigenes Feld statt Präfix-Template (Template optional später). **`building_parts` erhält dafür zusätzlich eine `folder_name`-Spalte** (bisher nur `short_name`). *— präzisiert: bis zur Ordneranlage beim journalisierten Import dürfen `folder_name` und Präfix neu berechnet werden, rename-stabil erst ab Ordneranlage, siehe ADR-059-Addendum Ordneranlage (Audit Review 01, R01-001 E12, entschieden 2026-09-24)*
+5. **Seed bei Projektanlage** (= „Default-Ordnerstruktur ist der Seed der Stammdaten", DB ab dann führend): Built-in-Typen Polierplan `#185FA5`, Statik `#534AB7`, Bewehrung `#993C1D`, Schalung `#1F7280`, Architektur `#0F6E56` (alle `building_parts`) · Fertigteile `#6E6E6E` (`categories`: Wände/Decken/Stiegen) · Protokolle `#555555` (`categories`: Baubesprechung/Bautagesbericht/Sicherheit/Abnahme). „+ Neu…" in jeder Ringebene = Schnellanlage in diese Stammdaten + sofortige physische Ordner-Anlage; Pflege (Umbenennen/Löschen/Sortieren) in den Projekt-Einstellungen. *— geändert: Der Ordner entsteht beim journalisierten Import, nicht bei der Schnellanlage, siehe ADR-059-Addendum Ordneranlage (Audit Review 01, R01-001 E12, entschieden 2026-09-24)*
+6. **document_key präzisiert:** räumlich = `document_type_id + building_part_id [+ building_level_id] + plan_number`; kategorial (Typen ohne Plannummer) = `document_type_id + category_id + (Datum ?? Dateiname)`. Die Erstaufnahme (CaptureConfirmService) stellt auf Stammdaten-IDs um, sobald die Ringe daraus gespeist werden (BPM-111.05 Slice 2). *— kategorial: Code-Ist `Plannummer ?? Dateiname`, fachlich zu prüfen, bis dahin gilt der Code-Ist, siehe ADR-059-Addendum Bucket-Modell (Audit Review 01, R01-001 E9, entschieden 2026-09-24)*
 
 **Frühphase:** Neue Tabellen sind additiv (`CREATE TABLE IF NOT EXISTS`); die `folder_name`-Spalte in `building_parts` ist eine Bestandsänderung → **Reset-Anweisung: bpm.db löschen, BPM legt sie beim nächsten Start neu an** (keine Migration, INDEX.md-Frühphasenregel).
 
 **Konsequenzen:** DB-SCHEMA.md Kap. 4.12/4.13 neu + Kap. 4.4 ergänzt; Einstellungen Tab 2 braucht post-Slice eine Pflege-UI für Typen/Kategorien; BPM-111.05 Slice 2 baut den Ring-Daten-Service auf diesen Tabellen auf.
+
+### ADR-059-Addendum: Bucket-Modell als einzige V1-Statuslogik (2026-11-12, Audit Review 01)
+
+**Status:** ✅ Entschieden (Herbert, 2026-09-24, R01-001 E9; Punkt 6 E13)
+**Herkunft:** Konsistenz-Audit Audit Review 01 (Befunde PM-12, TE-05, K14-03, K26-08, PM-50, PM-49, K26-10): PlanManager.md beschreibt eine 7-Status-Matrix, der V1-Pfad erzeugt nur drei Status; Konflikte (Bucket D) lassen sich per Radial als Erstaufnahme importieren; Bucket-B-Aktionen sind in Akzeptanzkriterien, Doku und Code verschieden; die PDF/DWG-Paarung kennt kein DXF; der kategoriale `document_key` weicht vom Teil-43-Addendum P.6 ab; offene Pending-Zuordnungen gehen beim Verlassen der Projektansicht ohne Rückfrage verloren.
+
+**Entscheidung:**
+
+1. **Einzige V1-Statuslogik:** Die Buckets A–D aus ADR-059 P.5 sind die V1-Wahrheit. Die 7-Status-Matrix aus PlanManager.md entfällt, tote Status-Enums werden entfernt (ADR-054-Addendum). (Audit Review 01, R01-001 E9, entschieden 2026-09-24)
+2. **Bucket B (Update-Karten):** In V1 mit den Aktionen „Übernehmen" und „Überspringen"; Akzeptanzkriterien und Mockup werden angeglichen. (Audit Review 01, R01-001 E9, entschieden 2026-09-24)
+3. **Bucket D (Konflikte):** Konflikte werden nur über das Detail-Panel bzw. einen Auswahldialog aufgelöst, nie per Radial als Erstaufnahme — Konfliktzeilen sind für das Radial gesperrt wie Bucket A und B. (Audit Review 01, R01-001 E9, entschieden 2026-09-24)
+4. **PDF/DWG/DXF-Paarung:** DXF wird in die Paarung aufgenommen (wie ADR-054 P.3 „pdf+dxf"); der Default-Vorschlag „eine Revision" nach ADR-059 P.6 (im Panel bestätigt) bleibt. (Audit Review 01, R01-001 E9, entschieden 2026-09-24)
+5. **Kategorialer `document_key` (PM-49):** Teil-43-Addendum P.6 nennt `Datum ?? Dateiname`, der Code bildet `Plannummer ?? Dateiname`. Fachlich zu prüfen; bis dahin gilt der Code-Ist. (Audit Review 01, R01-001 E9, entschieden 2026-09-24)
+6. **Pending-Zuordnungen:** Verlässt der User die Projektansicht mit offenen Pending-Zuordnungen (ADR-059 P.5), warnt BPM vorher (V1, Schutz vor Datenverlust). (Audit Review 01, R01-001 E13, entschieden 2026-09-24)
+
+Archivname und Archivierung bei Indexwechsel: ADR-045-Addendum.
+
+**Betrifft:** ADR-045-Addendum (Archivregeln), ADR-054 (P.3 Auto-Link, Addendum Statuslogik), ADR-064 (Journal/Undo), PlanManager.md (Status-/Bucket-Kapitel), Mockup `02_ManuellSortieren`, ClickUp BPM-111.
+
+### ADR-059-Addendum: Tokenisierung, Index-Pflicht und Begriff „Plantyp" (2026-11-12, Audit Review 01)
+
+**Status:** ✅ Entschieden (Herbert, 2026-09-24, R01-001 E11 und E16)
+**Herkunft:** Konsistenz-Audit Audit Review 01 (Befunde LU5-29, LU5-36, LU6-30, PM-09, BG-56): Tracker, Doku und Code widersprechen sich bei der Index-Pflicht im Profil-Wizard (Schritt 3), bei den Default-Trennern und beim wirkungslosen `collapseRepeatedDelimiters`; der Segment-Editor zerlegt mit einer eigenen Trennerklasse (inkl. Leerzeichen und Punkt), sodass Wizard und Editor zwei verschiedene Zerlegungen hätten. BPM-130 baut die Profil-UI vollständig nach ADR-065 P.7 um und setzt dabei diese Regeln um. ADR-059 spricht noch von „Plantyp".
+
+**Entscheidung:**
+
+1. **Index optional = warnen statt blockieren:** Fehlt im Profil ein `planIndex`-Segment, warnt der Wizard, statt das Weiterkommen zu blockieren (ändert ADR-045 „muss zugewiesen sein"). (Audit Review 01, R01-001 E11, entschieden 2026-09-24)
+2. **Default-Trenner „- _":** Bindestrich und Unterstrich sind die Default-Trenner; der Punkt ist nur profilgebunden zulässig (ADR-054 P.9). (Audit Review 01, R01-001 E11, entschieden 2026-09-24)
+3. **`collapseRepeatedDelimiters` entfällt:** Leere Teile werden immer übersprungen; das Flag verschwindet aus `tokenization` (ADR-054 P.9). Frühphase: Profil-Schema-Änderung per Reset, keine Migration. (Audit Review 01, R01-001 E11, entschieden 2026-09-24)
+4. **Eine Zerlegung:** Der Segment-Editor startet mit dem `FileNameParser` und den Profil-Trennern — keine eigene, hartcodierte Trennerklasse (ADR-065 P.9: gleiche Token-Grenzsemantik wie `FileNameParser`). (Audit Review 01, R01-001 E11, entschieden 2026-09-24)
+5. **„Plantyp" = Dokumenttyp:** Der Begriff wird in ADR-059 per Fußnote erklärt, nicht umgeschrieben. (Audit Review 01, R01-001 E16, entschieden 2026-09-24)
+
+**Betrifft:** ADR-045 (Index-Toggle im Wizard), ADR-054 P.9 (`tokenization`), ADR-056-Addendum (Segmenttyp-Schlüssel), ADR-065 (P.7 Profil-UI, P.9 Token-Grenzen), PlanManager.md 13.4/15.6.3, GLOSSAR („Plantyp"), ClickUp BPM-130.
+
+### ADR-059-Addendum: Ordneranlage beim journalisierten Import + eindeutige Ordnernamen (2026-11-12, Audit Review 01)
+
+**Status:** ✅ Entschieden (Herbert, 2026-09-24, R01-001 E12)
+**Herkunft:** Konsistenz-Audit Audit Review 01 (Befunde K14-04, K24-02, K24-03, K24-06, K24-12, K27-03, LU6-18): `building_parts`, `building_levels` und `document_type_categories` bilden Ordnernamen und Radial-Segmente, haben aber keinen Eindeutigkeitsschutz; Geschossnamen dürfen leer sein; die Radial-Schnellanlage setzt den Geschoss-Präfix fest auf „00" und legt entgegen Teil-43-Addendum P.5 keinen Ordner an (er entsteht erst beim Import); der stabile Ordnername ist beim Bearbeiten unsichtbar; BPM-116 plant ein automatisches Umbenennen von Ordnern ohne Journal. (Audit Review 01, R01-001 E12, entschieden 2026-09-24)
+
+**Entscheidung:**
+
+1. **Ordner entsteht beim journalisierten Import:** Die Schnellanlage („+ Neu…") legt nur den Stammdatensatz an; der physische Ordner entsteht erst beim journalisierten Import (ADR-064). Ändert Teil-43-Addendum P.5 („sofortige physische Ordner-Anlage"); der Mockup-Text wird angepasst. Damit entstehen keine leeren Waisenordner.
+2. **Neuberechnung bis zur Ordneranlage:** Solange kein physischer Ordner existiert, dürfen `folder_name` und Präfix neu berechnet werden. Ab der Ordneranlage gilt die Ordnernamen-Regel aus Teil-43-Addendum P.4 (rename-stabil).
+3. **Umbenennen nur explizit und journalisiert:** Ein bestehender Ordner wird nur per explizitem, journalisiertem Befehl umbenannt — kein automatisches Umbenennen (BPM-116 wird umformuliert).
+4. **Eindeutige Ordnernamen:** Partieller UNIQUE-Index auf den normalisierten `folder_name` (`is_deleted = 0`) für `building_parts` (je Projekt), `building_levels` (je Bauteil) und `document_type_categories` (je Dokumenttyp), dazu eine Kollisionsprüfung im Dialog. Der Geschossname ist Pflicht; `folder_name` wird schreibgeschützt angezeigt. Frühphase: `bpm.db` löschen, BPM legt sie mit den Indizes neu an.
+
+**Betrifft:** ADR-061 (DB als einzige Ordner-Wahrheit, P.1 rename-stabile `folder_name`), ADR-064 (journalisierte Dateioperationen), DB-SCHEMA.md Kap. 4.4/4.5/4.13, ProjectEditDialog, Mockup `02_ManuellSortieren`, ClickUp BPM-116.
 
 ---
 
@@ -2881,7 +3076,7 @@ Das bisherige Erkennungs-Modell extrahiert Identitätsfelder (haus/geschoss/plan
 
 2. **Eigenes schmales Interface statt `System.IO.Abstractions`** (Projektregel keine neuen Libraries ohne Freigabe; BPM braucht nur wenige kontrollierte Operationen mit BPM-Verhalten: Logging, DSGVO-Pfadmaskierung, Same-Volume-Prüfung, Cloud-Vorsicht). `FileInfoSnapshot`-Record statt `System.IO.FileInfo`.
 
-3. **Zwei Zusatz-Ports für den In-App-Explorer:** `IFileLauncher` (`OpenFile` via ShellExecute / `OpenFolder` / `RevealInExplorer` / `CopyPathToClipboard`) — NICHT im File-Port. Später `IShareService` (Windows-Share-Sheet); echte Cloud-Share-Links bewusst **out-of-scope** (Provider-APIs, Online-Zwang, DSGVO/Berechtigungen).
+3. **Zwei Zusatz-Ports für den In-App-Explorer:** `IFileLauncher` (`OpenFile` via ShellExecute / `OpenFolder` / `RevealInExplorer` / `CopyPathToClipboard`) — NICHT im File-Port. *— `CopyPathToClipboard` gestrichen (Clipboard = reine UI-Aktion), siehe ADR-060-Addendum (Audit Review 01, R01-001 E1, entschieden 2026-09-24)* Später `IShareService` (Windows-Share-Sheet); echte Cloud-Share-Links bewusst **out-of-scope** (Provider-APIs, Online-Zwang, DSGVO/Berechtigungen).
 
 4. **Schichtregel:** Views/ViewModels nie `System.IO`; PlanManager/Settings keine direkten `File`/`Directory`/`Path`-Aufrufe; Infrastructure = echte `System.IO`; Domain nur Interfaces/Modelle. Bestehende High-Level-Services (`ProjectFolderService`, `ImportExecutionService`, `RecoveryExecutorService`, `CaptureConfirmService`) bleiben fachlich, werden nur von direktem `System.IO` entkoppelt.
 
@@ -2897,11 +3092,28 @@ Das bisherige Erkennungs-Modell extrahiert Identitätsfelder (haus/geschoss/plan
 
 **Alternativen verworfen:** `System.IO.Abstractions` (NuGet — jetzt nicht: Lib-Regel + zu breite Fläche); God-Interface `IFileStorage` (Coupling, schwer testbar).
 
-**DSGVO:** Klasse A (technische Dateioperationen). Pfade/Dateinamen können Personenbezug tragen → DSGVO-Pfadmaskierung beim Logging zentral im Adapter.
+**DSGVO:** Klasse A (technische Dateioperationen). Pfade/Dateinamen können Personenbezug tragen → DSGVO-Pfadmaskierung beim Logging zentral im Adapter. *— präzisiert: zentral vor jedem Loggen, nicht nur im Adapter, siehe ADR-060-Addendum (Audit Review 01, R01-001 E2, entschieden 2026-09-24)*
 
 **Betrifft:** ADR-053 (Server-Sync — Ports erleichtern spätere Remote-Adapter), ADR-061 (Resolver/Import nutzen die Ports), Architektur-Doc (Schichtgrenzen), DSVGO-Architektur.md.
 
 **Referenz:** [Docs/Referenz/chatgpt-reviews/CGR-2026-06-22-bpm-architektur/](../Referenz/chatgpt-reviews/CGR-2026-06-22-bpm-architektur/) — 4 Runden Cross-Review (r1 Port-Zuschnitt/Testbarkeit, r2–r4 Slices/Sign-off). ClickUp: BPM-112.
+
+### ADR-060-Addendum: Dokumentierte Ausnahmen in der UI-Schicht + zentrale Pfadmaskierung (2026-11-12, Audit Review 01)
+
+**Status:** ✅ Entschieden (Herbert, 2026-09-24, R01-001 E1 und E2)
+**Herkunft:** Konsistenz-Audit Audit Review 01 (Befunde AR-30, AR-31, LU5-40, LU3-20, AR-23, DS-04): In UI-nahen Fällen werden die Ports umgangen (Process.Start, Clipboard, SetupDialog vor dem DI-Aufbau), UserControls bekommen Ports per Property aus dem Code-Behind; Services loggen direkt neben dem maskierten Adapter volle Pfade inkl. Windows-Benutzerordner, und der DevTools-Bug-Report exportiert Benutzername und DB-Pfad.
+
+**Entscheidung:**
+
+1. **Ports nur per DI, mit dokumentierten Ausnahmen:** Services, Ports und DB-Klassen kommen nur per DI (Container bzw. registrierte Factory je Projekt, eine Instanz-Welt). Dokumentierte Ausnahmen von der DI- bzw. Port-Pflicht (P.1/P.4):
+   - **Bootstrap vor DI:** Der SetupDialog läuft vor dem Aufbau des Containers und darf `System.IO` direkt nutzen.
+   - **Reine UI-Aktionen:** Clipboard („Pfad kopieren") bleibt eine UI-Aktion im View; `CopyPathToClipboard` wird aus `IFileLauncher` gestrichen (P.3).
+   - **XAML-UserControls:** Ports werden über ViewModel/DataContext an UserControls weitergegeben (Ausnahme von der Konstruktor-Injektion; die UserControls nutzen weiterhin die Ports).
+
+   Keine Ausnahme ist das Öffnen eines Projektordners: Es läuft über `IFileLauncher` (kein `Process.Start` im ViewModel). Ein FileSystemWatcher wird erst über einen eigenen Port genutzt, der noch nicht existiert. (Audit Review 01, R01-001 E1, entschieden 2026-09-24)
+2. **Zentrale Pfadmaskierung vor dem Loggen:** Pfade werden zentral vor dem Loggen maskiert (Datei- bzw. Ordnername statt voller Pfad) — nicht nur im `LocalFileSystem`-Adapter, sondern für jede Log-Ausgabe (zentraler Maskierungs-Helper, Name bei Umsetzung). Statisches Serilog (`Log.*`) bleibt der Standard (kein `ILogger<T>`). Der Windows-Benutzername kommt nie in Logs oder den Bug-Report; der Rechnername ist als technisches Gerätemerkmal erlaubt. (Audit Review 01, R01-001 E2, entschieden 2026-09-24)
+
+**Betrifft:** ADR-015 (Serilog), ADR-043 (DevTools-Bug-Report), ADR-052 (IUserContext), ADR-064 (DSGVO-Zeile: Pfad-Logging), CODING_STANDARDS Kap. 8/19.5, DSVGO-Architektur.md (Logging), WPF_UI_Architecture (FileSystemWatcher-Muster).
 
 ---
 
@@ -2918,7 +3130,7 @@ Zwei getrennte Ordner-Wahrheiten, die sich nicht kennen: `AppSettings.FolderTemp
 
 **Entscheidung:** Nach Bootstrap ist die DB die EINZIGE fachliche Ordner-/Typ-Wahrheit; `FolderTemplate` ist nur Bootstrap-Quelle beim Projekt-Setup.
 
-1. **Schema `document_types`:** + `key` (TEXT NOT NULL, `UNIQUE(project_id, key)`, nach Anlage gesperrt, ≠ UI-Name) + `root_relative_path` (TEXT NOT NULL, echter Root je Typ: „01 Planunterlagen" / „06 Protokolle"; CHECK `<> ''`) + `folder_name` (Typordner unter Root, **leer bei Root-Typ**). `document_type_categories.folder_name` = echter (ggf. präfixierter) Kategorieordner. **`building_levels` erhält `folder_name`** = `"{PrefixString} {Name}"` (z.B. `-01 KG` / `00 EG` / `01 OG1`), beim Anlegen erzeugt, rename-stabil (ON CONFLICT unangetastet).
+1. **Schema `document_types`:** + `key` (TEXT NOT NULL, `UNIQUE(project_id, key)`, nach Anlage gesperrt, ≠ UI-Name) + `root_relative_path` (TEXT NOT NULL, echter Root je Typ: „01 Planunterlagen" / „06 Protokolle"; CHECK `<> ''`) + `folder_name` (Typordner unter Root, **leer bei Root-Typ**). `document_type_categories.folder_name` = echter (ggf. präfixierter) Kategorieordner. **`building_levels` erhält `folder_name`** = `"{PrefixString} {Name}"` (z.B. `-01 KG` / `00 EG` / `01 OG1`), beim Anlegen erzeugt, rename-stabil (ON CONFLICT unangetastet). *— präzisiert: bis zur Ordneranlage beim journalisierten Import dürfen `folder_name` und Präfix neu berechnet werden, rename-stabil erst ab Ordneranlage, siehe ADR-059-Addendum Ordneranlage (Audit Review 01, R01-001 E12, entschieden 2026-09-24)*
 
 2. **Template trägt Typ-Metadaten:** `FolderTemplateEntry` UND `SubFolderEntry` bekommen optionale Typ-Metadaten (`CreatesDocumentType`, `DocumentTypeKey`, `DocumentTypeDisplayName`, `Ring2Source?`, `Categories` mit `HasPrefix` je Kategorie). **Regel:** Ein Template-Node wird Dokumenttyp GENAU DANN wenn `CreatesDocumentType == true` (keine implizite Ableitung aus HasPrefix/Name/Position/Kategorien). Ein Hauptordner kann Container ODER Typ ODER beides sein (nur explizit). **Protokolle = eigener Root-Typ** (Hauptordner „06 Protokolle", `folder_name` leer). Der hardcodierte `_builtins`-Seed in `DocumentTypeSeedService` entfällt → Seed aus `FolderTemplate`, nur beim Setup.
 
@@ -2982,6 +3194,20 @@ Die Plan-Vorschau (BPM-111.06) braucht In-App-PDF-Rendering; die Spez (Mockup 02
 
 **Referenz:** ClickUp BPM-111.06 / Subtask Slice C (86cahy45b), Teil 47.
 
+### ADR-062-Addendum: Hinweis zur Umsetzung — Kopien und Dokument-Öffnungen im Adapter (2026-11-12, Audit Review 01)
+
+**Status:** ✅ Entschieden (Herbert, 2026-09-24, R01-001 E20)
+**Herkunft:** Konsistenz-Audit Audit Review 01 (Befund K18-05): `PdfiumPdfService` kopiert jede PDF pro Aufruf zweimal in ein `byte[]` (MemoryStream + `ToArray`) und öffnet das Dokument in `RenderPageAsync` zweimal (Probe-Pass, dann Zielfaktor). Docnet bietet nur `byte[]`- oder Pfad-Eingänge, der Stream-Port erzwingt daher eine Kopie. (Audit Review 01, R01-001 E20, entschieden 2026-09-24)
+
+**Entscheidung:**
+
+1. **Stream-Port bleibt:** Die Port-Signaturen aus P.1 (Stream-Eingang) bleiben unverändert.
+2. **Nur einmal kopieren:** Der Adapter kopiert den Eingangs-Stream höchstens einmal (bzw. nutzt den MemoryStream-Puffer direkt, ohne zusätzliches `ToArray`).
+3. **Pro Render einmal öffnen:** Das Dokument wird pro Render nur einmal geöffnet (kein zweiter Parse für den Probe-Pass).
+4. **Ausnahme im Coding Standard:** CODING_STANDARDS 16.1 (Stream statt Komplettkopie bei großen Dateien) erhält die Ausnahme „Engine verlangt `byte[]`".
+
+**Betrifft:** ADR-063 (`IPdfTextService` im selben Adapter), CODING_STANDARDS Kap. 16.1.
+
 ---
 
 ## ADR-063: PDF-Text-Port (IPdfTextService) + PdfPig-Freigabe
@@ -3025,7 +3251,7 @@ Die Plan-Vorschau (BPM-111.06) braucht In-App-PDF-Rendering; die Spez (Mockup 02
 
 **Datum:** 2026-08-27
 **Status:** ✅ Entschieden (beidseitiges Sign-off via CGR-2026-08-27-bpm-architektur r3: ChatGPT GPT-5.4 + Claude + Herbert)
-**Implementierung:** ✅ **Umgesetzt** (Teil 49, v0.28.140–.153, Commits `6d5d44d`…`81b49e8`) — ClickUp **BPM-120** komplett: Slices H0 + T0–T8, alle 15 Akzeptanzkriterien testverifiziert (u. a. Crash-Matrix `ImportCrashMatrixTests`: 5 Crash-Punkte × Forward/Rollback/Undo mit Endzustands-Äquivalenz). BPM-112 Slice 3 (= BPM-112.03) mit T1 miterledigt; ADR-061 P5 damit im Importpfad umgesetzt. Journal zusätzlich um `md5`/`file_size`/`document_type_id` erweitert (Recovery-Verifikation + vollständige Struktur-Herstellung).
+**Implementierung:** ✅ **Umgesetzt** (Teil 49, v0.28.140–.153, Commits `6d5d44d`…`81b49e8`) — ClickUp **BPM-120** komplett: Slices H0 + T0–T8, alle 15 Akzeptanzkriterien testverifiziert (u. a. Crash-Matrix `ImportCrashMatrixTests`: 5 Crash-Punkte × Forward/Rollback/Undo mit Endzustands-Äquivalenz). BPM-112 Slice 3 (= BPM-112.03) mit T1 miterledigt; ADR-061 P5 damit im Importpfad umgesetzt. Journal zusätzlich um `md5`/`file_size`/`document_type_id` erweitert (Recovery-Verifikation + vollständige Struktur-Herstellung). ⚠️ Offene Lücken (failed-Empfehlung, Bauteil/Geschoss/Typ im Journal, Undo nach Archiv-Move, Radial-Move ohne Klassifikation) siehe ADR-064-Addendum (Audit Review 01, R01-001 E10, entschieden 2026-09-24).
 **Herkunft:** Review einer externen ChatGPT-12-Diagramm-Analyse des Gesamtprojekts, 3 Runden Cross-Review mit Code-Verifikation (Stand v0.28.120). Auslöser: Der Crash-Korridor zwischen Dateisystem-Mutation und `planmanager.db`-Update ist der größte offene technische Befund vor V1.
 
 **Kontext:**
@@ -3051,7 +3277,7 @@ Elf verbindliche Invarianten (Sign-off r3), umzusetzen via BPM-120:
 5. **Undo-Reihenfolge:** DB-Rollback + `MarkImportUndone` NUR nach vollständig erfolgreichem Disk-Reverse (LIFO, nach Preflight); scheitert ein Disk-Reverse, bleibt der Vorgang reparierbar. DB-Rollback läuft in einer Transaction. Gemeinsamer Kern `ApplyForward`/`ApplyReverse` — kein Framework, kein Command-Bus.
 6. **Status-Semantik:** `pending` = recovery-pflichtig (blockiert neuen Confirm); `failed` erst terminal nach vollständigem Rollback oder bewusster Cleanup-/Abbruchentscheidung.
 7. **`skipDuplicate` (Bucket A):** Bestätigte MD5-Dubletten werden als echte Action (`action_type = skipDuplicate`, Source-Pfad + MD5 + Größe) journalisiert und beim Confirm direkt gelöscht — journalisiert + recovery-fähig, aber **bewusst nicht undo-bar** (journalisiert ≠ undo-bar; Inhalt liegt MD5-identisch im Bestand, kein Papierkorb). Recovery-Endzustand: redundante Inbox-Kopie existiert nicht mehr UND gleicher MD5 im getrackten Bestand verifiziert (Lookup über die getrackte Teilmenge nach ADR-061 Modell A, kein Verzeichnis-Scan); sonst RecoveryConflict, nie blind `completed`. Undo-Präzisierung: gemischter Import → undo-fähige Actions zurück, skipDuplicate bleibt gelöscht, Journal darf `undone` werden; reiner skipDuplicate-Import → kein Undo anbieten.
-8. **Schema-Änderung (Frühphase, keine Migration):** `import_actions.destination_path` und (bei Nutzung) `import_action_files.destination_path` werden nullable. Betroffene Datei: projektbezogene `planmanager.db` — User löscht sie, BPM erzeugt sie beim nächsten Start neu.
+8. **Schema-Änderung (Frühphase, keine Migration):** `import_actions.destination_path` und (bei Nutzung) `import_action_files.destination_path` werden nullable. *— `import_action_files` gestrichen, siehe ADR-054-Addendum (Audit Review 01, R01-001 E10, entschieden 2026-09-24)* Betroffene Datei: projektbezogene `planmanager.db` — User löscht sie, BPM erzeugt sie beim nächsten Start neu.
 9. **H0 — ein V1-Importweg:** Der klassische Profil-Import („Import starten" / `OnStartImport` / `ImportPreviewDialog`) wird VOR der Härtung aus dem V1-Nutzerpfad genommen (Legacy-Klassen blieben vorerst im Repo — **entfernt mit BPM-083, v0.28.186**: `ImportWorkflowService`, `FileParseService`, `ImportContextResolver`, `RevisionDecisionService`, `ImportPlanBuilder`, `ImportPreviewDialog`/`-ViewModel`; `DocumentTypeRecognizer` bleibt für BPM-121). Damit für V1 gestrichen: Skip-only-Fix, `DocumentTypeRecognizer.IsConflict`-Fix, Preview-UX-Ausbau des alten Dialogs, LearnIndex-Profil-Lernen.
 10. **Parallelität:** PDF-Port-Arbeit (ADR-062/063) darf parallel laufen, solange sie den Importpfad nicht berührt. Keine weiteren Features, die auf dem mutierenden Import-/Undo-/Recovery-Pfad aufbauen, bevor die Invarianten erfüllt sind; reine UI-/Preview-/PDF-Arbeit ist entkoppelt.
 11. **Explorer-Abgrenzung:** In-App-Dateibrowser folgt ADR-061 Modell A (Live-FS + kuratierter Planindex; getrackte Pläne nur über journalisierte Operationen) und startet erst nach stabilen Ports (ADR-060 Slice 6). Reklassifizierung getrackter Pläne (physischer Move ändert fachliche Zuordnung) ist ein eigener Domain-Workflow, kein Explorer-Feature. Architektur-Diagramm dazu erst bei Feature-Start.
@@ -3063,13 +3289,29 @@ Elf verbindliche Invarianten (Sign-off r3), umzusetzen via BPM-120:
 - Die ADR-058-Stop-Invarianten werden erstmals technisch einlösbar; die Crash-Fenster FS ↔ DB sind testbar (Fault-Injection via FakeFileStore + Temp-/SQLite-Integrationstests).
 - `CaptureConfirmService` erhält den Executor via Constructor Injection statt internem `new` (eine Instanz-Welt für klassischen und Radial-Pfad, solange beide existieren).
 - Bewusst NICHT gebaut: 2PC, verteilte Locks, FileSystemWatcher-Sync-Engine, OneDrive-API, Papierkorb/Quarantäne für Dubletten, Event Sourcing.
-- Außerhalb des Scopes, aber im Review festgehalten: ID-basierter `document_key` (`BuildManualDocumentKey` nutzt noch Bauteil-/Geschoss-NAMEN statt Stammdaten-IDs) bleibt ADR-059/BPM-111-Abnahmepunkt (Kommentar an BPM-111).
+- Außerhalb des Scopes, aber im Review festgehalten: ID-basierter `document_key` (`BuildManualDocumentKey` nutzt noch Bauteil-/Geschoss-NAMEN statt Stammdaten-IDs) bleibt ADR-059/BPM-111-Abnahmepunkt (Kommentar an BPM-111). *— überholt: Der Key ist ID-basiert (ADR-059 P.3, Teil-43-Addendum P.6); nur ein Namens-Fallback ist übrig, er wird entfernt, Test-Fixtures arbeiten mit Stammdaten-IDs (INDEX.md „Projekt-Phase", Audit Review 01, R01-001 E6, entschieden 2026-09-24)*
 
 **DSGVO:** Klasse A (technische Import-/Journal-Persistenz, kein Personenbezug). Pfad-Logging über die ADR-060-Ports zentral maskierbar.
 
 **Betrifft:** ADR-058 (Stop-Punkte + Journal-Haltbarkeit), ADR-059 (ein V1-Importweg, Buckets), ADR-060 (Slice 3 wird in BPM-120 erledigt), ADR-061 (P5 wird umgesetzt und DB-seitig präzisiert), DB-SCHEMA.md Kap. 6 (`import_actions`/`import_action_files` — `destination_path` nullable, mit BPM-120 nachziehen), PlanManager.md (Import-/Recovery-/Undo-Kapitel).
 
 **Referenz:** [Docs/Referenz/chatgpt-reviews/CGR-2026-08-27-bpm-architektur/](../Referenz/chatgpt-reviews/CGR-2026-08-27-bpm-architektur/) — 3 Runden Cross-Review (r1 Delta-Analyse + Task-Schnitt, r2 Diagramm-Nachlieferung + Undo-Befund + H0, r3 Sign-off + 15 Akzeptanzkriterien). ClickUp: BPM-120.
+
+### ADR-064-Addendum: Recovery-Empfehlung, vollständiges Journal, Undo-Kette und Archiv-Move (2026-11-12, Audit Review 01)
+
+**Status:** ✅ Entschieden (Herbert, 2026-09-24, R01-001 E10)
+**Herkunft:** Konsistenz-Audit Audit Review 01 (Befunde PM-24, DB-34, PM-39, K28-02, LU5-02, DB-33): `RecoveryDecisionService` empfiehlt bei failed Actions „Verwerfen", obwohl P.6 failed als retry-fähig definiert; Recovery Forward legt Dokumente mit Typ `unknown` und ohne Bauteil/Geschoss an, weil das Journal diese Werte nicht führt (entgegen der Endzustands-Äquivalenz); nach einem Undo wird der vorherige Import undo-bar; ein Archiv-Move blockiert entgegen der CHANGELOG-Zusage das Undo des letzten Imports; der Radial-Move ändert nur die Ablage, nicht die Klassifikation. ADR-064 ist für Recovery, Undo und Archiv-Move maßgeblich; Code und ältere Docs werden angeglichen. (Audit Review 01, R01-001 E10, entschieden 2026-09-24)
+
+**Entscheidung:**
+
+1. **failed → „Fortsetzen" empfehlen:** Bei Imports mit failed Actions empfiehlt die Recovery „Fortsetzen" (Forward, retry-fähig nach P.6/T6), nicht „Verwerfen".
+2. **Vollständiges Journal:** Das Journal führt zusätzlich Bauteil-ID, Geschoss-ID und den Typ (Anzeigename für `plan_documents.document_type`; `document_type_id` führt das Journal bereits), damit Recovery Forward denselben Endzustand herstellt wie der normale Import (P.1/P.4). Frühphase: projektbezogene `planmanager.db` löschen, BPM erzeugt sie neu (keine Migration).
+3. **Undo-Kette mit Preflight zulässig:** Nach einem Undo darf der davorliegende Import ebenfalls rückgängig gemacht werden; jeder Schritt durchläuft einzeln den Preflight (P.5). „Kein Multi-Rollback" heißt präzise: kein Rückgängigmachen mehrerer Imports in einem Schritt. Ein Ketten-Test sichert das ab.
+4. **Undo nach Archiv-Move gesperrt:** Hat ein Archiv-Move (auch „Verschieben (journalisiert)") Dateien eines Imports verschoben, ist das Undo dieses Imports gesperrt; die UI zeigt einen Hinweis statt eines aktiven Undo-Buttons. Die gegenteilige CHANGELOG-Zusage wird korrigiert.
+5. **Radial-Move schreibt die Klassifikation mit:** Ein Archiv-Move per Radial ändert neben der Ablage auch die Klassifikation (Dokumenttyp, Bauteil bzw. Kategorie, Geschoss) — journalisiert, als Reklassifizierungs-Workflow im Sinne von P.11.
+6. **`import_action_files` gestrichen:** siehe ADR-054-Addendum; P.8 betrifft nur noch `import_actions.destination_path`.
+
+**Betrifft:** ADR-009-Addendum (Recovery-Trigger), ADR-054-Addendum (Journal-Tabellen), ADR-058 (Klassifikationsfelder von `plan_documents`), ADR-059 P.3 (`document_key` aus der Klassifikation), PlanManager.md (Recovery-/Undo-Kapitel), `Docs/Test/Recovery-Szenarien.md`, CHANGELOG (Zusage „Import-Undo bleibt unberührt").
 
 ---
 
@@ -3164,6 +3406,65 @@ Messgröße ab Stufe A: Akzeptanzrate der Vorschläge (Anteil Erstaufnahmen, bei
 **Betrifft:** ADR-010 (Profil/Template-Präzisierung, Punkt 12), ADR-056 (Segmenttypen als Feld-Vokabular), ADR-058 (`plan_document_segments` = Sample-Store, `building_part_aliases`-Muster), ADR-059 (Assist-Grenze bleibt; Punkt 1), ADR-061 (ID-Auflösung lokal, Fail-Fast), ADR-064 (Mining außerhalb der Import-Transaktion), DB-SCHEMA.md (`document_types.is_active` jetzt dokumentieren; `recognition_feedback` mit Stufe B), PlanManager.md (Erkennungs-Tab/Profil-Kapitel bei Umsetzung).
 
 **Referenz:** [Docs/Referenz/chatgpt-reviews/CGR-2026-08-27-plan-erkennung/](../Referenz/chatgpt-reviews/CGR-2026-08-27-plan-erkennung/) — 3 Runden Cross-Review (r1 Grundsatz ML vs. Deterministik + Hierarchie-Modell, r2 Sign-off + Dokumenttyp-Zielbild, r3 Konkretisierung K1–K6 + Tokenization-Bootstrap + finales Sign-off).
+
+### ADR-065-Addendum: post-V1 bleibt, BPM-121.00/.03 post-V1 (2026-11-12, Audit Review 01)
+
+**Status:** ✅ Entschieden (Herbert, 2026-09-24, R01-001 E13; Punkt 3 E11)
+**Herkunft:** Konsistenz-Audit Audit Review 01 (Befunde K27-09, BG-01): Der BPM-121-Schnitt in ClickUp stuft 121.03 (Aliasse, Stufe C1) und 121.00 (inkl. Regex-Regeleingabe) als v1-nice ein, ADR-065 sagt „komplett post-V1". Triage-Regel: Komfort-/Lernfunktionen gehen per Addendum nach post-V1; ClickUp folgt immer dem neuesten akzeptierten ADR.
+
+**Entscheidung:**
+
+1. **„Komplett post-V1" bleibt:** Die Klarstellung im Implementierungsstatus bleibt unverändert; ADR-065 wird für V1 nicht geöffnet. (Audit Review 01, R01-001 E13, entschieden 2026-09-24)
+2. **BPM-121.00 und BPM-121.03 sind post-V1:** Beide gehören zu den Ausbaustufen nach V1; ClickUp wird entsprechend zurückgestuft. (Audit Review 01, R01-001 E13, entschieden 2026-09-24)
+3. **Dokumenttyp-Zielbild (P.7) in V1 über BPM-130:** Die Profil-UI wird in BPM-130 vollständig nach P.7 umgebaut (Regeln zu Index, Trennern und Zerlegung: ADR-059-Addendum Tokenisierung). Das ist die bereits erlaubte Ausnahme „reine UI-Zusammenführung, wenn V1-Arbeit sie ohnehin anfasst". (Audit Review 01, R01-001 E11, entschieden 2026-09-24)
+
+**Betrifft:** ADR-059 (Post-V1-Liste, Addendum Tokenisierung), ClickUp BPM-121 (.00, .03) und BPM-130.
+
+---
+
+## ADR-066: planmanager.db als autorierte Projektdaten + geräteübergreifendes Identitätsmodell (stabile ULIDs)
+
+**Datum:** 2026-09-24 (dokumentiert 2026-11-12)
+**Status:** ✅ Entschieden (Herbert, 2026-09-24, R01-001 E4)
+**Implementierung:** Not Started
+**Herkunft:** Konsistenz-Audit Audit Review 01, Grundsatzfrage „Geräteübergreifendes Identitätsmodell", Option A (Befunde K11-02, K11-03, K11-04, K11-05, K11-06, K15-08, K23-03, K23-10, K23-11, AR-39). Erfüllt die Vorgabe aus dem ADR-058-Addendum Cross-DB P.3, für nicht rebuildbare PlanManager-Daten ein eigenes ADR anzulegen. (Audit Review 01, R01-001 E4, entschieden 2026-09-24)
+
+**Kontext:**
+
+ADR-004 und ADR-046 versprechen das Arbeiten auf zwei Geräten über den Cloud-Ordner, jedes Gerät hat aber eine eigene `bpm.db`. `ExportToProject` leert die IDs von Bauteilen und Geschossen; Dokumenttypen, Kategorien und Custom-Segmenttypen fehlen im Export und werden nach einem Re-Import, einem `bpm.db`-Reset oder auf dem Zweitgerät mit neuen ULIDs geseedet. Danach zeigen der ID-basierte `document_key` (ADR-059 P.3), die Cross-DB-Soft-References in `planmanager.db` (ADR-058-Addendum Cross-DB) sowie die synchronisierten Profile (`DocumentTypeId`, `fieldTypeId`) und Pattern-Templates ins Leere.
+
+Gleichzeitig gilt `planmanager.db` als „rebuildbarer Cache" (ADR-004, ADR-041, ADR-058-Addendum Cross-DB P.1–P.3, Architektur 1.6). Sie enthält aber vom Menschen vergebene, nicht aus dem Dateisystem rekonstruierbare Daten: Dokument-Identitäten (ADR-059 P.1), Segmentwerte aus Radial und Segment-Editor, Änderungshinweise, Tags und `plan_context_links`. Rebuild-Code gibt es nicht. Für die geteilten JSON-Dateien fehlen außerdem ein WorkspaceId-Vergleich, die Erkennung von Cloud-Konfliktkopien und gerätespezifische Temp-Namen; das Hidden+System-Attribut für `.AppData/` aus ADR-004 wird nie gesetzt.
+
+**Entscheidung:**
+
+1. **Stabile IDs über project.json:** Die ULIDs aller Stammdaten eines Projekts werden in `.bpm/project.json` exportiert und beim Import übernommen — keine Neuvergabe bei Re-Import, `bpm.db`-Reset oder auf dem Zweitgerät. Ersetzt „Keine DB-IDs" aus ADR-046.
+2. **Vollständiger Stammdaten-Export:** Dokumenttypen (`document_types`), Kategorien (`document_type_categories`) und Custom-Segmenttypen (`segment_types`) werden mitexportiert. Seeds laufen idempotent über `key`: Was über `project.json` bereits wiederhergestellt ist, wird nicht neu angelegt.
+3. **`planmanager.db` = autorierte, zu sichernde Projektdaten:** `planmanager.db` ist kein rebuildbarer Cache mehr, sondern zu sichernde, autorierte Daten. „Cache-Rebuild aus dem Dateisystem" entfällt als Recovery- und Zweitgerät-Weg. Die DB-Grenze aus dem ADR-058-Addendum Cross-DB (zwei Dateien, logische Soft-References, harte FKs nur innerhalb einer Datei) bleibt unverändert — geändert wird nur die Einstufung. `plan_context_links` bleibt in `planmanager.db` (beantwortet den offenen Punkt „Heimat neu bewerten" im ADR-058-Addendum Cross-DB).
+4. **Schutzmaßnahmen für geteilte Dateien:**
+   - **WorkspaceId beim Laden vergleichen** (Gerät ↔ geteilte Konfiguration) und bei Abweichung warnen.
+   - **Konfliktkopien erkennen** (vom Cloud-Client erzeugte Varianten einer Datei) und **nicht als Profile laden**.
+   - **Temp-Dateien mit Gerätesuffix + Lock-Retry** beim Schreiben geteilter JSON-Dateien.
+   - **`.AppData/` ohne System-Attribut** (ADR-004-Addendum).
+5. **ADR-065 P.12 bleibt gültig:** `RecognitionProfile` referenziert die projektlokale `DocumentTypeId`. Durch Punkt 1 ist diese ULID über Re-Import und Geräte hinweg stabil — „projektlokal" heißt je Projekt, nicht je Gerät.
+6. **Frühphase: Reset statt Migration.** Für bestehende Datenbanken und `project.json` ohne IDs gibt es keinen Migrationscode; betroffene Dateien werden nach der INDEX.md-Frühphasenregel zurückgesetzt.
+
+**Alternativen:**
+
+- *Schlüssel statt IDs über Gerätegrenzen* (Profile und Templates referenzieren `key`/`token_key`/`folder_name`, IDs bleiben lokal, `planmanager.db` pro Gerät mit eigenem Plan-Index): verworfen — `document_key` (ADR-059 P.3) und die Soft-References beruhen auf IDs; ohne stabile IDs verwaist `planmanager.db` bei jedem Reset.
+- *V1 offiziell als Ein-Gerät-Betrieb* (Zweitgerät und Re-Import erst mit ADR-053): verworfen — in der Projekt-Phase mit „Reset statt Migration" ist der Re-Import der Normalfall.
+
+**Konsequenzen:**
+
+- ULIDs sind global eindeutig, das Mitführen kostet wenig; ADR-053 braucht stabile IDs später ohnehin.
+- ADR-046 (project.json mit IDs), ADR-004 (kein Cache-Rebuild, kein System-Attribut), ADR-041 (keine Rebuild-Recovery für `planmanager.db`) und ADR-054 P.6 (kein Cache-Rebuild als Hash-Verwendung) sind per Addendum bzw. Vermerk angepasst; ADR-058-Addendum Cross-DB P.1–P.3 ist umgestuft.
+- `planmanager.db` muss in die Sicherung einbezogen werden.
+- Architektur-Doc (Kap. 1.6, 2.2–2.6, 3.6), DSGVO-Doc (Kap. 3, 9) und die Grundprinzipien in DB-SCHEMA.md (Kap. 1.1) sind auf die neue Einstufung nachgezogen (Audit Review 01); die Tabellen-Details in DB-SCHEMA.md folgen mit der Umsetzung.
+
+**Offen (bei Umsetzung festzulegen):** Sicherungsweg und -ort für `planmanager.db`; wie das Zweitgerät vor ADR-053 zu einem Planindex kommt.
+
+**DSGVO:** Die ULIDs selbst sind Klasse A. Der Inhalt von `project.json` bleibt Klasse B (Kontakte der Beteiligten; Löschen nach ADR-050-Addendum).
+
+**Betrifft:** ADR-002, ADR-004, ADR-041, ADR-046, ADR-050-Addendum, ADR-053, ADR-054 P.6 (`md5_hash`-Begründung „Cache-Rebuild"), ADR-056 (Custom-Segmenttypen), ADR-058-Addendum Cross-DB (P.1–P.3, offener Punkt), ADR-059 P.3 (`document_key`), ADR-061 (DB als Ordner-Wahrheit), ADR-065 P.12, DB-SCHEMA.md, Architektur-Doc Kap. 1.6/2.6/3.6.
 
 ---
 

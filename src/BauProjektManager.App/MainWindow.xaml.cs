@@ -60,6 +60,11 @@ public partial class MainWindow : Window
 
 #if DEBUG
         BtnDevTools.Visibility = Visibility.Visible;
+        BtnDevTools.Click += OnOpenDevTools;
+#else
+        // Release: DevTools-Button gar nicht in der Sidebar (ModuleDevTools.md Kap. 3)
+        if (BtnDevTools.Parent is Panel devToolsHost)
+            devToolsHost.Children.Remove(BtnDevTools);
 #endif
     }
 

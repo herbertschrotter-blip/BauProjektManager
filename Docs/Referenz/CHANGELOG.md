@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.196] — 2026-11-12
+
+### Fix: Release-Build bricht nicht mehr am DevTools-Handler (R01-010)
+
+Die Release-Konfiguration baute nicht (CS1061): `MainWindow.xaml` verdrahtete `Click="OnOpenDevTools"` in jeder Konfiguration, der Handler existiert aber nur unter `#if DEBUG`. Der Click wird jetzt im DEBUG-Zweig des Konstruktors per Code verdrahtet; im Release-Build entfernt der Konstruktor den DevTools-Button aus der Sidebar, wie ModuleDevTools.md Kap. 3 es verlangt („In Release-Builds existiert weder der Button noch die Instanziierung“). Verifiziert: `dotnet build -c Release` ohne Fehler, Debug-Build und 507/507 Tests grün. (Audit Review 01, R01-010 / SE-01)
+
+---
 ## [v0.28.195] — 2026-11-12
 
 ### Docs: Vier Klärungen zu R01-001 nachgetragen (Detail-Panel-Listen V1, Bucket D, Pfadmaskierung V1, Dialogebene)

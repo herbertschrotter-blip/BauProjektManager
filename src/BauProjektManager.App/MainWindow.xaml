@@ -88,8 +88,9 @@
                         </StackPanel>
                     </Button>
 
+                    <!-- Click wird nur im DEBUG-Build im Code-Behind verdrahtet; im Release-Build
+                         entfernt der Konstruktor den Button aus der Sidebar (ModuleDevTools.md Kap. 3). -->
                     <Button x:Name="BtnDevTools"
-                            Click="OnOpenDevTools"
                             Style="{StaticResource BpmButtonNav}"
                             Foreground="{StaticResource BpmWarning}"
                             Margin="0,16,0,0"

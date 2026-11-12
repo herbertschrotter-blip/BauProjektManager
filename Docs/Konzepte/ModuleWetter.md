@@ -6,7 +6,7 @@ status: active
 owner: herbert
 topics: [wetter, api, openmeteo, google-sheets, offline-sync, bautagebuch]
 read_when: [wetter-feature, wetter-api, google-sheets-worker, wetter-sync]
-related_docs: [architektur, dsvgo-architektur, konzept-bautagebuch]
+related_docs: [architektur, dsgvo-architektur, konzept-bautagebuch]
 related_code: []
 supersedes: []
 ---
@@ -18,8 +18,8 @@ supersedes: []
 - Nicht zuständig für: Bautagebuch-Auto-Befüllung (→ ModuleBautagebuch.md)
 - Pflichtlesen: keine
 - Fachliche Invarianten:
-  - Google Sheets als 24/7 Cloud-Worker geplant (Apps Script pollt API stündlich) – BPM-seitiger Abruf aus dem Sheet (CSV-/Web-App-URL, Sheets API) erst nach Eintrag im DSGVO-Gateway-Register (DSVGO-Architektur Kap. 4.4); bis dahin gilt nur der registrierte Abruf bei api.open-meteo.com
-  - BPM synct über IWeatherSyncService; jeder externe Abruf nur über IExternalCommunicationService + DataClassification und nur zu Endpunkten aus dem DSGVO-Gateway-Register (DSVGO-Architektur Kap. 4.4)
+  - Google Sheets als 24/7 Cloud-Worker geplant (Apps Script pollt API stündlich) – BPM-seitiger Abruf aus dem Sheet (CSV-/Web-App-URL, Sheets API) erst nach Eintrag im DSGVO-Gateway-Register (DSGVO-Architektur Kap. 4.4); bis dahin gilt nur der registrierte Abruf bei api.open-meteo.com
+  - BPM synct über IWeatherSyncService; jeder externe Abruf nur über IExternalCommunicationService + DataClassification und nur zu Endpunkten aus dem DSGVO-Gateway-Register (DSGVO-Architektur Kap. 4.4)
   - Offline-first: Lokaler SQLite Weather-Cache
 
 ---
@@ -33,7 +33,7 @@ supersedes: []
 **Datum:** 09.04.2026 (erweitert, basierend auf Konzeptsession 08./09.04.2026)  
 **Abhängigkeiten:** Einstellungen (Koordinaten pro Projekt), IExternalCommunicationService (ADR-035)  
 **Technologie:** Google Sheets (Cloud-Worker) + Google Sheets API + Open-Meteo API + LiveCharts2 (WPF)  
-**Referenz:** Architektur v1.4, Kapitel 11.4 · DSVGO-Architektur.md  
+**Referenz:** Architektur v1.4, Kapitel 11.4 · DSGVO-Architektur.md  
 
 ---
 
@@ -246,7 +246,7 @@ https://api.open-meteo.com/v1/forecast
 - OAuth 2.0 Authentifizierung (Nutzer autorisiert BPM einmalig)
 - BPM kann lesen UND schreiben (z.B. Projektdaten ins Sheet pushen)
 
-> **Datenweg (verbindlich, Audit Review 01, R01-001 E17, entschieden 2026-09-24):** Auch Sheets-API-Aufrufe laufen ausschließlich über `IExternalCommunicationService` mit `DataClassification` — eine Client-Library (`Google.Apis.Sheets.v4`) darf keinen eigenen HTTP-Weg am Gateway vorbei öffnen. Endpunkt (sheets.googleapis.com) und OAuth-Token (Secret, DPAPI nach ADR-042) müssen vor der Umsetzung im DSGVO-Gateway-Register (DSVGO-Architektur Kap. 4.4) stehen; derzeit ist für `wetter` nur api.open-meteo.com registriert.
+> **Datenweg (verbindlich, Audit Review 01, R01-001 E17, entschieden 2026-09-24):** Auch Sheets-API-Aufrufe laufen ausschließlich über `IExternalCommunicationService` mit `DataClassification` — eine Client-Library (`Google.Apis.Sheets.v4`) darf keinen eigenen HTTP-Weg am Gateway vorbei öffnen. Endpunkt (sheets.googleapis.com) und OAuth-Token (Secret, DPAPI nach ADR-042) müssen vor der Umsetzung im DSGVO-Gateway-Register (DSGVO-Architektur Kap. 4.4) stehen; derzeit ist für `wetter` nur api.open-meteo.com registriert.
 
 **Optionaler Workflow:** BPM schreibt Projekt-Koordinaten direkt ins "Projekte"-Blatt via Sheets API → Sheet pollt automatisch für alle eingetragenen Standorte. Alternativ: Nutzer trägt Koordinaten manuell im Sheet ein (kein API-Zugriff nötig, einfacher).
 
@@ -480,7 +480,7 @@ Berechnungen aus `WeatherDaily`-Tabelle:
 | GPS-Koordinaten | ClassA — keine Personenzuordnung |
 | Baustellenadressen | ClassB — NICHT an Google übertragen, nur Koordinaten |
 | API-Calls | Über IExternalCommunicationService mit DataClassification, Audit-Log und Kill-Switch — kein direkter HttpClient |
-| Gateway-Register | Jeder externe Endpunkt muss in DSVGO-Architektur Kap. 4.4 registriert sein. Registriert: `wetter` → api.open-meteo.com (ClassA). Google-Endpunkte (CSV-/Web-App-URL, Sheets API) vor Umsetzung eintragen (Audit Review 01, R01-001 E17, entschieden 2026-09-24) |
+| Gateway-Register | Jeder externe Endpunkt muss in DSGVO-Architektur Kap. 4.4 registriert sein. Registriert: `wetter` → api.open-meteo.com (ClassA). Google-Endpunkte (CSV-/Web-App-URL, Sheets API) vor Umsetzung eintragen (Audit Review 01, R01-001 E17, entschieden 2026-09-24) |
 | Google Sheet | Liegt im Account des Nutzers, BPM hat keinen eigenen Google-Account |
 | Attribution | "Wetterdaten: Open-Meteo.com" in BPM anzeigen |
 
@@ -503,7 +503,7 @@ Berechnungen aus `WeatherDaily`-Tabelle:
 ## 13. Implementierungs-Phasen
 
 ### Phase 1: Sheet-Sync + Tabelle (Minimum Viable)
-- Voraussetzung: Google-Veröffentlichungs-URL (CSV bzw. Web-App) im DSGVO-Gateway-Register eingetragen (DSVGO-Architektur Kap. 4.4, siehe Kap. 11); bis dahin nur der registrierte Abruf bei api.open-meteo.com (Kap. 5.3) (Audit Review 01, R01-001 E17, entschieden 2026-09-24)
+- Voraussetzung: Google-Veröffentlichungs-URL (CSV bzw. Web-App) im DSGVO-Gateway-Register eingetragen (DSGVO-Architektur Kap. 4.4, siehe Kap. 11); bis dahin nur der registrierte Abruf bei api.open-meteo.com (Kap. 5.3) (Audit Review 01, R01-001 E17, entschieden 2026-09-24)
 - Google Sheet Template erstellen (generalisiert aus bestehendem Sheet)
 - `IWeatherSyncService` implementieren (CSV abrufen, parsen)
 - SQLite `WeatherHourly` + `WeatherDaily` Tabellen

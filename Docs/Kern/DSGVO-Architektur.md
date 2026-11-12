@@ -1,5 +1,5 @@
 ---
-doc_id: dsvgo-architektur
+doc_id: dsgvo-architektur
 doc_type: policy
 authority: source_of_truth
 status: active

@@ -6,7 +6,7 @@ status: active
 owner: herbert
 topics: [architektur-entscheidungen, adr, modularer-monolith, sqlite, ulid, datenschutz, wpf, mvvm]
 read_when: [neue-architekturentscheidung, bestehende-adr-prüfen, adr-status-ändern, entscheidung-nachschlagen]
-related_docs: [architektur, db-schema, dsvgo-architektur, planmanager]
+related_docs: [architektur, db-schema, dsgvo-architektur, planmanager]
 related_code: []
 supersedes: []
 ---
@@ -1398,7 +1398,7 @@ else
 - Compliance-Modus (`RequiresStrictCompliance`) darf NIEMALS durch User-Settings steuerbar sein
 - Session-Override (optional): `IPrivacyContext.IsTrustedSession` für temporäres Abschalten von Klasse-B-Warnungen im Commercial-Modus. Klasse C bleibt IMMER blockiert
 - Für V1 nicht relevant (keine Online-Module). Implementierung vor dem ersten Online-Modul zusammen mit ADR-035
-- Detailliertes Konzept: [DSVGO-Architektur.md](DSVGO-Architektur.md) Kapitel 4.3
+- Detailliertes Konzept: [DSGVO-Architektur.md](DSGVO-Architektur.md) Kapitel 4.3
 
 ---
 
@@ -2242,7 +2242,7 @@ Im Server-Modus gilt: "Server gewinnt" bei Daten-Konflikten. Der Server erzwingt
 3. **project.json bereinigen:** `DeleteProject` leert bzw. entfernt die Kontakte in `.bpm/project.json`, damit ein Re-Import sie nicht wiederherstellt.
 4. **DSGVO-Doc:** `project.json` wird mit Begründung (Re-Import, ADR-046) als Klasse-B-Datei in das DSGVO-Doc aufgenommen.
 
-**Betrifft:** ADR-046 (Inhalt von project.json), ADR-053 (Tombstones im Sync), ADR-066 (Export mit IDs), DSVGO-Architektur.md (Löschkonzept, Dateiliste).
+**Betrifft:** ADR-046 (Inhalt von project.json), ADR-053 (Tombstones im Sync), ADR-066 (Export mit IDs), DSGVO-Architektur.md (Löschkonzept, Dateiliste).
 
 ---
 
@@ -3094,7 +3094,7 @@ Archivname und Archivierung bei Indexwechsel: ADR-045-Addendum.
 
 **DSGVO:** Klasse A (technische Dateioperationen). Pfade/Dateinamen können Personenbezug tragen → DSGVO-Pfadmaskierung beim Logging zentral im Adapter. *— präzisiert: zentral vor jedem Loggen, nicht nur im Adapter, siehe ADR-060-Addendum (Audit Review 01, R01-001 E2, entschieden 2026-09-24)*
 
-**Betrifft:** ADR-053 (Server-Sync — Ports erleichtern spätere Remote-Adapter), ADR-061 (Resolver/Import nutzen die Ports), Architektur-Doc (Schichtgrenzen), DSVGO-Architektur.md.
+**Betrifft:** ADR-053 (Server-Sync — Ports erleichtern spätere Remote-Adapter), ADR-061 (Resolver/Import nutzen die Ports), Architektur-Doc (Schichtgrenzen), DSGVO-Architektur.md.
 
 **Referenz:** [Docs/Referenz/chatgpt-reviews/CGR-2026-06-22-bpm-architektur/](../Referenz/chatgpt-reviews/CGR-2026-06-22-bpm-architektur/) — 4 Runden Cross-Review (r1 Port-Zuschnitt/Testbarkeit, r2–r4 Slices/Sign-off). ClickUp: BPM-112.
 
@@ -3113,7 +3113,7 @@ Archivname und Archivierung bei Indexwechsel: ADR-045-Addendum.
    Keine Ausnahme ist das Öffnen eines Projektordners: Es läuft über `IFileLauncher` (kein `Process.Start` im ViewModel). Ein FileSystemWatcher wird erst über einen eigenen Port genutzt, der noch nicht existiert. (Audit Review 01, R01-001 E1, entschieden 2026-09-24)
 2. **Zentrale Pfadmaskierung vor dem Loggen:** Pfade werden zentral vor dem Loggen maskiert (Datei- bzw. Ordnername statt voller Pfad) — nicht nur im `LocalFileSystem`-Adapter, sondern für jede Log-Ausgabe (zentraler Maskierungs-Helper, Name bei Umsetzung). Statisches Serilog (`Log.*`) bleibt der Standard (kein `ILogger<T>`). Der Windows-Benutzername kommt nie in Logs oder den Bug-Report; der Rechnername ist als technisches Gerätemerkmal erlaubt. (Audit Review 01, R01-001 E2, entschieden 2026-09-24)
 
-**Betrifft:** ADR-015 (Serilog), ADR-043 (DevTools-Bug-Report), ADR-052 (IUserContext), ADR-064 (DSGVO-Zeile: Pfad-Logging), CODING_STANDARDS Kap. 8/19.5, DSVGO-Architektur.md (Logging), WPF_UI_Architecture (FileSystemWatcher-Muster).
+**Betrifft:** ADR-015 (Serilog), ADR-043 (DevTools-Bug-Report), ADR-052 (IUserContext), ADR-064 (DSGVO-Zeile: Pfad-Logging), CODING_STANDARDS Kap. 8/19.5, DSGVO-Architektur.md (Logging), WPF_UI_Architecture (FileSystemWatcher-Muster).
 
 ---
 

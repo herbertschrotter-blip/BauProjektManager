@@ -6,7 +6,7 @@ status: active
 owner: herbert
 topics: [architektur, solution-struktur, speicherstrategie, registry, betriebsmodi, v1-scope]
 read_when: [neues-modul, schichtgrenzen, di-setup, speicherort, registry-änderung]
-related_docs: [db-schema, dsvgo-architektur, coding-standards, backlog, planmanager]
+related_docs: [db-schema, dsgvo-architektur, coding-standards, backlog, planmanager]
 related_code: [src/BauProjektManager.App/App.xaml.cs, src/BauProjektManager.Domain/, src/BauProjektManager.Infrastructure/Persistence/]
 supersedes: []
 ---
@@ -15,7 +15,7 @@ supersedes: []
 - Zweck: Systemarchitektur, Speicherstrategie, Solution-Struktur und V1-Scope des BPM
 - Autorität: source_of_truth
 - Lesen wenn: Neues Modul, Schichtgrenzen prüfen, DI-Setup, Speicherort klären, Registry-Änderung
-- Nicht zuständig für: DB-Schema-Details (→ DB-SCHEMA.md), Datenschutz-Regeln (→ DSVGO-Architektur.md), Code-Style (→ CODING_STANDARDS.md), PlanManager-Fachlogik (→ PlanManager.md)
+- Nicht zuständig für: DB-Schema-Details (→ DB-SCHEMA.md), Datenschutz-Regeln (→ DSGVO-Architektur.md), Code-Style (→ CODING_STANDARDS.md), PlanManager-Fachlogik (→ PlanManager.md)
 - Kapitel:
   - 1. Vision & Übersicht (inkl. 1.4 Ansichtsprofile)
   - 2. Speicherstrategie
@@ -56,7 +56,7 @@ supersedes: []
 - [CHANGELOG.md](../Referenz/CHANGELOG.md) — Versionshistorie ab v0.0.0
 - [BACKLOG.md](BACKLOG.md) — Feature-Liste mit Status
 - [CODING_STANDARDS.md](CODING_STANDARDS.md) — Code-Richtlinien
-- [DSVGO-Architektur.md](DSVGO-Architektur.md) — Datenschutz, Privacy Engineering, IPrivacyPolicy
+- [DSGVO-Architektur.md](DSGVO-Architektur.md) — Datenschutz, Privacy Engineering, IPrivacyPolicy
 - [ServerArchitektur.md](../Konzepte/ServerArchitektur.md) — Zielarchitektur Modus C (Server, Auth, Sync, PostgreSQL, ADR-050/051)
 - Modul-Konzepte: [Docs/Konzepte/](../Konzepte/) — Detaillierte Konzeptdokumente pro Modul
 
@@ -514,7 +514,7 @@ public enum ProjectStatus { Active, Completed }
 - Felder umbenennen/entfernen: **BREAKING CHANGE** (Major-Version, z.B. 1.0 → 2.0)
 - Bei Major-Version: VBA-Makros müssen vor Rollout angepasst werden
 - `registryVersion` und `schema_version` (DB) sind **unabhängig** — nicht jede DB-Schema-Änderung ändert den VBA-Exportvertrag
-- Whitelist für Klasse-B-Felder: siehe [DSGVO-Architektur Kap. 9.3](DSVGO-Architektur.md)
+- Whitelist für Klasse-B-Felder: siehe [DSGVO-Architektur Kap. 9.3](DSGVO-Architektur.md)
 
 ### 3.6 .bpm/ Ordner (ADR-046)
 
@@ -533,7 +533,7 @@ Projektordner/
 
 **manifest.json** (schlank — nur Ausweis): projectId, projectNumber, name, updatedAtUtc, createdByMachine, modules (Flags welche Module aktiv sind).
 
-**project.json** (Vollexport): Alle Projektdaten für Import/Übergabe, eigene DTOs. Wird bei jedem Speichern aktualisiert. **Stabile IDs statt „keine DB-IDs“ (ADR-066, ADR-046 geändert; Audit Review 01, R01-001 E4, entschieden 2026-09-24 — Umsetzung offen):** Die ULIDs aller Stammdaten werden mitexportiert und beim Import übernommen; zusätzlich Dokumenttypen, Kategorien und Custom-Segmenttypen, Seeds idempotent über `key`. Enthält die Kontaktdaten von Auftraggeber und Beteiligten (Klasse B) — Einstufung, Begründung und Bereinigung beim Löschen: [DSGVO-Architektur Kap. 9.2/9.5](DSVGO-Architektur.md) (E3).
+**project.json** (Vollexport): Alle Projektdaten für Import/Übergabe, eigene DTOs. Wird bei jedem Speichern aktualisiert. **Stabile IDs statt „keine DB-IDs“ (ADR-066, ADR-046 geändert; Audit Review 01, R01-001 E4, entschieden 2026-09-24 — Umsetzung offen):** Die ULIDs aller Stammdaten werden mitexportiert und beim Import übernommen; zusätzlich Dokumenttypen, Kategorien und Custom-Segmenttypen, Seeds idempotent über `key`. Enthält die Kontaktdaten von Auftraggeber und Beteiligten (Klasse B) — Einstufung, Begründung und Bereinigung beim Löschen: [DSGVO-Architektur Kap. 9.2/9.5](DSGVO-Architektur.md) (E3).
 
 **profiles/**: Eine JSON-Datei pro Plantyp-Profil. Synct über Cloud-Speicher zwischen Geräten.
 
@@ -658,7 +658,7 @@ BauProjektManager.sln
     │   ├── BauProjektManager_Architektur.md   ← DIESES DOKUMENT
     │   ├── DB-SCHEMA.md                       ← ✅ Schema v2.0 (ULID)
     │   ├── CODING_STANDARDS.md                ← ✅ Code-Richtlinien + Datenschutz (Kap. 17)
-    │   ├── DSVGO-Architektur.md               ← ✅ Privacy Engineering, IPrivacyPolicy
+    │   ├── DSGVO-Architektur.md               ← ✅ Privacy Engineering, IPrivacyPolicy
     │   └── BACKLOG.md                         ← ✅ Feature-Liste
     ├── Referenz/                              ← Lesen wenn Thema aufkommt
     │   ├── ADR.md                             ← ✅ 49 Entscheidungen

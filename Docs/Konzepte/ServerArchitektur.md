@@ -75,7 +75,7 @@ supersedes: []
 **Verwandte Dokumente:**
 - [MultiUserKonzept.md](MultiUserKonzept.md) — Roadmap/Übergang (Phasen 1–3)
 - [DatenarchitekturSync.md](DatenarchitekturSync.md) — Sync-Mechanismus, Outbox/Inbox
-- [DSVGO-Architektur.md](../Kern/DSVGO-Architektur.md) — Datenschutz, Rollenmatrix
+- [DSGVO-Architektur.md](../Kern/DSGVO-Architektur.md) — Datenschutz, Rollenmatrix
 - [BPM-Mobile-Konzept.md](BPM-Mobile-Konzept.md) — PWA nutzt Server-Modus
 
 ---

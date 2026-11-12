@@ -71,7 +71,7 @@ BauProjektManager.sln
 | [Architektur v2.0](Docs/Kern/BauProjektManager_Architektur.md) | Technische Spezifikation, Datenmodell, Import-Workflow, GUI-Mockups |
 | [DB-Schema](Docs/Kern/DB-SCHEMA.md) | Zentrales DB-Leitdokument (Ist + geplant, 18 Tabellen) |
 | [Coding Standards](Docs/Kern/CODING_STANDARDS.md) | Code-Richtlinien für C#/WPF + Datenschutz (Kap. 17) |
-| [DSGVO-Architektur](Docs/Kern/DSVGO-Architektur.md) | Privacy Engineering, IPrivacyPolicy, Datenklassifizierung A/B/C |
+| [DSGVO-Architektur](Docs/Kern/DSGVO-Architektur.md) | Privacy Engineering, IPrivacyPolicy, Datenklassifizierung A/B/C |
 | [Backlog](Docs/Kern/BACKLOG.md) | Feature-Liste mit Status und Priorisierung |
 
 ### Referenz (lesen wenn Thema aufkommt)

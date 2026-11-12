@@ -6,7 +6,7 @@ status: active
 owner: herbert
 topics: [naming, formatierung, mvvm, wpf, xaml, di, async, testing, json, sicherheit, git, performance, datenschutz]
 read_when: [neue-klasse, neuer-service, neues-viewmodel, code-review, xaml-erstellen, datenschutz-code]
-related_docs: [architektur, dsvgo-architektur, db-schema]
+related_docs: [architektur, dsgvo-architektur, db-schema]
 related_code: [src/BauProjektManager.App/, src/BauProjektManager.Domain/, src/BauProjektManager.Settings/, src/BauProjektManager.PlanManager/]
 supersedes: []
 ---
@@ -15,7 +15,7 @@ supersedes: []
 - Zweck: Verbindliche Code-Richtlinien für C#, WPF/XAML, MVVM, Git und Datenschutz im BPM-Projekt
 - Autorität: source_of_truth
 - Lesen wenn: Neue Klasse/Service/ViewModel, Code-Review, XAML erstellen, Datenschutz-relevanter Code
-- Nicht zuständig für: DB-Schema (→ DB-SCHEMA.md), Architektur-Entscheidungen (→ Architektur.md, ADR.md), Privacy-Architektur (→ DSVGO-Architektur.md)
+- Nicht zuständig für: DB-Schema (→ DB-SCHEMA.md), Architektur-Entscheidungen (→ Architektur.md, ADR.md), Privacy-Architektur (→ DSGVO-Architektur.md)
 - Kapitel:
   - 1. Namensgebung
   - 2. Code-Formatierung
@@ -1668,7 +1668,7 @@ var result = heavyOperation.Result;          // NIEMALS!
 
 ## 17. Datenschutz im Code (PFLICHT)
 
-Verbindliche Regeln aus [DSVGO-Architektur.md](DSVGO-Architektur.md) (ADR-035, ADR-036). Gelten ab sofort für jeden neuen Code.
+Verbindliche Regeln aus [DSGVO-Architektur.md](DSGVO-Architektur.md) (ADR-035, ADR-036). Gelten ab sofort für jeden neuen Code.
 
 ### 17.1 Logging — Keine Personendaten
 ```csharp
@@ -1758,7 +1758,7 @@ if (settings.PrivacyMode == "relaxed")  // VERBOTEN — User kann DSGVO umgehen
 
 ### 17.6 registry.json — Whitelist
 
-Neue Felder in `registry.json` müssen gegen die Whitelist (DSVGO-Architektur Kap. 9.3) geprüft werden. Klasse-B-Felder nur wenn für VBA-Kompatibilität zwingend nötig.
+Neue Felder in `registry.json` müssen gegen die Whitelist (DSGVO-Architektur Kap. 9.3) geprüft werden. Klasse-B-Felder nur wenn für VBA-Kompatibilität zwingend nötig.
 
 ### 17.7 Datenschutz-Logik — Trennung von Policy und UI
 

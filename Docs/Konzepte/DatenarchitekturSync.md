@@ -49,7 +49,7 @@ supersedes: []
 - Zweck: ⚠️ SUPERSEDED durch ADR-053. Nicht mehr als gültiges Konzept laden.
 - Autorität: historical
 - Lesen wenn: Sync-Feature, Multi-User, Change-Tracking, Snapshot, Konflikt-Behandlung
-- Nicht zuständig für: DB-Tabellen-Details (→ DB-SCHEMA.md), Datenschutz (→ DSVGO-Architektur.md)
+- Nicht zuständig für: DB-Tabellen-Details (→ DB-SCHEMA.md), Datenschutz (→ DSGVO-Architektur.md)
 - Kapitel:
   - 1. Zweck und Zielzustand
   - 2. Datenmodell
@@ -79,7 +79,7 @@ supersedes: []
 - [MultiUserKonzept.md](MultiUserKonzept.md) — Phasenmodell, Rollen, Server-Architektur
 - [ServerArchitektur.md](ServerArchitektur.md) — Zielarchitektur Modus C, Auth, Sync, PostgreSQL
 - [DB-SCHEMA.md](../Kern/DB-SCHEMA.md) — Tabellen-Definitionen
-- [DSVGO-Architektur.md](../Kern/DSVGO-Architektur.md) — Datenschutz-Klassifizierung
+- [DSGVO-Architektur.md](../Kern/DSGVO-Architektur.md) — Datenschutz-Klassifizierung
 - [BauProjektManager_Architektur.md](../Kern/BauProjektManager_Architektur.md) — Gesamtarchitektur
 
 ---
@@ -567,7 +567,7 @@ Bestehende `ProjectDatabase.cs` bleibt, aber Mutationen laufen über diese Bound
 
 - ULID-Migration muss abgeschlossen sein (ADR-039)
 - MultiUserKonzept.md definiert Phasenmodell und Betriebsmodi
-- DSVGO-Architektur.md definiert Datenklassifizierung (ClassA/B/C)
+- DSGVO-Architektur.md definiert Datenklassifizierung (ClassA/B/C)
 - DB-SCHEMA.md muss Sync-Tabellen aufnehmen wenn gebaut
 
 ---

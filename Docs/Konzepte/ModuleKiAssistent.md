@@ -6,7 +6,7 @@ status: active
 owner: herbert
 topics: [ki, chatgpt, claude, lv-analyse, dokumentensuche, api]
 read_when: [ki-feature, lv-analyse, dokumentensuche, externe-api-ki]
-related_docs: [architektur, dsvgo-architektur, konzept-kalkulation]
+related_docs: [architektur, dsgvo-architektur, konzept-kalkulation]
 related_code: []
 supersedes: []
 ---

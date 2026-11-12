@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.194] — 2026-11-12
+
+### Docs: DSVGO-Architektur.md → DSGVO-Architektur.md (Dateiname, doc_id, alle Verweise)
+
+Vierter und letzter Docs-Commit zu Audit Review 01 (R01-001 E16): Der Tippfehler im Dateinamen des Datenschutz-Docs ist behoben. `Docs/Kern/DSVGO-Architektur.md` heißt jetzt `Docs/Kern/DSGVO-Architektur.md` (per `git mv`, Historie bleibt verfolgbar), die `doc_id` lautet `dsgvo-architektur`, und alle Verweise sind nachgezogen (62 Stellen in 26 Dateien: CLAUDE.md, README.md, INDEX.md, Kern-, Modul-, Referenz- und Konzept-Docs inkl. `related_docs`). Unverändert bleiben bewusst die früheren CHANGELOG-Einträge und das Review-Archiv `Docs/Referenz/chatgpt-reviews/` (Historie). Inhaltlich keine Änderung, keine Code-Änderung.
+
+---
 ## [v0.28.193] — 2026-11-12
 
 ### Docs: R01-001-Entscheidungen in Doku-Norm, UI-Regeln und Konzepten + Baulotse-HTML entfernt

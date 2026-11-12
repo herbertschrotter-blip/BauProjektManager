@@ -55,7 +55,7 @@ src/
 
 - Architektur: Docs/Kern/BauProjektManager_Architektur.md
 - DB Schema: Docs/Kern/DB-SCHEMA.md
-- DSGVO: Docs/Kern/DSVGO-Architektur.md
+- DSGVO: Docs/Kern/DSGVO-Architektur.md
 - UI/UX: Docs/Referenz/UI_UX_Guidelines.md
 - Backlog: Docs/Kern/BACKLOG.md
 

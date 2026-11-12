@@ -104,7 +104,7 @@ Ihre Fachlichen Invarianten gelten immer.
 |-----|----------------|------|
 | Architektur | Schichtgrenzen, Dependency-Regel, SoR je Modus, Offline-First | `Docs/Kern/BauProjektManager_Architektur.md` |
 | CODING_STANDARDS | Naming, MVVM, Sync-Felder, UTC, Soft Delete, IUserContext, Icons | `Docs/Kern/CODING_STANDARDS.md` |
-| DSGVO-Architektur | Logging-Regeln, HttpClient-Verbot, DataClassification | `Docs/Kern/DSVGO-Architektur.md` |
+| DSGVO-Architektur | Logging-Regeln, HttpClient-Verbot, DataClassification | `Docs/Kern/DSGVO-Architektur.md` |
 
 Bei UI-Änderungen zusätzlich:
 
@@ -135,15 +135,15 @@ Bei UI-Änderungen zusätzlich:
 
 ### Wetter / externe API
 - Primary: `Docs/Konzepte/ModuleWetter.md`
-- Secondary: `Docs/Kern/DSVGO-Architektur.md`, `Docs/Kern/BauProjektManager_Architektur.md`
+- Secondary: `Docs/Kern/DSGVO-Architektur.md`, `Docs/Kern/BauProjektManager_Architektur.md`
 
 ### Foto / Dateiimport
 - Primary: `Docs/Konzepte/ModuleFoto.md`
-- Secondary: `Docs/Kern/DSVGO-Architektur.md`
+- Secondary: `Docs/Kern/DSGVO-Architektur.md`
 
 ### Zeiterfassung / Excel
 - Primary: `Docs/Konzepte/ModuleZeiterfassung.md`
-- Secondary: `Docs/Kern/DSVGO-Architektur.md`
+- Secondary: `Docs/Kern/DSGVO-Architektur.md`
 
 ### SQLite / Repository / Datenbankänderung
 - Primary: `Docs/Kern/DB-SCHEMA.md`
@@ -172,7 +172,7 @@ Bei UI-Änderungen zusätzlich:
 
 ### KI-Assistent
 - Primary: `Docs/Konzepte/ModuleKiAssistent.md`
-- Secondary: `Docs/Kern/DSVGO-Architektur.md`
+- Secondary: `Docs/Kern/DSGVO-Architektur.md`
 
 ### Mobile / PWA
 - Primary: `Docs/Konzepte/BPM-Mobile-Konzept.md`
@@ -187,7 +187,7 @@ Bei UI-Änderungen zusätzlich:
 - Primary: `Docs/Konzepte/ModuleAktivierungLizenzierung.md`
 
 ### DSGVO / Datenschutz / externe Kommunikation
-- Primary: `Docs/Kern/DSVGO-Architektur.md`
+- Primary: `Docs/Kern/DSGVO-Architektur.md`
 
 ### Ordner-Sync
 - Primary: `Docs/Konzepte/ModuleOrdnerSync.md`
@@ -251,7 +251,7 @@ NICHT als Referenz (bis zur Sanierung, R01-015/R01-040): DevToolsDialog.xaml/.cs
 | Datei | Querschnitt |
 |-------|-------------|
 | App.xaml.cs | DI — bei jedem neuen Service |
-| DSVGO-Architektur.md | Externe Verbindungen |
+| DSGVO-Architektur.md | Externe Verbindungen |
 | Architektur-Doc | Schichtgrenzen |
 | Themes/Colors+Buttons | Visuelle Konsistenz |
 | DB-SCHEMA.md | Persistenzänderungen |

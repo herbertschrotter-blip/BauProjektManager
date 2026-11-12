@@ -6,7 +6,7 @@ status: active
 owner: herbert
 topics: [zeiterfassung, stundenzettel, excel, closedxml, personal, lohn]
 read_when: [zeiterfassung-feature, stundenzettel, excel-export, personal-stunden]
-related_docs: [architektur, dsvgo-architektur, konzept-kalkulation, konzept-bautagebuch]
+related_docs: [architektur, dsgvo-architektur, konzept-kalkulation, konzept-bautagebuch]
 related_code: []
 supersedes: []
 ---

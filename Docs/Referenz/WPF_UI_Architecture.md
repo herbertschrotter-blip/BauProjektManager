@@ -54,7 +54,7 @@ supersedes: []
 - [UI_UX_Guidelines.md](UI_UX_Guidelines.md) — Design-Token, Screen States, Feedback-Matrix, Komponenten
 - [CODING_STANDARDS.md](../Kern/CODING_STANDARDS.md) — Kap. 10 XAML-Konventionen, Kap. 17.7 Datenschutz nie im ViewModel
 - [ADR-028](ADR.md) — Theme-System mit 7 Resource Dictionaries
-- [DSVGO-Architektur.md](../Kern/DSVGO-Architektur.md) — Kap. 13 Datenschutz-GUI
+- [DSGVO-Architektur.md](../Kern/DSGVO-Architektur.md) — Kap. 13 Datenschutz-GUI
 
 ---
 
@@ -408,7 +408,7 @@ private void OnSave(object sender, RoutedEventArgs e)
 
 ### 6.3 Datenschutz-Regel (CODING_STANDARDS 17.7)
 
-Datenschutz-Entscheidungen (Klasse B/C blockieren, Consent anfordern, Audit loggen) gehören **nie** ins ViewModel. Die `IPrivacyPolicy` entscheidet, das ViewModel visualisiert nur das Ergebnis. Siehe [DSVGO-Architektur.md Kap. 13](../Kern/DSVGO-Architektur.md).
+Datenschutz-Entscheidungen (Klasse B/C blockieren, Consent anfordern, Audit loggen) gehören **nie** ins ViewModel. Die `IPrivacyPolicy` entscheidet, das ViewModel visualisiert nur das Ergebnis. Siehe [DSGVO-Architektur.md Kap. 13](../Kern/DSGVO-Architektur.md).
 
 ---
 

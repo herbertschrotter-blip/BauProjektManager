@@ -6,7 +6,7 @@ status: active
 owner: herbert
 topics: [ui, ux, design-system, farbtokens, typografie, buttons, screen-states, navigation, icons, dialoge, datagrid]
 read_when: [neuer-dialog, neues-ui-element, farbe-wählen, button-style, screen-states, icon-hinzufügen]
-related_docs: [wpf-ui-architecture, coding-standards, dsvgo-architektur]
+related_docs: [wpf-ui-architecture, coding-standards, dsgvo-architektur]
 related_code: [src/BauProjektManager.App/Themes/]
 supersedes: []
 ---
@@ -64,7 +64,7 @@ supersedes: []
 - [WPF_UI_Architecture.md](WPF_UI_Architecture.md) — Technische Umsetzung: Token → WPF Resource Keys, ResourceDictionary-Aufbau
 - [CODING_STANDARDS.md](../Kern/CODING_STANDARDS.md) — Kap. 10 XAML-Konventionen, Kap. 17.7 Datenschutz-Logik nie im ViewModel
 - [UX_Flows.md](UX_Flows.md) — User Workflows für Einstellungen und PlanManager
-- [DSVGO-Architektur.md](../Kern/DSVGO-Architektur.md) — Kap. 13 Datenschutz-GUI, Kap. 4.5 Dienststatus-Modell
+- [DSGVO-Architektur.md](../Kern/DSGVO-Architektur.md) — Kap. 13 Datenschutz-GUI, Kap. 4.5 Dienststatus-Modell
 
 **Sprachregelung:** Interne Doku-/Pattern-Begriffe (Loading, Empty, Toast, Breadcrumb etc.) dürfen Englisch sein. Alle sichtbaren UI-Texte in der App  sind Deutsch (siehe Kap. 13).
 

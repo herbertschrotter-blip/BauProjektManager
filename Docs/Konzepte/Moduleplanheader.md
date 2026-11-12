@@ -6,7 +6,7 @@ status: active
 owner: herbert
 topics: [plankopf, revisionstabelle, pdfpig, ki-api, indexsource-planheader]
 read_when: [planheader-feature, plankopf-extraktion, pdf-parsing, revisionstabelle]
-related_docs: [planmanager, dsvgo-architektur, konzept-ki-assistent]
+related_docs: [planmanager, dsgvo-architektur, konzept-ki-assistent]
 related_code: []
 supersedes: []
 ---

@@ -6,7 +6,7 @@ status: active
 owner: herbert
 topics: [mobile, pwa, bautagebuch, plan-viewer, offline, sync, write-lock]
 read_when: [mobile-feature, pwa-architektur, offline-sync, bautagebuch-mobil]
-related_docs: [architektur, dsvgo-architektur, planmanager]
+related_docs: [architektur, dsgvo-architektur, planmanager]
 related_code: []
 supersedes: []
 ---

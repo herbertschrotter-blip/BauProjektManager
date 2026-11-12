@@ -37,7 +37,7 @@ supersedes: []
 - [PlanManager.md](../Module/PlanManager.md) — Kernmodul, Sync liefert Dateien an _Eingang/
 - [BauProjektManager_Architektur.md](../Kern/BauProjektManager_Architektur.md) — Speicherstrategie
 - [MultiUserKonzept.md](MultiUserKonzept.md) — ADR-033, ADR-037
-- [DSVGO-Architektur.md](../Kern/DSVGO-Architektur.md) — Klasse B bei Personendaten in Dokumenten
+- [DSGVO-Architektur.md](../Kern/DSGVO-Architektur.md) — Klasse B bei Personendaten in Dokumenten
 - [ADR.md](../Referenz/ADR.md) — ADR-004 (Cloud-Sync-Strategie)
 
 ---

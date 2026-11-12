@@ -6,7 +6,7 @@ status: active
 owner: herbert
 topics: [sqlite, bpm-db, planmanager-db, tabellen, migration, ulid, json-dateien]
 read_when: [neue-tabelle, spalte-ändern, fk-ändern, migration, db-query, json-konfiguration]
-related_docs: [architektur, dsvgo-architektur, planmanager]
+related_docs: [architektur, dsgvo-architektur, planmanager]
 related_code: [src/BauProjektManager.Infrastructure/Persistence/ProjectDatabase.cs, src/BauProjektManager.PlanManager/Services/PlanManagerDatabase.cs]
 supersedes: []
 ---
@@ -15,7 +15,7 @@ supersedes: []
 - Zweck: Zentrale Referenz für alle SQLite-Tabellen und JSON-Konfigurationsdateien in BPM
 - Autorität: source_of_truth
 - Lesen wenn: Neue Tabelle, Spalte ändern, FK ändern, Migration, DB-Query, JSON-Konfiguration
-- Nicht zuständig für: Domain-Modell-Logik (→ Architektur.md), Datenschutz-Klassifikation (→ DSVGO-Architektur.md)
+- Nicht zuständig für: Domain-Modell-Logik (→ Architektur.md), Datenschutz-Klassifikation (→ DSGVO-Architektur.md)
 - Kapitel:
   - 1. Überblick
   - 2. Beziehungsdiagramm
@@ -1681,7 +1681,7 @@ Seit v0.28.182 (BPM-069) gibt es **keinen Migrationspfad** mehr — die Split-Da
 
 **Cross-Review-Quelle:** [CGR-2026-04-30-datenarchitektur-sync](../Referenz/chatgpt-reviews/CGR-2026-04-30-datenarchitektur-sync/) (7 Runden mit ChatGPT GPT-5.4)
 
-**Datenklassifizierung:** Siehe [DSVGO-Architektur.md](DSVGO-Architektur.md) (DSGVO-Datenklassen Klasse A/B/C) + [ADR-047](../Referenz/ADR.md) (4-Stufen-Modell bleibt gültig, heißt jetzt **Sync-Kategorie**: `local-only`, `shared-domain`, `shared-reference`, `restricted` — ersetzt die früheren Buchstaben A–D; „Klasse A/B/C“ ist ausschließlich für die DSGVO-Datenklassen reserviert; Audit Review 01, R01-001 E16, entschieden 2026-09-24)
+**Datenklassifizierung:** Siehe [DSGVO-Architektur.md](DSGVO-Architektur.md) (DSGVO-Datenklassen Klasse A/B/C) + [ADR-047](../Referenz/ADR.md) (4-Stufen-Modell bleibt gültig, heißt jetzt **Sync-Kategorie**: `local-only`, `shared-domain`, `shared-reference`, `restricted` — ersetzt die früheren Buchstaben A–D; „Klasse A/B/C“ ist ausschließlich für die DSGVO-Datenklassen reserviert; Audit Review 01, R01-001 E16, entschieden 2026-09-24)
 
 ---
 

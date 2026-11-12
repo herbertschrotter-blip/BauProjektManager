@@ -6,7 +6,7 @@ status: active
 owner: herbert
 topics: [outlook, com-interop, email, anhänge, vba]
 read_when: [outlook-feature, email-integration, anhänge-extrahieren]
-related_docs: [architektur, planmanager, dsvgo-architektur]
+related_docs: [architektur, planmanager, dsgvo-architektur]
 related_code: []
 supersedes: []
 ---

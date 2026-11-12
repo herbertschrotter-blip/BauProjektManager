@@ -6,7 +6,7 @@ status: active
 owner: herbert
 topics: [foto, viewer, tags, geodaten, exif, thumbnails, bautagebuch-integration]
 read_when: [foto-feature, bild-viewer, foto-tags, geodaten-fotos]
-related_docs: [architektur, konzept-bautagebuch, dsvgo-architektur]
+related_docs: [architektur, konzept-bautagebuch, dsgvo-architektur]
 related_code: []
 supersedes: []
 ---

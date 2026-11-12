@@ -274,7 +274,7 @@ Wenn das Dashboard gebaut wird, könnte ein Karten-Widget die Baustellen zeigen:
 | Mapsui | Modernes WPF/MAUI-Kartenkontrolle, NuGet |
 | WebView2 + Leaflet | HTML-basierte Karte in WPF eingebettet |
 
-> **Datenweg:** Weitere Endpunkte (Kachel-Server, Nominatim/OSM) vor der Umsetzung im DSGVO-Gateway-Register (DSVGO-Architektur Kap. 4.4) eintragen und nur über IExternalCommunicationService abrufen; eine Bibliothek darf keinen eigenen HTTP-Weg am Gateway vorbei öffnen (Audit Review 01, R01-001 E17, entschieden 2026-09-24).
+> **Datenweg:** Weitere Endpunkte (Kachel-Server, Nominatim/OSM) vor der Umsetzung im DSGVO-Gateway-Register (DSGVO-Architektur Kap. 4.4) eintragen und nur über IExternalCommunicationService abrufen; eine Bibliothek darf keinen eigenen HTTP-Weg am Gateway vorbei öffnen (Audit Review 01, R01-001 E17, entschieden 2026-09-24).
 
 Entscheidung wird getroffen wenn das Dashboard drankommt.
 
@@ -324,7 +324,7 @@ Phase 1–3 können ohne Google API-Key umgesetzt werden (GIS Steiermark ist kos
 | Flächenwidmung auch abfragen? | Bauland/Grünland aus GIS Steiermark | ⬜ Nice to have |
 | Baugrundanalyse / AI? | Aus Prompt — für BPM derzeit nicht relevant | ❌ Nicht geplant |
 
-> **Datenweg:** Für Nominatim/OSM-Geocoding und Kachel-Server der Karten-Bibliothek gilt: Endpunkte vor der Umsetzung im DSGVO-Gateway-Register (DSVGO-Architektur Kap. 4.4) eintragen und nur über IExternalCommunicationService abrufen; eine Bibliothek darf keinen eigenen HTTP-Weg am Gateway vorbei öffnen (Audit Review 01, R01-001 E17, entschieden 2026-09-24).
+> **Datenweg:** Für Nominatim/OSM-Geocoding und Kachel-Server der Karten-Bibliothek gilt: Endpunkte vor der Umsetzung im DSGVO-Gateway-Register (DSGVO-Architektur Kap. 4.4) eintragen und nur über IExternalCommunicationService abrufen; eine Bibliothek darf keinen eigenen HTTP-Weg am Gateway vorbei öffnen (Audit Review 01, R01-001 E17, entschieden 2026-09-24).
 
 ---
 

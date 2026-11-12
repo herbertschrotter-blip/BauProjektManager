@@ -6,7 +6,7 @@ status: active
 owner: herbert
 topics: [planmanager, import, profil, parsing, undo, versionierung, index, sortierung]
 read_when: [planmanager-feature, import-workflow, profil-anlernen, dateinamen-parsing, undo-journal]
-related_docs: [architektur, db-schema, dsvgo-architektur, ui-ux-guidelines, wpf-ui-architecture]
+related_docs: [architektur, db-schema, dsgvo-architektur, ui-ux-guidelines, wpf-ui-architecture]
 related_code: [src/BauProjektManager.PlanManager/, src/BauProjektManager.Domain/Models/, src/BauProjektManager.Infrastructure/Persistence/]
 supersedes: []
 ---
@@ -66,7 +66,7 @@ supersedes: []
 - [ADR.md](../Referenz/ADR.md) — ADR-007 bis ADR-010, ADR-022, ADR-045
 - [UI_UX_Guidelines.md](../Referenz/UI_UX_Guidelines.md) — Design-Token, Screen States
 - [WPF_UI_Architecture.md](../Referenz/WPF_UI_Architecture.md) — ViewState, MVVM
-- [DSVGO-Architektur.md](../Kern/DSVGO-Architektur.md) — Klasse A, kein ext. Kontakt
+- [DSGVO-Architektur.md](../Kern/DSGVO-Architektur.md) — Klasse A, kein ext. Kontakt
 - [Moduleplanheader.md](../Konzepte/Moduleplanheader.md) — Post-V1: PlanHeader
 
 ---
@@ -97,7 +97,7 @@ Bauprotokolle, Prüfberichte, Baubesprechungen etc. Der Zielordner ist frei wäh
 | DSFA nötig? | Nein |
 | IExternalCommunicationService nötig? | Nein (erst bei PlanHeader mit KI-API, Post-V1) |
 
-**Post-V1:** Wenn `IndexSource.PlanHeader` mit KI-API kommt → Klasse C. Dann DSVGO-Architektur Kap. 7+12.
+**Post-V1:** Wenn `IndexSource.PlanHeader` mit KI-API kommt → Klasse C. Dann DSGVO-Architektur Kap. 7+12.
 
 ---
 

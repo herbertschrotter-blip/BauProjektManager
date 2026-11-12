@@ -37,7 +37,7 @@ supersedes: []
 - [DEPENDENCY-MAP.md](../Referenz/DEPENDENCY-MAP.md) — Solution-Struktur + Ökosystem
 - [BauProjektManager_Architektur.md](BauProjektManager_Architektur.md) — Technische Spezifikation v2.0
 - [CODING_STANDARDS.md](CODING_STANDARDS.md) — Code-Richtlinien
-- [DSVGO-Architektur.md](DSVGO-Architektur.md) — Datenschutz, Privacy Engineering
+- [DSGVO-Architektur.md](DSGVO-Architektur.md) — Datenschutz, Privacy Engineering
 - Modul-Konzepte: [Docs/Konzepte/](../Konzepte/)
 
 ---
@@ -156,7 +156,7 @@ Diese Features verbessern V1, sind aber kein Blocker für den Release.
 | IExternalCommunicationService | Zentrales Privacy Gate für alle externen HTTP-Calls (ADR-035) | ⬜ |
 | IPrivacyPolicy + DI | RelaxedPrivacyPolicy (intern) + StrictPrivacyPolicy (kommerziell), Lizenz-gesteuert (ADR-036) | ⬜ |
 | DataClassification Enum | ClassA/ClassB/ClassC im Domain-Projekt | ⬜ |
-| external_call_log Tabelle | Audit-Log in bpm.db (DSVGO-Architektur Kap. 11.3) | ⬜ |
+| external_call_log Tabelle | Audit-Log in bpm.db (DSGVO-Architektur Kap. 11.3) | ⬜ |
 | Einstellungen: Datenschutz-Tab | Toggle pro externem Dienst, Audit-Log-Anzeige, Kill-Switch | ⬜ |
 | Log-Rotation 30 Tage | Serilog retainedFileCountLimit (trivial) | ✅ v0.5.0 |
 | ADR-039 v2 ULID-Schema | ✅ Implementiert v0.25.1 — alle Tabellen auf ULID migriert | ✅ |
@@ -307,7 +307,7 @@ schema_version (version)
 - **Datenschutz:** DataClassification (A/B/C) bei jedem externen Call mitgeben
 - **Datenschutz:** IPrivacyPolicy per DI, gesteuert über Lizenz — nicht settings.json (ADR-036)
 - **Datenschutz:** API-Keys in DPAPI, NIEMALS in settings.json/registry.json/Git/Logs
-- **Datenschutz:** registry.json Whitelist beachten bei neuen Feldern (DSVGO-Architektur Kap. 9.3)
+- **Datenschutz:** registry.json Whitelist beachten bei neuen Feldern (DSGVO-Architektur Kap. 9.3)
 - **Multi-User-Vorbereitung:** `IProjectDataService` Interface statt direkt ProjectDatabase.cs (MultiUserKonzept Kap. 8) — *überholt: DB-Klassen gelten als dünne Service-Schicht, wenn sie die Metadaten (IUserContext) selbst setzen; Interfaces nur für Ports und Test-Nähte (Audit Review 01, R01-001 E1, entschieden 2026-09-24; CODING_STANDARDS Kap. 8/19.5)*
 - **Sync-Vorbereitung (ADR-050/051):** Neue Tabellen: ULID + `created_at`, `created_by`, `last_modified_at`, `last_modified_by`, `sync_version`, `is_deleted` — UTC, Soft Delete, Writes über Services (CODING_STANDARDS Kap. 19)
 

@@ -288,7 +288,7 @@ Diese Prinzipien gelten für alle zukünftigen Module und Entscheidungen:
 | **GUI-only** | Kein Terminal, keine Kommandozeile. Alles über die Oberfläche |
 | **Schrittweise** | Ein Feature nach dem anderen. Testen nach jedem Schritt |
 | **KI-gestützt** | Datenextraktion aus Dokumenten per KI-API (ChatGPT/Claude), konfigurierbar in Einstellungen |
-| **Datenschutz by Design** | Keine automatischen Daten-Uploads. Jede externe Kommunikation über IExternalCommunicationService (ADR-035). Datenklassifizierung A/B/C. IPrivacyPolicy austauschbar per Lizenz — Relaxed (intern) vs. Strict (kommerziell) (ADR-036). Details: DSVGO-Architektur.md |
+| **Datenschutz by Design** | Keine automatischen Daten-Uploads. Jede externe Kommunikation über IExternalCommunicationService (ADR-035). Datenklassifizierung A/B/C. IPrivacyPolicy austauschbar per Lizenz — Relaxed (intern) vs. Strict (kommerziell) (ADR-036). Details: DSGVO-Architektur.md |
 
 ---
 
@@ -337,7 +337,7 @@ BPM wird als internes Werkzeug entwickelt. Falls es irgendwann für andere Baufi
 - Support-Konzept (RAG-basierter Chat-Bot, kontextbezogene Hilfe pro Feature)
 - Automatisierte Fehlerberichte als GitHub Issues (über IExternalCommunicationService, mit User-Zustimmung)
 - DSGVO-Compliance: StrictPrivacyPolicy automatisch aktiv bei kommerzieller Lizenz (ADR-036)
-- Verarbeitungsverzeichnis, Datenschutzerklärung, Mitarbeiter-Informationsvorlage (siehe DSVGO-Architektur.md Kap. 15)
+- Verarbeitungsverzeichnis, Datenschutzerklärung, Mitarbeiter-Informationsvorlage (siehe DSGVO-Architektur.md Kap. 15)
 - Code Signing Zertifikat für Auto-Updates
 - SQLite-Verschlüsselung (SQLCipher) vor Zeiterfassung mit Mitarbeiterdaten
 - Steuerberater für USt/OSS-Regelung bei digitalen Leistungen in der EU

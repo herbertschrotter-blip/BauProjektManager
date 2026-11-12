@@ -6,7 +6,7 @@ status: active
 owner: herbert
 topics: [kalkulation, nachkalkulation, bauzeitprognose, arbeitspakete, lv, soll-ist]
 read_when: [kalkulation-feature, nachkalkulation, bauzeitprognose, arbeitspakete]
-related_docs: [architektur, db-schema, konzept-zeiterfassung, dsvgo-architektur]
+related_docs: [architektur, db-schema, konzept-zeiterfassung, dsgvo-architektur]
 related_code: []
 supersedes: []
 ---

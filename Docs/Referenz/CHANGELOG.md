@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.203] — 2026-11-12
+
+### Fix: SQLite-Sicherheitsupdate — Microsoft.Data.Sqlite 10.0.5 → 10.0.15 (NU1903 behoben)
+
+Die transitive Abhängigkeit `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 war von GHSA-2m69-gcr7-jv3q betroffen (verwundbar bis 2.1.11, Build-Warnung NU1903 in allen Projekten). `Microsoft.Data.Sqlite` steht jetzt in Infrastructure und Tests auf 10.0.15 und zieht SQLitePCLRaw 2.1.13 nach — ein Patch-Update innerhalb von .NET 10, kein expliziter Pin und keine neue Bibliothek nötig. `dotnet list package --vulnerable` meldet keine anfälligen Pakete mehr. Freigabe: Audit Review 01, R01-001 E20 (TE-30); BACKLOG #78 erledigt.
+
+---
 ## [v0.28.202] — 2026-11-12
 
 ### Fix: Undo nach Archiv-Move gesperrt mit Hinweis, Docs zu R01-008 nachgezogen

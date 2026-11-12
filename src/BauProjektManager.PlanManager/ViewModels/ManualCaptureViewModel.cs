@@ -134,7 +134,7 @@ public partial class ManualCaptureViewModel : ObservableObject
         _confirm = new CaptureConfirmService(
             new ImportExecutionService(planDb, idGenerator, fs, fs, fs), _pending);
         _undo = new ImportUndoService(planDb, fs, fs, fs);
-        _move = new ArchiveMoveService(planDb);
+        _move = new ArchiveMoveService(planDb, fs, fs, fs);
         _bpmDb = bpmDb;
         _seed = new DocumentTypeSeedService(bpmDb);
         _creation = new DocumentTypeCreationService(bpmDb, new PlanValueNormalizer());
@@ -303,19 +303,27 @@ public partial class ManualCaptureViewModel : ObservableObject
     /// <summary>
     /// Führt den Archiv-Move aus (111.07 Slice D): journalisiert (Status
     /// 'moved'), sofort — kein Pending, kein Undo (Undo gilt nur dem letzten
-    /// Import). Lädt den Archiv-Bestand danach neu.
+    /// Import). R01-008 (ADR-064-Addendum P.5): das Radial klassifiziert mit um —
+    /// Dokumenttyp, Bauteil bzw. Kategorie, Geschoss und document_key folgen der Wahl.
+    /// Lädt den Archiv-Bestand danach neu.
     /// </summary>
     public void CompleteMove(RadialSelectionController controller, ArchiveRowViewModel row)
     {
-        if (controller.SelectedType is null)
+        if (controller.SelectedType is not { } type)
             return;
 
         var targetDir = controller.BuildTargetDirectory(_plansRelativePath);
-        var result = _move.MoveDocument(row.Entry, targetDir, _projectRootPath);
+        var reclassification = new ArchiveReclassification(
+            type.Id, type.Name,
+            controller.SelectedBuildingPart?.Id,
+            controller.SelectedCategory?.Id,
+            controller.SelectedBuildingLevel?.Id);
+        var result = _move.MoveDocument(row.Entry, targetDir, _projectRootPath, reclassification);
         StatusText = result.Success
             ? $"↷ {row.FileName} verschoben nach {targetDir} ({result.MovedFiles} Datei(en), Journal)"
             : $"⚠ Verschieben fehlgeschlagen: {result.Error}";
         LoadArchive();
+        CanUndoLastImport = _undo.Preflight(_projectRootPath).CanUndo;
     }
 
     // ── Schnellanlage „+ Neu…" (Slice 3) ────────────────────────────

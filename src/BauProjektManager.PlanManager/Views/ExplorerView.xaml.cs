@@ -214,7 +214,11 @@ public partial class ExplorerView : UserControl
         if (ViewModel is not { SelectedFile: { Entry: not null } row } vm)
             return;
 
-        var dialog = new FolderPickerDialog(vm.ProjectRootPath,
+        // R01-008.01: Zielwahl nur im eigenen Ablageordner (Umklassifizieren = Radial).
+        var area = vm.GetMoveArea(row);
+        if (area is null)
+            return;
+        var dialog = new FolderPickerDialog(vm.ProjectRootPath, area,
             $"{row.Entry.PlanNumber} ({row.Entry.Title})")
         {
             Owner = Window.GetWindow(this)

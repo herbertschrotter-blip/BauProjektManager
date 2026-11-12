@@ -17,7 +17,7 @@ namespace BauProjektManager.PlanManager.Services;
 /// Siehe DB-SCHEMA.md Kap. 6.7 + ADR-058 + ADR-058-Addendum (Cross-DB Soft References).
 /// BPM-107: Registriert sich bei IPersistenceRegistry beim ersten Connection-Open.
 /// </summary>
-public class PlanManagerDatabase : IDisposable
+public partial class PlanManagerDatabase : IDisposable
 {
     private readonly string _dbPath;
     private readonly string _projectId;

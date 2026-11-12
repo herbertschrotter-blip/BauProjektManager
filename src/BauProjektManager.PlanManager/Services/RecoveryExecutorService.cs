@@ -23,6 +23,7 @@ public class RecoveryExecutorService
     private readonly IFileSystemWriter _writer;
     private readonly IPathService _path;
     private readonly ImportExecutionService _executor;
+    private readonly ArchiveMoveService _move;
 
     // BPM-120 T5 (ADR-064 P.4): Recovery Forward laeuft ueber den Executor —
     // derselbe Disk-/DB-Apply-Pfad wie der normale Import, keine Eigenlogik.
@@ -36,6 +37,8 @@ public class RecoveryExecutorService
         _writer = writer;
         _path = path;
         _executor = executor;
+        // R01-008: Archiv-Move-Journale haben eine eigene Recovery-Semantik.
+        _move = new ArchiveMoveService(db, reader, writer, path);
     }
 
     /// <summary>
@@ -46,6 +49,10 @@ public class RecoveryExecutorService
     public RecoveryResult ExecuteForward(string importId, string projectRootPath)
     {
         Log.Information("Recovery Forward gestartet fuer Import {Id}", importId);
+        // R01-008 (ADR-064 P.1): ein Archiv-Move endet nie als 'completed' (sonst
+        // waere er „letzter Import“ fuer Undo) und schreibt Pfade + Klassifikation.
+        if (_db.IsMoveJournal(importId))
+            return _move.RecoverForward(importId, projectRootPath);
         // T6/AK 13: auch 'failed' Actions erneut versuchen — failed ist auf
         // Action-Ebene nicht terminal, solange kein Rollback/Cleanup entschieden
         // wurde. Sonst wuerde ein zweiter Forward-Lauf ein Journal mit
@@ -104,6 +111,8 @@ public class RecoveryExecutorService
     public RecoveryResult ExecuteRollback(string importId, string projectRootPath)
     {
         Log.Information("Recovery Rollback gestartet fuer Import {Id}", importId);
+        if (_db.IsMoveJournal(importId))
+            return _move.RollbackMove(importId, projectRootPath);
 
         // Completed-Actions rückwärts abarbeiten (LIFO — letzte zuerst rückgängig)
         var completed = _db.GetImportActions(importId, statusFilter: "completed");
@@ -206,6 +215,9 @@ public class RecoveryExecutorService
     {
         try
         {
+            // R01-008.01: getrackte Datei nie loeschen — Endzustand trotzdem erfuellt.
+            if (_db.IsTrackedFilePath(action.SourcePath))
+                return null;
             var inStock = action.Md5 is not null && knownMd5.ContainsKey(action.Md5);
             if (!inStock)
                 return $"RecoveryConflict: MD5 der Dublette nicht im getrackten Bestand ({action.SourcePath})";

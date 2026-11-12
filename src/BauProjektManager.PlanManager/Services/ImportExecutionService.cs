@@ -474,8 +474,13 @@ public class ImportExecutionService
     {
         try
         {
+            // R01-008.01: eine getrackte Bestandsdatei ist nie eine Inbox-Dublette —
+            // nicht loeschen; die Action gilt als erledigt (sonst haengt das Journal).
+            var tracked = _db.IsTrackedFilePath(decision.File.Parsed.RelativePath);
+            if (tracked)
+                Log.Warning("skipDuplicate: getrackte Datei bleibt erhalten: {File}", decision.File.Parsed.FileName);
             var sourcePath = _path.Combine(projectRootPath, decision.File.Parsed.RelativePath);
-            if (_reader.FileExists(sourcePath))
+            if (!tracked && _reader.FileExists(sourcePath))
                 WithLockRetry(() => _writer.DeleteFile(sourcePath));
             _db.CompleteImportAction(actionId, true);
             Log.Debug("Dublette aus Eingang entfernt: {File}", decision.File.Parsed.FileName);

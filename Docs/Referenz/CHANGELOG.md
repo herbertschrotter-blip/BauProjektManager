@@ -32,6 +32,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.201] — 2026-11-12
+
+### Fix: Archiv-Move ADR-064-konform — FS-Ports, Journal vorab, Transaktion, eigene Recovery, Zielordner-Schutz, Radial klassifiziert mit (R01-008.01/.02)
+
+Der `ArchiveMoveService` ist neu gebaut (Audit Review 01, R01-008 / PM-03, K25-01, LU5-02; ADR-064 + Addendum P.5, ADR-060, ADR-061 P.5/P.6). **Ablauf wie ein Import:** Preflight ohne Mutation (Dateien vorhanden, Ziel frei, Ziel-`document_key` frei) → Journal-Header und **alle** `moved`-Actions vor der ersten Mutation → Disk über `.bpm_tmp` + Rename + Lock-Retry über die FS-Ports (kein direktes `System.IO` mehr) → **eine** DB-Transaktion für Dateipfade, Ablage, Klassifikation, `manual_override`-Event, Action-Abschluss und Journal `moved`. Scheitert ein Schritt, werden bereits verschobene Dateien sofort zurückgeschoben (Journal `failed`); gelingt das nicht, bleibt das Journal `pending`. **Eigene Recovery:** Move-Journale laufen nicht mehr durch den Import-Zweig (der setzte `completed` und machte den Move zum „letzten Import“), sondern über `RecoverForward`/`RollbackMove` — idempotent aus Quelle, `.bpm_tmp` oder Ziel, Ende immer `moved` bzw. `failed`.
+
+**Zielordner-Schutz (Entscheidung Herbert):** Das Explorer-„Verschieben (journalisiert)“ erlaubt nur noch den eigenen Ablageordner des Plans und dessen Unterordner; der Ablageordner (Ort künftiger Revisionen) und die Klassifikation bleiben. Ordner mit führendem `_` oder `.` (u. a. `_Eingang`, `_Archiv`) sind im Dialog ausgeblendet und im Service gesperrt (`ArchiveMoveTargetGuard`). Zusätzlich löscht `skipDuplicate` nie eine Datei, die als getrackter Bestand geführt wird. **Radial-Move im Archiv-Tab klassifiziert mit** (ADR-064-Addendum P.5): Dokumenttyp, Bauteil bzw. Kategorie, Geschoss und `document_key` folgen der Wahl; ist der neue Key durch ein anderes Dokument belegt, wird abgelehnt. Der Radial-Zielordner nutzt jetzt den `folder_name` des Geschosses (wie der `DocumentTargetPathResolver`). Keine Schema-Änderung. 13 Tests in `ArchiveMoveServiceTests` (Move, Teilfehler mit Sofort-Rollback, Recovery Forward/Rollback, gesperrte Ziele, Umklassifizierung, Key-Kollision, getrackte Dublette).
+
+---
 ## [v0.28.200] — 2026-11-12
 
 ### Fix: Recovery empfiehlt bei failed „Fortsetzen“, Journal mit voller Klassifikation, Undo-Kette getestet (R01-006 Rest)

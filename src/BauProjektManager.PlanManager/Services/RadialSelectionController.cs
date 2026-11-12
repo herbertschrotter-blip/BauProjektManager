@@ -263,8 +263,9 @@ public class RadialSelectionController
             segments.Add(part?.FolderName is { Length: > 0 } fn
                 ? fn
                 : _normalizer.NormalizeForFolderName(SelectedPart));
+            // Gespeicherten folder_name des Geschosses bevorzugen (wie DocumentTargetPathResolver).
             if (SelectedLevel is not null)
-                segments.Add(SelectedLevel);
+                segments.Add(SelectedBuildingLevel?.FolderName is { Length: > 0 } lf ? lf : SelectedLevel);
         }
         else if (SelectedType?.Ring2Source == Ring2Source.Categories && SelectedPart is not null)
         {

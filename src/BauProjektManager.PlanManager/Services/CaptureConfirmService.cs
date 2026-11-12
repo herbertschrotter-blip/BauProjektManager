@@ -213,4 +213,25 @@ public class CaptureConfirmService
 
         return string.Join("|", parts);
     }
+
+    /// <summary>
+    /// document_key aus Stammdaten-IDs (ADR-059 P.3) ohne Namens-Fallback — fuer die
+    /// Umklassifizierung per Radial-Move (R01-008, ADR-064-Addendum P.5). Gleiche
+    /// Zusammensetzung wie <see cref="BuildManualDocumentKey"/>.
+    /// </summary>
+    public static string BuildDocumentKey(
+        string documentTypeId, string planNumberOrFileStem,
+        string? ring2Id, string? buildingLevelId, IPlanValueNormalizer normalizer)
+    {
+        var parts = new List<string>
+        {
+            normalizer.NormalizeForKey(documentTypeId),
+            normalizer.NormalizeForKey(planNumberOrFileStem)
+        };
+        if (ring2Id is not null)
+            parts.Add(ring2Id);
+        if (buildingLevelId is not null)
+            parts.Add(buildingLevelId);
+        return string.Join("|", parts);
+    }
 }

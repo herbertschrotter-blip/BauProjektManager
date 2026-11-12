@@ -39,7 +39,7 @@ public partial class ExplorerViewModel : ObservableObject
     {
         _launcher = launcher;
         _db = db;
-        _move = db is null ? null : new ArchiveMoveService(db);
+        _move = db is null ? null : new ArchiveMoveService(db, _fs, _fs, _fs);
         _reconcile = db is null ? null : new PlanReconcileService(db, _fs);
     }
 
@@ -297,9 +297,16 @@ public partial class ExplorerViewModel : ObservableObject
     public string ProjectRootPath => _rootPath;
 
     /// <summary>
-    /// Getrackten Plan journalisiert verschieben (112.06b, ADR-061 P.6):
+    /// Ablageordner (relativ), in dem der Plan verschoben werden darf — eigener
+    /// Ordner samt Unterordnern (R01-008.01, ADR-064 P.11). Null = kein Move moeglich.
+    /// </summary>
+    public string? GetMoveArea(ExplorerFileRow row) =>
+        _move is null || row.Entry is null ? null : _move.GetExplorerMoveArea(row.Entry);
+
+    /// <summary>
+    /// Getrackten Plan journalisiert verschieben (112.06b, ADR-061 P.6, R01-008):
     /// laeuft ueber den ArchiveMoveService — alle Dateien der current-Revision
-    /// ziehen gemeinsam um, Journal-Action VOR jedem Move, nicht undo-bar.
+    /// ziehen gemeinsam um, Journal vorab, nur im eigenen Ablageordner, nicht undo-bar.
     /// </summary>
     public void MoveTracked(ExplorerFileRow row, string targetRelativeDirectory)
     {

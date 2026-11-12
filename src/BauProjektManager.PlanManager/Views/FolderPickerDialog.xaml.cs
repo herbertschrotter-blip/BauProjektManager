@@ -7,7 +7,9 @@ namespace BauProjektManager.PlanManager.Views;
 
 /// <summary>
 /// Zielordner-Wahl fuer das journalisierte Verschieben im Explorer (112.06b).
-/// Zeigt den Projektbaum lazy (gleiche Knoten wie der Explorer); Ergebnis ist
+/// R01-008.01 (ADR-064 P.11): zeigt NUR den eigenen Ablageordner des Plans samt
+/// Unterordnern; Ordner mit fuehrendem _ (_Eingang, _Archiv) oder . sind
+/// ausgeblendet (der ArchiveMoveService prueft dieselbe Regel). Ergebnis ist
 /// der RELATIVE Zielpfad. Kein "+ Neu…" hier — neue Ordner entstehen ueber
 /// die Radial-Strecke bzw. Stammdaten (ADR-061).
 /// </summary>
@@ -19,13 +21,17 @@ public partial class FolderPickerDialog : Window
     private readonly string _rootPath;
     private ExplorerFolderNode? _selected;
 
-    public FolderPickerDialog(string rootPath, string planLabel)
+    public FolderPickerDialog(string rootPath, string allowedRelativeDirectory, string planLabel)
     {
         _rootPath = rootPath;
         InitializeComponent();
         TitleText.Text = $"Zielordner für {planLabel}";
-        foreach (var node in BuildChildNodes(rootPath))
-            FolderTree.Items.Add(node);
+        var areaPath = _fs.Combine(rootPath, allowedRelativeDirectory);
+        var areaNode = new ExplorerFolderNode(allowedRelativeDirectory, areaPath);
+        foreach (var child in BuildChildNodes(areaPath))
+            areaNode.Children.Add(child);
+        areaNode.ChildrenLoaded = true;
+        FolderTree.Items.Add(areaNode);
     }
 
     /// <summary>Gewaehlter Zielordner relativ zum Projektroot (nur bei DialogResult=true).</summary>
@@ -66,11 +72,11 @@ public partial class FolderPickerDialog : Window
         try
         {
             foreach (var dir in _fs.EnumerateDirectories(parentPath)
-                         .Where(d => !_fs.GetFileName(d).StartsWith('.'))
+                         .Where(IsSelectable)
                          .OrderBy(d => _fs.GetFileName(d), StringComparer.OrdinalIgnoreCase))
             {
                 var node = new ExplorerFolderNode(_fs.GetFileName(dir), dir);
-                if (_fs.EnumerateDirectories(dir).Any(d => !_fs.GetFileName(d).StartsWith('.')))
+                if (_fs.EnumerateDirectories(dir).Any(IsSelectable))
                     node.Children.Add(ExplorerFolderNode.Placeholder());
                 nodes.Add(node);
             }
@@ -80,5 +86,12 @@ public partial class FolderPickerDialog : Window
             Log.Warning(ex, "FolderPicker: Unterordner nicht lesbar");
         }
         return nodes;
+    }
+
+    /// <summary>Gesperrt: _Eingang, _Archiv und System-Ordner (fuehrendes _ oder .).</summary>
+    private static bool IsSelectable(string dir)
+    {
+        var name = _fs.GetFileName(dir);
+        return !name.StartsWith('.') && !name.StartsWith('_');
     }
 }

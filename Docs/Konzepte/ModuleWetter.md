@@ -18,11 +18,13 @@ supersedes: []
 - Nicht zuständig für: Bautagebuch-Auto-Befüllung (→ ModuleBautagebuch.md)
 - Pflichtlesen: keine
 - Fachliche Invarianten:
-  - Google Sheets als 24/7 Cloud-Worker (Apps Script pollt API stündlich)
-  - BPM synct über IWeatherSyncService / IExternalCommunicationService
+  - Google Sheets als 24/7 Cloud-Worker geplant (Apps Script pollt API stündlich) – BPM-seitiger Abruf aus dem Sheet (CSV-/Web-App-URL, Sheets API) erst nach Eintrag im DSGVO-Gateway-Register (DSVGO-Architektur Kap. 4.4); bis dahin gilt nur der registrierte Abruf bei api.open-meteo.com
+  - BPM synct über IWeatherSyncService; jeder externe Abruf nur über IExternalCommunicationService + DataClassification und nur zu Endpunkten aus dem DSGVO-Gateway-Register (DSVGO-Architektur Kap. 4.4)
   - Offline-first: Lokaler SQLite Weather-Cache
 
 ---
+
+> ⚠️ **Eingefroren – Stand vor ADR-053/058–066** (Audit Review 01, R01-001 E17, entschieden 2026-09-24): Dieses Konzept beschreibt den Planungsstand vor diesen ADRs. Vor der Umsetzung gegen die aktuellen ADRs abgleichen. Bereits verbindlich korrigiert: DSGVO-Datenwege, keine KI im Importpfad, ULIDs.
 
 # BauProjektManager — Modul: Wetter
 
@@ -94,7 +96,7 @@ Wetterdaten pro Baustelle **rund um die Uhr** sammeln — unabhängig davon ob B
 - **Kostenlos:** Keine Server-Kosten, kein VPS, keine API-Keys auf BPM-Seite
 - **Nutzer-Kontrolle:** Sheet liegt im eigenen Google-Account des Nutzers
 - **Visuell:** Nutzer kann Rohdaten auch direkt im Sheet sehen
-- **Kein Vendor Lock-in:** BPM funktioniert auch ohne Sheet (Fallback: direkter API-Call wenn BPM läuft)
+- **Kein Vendor Lock-in:** BPM funktioniert auch ohne Sheet (Fallback: BPM ruft Open-Meteo selbst über IExternalCommunicationService ab, wenn BPM läuft – Kap. 5.3) (Audit Review 01, R01-001 E17, entschieden 2026-09-24)
 
 ### 3.2 Sheet-Struktur (Template)
 
@@ -139,7 +141,7 @@ Menü "Wetter":
 1. Nutzer klickt in BPM "Wetter-Modul einrichten"
 2. BPM öffnet Google-Template-URL → Nutzer klickt "Kopie erstellen"
 3. Nutzer öffnet Menü "Wetter" → "Ersteinrichtung" → **Wizard-Dialog öffnet sich**
-4. Wizard: API-Key eingeben (Button öffnet direkt die Key-Seite des Anbieters)
+4. Wizard: API-Key eingeben (Button öffnet direkt die Key-Seite des Anbieters) — nur bei einem Anbieter mit Key-Pflicht (Anbieterwahl offen, Kap. 15); bei Open-Meteo entfällt der Schritt (Audit Review 01, R01-001 E17, entschieden 2026-09-24)
 5. Wizard: Erste Baustelle anlegen (Name + Koordinaten)
 6. Wizard: Klick "Fertigstellen" → Trigger wird automatisch installiert, Test-Abruf läuft
 7. Nutzer kopiert die Sheet-URL / CSV-URL zurück in BPM-Einstellungen
@@ -151,20 +153,20 @@ Menü "Wetter":
 
 Beim Klick auf Menü "Wetter → Ersteinrichtung" öffnet sich ein modaler HTML-Dialog direkt im Google Sheet. Der Wizard führt den Nutzer in 4 Schritten durch die Konfiguration:
 
-**Schritt 1 — API-Key:**
+**Schritt 1 — API-Key (nur bei Anbieter mit Key-Pflicht, Kap. 15; entfällt bei Open-Meteo):** (Audit Review 01, R01-001 E17, entschieden 2026-09-24)
 - Eingabefeld für den Wetter-API-Key
 - Button "API-Key holen" öffnet direkt die Registrierungsseite des gewählten Anbieters (z.B. `https://home.openweathermap.org/api_keys`)
-- Validierung: Feld darf nicht leer sein
+- Validierung: Feld darf nicht leer sein (nur wenn der gewählte Anbieter einen Key verlangt)
 
 **Schritt 2 — Erste Baustelle:**
 - Eingabefelder: Baustellenname, Breitengrad, Längengrad
-- Optional: "Von Adresse suchen" (Google Maps Geocoding im Script)
+- ~~Optional: "Von Adresse suchen" (Google Maps Geocoding im Script)~~ — entfällt: widerspricht Kap. 11 (keine Baustellenadressen an Google, nur Koordinaten) (Audit Review 01, R01-001 E17, entschieden 2026-09-24)
 - Eintrag wird automatisch ins "Projekte"-Blatt geschrieben
 
-**Schritt 3 — Test-Abruf:**
-- Script macht sofort einen API-Call mit dem Key und den Koordinaten
+**Schritt 3 — Test-Abruf:** (Audit Review 01, R01-001 E17, entschieden 2026-09-24)
+- Script macht sofort einen API-Call mit den Koordinaten (und dem Key, falls der gewählte Anbieter einen verlangt)
 - Ergebnis wird angezeigt: "✅ 14.2°C, Sonnig — Verbindung funktioniert!"
-- Bei Fehler: Klare Meldung ("❌ Ungültiger API-Key" oder "❌ Keine Internetverbindung")
+- Bei Fehler: Klare Meldung ("❌ Ungültiger API-Key (nur bei Anbieter mit Key-Pflicht)" oder "❌ Keine Internetverbindung")
 
 **Schritt 4 — Trigger installieren:**
 - Script erstellt automatisch den stündlichen Trigger via `ScriptApp.newTrigger()`
@@ -213,7 +215,7 @@ function installHourlyTrigger() {
 - Modaler Dialog via `SpreadsheetApp.getUi().showModalDialog()`
 - HTML/CSS gestaltet: Schritt-für-Schritt mit Fortschrittsbalken
 - Responsive, sauberes Design passend zum Google-Stil
-- Validierung in Echtzeit (Key-Format prüfen, Koordinaten-Bereich prüfen)
+- Validierung in Echtzeit (Key-Format prüfen (falls Key), Koordinaten-Bereich prüfen) (Audit Review 01, R01-001 E17, entschieden 2026-09-24)
 
 ---
 
@@ -244,6 +246,8 @@ https://api.open-meteo.com/v1/forecast
 - OAuth 2.0 Authentifizierung (Nutzer autorisiert BPM einmalig)
 - BPM kann lesen UND schreiben (z.B. Projektdaten ins Sheet pushen)
 
+> **Datenweg (verbindlich, Audit Review 01, R01-001 E17, entschieden 2026-09-24):** Auch Sheets-API-Aufrufe laufen ausschließlich über `IExternalCommunicationService` mit `DataClassification` — eine Client-Library (`Google.Apis.Sheets.v4`) darf keinen eigenen HTTP-Weg am Gateway vorbei öffnen. Endpunkt (sheets.googleapis.com) und OAuth-Token (Secret, DPAPI nach ADR-042) müssen vor der Umsetzung im DSGVO-Gateway-Register (DSVGO-Architektur Kap. 4.4) stehen; derzeit ist für `wetter` nur api.open-meteo.com registriert.
+
 **Optionaler Workflow:** BPM schreibt Projekt-Koordinaten direkt ins "Projekte"-Blatt via Sheets API → Sheet pollt automatisch für alle eingetragenen Standorte. Alternativ: Nutzer trägt Koordinaten manuell im Sheet ein (kein API-Zugriff nötig, einfacher).
 
 **DSGVO:** GPS-Koordinaten sind ClassA (keine Personendaten). Baustellenadressen wären ClassB — deshalb nur Koordinaten übertragen, keine Adressen.
@@ -266,7 +270,7 @@ public interface IWeatherSyncService
 ### 5.2 Sync-Ablauf
 
 1. BPM startet → `IWeatherSyncService.SyncAsync()` wird aufgerufen
-2. Service ruft CSV-URL über `IExternalCommunicationService` ab (ClassA, Audit-Log)
+2. Service ruft CSV-URL über `IExternalCommunicationService` ab (ClassA, Audit-Log) — die Google-Veröffentlichungs-URL (CSV bzw. Web-App) muss vorher im DSGVO-Gateway-Register stehen (derzeit nicht registriert) (Audit Review 01, R01-001 E17, entschieden 2026-09-24)
 3. CSV wird geparst → neue Einträge identifiziert (seit letztem Sync)
 4. Neue Einträge werden in SQLite `Weather`-Tabelle geschrieben
 5. Optional: Stündlicher Timer wiederholt den Sync
@@ -274,7 +278,7 @@ public interface IWeatherSyncService
 ### 5.3 Fallback (ohne Google Sheet)
 
 Wenn kein Sheet konfiguriert oder nicht erreichbar:
-- BPM ruft Open-Meteo direkt ab (nur wenn BPM läuft)
+- BPM ruft Open-Meteo selbst ab (nur wenn BPM läuft) — über `IExternalCommunicationService` mit `DataClassification.ClassA` (registrierter Dienst `wetter`), kein direkter `HttpClient` (Audit Review 01, R01-001 E17, entschieden 2026-09-24)
 - Daten nur während Laufzeit verfügbar, keine 24/7-Sammlung
 - Funktioniert als einfacher Offline-Cache
 
@@ -283,6 +287,8 @@ Wenn kein Sheet konfiguriert oder nicht erreichbar:
 ## 6. Datenmodell
 
 ### 6.1 SQLite-Tabellen
+
+> ⚠️ **Hinweis:** Die SQL-Statements unten zeigen einen **frühen Entwurf** mit `INTEGER PRIMARY KEY AUTOINCREMENT`. Verbindlich ist ULID (`TEXT PRIMARY KEY`, ADR-039 v2) für alle Tabellen; bei Implementierung gilt DB-SCHEMA.md (Audit Review 01, R01-001 E17, entschieden 2026-09-24).
 
 ```sql
 CREATE TABLE WeatherHourly (
@@ -473,7 +479,8 @@ Berechnungen aus `WeatherDaily`-Tabelle:
 | Wetterdaten | ClassA — keine Personendaten, unkritisch |
 | GPS-Koordinaten | ClassA — keine Personenzuordnung |
 | Baustellenadressen | ClassB — NICHT an Google übertragen, nur Koordinaten |
-| API-Calls | Über IExternalCommunicationService mit Audit-Log und Kill-Switch |
+| API-Calls | Über IExternalCommunicationService mit DataClassification, Audit-Log und Kill-Switch — kein direkter HttpClient |
+| Gateway-Register | Jeder externe Endpunkt muss in DSVGO-Architektur Kap. 4.4 registriert sein. Registriert: `wetter` → api.open-meteo.com (ClassA). Google-Endpunkte (CSV-/Web-App-URL, Sheets API) vor Umsetzung eintragen (Audit Review 01, R01-001 E17, entschieden 2026-09-24) |
 | Google Sheet | Liegt im Account des Nutzers, BPM hat keinen eigenen Google-Account |
 | Attribution | "Wetterdaten: Open-Meteo.com" in BPM anzeigen |
 
@@ -496,6 +503,7 @@ Berechnungen aus `WeatherDaily`-Tabelle:
 ## 13. Implementierungs-Phasen
 
 ### Phase 1: Sheet-Sync + Tabelle (Minimum Viable)
+- Voraussetzung: Google-Veröffentlichungs-URL (CSV bzw. Web-App) im DSGVO-Gateway-Register eingetragen (DSVGO-Architektur Kap. 4.4, siehe Kap. 11); bis dahin nur der registrierte Abruf bei api.open-meteo.com (Kap. 5.3) (Audit Review 01, R01-001 E17, entschieden 2026-09-24)
 - Google Sheet Template erstellen (generalisiert aus bestehendem Sheet)
 - `IWeatherSyncService` implementieren (CSV abrufen, parsen)
 - SQLite `WeatherHourly` + `WeatherDaily` Tabellen

@@ -19,14 +19,14 @@ supersedes: []
 - Kapitel:
   - 1. Zweck
   - 2. Ordnerstruktur
-  - 3. Standard-Doc-Set bei Init
+  - 3. Standard-Doc-Set bei Projekt-Init
   - 4. Frontmatter-Standard
   - 5. Authority-Level
   - 6. AI-Quickload-Block
   - 7. Kapitelvorlagen pro Doc-Typ
-  - 8. Wie Skills Docs lesen
+  - 8. Wie Skills Docs lesen (verbindliche Ladereihenfolge)
   - 9. INDEX.md als Router
-  - 10. Generierter Katalog
+  - 10. Generierter Katalog (geplant)
   - 11. Validierungsregeln
   - 12. CLAUDE.md
 - Pflichtlesen:
@@ -34,9 +34,9 @@ supersedes: []
   - Kapitel 7 (Kapitelvorlagen) bei jeder Doc-Erstellung und Refactoring
   - Kapitel 8 (Skill-Laderegel) bei jeder Skill-Änderung
 - Fachliche Invarianten:
-  - Frontmatter Pflicht für Kern/, Module/, Referenz/
+  - Frontmatter Pflicht für Kern/, Module/, Referenz/, Test/
   - Quickload Pflicht für source_of_truth und secondary
-  - Feste Kapitelvorlagen pro doc_type
+  - Kapitelvorlagen pro doc_type verbindlich nur für neue Docs; Bestand behält thematische Gliederung
   - Einheitliche Skill-Ladereihenfolge für alle Doc-lesenden Skills
   - Skill = Enforcement, diese Doc = Norm
 
@@ -66,8 +66,12 @@ Docs/
 ├── Kern/           ← Autoritativ, bei jeder Code-Änderung relevant
 ├── Referenz/       ← Ergänzend, laden wenn Thema aufkommt
 ├── Konzepte/       ← Zukunft, erst relevant wenn Modul gebaut wird
-└── Module/         ← Implementiert oder im Bau
+├── Module/         ← Implementiert oder im Bau
+└── Test/           ← Manuelle Test-Anleitungen (doc_type test-guide)
 ```
+
+**Ordnerregel für die doc_types `vision` und `test-guide`:** `vision` liegt in `Referenz/`,
+`test-guide` in `Test/`. (Audit Review 01, R01-001 E19, entschieden 2026-09-24)
 
 ---
 
@@ -108,6 +112,12 @@ supersedes: [liste]
 ---
 ```
 
+Optionales Feld: `superseded_by: [liste]` — doc_ids bzw. ADR-IDs, die dieses Doc ablösen
+(siehe 4.5).
+
+`authority` und `status` tragen ausschließlich einen Enum-Wert (Kap. 5 bzw. 4.3) — kein
+Fließtext, keine Klammerzusätze. (Audit Review 01, R01-001 E19, entschieden 2026-09-24)
+
 ### 4.2 Erlaubte Doc-Typen
 
 | Typ | Bedeutung |
@@ -122,6 +132,11 @@ supersedes: [liste]
 | policy | Verbindliche Regel/Norm |
 | backlog | Feature-Tracking, Planung |
 | changelog | Versionshistorie |
+| vision | Produktvision, Zielgruppe, strategische Positionierung |
+| test-guide | Manuelle Test-Anleitung (Szenarien mit Setup und Cleanup) |
+
+`vision` und `test-guide` sind neu (Audit Review 01, R01-001 E19, entschieden 2026-09-24);
+Ordner siehe Kap. 2.
 
 ### 4.3 Erlaubte Status-Werte
 
@@ -134,7 +149,17 @@ supersedes: [liste]
 ### 4.4 Ausnahmen
 
 - Docs in Konzepte/ KÖNNEN Frontmatter haben, MÜSSEN aber nicht bis Bau-Start
-- CLAUDE.md und INDEX.md im Root bekommen KEIN Frontmatter
+- CLAUDE.md, INDEX.md und AGENTS.md im Root bekommen KEIN Frontmatter
+
+### 4.5 Abgelöste Docs
+
+- Teilweise abgelöst → `status: active`, `authority: secondary`, Banner oben + optionales
+  Frontmatter-Feld `superseded_by: [...]`
+- Vollständig abgelöst → `status: deprecated`, `authority: historical`
+- Andere Werte (z. B. `superseded`, `partially-superseded` oder `deprecated` als authority)
+  sind nicht erlaubt — es gelten nur die Enums aus 4.3 und Kap. 5
+
+(Audit Review 01, R01-001 E19, entschieden 2026-09-24)
 
 ---
 
@@ -142,14 +167,17 @@ supersedes: [liste]
 
 | Level | Bedeutung | Routing |
 |-------|-----------|---------|
-| source_of_truth | Verbindliche Primärquelle | Primary im Router |
-| secondary | Ergänzende Quelle | Secondary im Router |
+| source_of_truth | Verbindliche Primärquelle für die eigenen topics | Primary oder Secondary im Router |
+| secondary | Ergänzende Quelle | Primary (erste Anlaufstelle) oder Secondary im Router |
 | historical | Nur Nachvollziehbarkeit | NICHT als Primary |
 
 Regeln:
-- Jedes Thema genau EINE source_of_truth
-- historical nicht als Primary
+- authority gilt für die eigenen `topics` des Docs
+- Jedes Thema höchstens EINE source_of_truth
+- historical (bzw. status deprecated) nicht als Primary
 - Bei Widerspruch: source_of_truth gewinnt
+- Die Router-Rolle Primary ist von authority entkoppelt (Kap. 9.3)
+  (Audit Review 01, R01-001 E19, entschieden 2026-09-24)
 
 ---
 
@@ -180,9 +208,15 @@ Quickload-Block haben. Direkt nach Frontmatter.
 
 ### 6.3 Feldregeln
 
+- Autorität: nur der Enum-Wert (source_of_truth | secondary | historical) — kein Fließtext,
+  keine Klammerzusätze. Abgrenzungen gehören in „Nicht zuständig für“.
+  (Audit Review 01, R01-001 E19, entschieden 2026-09-24)
 - Nicht zuständig für: PFLICHT bei source_of_truth
 - Lesen wenn: NICHT leer bei source_of_truth und secondary
-- Kapitel: Listet alle H2-Überschriften auf
+- Kapitel: Listet alle H2-Überschriften auf.
+  Ausnahme doc_type `backlog`, `changelog`, `adr`: eine Sammelzeile statt Einzelliste,
+  z. B. `- Kapitel: Versionseinträge absteigend (eine H2 je Version) + Dokumentations-Versionen`.
+  (Audit Review 01, R01-001 E19, entschieden 2026-09-24)
 - Pflichtlesen: Kapitel die IMMER geladen werden wenn Modul betroffen ist.
   Skills behandeln das als Blocking Condition.
 - Fachliche Invarianten: Kernregeln die nie gebrochen werden dürfen.
@@ -199,7 +233,12 @@ Aus dem Kapitel-Feld und Pflichtlesen entscheidet sie was nachgeladen wird.
 
 ## 7. Kapitelvorlagen pro Doc-Typ
 
-H2-Überschriften nummeriert. Reihenfolge fest. Docs werden dagegen refactort.
+Die Kapitelvorlagen gelten verbindlich nur für neue Docs: H2-Überschriften nummeriert,
+Reihenfolge fest. Bestands-Docs (vor dem 2026-09-24 angelegt) behalten ihre thematische
+Gliederung — auch der Regel-Teil darf thematisch gegliedert sein — und werden nicht
+dagegen refactort. Bei neuen Docs sind Abweichungen von Vorlage oder Kapitelreihenfolge
+eine Warnung (Kap. 11.2); Bestands-Docs werden dafür nicht gemeldet.
+(Audit Review 01, R01-001 E19, entschieden 2026-09-24)
 
 ### 7.1 module
 
@@ -268,11 +307,23 @@ H2-Überschriften nummeriert. Reihenfolge fest. Docs werden dagegen refactort.
 
 Bestehendes Format: Status, Kontext, Entscheidung, Konsequenzen.
 
-### 7.8 backlog / changelog
+### 7.8 backlog / changelog / vision
 
 Freie Struktur.
 
-### 7.9 Regeln
+### 7.9 test-guide
+
+```markdown
+## 1. Zweck
+## 2. Voraussetzungen
+## 3. Setup
+## 4. Szenarien
+## 5. Cleanup
+```
+
+### 7.10 Regeln
+
+Gelten für neue Docs (siehe Einleitung Kap. 7):
 
 - H2 IMMER nummeriert
 - Reihenfolge fest
@@ -316,7 +367,7 @@ Wenn ein Pflichtlesen-Kapitel nicht geladen wurde und das Modul betroffen ist
 
 ```markdown
 ### [Thema]
-- Primary: [Pfad zur source_of_truth]
+- Primary: [Pfad zur ersten Anlaufstelle für das Thema – nie historical/deprecated, siehe 9.3]
 - Secondary: [Pfad zur ergänzenden Doc]
 - Reference: [Pfad zur Hintergrund-Doc]
 ```
@@ -325,33 +376,46 @@ Wenn ein Pflichtlesen-Kapitel nicht geladen wurde und das Modul betroffen ist
 
 - Doc-Katalog, Langbeschreibungen, Dateigrößen, Schlagwort-Listen
 
+### 9.3 Rolle Primary (Router-Regel)
+
+Primary im INDEX = erste Anlaufstelle für das Thema; muss nicht authority source_of_truth
+sein, darf aber nie historical/deprecated sein.
+(Audit Review 01, R01-001 E19, entschieden 2026-09-24)
+
 ---
 
-## 10. Generierter Katalog
+## 10. Generierter Katalog (geplant)
 
-docs.catalog.json aus Frontmatter generiert. Nie manuell editiert.
+**Status: geplant** — `docs.catalog.json` und ein Generator existieren noch nicht.
+(Audit Review 01, R01-001 E19, entschieden 2026-09-24)
+
+Zielbild: docs.catalog.json aus Frontmatter generiert. Nie manuell editiert.
 
 ---
 
 ## 11. Validierungsregeln
 
+Jede Prüfregel steht in genau einer Stufe.
+(Audit Review 01, R01-001 E19, entschieden 2026-09-24)
+
 ### 11.1 Stufe A — Formal (Blocker)
 
-- Frontmatter vorhanden bei Kern/, Module/, Referenz/
+- Frontmatter vorhanden bei Kern/, Module/, Referenz/, Test/
 - Alle Pflichtfelder vorhanden
-- doc_id eindeutig, Enums korrekt
+- doc_id eindeutig, Enums korrekt (doc_type, authority, status nur als Enum-Wert, auch im
+  Quickload-Feld „Autorität“)
 - Quickload vorhanden bei source_of_truth und secondary
-- Quickload Kapitel-Liste stimmt mit H2s überein
-- Kapitelreihenfolge entspricht Vorlage
+- Quickload Kapitel-Liste stimmt mit H2s überein (Sammelzeile bei backlog, changelog, adr —
+  Kap. 6.3)
 - Fachliche Invarianten max 5
 - Pflichtlesen verweist auf existierende Kapitel
 
 ### 11.2 Stufe B — Semantisch (Warnung)
 
-- Quickload Kapitel-Liste stimmt nicht mit H2s überein
-- historical Doc als Primary im Router
+- historical/deprecated Doc als Primary im Router
 - related_docs nicht existierend
-- Kapitelvorlage nicht eingehalten
+- Kapitelvorlage oder Kapitelreihenfolge nicht eingehalten — nur bei neuen Docs (Kap. 7);
+  Bestands-Docs mit thematischer Gliederung werden dafür nicht gemeldet
 - Fachliche Invarianten leer bei großem Modul
 
 ---
@@ -361,3 +425,8 @@ docs.catalog.json aus Frontmatter generiert. Nie manuell editiert.
 Spezial-Datei für Claude Code Terminal. Kein Frontmatter, kein Quickload.
 Bei Init als Skelett mit Projektname, Stack, Coding-Standards, Git-Regeln,
 Verweisen auf INDEX.md und DOC-STANDARD.md.
+
+**AGENTS.md** (Root, versioniert): kurze Weiterleitung auf CLAUDE.md für andere Agenten —
+nennt nur die Einstiegspunkte (CLAUDE.md, INDEX.md, DOC-STANDARD.md) und wiederholt keine
+Regeln. Kein Frontmatter, kein Quickload. Maßgeblich bleibt CLAUDE.md.
+(Audit Review 01, R01-001 E18, entschieden 2026-09-24)

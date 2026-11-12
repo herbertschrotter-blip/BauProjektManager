@@ -13,36 +13,52 @@ supersedes: []
 
 ## AI-Quickload
 - Zweck: Design-System und UI/UX-Regeln für alle BPM-Module und Screens
-- Autorität: source_of_truth (für Design-Regeln; WPF_UI_Architecture.md = technische Umsetzung)
+- Autorität: source_of_truth
 - Lesen wenn: Neuer Dialog, neues UI-Element, Farbe wählen, Button-Style, Screen States, Icon hinzufügen
-- Nicht zuständig für: WPF-ResourceDictionary-Aufbau (→ WPF_UI_Architecture.md), XAML-Code-Konventionen (→ CODING_STANDARDS.md Kap. 10)
+- Nicht zuständig für: konkrete Screens (→ neuestes freigegebenes Mockup, Rangfolge Kap. 1.4), WPF-ResourceDictionary-Aufbau und technische Umsetzung (→ WPF_UI_Architecture.md), XAML-Code-Konventionen (→ CODING_STANDARDS.md Kap. 10), Static-/DynamicResource-Regel (→ CODING_STANDARDS.md Kap. 10.5)
 - Kapitel:
-  - 0. Schnellreferenz
-  - 1–4. Farben, Typografie, Spacing, Buttons
-  - 5–6. Screen States (5 Pflicht), Navigation
-  - 7–8. Icons, Dialoge
-  - 9–12. DataGrid, Formulare, Feedback, TreeView
-  - 13–15. Sprache, Barrierefreiheit, Responsive
-  - 16–19. Datenschutz-GUI, Animationen, Anti-Patterns, Offene Punkte
+  - 0. Aktueller UI-Stand
+  - 1. Projektkontext (inkl. 1.4 Rangfolge)
+  - 2. Design-Prinzipien
+  - 3. Farben
+  - 4. Typografie
+  - 5. Spacing & Grid
+  - 6. Layout & Navigation
+  - 7. Screen States
+  - 8. Komponenten
+  - 9. Master-Detail Pattern (inkl. 9.1 Detail-Panel)
+  - 10. Such- und Filterstandards
+  - 11. Datenformate
+  - 12. Formulare
+  - 13. UX-Wording
+  - 14. Interaktionsregeln
+  - 15. Accessibility
+  - 16. Do's & Don'ts
+  - 17. Responsive Verhalten
+  - 18. Feedback-Matrix
+  - 19. Toggle-Switch
 - Pflichtlesen:
-  - Kapitel 0 (Schnellreferenz) bei jedem UI-Element
-  - Kapitel 5 (Screen States) bei neuem Screen/View
-  - Kapitel 7 (Icons) bei neuem Icon
+  - Kapitel 0 (Aktueller UI-Stand) bei jedem UI-Element
+  - Kapitel 1.4 (Rangfolge der UI-Quellen) bei Widerspruch zwischen Guidelines, Mockup, UI-Docs und Code
+  - Kapitel 7 (Screen States) bei neuem Screen/View
+  - Kapitel 8.7 (Icons) bei neuem Icon
+  - Kapitel 15 (Accessibility, Mindeststandard V1) bei neuem Screen, Dialog oder Overlay
 - Fachliche Invarianten:
   - Alle Farben über Theme-Tokens — nie hardcoded Hex
   - 5 Screen States Pflicht: Loading, Empty, Content, Error, Disabled
-  - Max 1 Primary-Button + 1 Kontext-Button pro Screen
-  - Alle UI-Texte Deutsch, interne Pattern-Begriffe dürfen Englisch sein
+  - Max. 1 Primary-Button je Dialog-Footer
+  - Alle UI-Texte Deutsch (Bau-Fachsprache österreichisch, z. B. „Geschoß“), interne Pattern-Begriffe dürfen Englisch sein
+  - A11y-Mindeststandard V1 (hart): sichtbarer Fokus, Tastaturpfad für Kernabläufe, Escape schließt Overlays, Kontrast ≥ 4,5:1
 
 ---
 
 # BauProjektManager — UI/UX Guidelines
 
-**Version:** 2.1  
-**Datum:** 04.04.2026  
+**Version:** 2.3  
+**Datum:** 12.11.2026  
 **Gültig für:** Alle Module, alle Screens, alle zukünftigen Features  
 **Design-Vorbild:** VS Code (Dark Theme, Sidebar, sauber, professionell)  
-**Governance:** Dieses Dokument wird bei jeder UI-relevanten Änderung aktualisiert. Abweichungen sind erlaubt, müssen aber dokumentiert und begründet werden.
+**Governance:** Dieses Dokument wird bei jeder UI-relevanten Änderung aktualisiert. Abweichungen sind erlaubt, müssen aber dokumentiert und begründet werden. Rangfolge gegenüber Mockups, abgeleiteten UI-Docs und Code: Kap. 1.4.
 
 **Verwandte Dokumente:**
 - [WPF_UI_Architecture.md](WPF_UI_Architecture.md) — Technische Umsetzung: Token → WPF Resource Keys, ResourceDictionary-Aufbau
@@ -61,18 +77,18 @@ supersedes: []
 ```
 ┌──────────────────────────────────────────────────────┐
 │ Sidebar │ Toolbar (nur wenn Modul sie braucht)       │
-│  (56px) │────────────────────────────────────────────│
-│         │                                            │
+│(220/56px│────────────────────────────────────────────│
+│ klappb.)│                                            │
 │  [📁]   │  Content-Bereich                           │
 │  [⚙]    │  (wechselt pro Modul: SettingsView,       │
 │         │   PlanManagerView)                         │
 │         │                                            │
 │  v0.25  │────────────────────────────────────────────│
-│         │ Statusleiste (22px)                        │
+│         │ Statusleiste (28px)                        │
 └──────────────────────────────────────────────────────┘
 ```
 
-- **Sidebar:** 56px Icon-Leiste, immer sichtbar, `BpmBgSurface` Hintergrund (siehe UI_Navigation.md)
+- **Sidebar:** klappbar 220px (Emoji + Text) ↔ 56px (Icon-Leiste), immer sichtbar, `BpmBgSurface` Hintergrund (siehe UI_Navigation.md) — Shell-Maße nach Code (Audit Review 01, R01-001 E14, entschieden 2026-09-24)
 - **Content:** `#1E1E1E` Hintergrund, 20px Margin
 - **Statusleiste:** 28px Höhe, `#007ACC` Blau, weißer Text
 - **Navigation:** Button-Click → ContentControl wird befüllt
@@ -164,6 +180,34 @@ Effizienz vor Ästhetik.
 
 BPM ist ein Arbeitswerkzeug, keine Show-App. Jeder Pixel muss einem Zweck dienen.
 
+### 1.4 Rangfolge der UI-Quellen
+
+(Audit Review 01, R01-001 E14, entschieden 2026-09-24)
+
+| Quelle | Zuständig für | Rolle |
+|---|---|---|
+| **UI_UX_Guidelines.md** (dieses Dokument) | Prinzipien und Design-Tokens (Farben, Typografie, Spacing, Komponenten-Regeln, Barrierefreiheit) | maßgeblich |
+| **Neuestes freigegebenes Mockup** (`Docs/Mockups/<Modul>/`, Status laut `_SITEMAP.md`) | Konkrete Screens: Layout, Maße, Beschriftungen, Abläufe eines Screens | maßgeblich |
+| **UI_Navigation.md, WPF_UI_Architecture.md, UX_Flows.md** | Navigation, technische WPF-Umsetzung, User-Workflows | abgeleitet — werden aus Guidelines und Mockups nachgezogen, entscheiden nichts selbst |
+| **Code, der dem Mockup folgt** | Umgesetzter Screen | gilt als Ist |
+
+**Regeln:**
+- Layout- und Maßangaben zu konkreten Screens (Kap. 0 und 6) sind Richtwerte; Tokens und Komponenten-Regeln (z. B. Mindesthöhe 32px, Focus-Ring 2px) bleiben maßgeblich. Bei Widerspruch gilt für einen konkreten Screen das neueste freigegebene Mockup — die Einzelentscheidungen (E14) unten gehen vor, abweichende Mockups werden angeglichen.
+- Widerspricht ein abgeleitetes UI-Doc den Guidelines oder dem Mockup, wird das abgeleitete Doc nachgezogen.
+- Für fertige Screens werden keine Mockups nachgezogen. Die Sitemaps führen sie mit dem Status „implementiert ohne Mockup“; für sie gilt der Code als Ist, Prinzipien und Tokens aus diesem Dokument.
+- Die Static-/DynamicResource-Regel steht nur in [CODING_STANDARDS.md](../Kern/CODING_STANDARDS.md) Kap. 10.5; alle UI-Docs verweisen dorthin.
+
+**Einzelentscheidungen (E14):**
+
+| Thema | Festlegung |
+|---|---|
+| Shell-Maße | Nach Code: Statusleiste 28px, Sidebar klappbar 220px ↔ 56px (BPM-067) |
+| Plandaten „Im Explorer zeigen“ | Heißt „Im Windows-Explorer zeigen“ und öffnet den Windows-Explorer; der Sprung in den In-App-Tab „Explorer“ kommt post-V1 |
+| Segmenttyp-Manager Reorder | Drag-Reorder von Gruppen und Typen kommt post-V1 |
+| Kosmetische Abweichungen Mockup ↔ Code | Werden ins Mockup übernommen: Radial 460px (statt 500px), Ring-Ausblendung ohne Animation (Animation nur beim Erscheinen), Statistikzeile des Segmenttyp-Managers wie im Code |
+| Dialog-Basis-Styles | Ungenutzte Dialog-Styles werden verwendet oder gelöscht (Kap. 8.4) |
+| BpmButtonSuccess | Wird durch Secondary ersetzt (Farbregel Kap. 3.3, Kap. 8.1) |
+
 ---
 
 ## 2. Design-Prinzipien
@@ -174,7 +218,7 @@ Diese 9 Regeln gelten für ALLE Module, ALLE Screens, ALLE Entscheidungen:
 Gleiche Aktionen sehen überall gleich aus. Ein "Speichern"-Button ist in jedem Dialog an derselben Stelle, in derselben Farbe, mit demselben Text.
 
 ### P2: One Primary Action Per Context
-Pro sichtbarem Kontext genau EINE Hauptaktion die sofort erkennbar ist. Alles andere ist sekundär. Konkret: 1 Primary pro Seite (Hauptansicht), 1 pro Dialog, 1 pro Wizard-Schritt.
+Pro sichtbarem Kontext genau EINE Hauptaktion die sofort erkennbar ist. Alles andere ist sekundär. Verbindlich ist nur: ein Primary je Dialog-Footer (gilt auch für den Footer eines Wizard-Schritts) (Audit Review 01, R01-001 E15, entschieden 2026-09-24).
 
 ### P3: Progressive Disclosure
 Zeige nur was jetzt relevant ist. Erweiterte Optionen verstecken sich hinter "Erweitert" oder in Tabs.
@@ -266,8 +310,8 @@ Inverse Variante. Farb-Token bleiben gleich, nur Werte ändern sich.
 
 - **Maximal 2 Akzentfarben** gleichzeitig auf einem Screen
 - **Rot nur für Fehler und destruktive Aktionen**
-- **Grün nur für Erfolg**
-- **Gelb nur für Warnungen**
+- **Grün nur für Erfolg** — keine grünen Aktions-Buttons (BpmButtonSuccess wird durch Secondary ersetzt, Kap. 8.1)
+- **Gelb nur für Warnungen** — auf `warning`-Gelb immer dunkle Schrift (Kontrast, Kap. 15)
 - **Akzentblau für interaktive Elemente**
 - **Keine bunten Hintergründe**
 
@@ -295,7 +339,7 @@ Inverse Variante. Farb-Token bleiben gleich, nur Werte ändern sich.
 ### 4.3 Typografie-Regeln
 
 - **Zeilenhöhe:** 1.4× Schriftgröße
-- **Maximal 3 verschiedene Schriftgrößen pro Screen**
+- **Maximal 3 verschiedene Schriftgrößen im Content-Bereich eines Screens** — die Shell (Sidebar, Statusleiste) zählt nicht mit (Audit Review 01, R01-001 E15, entschieden 2026-09-24)
 - **Kein Unterstreichen** außer bei Links
 - **Kein Kursiv** außer bei Platzhalter-Text
 - **VERSALIEN** nur für Status-Badges
@@ -337,7 +381,7 @@ Inverse Variante. Farb-Token bleiben gleich, nur Werte ändern sich.
 ├────────┬─────────────────────────────────────────────────────────┤
 │ Side   │  ╔══════════════════════════════════════════════════╗   │
 │ bar    │  ║  TOOLBAR (modul-spezifische Aktionen)           ║   │
-│ (56px) │  ║  [← Zurück] [Projektname]    │ [Import starten] ║  │
+│(220/56)│  ║  [← Zurück] [Projektname]    │ [Import starten] ║  │
 │        │  ╚══════════════════════════════════════════════════╝   │
 │ [📁]   │                                                        │
 │ [⚙]    │  ┌─────────────────────────────────────────────────┐   │
@@ -347,7 +391,7 @@ Inverse Variante. Farb-Token bleiben gleich, nur Werte ändern sich.
 │        │  └─────────────────────────────────────────────────┘   │
 │ v0.25  │                                                        │
 ├────────┴─────────────────────────────────────────────────────────┤
-│  Statusleiste (22px)                                             │
+│  Statusleiste (28px)                                             │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -379,8 +423,8 @@ Inverse Variante. Farb-Token bleiben gleich, nur Werte ändern sich.
 ### 6.5 Statusleiste
 
 - **Position:** Ganz unten
-- **Höhe:** 24px
-- **Hintergrund:** `bg-surface`
+- **Höhe:** 28px (Shell-Maße nach Code, Audit Review 01, R01-001 E14, entschieden 2026-09-24)
+- **Hintergrund:** `accent-primary` mit `text-on-accent` (wie Mockup `01_Sidebar.html` und Code, Kap. 0.1; Rangfolge Kap. 1.4)
 - **Inhalt links:** DB-Pfad, Schema-Version
 - **Inhalt rechts:** Letzte Aktion, Zeitstempel
 
@@ -418,13 +462,15 @@ Inverse Variante. Farb-Token bleiben gleich, nur Werte ändern sich.
 
 | Variante | Hintergrund | Verwendung |
 |----------|------------|-----------|
-| **Primary** | `accent-primary` | Hauptaktion pro Screen |
+| **Primary** | `accent-primary` | Hauptaktion (max. 1 je Dialog-Footer, P2) |
 | **Secondary** | `bg-elevated` | Sekundäre Aktionen |
 | **Danger** | `error` | Destruktive Aktionen |
 | **Ghost** | Transparent | Tertiäre/Inline-Aktionen |
 | **Link** | Transparent, `accent-primary` Text | Navigation |
 
-**Regeln:** Max. 1 Primary pro sichtbarem Kontext (Seite, Dialog, Wizard-Schritt — siehe P2). Primary rechts in Dialogen. Mindesthöhe 32px.
+**Regeln:** Max. 1 Primary je Dialog-Footer (siehe P2). Primary rechts in Dialogen. Mindesthöhe 32px.
+
+**Keine Success-Variante:** Grün ist Erfolgsmeldungen vorbehalten (Kap. 3.3). `BpmButtonSuccess` wird durch Secondary ersetzt und entfällt (Audit Review 01, R01-001 E14, entschieden 2026-09-24).
 
 ### 8.2 Input-Felder
 
@@ -451,7 +497,8 @@ Inverse Variante. Farb-Token bleiben gleich, nur Werte ändern sich.
 - **Buttons:** Unten rechts, Primary ganz rechts
 - **Schließen:** [✕] oder Escape (mit Dirty-State-Check bei Formulardialogen)
 - **Overlay-Klick:** Nur bei Info-/Bestätigungsdialogen erlaubt. Bei Bearbeitungsdialogen mit Formularen: KEIN Overlay-Klick (Risiko Datenverlust)
-- **Keine verschachtelten Dialoge**
+- **Unterdialoge höchstens eine Ebene tief:** Ein Dialog darf einen Unterdialog öffnen (z. B. Profil-Wizard → Segmenttyp-Manager, Projekt-Dialog → Bauteil-/Geschoß-Dialog), der Unterdialog keinen weiteren (Audit Review 01, R01-001 E15, entschieden 2026-09-24). Bestätigungs-, Hinweis- und Dirty-Check-Abfragen (BpmConfirmDialog, BpmInfoDialog, ShowDarkConfirm) zählen nicht als weitere Dialogebene.
+- **Dialog-Basis-Styles:** Die Basis-Styles aus `Dialogs.xaml` werden in den Dialogen verwendet oder gelöscht — keine ungenutzten Dialog-Styles im Theme (Audit Review 01, R01-001 E14, entschieden 2026-09-24)
 
 ### 8.5 Toast-Benachrichtigungen
 
@@ -498,15 +545,25 @@ Inverse Variante. Farb-Token bleiben gleich, nur Werte ändern sich.
 | Komplexes Objekt bearbeiten | Dialog (Modal) |
 | Einfaches Objekt erstellen | Dialog (kleiner) |
 | Objekt ansehen + navigieren | Seitenwechsel im Content |
-| Schnelle Änderung in Zeile | Inline-Editing |
+| Objekt in Liste auswählen, Eigenschaften sehen und einfach bearbeiten | Liste + Detail-Panel (Kap. 9.1) |
+| Schnelle Änderung eines Einzelwerts in Zeile | Inline-Editing |
 
-**Regeln:** Nie beides mischen im selben Modul. Dialoge für Erstellen/Bearbeiten (Standard in BPM). Inline-Editing nur für einzelne Felder.
+**Regeln:** Dialoge für Erstellen/Bearbeiten (Standard in BPM). Inline-Editing nur für Einzelwerte (z. B. Höhenkoten im Geschoß-Grid); ein solcher Einzelwert darf zusätzlich über den Bearbeiten-Dialog des Objekts änderbar sein — die frühere Regel „nie beides mischen im selben Modul“ entfällt (Audit Review 01, R01-001 E15, entschieden 2026-09-24).
+
+### 9.1 Detail-Panel
+
+Eigenes Muster neben Dialog und Inline-Editing (Audit Review 01, R01-001 E15, entschieden 2026-09-24):
+
+- **Aufbau:** Liste bzw. Tabelle + Detail-Panel. Die Auswahl einer Zeile zeigt ihre Eigenschaften im Panel; Lage des Panels (unten oder seitlich) nach Mockup des Screens.
+- **Bearbeitung:** Einfache Bearbeitung direkt im Panel (z. B. Plandaten: Tags und Segmente; Manuell sortieren: Plannummer, Index, Bezeichnung; Segmenttyp-Manager: Liste + Bearbeitungsbereich).
+- **Abgrenzung:** Komplexe Objekte und das Erstellen mit Formular bleiben im Dialog (Tabelle oben).
+- **Tastatur:** Das Detail-Panel ist Teil des Tastaturpfads; im Tab „Manuell sortieren“ ersetzen die Listen im Detail-Panel das Radial bei Tastaturbedienung (Kap. 15).
 
 ---
 
 ## 10. Such- und Filterstandards
 
-- **Suchfeld:** Oben rechts, 250–350px, Platzhalter "Suche in [Datentyp]..."
+- **Suchfeld:** Links (am Anfang der Such-/Filterzeile über der Liste), Breite nach Mockup des Screens, Platzhalter "Suche in [Datentyp]..." (Audit Review 01, R01-001 E15, entschieden 2026-09-24)
 - **Live-Suche:** 300ms Debounce
 - **Filter:** ComboBox-Dropdowns neben Suchfeld
 - **Reset:** "Filter zurücksetzen" Link wenn aktiv
@@ -548,6 +605,7 @@ Inverse Variante. Farb-Token bleiben gleich, nur Werte ändern sich.
 - **Komplett Deutsch** (Ausnahmen: Dashboard, OK)
 - **Duzen** (nicht Siezen)
 - **Bau-Fachsprache** (Geschoß, Polier, Bewehrung, Schalung, RDOK, LV)
+- **Schreibweise „Geschoß“:** In allen UI-Texten österreichisch „Geschoß“ (Mehrzahl „Geschoße“), nicht „Geschoss“ (österreichische Zielgruppe, GLOSSAR-Invariante). Technische Keys (Segmenttyp-Keys, DB-Spalten, Enum-Werte) bleiben ASCII (Audit Review 01, R01-001 E16, entschieden 2026-09-24)
 - **Fehlermeldungen:** Was passiert + was User tun kann
 - **Sachlich, direkt, keine Ausrufezeichen**
 
@@ -555,16 +613,23 @@ Inverse Variante. Farb-Token bleiben gleich, nur Werte ändern sich.
 
 ## 14. Interaktionsregeln
 
-- **Einfachklick:** Selektieren
+- **Einfachklick:** Selektieren — Ausnahme Projektliste (PlanManager): Mausklick darf direkt ins Projekt navigieren, Tastaturauswahl (Pfeiltasten) selektiert nur, geöffnet wird erst mit Enter (Kap. 15)
 - **Doppelklick:** Bearbeiten (Dialog)
 - **Rechtsklick:** Kontextmenü
-- **Escape:** Dialog schließen (Pflicht)
+- **Escape:** Dialog bzw. Overlay schließen (Pflicht)
 - **Enter:** Primary-Button ausführen (Pflicht)
 - **Animationen:** Max. 300ms, ease-out für Öffnen, ease-in für Schließen
 
 ---
 
 ## 15. Accessibility
+
+**Mindeststandard V1 (hart)** — gilt für alle V1-Screens, -Dialoge und -Overlays; nur der DevToolsDialog (nur DEBUG) hat niedrige Priorität (Audit Review 01, R01-001 E15, entschieden 2026-09-24):
+
+1. **Sichtbarer Fokus:** Jedes fokussierbare Element zeigt einen sichtbaren Fokus (Focus-Ring, Kap. 15.2). Fokusrahmen dürfen nicht ersatzlos entfernt werden.
+2. **Tastaturpfad für die Kernabläufe:** Kernabläufe sind ohne Maus bedienbar. Radial (Manuell sortieren): Tastatur-Alternative über die Listen im Detail-Panel (Kap. 9.1) — Abgleich mit dem Listen-Fallback im Detail-Panel (post-V1 laut BACKLOG; Audit Review 01, R01-001 E13, entschieden 2026-09-24) offen, Klärung durch Herbert. Projektliste: Mausklick darf navigieren, Tastaturauswahl erst mit Enter (Kap. 14).
+3. **Escape schließt Overlays:** Escape schließt Dialoge und Overlays (bei Formulardialogen mit Dirty-Check, Kap. 8.4).
+4. **Kontrast ≥ 4,5:1** für Text (WCAG AA, Kap. 15.1). Auf `warning`-Gelb immer dunkle Schrift.
 
 ### 15.1 Kontrast (WCAG AA ≥ 4.5:1)
 
@@ -573,6 +638,8 @@ Inverse Variante. Farb-Token bleiben gleich, nur Werte ändern sich.
 | `text-primary` auf `bg-base` | 10.5:1 | ✅ AAA |
 | `text-secondary` auf `bg-base` | 4.6:1 | ✅ AA |
 | `text-on-accent` auf `accent-primary` | 4.7:1 | ✅ AA |
+| Dunkle Schrift (`#1E1E1E`) auf `warning` | ca. 8,6:1 | ✅ AAA — Pflicht auf Warning-Gelb |
+| `text-bright` / Weiß auf `warning` | ca. 1,9:1 | ❌ verboten |
 
 Bei neuen Farbkombinationen: Kontrast prüfen bevor verwendet.
 
@@ -604,14 +671,16 @@ Bei neuen Farbkombinationen: Kontrast prüfen bevor verwendet.
 
 ### ❌ DON'T
 
-- Mehrere Primary Buttons auf einem Screen
+- Mehrere Primary Buttons in einem Dialog-Footer
 - Farben direkt in XAML ohne Token
 - MessageBox.Show() verwenden
 - Horizontalen Scroll auf Seitenebene
 - Rot für nicht-destruktive Aktionen
 - Animationen über 300ms
 - Englische Begriffe in der GUI
-- Verschachtelte Dialoge
+- Unterdialoge tiefer als eine Ebene
+- Fokusrahmen ersatzlos entfernen
+- Weiße Schrift auf Warning-Gelb
 - Dekorative Elemente die Daten verdrängen
 
 ---
@@ -676,3 +745,14 @@ Einsatzbereich: Globales ± 0,00 Niveau, zukünftig alle An/Aus-Einstellungen im
 *Änderungen v2.1 → v2.2 (09.04.2026):*
 *- Neues Kap. 19: Toggle-Switch als UI-Pattern (statt CheckBox für An/Aus)*
 *- Version 2.1 → 2.2*
+
+*Änderungen v2.2 → v2.3 (12.11.2026, Audit Review 01, R01-001 E14/E15/E16, entschieden 2026-09-24):*
+*- Neues Kap. 1.4: Rangfolge der UI-Quellen (Guidelines für Prinzipien und Tokens, neuestes freigegebenes Mockup für konkrete Screens, abgeleitete UI-Docs, Code als Ist) + Einzelentscheidungen E14*
+*- Shell-Maße nach Code: Statusleiste 28px, Sidebar klappbar 220px ↔ 56px (Kap. 0.1, 6.1, 6.5)*
+*- Statusleisten-Hintergrund in 6.5 nach Mockup 01_Sidebar.html und Code (accent-primary), Rangfolge Kap. 1.4*
+*- Regel in 1.4 präzisiert: nur Layout- und Maßangaben zu konkreten Screens sind Richtwerte, Tokens und Komponenten-Regeln bleiben maßgeblich; Einzelentscheidungen E14 gehen abweichenden Mockups vor*
+*- Gestaltungsregeln gelockert: ein Primary je Dialog-Footer (P2, 8.1 inkl. Button-Tabelle), Unterdialoge höchstens eine Ebene tief, Bestätigungs-, Hinweis- und Dirty-Check-Abfragen zählen nicht als Ebene (8.4), Detail-Panel als eigenes Muster (9.1), Inline-Editing nur für Einzelwerte (9), Suchfeld links (10), Schriftgrößen-Regel nur für den Content-Bereich (4.3)*
+*- A11y-Mindeststandard V1 (hart) in Kap. 15 (Abgleich Radial-Tastaturalternative mit dem Listen-Fallback E13 offen), Ausnahme Projektliste in Kap. 14, Kontrast-Zeilen für Warning-Gelb (dunkle Schrift 8,6:1 = AAA)*
+*- AI-Quickload: Kapitel-Liste an die H2 angeglichen, Pflichtlesen auf Kap. 7 (Screen States) und 8.7 (Icons) korrigiert*
+*- BpmButtonSuccess entfällt (8.1), Dialog-Basis-Styles verwenden oder löschen (8.4), Sprachregel „Geschoß“ (13)*
+*- Version-Kopf 2.1 → 2.3*

@@ -1,8 +1,8 @@
 ---
 doc_id: konzept-multi-user
 doc_type: concept
-authority: deprecated
-status: superseded
+authority: historical
+status: deprecated
 superseded_by: [adr-053]
 owner: herbert
 topics: [multi-user, write-lock, heartbeat, phasen-modell, server, rbac]
@@ -36,7 +36,7 @@ supersedes: []
 
 ## AI-Quickload (HISTORISCH)
 - Zweck: ⚠️ SUPERSEDED durch ADR-053. Nicht mehr als gültiges Konzept laden.
-- Autorität: deprecated
+- Autorität: historical
 - Lesen wenn: Nur als historische Referenz für Verlauf der Architektur-Entscheidungen
 - Nicht zuständig für: alles — gilt durch ADR-053 nicht mehr
 

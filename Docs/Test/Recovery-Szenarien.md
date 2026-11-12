@@ -13,22 +13,22 @@ supersedes: []
 
 ## AI-Quickload
 - Zweck: Manuelle Test-Anleitung für die 5 Recovery-Szenarien (BPM-016 / 016.05)
-- Autorität: secondary (Test-Guide, kein Source-of-Truth)
+- Autorität: secondary
 - Lesen wenn: Recovery-Code wurde geändert, vor V1-Release, Regressions-Verdacht
 - Pflichtlesen: keine — kapitelweise nutzen
 - Kapitel:
   - 1. Zweck
   - 2. Voraussetzungen
   - 3. Setup vor jedem Szenario
-  - 4. Szenarien 1–5
+  - 4. Szenarien
   - 5. Cleanup nach Tests
-
-## Fachliche Invarianten
-- Recovery-Empfehlung ist deterministisch aus PendingImportInfo-Counts (siehe RecoveryDecisionService)
-- Forward bei IsRollbackTrivial oder IsForwardTrivial → IsAutomaticAllowed=true
-- Cleanup bei FailedActions > 0 → IsAutomaticAllowed=false
-- Rollback ist NIE Empfehlung — nur als manuelle User-Wahl
-- Cleanup macht KEINE Disk-Operation, nur Status-Update
+  - Hinweise
+- Fachliche Invarianten:
+  - Recovery-Empfehlung ist deterministisch aus PendingImportInfo-Counts (siehe RecoveryDecisionService)
+  - Forward bei IsRollbackTrivial oder IsForwardTrivial → IsAutomaticAllowed=true
+  - Cleanup bei FailedActions > 0 → IsAutomaticAllowed=false (Code-Ist; Ziel nach ADR-064-Addendum P.1: bei failed „Fortsetzen“ empfehlen — Test-Guide wird mit dem Code nachgezogen, Audit Review 01, R01-001 E10, entschieden 2026-09-24)
+  - Rollback ist NIE Empfehlung — nur als manuelle User-Wahl
+  - Cleanup macht KEINE Disk-Operation, nur Status-Update
 
 ---
 

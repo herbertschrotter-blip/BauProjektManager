@@ -24,6 +24,8 @@ supersedes: []
 
 ---
 
+> ⚠️ **Eingefroren – Stand vor ADR-053/058–066** (Audit Review 01, R01-001 E17, entschieden 2026-09-24): Dieses Konzept beschreibt den Planungsstand vor diesen ADRs. Vor der Umsetzung gegen die aktuellen ADRs abgleichen. Bereits verbindlich korrigiert: DSGVO-Datenwege, keine KI im Importpfad, ULIDs.
+
 ﻿# BauProjektManager — Konzept: Foto-Management
 
 **Erstellt:** 27.03.2026  
@@ -318,6 +320,8 @@ OneDrive/.AppData/BauProjektManager/Projects/202512_OeWG-Dobl/
 ### 7.2 Phase 2 — SQLite (später)
 
 Wenn das Modul wächst, Migration zu SQLite (wie PhotoFolder V2 geplant hat):
+
+> ⚠️ **Hinweis:** Die SQL-Statements unten zeigen einen **frühen Entwurf** mit `INTEGER PRIMARY KEY AUTOINCREMENT` und INTEGER-Fremdschlüsseln. Verbindlich ist ULID (`TEXT PRIMARY KEY`, ADR-039 v2) für alle Tabellen; bei Implementierung gilt DB-SCHEMA.md (Audit Review 01, R01-001 E17, entschieden 2026-09-24).
 
 ```sql
 CREATE TABLE photos (

@@ -1,8 +1,8 @@
 ---
 doc_id: konzept-server-architektur
 doc_type: concept
-authority: partially-superseded
-status: partially-superseded
+authority: secondary
+status: active
 superseded_by: [adr-053]
 owner: herbert
 topics: [server, auth, rbac, postgresql, jwt, nachkalkulation]
@@ -43,7 +43,7 @@ supersedes: []
 
 ## AI-Quickload (Auth/RBAC bleibt gültig, Hosting/Sync superseded)
 - Zweck: ⚠️ Hosting + Sync-Mechanik durch ADR-053 ersetzt. Auth/RBAC/Nachkalkulation/Audit-Trail-Inhalte bleiben gültig für Phase Verkauf.
-- Autorität: secondary (Ergebnis aus 3-Runden Cross-Review Claude/ChatGPT)
+- Autorität: secondary
 - Lesen wenn: Server-Modus, Multi-User, Auth, Sync, API-Design, Nachkalkulation
 - Nicht zuständig für: Sync-Tabellen/Events (→ DatenarchitekturSync.md), Mobile-App (→ BPM-Mobile-Konzept.md)
 - Kapitel:

@@ -23,6 +23,8 @@ supersedes: []
 
 ---
 
+> ⚠️ **Eingefroren – Stand vor ADR-053/058–066** (Audit Review 01, R01-001 E17, entschieden 2026-09-24): Dieses Konzept beschreibt den Planungsstand vor diesen ADRs. Vor der Umsetzung gegen die aktuellen ADRs abgleichen. Bereits verbindlich korrigiert: DSGVO-Datenwege, keine KI im Importpfad, ULIDs.
+
 # BauProjektManager — Modul: Task-Management & Materialbestellung
 
 **Erstellt:** 30.03.2026  
@@ -227,6 +229,7 @@ public interface ITaskManagementService
 public class ClickUpTaskService : ITaskManagementService
 {
     // REST API: https://api.clickup.com/api/v2/
+    // HTTP nur über IExternalCommunicationService (DataClassification.ClassB, Modul-ID task_mgmt im DSGVO-Gateway-Register)
     // API-Key in Windows Credential Manager
 }
 
@@ -243,6 +246,8 @@ public class LocalTaskService : ITaskManagementService
     // Für Solo-Poliere ohne Team-Tool
 }
 ```
+
+Externe HTTP-Aufrufe nur über IExternalCommunicationService (task_mgmt, ClassB) (Audit Review 01, R01-001 E17, entschieden 2026-09-24).
 
 ### 4.4 Systemeinstellungen
 

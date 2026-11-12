@@ -27,10 +27,12 @@ supersedes: []
 - Pflichtlesen: keine
 - Fachliche Invarianten:
   - Keine Abos — Einmalzahlung pro Modul
-  - Offline-fähige Lizenzvalidierung — kein Activation-Server
+  - Offline-fähige Lizenzvalidierung per asymmetrischer Signatur (ADR-053 P.23) — kein Activation-Server
   - Testdaten bleiben bei Ablauf erhalten — nur Zugriff gesperrt
 
 ---
+
+> ⚠️ **Eingefroren – Stand vor ADR-053/058–066** (Audit Review 01, R01-001 E17, entschieden 2026-09-24): Dieses Konzept beschreibt den Planungsstand vor diesen ADRs. Vor der Umsetzung gegen die aktuellen ADRs abgleichen. Bereits verbindlich korrigiert: DSGVO-Datenwege, keine KI im Importpfad, ULIDs.
 
 # BauProjektManager — Konzept: Modul-Aktivierung & Lizenzierung
 
@@ -58,7 +60,7 @@ Lizenz- und Aktivierungsdaten:
 
 - `settings.json` → `activeModules` Dictionary (welche Module aktiv)
 - `trial.dat` → verschlüsselt in `%LocalAppData%` (Testversions-Startdaten)
-- `.bpm-license` → signierte JSON-Datei (Lizenz pro Modul)
+- `.bpm-license` → signierte JSON-Datei (Lizenz pro Modul), asymmetrisch signiert (Ed25519/RSA, ADR-053 P.23)
 
 ### Modulliste
 
@@ -103,7 +105,7 @@ Lizenz- und Aktivierungsdaten:
     "aiAssistant": { "type": "none" }
   },
   "maxInstallations": 3,
-  "signature": "base64-encoded-hmac-sha256..."
+  "signature": "base64-encoded-signature (Ed25519/RSA)..."
 }
 ```
 
@@ -256,16 +258,15 @@ Manipulation erschweren (nicht verhindern) — bei System-Datum-Rückstellung: P
 ```csharp
 public class LicenseValidator
 {
-    private const string SecretKey = "..."; // In App kompiliert
+    private const string PublicKey = "..."; // Nur der öffentliche Schlüssel ist in der App
     
     public LicenseResult Validate(string licenseFilePath)
     {
         var json = File.ReadAllText(licenseFilePath);
         var license = JsonSerializer.Deserialize<LicenseFile>(json);
         
-        // 1. Signatur prüfen (HMAC-SHA256)
-        var expectedSig = ComputeHmac(json.WithoutSignature(), SecretKey);
-        if (license.Signature != expectedSig)
+        // 1. Signatur prüfen (asymmetrisch, Ed25519/RSA — ADR-053 P.23)
+        if (!VerifySignature(json.WithoutSignature(), license.Signature, PublicKey))
             return LicenseResult.Invalid("Ungültige Signatur");
         
         // 2. Module prüfen
@@ -280,7 +281,7 @@ public class LicenseValidator
 }
 ```
 
-Kein Online-Check. Der Secret Key ist in der App kompiliert. Nicht unknackbar, aber für eine Polier-Software im Bau-Bereich völlig ausreichend.
+Kein Online-Check. In der App ist nur der öffentliche Schlüssel enthalten; signiert wird beim Herausgeber mit dem privaten Schlüssel, der nie ausgeliefert wird. Wer die App analysiert, kann daher keine gültigen Lizenzen erzeugen — anders als beim früher geplanten, in der EXE eingebetteten HMAC-Secret (ADR-034/042, durch ADR-053 P.23 abgelöst). Bei Wartungsablauf kein harter Stopp: Software läuft weiter, Updates/Support gesperrt (ADR-053 P.23). (Audit Review 01, R01-001 E17, entschieden 2026-09-24)
 
 ### 4.2 Verkaufsmodell (Zukunft)
 

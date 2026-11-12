@@ -13,9 +13,9 @@ supersedes: []
 
 ## AI-Quickload
 - Zweck: Solution-Abhängigkeiten, externes Ökosystem (VBA/PowerShell) und NuGet-Pakete
-- Autorität: secondary (Architektur.md ist source_of_truth für Solution-Struktur)
+- Autorität: secondary
 - Lesen wenn: Neue Abhängigkeit, neues NuGet-Paket, VBA-Integration, Solution-Struktur prüfen
-- Nicht zuständig für: Architektur-Entscheidungen (→ ADR.md), Schichtgrenzen (→ Architektur.md)
+- Nicht zuständig für: Architektur-Entscheidungen (→ ADR.md), Schichtgrenzen und Solution-Struktur als source_of_truth (→ Architektur.md)
 - Kapitel:
   - 1. Interne Solution-Struktur
   - 2. Externes Ökosystem

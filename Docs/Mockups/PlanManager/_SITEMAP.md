@@ -12,6 +12,7 @@ Wird vor jedem neuen Mockup gelesen und nach Mockup-Änderungen aktualisiert.
 - ✅ aktiv — Quelle hat `onclick`, Ziel existiert
 - ⚪ geplant — Ziel existiert, `onclick` im Quell-HTML fehlt noch
 - 🟡 tot — Ziel-Mockup fehlt, Aufrufer hat `alert('Mockup folgt: X')`
+- 🔷 implementiert ohne Mockup — Screen ist im Code umgesetzt, ein Mockup gibt es nicht und wird nicht nachgezogen; der Code gilt als Ist (Audit Review 01, R01-001 E14, entschieden 2026-09-24)
 - ❌ kaputt — Pfad-Inkonsistenz
 
 ## Fenster
@@ -21,7 +22,10 @@ Wird vor jedem neuen Mockup gelesen und nach Mockup-Änderungen aktualisiert.
 | 01_Projektuebersicht | (Sidebar / App-Start) | – | ✅ aktiv | 01_Projektuebersicht.html |
 | 02_Projektdetail | 01_Projektuebersicht | Projekt-Karte (Klick) | 🟡 in Arbeit | 01_Profile.html, 02_ManuellSortieren.html (Radial-Erfassung BPM-111.01), 04_Explorer.html (BPM-112.06), 05_Plandaten.html (Teil 50; 03_Sync=BPM-005 fehlt) |
 | 03_ProfilWizard | 02_Projektdetail (Profile-Tab) | "✎ Profil" / "+ Neues Profil anlernen" | ✅ aktiv | 01_Datei.html, 02_Segmente.html, 02_Segmente_NeuerCustom.html (Inline-Popover BPM-108), 03_IndexSource.html, 04_Zielordner.html, 05_Erkennung.html |
-| 04_FeldtypManager | 03_ProfilWizard/02_Segmente.html | "⚙ Segmenttypen verwalten…" | ✅ aktiv | 01_Uebersicht.html (CRUD + Gruppen + Drag-Reorder + Farbpalette + Built-in Rollen-Read-only, BPM-108) |
+| 04_FeldtypManager | 03_ProfilWizard/02_Segmente.html | "⚙ Segmenttypen verwalten…" | ✅ aktiv | 01_Uebersicht.html (CRUD + Gruppen + Drag-Reorder + Farbpalette + Built-in Rollen-Read-only, BPM-108; Drag-Reorder post-V1, Audit Review 01, R01-001 E14, entschieden 2026-09-24) |
+| – | 02_Projektdetail (Tab "Manuell sortieren") | Öffnen des Tabs bei nicht abgeschlossenem Import (Recovery) | 🔷 implementiert ohne Mockup | – (WPF: `RecoveryDialog.xaml`) |
+| – | 02_Projektdetail/04_Explorer.html | Kontextmenü "➔ Verschieben…" (Ordner-Wahl) | 🔷 implementiert ohne Mockup | – (WPF: `FolderPickerDialog.xaml`) |
+| – | 02_Projektdetail/02_ManuellSortieren.html | Radial "+ Neu…" je Ebene (Schnellanlage) | 🔷 implementiert ohne Mockup | – (WPF: Dialoge „Neuer Dokumenttyp“ (PromptNewDocumentType) sowie „Neues Bauteil“, „Neue Kategorie“, „Neues Geschoß“ (PromptName) in `ManualCaptureView.xaml.cs`) |
 | _Archiv | – | – | – | 00_Gesamtuebersicht.html (alt, nicht navigierbar) |
 
 ## Navigationskanten
@@ -47,7 +51,7 @@ Wird vor jedem neuen Mockup gelesen und nach Mockup-Änderungen aktualisiert.
 | 02_Projektdetail/04_Explorer.html | 02_Projektdetail/01_Profile.html | Tab "Profile" | ✅ aktiv |
 | 02_Projektdetail/04_Explorer.html | 01_Projektuebersicht/01_Projektuebersicht.html | ← Zurück-Pfeil + Sidebar | ✅ aktiv |
 | 02_Projektdetail/04_Explorer.html | 02_Projektdetail/03_Sync.html | Tab "Sync" | 🟡 tot |
-| 02_Projektdetail/05_Plandaten.html | 02_Projektdetail/04_Explorer.html | Tab "Explorer" + "Im Explorer zeigen" | ✅ aktiv |
+| 02_Projektdetail/05_Plandaten.html | 02_Projektdetail/04_Explorer.html | Tab "Explorer" + "Im Explorer zeigen" (Button-Sprung in den In-App-Tab post-V1; WPF-Button heißt „Im Windows-Explorer zeigen“ und öffnet den Windows-Explorer, Audit Review 01, R01-001 E14, entschieden 2026-09-24) | ✅ aktiv |
 | 02_Projektdetail/05_Plandaten.html | 02_Projektdetail/02_ManuellSortieren.html | Tab "Manuell sortieren" | ✅ aktiv |
 | 02_Projektdetail/05_Plandaten.html | 02_Projektdetail/01_Profile.html | Tab "Profile" | ✅ aktiv |
 | 02_Projektdetail/05_Plandaten.html | 04_FeldtypManager/01_Uebersicht.html | "⚙ Segmenttypen verwalten…" | ✅ aktiv |
@@ -83,6 +87,13 @@ Wird vor jedem neuen Mockup gelesen und nach Mockup-Änderungen aktualisiert.
 
 - **Tab-Reihenfolge Projektdetail (Entscheidung Herbert):** Explorer · Manuell sortieren · Plandaten · Profile · Sync — Explorer ist damit der Start-Tab beim Projektöffnen.
 - **04_FeldtypManager Rückweg:** "Schließen" führt hardcodiert zum Wizard (03_ProfilWizard/02_Segmente.html); der neue Aufrufer 05_Plandaten hat im Mockup keinen eigenen Rückweg (App: Dialog kehrt zum Aufrufer zurück).
+
+## Hinweise (Audit Review 01, R01-001 E14, entschieden 2026-09-24)
+
+- **Rangfolge:** Für konkrete Screens gilt das neueste freigegebene Mockup, Code, der ihm folgt, gilt als Ist (UI_UX_Guidelines.md Kap. 1.4). Für fertige Screens ohne Mockup wird keines nachgezogen (Status 🔷).
+- **Plandaten „Im Explorer zeigen“:** heißt in WPF „Im Windows-Explorer zeigen“ und öffnet den Windows-Explorer; der Sprung in den In-App-Tab „Explorer“ kommt post-V1. Der Button-`onclick` im Mockup `05_Plandaten.html` zeigt damit ein Post-V1-Verhalten.
+- **Segmenttyp-Manager:** Drag-Reorder von Gruppen und Typen kommt post-V1.
+- **Kosmetische Abweichungen werden ins Mockup übernommen** (offen, Mockups noch nicht angepasst): Radial 460px statt 500px und Ring-Ausblendung ohne Animation (Animation nur beim Erscheinen) in `02_ManuellSortieren.html`; Statistikzeile wie im Code („n Gruppen · n Segmenttypen · n deaktiviert · n eigen“) in `04_FeldtypManager/01_Uebersicht.html`.
 
 ## Offene Punkte (Backlog-Referenz)
 

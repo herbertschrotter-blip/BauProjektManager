@@ -1,6 +1,6 @@
 ---
 doc_id: vision
-doc_type: reference
+doc_type: vision
 authority: source_of_truth
 status: active
 owner: herbert
@@ -13,9 +13,22 @@ supersedes: []
 
 ## AI-Quickload
 - Zweck: Produktvision, Schmerzpunkte, Zielgruppe und strategische Positionierung von BPM
-- Autorität: source_of_truth (für Produktstrategie und Nordstern)
+- Autorität: source_of_truth
 - Lesen wenn: Produktstrategie, Zielgruppe klären, Warum BPM, Lizenzfrage
 - Nicht zuständig für: Technische Architektur (→ Architektur.md), Feature-Planung (→ BACKLOG.md)
+- Kapitel:
+  - 1. Der Nordstern
+  - 2. Das Problem
+  - 3. Die Lösung
+  - 4. Zielgruppe
+  - 5. Module und Entwicklungshorizont
+  - 6. Differenzierung
+  - 7. Das Dashboard — die langfristige Vision
+  - 8. Technische Leitplanken
+  - 9. Erfolgskriterien
+  - 10. Risiken und Gegenmaßnahmen
+  - 11. Kommerzialisierung (langfristig, kein aktuelles Ziel)
+  - 12. Zusammenfassung
 - Pflichtlesen: keine
 - Fachliche Invarianten:
   - Offline-first, kein Cloud-Abo — Kernprinzip. Optional self-hosted Server-Modus für Firmenbetrieb (ADR-050/051)

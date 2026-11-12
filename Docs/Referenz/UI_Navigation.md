@@ -13,7 +13,7 @@ supersedes: []
 
 ## AI-Quickload
 - Zweck: Shell-Aufbau, Sidebar-/Toolbar-Regeln und Screen-Hierarchie für die BPM-Navigation
-- Autorität: secondary (UI_UX_Guidelines.md = source_of_truth für Design)
+- Autorität: secondary
 - Lesen wenn: Neuer Screen, Navigation ändern, Sidebar-Eintrag, Toolbar-Frage
 - Nicht zuständig für: Design-Tokens (→ UI_UX_Guidelines.md), XAML-Umsetzung (→ WPF_UI_Architecture.md)
 - Kapitel:
@@ -26,7 +26,7 @@ supersedes: []
   - 7. Offene Punkte
 - Pflichtlesen: keine
 - Fachliche Invarianten:
-  - Sidebar links (56px) für Modul-Wechsel — keine Top-Level-Toolbar dafür
+  - Sidebar links (klappbar 220px ↔ 56px) für Modul-Wechsel — keine Top-Level-Toolbar dafür
   - Toolbar nur innerhalb eines Moduls wenn es mehrere Seiten hat
   - Modale Dialoge (Wizard) überlagern das Hauptfenster
 
@@ -45,7 +45,7 @@ supersedes: []
 ```
 ┌──────────────────────────────────────────────────┐
 │ Sidebar │ Toolbar (nur wenn Modul sie braucht)   │
-│  (56px) │────────────────────────────────────────│
+│(220/56) │────────────────────────────────────────│
 │         │                                        │
 │  [Mod1] │  Content-Bereich                       │
 │  [Mod2] │  (Hauptfenster oder Modal-Dialog)      │
@@ -53,7 +53,7 @@ supersedes: []
 │   ...   │                                        │
 │         │                                        │
 │  v0.25  │────────────────────────────────────────│
-│         │ Statusleiste (22px)                    │
+│         │ Statusleiste (28px)                    │
 └──────────────────────────────────────────────────┘
 ```
 
@@ -173,7 +173,9 @@ Zeigt auch Sync-Herkunft: „15 im Eingang · davon 3 vom Server-Sync"
 
 ---
 
-## 6. Statusleiste (immer sichtbar, 22px)
+## 6. Statusleiste (immer sichtbar, 28px)
+
+Höhe nach Code (Shell-Maße, UI_UX_Guidelines Kap. 1.4; Audit Review 01, R01-001 E14, entschieden 2026-09-24).
 
 Am unteren Rand der Shell. Zeigt kontextabhängig:
 
@@ -191,9 +193,9 @@ Am unteren Rand der Shell. Zeigt kontextabhängig:
 2. **Toolbar = Seiten-Navigation innerhalb eines Moduls.** Nur wenn nötig.
 3. **Tabs = Unter-Ansichten auf derselben Seite.** Kein neues Fenster.
 4. **Modals = Temporäre Aufgaben.** Profil-Wizard; die Import-Vorschau ist mit BPM-083 entfallen (Zuordnung läuft im Radial der Seite „Manuell sortieren").
-5. **Max. 1 Primary Button** pro sichtbarem Kontext (P2-Regel).
+5. **Max. 1 Primary Button** je Dialog-Footer (P2-Regel, UI_UX_Guidelines Kap. 2/8.1; Audit Review 01, R01-001 E15, entschieden 2026-09-24).
 6. **Badges in Sidebar** zeigen offene Aufgaben (Dateien im Eingang).
-7. **Keine verschachtelten Modals.** Der Wizard ist ein eigenständiger Dialog.
+7. **Unterdialoge höchstens eine Ebene tief.** Der Wizard ist ein eigenständiger Dialog; er darf einen Unterdialog öffnen (z. B. Segmenttyp-Manager), der Unterdialog keinen weiteren. Bestätigungs-, Hinweis- und Dirty-Check-Abfragen zählen nicht als weitere Ebene (UI_UX_Guidelines Kap. 8.4; Audit Review 01, R01-001 E15, entschieden 2026-09-24).
 8. **Escape schließt Modal** (mit Dirty-Check bei ungespeicherten Änderungen).
 
 ---

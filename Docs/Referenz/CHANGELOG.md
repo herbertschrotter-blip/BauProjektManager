@@ -16,11 +16,12 @@ supersedes: []
 - Autorität: source_of_truth
 - Lesen wenn: Version nachschlagen, Änderungen prüfen, Release-Notes
 - Nicht zuständig für: Feature-Planung (→ BACKLOG.md), Architektur-Entscheidungen (→ ADR.md)
+- Kapitel: Versionseinträge absteigend (eine H2 je Version)
 - Pflichtlesen: keine (gezieltes Nachschlagen per Version)
 - Fachliche Invarianten:
   - Keep-a-Changelog Format, chronologisch absteigend (neueste oben)
   - Versionsnummer x.y.z: jeder Commit +1 PATCH (auch Feature); MINOR/MAJOR nur auf Ansage (Regel: Skill-Profil der CLAUDE.md → Commit)
-  - Jeder Commit = ein Eintrag mit Version, Datum und Beschreibung
+  - Jeder Commit = ein Eintrag mit Version, Datum (= Commit-Datum) und Beschreibung; frühere Einträge werden nicht umgeschrieben, Korrekturen kommen als Richtigstellung in einen neuen Eintrag
 
 ---
 
@@ -31,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.193] — 2026-11-12
+
+### Docs: R01-001-Entscheidungen in Doku-Norm, UI-Regeln und Konzepten + Baulotse-HTML entfernt
+
+Dritter Docs-Commit zu Audit Review 01 (R01-001). **DOC-STANDARD (E19):** Kapitelvorlagen verbindlich nur noch für neue Docs, Doppelung Blocker/Warnung in Kap. 11 aufgelöst, Quickload-Sammelzeile für backlog/changelog/adr (hier im CHANGELOG-Quickload nachgezogen), authority/status nur als Enum-Wert, feste Status-Regel für abgelöste Docs (optional `superseded_by`), Router-Rolle Primary von authority entkoppelt, neue doc_types `vision` und `test-guide` (Ordner `Test/`), AGENTS.md als frontmatterfreie Weiterleitung, `docs.catalog.json` als geplant; VISION.md ist doc_type `vision`, Recovery-Szenarien.md enum-konform, DEPENDENCY-MAP- und UI_Navigation-Quickloads auf reine Enum-Werte. **GLOSSAR (E16):** „Geschoß“ in Fachtexten, Archiv nur für abgelöste Versionen („Bestand“ für den UI-Tab), Badge „Standard“, Auftraggeber vs. Bauherr, Sync-Kategorie neben den DSGVO-Datenklassen, „Plantyp“ → Dokumenttyp, neue Begriffe (Segmenttyp, Dokumenttyp-Stammdaten, Ablagebereich, Erfassung, Radial, Pending, Plandaten, PlanFile), veraltete Einträge korrigiert. **UI-Regeln (E14/E15/E1):** UI_UX_Guidelines mit Rangfolge der UI-Quellen (Kap. 1.4: Guidelines für Prinzipien und Tokens, neuestes Mockup für Screens), gelockerten Gestaltungsregeln (ein Primary je Dialog-Footer, Unterdialoge höchstens eine Ebene, Detail-Panel als Muster, Suchfeld links) und hartem A11y-Mindeststandard V1 (Fokus, Tastaturpfad, Escape, Kontrast ≥ 4,5:1); WPF_UI_Architecture verweist für Static-/DynamicResource nur auf CODING_STANDARDS 10.5, Shell-Maße nach Code (Statusleiste 28 px, Sidebar 220/56 px), FileSystemWatcher-Muster gestrichen; UX_Flows trennt Ziel und Ist; die Mockup-Sitemaps führen den Status „implementiert ohne Mockup“. **Konzepte (E17):** Die 15 nicht abgelösten Konzept-Docs tragen das Banner „Eingefroren – Stand vor ADR-053/058–066“; sofort korrigiert sind externe Aufrufe nur über `IExternalCommunicationService` (Wetter, GIS, ohne API-Key in settings.json), keine KI im Plankopf-Importpfad, ULIDs und die asymmetrische Lizenzsignatur; Frontmatter der abgelösten Konzepte enum-konform. Die **sechs unverlinkten Baulotse-HTML-Dateien** im Docs-Root sind gelöscht, maßgeblich ist VISION.md. Offen für Herbert: Abgleich Listen-Fallback (E13) ↔ Tastaturpfad über Listen (E15), Statusleisten-Farbe, Ausnahme „Bestätigungsdialoge zählen nicht als Dialogebene“. Mockup-HTML nach E14 folgt über mockup-erstellen. Keine Code-Änderung.
+
+---
 ## [v0.28.192] — 2026-11-12
 
 ### Docs: R01-001-Entscheidungen in den Kern-Regeln (CODING_STANDARDS, Architektur, DSGVO, INDEX, BACKLOG, CLAUDE.md)

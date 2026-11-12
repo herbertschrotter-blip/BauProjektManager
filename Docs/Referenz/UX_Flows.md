@@ -13,27 +13,50 @@ supersedes: []
 
 ## AI-Quickload
 - Zweck: User-Workflow-Beschreibungen mit Flowcharts für alle BPM-Hauptaktionen
-- Autorität: secondary (UI_UX_Guidelines.md = source_of_truth für Design)
+- Autorität: secondary
 - Lesen wenn: Neuer Workflow, User-Flow prüfen, Screen-Reihenfolge, Fehlerfall klären
-- Nicht zuständig für: Design-Tokens (→ UI_UX_Guidelines.md), technische XAML-Umsetzung (→ WPF_UI_Architecture.md)
+- Nicht zuständig für: Design-Tokens (→ UI_UX_Guidelines.md, source_of_truth für Design), konkrete Screens (→ neuestes freigegebenes Mockup; dieses Doc ist abgeleitet, Rangfolge UI_UX_Guidelines.md Kap. 1.4), technische XAML-Umsetzung (→ WPF_UI_Architecture.md)
+- Kapitel:
+  - 1. Ziel
+  - 2. App-Start
+  - 3. Projekt anlegen
+  - 4. Projekt bearbeiten
+  - 5. Projekt löschen
+  - 6. Plan-Import (PlanManager)
+  - 7. Ordnerstruktur anlegen
+  - 8. Ordnerstruktur-Vorlage bearbeiten
+  - 9. Zeiterfassung (Zukunft)
+  - 10. Arbeitseinteilung (Zukunft)
+  - 11. Arbeitspaket abschließen (Zukunft)
+  - 12. Materialbestellung (Zukunft)
+  - 13. Bautagebuch (Zukunft)
+  - 14. Cross-Modul Navigation
+  - 15. Standard-Interaktionsmuster
 - Pflichtlesen: keine (gezieltes Nachschlagen per Workflow)
 - Fachliche Invarianten:
   - Jeder Flow zeigt: Ziel, Schritte, Screens, Fehlerfälle
   - ASCII-Flowcharts als Darstellungsformat
+  - Ziel und Ist getrennt: nicht umgesetzte Schritte tragen 🎯, entfallene ⊘ (Kap. 1)
 
 ---
 
 # BauProjektManager — UX Flows
 
-**Version:** 1.0  
-**Datum:** 30.03.2026  
-**Bezug:** UI_UX_Guidelines.md (Design-Regeln), WPF_UI_Architecture.md (technischer Aufbau)
+**Version:** 1.1  
+**Datum:** 12.11.2026  
+**Bezug:** UI_UX_Guidelines.md (Design-Regeln, Rangfolge Kap. 1.4 — dieses Doc ist abgeleitet), WPF_UI_Architecture.md (technischer Aufbau)
 
 ---
 
 ## 1. Ziel
 
 Dieses Dokument beschreibt die **Hauptworkflows** die ein User in BPM durchläuft. Jeder Flow zeigt: Was will der User erreichen, welche Schritte durchläuft er, welche Screens sieht er, was kann schiefgehen.
+
+> **Ziel und Ist** (Audit Review 01, R01-001 E14, entschieden 2026-09-24) — Dieses Dokument ist abgeleitet: Es folgt UI_UX_Guidelines.md (Prinzipien, Tokens) und dem neuesten freigegebenen Mockup (konkrete Screens) und wird nachgezogen (Rangfolge UI_UX_Guidelines.md Kap. 1.4). In den Flows für bestehende Module gilt:
+> - **🎯 Ziel / nicht umgesetzt** — Schritt oder Rückmeldung ist Zielbild, im Code noch nicht vorhanden (z. B. Toasts, Undo-Toast, Live-Validierung).
+> - **⊘ entfallen** — Schritt wurde bewusst gestrichen und kommt nicht mehr.
+> - **Ist:** — beschreibt den umgesetzten Ablauf, wo er vom Zielbild abweicht.
+> - Die Markierungen decken die im Audit Review 01 festgestellten Abweichungen ab (Kap. 2–8, 14, 15); Kapitel mit „(Zukunft)“ sind insgesamt geplant.
 
 > ⬜ **Hinweis zu geplanten Sections** — Sections mit „(Zukunft)" im Titel beschreiben Workflows die auf **noch nicht implementierten DB-Tabellen** beruhen (z.B. `time_entries`, `work_assignments`, `material_orders`, `diary_days`). Source-of-Truth für den Implementierungsstand: [DB-SCHEMA.md Kap. 5](../Kern/DB-SCHEMA.md#5-geplante-tabellen-nach-v1). Die Flowcharts dort sind Konzept-Vorschau, nicht Live-Verhalten.
 
@@ -53,37 +76,43 @@ Ersteinrichtungs-Dialog
     │ Archivordner wählen (oder Vorschlag bestätigen)
     │
     ▼
-[Einrichtung abschließen]
+[Speichern und starten]
     │
     ▼
-Hauptfenster → Einstellungen (Projekte-Tab)
+Hauptfenster → Einstellungen (Projekte-Tab)          🎯
     │
     ▼
-Empty State: "Noch keine Projekte angelegt"
+Empty State: "Noch keine Projekte angelegt"           🎯
     │
     ▼
-[+ Neues Projekt anlegen]
+[+ Neues Projekt anlegen]                             🎯
 ```
 
-**Fehlerfall:** Cloud-Speicher nicht erkannt → Manuell Pfad wählen. Kein Abbruch möglich ohne Setup.
+**Ist:** Das Hauptfenster startet mit dem Platzhalter „Willkommen im BauProjektManager“ und der Statusleiste „Bereit | Kein Projekt geladen“; die Einstellungen öffnet der User über die Sidebar.
+
+**Fehlerfall:** Cloud-Speicher nicht erkannt → Manuell Pfad wählen. Kein Abbruch möglich ohne Setup (Abbrechen beendet die App).
 
 ### 2.2 Normaler Start (Setup vorhanden)
 
 ```
 App öffnet
     │
-    ├── settings.json laden ✓
+    ├── device-settings.json laden ✓ (settings.json seit BPM-069 entfallen)
     ├── bpm.db öffnen ✓
-    ├── registry.json exportieren ✓
+    ├── registry.json exportieren                     🎯
     │
     ▼
-Hauptfenster → letztes aktives Modul
+Hauptfenster → letztes aktives Modul                  🎯
     │
     ▼
-Statusleiste: "Bereit | 5 Projekte geladen"
+Statusleiste: "Bereit | 5 Projekte geladen"           🎯
 ```
 
-**Fehlerfall:** bpm.db nicht erreichbar → Error State mit Meldung + "Erneut versuchen".
+**Ist:** Das Hauptfenster startet immer mit dem Platzhalter „Willkommen im BauProjektManager“ und der Statusleiste „Bereit | Kein Projekt geladen“; das letzte aktive Modul wird nicht gemerkt. registry.json wird nicht beim Start exportiert, sondern nach Anlegen, Bearbeiten, Löschen oder Import eines Projekts.
+
+**Fehlerfall:** bpm.db nicht erreichbar → Error State mit Meldung + "Erneut versuchen" 🎯 (Ist: kein Error State mit Wiederholen).
+
+**Fehlerfall (Ist):** Arbeits- oder Archivordner beim Start nicht erreichbar → Bestätigungsdialog „Pfad-Problem erkannt“ mit „Einstellungen öffnen?“ → Ja: Ersteinrichtungs-Dialog (Abbrechen beendet die App) · Nein: Start mit den gespeicherten Pfaden.
 
 ---
 
@@ -131,18 +160,20 @@ ProjectEditDialog öffnet (5 Tabs)
     ├── registry.json aktualisieren
     │
     ▼
-Toast: "Projekt 'ÖWG Dobl' gespeichert ✓"
+Toast: "Projekt 'ÖWG Dobl' gespeichert ✓"            🎯
 Projektliste aktualisiert
 ```
+
+**Ist:** Kein Toast (keine Toast-Infrastruktur, UI_UX_Guidelines Kap. 18) — die Projektliste wird aktualisiert, der Registry-Status unter der Liste meldet den Export („Registry exportiert (n Projekte)“).
 
 ### 3.2 Fehlerfall
 
 | Fehler | Reaktion |
 |--------|---------|
-| Projektname leer | Live-Validierung: rote Umrandung + "Projektname darf nicht leer sein" |
-| Ordner existiert bereits | Dialog: "Der Ordner existiert bereits. Trotzdem verknüpfen?" |
-| Kein Schreibrecht auf Pfad | Error Toast: "Ordner konnte nicht erstellt werden. Prüfe die Berechtigungen." |
-| DB gesperrt (Multi-User) | Error Toast: "Datenbank wird von [Name] bearbeitet. Bitte warten." |
+| Projektname leer | 🎯 Live-Validierung: rote Umrandung + "Projektname darf nicht leer sein" (Ist: keine Validierung beim Speichern) |
+| Ordner existiert bereits | 🎯 Dialog: "Der Ordner existiert bereits. Trotzdem verknüpfen?" |
+| Kein Schreibrecht auf Pfad | 🎯 Error Toast: "Ordner konnte nicht erstellt werden. Prüfe die Berechtigungen." |
+| DB gesperrt (Multi-User) | 🎯 Error Toast: "Datenbank wird von [Name] bearbeitet. Bitte warten." |
 
 ---
 
@@ -170,8 +201,10 @@ ProjectEditDialog öffnet (mit Daten befüllt)
     ├── registry.json aktualisieren
     │
     ▼
-Toast: "Änderungen gespeichert ✓"
+Toast: "Änderungen gespeichert ✓"                    🎯
 ```
+
+**Ist:** Kein Toast — wie Kap. 3.1 (Projektliste aktualisiert, Registry-Status meldet den Export).
 
 ### 4.2 Abbrechen
 
@@ -179,7 +212,7 @@ Toast: "Änderungen gespeichert ✓"
 [Abbrechen] ODER [✕] ODER Escape
     │
     ├── Wenn keine Änderungen: Dialog schließt sofort
-    ├── Wenn Änderungen vorhanden:
+    ├── Wenn Änderungen vorhanden:                     🎯 Dirty-Check
     │       │
     │       ▼
     │   "Ungespeicherte Änderungen verwerfen?"
@@ -187,6 +220,8 @@ Toast: "Änderungen gespeichert ✓"
     │       ├── [Verwerfen] → Dialog schließt
     │       └── [Zurück zum Bearbeiten] → Dialog bleibt offen
 ```
+
+**Ist:** Kein Dirty-Check — [Abbrechen] und [✕] schließen den Dialog sofort; Escape ist nicht belegt (Pflicht laut A11y-Mindeststandard, UI_UX_Guidelines Kap. 15).
 
 ---
 
@@ -217,9 +252,13 @@ Bestätigungsdialog:
             ├── Projektordner im Dateisystem bleiben bestehen
             │
             ▼
-        Toast: "Projekt 'ÖWG Dobl' gelöscht"
-        + Undo-Link im Toast (5 Sekunden)
+        Toast: "Projekt 'ÖWG Dobl' gelöscht"           🎯
+        + Undo-Link im Toast (5 Sekunden)               🎯
 ```
+
+**Ist:** Kein Toast und kein Undo — der Registry-Status unter der Projektliste zeigt „Projekt <Name> gelöscht“.
+
+**Ist (Löschen):** Kein CASCADE-Löschen — Projekt, Bauteile, Geschoße, Beteiligte und Links werden soft-gelöscht (`is_deleted = 1`, Tombstone für den Sync, ADR-053). 🎯 **Ziel** (Audit Review 01, R01-001 E3, entschieden 2026-09-24): dabei die Klasse-B-Felder (Firma, Kontaktperson, Telefon, E-Mail) leeren und die Kontakte in `.bpm/project.json` bereinigen (ADR-050-Addendum, DSGVO-Architektur Kap. 9.5).
 
 ---
 
@@ -227,7 +266,38 @@ Bestätigungsdialog:
 
 ### 6.1 Haupt-Flow
 
+**Ist (ein V1-Importweg, BPM-083 / BPM-120 H0):** Zuordnung per Radial im Tab „Manuell sortieren“, Bestätigung über die Pending-Liste. Details: [PlanManager.md](../Module/PlanManager.md) Kap. 6 (Phase 2–4) und Kap. 11.4.
+
 ```
+PlanManager → Projekt öffnen → Tab "Manuell sortieren"
+    │
+    ▼
+Eingang (_Eingang) wird gescannt und gegen den Bestand abgeglichen
+    │ Buckets: A Dublette · B Update · C Erstaufnahme · D Konflikt
+    │
+    ├── Erstaufnahme → Radial: Dokumenttyp · Bauteil/Kategorie · Geschoß
+    │                  (Detail-Panel ergänzt Titel, Index, Segmente)
+    ├── Update → Update-Karte bestätigen oder überspringen
+    │
+    ▼
+Zuordnungen landen als Pending (noch keine Dateibewegung)
+    │
+    ▼
+[Import bestätigen]
+    │
+    ├── Dateien in Zielordner verschieben
+    ├── Alte Indexdatei bei Indexwechsel in _Archiv     🎯 (Ist: nur bei Namenskollision am Ziel)
+    ├── Import-Journal in planmanager.db schreiben
+    │
+    ▼
+[↩ Letzten Import rückgängig] (Detail-Panel, nur der letzte Import, ohne Zeitlimit)
+```
+
+**⊘ Entfallen** (Audit Review 01, R01-001 E14, entschieden 2026-09-24): Der folgende frühere Ablauf mit [Import starten] in der Toolbar, Import-Vorschau-Dialog und zeitlich begrenztem [↩️ Rückgängig] in der Toolbar ist mit BPM-083 entfallen und bleibt nur zur Nachvollziehbarkeit stehen.
+
+```
+⊘ ENTFALLEN — früherer Ablauf
+
 PlanManager → Projekt auswählen
     │
     ▼
@@ -278,10 +348,10 @@ Toast: "12 Pläne importiert (2 neu, 1 Update)"
 
 | Fehler | Reaktion |
 |--------|---------|
-| Eingangsordner existiert nicht | Error State: "Eingangsordner nicht gefunden. Projekt-Pfade prüfen." |
-| Datei gesperrt (Cloud-Speicher-Sync) | Warnung pro Datei in der Vorschau, überspringbar |
-| Zielordner nicht beschreibbar | Error Toast + betroffene Dateien in Vorschau markiert |
-| Plantyp nicht erkannt | Gelb markiert in Vorschau, manuell zuweisbar |
+| Eingangsordner existiert nicht | 🎯 Error State: "Eingangsordner nicht gefunden. Projekt-Pfade prüfen." (Ist: leere Eingangsliste, nur Log-Warnung) |
+| Datei gesperrt (Cloud-Speicher-Sync) | ⊘ Warnung pro Datei in der Vorschau, überspringbar (Vorschau entfallen) |
+| Zielordner nicht beschreibbar | 🎯 Error Toast; ⊘ betroffene Dateien in Vorschau markiert (Vorschau entfallen) |
+| Plantyp nicht erkannt | ⊘ Gelb markiert in Vorschau (Vorschau entfallen). Ist: nicht erkannte Dateien sind Erstaufnahmen und werden per Radial einem Dokumenttyp zugeordnet |
 
 ---
 
@@ -292,7 +362,7 @@ Toast: "12 Pläne importiert (2 neu, 1 Update)"
 ```
 Tab 5: Ordnerstruktur
     │
-    ├── Standard-Vorlage wird angezeigt (aus settings.json)
+    ├── Standard-Vorlage wird angezeigt (aus shared-config.json)
     │   01 Planunterlagen
     │   ├── 00 Polierpläne
     │   ├── 01 Bewehrungspläne
@@ -312,7 +382,7 @@ Tab 5: Ordnerstruktur
     ├── .bpm/ Ordner in Projektordner erstellen (ADR-046)
     │
     ▼
-Toast: "Projektordner erstellt ✓"
+Toast: "Projektordner erstellt ✓"                    🎯
 ```
 
 ---
@@ -335,10 +405,10 @@ TreeView zeigt aktuelle Vorlage
     ├── [##] Präfix ein/aus (nur Unterordner)
     │
     ▼
-Änderungen werden sofort in settings.json gespeichert
+Änderungen werden sofort in shared-config.json gespeichert
     │
     ▼
-Statusleiste: "Ordnerstruktur aktualisiert"
+Statusleiste: "Ordnerstruktur aktualisiert"           🎯 (Ist: keine Statusmeldung)
 ```
 
 ---
@@ -513,7 +583,7 @@ Sidebar → Modul klicken → View wechselt
     │
     ▼
 Breadcrumb zeigt: [Modulname] > [Unterseite] > [Detail]  ← Post-V1, V1 hat keine Breadcrumb
-Toolbar zeigt: Modul-spezifische Buttons
+Toolbar zeigt: Modul-spezifische Buttons  🎯 (V1 hat keine Shell-Toolbar)
 ```
 
 ### 14.2 Projekt-Kontext
@@ -565,6 +635,8 @@ Toolbar-Buttons → auf selektierte Zeile anwenden
 Kein Kontextmenü in V1 (später optional)
 ```
 
+**Ausnahme Projektliste (PlanManager):** Mausklick darf direkt ins Projekt navigieren; Tastaturauswahl (Pfeiltasten) selektiert nur, geöffnet wird erst mit Enter (UI_UX_Guidelines Kap. 14/15; Audit Review 01, R01-001 E15, entschieden 2026-09-24).
+
 ### 15.2 Formulare mit Tabs
 
 ```
@@ -595,9 +667,11 @@ Dieses Muster gilt für jeden Import in BPM (Pläne, LV, Excel-Daten):
 2. Vorschau anzeigen     → Was wird importiert? Was passiert?
 3. Bestätigen           → [Importieren] Button
 4. Ausführen            → Fortschrittsbalken
-5. Ergebnis anzeigen    → Toast + Zusammenfassung
+5. Ergebnis anzeigen    → Toast 🎯 + Zusammenfassung
 6. Rückgängig anbieten  → [↩️ Rückgängig] (zeitlich begrenzt)
 ```
+
+**PlanManager (Ist, Kap. 6.1):** Schritt 2 ist die Zuordnung im Tab „Manuell sortieren“ mit Pending-Liste — der Import-Vorschau-Dialog ist ⊘ entfallen. Schritt 6 ist „↩ Letzten Import rückgängig“: nur der letzte Import, ohne Zeitlimit.
 
 ### 15.4 Export-Workflow (universell)
 
@@ -606,10 +680,17 @@ Dieses Muster gilt für jeden Import in BPM (Pläne, LV, Excel-Daten):
 2. Format wählen         → Excel / PDF / CSV
 3. Speicherort wählen    → SaveFileDialog
 4. Exportieren           → Fortschrittsbalken bei großen Exporten
-5. Ergebnis              → Toast: "Exportiert nach D:\..."
+5. Ergebnis              → Toast 🎯: "Exportiert nach D:\..."
                             + [Ordner öffnen] Link
 ```
 
 ---
 
 *Dieses Dokument beschreibt WAS der User tut. WIE es aussieht steht in UI_UX_Guidelines.md. WIE es technisch gebaut wird steht in WPF_UI_Architecture.md.*
+
+*Änderungen v1.0 → v1.1 (12.11.2026, Audit Review 01, R01-001 E14/E15, entschieden 2026-09-24):*
+- *Ziel und Ist getrennt (Legende 🎯 / ⊘ / Ist in Kap. 1): App-Start (Kap. 2) mit Ist-Ablauf und Pfad-Problem-Dialog, Toasts, Live-Validierung, Dirty-Check und Undo-Toast als Ziel markiert (Kap. 3–5, 7, 8, 14, 15)*
+- *Ist-Korrekturen: registry.json wird nicht beim Start exportiert, sondern nach Anlegen, Bearbeiten, Löschen oder Import eines Projekts (Kap. 2.2); fehlender Eingangsordner ohne Error State, nur leere Eingangsliste und Log-Warnung (Kap. 6.2); Ordnerstruktur-Vorlage liegt in shared-config.json, keine Statusmeldung nach Änderung (Kap. 7.1, 8.1)*
+- *AI-Quickload: Pflichtfeld „Kapitel“ mit den H2 1–15 ergänzt*
+- *Plan-Import (Kap. 6): Ist-Flow über Radial und Pending ergänzt, Import-Vorschau-Dialog und Toolbar-Import als entfallen markiert; Hinweis in Kap. 15.3*
+- *Ausnahme Projektliste (Mausklick navigiert, Tastatur erst mit Enter) in Kap. 15.1*

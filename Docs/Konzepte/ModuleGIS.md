@@ -20,16 +20,20 @@ supersedes: []
 - Fachliche Invarianten:
   - Offline-Koordinatentransformation über ProjNet (EPSG:31258↔WGS84)
   - Kataster-API nur bei Verbindung — Fallback auf manuelle Eingabe
+  - Externe Abfragen nur über IExternalCommunicationService + DataClassification (registriert: `gis_stmk`, `gis_google`) — kein direkter HttpClient
+  - Google-API-Key nie in settings.json — DPAPI-geschützt in `%LocalAppData%` (ADR-042)
 
 ---
+
+> ⚠️ **Eingefroren – Stand vor ADR-053/058–066** (Audit Review 01, R01-001 E17, entschieden 2026-09-24): Dieses Konzept beschreibt den Planungsstand vor diesen ADRs. Vor der Umsetzung gegen die aktuellen ADRs abgleichen. Bereits verbindlich korrigiert: DSGVO-Datenwege, keine KI im Importpfad, ULIDs.
 
 ﻿# BauProjektManager — Konzept: GIS-Integration
 
 **Erstellt:** 29.03.2026  
 **Version:** 0.1 (Konzeptentwurf)  
 **Status:** Zukunftsidee — Umsetzung nach V1  
-**Abhängigkeit:** HttpClient (.NET), ProjectLocation (Domain-Modell bereits vorbereitet)  
-**Verwandte ADR:** —  
+**Abhängigkeit:** IExternalCommunicationService (ADR-035, statt direktem HttpClient), ProjectLocation (Domain-Modell bereits vorbereitet)  
+**Verwandte ADR:** ADR-035 (IExternalCommunicationService), ADR-042 (Secrets/DPAPI)  
 **Datenquelle:** GIS Steiermark (ArcGIS REST FeatureServer), optional Google Maps API
 
 ---
@@ -50,7 +54,7 @@ BPM fragt GIS-Dienste direkt ab und befüllt `ProjectLocation`-Felder automatisc
 
 ### Warum kein REST Backend?
 
-BPM ist eine Desktop-App. Die GIS-Abfrage geht direkt aus C# (HttpClient) an die externe API. Kein eigener Server nötig.
+BPM ist eine Desktop-App. Die GIS-Abfrage geht aus C# über `IExternalCommunicationService` (ADR-035, mit `DataClassification`) an die externe API — kein direkter `HttpClient` (Audit Review 01, R01-001 E17, entschieden 2026-09-24). Kein eigener Server nötig.
 
 ---
 
@@ -270,19 +274,24 @@ Wenn das Dashboard gebaut wird, könnte ein Karten-Widget die Baustellen zeigen:
 | Mapsui | Modernes WPF/MAUI-Kartenkontrolle, NuGet |
 | WebView2 + Leaflet | HTML-basierte Karte in WPF eingebettet |
 
+> **Datenweg:** Weitere Endpunkte (Kachel-Server, Nominatim/OSM) vor der Umsetzung im DSGVO-Gateway-Register (DSVGO-Architektur Kap. 4.4) eintragen und nur über IExternalCommunicationService abrufen; eine Bibliothek darf keinen eigenen HTTP-Weg am Gateway vorbei öffnen (Audit Review 01, R01-001 E17, entschieden 2026-09-24).
+
 Entscheidung wird getroffen wenn das Dashboard drankommt.
 
 ---
 
 ## 8. API-Key Verwaltung
 
-Google Maps API braucht einen API-Key. Dieser darf **nicht im Code** stehen (ADR-016, Coding Standards).
+Google Maps API braucht einen API-Key. Dieser darf **nicht im Code** stehen (ADR-042, Coding Standards).
 
 | Option | Beschreibung |
 |--------|-------------|
-| settings.json | API-Key in App-Einstellungen (OneDrive, versteckt in .AppData) |
-| Umgebungsvariable | `%BPM_GOOGLE_API_KEY%` |
-| Erster Start | Dialog "Google Maps API-Key eingeben" (optional, GIS funktioniert auch ohne) |
+| **DPAPI (verbindlich)** | API-Key DPAPI-geschützt in `%LocalAppData%\BauProjektManager\` (Scope CurrentUser, ADR-042), nie im Klartext |
+| ~~settings.json~~ | ❌ Entfällt — ADR-042 verbietet Secrets in `settings.json` |
+| ~~Umgebungsvariable~~ | ❌ Entfällt — `%BPM_GOOGLE_API_KEY%` wäre Klartext, widerspricht ADR-042 |
+| Erster Start | Dialog "Google Maps API-Key eingeben" (optional, GIS funktioniert auch ohne) → Speicherung per DPAPI |
+
+*(Audit Review 01, R01-001 E17, entschieden 2026-09-24)*
 
 GIS Steiermark braucht **keinen API-Key** — die Dienste sind öffentlich.
 
@@ -292,7 +301,7 @@ GIS Steiermark braucht **keinen API-Key** — die Dienste sind öffentlich.
 
 | Phase | Was | Abhängigkeit |
 |-------|-----|-------------|
-| **1** | `SteiermarkGisService` — Koordinaten → KG/GST abfragen | Nur HttpClient |
+| **1** | `SteiermarkGisService` — Koordinaten → KG/GST abfragen | Nur IExternalCommunicationService (ADR-035) |
 | **2** | `CoordinateConverter` — EPSG:31258 ↔ WGS84 | ProjNet NuGet |
 | **3** | "🔍 Grundstück laden" Button im ProjectEditDialog | Phase 1 + 2 |
 | **4** | `GoogleGeocodingService` — Adresse → Koordinaten | API-Key nötig |
@@ -315,6 +324,8 @@ Phase 1–3 können ohne Google API-Key umgesetzt werden (GIS Steiermark ist kos
 | Flächenwidmung auch abfragen? | Bauland/Grünland aus GIS Steiermark | ⬜ Nice to have |
 | Baugrundanalyse / AI? | Aus Prompt — für BPM derzeit nicht relevant | ❌ Nicht geplant |
 
+> **Datenweg:** Für Nominatim/OSM-Geocoding und Kachel-Server der Karten-Bibliothek gilt: Endpunkte vor der Umsetzung im DSGVO-Gateway-Register (DSVGO-Architektur Kap. 4.4) eintragen und nur über IExternalCommunicationService abrufen; eine Bibliothek darf keinen eigenen HTTP-Weg am Gateway vorbei öffnen (Audit Review 01, R01-001 E17, entschieden 2026-09-24).
+
 ---
 
-*Dieses Konzept beschreibt die BPM-spezifische GIS-Integration als Desktop-App. Kein REST Backend, kein eigener GIS-Server — direkte API-Calls aus C# an öffentliche Dienste. Die bestehenden ProjectLocation-Felder sind bereits vorbereitet.*
+*Dieses Konzept beschreibt die BPM-spezifische GIS-Integration als Desktop-App. Kein REST Backend, kein eigener GIS-Server — API-Calls aus C# über `IExternalCommunicationService` an öffentliche Dienste. Die bestehenden ProjectLocation-Felder sind bereits vorbereitet.*

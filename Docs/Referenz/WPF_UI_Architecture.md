@@ -13,22 +13,31 @@ supersedes: []
 
 ## AI-Quickload
 - Zweck: Technische WPF-Umsetzung des Design-Systems — ResourceDictionaries, Token-Mapping, ViewState, Dialog-Pattern
-- Autorität: secondary (UI_UX_Guidelines.md = source_of_truth für Design-Regeln)
+- Autorität: secondary
 - Lesen wenn: Neuer Dialog, neues Theme-Token, ResourceDictionary ändern, ViewState-Pattern, Modul-XAML
-- Nicht zuständig für: Design-Entscheidungen (→ UI_UX_Guidelines.md), XAML-Code-Konventionen (→ CODING_STANDARDS.md Kap. 10)
+- Nicht zuständig für: Design-Entscheidungen (→ UI_UX_Guidelines.md, source_of_truth), konkrete Screens (→ neuestes freigegebenes Mockup; dieses Doc ist abgeleitet, Rangfolge UI_UX_Guidelines.md Kap. 1.4), XAML-Code-Konventionen (→ CODING_STANDARDS.md Kap. 10), Static-/DynamicResource-Regel (→ CODING_STANDARDS.md Kap. 10.5)
 - Kapitel:
-  - 1–4. Ziel, ResourceDictionary-Aufbau, Token-Mapping, Buttons
-  - 5–7. Dialog-Pattern, Screen States, Theme-System
-  - 8–10. DataGrid, Sidebar/Navigation, ContextMenu
-  - 11–13. TreeView, Inputs/Tabs, Tooltips
-  - 14. Anti-Patterns
+  - 1. Ziel
+  - 2. Projektstruktur
+  - 3. Resource Dictionary Architektur
+  - 4. Token → WPF-Key Mapping
+  - 5. Shell-Architektur
+  - 6. MVVM-Regeln
+  - 7. Screen State Pattern
+  - 8. Feedback-Infrastruktur
+  - 9. Dialog-Architektur
+  - 10. Datenformatierung
+  - 11. Responsive-Regeln
+  - 12. Theme-System
+  - 13. Basis-Komponenten
+  - 14. Sicherheit und Datenschutz in der UI
   - 15. Implementierungsreihenfolge
-  - 16. Modul-Projekte: XAML-Regeln (PFLICHT)
+  - 16. Modul-Projekte: XAML-Regeln
 - Pflichtlesen:
-  - Kapitel 5 (Dialog-Pattern) bei neuem Dialog
+  - Kapitel 9 (Dialog-Architektur) und 5.4 (Code-Behind-Dialoge) bei neuem Dialog
   - Kapitel 16 (Modul-XAML-Regeln) bei XAML in Modul-Projekten (Settings, PlanManager)
 - Fachliche Invarianten:
-  - DynamicResource in Custom-Dialog-Windows — StaticResource verursacht XamlParseException
+  - Static-/DynamicResource-Regel steht nur in CODING_STANDARDS.md Kap. 10.5 — hier nicht wiederholen
   - Alle Farben über Theme-Tokens aus Colors.xaml — nie hardcoded
   - 7 ResourceDictionaries: Colors, Typography, Buttons, DataGrid, Dialogs, Icons, TreeView (TabControl/TabItem Styles in Dialogs.xaml integriert)
   - Icons über Icons.xaml Registry (ADR-044)
@@ -37,9 +46,9 @@ supersedes: []
 
 ﻿# BauProjektManager — WPF UI Architecture
 
-**Version:** 2.0  
-**Datum:** 04.04.2026  
-**Bezug:** UI_UX_Guidelines.md v2.1 (Design-Regeln), CODING_STANDARDS.md Kap. 10+17 (Code-Regeln), ADR-028 (Theme-System)
+**Version:** 2.2  
+**Datum:** 12.11.2026  
+**Bezug:** UI_UX_Guidelines.md v2.3 (Design-Regeln, Rangfolge Kap. 1.4 — dieses Doc ist abgeleitet), CODING_STANDARDS.md Kap. 10+17 (Code-Regeln), ADR-028 (Theme-System)
 
 **Verwandte Dokumente:**
 - [UI_UX_Guidelines.md](UI_UX_Guidelines.md) — Design-Token, Screen States, Feedback-Matrix, Komponenten
@@ -138,7 +147,7 @@ BauProjektManager.PlanManager/
 |---|---|---|
 | **Colors.xaml** | Farb-Token als SolidColorBrush + Color | Keine |
 | **Typography.xaml** | Schriftgrößen, -gewichte als Doubles + Styles | Colors.xaml |
-| **Buttons.xaml** | Button-Varianten (Primary, Secondary mit Border, Danger, Ghost, Nav mit Code-Behind Highlight) | Colors.xaml, Typography.xaml |
+| **Buttons.xaml** | Button-Varianten (Primary, Secondary mit Border, Danger, Ghost, Nav mit Code-Behind Highlight). Keine Success-Variante: `BpmButtonSuccess` wird durch Secondary ersetzt und entfällt (Audit Review 01, R01-001 E14, entschieden 2026-09-24) | Colors.xaml, Typography.xaml |
 | **Inputs.xaml** | ComboBox (implementiert), TextBox/DatePicker/CheckBox (folgen bei Bedarf) | Colors.xaml, Typography.xaml | 🟡 Partial (ComboBox seit v0.28.6, BPM-101) |
 | **DataGrid.xaml** | Header, Row, Cell, Zebra-Variante | Colors.xaml, Typography.xaml |
 | **Dialogs.xaml** | Dialog-Basis (Header/Footer/Overlay), Cards, Tooltips, Separatoren, ContextMenu/MenuItem Styles, TabControl/TabItem Styles | Colors.xaml, Typography.xaml |
@@ -186,20 +195,12 @@ BauProjektManager.PlanManager/
 
 ### 3.4 Referenzierung
 
+Ob `StaticResource` oder `DynamicResource` verwendet wird, regelt ausschließlich [CODING_STANDARDS.md](../Kern/CODING_STANDARDS.md) Kap. 10.5 (Static-/DynamicResource-Regel). Dieses Dokument wiederholt die Regel nicht (Audit Review 01, R01-001 E14, entschieden 2026-09-24). Die XAML-Beispiele in diesem Dokument zeigen Aufbau und Token-Namen; der darin verwendete Resource-Typ ist nicht normativ.
+
 ```xml
-<!-- RICHTIG — StaticResource für Styles und Farben (V1 Standard) -->
-<Button Style="{StaticResource BpmButtonPrimary}"/>
-<Border Background="{StaticResource BpmBgSurface}"/>
-
-<!-- RICHTIG — DynamicResource nur wenn sich Wert zur Laufzeit ändern kann -->
-<!-- (z.B. Theme-Wechsel Dark→Light, erst nach V1) -->
-<Border Background="{DynamicResource BpmBgBase}"/>
-
-<!-- FALSCH — Farben direkt in XAML -->
+<!-- FALSCH — Farben direkt in XAML statt Theme-Token -->
 <Border Background="#1E1E1E"/>
 ```
-
-**Entscheidung:** Für V1 `StaticResource` verwenden (kein Laufzeit-Theme-Wechsel). Wenn Light Theme kommt → auf `DynamicResource` umstellen.
 
 ---
 
@@ -268,32 +269,34 @@ Verbindliche Brücke zwischen Design-Token (UI_UX_Guidelines.md) und WPF Resourc
 ┌──────────────────────────────────────────────────────────────┐
 │ BpmBreadcrumb (28px) 🎯                                      │
 ├────────┬─────────────────────────────────────────────────────┤
-│ Side-  │ BpmToolbar (34px, nur wenn Modul sie braucht)      │
+│ Side-  │ BpmToolbar (34px, nur wenn Modul sie braucht) 🎯   │
 │ bar    ├─────────────────────────────────────────────────────┤
-│(220px) │                                                     │
-│ Text+  │ ContentControl (wechselt pro Modul)                 │
-│ Icons  │                                                     │
-│ (V1)   │                                                     │
+│(220/56)│                                                     │
+│klappbar│ ContentControl (wechselt pro Modul)                 │
+│BPM-067 │                                                     │
+│        │                                                     │
 ├────────┴─────────────────────────────────────────────────────┤
-│ BpmStatusBar (22px)                                          │
+│ BpmStatusBar (28px)                                          │
 └──────────────────────────────────────────────────────────────┘
 
 🎯 = Zielstandard, kommt mit UI-Refresh
 ```
+
+**Shell-Maße nach Code** (Audit Review 01, R01-001 E14, entschieden 2026-09-24): Statusleiste 28px, Sidebar klappbar 220px (Emoji + Text) ↔ 56px (Icon-Leiste), Zustand gerätelokal (BPM-067). Ist im Code (`MainWindow.xaml`): nur Content-Zeile + Statusleiste; Breadcrumb und Toolbar sind Zielstandard.
 
 ### 5.2 Grid-Layout
 
 ```xml
 <Grid>
     <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="220"/>  <!-- Sidebar (220px Text+Icons V1, Post-V1: 56px Icon-Leiste) -->
+        <ColumnDefinition Width="220"/>  <!-- Sidebar klappbar: 220 (Emoji + Text) oder 56 (Icon-Leiste), Umschaltung im Code-Behind (BPM-067) -->
         <ColumnDefinition Width="*"/>    <!-- Content -->
     </Grid.ColumnDefinitions>
     <Grid.RowDefinitions>
         <RowDefinition Height="28"/>     <!-- Breadcrumb (Post-V1) -->
         <RowDefinition Height="34"/>     <!-- Toolbar -->
         <RowDefinition Height="*"/>      <!-- Content -->
-        <RowDefinition Height="22"/>     <!-- Statusleiste -->
+        <RowDefinition Height="28"/>     <!-- Statusleiste -->
     </Grid.RowDefinitions>
 
     <!-- Sidebar: Zeile 0-3, Spalte 0 -->
@@ -338,13 +341,15 @@ foreach (var key in Resources.Keys)
 
 Ohne diese Zeile haben ComboBoxen, TextBoxen etc. im Code-Behind-Dialog kein Dark Theme.
 
+**Verschachtelung:** Unterdialoge höchstens eine Ebene tief — ein Unterdialog (z. B. ShowPartEditDialog aus dem ProjectEditDialog) öffnet keinen weiteren Dialog (UI_UX_Guidelines.md Kap. 8.4; Audit Review 01, R01-001 E15, entschieden 2026-09-24). Bestätigungs-, Hinweis- und Dirty-Check-Abfragen (BpmConfirmDialog, BpmInfoDialog, ShowDarkConfirm) zählen nicht als weitere Dialogebene.
+
 **Toggle-Switch:** Für An/Aus-Schalter wird ein ovaler Custom-Toggle verwendet (Border + Ellipse im XAML, State-Feld + UpdateToggleVisual() im Code-Behind). Keine WPF-CheckBox — die passt nicht zum Dark Theme.
 
 **Dark Confirm-Dialog:** Für Ja/Nein-Fragen in Code-Behind-Dialogen `ShowDarkConfirm()` verwenden statt `MessageBox.Show()`. Die System-MessageBox ist weiß und passt nicht zum Dark Theme.
 
 **GridSplitter:** Für geteilte Bereiche (z.B. Bauteile/Geschosse) `GridSplitter` mit `BpmBorderDefault` Background verwenden. MinHeight auf beiden Seiten setzen.
 
-**FileSystemWatcher:** Für Ordnerstruktur-Dialoge einen `FileSystemWatcher` auf `project.Paths.Root` starten, bei `Created/Deleted/Renamed` → `LoadFromDisk()` neu aufrufen. Watcher wird im `Closed`-Event disposed.
+**FileSystemWatcher:** Das frühere Muster „Watcher auf `project.Paths.Root` im Ordnerstruktur-Dialog“ ist gestrichen. Bis es einen Watcher-Port gibt, wird hier kein Watcher-Muster für Dialoge und Views dokumentiert (Schichtregel ADR-060) (Audit Review 01, R01-001 E1, entschieden 2026-09-24).
 
 ---
 
@@ -457,9 +462,10 @@ public partial class ProjectEditViewModel : ObservableObject
 
 ```csharp
 // RICHTIG — Benutzerfreundliche Fehlermeldung + technisches Logging
+// (statisches Serilog Log.* ist Standard, kein ILogger<T> — Audit Review 01, R01-001 E2, entschieden 2026-09-24)
 catch (Exception ex)
 {
-    _logger.LogError(ex, "Projekt {ProjectId} konnte nicht geladen werden", projectId);
+    Log.Error(ex, "Projekt {ProjectId} konnte nicht geladen werden", projectId);
     UserFriendlyError = "Projekt konnte nicht geladen werden. Bitte erneut versuchen.";
     ViewState = ViewState.Error;
 }
@@ -514,10 +520,12 @@ catch (Exception ex)
            Foreground="{StaticResource BpmWarning}"/>
 
 <!-- Read-only Banner (orthogonal) -->
+<!-- Auf Warning-Gelb dunkle Schrift (Kontrast ≥ 4,5:1, UI_UX_Guidelines Kap. 15;
+     Audit Review 01, R01-001 E15, entschieden 2026-09-24) — nie BpmTextBright/Weiß -->
 <Border Visibility="{Binding IsReadOnly, Converter={StaticResource BoolToVisibility}}"
         Background="{StaticResource BpmWarning}" Padding="8,4">
     <TextBlock Text="🔒 Nur-Lesen-Modus — anderer Benutzer bearbeitet"
-               Foreground="{StaticResource BpmTextBright}"/>
+               Foreground="{StaticResource BpmBgBase}"/>
 </Border>
 ```
 
@@ -531,7 +539,7 @@ Technische Einordnung der Feedback-Matrix aus UI_UX_Guidelines.md Kap. 18.
 |---|---|---|---|
 | **Inline-Validierung** | Border + TextBlock unter Feld | In Inputs.xaml (Style) | ✅ Machbar |
 | **Toast** | BpmToast (UserControl in App/Controls/) | Shell-only, Overlay über Content | 🎯 Zielstandard |
-| **Modal-Dialog** | Window mit BpmDialogBase Style | Dialogs.xaml | ✅ Vorhanden |
+| **Modal-Dialog** | Window mit BpmDialogWindow Style (derzeit von keinem Dialog genutzt — verwenden oder löschen, Kap. 9.1) | Dialogs.xaml | ✅ Vorhanden |
 | **Error-Dialog** | Window mit Details-Expander | Dialogs.xaml (neuer Style BpmErrorDialog) | 🎯 |
 | **Statusleiste** | BpmStatusBar (TextBlock in MainWindow) | Shell | ✅ Vorhanden |
 | **Banner** | BpmBanner (UserControl in App/Controls/) | Shell-only, oben im Content | 🎯 Zielstandard |
@@ -553,10 +561,12 @@ Technische Einordnung der Feedback-Matrix aus UI_UX_Guidelines.md Kap. 18.
 
 ### 9.1 Dialog-Basis
 
+**Regel:** Die Dialog-Basis-Styles aus `Dialogs.xaml` (`BpmDialogWindow`, `BpmDialogHeader`, `BpmDialogFooter`, `BpmDialogCloseButton`) werden in den Dialogen verwendet oder gelöscht — keine ungenutzten Dialog-Styles im Theme (UI_UX_Guidelines.md Kap. 8.4; Audit Review 01, R01-001 E14, entschieden 2026-09-24). Im Dialog-Footer höchstens ein Primary (UI_UX_Guidelines.md Kap. 8.1; Audit Review 01, R01-001 E15, entschieden 2026-09-24).
+
 Alle Dialoge folgen demselben Muster:
 
 ```xml
-<Window Style="{StaticResource BpmDialogBase}">
+<Window Style="{StaticResource BpmDialogWindow}">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>  <!-- Header -->
@@ -565,12 +575,10 @@ Alle Dialoge folgen demselben Muster:
         </Grid.RowDefinitions>
 
         <!-- Header: Titel + Schließen -->
-        <Border Grid.Row="0" Background="{StaticResource BpmBgElevated}">
+        <Border Grid.Row="0" Style="{StaticResource BpmDialogHeader}">
             <Grid>
                 <TextBlock Text="Dialog-Titel" Style="{StaticResource BpmHeading3}"/>
-                <Button Content="✕" HorizontalAlignment="Right"
-                        Style="{StaticResource BpmButtonGhost}"
-                        Command="{Binding CloseCommand}"/>
+                <Button Style="{StaticResource BpmDialogCloseButton}" Command="{Binding CloseCommand}"/>
             </Grid>
         </Border>
 
@@ -580,9 +588,8 @@ Alle Dialoge folgen demselben Muster:
         </ScrollViewer>
 
         <!-- Footer: Buttons -->
-        <Border Grid.Row="2" Background="{StaticResource BpmBgSurface}">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
-                        Margin="{StaticResource BpmDialogPadding}">
+        <Border Grid.Row="2" Style="{StaticResource BpmDialogFooter}">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="Abbrechen" Style="{StaticResource BpmButtonSecondary}"
                         Command="{Binding CancelCommand}" Margin="0,0,8,0"/>
                 <Button Content="Speichern" Style="{StaticResource BpmButtonPrimary}"
@@ -687,7 +694,7 @@ Technische Umsetzung der Auflösungsregeln aus UI_UX_Guidelines.md Kap. 17.
 
 ### 11.2 Technische Leitplanken
 
-- **Sidebar:** 220px Text+Icons (V1), Post-V1: 56px Icon-Leiste. Immer sichtbar. Modul-Unterpunkte in der Toolbar.
+- **Sidebar:** klappbar 220px (Emoji + Text) ↔ 56px (Icon-Leiste), Zustand gerätelokal (BPM-067; Shell-Maße nach Code, Audit Review 01, R01-001 E14, entschieden 2026-09-24). Immer sichtbar. Modul-Unterpunkte in der Toolbar.
 - **Dialoge:** `MinWidth`/`MinHeight` setzen, `MaxWidth` an Screen binden. Für enge Bildschirme: ScrollViewer um den Content
 - **DataGrids:** Horizontaler Scroll erlaubt in Tabellen, NICHT auf Seitenebene
 - **Fixe Breiten:** Nur für Sidebar, Toolbar, Statusleiste. Content-Bereich immer `Width="*"`
@@ -829,26 +836,15 @@ Die Datenschutz-Entscheidung trifft die Policy, nicht das ViewModel. Das ViewMod
 
 ## 16. Modul-Projekte: XAML-Regeln (PFLICHT)
 
-### 15.1 DynamicResource statt StaticResource
+### 15.1 Static-/DynamicResource (Verweis)
 
 Modul-Projekte (BauProjektManager.PlanManager, .Settings etc.) haben zur Kompilierzeit
 **keinen Zugriff** auf die App-ResourceDictionaries (Colors.xaml, Buttons.xaml etc.).
 Diese werden erst zur Laufzeit durch die App-Shell bereitgestellt.
 
-**Regel:** In Modul-XAML IMMER `DynamicResource` verwenden, NIE `StaticResource`
-fuer Theme-Tokens, Brushes und Styles.
-
-```xml
-<!-- RICHTIG (Modul) -->
-Background="{DynamicResource BpmBgSurface}"
-Style="{DynamicResource BpmButtonPrimary}"
-
-<!-- FALSCH (verursacht XamlParseException zur Laufzeit) -->
-Background="{StaticResource BpmBgSurface}"
-```
-
-**Ausnahme:** Converter und lokale Ressourcen die im Window/UserControl selbst
-definiert sind, duerfen `StaticResource` verwenden.
+Welcher Resource-Typ in Modul-XAML, App/Shell-XAML und Custom-Dialog-Windows gilt, regelt
+ausschließlich [CODING_STANDARDS.md](../Kern/CODING_STANDARDS.md) Kap. 10.5 (Static-/DynamicResource-Regel).
+Dieses Dokument wiederholt die Regel nicht (Audit Review 01, R01-001 E14, entschieden 2026-09-24).
 
 ### 15.2 BAML-Cache bei XAML-Aenderungen
 
@@ -887,3 +883,12 @@ Sie verursachen XML-Parser-Fehler. Stattdessen einfache gerade Anfuehrungszeiche
 
 *Aenderungen v2.0 → v2.1 (10.04.2026):*
 - *Kap. 15 NEU: DynamicResource-Pflicht fuer Modul-Projekte, BAML-Cache-Regel, typografische Anfuehrungszeichen*
+
+*Änderungen v2.1 → v2.2 (12.11.2026, Audit Review 01, R01-001 E1/E2/E14/E15, entschieden 2026-09-24):*
+- *Static-/DynamicResource-Regel nur noch in CODING_STANDARDS.md Kap. 10.5 — Kap. 3.4, 16 (15.1) und Quickload verweisen dorthin (E14)*
+- *Shell-Maße nach Code: Statusleiste 28px, Sidebar klappbar 220px ↔ 56px (Kap. 5.1, 5.2, 11.2), Toolbar als Zielstandard markiert (E14)*
+- *FileSystemWatcher-Muster aus Kap. 5.4 gestrichen, bis es einen Watcher-Port gibt (E1); Unterdialoge höchstens eine Ebene tief, Bestätigungs-, Hinweis- und Dirty-Check-Abfragen zählen nicht als Ebene (Kap. 5.4, E15)*
+- *Read-only-Banner-Beispiel mit dunkler Schrift auf Warning-Gelb (Kap. 7.5, E15); Logging-Beispiel auf statisches Serilog `Log.*` (Kap. 7.4, E2)*
+- *Dialog-Basis: `BpmDialogWindow` statt nicht existierendem `BpmDialogBase`, Regel „Dialog-Styles verwenden oder löschen“ (Kap. 8, 9.1); BpmButtonSuccess entfällt (Kap. 3.1) (E14)*
+- *Kap. 9.1 Beispiel an die Regel angeglichen: Header, Footer und Schließen-Button über `BpmDialogHeader`, `BpmDialogFooter`, `BpmDialogCloseButton`; BpmDialogPadding (existiert nicht) aus dem Beispiel entfernt (E14); im Dialog-Footer höchstens ein Primary (E15)*
+- *AI-Quickload: Kapitel-Liste an die H2 angeglichen, Pflichtlesen bei neuem Dialog auf Kap. 9 und 5.4 korrigiert*

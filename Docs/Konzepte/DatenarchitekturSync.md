@@ -1,8 +1,8 @@
 ---
 doc_id: konzept-datenarchitektur-sync
 doc_type: concept
-authority: deprecated
-status: superseded
+authority: historical
+status: deprecated
 superseded_by: [adr-053]
 owner: herbert
 topics: [historisch, sync, datenarchitektur, outbox-inbox]
@@ -37,7 +37,7 @@ supersedes: []
 > - **`Docs/Kern/DB-SCHEMA.md`** — geplante Sync-Tabellen (sync_state_local, sync_checkpoints, sync_history) + recognition_profiles in DB
 >
 > **Was nutzbar bleibt (gültig):**
-> - **4-Klassen-Datenmodell** (A: local-only, B: shared domain, C: shared reference, D: restricted) — bleibt gültig laut ADR-047
+> - **4-Klassen-Datenmodell**, heute **Sync-Kategorie** (`local-only`, `shared-domain`, `shared-reference`, `restricted`; ersetzt die früheren Buchstaben A–D — „Klasse A/B/C“ ist nur noch für DSGVO-Datenklassen reserviert; Audit Review 01, R01-001 E16, entschieden 2026-09-24) — bleibt gültig laut ADR-047
 > - **Local-First-Prinzip** (SQLite ist einzige lokale Wahrheit) — bleibt gültig laut ADR-051
 > - **Shared vs. restricted physisch trennen** — bleibt gültig
 >
@@ -47,7 +47,7 @@ supersedes: []
 
 ## AI-Quickload (HISTORISCH)
 - Zweck: ⚠️ SUPERSEDED durch ADR-053. Nicht mehr als gültiges Konzept laden.
-- Autorität: secondary (historisches Detailkonzept Phase 2, Sofortregeln gelten aus ServerArchitektur.md)
+- Autorität: historical
 - Lesen wenn: Sync-Feature, Multi-User, Change-Tracking, Snapshot, Konflikt-Behandlung
 - Nicht zuständig für: DB-Tabellen-Details (→ DB-SCHEMA.md), Datenschutz (→ DSVGO-Architektur.md)
 - Kapitel:

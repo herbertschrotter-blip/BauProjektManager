@@ -36,6 +36,8 @@ supersedes: []
 
 ---
 
+> ⚠️ **Eingefroren – Stand vor ADR-053/058–066** (Audit Review 01, R01-001 E17, entschieden 2026-09-24): Dieses Konzept beschreibt den Planungsstand vor diesen ADRs. Vor der Umsetzung gegen die aktuellen ADRs abgleichen. Bereits verbindlich korrigiert: DSGVO-Datenwege, keine KI im Importpfad, ULIDs.
+
 # BauProjektManager — Modul: Dashboard
 
 **Status:** Nach V1 (Phase 3)

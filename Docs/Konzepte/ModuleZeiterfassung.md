@@ -24,6 +24,8 @@ supersedes: []
 
 ---
 
+> ⚠️ **Eingefroren – Stand vor ADR-053/058–066** (Audit Review 01, R01-001 E17, entschieden 2026-09-24): Dieses Konzept beschreibt den Planungsstand vor diesen ADRs. Vor der Umsetzung gegen die aktuellen ADRs abgleichen. Bereits verbindlich korrigiert: DSGVO-Datenwege, keine KI im Importpfad, ULIDs.
+
 ﻿# BauProjektManager — Konzept: Arbeitszeiterfassung
 
 **Erstellt:** 29.03.2026  
@@ -138,7 +140,7 @@ Single Point of Truth. Jede Zeile = ein Stundeneintrag.
 | ZeitID | Auto-ID | Eindeutige ID, nie wiederverwendet | 1, 2, 3... |
 | Datum | Datum | Arbeitstag | 29.03.2026 |
 | MitarbeiterID | Integer | FK → tbl_Mitarbeiter | 3 |
-| BaustelleID | Text | FK → BPM Projekt-ID oder eigene ID | "proj_001" |
+| BaustelleID | Text | FK → BPM Projekt-ID (ULID, ADR-039) oder eigene ID | "01HV8M2Q9AJ3W1XK7R4F5N6T8C" |
 | StundenartID | Integer | FK → tbl_Stundenarten | 1 |
 | Stunden | Dezimal | Arbeitsstunden (0.5er Schritte) | 8.5 |
 | StatuscodeID | Integer | FK → tbl_Statuscodes (optional) | 1 |
@@ -187,7 +189,7 @@ BPM liefert die Baustellen-Liste aus `bpm.db`. Für Baustellen die nicht in BPM 
 
 | Spalte | Typ | Beschreibung |
 |--------|-----|-------------|
-| BaustelleID | Text | "proj_001" (aus BPM) oder "int_001" (intern) |
+| BaustelleID | Text | ULID aus BPM (z.B. "01HV8M2Q9AJ3W1XK7R4F5N6T8C") oder "int_001" (intern) |
 | Bezeichnung | Text | "ÖWG Dobl" oder "Büro" |
 | Quelle | Text | "BPM" oder "Intern" |
 | Aktiv | Boolean | |
@@ -319,13 +321,13 @@ Das Excel-Datenmodell ist bewusst SQL-kompatibel gestaltet:
 | Excel | SQL-Äquivalent |
 |-------|---------------|
 | tbl_Zeiten | Tabelle mit Primärschlüssel, Fremdschlüssel |
-| Auto-ID | AUTOINCREMENT |
+| Auto-ID | ULID als Primärschlüssel (`TEXT PRIMARY KEY`, ADR-039 — keine INTEGER-IDs, kein AUTOINCREMENT) |
 | IDs statt Klartext | Foreign Keys |
 | Append-only | INSERT-only (kein UPDATE/DELETE) |
 | Historisierung (GültigAb/Bis) | Temporal Tables oder manuell |
 | Power Query Views | SQL Views |
 
-Migration zu SQLite wäre: Tabellen 1:1 übernehmen, Power Query durch SQL Views ersetzen, ClosedXML durch Microsoft.Data.Sqlite. Das Datenmodell ändert sich nicht.
+Migration zu SQLite wäre: Tabelleninhalte übernehmen, Primärschlüssel als ULID neu vergeben (ADR-039), Power Query durch SQL Views ersetzen, ClosedXML durch Microsoft.Data.Sqlite. ~~Das Datenmodell ändert sich nicht.~~ Verbindlich für das SQLite-Schema ist DB-SCHEMA.md (Kap. 5.1 `employees`, 5.2 `time_entries`), nicht dieses Konzept (ADR-031). (Audit Review 01, R01-001 E17, entschieden 2026-09-24)
 
 ---
 

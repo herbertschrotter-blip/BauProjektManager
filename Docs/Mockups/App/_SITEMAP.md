@@ -13,6 +13,7 @@ Mockup-Änderungen aktualisiert.
 - ✅ aktiv — Quelle hat `onclick`, Ziel existiert
 - ⚪ geplant — Ziel existiert, `onclick` im Quell-HTML fehlt noch
 - 🟡 tot — Ziel-Mockup fehlt, Aufrufer hat `alert('Mockup folgt: X')`
+- 🔷 implementiert ohne Mockup — Screen ist im Code umgesetzt, ein Mockup gibt es nicht und wird nicht nachgezogen; der Code gilt als Ist (Audit Review 01, R01-001 E14, entschieden 2026-09-24)
 - ❌ kaputt — Pfad-Inkonsistenz
 
 ## Fenster
@@ -20,6 +21,7 @@ Mockup-Änderungen aktualisiert.
 | Ordner | Aufrufer | Trigger | Status | Datei(en) |
 |---|---|---|---|---|
 | 01_Shell | (App-Start, Referenz-Mockup) | – | ✅ aktiv | 01_Sidebar.html (klappbare Sidebar 220px ↔ 56px, BPM-067, Teil 52) |
+| – | (App-Start: Ersteinrichtung bzw. Pfad-Problem beim Start) | automatisch / „Einstellungen öffnen?“ → Ja | 🔷 implementiert ohne Mockup | – (WPF: `SetupDialog.xaml`) |
 
 ## Navigationskanten
 
@@ -40,6 +42,7 @@ Keine. Das Shell-Mockup ist ein Referenz-Entwurf für die Sidebar; die bestehend
 ## Hinweise
 
 - **Zustände:** Chevron oben oder Doppelklick auf den Titel schaltet A (220px, Emoji + Text) ↔ B (56px, Emoji + Tooltip, Badge als Ecke). Default A. Zustand gerätelokal (`UiLayout.SidebarCollapsed`, WPF-Umsetzung in BPM-067 Schritt 2).
+- **Shell-Maße nach Code** (Audit Review 01, R01-001 E14, entschieden 2026-09-24): Statusleiste 28px, Sidebar klappbar 220px ↔ 56px. Maßgeblich ist der Code; das Mockup zeigt die Statusleiste noch mit 24px (Mockup-Anpassung offen).
 - **Post-V1-Module** (Fotos, Zeiterfassung, Bautagebuch, Kalkulation, Wetter, Outlook, Vorlagen, Aufgaben, GIS, KI-Assistent) sind ausgegraut und nicht klickbar — Sichtbarkeit später über Ansichtsprofile (Architektur Kap. 1.4).
 - **Emoji-Quellen:** 📁 ⚙ 🛠 👤 aus `Icons.xaml`; 📷 ⏱ 📓 📧 🌤 📄 aus dem Modulbaum in `BauProjektManager_Architektur.md`; 🏠 🧮 📋 🗺 🤖 neu vorgeschlagen (Icons.xaml-Keys beim WPF-Umbau anlegen).
 - **Einstellungen + Dev Tools unten** (Entscheidung Herbert, Teil 52), Home ganz oben übernimmt die Dashboard-Rolle.

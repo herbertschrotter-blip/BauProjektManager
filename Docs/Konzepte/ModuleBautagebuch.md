@@ -32,6 +32,8 @@ supersedes: []
 
 ---
 
+> ⚠️ **Eingefroren – Stand vor ADR-053/058–066** (Audit Review 01, R01-001 E17, entschieden 2026-09-24): Dieses Konzept beschreibt den Planungsstand vor diesen ADRs. Vor der Umsetzung gegen die aktuellen ADRs abgleichen. Bereits verbindlich korrigiert: DSGVO-Datenwege, keine KI im Importpfad, ULIDs.
+
 # BauProjektManager — Modul: Bautagebuch
 
 **Status:** Nach V1 (Phase 3-4)  
@@ -69,7 +71,7 @@ Tageseinträge in SQLite (lokal). Nicht in JSON-Dateien — weil über Monate vi
 
 ```json
 {
-  "projectId": "proj_202512_dobl",
+  "projectId": "01HV8M2Q9AJ3W1XK7R4F5N6T8C",
   "date": "2026-03-27",
   "createdAt": "2026-03-27T16:30:00",
   "lastModified": "2026-03-27T17:15:00",

@@ -12,17 +12,19 @@ supersedes: []
 ---
 
 ## AI-Quickload
-- Zweck: Konzept für Plankopf-Erkennung — Revisionstabelle aus PDF lesen (PdfPig + KI-API)
+- Zweck: Konzept für Plankopf-Erkennung — Revisionstabelle aus PDF lesen (PdfPig, keine KI-API)
 - Autorität: secondary
 - Lesen wenn: PlanHeader-Feature, Plankopf-Extraktion, PDF-Parsing, IndexSource.PlanHeader
 - Nicht zuständig für: Dateinamen-Parsing (→ PlanManager.md Kap. 13), KI-API allgemein (→ ModuleKiAssistent.md)
 - Pflichtlesen: keine
 - Fachliche Invarianten:
   - Post-V1 Feature — IndexSource.PlanHeader Enum existiert, Implementierung offen
-  - DSGVO Klasse C wenn KI-API genutzt wird
-  - PdfPig für lokale Extraktion, KI-API nur als Fallback
+  - Keine KI im Importpfad (ADR-065 P.2) — BPM ruft keine KI-API auf; ein LLM nutzt nur der User extern beim Anlernen (Kap. 2/10)
+  - PdfPig für lokale Extraktion, kein KI-Fallback
 
 ---
+
+> ⚠️ **Eingefroren – Stand vor ADR-053/058–066** (Audit Review 01, R01-001 E17, entschieden 2026-09-24): Dieses Konzept beschreibt den Planungsstand vor diesen ADRs. Vor der Umsetzung gegen die aktuellen ADRs abgleichen. Bereits verbindlich korrigiert: DSGVO-Datenwege, keine KI im Importpfad, ULIDs.
 
 ﻿# BauProjektManager — Modul: Plankopf-Erkennung (PlanHeader)
 
@@ -428,7 +430,7 @@ public class RevisionEntry
 ## 10. Abgrenzung
 
 - **Kein OCR:** Alle PDFs sind Text-basiert (aus CAD exportiert). OCR ist nicht nötig.
-- **Keine KI in BPM:** Claude wird nur extern zum Anlernen verwendet. BPM selbst macht nur JSON-Matching + Regex.
+- **Keine KI in BPM:** Claude wird nur extern zum Anlernen verwendet. BPM selbst macht nur JSON-Matching + Regex. Verbindlich nach ADR-065 P.2: kein LLM/ML im Importpfad, auch nicht als Fallback (Audit Review 01, R01-001 E17, entschieden 2026-09-24).
 - **Kein Zwang:** Plankopf-Erkennung ist optional. Ohne Templates funktioniert der Import wie bisher (nur Dateinamen-Parser).
 - **Keine automatische Template-Erstellung:** Templates werden immer von Claude generiert und vom User eingefügt — nie automatisch.
 

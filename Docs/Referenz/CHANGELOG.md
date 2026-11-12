@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.202] — 2026-11-12
+
+### Fix: Undo nach Archiv-Move gesperrt mit Hinweis, Docs zu R01-008 nachgezogen
+
+Umsetzung von ADR-064-Addendum P.4 (Audit Review 01, R01-008 / K28-02). Hat ein Archiv-Move (Radial im Archiv-Tab oder Explorer-„Verschieben“) Dateien des letzten Imports verschoben, meldet der Undo-Preflight genau einen klaren Konflikt („Undo gesperrt: Pläne dieses Imports wurden danach verschoben“) statt Einzelkonflikten „extern verschoben“. Erkennung über die Journal-Pfade (Quelle der `moved`-Action = Ziel einer completed Import-Action, Move-Journal nicht `failed`) — ein zurückgerollter Move sperrt nicht. Im Tab „Manuell sortieren“ steht der Hinweis unter „↩ Letzten Import rückgängig“; der ↩-Button der Archivzeile folgt jetzt dem Preflight statt nur der „letzter Import“-Kennzeichnung, und der Undo-Zustand wird nach jedem Move neu bestimmt. Die Richtigstellung zur Zusage aus v0.28.135 (v0.28.194) ist damit im Code eingelöst. Docs: ADR-064-Umsetzungszeile, PlanManager.md 11.4 (Archiv-Move, Undo-Sperre), DB-SCHEMA (`action_type = moved`), Recovery-Szenarien (Szenario 6). 2 neue Tests in `ImportReverseEndStateTests`.
+
+---
 ## [v0.28.201] — 2026-11-12
 
 ### Fix: Archiv-Move ADR-064-konform — FS-Ports, Journal vorab, Transaktion, eigene Recovery, Zielordner-Schutz, Radial klassifiziert mit (R01-008.01/.02)

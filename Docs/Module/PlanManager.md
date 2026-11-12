@@ -597,6 +597,8 @@ Das Undo-System ist **zweistufig implementiert** (ADR-059 Pending Assignments):
 - Dokumente ohne verbleibende aktive Revision → `is_deleted = 1`
 - Durch den Import superseded Revisionen (ermittelt über `plan_revision_events`, `event_type = 'superseded'`) → zurück auf `current`, `superseded_at = NULL`, Audit-Event `made_current` mit Undo-Notiz
 
+**Archiv-Move (R01-008, ADR-064-Addendum P.4/P.5):** Verschieben eines getrackten Plans läuft über den `ArchiveMoveService` wie ein Import — Journal-Actions `moved` vor der ersten Mutation, Disk über `.bpm_tmp`, eine DB-Transaktion für Pfade, Ablage und Klassifikation, Journal-Ende `moved` (nie „letzter Import“). Das Radial im Archiv-Tab klassifiziert mit (Typ, Bauteil bzw. Kategorie, Geschoss, `document_key`); das Explorer-„Verschieben (journalisiert)“ erlaubt nur den eigenen Ablageordner samt Unterordnern, `_`- und `.`-Ordner sind gesperrt. **Undo-Sperre:** Hat ein Archiv-Move Dateien des letzten Imports verschoben, ist dessen Undo gesperrt; die UI zeigt den Hinweis unter dem Undo-Button. `skipDuplicate` löscht nie eine getrackte Datei.
+
 **Bestätigungs-Strecke:** `CaptureConfirmService` mappt Pending → `ImportDecision` und nutzt die bestehende `ImportExecutionService`-Strecke — Journal-vor-Move-Invariante und Supersede-Logik gelten unverändert. Erstaufnahmen erhalten einen manuellen, index-freien document_key (Typ|Nummer|Bauteil[|Geschoss]; nummernlose Typen: Dateiname statt Nummer).
 
 ---

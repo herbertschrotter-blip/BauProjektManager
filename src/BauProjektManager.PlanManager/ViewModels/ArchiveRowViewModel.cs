@@ -11,16 +11,20 @@ namespace BauProjektManager.PlanManager.ViewModels;
 /// </summary>
 public partial class ArchiveRowViewModel : ObservableObject
 {
-    public ArchiveRowViewModel(PlanArchiveEntry entry, bool isLastImport)
+    public ArchiveRowViewModel(PlanArchiveEntry entry, bool isLastImport, bool canUndoLastImport = true)
     {
         Entry = entry;
         IsLastImport = isLastImport;
+        CanUndo = isLastImport && canUndoLastImport;
     }
 
     public PlanArchiveEntry Entry { get; }
 
     /// <summary>Gehört zur jüngsten abgeschlossenen Import-Journal-Id (grüne Kennzeichnung).</summary>
     public bool IsLastImport { get; }
+
+    /// <summary>↩ aktiv: letzter Import UND Undo-Preflight ok (R01-008: nach Archiv-Move gesperrt).</summary>
+    public bool CanUndo { get; }
 
     public string FileName => Entry.FileName ?? Entry.PlanNumber;
     public string? RelativePath => Entry.RelativePath;

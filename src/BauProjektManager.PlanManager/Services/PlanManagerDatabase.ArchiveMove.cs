@@ -106,6 +106,30 @@ public partial class PlanManagerDatabase
         return Convert.ToInt64(cmd.ExecuteScalar()) > 0;
     }
 
+    /// <summary>
+    /// True, wenn ein spaeterer Archiv-Move (nicht verworfen) Dateien dieses Imports
+    /// verschoben hat (ADR-064-Addendum P.4): dann ist das Undo des Imports gesperrt.
+    /// Erkennung ueber die Journal-Pfade: Quelle des Moves = Ziel einer Import-Action.
+    /// </summary>
+    public bool HasArchiveMoveAfterImport(string importId)
+    {
+        var cmd = GetConnection().CreateCommand();
+        cmd.CommandText = """
+            SELECT COUNT(*) FROM import_actions m
+            JOIN import_journal mj ON mj.id = m.import_id
+            WHERE m.action_type = @at AND mj.status <> 'failed'
+              AND mj.timestamp >= (SELECT timestamp FROM import_journal WHERE id = @id)
+              AND mj.id <> @id
+              AND REPLACE(m.source_path, '\', '/') COLLATE NOCASE IN (
+                  SELECT REPLACE(a.destination_path, '\', '/') FROM import_actions a
+                  WHERE a.import_id = @id AND a.action_status = 'completed'
+                    AND a.destination_path IS NOT NULL)
+            """;
+        cmd.Parameters.AddWithValue("@at", MovedActionType);
+        cmd.Parameters.AddWithValue("@id", importId);
+        return Convert.ToInt64(cmd.ExecuteScalar()) > 0;
+    }
+
     /// <summary>True, wenn das Journal ein Archiv-Move ist (Actions vom Typ 'moved').</summary>
     public bool IsMoveJournal(string importId)
     {

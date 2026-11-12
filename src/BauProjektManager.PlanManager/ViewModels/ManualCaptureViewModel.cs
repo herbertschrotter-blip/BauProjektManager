@@ -174,6 +174,13 @@ public partial class ManualCaptureViewModel : ObservableObject
     [ObservableProperty]
     private bool _canUndoLastImport;
 
+    /// <summary>
+    /// Grund, warum der letzte Import nicht rueckgaengig gemacht werden kann
+    /// (z.B. Archiv-Move danach, ADR-064-Addendum P.4); leer = kein Hinweis.
+    /// </summary>
+    [ObservableProperty]
+    private string _undoHint = "";
+
     /// <summary>Detail-Panel-Inhalt der einzeln gewählten Zeile (null = keine/mehrere Auswahl).</summary>
     [ObservableProperty]
     private CaptureDetailViewModel? _selectedDetail;
@@ -231,7 +238,6 @@ public partial class ManualCaptureViewModel : ObservableObject
                      $"{result.UpdateProposalCount} Updates, {result.NewCaptureCount} neu, " +
                      $"{result.ConflictCount} Konflikte";
         StatusText = _summaryStatusText;
-        CanUndoLastImport = _undo.Preflight(_projectRootPath).CanUndo;
         SetSelectedRow();
         InboxChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -239,11 +245,18 @@ public partial class ManualCaptureViewModel : ObservableObject
     /// <summary>Archiv-Bestand + Tab-Header neu laden (111.07 Slice D).</summary>
     private void LoadArchive()
     {
+        // Undo-Zustand mit dem Archiv neu bestimmen (R01-008: nach Archiv-Move gesperrt).
+        var preflight = _undo.Preflight(_projectRootPath);
+        CanUndoLastImport = preflight.CanUndo;
+        UndoHint = preflight.ImportId is not null && !preflight.CanUndo
+            ? preflight.Conflicts.FirstOrDefault()?.Issue ?? ""
+            : "";
         var lastImportId = _planDb.GetLastCompletedImportId();
         ArchiveRows.Clear();
         foreach (var entry in _planDb.GetArchiveEntries())
             ArchiveRows.Add(new ArchiveRowViewModel(
-                entry, lastImportId is not null && entry.LastImportId == lastImportId));
+                entry, lastImportId is not null && entry.LastImportId == lastImportId,
+                preflight.CanUndo));
         InboxTabHeader = $"Neue Pläne ({Rows.Count})";
         ArchiveTabHeader = $"Archiv ({ArchiveRows.Count})";
     }
@@ -323,7 +336,6 @@ public partial class ManualCaptureViewModel : ObservableObject
             ? $"↷ {row.FileName} verschoben nach {targetDir} ({result.MovedFiles} Datei(en), Journal)"
             : $"⚠ Verschieben fehlgeschlagen: {result.Error}";
         LoadArchive();
-        CanUndoLastImport = _undo.Preflight(_projectRootPath).CanUndo;
     }
 
     // ── Schnellanlage „+ Neu…" (Slice 3) ────────────────────────────

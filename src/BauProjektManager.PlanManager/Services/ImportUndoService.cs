@@ -23,6 +23,10 @@ public class ImportUndoService
     private readonly IFileSystemWriter _writer;
     private readonly IPathService _path;
 
+    /// <summary>Hinweistext der Undo-Sperre nach einem Archiv-Move (Addendum P.4).</summary>
+    public const string ArchiveMoveBlocksUndo =
+        "Undo gesperrt: Pläne dieses Imports wurden danach verschoben";
+
     public ImportUndoService(
         PlanManagerDatabase db,
         IFileSystemReader reader, IFileSystemWriter writer, IPathService path)
@@ -50,6 +54,15 @@ public class ImportUndoService
             .Where(a => a.ActionType != "skipDuplicate")
             .ToList();
         var conflicts = new List<UndoActionConflict>();
+
+        // R01-008 (ADR-064-Addendum P.4): hat ein Archiv-Move Dateien dieses Imports
+        // verschoben, ist das Undo gesperrt — ein klarer Hinweis statt Einzelkonflikten.
+        if (_db.HasArchiveMoveAfterImport(importId))
+        {
+            conflicts.Add(new UndoActionConflict(actions.FirstOrDefault()?.Id ?? importId, "",
+                ArchiveMoveBlocksUndo));
+            return new UndoPreflightReport(importId, actions.Count, conflicts);
+        }
 
         foreach (var action in actions)
         {

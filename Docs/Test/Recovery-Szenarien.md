@@ -247,6 +247,18 @@ geändert wurden und der Import nicht mehr aktuell ist).
 - DB (R01-006): Plan-Cache zurückgesetzt — vom Import angelegte Revisionen soft-deleted, superseded Revisionen wieder current, Dokumente ohne Revision soft-deleted; die zurückgeschobenen Dateien gelten beim nächsten Erfassen **nicht** als Dublette
 - Log: `Recovery Rollback fertig: N ok, 0 fehler`
 
+### Szenario 6 — Unterbrochener Archiv-Move (R01-008)
+
+**Hintergrund:** Ein Archiv-Move (Radial im Archiv-Tab oder Explorer-„Verschieben“) bricht nach dem Journal ab — z.B. PDF schon am Ziel, DWG als `.bpm_tmp`, DB noch nicht geschrieben.
+
+**Erwartung:** Der Vorgang erscheint als pending Import im Recovery-Dialog (Actions vom Typ `moved`).
+
+**Akzeptanz nach „Fortsetzen“:** alle Dateien am Ziel, `plan_files.relative_path` und Ablage/Klassifikation des Dokuments aktualisiert, `import_journal.status = 'moved'` (nie `completed` — der Move wird nicht zum „letzten Import“ für Undo).
+
+**Akzeptanz nach „Rückgängig“:** alle Dateien wieder an der Quelle, DB unverändert, `import_journal.status = 'failed'`.
+
+Automatisiert: `ArchiveMoveServiceTests` (Recovery_Forward…, Recovery_Rollback…).
+
 ---
 
 ## 5. Cleanup nach Tests

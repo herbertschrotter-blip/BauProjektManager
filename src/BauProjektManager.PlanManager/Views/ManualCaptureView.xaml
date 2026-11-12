@@ -190,7 +190,7 @@
                                         Content="↩"
                                         Style="{DynamicResource BpmButtonSecondary}"
                                         Padding="4,0" Height="24" MinWidth="30"
-                                        IsEnabled="{Binding IsLastImport}"
+                                        IsEnabled="{Binding CanUndo}"
                                         ToolTip="Macht den LETZTEN Import komplett rückgängig (Undo nur letzter Import)"
                                         Command="{Binding DataContext.UndoLastImportCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
                             </Grid>
@@ -263,6 +263,21 @@
                             Style="{DynamicResource BpmButtonSecondary}"
                             MaxWidth="296" MinWidth="296" HorizontalAlignment="Left"
                             Content="↩ Letzten Import rückgängig"/>
+                    <TextBlock Text="{Binding UndoHint}"
+                               Foreground="{DynamicResource BpmTextSecondary}"
+                               FontSize="{DynamicResource BpmFontSizeCaption}"
+                               TextWrapping="Wrap" MaxWidth="296" HorizontalAlignment="Left"
+                               Margin="0,4,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding UndoHint}" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
 
                     <TextBlock Text="{Binding StatusText}"
                                Foreground="{DynamicResource BpmTextSecondary}"

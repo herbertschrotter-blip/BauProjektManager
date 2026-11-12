@@ -969,7 +969,9 @@ CREATE TABLE import_actions (
     action_order INTEGER NOT NULL,
     action_type TEXT NOT NULL,          -- "new", "indexUpdate", "changed", "changedSameIdx",
                                        -- "olderRevision", "skip", "manual", "learnIndex",
-                                       -- "skipDuplicate" (BPM-120 T2, Bucket A)
+                                       -- "skipDuplicate" (BPM-120 T2, Bucket A),
+                                       -- "moved" (Archiv-Move, R01-008: führt die ZIEL-Klassifikation;
+                                       --  Journal endet mit status moved statt completed)
     action_status TEXT NOT NULL,        -- "pending", "completed", "failed"
     document_key TEXT,
     plan_number TEXT NOT NULL,

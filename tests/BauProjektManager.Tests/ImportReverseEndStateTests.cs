@@ -265,4 +265,46 @@ public class ImportReverseEndStateTests
         Assert.True(env.Fake.FileExists(env.InboxAbs(FileName)));
         Assert.Null(env.Repo.GetLastCompletedImportId());
     }
+
+    // ── R01-008 / K28-02: Undo nach Archiv-Move gesperrt (ADR-064-Addendum P.4) ──
+
+    private static PlanArchiveEntry EntryFor(TestEnv env)
+    {
+        var doc = env.Repo.GetDocumentByKey(Key)!;
+        var rev = env.Repo.GetCurrentRevisionForDocument(doc.Id)!;
+        return new PlanArchiveEntry(doc.Id, doc.PlanNumber, "", doc.DocumentType, rev.Id, null,
+            "", rev.LastImportId, FileName, Path.Combine(TargetRelDir, FileName));
+    }
+
+    [Fact]
+    public void Undo_AfterArchiveMove_BlockedWithHint_NothingTouched()
+    {
+        using var env = new TestEnv();
+        Assert.Equal(0, env.Import(FileName, "md5-a").Failed);
+        var moved = new ArchiveMoveService(env.Repo, env.Fake, env.Fake, env.Fake)
+            .MoveDocument(EntryFor(env), Path.Combine(TargetRelDir, "Vorabzug"), env.Root);
+        Assert.True(moved.Success, moved.Error);
+
+        var preflight = env.Undo().Preflight(env.Root);
+        Assert.False(preflight.CanUndo);
+        Assert.Equal(ImportUndoService.ArchiveMoveBlocksUndo, Assert.Single(preflight.Conflicts).Issue);
+
+        var result = env.Undo().UndoLastImport(env.Root);
+        Assert.False(result.Success);
+        Assert.True(env.Fake.FileExists(Path.Combine(env.Root, TargetRelDir, "Vorabzug", FileName)));
+        Assert.NotNull(env.Repo.GetDocumentByKey(Key));
+    }
+
+    [Fact]
+    public void Undo_AfterRolledBackArchiveMove_StillAllowed()
+    {
+        using var env = new TestEnv();
+        Assert.Equal(0, env.Import(FileName, "md5-a").Failed);
+        env.Fake.FailNext(FakeFileStore.FileOp.Move, "Vorabzug", new UnauthorizedAccessException("gesperrt"));
+        var moved = new ArchiveMoveService(env.Repo, env.Fake, env.Fake, env.Fake)
+            .MoveDocument(EntryFor(env), Path.Combine(TargetRelDir, "Vorabzug"), env.Root);
+        Assert.False(moved.Success);
+
+        Assert.True(env.Undo().Preflight(env.Root).CanUndo);
+    }
 }

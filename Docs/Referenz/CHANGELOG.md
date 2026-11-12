@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.198] — 2026-11-12
+
+### Fix: Fehlende Quelldatei ergibt keinen DB-Eintrag ohne Datei mehr (R01-006.02)
+
+`ImportExecutionService.ExecuteSingleAction` verschob nur, wenn die Eingangsdatei existierte, führte die DB-Phase aber immer aus — war die Datei zwischen Analyse und Bestätigen verschwunden (Zweitgerät, Sync, manuell entfernt), meldete der Import Erfolg und die DB zeigte auf eine nicht vorhandene Datei; bei einem Index-Update war der Vorgänger dann schon im `_Archiv`. Jetzt bricht die Action VOR jeder Disk-Mutation mit `RecoveryConflict: Quelldatei fehlt` ab (Action `failed`, Journal bleibt `pending`, Vorgänger bleibt am Ziel). Recovery Forward übernimmt bei einem Index-Update ohne Quelle, ohne tmp und ohne Archiv nicht mehr den Vorgänger als neue Revision, sondern meldet ebenfalls einen Konflikt. Zwei neue Tests, 510/510 grün. (Audit Review 01, R01-006 / K22-07)
+
+---
 ## [v0.28.197] — 2026-11-12
 
 ### Fix: Re-Import nach Undo scheitert nicht mehr am UNIQUE auf document_key (R01-006.01)

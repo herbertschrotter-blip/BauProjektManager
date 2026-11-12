@@ -191,6 +191,14 @@ public class ImportExecutionService
 
         try
         {
+            // R01-006.02 (ADR-064 P.1/P.4): fehlt die Eingangsdatei (zwischen Analyse
+            // und Bestaetigen verschwunden), VOR jeder Disk-Mutation abbrechen — kein
+            // Archivieren des Vorgaengers, kein DB-Eintrag ohne Datei. Die Action wird
+            // failed, das Journal bleibt pending (Recovery entscheidet).
+            if (!_reader.FileExists(sourcePath))
+                throw new FileNotFoundException(
+                    $"RecoveryConflict: Quelldatei fehlt ({decision.File.Parsed.RelativePath})");
+
             // Create target directory
             var targetDir = _path.GetDirectoryName(targetPath);
             if (!string.IsNullOrEmpty(targetDir))
@@ -206,12 +214,9 @@ public class ImportExecutionService
             if (decision.Status == ImportStatus.UpdateNewerIndex && archiveRelPath is not null)
                 ArchiveExistingFile(targetPath, _path.Combine(projectRootPath, archiveRelPath));
 
-            if (_reader.FileExists(sourcePath))
-            {
-                PublishIncomingFile(sourcePath, targetPath);
-                Log.Information("Datei verschoben: {Source} → {Target}",
-                    decision.File.Parsed.FileName, targetRelPath);
-            }
+            PublishIncomingFile(sourcePath, targetPath);
+            Log.Information("Datei verschoben: {Source} → {Target}",
+                decision.File.Parsed.FileName, targetRelPath);
 
             // --- DB-Phase (T4/AK 10): ALLE fachlichen Writes + action_status =
             //     completed in DERSELBEN SQLite-Transaction. Wirft ein Write,
@@ -257,6 +262,12 @@ public class ImportExecutionService
             if (action.ArchivePath is not null)
             {
                 var archiveAbs = _path.Combine(projectRootPath, action.ArchivePath);
+                // R01-006.02: Archiv fehlt, Ziel liegt, aber weder Quelle noch tmp —
+                // am Ziel liegt dann der VORGAENGER, nicht die neue Datei (Quelle vor
+                // der ersten Mutation verschwunden). Nie als neue Revision uebernehmen.
+                if (!_reader.FileExists(archiveAbs) && _reader.FileExists(targetAbs)
+                    && !_reader.FileExists(sourceAbs) && !_reader.FileExists(tmpAbs))
+                    return $"RecoveryConflict: Quelldatei fehlt, am Ziel liegt noch der Vorgaenger ({action.SourcePath})";
                 if (!_reader.FileExists(archiveAbs)
                     && _reader.FileExists(targetAbs)
                     && (_reader.FileExists(sourceAbs) || _reader.FileExists(tmpAbs)))

@@ -111,4 +111,50 @@ public class ImportReverseEndStateTests
         Assert.True(env.Fake.FileExists(env.TargetAbs(FileName)));
         Assert.False(env.Repo.HasPendingImports());
     }
+
+    // ── 006.02 / K22-07: fehlende Quelldatei ──
+
+    [Fact]
+    public void Import_SourceVanished_ActionFailsWithoutDbEntry()
+    {
+        using var env = new TestEnv();
+        // Datei zwischen Analyse und Bestaetigen verschwunden: nicht im Eingang anlegen
+        var result = env.Import(FileName, "md5-a", addFile: false);
+
+        Assert.Equal(1, result.Failed);
+        Assert.Contains("RecoveryConflict", result.Errors.Single());
+        Assert.Null(env.Repo.GetDocumentByKey(Key));          // kein DB-Eintrag ohne Datei
+        Assert.True(env.Repo.HasPendingImports());             // Journal bleibt pending
+        Assert.False(env.Fake.FileExists(env.TargetAbs(FileName)));
+    }
+
+    [Fact]
+    public void IndexUpdate_SourceVanished_PredecessorStaysAndRecoveryReportsConflict()
+    {
+        using var env = new TestEnv();
+        Assert.Equal(0, env.Import(FileName, "md5-a").Failed);
+        var docId = env.Repo.GetDocumentByKey(Key)!.Id;
+        var revA = env.Repo.GetCurrentRevisionForDocument(docId)!;
+
+        // Index-Update planen, Quelle verschwindet vor der Ausfuehrung
+        var update = new ImportDecision(
+            new ClassifiedImportFile(
+                new ParsedImportFile(Path.Combine("_Eingang", FileName), FileName, ".pdf", 12, "md5-b",
+                    null, new Dictionary<string, string>(), ParseConfidence.High, []),
+                "polierplan", "Polierplan", Key, "5998-300", "B", RevisionKind.Alphabetic,
+                IndexSourceType.FileName, ImportStage.Unknown, new Dictionary<string, string>(), []),
+            ImportStatus.UpdateNewerIndex, Key, revA.Id, Path.Combine(TargetRelDir, FileName), []);
+        var result = env.Executor().Execute([update], env.Root, "_Eingang");
+
+        Assert.Equal(1, result.Failed);
+        Assert.True(env.Fake.FileExists(env.TargetAbs(FileName)));     // Vorgaenger nicht archiviert
+        Assert.DoesNotContain(env.Fake.EnumerateFiles(env.Root, "*", recursive: true), f => f.Contains("_Archiv"));
+        Assert.Equal(revA.Id, env.Repo.GetCurrentRevisionForDocument(docId)!.Id);
+
+        // Recovery Forward darf den Vorgaenger nicht als neue Revision uebernehmen
+        var importId = env.Repo.GetPendingImports().Single().Id;
+        var forward = env.Recovery().ExecuteForward(importId, env.Root);
+        Assert.Equal(1, forward.FailedCount);
+        Assert.Equal(revA.Id, env.Repo.GetCurrentRevisionForDocument(docId)!.Id);
+    }
 }

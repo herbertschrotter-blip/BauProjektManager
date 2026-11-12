@@ -31,6 +31,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.192] — 2026-11-12
+
+### Docs: R01-001-Entscheidungen in den Kern-Regeln (CODING_STANDARDS, Architektur, DSGVO, INDEX, BACKLOG, CLAUDE.md)
+
+Zweiter Docs-Commit zu Audit Review 01 (R01-001). **CODING_STANDARDS:** zweistufige DI-Regel mit dokumentierten Ausnahmen (8.3; Interfaces nur für Ports und Test-Nähte), statisches Serilog mit zentraler Pfadmaskierung statt `ILogger<T>` (8.4), Static-/DynamicResource-Regel als einzige Regelstelle (10.5), Thread-Regel mit eingegrenztem CancellationToken und Single-Writer-Mutex als V1-Pflicht (11.3), die Ausnahmen aus E8 (catch an Grenzen 6.5, SQL-Bezeichner nur aus Konstanten 14.3, `DateTime.Now` für Dateinamen/Log-Anzeige, `static readonly` in PascalCase, UTF-8 ohne BOM, Format-Vorhaben 2.7) und die byte[]-Ausnahme für die PDF-Engine (16.1); Commit-Typen = CLAUDE.md, Sync-Kategorie statt „Klasse C (Restricted)“, Quickload-Invarianten auf 5. **Architektur:** zweistufige DI statt „DI-Container post-V1“, `planmanager.db` als autorierte Daten (ADR-066) ohne System-Attribut für `.AppData`, registry.json-Vertrag bis zur VBA-Bestandsaufnahme auf Code-Ist, Kap. 9 mit Mutex, Thread-Regel und ohne „Backup vor Import“, keine KI im Plankopf-Importpfad. **DSGVO v1.5:** zentrale Pfadmaskierung, Windows-Benutzername nie in Logs oder Bug-Report, Löschen als Tombstone mit Anonymisierung, `.bpm/project.json` als Klasse-B-Datei, Register-Regel für Gateway-Endpunkte (Wetter), Sync-Kategorie. **INDEX:** `ManifestService.EnsureMigrated` als einzige freigegebene Migrations-Ausnahme mit Entfernungspunkt, Router-Regel (Primary = erste Anlaufstelle, nie historical), DevToolsDialog und SettingsViewModel nicht mehr Referenz. **BACKLOG:** V1-Nachträge (Pending-Warnung, Badge für verwaiste Referenzen, Import-Time-Validation, Quellen-Spalte für Segmente, Pfadmaskierung), Mutex in Must, **SQLitePCLRaw-Sicherheitsupdate freigegeben (TE-30, NU1903)**. **DB-SCHEMA:** Frühphasen-Vermerk in 1.1/Kap. 7, Cache-Aussagen auf ADR-066. **ModuleDevTools:** Vermerk zur Reset-Risikostufe von `planmanager.db`. **CLAUDE.md:** Kurzversion der Coding Standards angeglichen, Testbefehl im Skill-Profil auf das Test-csproj (die Tests liegen nicht in der `.slnx`). **AGENTS.md** ist jetzt eine versionierte Weiterleitung auf CLAUDE.md; die Tracker-Config führt `cancelled` für gestrichene Aufgaben und die Zielversion als Meilenstein-Tag. Keine Code-Änderung.
+
+---
 ## [v0.28.191] — 2026-11-12
 
 ### Docs: R01-001-Entscheidungen in ADR.md — Addenda + neues ADR-066

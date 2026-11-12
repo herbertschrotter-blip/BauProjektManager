@@ -16,6 +16,7 @@ supersedes: []
 - Autorität: source_of_truth
 - Lesen wenn: Neues Feature planen, Feature-Status prüfen, Priorität klären, nächsten Schritt bestimmen
 - Nicht zuständig für: Versionshistorie (→ CHANGELOG.md), Architektur-Details (→ Architektur.md)
+- Kapitel: Priorisierung + MoSCoW-Abschnitte (Must / Should / Could / Won't) + Querschnittsfeature KI-API-Import + DB-Schema + Beim Coden beachten + Docs-Schulden
 - Pflichtlesen: keine (freie Struktur)
 - Fachliche Invarianten:
   - V1-Scope: NUR PlanManager + Einstellungen — alles andere ist Post-V1
@@ -117,6 +118,20 @@ Details: [BauProjektManager_Architektur.md](BauProjektManager_Architektur.md) Ka
 | 32 | Unbekannte Dateien | Profil erweitern / Skip |
 | 33 | Erkennungs-Konflikt | Mehrere Profile → User wählt — ❌ gestrichen Teil 52 (BPM-020): hing am Profil-Import (ADR-064 P.9 aus V1); im Radial wählt der Nutzer den Typ selbst (ADR-059); Restbedarf = Veto-Regel ADR-065 P.4 (mehrdeutig → keine Ring-1-Vorbelegung) in BPM-121 |
 
+### V1-Nachträge aus Audit Review 01 (⬜ offen)
+
+Triage-Regel (Audit Review 01, R01-001 E13, entschieden 2026-09-24): Datenintegrität/Datenverlust → für V1 nachbauen; Komfort- und Lernfunktionen → per ADR-Addendum post-V1 (siehe Won't have). Der Scope ändert sich nur per ADR-Addendum.
+
+| # | Feature | Beschreibung | Status |
+|---|---------|-------------|--------|
+| 14 | Single-Writer Mutex | Nur eine App-Instanz gleichzeitig (benannter Mutex beim App-Start). **V1-Pflicht** (Audit Review 01, R01-001 E7, entschieden 2026-09-24) — von Should hierher verschoben | ⬜ |
+| 74 | Warnung bei offenen Pending-Zuordnungen | Beim Verlassen der Projektansicht mit offenen, unbestätigten Pending-Zuordnungen nachfragen statt sie stumm zu verwerfen (E13) | ⬜ |
+| 75 | Badge für verwaiste Referenzen | Plandaten: verwaiste Bauteil-/Geschoss-Referenzen (soft-gelöscht bzw. gelöscht und mit neuer ID neu angelegt) mit Warn-Badge statt leerer Zelle anzeigen (ADR-058-Addendum; E13) | ⬜ |
+| 76 | Import-Time-Validation der Soft-References | Vor dem Schreiben nach `planmanager.db` Bauteil-, Geschoss-, Dokumenttyp- und Segmenttyp-IDs gegen `bpm.db` prüfen, Fail-Fast (BPM-109.03, ADR-058-Addendum; E13) | ⬜ |
+| 77 | Quellen-Spalte für Segmente | `plan_document_segments` bekommt eine Quellen-Spalte (Dateiname geparst, Radial, PDF-Markierung, manuell) — jetzt anlegen, Reset statt Migration (Projekt-Phase); BPM-121 lernt daraus (E13) | ⬜ |
+| 78 | SQLitePCLRaw-Sicherheitsupdate | Update von Microsoft.Data.Sqlite bzw. expliziter SQLitePCLRaw-Pin auf eine Version ohne GHSA-2m69-gcr7-jv3q (Build-Warnung NU1903). **Freigabe erteilt** (Audit Review 01, R01-001 E20, entschieden 2026-09-24) | ⬜ |
+| 79 | Zentrale Pfadmaskierung + Bug-Report ohne Benutzername | Pfade vor dem Loggen zentral auf Datei-/Ordnernamen maskieren (zentraler Maskierungs-Helper, Name bei Umsetzung); Windows-Benutzername aus Logs und DevTools-Bug-Report entfernen (DSGVO-Architektur Kap. 11.2/15; Audit Review 01, R01-001 E2, entschieden 2026-09-24) | ⬜ |
+
 ---
 
 ## Should — wichtig, aber V1 geht ohne
@@ -125,9 +140,9 @@ Diese Features verbessern V1, sind aber kein Blocker für den Release.
 
 | Feature | Beschreibung | Status |
 |---------|-------------|--------|
-| .bpm/ Ordner (#11) | Manifest-Split: `.bpm/manifest.json` (schlank) + `.bpm/project.json` (Vollexport) + `.bpm/profiles/` (Plantyp-Profile). Ersetzt einzelne `.bpm-manifest`-Datei (ADR-046). Migration automatisch. | ✅ v0.28.178 (BPM-046: ManifestService + ProjectExportService + ProjectFolderScanner; plan-index.json gestrichen wegen ADR-061) |
+| .bpm/ Ordner (#11) | Manifest-Split: `.bpm/manifest.json` (schlank) + `.bpm/project.json` (Vollexport) + `.bpm/profiles/` (Plantyp-Profile). Ersetzt einzelne `.bpm-manifest`-Datei (ADR-046). Migration automatisch (`ManifestService.EnsureMigrated` — ausdrücklich freigegebene Ausnahme mit Entfernungspunkt, INDEX.md „Projekt-Phase“; Audit Review 01, R01-001 E6, entschieden 2026-09-24). | ✅ v0.28.178 (BPM-046: ManifestService + ProjectExportService + ProjectFolderScanner; plan-index.json gestrichen wegen ADR-061) |
 | Projekt archivieren (#12) | Status → Completed, Ordner von BasePath nach ArchivePath verschieben. Kein eigener Status „Archived" (ADR-025). Pfad-Resolution: relativer folder_name + Manifest-Fallback (Option C). Button vorbereitet (disabled) | ⬜ |
-| Single-Writer Mutex (#14) | Nur eine App-Instanz gleichzeitig (ADR-016) | ⬜ |
+| ~~Single-Writer Mutex (#14)~~ | → nach Must verschoben (V1-Pflicht, Abschnitt „V1-Nachträge aus Audit Review 01“). Der frühere Verweis auf ADR-016 war falsch — ADR-016 enthält keinen Mutex (Audit Review 01, R01-001 E7, entschieden 2026-09-24) | ⬜ (→ Must) |
 | Versionsnummer im Log (#16) | Aus Assembly, nicht hardcoded | ✅ v0.16.1 |
 | Bestehende Ordner zuweisen | Existierenden Ordner einem Projekt zuweisen statt neu anlegen. "Projekt importieren" Button mit Auto-Manifest-Erkennung. | ✅ v0.20.0 |
 | Ordner umbenennen auf Disk | Bei Sortierung/Präfix-Änderung Ordner auf Festplatte umbenennen | ⬜ |
@@ -221,7 +236,7 @@ Gute Ideen, aber erst nach einem funktionierenden PlanManager. Konzepte sind dok
 | Outlook COM | [ModuleOutlook.md](Konzepte/ModuleOutlook.md) | VBA-Makros funktionieren als Übergangslösung |
 | Wetter API | [ModuleWetter.md](Konzepte/ModuleWetter.md) | Kein Kernfeature |
 | Vorlagen | [ModuleVorlagen.md](Konzepte/ModuleVorlagen.md) | Excel/Word-Vorlagen funktionieren manuell |
-| Plankopf-Extraktion | [ModulePlanHeader.md](Konzepte/Moduleplanheader.md) | Braucht KI-API, kommt nach PlanManager |
+| Plankopf-Extraktion | [ModulePlanHeader.md](Konzepte/Moduleplanheader.md) | Kommt nach PlanManager. Keine KI im Importpfad (ADR-065 P.2) — ein LLM nutzt nur der User extern beim Anlernen (Moduleplanheader Kap. 10) (Audit Review 01, R01-001 E17, entschieden 2026-09-24) |
 | Mobile PWA | BPM-Mobile-Konzept.md | Desktop muss erst stabil sein (ADR-019) |
 | KI-API-Import (Phase 2) | ADR-027 | Phase 1 (manuell) reicht erstmal |
 | Outlook-Adressbuch Sync | — | Braucht zuerst eigenes Adressbuch |
@@ -236,6 +251,9 @@ Gute Ideen, aber erst nach einem funktionierenden PlanManager. Konzepte sind dok
 | **Nachkalkulation** | — (Konzept noch zu erstellen) | Haupttreiber für Server-Modus. Bestellungen, Lieferscheine, Lohnstunden, Geräte, NU-Rechnungen. Braucht Zeiterfassung + Server |
 | **Auth / RBAC** | [ADR-053 Punkte 7-10](../Referenz/ADR.md) | ASP.NET Identity + JWT + Refresh Tokens. Rollen Phase 0/1: admin, bauleiter, polier, gast. AD/LDAP optional in Phase Verkauf |
 | **Audit-Trail** | [ADR-053](../Referenz/ADR.md) | audit_log Tabelle für kritische Operationen (Nachkalkulation, Freigaben). Erst mit Nachkalkulation |
+| ADR-056-Health-Gating | [ADR-056 P.5](../Referenz/ADR.md) | Komfortfunktion — in V1 gibt es keinen Profil-Import; post-V1 per ADR-Addendum, ADR-056-Status anpassen (Audit Review 01, R01-001 E13, entschieden 2026-09-24) |
+| Relink-Bestätigung im PlanManager | [ADR-061 P.6](../Referenz/ADR.md) | MD5-Relink-Vorschlag mit Bestätigung durch den Nutzer — Komfortfunktion, post-V1 per ADR-Addendum (E13) |
+| Listen-Fallback im Detail-Panel | [ADR-059 P.5/P.6](../Referenz/ADR.md) | Auswahl für Dokumenttyp, Bauteil/Kategorie und Geschoss ohne Radial — post-V1 per ADR-Addendum, außer Projekte mit mehr als 25 Bauteilen sind schon V1-Realität, dann V1 (E13). Abgleich offen: Nach E15 ist die Tastatur-Alternative zum Radial über die Listen im Detail-Panel Teil des A11y-Mindeststandards V1 (UI_UX_Guidelines Kap. 15) — Klärung durch Herbert, bis dahin kein ADR-059-Addendum |
 
 ---
 
@@ -246,7 +264,7 @@ Betrifft mehrere Module — hier zentral dokumentiert.
 **Phase 1 (manuell):** App zeigt Prompt → User kopiert zu Claude/ChatGPT → fügt Antwort ein → App parst JSON  
 **Phase 2 (automatisch):** App ruft KI-API direkt auf (ChatGPT oder Claude, konfigurierbar)
 
-**Anwendungsfälle:** Firmenliste (Tab 3), Plankopf-Extraktion, Index-Import, LV-Analyse  
+**Anwendungsfälle:** Firmenliste (Tab 3), Plankopf-Extraktion, Index-Import, LV-Analyse — Plankopf-Extraktion nur über Phase 1 (extern beim Anlernen), kein automatischer KI-Aufruf im Plan-Importpfad (ADR-065 P.2; Audit Review 01, R01-001 E17, entschieden 2026-09-24)  
 **Architektur:** IKiImportService Interface, JSON-Austausch, Prompt-Templates, API-Keys in Credential Manager  
 **Details:** ADR-027, [ModuleKiAssistent.md](Konzepte/ModuleKiAssistent.md)
 
@@ -290,7 +308,7 @@ schema_version (version)
 - **Datenschutz:** IPrivacyPolicy per DI, gesteuert über Lizenz — nicht settings.json (ADR-036)
 - **Datenschutz:** API-Keys in DPAPI, NIEMALS in settings.json/registry.json/Git/Logs
 - **Datenschutz:** registry.json Whitelist beachten bei neuen Feldern (DSVGO-Architektur Kap. 9.3)
-- **Multi-User-Vorbereitung:** `IProjectDataService` Interface statt direkt ProjectDatabase.cs (MultiUserKonzept Kap. 8)
+- **Multi-User-Vorbereitung:** `IProjectDataService` Interface statt direkt ProjectDatabase.cs (MultiUserKonzept Kap. 8) — *überholt: DB-Klassen gelten als dünne Service-Schicht, wenn sie die Metadaten (IUserContext) selbst setzen; Interfaces nur für Ports und Test-Nähte (Audit Review 01, R01-001 E1, entschieden 2026-09-24; CODING_STANDARDS Kap. 8/19.5)*
 - **Sync-Vorbereitung (ADR-050/051):** Neue Tabellen: ULID + `created_at`, `created_by`, `last_modified_at`, `last_modified_by`, `sync_version`, `is_deleted` — UTC, Soft Delete, Writes über Services (CODING_STANDARDS Kap. 19)
 
 ---

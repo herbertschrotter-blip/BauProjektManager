@@ -39,16 +39,15 @@ supersedes: []
 - Pflichtlesen:
   - Kapitel 7 (MVVM) bei neuem ViewModel oder View
   - Kapitel 10 (XAML) bei neuer XAML-Datei
+  - Kapitel 11 (Async/Thread-Regel) bei async-Code oder Task.Run in der Nähe von DB-Zugriffen
   - Kapitel 17 (Datenschutz) bei externem API-Call oder Personendaten
   - Kapitel 19 (Sync-Vorbereitung) bei neuer Tabelle oder neuem Service
 - Fachliche Invarianten:
-  - App/Shell-XAML: Farben über Theme-Tokens (StaticResource) — nie hardcoded Hex
-  - Modul-XAML + Custom-Dialog-Windows: DynamicResource (Pflicht, da App-Resources erst zur Laufzeit aufgelöst werden)
+  - Farben/Styles/Icons nur über Theme-Tokens, nie hardcoded Hex — App/Shell-XAML `StaticResource`, Modul-XAML + Custom-Dialog-Windows `DynamicResource` (Kapitel 10.5, einzige Regelstelle)
   - Keine Business-Logik im Code-Behind — nur View-Logik
   - Datenschutz-Entscheidungen nie im ViewModel — immer über IPrivacyPolicy
-  - Logging: Keine Personendaten, nur IDs (Serilog Structured Logging)
-  - Neue fachliche Tabellen: ULID + 6 Sync-Spalten + UTC + Soft Delete (Kapitel 19)
-  - Writes über Services mit IUserContext.DisplayName für created_by/last_modified_by (Kapitel 19.5/19.6, ADR-052)
+  - Logging: statisches Serilog (`Log.*`), keine Personendaten, nur IDs; Pfade nur zentral maskiert, Windows-Benutzername nie (Kapitel 8.4, 17.1)
+  - Neue fachliche Tabellen: ULID + 6 Sync-Spalten + UTC + Soft Delete; Writes über Services bzw. DB-Klassen, die created_by/last_modified_by aus IUserContext.DisplayName selbst setzen (Kapitel 19, ADR-052)
 
 ---
 
@@ -76,10 +75,13 @@ supersedes: []
 | Enum-Werte | PascalCase | `PlanStatus.Active` | `PlanStatus.ACTIVE` |
 | Lokale Variablen | camelCase | `planCount` | `PlanCount` |
 | Parameter | camelCase | `fileName` | `FileName` |
-| Private Felder | _camelCase | `_database` | `database` |
+| Private Instanzfelder | _camelCase | `_database` | `database` |
 | Konstanten | PascalCase | `MaxRetryCount` | `MAX_RETRY_COUNT` |
+| Statische readonly-Felder (auch private) | PascalCase | `JsonOptions` | `_jsonOptions` |
 | Namespaces | PascalCase | `BauProjektManager.Services` | `bauprojektmanager.services` |
 | Dateien | Wie die Klasse | `PlanImportService.cs` | `planImportService.cs` |
+
+**`static readonly`:** PascalCase wie Konstanten, auch wenn das Feld privat ist — `_camelCase` gilt nur für Instanzfelder. Ausnahme: Win32-Interop-Deklarationen (P/Invoke-Konstanten und -Felder) behalten die Win32-Schreibweise. (Audit Review 01, R01-001 E8, entschieden 2026-09-24)
 
 ### 1.2 Detaillierte Regeln
 
@@ -219,6 +221,8 @@ if (plan.IsNew)
     SavePlan(plan);
 ```
 
+Diese Regel wird werkzeuggestützt durchgesetzt (siehe 2.7).
+
 ### 2.3 Einrückung
 
 - **4 Spaces** (keine Tabs)
@@ -297,6 +301,15 @@ Process (name, count);  // FALSCH
 Process(name, count);   // RICHTIG
 ```
 
+### 2.7 Kodierung, Zeilenenden und Werkzeug-Durchsetzung
+
+(Audit Review 01, R01-001 E8, entschieden 2026-09-24)
+
+- **Kodierung:** Quelldateien in **UTF-8 ohne BOM** (`charset = utf-8`).
+- **Zeilenenden:** einheitlich nach `.editorconfig` (`end_of_line`), für Git festgelegt über eine `.gitattributes` (siehe Vorhaben).
+- **Durchsetzung per Werkzeug:** Was ein Werkzeug prüfen kann, wird nicht von Hand kontrolliert. Klammern (2.2) und Zeilenenden setzen `.editorconfig` (Klammerregel `csharp_prefer_braces`) und `dotnet format` durch.
+- **Vorhaben:** `.editorconfig` (Klammerregel, `charset` ohne BOM) und `.gitattributes` werden zusammen mit einem einmaligen `dotnet format`-Lauf über den Bestand in **einem eigenen Refactor-Commit** umgestellt. Bis dahin weicht `.editorconfig` (`charset = utf-8-bom`) von dieser Regel ab — maßgeblich ist diese Regel.
+
 ---
 
 ## 3. Klassen-Struktur
@@ -313,19 +326,17 @@ public class PlanImportService : IImportService
     // 2. Statische Felder (sparsam — nur für echte konstante Daten, nie für Services)
     private static readonly Encoding Utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 
-    // 3. Private Felder (alle Abhängigkeiten per Constructor Injection)
-    private readonly ILogger<PlanImportService> _logger;
+    // 3. Private Felder (alle Abhängigkeiten per Constructor Injection;
+    //    Logging über statisches Serilog Log.*, kein ILogger<T> — siehe 8.4)
     private readonly ProjectDatabase _database;
     private readonly IDocumentTypeRecognizer _recognizer;
     private int _importCount;
 
     // 4. Konstruktoren — alle Dependencies per Constructor (kein Service-Locator)
     public PlanImportService(
-        ILogger<PlanImportService> logger,
         ProjectDatabase database,
         IDocumentTypeRecognizer recognizer)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _database = database ?? throw new ArgumentNullException(nameof(database));
         _recognizer = recognizer ?? throw new ArgumentNullException(nameof(recognizer));
     }
@@ -404,7 +415,7 @@ public record PlanStatusInfo(PlanStatus Status, string Description);
 ```csharp
 // RICHTIG — Typ ist aus der rechten Seite offensichtlich
 var plans = new List<Plan>();
-var db = new ProjectDatabase();
+var builder = new StringBuilder();
 var result = await ImportAsync();
 var stream = File.Create(path);
 
@@ -622,12 +633,12 @@ try
 }
 catch (FileNotFoundException ex)
 {
-    _logger.LogWarning("Registry not found at {Path}", path);
+    Log.Warning("Registry not found at {Path}", path);  // Pfad nur zentral maskiert loggen (8.4)
     return CreateDefaultRegistry();
 }
 catch (JsonException ex)
 {
-    _logger.LogError(ex, "Registry corrupt at {Path}", path);
+    Log.Error(ex, "Registry corrupt at {Path}", path);
     throw new RegistryCorruptException(path, ex);
 }
 
@@ -636,7 +647,7 @@ try
 {
     // ...
 }
-catch (Exception ex)  // NIEMALS so (außer als letzter Fallback auf Top-Level)
+catch (Exception ex)  // NIEMALS so (Ausnahme: Top-Level-, Batch- und Ladegrenzen mit Log, siehe 6.5)
 {
     // Schluckt ALLE Fehler
 }
@@ -689,14 +700,14 @@ public class PlanParseException : Exception
 // RICHTIG — Stack Trace bleibt erhalten
 catch (IOException ex)
 {
-    _logger.LogError(ex, "File operation failed");
+    Log.Error(ex, "File operation failed");
     throw;  // Stack Trace bleibt!
 }
 
 // FALSCH — Stack Trace geht verloren
 catch (IOException ex)
 {
-    _logger.LogError(ex, "File operation failed");
+    Log.Error(ex, "File operation failed");
     throw ex;  // Stack Trace wird zurückgesetzt!
 }
 ```
@@ -719,6 +730,35 @@ using (var stream = File.OpenRead(path))
 var stream = File.OpenRead(path);
 var content = ReadContent(stream);
 // stream wird nie geschlossen → Speicher-Leak!
+```
+
+### 6.5 Ausnahme: `catch (Exception)` an Grenzen
+
+(Audit Review 01, R01-001 E8, entschieden 2026-09-24)
+
+`catch (Exception)` ist nur an drei Grenzen erlaubt — und dort **immer mit Log** (Exception mitgeben), nie still:
+
+| Grenze | Beispiel | Verhalten |
+|--------|----------|-----------|
+| Top-Level | globaler Fehlerhandler, Event-Handler/Command an der UI-Grenze | loggen, Fehlerdialog zeigen |
+| Batch | Schleife über unabhängige Elemente (Dateien hashen, Import-Aktionen) | loggen, Element überspringen, Rest weiterverarbeiten |
+| Laden | optionale oder beschädigbare Datei laden (Profile, Vorlagen) | loggen, definierten Fallback liefern |
+
+Überall sonst gilt 6.1 (spezifische Exceptions). Leere `catch { }`-Blöcke bleiben verboten.
+
+```csharp
+// RICHTIG — Batch-Grenze: eine fehlerhafte Datei bricht den Lauf nicht ab
+foreach (var file in files)
+{
+    try
+    {
+        hashes.Add(await ComputeHashAsync(file, ct));
+    }
+    catch (Exception ex) when (ex is not OperationCanceledException)  // Abbruch nicht schlucken
+    {
+        Log.Warning(ex, "Hash fehlgeschlagen: {File}", file);  // Pfad zentral maskiert (8.4)
+    }
+}
 ```
 
 ---
@@ -795,7 +835,7 @@ ViewModel erbt von `ObservableObject` (CommunityToolkit.Mvvm) und nutzt `[Observ
 ```csharp
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace BauProjektManager.PlanManager.ViewModels;
 
@@ -807,14 +847,10 @@ public partial class PlanManagerViewModel : ObservableObject
 {
     // Abhängigkeiten per Constructor Injection — kein direktes new im ViewModel
     private readonly ProjectDatabase _database;
-    private readonly ILogger<PlanManagerViewModel> _logger;
 
-    public PlanManagerViewModel(
-        ProjectDatabase database,
-        ILogger<PlanManagerViewModel> logger)
+    public PlanManagerViewModel(ProjectDatabase database)
     {
         _database = database ?? throw new ArgumentNullException(nameof(database));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     // [ObservableProperty] generiert automatisch:
@@ -843,7 +879,7 @@ public partial class PlanManagerViewModel : ObservableObject
             Projects.Add(new PlanProjectItem(p));
         }
         StatusText = $"{Projects.Count} Projekte geladen";
-        _logger.LogDebug("Loaded {Count} projects", Projects.Count);
+        Log.Debug("Loaded {Count} projects", Projects.Count);
     }
 }
 ```
@@ -920,7 +956,7 @@ public partial class ProjectDetailViewModel : ObservableObject
     [RelayCommand]
     private void OpenFolder(string path)
     {
-        Process.Start("explorer.exe", path);
+        _fileLauncher.OpenFolder(path);  // Port IFileLauncher (ADR-060) statt Process.Start im ViewModel
     }
 
     // Async Command — generiert ImportPlansCommand
@@ -986,7 +1022,9 @@ public class StatusToColorConverter : IValueConverter
 
 ### 8.1 Interface + Implementation
 
-Jeder Service hat ein Interface — das ermöglicht Testing und Austauschbarkeit:
+Interfaces gibt es nur für **Ports** (z. B. die Dateisystem- und Launcher-Ports aus ADR-060, die PDF-Ports aus ADR-062) und für **Test-Nähte** (Abhängigkeiten, die ein Test ersetzen muss). Keine Interface-Pflicht für jeden Service — konkrete Klassen wie `ProjectDatabase` werden direkt injiziert. (Audit Review 01, R01-001 E1, entschieden 2026-09-24)
+
+Beispiel einer Test-Naht:
 
 ```csharp
 // Interface
@@ -1006,16 +1044,9 @@ namespace BauProjektManager.PlanManager.Services;
 
 public class DocumentTypeRecognizer : IDocumentTypeRecognizer
 {
-    private readonly ILogger<DocumentTypeRecognizer> _logger;
-
-    public DocumentTypeRecognizer(ILogger<DocumentTypeRecognizer> logger)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
     public DocumentTypeMatch Recognize(string fileName, RecognitionProfile profile)
     {
-        _logger.LogDebug("Recognizing document type for {FileName}", fileName);
+        Log.Debug("Recognizing document type for {FileName}", fileName);
         // Implementation...
     }
 
@@ -1027,9 +1058,8 @@ public class DocumentTypeRecognizer : IDocumentTypeRecognizer
 **Regeln zum Service-Pattern:**
 
 - Interface in Domain oder im Feature-Modul, Implementation in Infrastructure oder im Modul
-- Abhängigkeiten ausschließlich per Constructor Injection (keine Property-Injection, kein Service-Locator)
-- `ILogger<T>` per Constructor — nie statisch, nie über `LogManager.GetLogger()`
-- `Microsoft.Extensions.Logging.ILogger<T>` ist die API; Serilog ist nur der Provider dahinter
+- Abhängigkeiten ausschließlich per Constructor Injection (keine Property-Injection, kein Service-Locator) — dokumentierte Ausnahmen siehe 8.3
+- Logging über statisches Serilog (`Log.*`), kein `ILogger<T>` — siehe 8.4
 - Synchrone Signaturen sind erlaubt — BPM ist Desktop, `ProjectDatabase` ist synchron, async nur wo es echte I/O-Latenz gibt
 
 ### 8.2 Dependency Injection Setup
@@ -1044,8 +1074,8 @@ public partial class App : Application
     {
         var services = new ServiceCollection();
 
-        // Logging (Serilog als Provider hinter Microsoft.Extensions.Logging)
-        services.AddLogging(builder => builder.AddSerilog());
+        // Logging: statisches Serilog — Log.Logger wird beim App-Start konfiguriert,
+        // keine Registrierung im Container (kein AddLogging, kein ILogger<T>; siehe 8.4)
 
         // Datenzugriff (zentrale Klasse, kein Interface in V1)
         services.AddSingleton<ProjectDatabase>();
@@ -1054,11 +1084,11 @@ public partial class App : Application
         services.AddSingleton<IDocumentTypeRecognizer, DocumentTypeRecognizer>();
         services.AddSingleton<IUserContext, LocalUserContext>();   // ADR-052
 
-        // ViewModels (Transient — neuer Zustand pro Aufruf)
+        // ViewModels (Transient — neuer Zustand pro Aufruf; Registrierung optional, siehe 8.3)
         services.AddTransient<PlanManagerViewModel>();
         services.AddTransient<ProjectDetailViewModel>();
 
-        // Views (Transient)
+        // Views (Transient; Registrierung optional, siehe 8.3)
         services.AddTransient<MainWindow>();
 
         _serviceProvider = services.BuildServiceProvider();
@@ -1075,9 +1105,41 @@ public partial class App : Application
 **Regeln zum DI-Setup:**
 
 - `Singleton` für Services und Datenklassen — eine Instanz pro App-Lebenszeit
-- `Transient` für ViewModels und Windows — neuer Zustand bei jedem Auflösen
+- Projektbezogene Instanzen (z. B. eine DB-Klasse je Projekt) über eine im Container registrierte Factory — eine Instanz je Projekt für alle Konsumenten (8.3)
+- `Transient` für ViewModels und Windows, sofern sie registriert sind — neuer Zustand bei jedem Auflösen
 - `serviceProvider.GetRequiredService<T>()` ausschließlich im App-Bootstrap (App.xaml.cs) — sonst wird das wieder Service-Locator
 - `IUserContext` per Compliance-Modus austauschbar (ADR-052) — `LocalUserContext` für Modus A, `JwtUserContext` für Modus C
+
+### 8.3 Zweistufige DI-Regel und dokumentierte Ausnahmen
+
+(Audit Review 01, R01-001 E1, entschieden 2026-09-24)
+
+**Stufe 1 — Services, Ports und DB-Klassen kommen nur per DI.** Aus dem Container (App-weite Singletons) bzw. über eine im Container registrierte Factory je Projekt. Es gibt nur eine Instanz-Welt: kein `new` für Services, Port-Adapter (z. B. `LocalFileSystem`) oder DB-Klassen in Views, ViewModels oder anderen Services, keine statischen Service-Instanzen.
+
+**Stufe 2 — ViewModels und Views.** ViewModels erhalten ihre Abhängigkeiten per Konstruktor und erzeugen keine Services selbst. Views dürfen View-first zusammensetzen: Eine View darf ihr ViewModel erzeugen und ihm die per DI bereitgestellten Abhängigkeiten übergeben. Views und ViewModels müssen nicht im Container registriert sein.
+
+**Interfaces:** nur für Ports und Test-Nähte (8.1).
+
+**DB-Klassen als dünne Service-Schicht:** Eine DB-Klasse (z. B. `ProjectDatabase`, `PlanManagerDatabase`) gilt als Service im Sinne von 19.5, wenn sie die Metadaten selbst setzt — insbesondere `created_by`/`last_modified_by` aus `IUserContext` (19.6). Dafür bekommt sie `IUserContext` (und die benötigten Ports) per DI.
+
+**Dokumentierte Ausnahmen:**
+
+| Ausnahme | Was erlaubt ist |
+|----------|-----------------|
+| Bootstrap vor DI | `SetupDialog` läuft in `App.OnStartup` vor dem Container-Aufbau. Er darf seine Abhängigkeiten selbst erzeugen; Ports stehen dort noch nicht zur Verfügung. |
+| Reine UI-Aktionen | UI-nahe Aktionen ohne Datei- oder Prozesszugriff (z. B. Clipboard) laufen direkt in der View, ohne Port. |
+| Ports an XAML-UserControls | Von XAML erzeugte UserControls haben keinen DI-Konstruktor. Sie erhalten Ports über ihr ViewModel bzw. den DataContext — nicht per Service-Locator und nicht über eine eigene statische Instanz. |
+
+### 8.4 Logging (statisches Serilog)
+
+(Audit Review 01, R01-001 E2, entschieden 2026-09-24)
+
+- **API:** statisches Serilog (`Log.Information(...)`, `Log.Warning(...)`, `Log.Error(ex, ...)`). Kein `ILogger<T>`, kein `Microsoft.Extensions.Logging`, keine Logger-Injection — `Log.Logger` wird einmal beim App-Start konfiguriert.
+- **Structured Logging:** Werte als Platzhalter (`{ProjectId}`), nicht per String-Interpolation in die Nachricht.
+- **Pfade:** werden zentral vor dem Loggen maskiert — geloggt wird nur der Datei- bzw. Ordnername, nie der volle Pfad. Die Maskierung sitzt an einer zentralen Stelle (zentraler Maskierungs-Helper, Name bei Umsetzung), nicht verstreut in einzelnen Services.
+- **Windows-Benutzername:** kommt nie in Logs oder in den Bug-Report.
+- **Rechnername:** erlaubt — technisches Gerätemerkmal.
+- Personendaten in Logs sind verboten (Kapitel 17.1).
 
 ---
 
@@ -1228,6 +1290,25 @@ Alle Farben, Styles und Templates in zentralen Resource Dictionaries:
 <!-- projectNameLabel.Text = viewModel.ProjectName;  // Nicht so! -->
 ```
 
+### 10.5 StaticResource vs. DynamicResource (einzige Regelstelle)
+
+(Audit Review 01, R01-001 E14, entschieden 2026-09-24)
+
+Diese Regel steht nur hier. Andere Docs (WPF_UI_Architecture, UI_UX_Guidelines, ADRs) verweisen auf dieses Kapitel und wiederholen sie nicht.
+
+Gilt für alle Ressourcen aus den App-Dictionaries (Farben/Brushes, Typografie, Spacing, Styles, Templates, Icons aus `Icons.xaml`):
+
+| Ort | App-Ressourcen | Lokale Ressourcen (im selben Window, UserControl oder Dictionary definiert, z. B. Converter) |
+|-----|----------------|------------------|
+| App/Shell-XAML (`MainWindow` und übrige XAML im Projekt `BauProjektManager.App`, außer Custom-Dialog-Windows) | `StaticResource` | `StaticResource` |
+| Modul-XAML (`BauProjektManager.PlanManager`, `.Settings`, künftige Module) | `DynamicResource` (Pflicht) | `StaticResource` erlaubt |
+| Custom-Dialog-Windows (alle eigenen `Window`-Klassen außer `MainWindow`, z. B. `DevToolsDialog`, `SetupDialog`, `BpmConfirmDialog`, auch im App-Projekt) | `DynamicResource` (Pflicht) | `StaticResource` erlaubt |
+| C#-Code | `FindResource` / `TryFindResource` | — |
+
+- **Grund:** Modul-Projekte und Custom-Dialog-Windows haben zur Kompilierzeit keinen Zugriff auf die App-Dictionaries; die Ressourcen stehen erst zur Laufzeit bereit. `StaticResource` kann dort je nach Ladezeitpunkt zur `XamlParseException` führen, daher gilt `DynamicResource` verbindlich.
+- **Nie** hardcodierte Farbwerte (Hex) oder Schriftgrößen statt Tokens.
+- **Laufzeit-Theme-Wechsel** (Light Theme, nach V1): Dann wird auch App/Shell-XAML auf `DynamicResource` umgestellt; die Regel wird hier angepasst.
+
 ---
 
 ## 11. Async/Await
@@ -1242,7 +1323,8 @@ public async Task<BpmManifest> LoadManifestAsync()
     return JsonSerializer.Deserialize<BpmManifest>(json)!;
 }
 
-// RICHTIG — ConfigureAwait(false) in Library-Code (nicht in ViewModel!)
+// RICHTIG — ConfigureAwait(false) nur in reinem Datei-/CPU-Code, nach dem in derselben
+// Methode kein DB- und kein UI-Zugriff mehr folgt (nicht in ViewModel, Thread-Regel 11.3!)
 // In Services:
 public async Task<string> ComputeHashAsync(string filePath)
 {
@@ -1268,7 +1350,7 @@ public async Task ImportAsync()
 {
     IsRunning = true;  // UI Property — OK auf UI Thread
 
-    // Schwere Arbeit auf Background-Thread
+    // Schwere Arbeit auf Background-Thread — nur Datei-/CPU-Arbeit, kein DB-Zugriff (11.3)
     var result = await Task.Run(() =>
     {
         return ScanAndClassifyFiles();  // Dauert lang — nicht UI blockieren
@@ -1283,6 +1365,25 @@ public async Task ImportAsync()
 
     IsRunning = false;
 }
+```
+
+### 11.3 Thread-Regel und CancellationToken (V1)
+
+(Audit Review 01, R01-001 E7, entschieden 2026-09-24)
+
+- **DB-Zugriff nur auf dem UI-Thread.** `ProjectDatabase` und `PlanManagerDatabase` halten je eine geteilte `SqliteConnection` ohne Thread-Schutz; Transaktionen laufen auf genau dieser Connection. Ein DB-Aufruf aus einem Hintergrund-Thread bricht das.
+- **`Task.Run` nur für Datei-/CPU-Arbeit ohne DB** (z. B. Hashing, PDF-Rendern, Ordner scannen). Ergebnisse werden nach dem `await` auf dem UI-Thread in die DB geschrieben.
+- **Kein `ConfigureAwait(false)`** in Code, nach dem in derselben Methode noch DB- oder UI-Zugriff folgt (11.1).
+- **CancellationToken nur für lang laufende Vorgänge:** Import, Hashing, PDF-Rendern. Kurze Operationen brauchen keinen Token — keine Pflicht für jede async-Methode.
+- **Single-Writer-Mutex ist V1-Pflicht:** Nur eine App-Instanz läuft und schreibt gleichzeitig (Architektur Kap. 9).
+
+```csharp
+// RICHTIG — Hashing im Hintergrund, DB-Write danach auf dem UI-Thread
+var hashes = await Task.Run(() => ComputeHashes(files, ct), ct);  // nur Datei-/CPU-Arbeit
+_database.SaveHashes(hashes);                                      // DB auf dem UI-Thread
+
+// FALSCH — DB-Zugriff im Hintergrund-Thread
+await Task.Run(() => _database.SaveHashes(ComputeHashes(files, ct)));
 ```
 
 ---
@@ -1447,6 +1548,28 @@ File.Copy(sourcePath, targetPath, overwrite: true);
 File.Delete(sourcePath);
 ```
 
+### 14.3 SQL-Befehle (SQLite)
+
+(Audit Review 01, R01-001 E8, entschieden 2026-09-24)
+
+- **Werte immer parametrisiert** — nie per String-Building oder Interpolation in den SQL-Text.
+- **Bezeichner** (Tabellen- und Spaltennamen) lassen sich nicht parametrisieren. Sie dürfen nur aus Konstanten bzw. einer Whitelist stammen, nie aus Benutzereingaben oder gelesenen Daten.
+
+```csharp
+// RICHTIG — Bezeichner aus Konstante/Whitelist, Wert parametrisiert
+private static readonly HashSet<string> SoftDeleteTables = ["building_parts", "building_levels"];
+
+if (!SoftDeleteTables.Contains(table))
+{
+    throw new ArgumentException($"Tabelle nicht freigegeben: {table}", nameof(table));
+}
+cmd.CommandText = $"SELECT id FROM {table} WHERE project_id = @projectId";
+cmd.Parameters.AddWithValue("@projectId", projectId);
+
+// FALSCH — Wert per String-Building
+cmd.CommandText = $"SELECT id FROM projects WHERE name = '{name}'";
+```
+
 ---
 
 ## 15. Git Commit Standards
@@ -1474,16 +1597,19 @@ Im BPM-Projekt wird ein einheitliches single-line-Format verwendet:
 |---------|--------|-----------|
 | `vX.Y.Z` | Semantic Version aus `Directory.Build.props` | `v0.27.25` |
 | Modul | Betroffenes Projekt oder Komponente | `App`, `Domain`, `INF` (Infrastructure), `PlanManager`, `Settings`, `Docs`, `Tests`, `INF+Docs` (kombiniert) |
-| Typ | Art der Änderung | `Feature`, `Fix`, `Refactor`, `Perf`, `Docs`, `Test`, `Chore`, `Konzept` |
+| Typ | Art der Änderung | `Feature`, `Fix`, `Change`, `Refactor`, `Perf`, `Docs` |
 | Kurztitel | Was wurde getan, optional ClickUp-ID in Klammern | `Recovery-Tests (BPM-098)` |
+
+**Typliste:** genau `Feature`, `Fix`, `Change`, `Refactor`, `Perf`, `Docs` — dieselbe Liste wie in `CLAUDE.md` (`## Git`); `Test`, `Chore` und `Konzept` sind keine Commit-Typen. (Audit Review 01, R01-001 E18, entschieden 2026-09-24)
 
 ### 15.3 Versionsbump-Regeln (SemVer)
 
 Verbindlich ist die Versionsregel im Skill-Profil der `CLAUDE.md` (`### Commit`). Kurzfassung der gelebten Praxis seit v0.28.0:
 
-- **PATCH** (`0.28.188 → 0.28.189`): jeder Commit — Feature, Fix, Refactor, Docs — mit Eintrag in CHANGELOG.md
-- **MINOR** (`0.28.x → 0.29.0`): nur auf Ansage von Herbert (z.B. Meilenstein)
+- **PATCH** (`0.28.188 → 0.28.189`): jeder Commit — Feature, Fix, Change, Refactor, Perf, Docs — mit Eintrag in CHANGELOG.md
+- **MINOR** (`0.28.x → 0.29.0`): nur auf Ansage von Herbert, für Meilensteine
 - **MAJOR** (`0.x.x → 1.0.0`): nur auf Ansage von Herbert (V1-Release, Breaking Change)
+- **CHANGELOG-Datum** = Commit-Datum; ältere Einträge und bereits gepushte Commit-Präfixe werden nicht umgeschrieben. (Audit Review 01, R01-001 E18, entschieden 2026-09-24)
 
 ### 15.4 Längere Commit-Bodies
 
@@ -1520,6 +1646,8 @@ var hash = await ComputeHashAsync(stream);
 var allBytes = File.ReadAllBytes(largePdfPath);  // 500MB PDF → OutOfMemory!
 ```
 
+**Ausnahme — Engine verlangt `byte[]`:** Bietet eine Bibliothek nur `byte[]`- oder Pfad-Eingänge, während der Port einen `Stream` liefert (z. B. Docnet/PDFium im `PdfiumPdfService`, Stream-Port nach ADR-062), ist eine Kopie in den Speicher erlaubt — aber nur einmal: einen vorhandenen `MemoryStream`-Puffer direkt nutzen statt erneut zu kopieren, und das Dokument pro Render-Vorgang nur einmal öffnen. (Audit Review 01, R01-001 E20, entschieden 2026-09-24)
+
 ### 16.2 WPF-spezifisch
 
 ```csharp
@@ -1529,7 +1657,7 @@ var allBytes = File.ReadAllBytes(largePdfPath);  // 500MB PDF → OutOfMemory!
 //          VirtualizingPanel.VirtualizationMode="Recycling"/>
 
 // RICHTIG — UI nicht blockieren
-// Schwere Operationen immer mit await Task.Run()
+// Schwere Datei-/CPU-Operationen mit await Task.Run() — ohne DB-Zugriff (Thread-Regel 11.3)
 
 // FALSCH — UI-Thread blockieren
 Thread.Sleep(1000);                          // NIEMALS!
@@ -1545,17 +1673,19 @@ Verbindliche Regeln aus [DSVGO-Architektur.md](DSVGO-Architektur.md) (ADR-035, A
 ### 17.1 Logging — Keine Personendaten
 ```csharp
 // RICHTIG — nur IDs loggen
-_logger.LogInformation("Client {ClientId} aktualisiert", client.Id);
-_logger.LogInformation("Projekt {ProjectId} geladen", project.Id);
+Log.Information("Client {ClientId} aktualisiert", client.Id);
+Log.Information("Projekt {ProjectId} geladen", project.Id);
 
 // FALSCH — Personendaten loggen
-_logger.LogInformation("Client {Name} ({Email}) aktualisiert",
+Log.Information("Client {Name} ({Email}) aktualisiert",
     client.ContactPerson, client.Email);
-_logger.LogInformation("Mitarbeiter {Name} hat {Stunden}h gearbeitet",
+Log.Information("Mitarbeiter {Name} hat {Stunden}h gearbeitet",
     employee.Name, hours);
 ```
 
 **VERBOTEN in Log-Nachrichten:** Personennamen, E-Mail-Adressen, Telefonnummern, Personalnummern, Dokumenteninhalte, API-Keys.
+
+**Pfade und Gerätedaten:** Pfade nur zentral maskiert (Datei-/Ordnername statt voller Pfad), Windows-Benutzername nie — weder in Logs noch im Bug-Report; der Rechnername ist als technisches Gerätemerkmal erlaubt (Kapitel 8.4; Audit Review 01, R01-001 E2, entschieden 2026-09-24).
 
 ### 17.2 Externe Kommunikation — Kein direkter HttpClient
 
@@ -1607,7 +1737,7 @@ var key = ProtectedData.Protect(Encoding.UTF8.GetBytes(apiKey),
 
 // FALSCH — API-Keys in Klartext
 settings.OpenAiApiKey = "sk-abc123...";  // NIEMALS in settings.json
-_logger.LogInformation("API Key: {Key}", apiKey);  // NIEMALS loggen
+Log.Information("API Key: {Key}", apiKey);  // NIEMALS loggen
 ```
 
 **VERBOTEN:** API-Keys in settings.json, registry.json, Git, Logs oder Quellcode.
@@ -1660,6 +1790,8 @@ foreach (var key in Resources.Keys)
     w.Resources[key] = Resources[key];
 ```
 
+**Verschachtelung:** Unterdialoge höchstens eine Ebene tief — ein programmatisch erstellter Unterdialog (z. B. ShowPartEditDialog) öffnet keinen weiteren Dialog (UI_UX_Guidelines Kap. 8.4; Audit Review 01, R01-001 E15, entschieden 2026-09-24). Bestätigungs-, Hinweis- und Dirty-Check-Abfragen (ShowDarkConfirm, BpmConfirmDialog, BpmInfoDialog) zählen nicht als weitere Dialogebene.
+
 ### 18.2 Toggle-Switch statt CheckBox
 
 Für An/Aus-Schalter im Dark Theme einen Custom Toggle verwenden (Border mit CornerRadius + Ellipse), nicht die WPF-CheckBox.
@@ -1705,13 +1837,15 @@ is_deleted          INTEGER NOT NULL DEFAULT 0
 // RICHTIG
 DateTime.UtcNow
 
-// VERBOTEN
+// VERBOTEN für gespeicherte Zeitstempel
 DateTime.Now
 ```
 
 Alle `created_at`, `last_modified_at` und sonstige Zeitstempel
 werden als UTC gespeichert. Anzeige in lokaler Zeit erfolgt
 ausschließlich in der UI-Schicht.
+
+**Ausnahme:** `DateTime.Now` ist erlaubt für Dateinamen (z. B. Archiv- oder Logdatei mit lokalem Zeitstempel) und für die Log-Anzeige (z. B. Session-Marker). Gespeicherte Zeitstempel (DB, JSON) bleiben UTC. (Audit Review 01, R01-001 E8, entschieden 2026-09-24)
 
 ### 19.3 Soft Delete
 
@@ -1736,8 +1870,11 @@ ULID statt auto-increment für alle neuen fachlichen Tabellen.
 
 ### 19.5 Writes nur über Application Services
 
-ViewModels schreiben nie direkt in die DB.
-Alle Writes laufen über Services die Metadaten setzen:
+ViewModels schreiben nie direkt per SQL/Connection in die DB.
+Alle Writes laufen über Services die Metadaten setzen.
+Eine DB-Klasse gilt dabei als dünne Service-Schicht, wenn sie diese Metadaten
+(insbesondere `created_by`/`last_modified_by` aus `IUserContext`) selbst setzt —
+dann darf ein ViewModel über sie schreiben (Kapitel 8.3; Audit Review 01, R01-001 E1, entschieden 2026-09-24):
 
 ```csharp
 public async Task UpdateAsync(Entity entity, string userId)
@@ -1773,7 +1910,7 @@ public enum UserContextSource { Local, Server }
 }
 ```
 
-- `localUserId`: automatisch aus `Environment.MachineName\Environment.UserName`, nur intern/Debug
+- `localUserId`: automatisch aus `Environment.MachineName\Environment.UserName`, nur intern/Debug — enthält den Windows-Benutzernamen und kommt daher nie in Logs oder den Bug-Report (Kapitel 8.4)
 - `localUserName`: lesbarer Anzeigename, vom User in den Einstellungen pflegbar
 - `created_by` / `last_modified_by` = immer `IUserContext.DisplayName` (lesbarer Name)
 
@@ -1803,7 +1940,8 @@ Server-Kommunikation nur über `IExternalCommunicationService` (ADR-035).
 - **`IBpmSyncClient`** ist BPM-eigenes Sync-Interface — kein Vendor-Lock-in zu Supabase/CommunityToolkit.Datasync/Library X
 - **Pull/Push** mit `server_version` (BIGINT) als monotone Server-Authority
 - **Konflikt-Strategie:** Server gewinnt. Lokale rejected Änderungen → Sync-Status-Anzeige, keine Merge-UI in Phase 0/1
-- **DataClassification-Whitelist** pro Sync-DTO: Klasse C (Restricted, z.B. Lohn) bleibt bis Phase Verkauf gesperrt
+- **DataClassification-Whitelist** pro Sync-DTO (DSGVO-Datenklasse A/B/C nach ADR-035, Kapitel 17.3). Welche Daten überhaupt synchronisiert werden, regelt die Sync-Kategorie (ADR-047). Daten der Sync-Kategorie `restricted` (z.B. Lohn) bleiben bis Phase Verkauf gesperrt.
+- **Sync-Kategorie** (ersetzt die Buchstaben-Klassen aus ADR-047): `local-only`, `shared-domain`, `shared-reference`, `restricted`. „Klasse A/B/C“ bezeichnet ausschließlich die DSGVO-Datenklassen (`DataClassification`, Kapitel 17.3). (Audit Review 01, R01-001 E16, entschieden 2026-09-24)
 
 #### Code-Disziplin für plattformneutrale Server-App
 
@@ -1852,13 +1990,13 @@ Server-Kommunikation nur über `IExternalCommunicationService` (ADR-035).
 
 ## Zusammenfassung — Die 10 wichtigsten Regeln
 
-1. **PascalCase** für Klassen/Methoden, **camelCase** für Variablen, **_camelCase** für private Felder
+1. **PascalCase** für Klassen/Methoden, **camelCase** für Variablen, **_camelCase** für private Instanzfelder (`static readonly` und Konstanten: PascalCase, 1.1)
 2. **Allman-Style** Klammern (jede Klammer eigene Zeile)
 3. **Immer Klammern** auch bei einzelnen Anweisungen
 4. **Eine Klasse pro Datei**, maximal 300-400 Zeilen
 5. **Kleine Methoden** (max 30-40 Zeilen), eine Aufgabe pro Methode
 6. **Return Early** mit Guard Clauses statt tiefer Verschachtelung
-7. **Spezifische Exceptions** fangen, nie leere catch-Blöcke
+7. **Spezifische Exceptions** fangen, nie leere catch-Blöcke (`catch (Exception)` nur an Top-Level-, Batch- und Ladegrenzen mit Log, 6.5)
 8. **MVVM strikt** einhalten: View hat keinen Code, ViewModel kennt keine View
 9. **async/await** für I/O, nie `.Result` oder `.Wait()`
 10. **XML-Dokumentation** auf allen public Members

@@ -64,18 +64,18 @@ Dieses Dokument ist die **zentrale Referenz** für alle Datenbanktabellen in BPM
 ### 1.1 Grundprinzipien
 
 - **Eine Datenbank, viele Module:** Alle Module greifen auf `bpm.db` zu
-- **PlanManager:** Eigene `planmanager.db` pro Projekt (Cache, Journal, Undo)
+- **PlanManager:** Eigene `planmanager.db` pro Projekt (Planindex, Journal, Undo) — autorierte, zu sichernde Projektdaten, kein rebuildbarer Cache (ADR-066)
 - **ID-Schema (ADR-039 v2):** ULID als `TEXT PRIMARY KEY` für ALLE Tabellen. Keine `seq` Spalte, keine INTEGER IDs, keine Ausnahmen.
 - **ID-Generierung:** Zentral über `IIdGenerator` Interface (Domain), implementiert als `UlidIdGenerator` (Infrastructure). Nie direkt `Ulid.NewUlid()` im Code.
 - **SQLite als System of Record (Modus A):** JSON-Dateien (registry.json, settings.json) sind generierte Exporte oder Konfiguration (ADR-002). In Modus C (Server): PostgreSQL ist SoR, SQLite = Offline-Cache (ADR-050)
-- **Schema-Migration:** Versioniert, automatisch bei App-Start, rückwärtskompatibel (ADR-040)
+- **Schema-Migration:** Versioniert, automatisch bei App-Start, rückwärtskompatibel (ADR-040) — gilt erst ab der Produktivphase; Frühphase: Reset statt Migration (INDEX.md „Projekt-Phase“, ADR-040-Hinweis; Audit Review 01, R01-001 E6, entschieden 2026-09-24)
 
 ### 1.2 Datenbank-Dateien
 
 | DB | Speicherort | Inhalt | Synct? |
 |----|------------|--------|--------|
 | `bpm.db` | `%LocalAppData%\BauProjektManager\` | Alle Stamm- und Projektdaten | Nein (Event-Sync über ADR-037) |
-| `planmanager.db` | `%LocalAppData%\...\Projects\<ProjektID>\` | Plan-Cache, Import-Journal, Undo | Nein (Event-Sync über ADR-037) |
+| `planmanager.db` | `%LocalAppData%\...\Projects\<ProjektID>\` | Planindex (autorierte Daten, kein rebuildbarer Cache — ADR-066), Import-Journal, Undo | Nein (Event-Sync über ADR-037) |
 
 ---
 
@@ -1313,6 +1313,8 @@ Beim Speichern des Bautagesberichts wird je gefundenem Treffer ein Eintrag in `p
 
 ## 7. Schema-Migration
 
+> **Frühphase (Audit Review 01, R01-001 E6, entschieden 2026-09-24):** Die Migrationsregeln dieses Kapitels gelten erst ab der Produktivphase. Bis dahin gilt INDEX.md „Projekt-Phase“: keine Migration, sondern Reset — betroffene Datei(en) nennen → User löscht sie → BPM erstellt sie beim nächsten Start neu (ADR-040-Hinweis). Einzige freigegebene Ausnahme: `ManifestService.EnsureMigrated` (ADR-046-Addendum P.2). Die Historie in 7.1/7.3 dokumentiert frühere Schemastände.
+
 ### 7.1 Migrationshistorie
 
 | Version | Datum | Änderung |
@@ -1679,7 +1681,7 @@ Seit v0.28.182 (BPM-069) gibt es **keinen Migrationspfad** mehr — die Split-Da
 
 **Cross-Review-Quelle:** [CGR-2026-04-30-datenarchitektur-sync](../Referenz/chatgpt-reviews/CGR-2026-04-30-datenarchitektur-sync/) (7 Runden mit ChatGPT GPT-5.4)
 
-**Datenklassifizierung:** Siehe [DSVGO-Architektur.md](DSVGO-Architektur.md) + [ADR-047](../Referenz/ADR.md) (4-Klassen-Modell bleibt gültig: A local-only, B shared domain, C shared reference, D restricted)
+**Datenklassifizierung:** Siehe [DSVGO-Architektur.md](DSVGO-Architektur.md) (DSGVO-Datenklassen Klasse A/B/C) + [ADR-047](../Referenz/ADR.md) (4-Stufen-Modell bleibt gültig, heißt jetzt **Sync-Kategorie**: `local-only`, `shared-domain`, `shared-reference`, `restricted` — ersetzt die früheren Buchstaben A–D; „Klasse A/B/C“ ist ausschließlich für die DSGVO-Datenklassen reserviert; Audit Review 01, R01-001 E16, entschieden 2026-09-24)
 
 ---
 

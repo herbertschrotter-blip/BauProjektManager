@@ -59,11 +59,16 @@ Skill-Issues und Aufgaben zum Skillsystem gehören nicht hierher, sondern in den
 
 ## Statusmodell
 
-| offen | in Arbeit | erledigt |
-|---|---|---|
-| `open` | `in progress` | `done` |
+| offen | in Arbeit | erledigt | gestrichen/abgelöst |
+|---|---|---|---|
+| `open` | `in progress` | `done` | `cancelled` |
 
 Status immer kleingeschrieben (die ClickUp-API unterscheidet Groß- und Kleinschreibung).
+
+Gestrichene oder abgelöste Aufgaben (ohne eigene Umsetzung, z. B. in einer anderen Aufgabe aufgegangen) bekommen
+`cancelled` statt `done` mit Kommentar; die Begründung steht weiter als kurzer Kommentar, Commit ID und Commit Text
+bleiben leer. `done` heißt nur noch: umgesetzt. Der Altbestand (gestrichene Aufgaben auf `done`) wird einmalig
+umgestellt. (Audit Review 01, R01-001 E18, entschieden 2026-09-24)
 
 ## Felder und Option-IDs
 
@@ -73,7 +78,7 @@ Status immer kleingeschrieben (die ClickUp-API unterscheidet Groß- und Kleinsch
 |------|----|----|----|--------|
 | **Typ** | `f7b8c62a-0783-4b6d-9a95-0ce861eae2ad` | drop_down | neu | Feature/Fix/Refactor/Perf/Docs/Konzept/Meta |
 | **Aufwand** | `ecc194e5-2c67-46a7-b4d1-177ce3512c10` | drop_down | neu | S/M/L/XL |
-| **Zielversion** | `1fcc0b5a-082c-4c2a-8238-f7ff31b560d4` | short_text | neu | z.B. "v0.26.0" |
+| **Zielversion** | `1fcc0b5a-082c-4c2a-8238-f7ff31b560d4` | short_text | neu | Meilenstein-Tag: v1/v1-nice/post-v1/server/backlog |
 | **Komponente** | `b0f37cca-c325-4ac6-9bb8-407c65e4611a` | short_text | neu | Hauptmodul/Datei |
 | **Zugehörige Docs** | `421cf05a-d02a-40b9-aca7-1dc086536f36` | text | neu | Doc-Pfade, mehrzeilig |
 | **Commit ID** | `a851a04d-f34a-429f-abce-bec0b0b6859f` | short_text | done | 7-char Hash |
@@ -94,6 +99,10 @@ Typ:
 | Docs | `12a547b2-4ebc-4caa-8527-023c66e9f111` | Violett |
 | Konzept | `1291a46f-feab-4596-8762-3872e51ee327` | Gelb |
 | Meta | `d60891c6-129f-4b99-9e6f-043940541a22` | Grau |
+
+Die Commit-Typen sind Feature/Fix/Change/Refactor/Perf/Docs (wie `CLAUDE.md`). Die Option `Change` fehlt im Dropdown
+noch: in ClickUp anlegen und ihre Option-ID hier nachtragen; bis dahin nicht raten. (Audit Review 01, R01-001 E18,
+entschieden 2026-09-24)
 
 Aufwand:
 
@@ -124,6 +133,10 @@ Meilenstein-Tags (nur an Hauptaufgaben, kleingeschrieben):
 | `post-v1` | Nach V1 Release |
 | `server` | Erst wenn Server-Modus gebaut wird |
 | `backlog` | Irgendwann, kein Zeitdruck |
+
+- Das Feld **Zielversion** enthält genau einen dieser Meilenstein-Tags (kleingeschrieben), keine konkrete Version
+  (die steht im Commit-Präfix und im CHANGELOG). An Hauptaufgaben ist es identisch mit dem Tag; Unteraufgaben tragen
+  nur das Feld. (Audit Review 01, R01-001 E18, entschieden 2026-09-24)
 
 - Kein Gedankenstrich `—` in Feldwerten (ClickUp lehnt sonst ab).
 - Option-IDs nie raten; bei unbekanntem Wert Auswahlfrage mit den Optionen oben.

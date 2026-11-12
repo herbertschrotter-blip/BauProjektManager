@@ -137,7 +137,7 @@ Pfad-Felder verwenden `BpmAccentPrimary` Foreground und `TextWrapping="Wrap"`.
 | Ersteinrichtung wiederholen | Setzt `isFirstRun: true` in settings.json | Niedrig — Setup-Dialog erscheint beim nächsten Start |
 | Nur Haupt-DB zurücksetzen | Löscht bpm.db | Mittel — alle Projekte weg |
 | Nur Einstellungen zurücksetzen | Löscht settings.json | Niedrig — Pfade und Ordner-Template weg |
-| PlanManager-Caches zurücksetzen | Löscht alle planmanager.db (pro Projekt, lokal) | Mittel — Import-Journal, Undo-Daten und Cache weg, Pläne im Dateisystem bleiben |
+| PlanManager-Caches zurücksetzen | Löscht alle planmanager.db (pro Projekt, lokal) | Mittel — Import-Journal, Undo-Daten und Cache weg, Pläne im Dateisystem bleiben *— Einstufung überholt: `planmanager.db` ist autorierte, nicht rebuildbare Projektdaten (ADR-066); mit ihr gehen auch die manuell vergebenen Plan-Identitäten und Segmentwerte verloren (Audit Review 01, R01-001 E4, entschieden 2026-09-24)* |
 | Komplett-Reset | Löscht bpm.db + settings.json + alle planmanager.db | Hoch — alles weg |
 
 Jede Option zeigt eine Bestätigungs-MessageBox vor Ausführung.

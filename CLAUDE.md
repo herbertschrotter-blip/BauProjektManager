@@ -35,14 +35,14 @@ src/
 
 ## Coding Standards (Kurzversion)
 
-- PascalCase Klassen/Methoden, _camelCase private Felder, IName Interfaces
+- PascalCase Klassen/Methoden/Konstanten/static readonly, _camelCase private Instanzfelder, IName Interfaces
 - Max 300-400 Zeilen/Klasse, 30-40 Zeilen/Methode
 - Nullable Reference Types AKTIV, kein null-forgiving ohne Grund
 - CommunityToolkit.Mvvm: ObservableObject, RelayCommand
 - KEINE hardcoded Colors/FontSize — nur Theme-Tokens
-- Constructor Injection, keine new-Instanzen für Services
-- SQLite parametrisiert, NIE String-Building
-- Serilog, KEINE Personendaten in Logs
+- DI zweistufig: Services, Ports und DB-Klassen nur per DI (Container bzw. Factory je Projekt), kein new; ViewModels per Konstruktor, Views dürfen View-first zusammensetzen; Interfaces nur für Ports und Test-Nähte (Ausnahmen: CODING_STANDARDS 8.3)
+- SQLite: Werte immer parametrisiert, NIE String-Building; Tabellen-/Spaltennamen nur aus Konstanten/Whitelist
+- Statisches Serilog (`Log.*`), KEINE Personendaten in Logs; Pfade nur zentral maskiert (Datei-/Ordnername), Windows-Benutzername nie
 - Alle externen HTTP über IExternalCommunicationService + DataClassification
 
 ## Git
@@ -68,7 +68,7 @@ src/
 
 ### Checks
 - build: dotnet build BauProjektManager.slnx [src/**; tests/**]
-- test: dotnet test BauProjektManager.slnx [src/**; tests/**]
+- test: dotnet test tests/BauProjektManager.Tests/BauProjektManager.Tests.csproj [src/**; tests/**]
 
 ### Commit
 - Format: [vX.Y.Z] <Modul>, <Typ>: <Kurztitel> (Modul auch kombiniert mit +, z.B. INF+Docs)

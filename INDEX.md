@@ -14,7 +14,7 @@
 
 ## Projekt-Metadaten
 
-- **Projekt:** BauProjektManager (BPM) / baulotse
+- **Projekt:** BauProjektManager (BPM) / baulotse (ob „baulotse“ der künftige Produktname wird, ist offen — Entscheidung separat, dann GLOSSAR/VISION; Audit Review 01, R01-001 E17, entschieden 2026-09-24)
 - **Tech-Stack:** C# / .NET 10 LTS, WPF, SQLite, CommunityToolkit.Mvvm, Serilog, ClosedXML
 - **Typ:** WPF Desktop-Anwendung, modularer Monolith, offline-first
 - **Repo:** github.com/herbertschrotter-blip/BauProjektManager, Branch: main
@@ -80,6 +80,15 @@ Ausnahmen:
 - Oder dieses Kapitel offiziell entfernt/umgeschrieben wird
   (= Übergang in Produktivphase)
 
+Ausdrücklich freigegebene Ausnahme (einzige):
+- `ManifestService.EnsureMigrated` — Vorwärtsmigration `.bpm-manifest` → `.bpm/` und
+  `manifest.json` SchemaVersion 1 → `project.json` + schlankes `manifest.json`
+  (ADR-046-Addendum P.2; Audit Review 01, R01-001 E6, entschieden 2026-09-24).
+  Entfernungspunkt: entfällt, sobald alle eigenen Projektordner auf `manifest.json` v2 +
+  `project.json` umgestellt sind — dann Code entfernen, ab da Reset statt Migration.
+- KEINE Ausnahme: der Namens-Fallback in `BuildManualDocumentKey` (wird entfernt,
+  Test-Fixtures arbeiten mit Stammdaten-IDs).
+
 Für KI (Claude, ChatGPT): Dieses Kapitel ist beim Quickload IMMER zu beachten.
 Vorschläge zu Migrations-Logik, Backward-Compatibility oder Legacy-Tolerance
 sind ohne explizite User-Freigabe abzulehnen.
@@ -102,16 +111,22 @@ Bei UI-Änderungen zusätzlich:
 | Doc | Quickload-Zweck | Pfad |
 |-----|----------------|------|
 | UI_UX_Guidelines | Screen States, Button-Regel, Sprache | `Docs/Referenz/UI_UX_Guidelines.md` |
-| WPF_UI_Architecture | Theme-Tokens, ResourceDictionaries, DynamicResource-Regel | `Docs/Referenz/WPF_UI_Architecture.md` |
+| WPF_UI_Architecture | Theme-Tokens, ResourceDictionaries (Static-/DynamicResource-Regel steht nur in CODING_STANDARDS Kap. 10.5) | `Docs/Referenz/WPF_UI_Architecture.md` |
 
 ---
 
 ## 1. Task-to-Doc Routing
 
+> **Router-Regel (Audit Review 01, R01-001 E19, entschieden 2026-09-24):** Primary im INDEX = erste Anlaufstelle für
+> das Thema; muss nicht authority source_of_truth sein, darf aber nie historical/deprecated sein.
+> Teilweise abgelöste Docs (`status: active`, `authority: secondary`, Banner + optional `superseded_by`) sind als
+> Primary, Secondary oder Reference zulässig; vollständig abgelöste Docs (`status: deprecated`, `authority: historical`)
+> nur als Warnhinweis „Historisch“ — nicht als gültiges Konzept laden (DOC-STANDARD 4.5/9.3).
+
 ### Plan-Management
 - Primary: `Docs/Module/PlanManager.md`
 - Secondary: `Docs/Kern/DB-SCHEMA.md` (Kap. 6.7 = Schema v2.0 / Plan-Archiv-Persistenz), `Docs/Kern/BauProjektManager_Architektur.md`
-- Reference: `Docs/Referenz/UI_Navigation.md`, `Docs/Referenz/ADR.md` (ADR-010 Recognition, ADR-056 Segmenttypen, ADR-058 Plan-Archiv, ADR-059 Plan-Erfassung, ADR-060 Dateisystem-Ports, ADR-061 Ordner-Wahrheit/Resolver, ADR-062 PDF-Render-Port, ADR-063 PDF-Text-Port/Text-Zuweisung — beide Ports: EINE Engine PDFium/Docnet, siehe Addenda)
+- Reference: `Docs/Referenz/UI_Navigation.md`, `Docs/Referenz/ADR.md` (ADR-010 Recognition, ADR-056 Segmenttypen, ADR-058 Plan-Archiv, ADR-059 Plan-Erfassung, ADR-060 Dateisystem-Ports, ADR-061 Ordner-Wahrheit/Resolver, ADR-062 PDF-Render-Port, ADR-063 PDF-Text-Port/Text-Zuweisung — beide Ports: EINE Engine PDFium/Docnet, siehe Addenda; ADR-066 `planmanager.db` als autorierte Projektdaten + geräteübergreifendes Identitätsmodell (stabile ULIDs))
 - Bei Cross-Modul-Anbindung (Bautagebuch/Foto/Vorlagen → Pläne): `IPlanLookupService` ist die öffentliche API, NICHT direkter SQL-Zugriff auf `plan_documents`. Snapshot-Pflicht `fixed_revision` (ADR-058)
 
 ### Einstellungen / Projekt-UI
@@ -134,6 +149,7 @@ Bei UI-Änderungen zusätzlich:
 - Primary: `Docs/Kern/DB-SCHEMA.md`
 - Secondary: `Docs/Kern/BauProjektManager_Architektur.md`
 - Beachte: CODING_STANDARDS Kap. 19 (Sync-Felder, UTC, Soft Delete, IUserContext)
+- Beachte: `Docs/Referenz/ADR.md` ADR-066 (`planmanager.db` = autorierte, zu sichernde Projektdaten, kein rebuildbarer Cache; stabile ULIDs über `.bpm/project.json`)
 
 ### Neuer Dialog / UI-Element
 - Primary: `Docs/Referenz/UI_UX_Guidelines.md`
@@ -195,7 +211,7 @@ Bei UI-Änderungen zusätzlich:
 - **Persistence/** — ProjectDatabase.cs (35KB), AppSettingsService, ManifestService + ProjectExportService + ProjectFolderScanner (.bpm/, ADR-046), ProjectFolderService, RegistryJsonExporter.
 
 ### src/BauProjektManager.Settings
-- **SettingsViewModel.cs** (28KB) — Referenz MVVM.
+- **SettingsViewModel.cs** (28KB) — Projektliste/Einstellungen. Bis zur Sanierung KEINE Referenz (R01-015/R01-040).
 - **ProjectEditDialog.xaml** (~58KB, nur SUCHE/ERSETZE) + Code-Behind als Partial Classes je Tab: `.xaml.cs` (Ctor/Save), `.Stammdaten`, `.Bauwerk`, `.BauwerkDialoge`, `.Beteiligte`, `.PortaleLinks`, `.Ordnerstruktur`, `.Helpers` (BPM-070)
 
 ### src/BauProjektManager.PlanManager
@@ -207,11 +223,14 @@ Bei UI-Änderungen zusätzlich:
 
 | Datei | Referenz für |
 |-------|-------------|
-| DevToolsDialog.xaml/.cs | Dialog-Pattern |
-| SettingsView + SettingsViewModel | MVVM-Pattern |
+| — (Referenz folgt nach Sanierung, R01-015/R01-040) | Dialog-Pattern |
+| — (Referenz folgt nach Sanierung, R01-015/R01-040) | MVVM-Pattern |
 | AppSettingsService.cs | Service-Pattern |
 
 NICHT als Referenz: ProjectEditDialog-Partials (Code-Behind statt MVVM, hardcoded Farben in den Unterdialogen)
+
+NICHT als Referenz (bis zur Sanierung, R01-015/R01-040): DevToolsDialog.xaml/.cs, SettingsView + SettingsViewModel
+(Audit Review 01, R01-001 E1, entschieden 2026-09-24)
 
 ---
 

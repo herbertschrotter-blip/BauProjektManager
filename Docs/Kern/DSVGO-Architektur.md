@@ -17,20 +17,34 @@ supersedes: []
 - Lesen wenn: Externe API, Personendaten verarbeiten, neues Online-Modul, Registry-Export, Logging mit Personenbezug
 - Nicht zuständig für: Code-Style-Regeln (→ CODING_STANDARDS.md Kap. 17), DB-Schema (→ DB-SCHEMA.md)
 - Kapitel:
+  - Dokumentklassifizierung
   - 1. Ziel & Geltungsbereich
   - 2. Kernprinzipien (PFLICHT)
   - 3. Datenklassifizierung
   - 4. Architektur-Übersicht
   - 5. Datenfluss-Architektur
-  - 6–19. (Details: IExternalCommunicationService, IPrivacyPolicy, Audit-Log, registry.json Whitelist, Betriebsmodi, Löschkonzept, DSFA, Compliance-Checkliste)
+  - 6. Kritische Kontrollpunkte
+  - 7. Anonymisierung & Redaction
+  - 8. Modul-Regeln
+  - 9. Datenspeicherung & Verschlüsselung
+  - 10. Zugriffskontrolle
+  - 11. Logging & Nachvollziehbarkeit
+  - 12. KI-Integration — Sonderregeln
+  - 13. Einstellungen — GUI für Datenschutz
+  - 14. Anti-Patterns (verboten)
+  - 15. MVP-Compliance-Strategie
+  - 16. DSFA — Checkliste
+  - 17. Organisatorische Maßnahmen
+  - 18. Modul-Implementierungs-Checkliste
+  - 19. Verwandte ADRs
+  - Änderungshistorie
 - Pflichtlesen:
   - Kapitel 2 (Kernprinzipien) bei JEDEM externen API-Call
   - Kapitel 3 (Datenklassifizierung) bei neuem Datentyp
   - Kapitel 9.3 (registry.json Whitelist) bei Registry-Änderung
 - Fachliche Invarianten:
-  - Keine Personendaten in Serilog-Logs — nur IDs
-  - Kein direkter HttpClient — alles über IExternalCommunicationService (ADR-035)
-  - DataClassification (ClassA/B/C) bei jedem externen Call
+  - Keine Personendaten in Serilog-Logs — nur IDs; Pfade zentral maskiert (Datei-/Ordnername), Windows-Benutzername nie in Logs oder Bug-Report (Kap. 11.2)
+  - Kein direkter HttpClient — alles über IExternalCommunicationService (ADR-035) mit DataClassification (ClassA/B/C) bei jedem externen Call, nur zu registrierten Endpunkten (Kap. 4.4)
   - registry.json nur Whitelist-Felder
   - Server-Modus (Modus C): JWT, HTTPS-Pflicht, Login-Audit, Token-Revoke — Details in ServerArchitektur.md, DSGVO-Erweiterung bei Server-Implementierung
   - IPrivacyPolicy über Lizenz gesteuert, nicht settings.json (ADR-036)
@@ -39,9 +53,9 @@ supersedes: []
 
 ﻿# BauProjektManager — DSGVO-Architektur & Privacy Engineering
 
-**Version:** 1.4  
+**Version:** 1.5  
 **Erstellt:** 03.04.2026  
-**Letzte Überarbeitung:** 03.04.2026  
+**Letzte Überarbeitung:** 12.11.2026  
 **Nächste Pflicht-Revision:** Spätestens 03.04.2027 oder bei Gesetzesänderung  
 **Status:** Verbindlicher Architekturstandard  
 **Gilt für:** Alle Module, alle externen Anbindungen  
@@ -148,12 +162,17 @@ Art. 25 DSGVO verlangt Maßnahmen die dem „Stand der Technik" entsprechen. Das
 
 Alle Daten in BPM werden in drei Klassen eingeteilt:
 
+> **Begriff:** „Klasse A/B/C“ ist ausschließlich für diese DSGVO-Datenklassen reserviert. Die Sync-Einteilung aus ADR-047 heißt **Sync-Kategorie** (`local-only`, `shared-domain`, `shared-reference`, `restricted`) und ist keine Datenklasse (Audit Review 01, R01-001 E16, entschieden 2026-09-24).
+
 ### KLASSE A — Kein Personenbezug
 
-- Technische Metadaten (MD5-Hashes, Dateipfade, Ordnerstruktur)
+- Technische Metadaten (MD5-Hashes, Dateipfade — beim Loggen nur maskiert, Kap. 11.2 —, Ordnerstruktur)
+- Rechnername (`Environment.MachineName`) als technisches Gerätemerkmal — darf geloggt werden
 - Generische Projektstruktur (Plantypen, Ordner-Templates)
 - App-Einstellungen (`settings.json` ohne Kontaktdaten)
-- Plan-Cache (`planmanager.db`: Dateinamen, Indexe, Hashes)
+- Planindex (`planmanager.db`: Dateinamen, Indexe, Hashes)
+
+**Volle Dateipfade** gelten in Logs und im Bug-Report als **potenziell personenbezogen** (ADR-060): Projektordner tragen Projekt- und Kundennamen, Pfade im Benutzerprofil den Windows-Benutzernamen. Sie werden vor dem Loggen zentral auf Datei-/Ordnernamen maskiert (Kap. 11.2). Der Windows-Benutzername (`Environment.UserName`) kommt nie in Logs oder den Bug-Report (Audit Review 01, R01-001 E2, entschieden 2026-09-24).
 
 **Regel:** Kann frei verarbeitet werden, keine Einschränkungen.
 
@@ -165,8 +184,9 @@ Alle Daten in BPM werden in drei Klassen eingeteilt:
 | `project_participants` (Name, Rolle, Kontakt) | Subunternehmer, Behörden | Art. 6 Abs. 1 lit. f DSGVO | Art. 14 — bei Ersterfassung empfohlen |
 | `employees` Tabelle (Name, Personalnummer) | Eigene Mitarbeiter | Art. 6 Abs. 1 lit. b DSGVO (Arbeitsvertrag) | Art. 13 — PFLICHT (Mitarbeiter-Info) |
 | `tbl_Zeiten` Excel (Arbeitszeiten, Krankenstand) | Eigene Mitarbeiter | Art. 6 Abs. 1 lit. b + § 96 ArbVG | Art. 13 — PFLICHT + ggf. BV |
-| `write_lock` Tabelle (Username, Machine-Name) — *geplant, Betriebsmodus B (ADR-020)* | BPM-Nutzer | Art. 6 Abs. 1 lit. f DSGVO | Nicht erforderlich (technisch) |
+| `write_lock` Tabelle (Username; Machine-Name selbst ist Klasse A) — *geplant, Betriebsmodus B (ADR-020)* | BPM-Nutzer | Art. 6 Abs. 1 lit. f DSGVO | Nicht erforderlich (technisch) |
 | `registry.json` (Ansprechpartner, E-Mails) | Geschäftskontakte | Art. 6 Abs. 1 lit. f DSGVO | Art. 14 — bei Ersterfassung empfohlen |
+| `.bpm/project.json` (Kontaktdaten Auftraggeber + Beteiligte, im Cloud-Projektordner) | Geschäftskontakte | Art. 6 Abs. 1 lit. f DSGVO | Art. 14 — bei Ersterfassung empfohlen |
 
 **Informationspflichten (Art. 13/14 DSGVO):**
 
@@ -379,6 +399,8 @@ Die `StrictPrivacyPolicy` prüft den Context: Bei `IsTrustedSession = true` werd
 | `wetter` | api.open-meteo.com | A (GPS-Koordinaten) | ⚠️ Ja — Dashboard-Widget |
 | `task_mgmt` | api.clickup.com (etc.) | B (Projekt + Material) | ⚠️ Ja — Auto-Sync 5 Min |
 
+**Register-Regel (verbindlich, Audit Review 01, R01-001 E17, entschieden 2026-09-24):** Zulässig sind nur die hier registrierten Endpunkte. Sieht ein Modul-Konzept andere Datenwege vor, müssen sie vor der Umsetzung in diese Tabelle eingetragen werden — mit Endpunkt, Datenklasse, Anbieter/DPA (z. B. US-Anbieter) und Authentifizierung (API-Key, OAuth). Bis dahin gilt nur der registrierte Weg. Für `wetter` ist derzeit ausschließlich der direkte Abruf bei api.open-meteo.com registriert (kein Key). Die in [ModuleWetter.md](../Konzepte/ModuleWetter.md) beschriebenen Google-Wege (CSV- bzw. Web-App-URL des Nutzer-Sheets, Google Sheets API mit OAuth) und ein Adress-Geocoding bei Google sind **nicht registriert** und damit nicht freigegeben.
+
 **Für `wetter` und `task_mgmt` (automatische Calls):**
 - Nur aktiv wenn Modul in Einstellungen aktiviert UND externer Dienst freigeschaltet
 - Kein Auto-Call beim ersten Start — User muss explizit aktivieren
@@ -582,6 +604,7 @@ Bevor ein Modul implementiert wird, muss das Konzeptdokument enthalten:
 - ❌ Speicherung unnötiger Daten (kein Feld ohne klaren Zweck)
 - ❌ „UI versteckt = sicher" annehmen (Hidden-Attribute ≠ Datenschutz)
 - ❌ Personendaten in Serilog-Logs (nur IDs, keine Namen/E-Mails/Telefon)
+- ❌ Volle Pfade oder Windows-Benutzername in Logs oder im Bug-Report (Pfade zentral maskieren, Kap. 11.2)
 
 ### 8.3 Modul-Übersicht — Datenschutz-Status
 
@@ -594,7 +617,7 @@ Bevor ein Modul implementiert wird, muss das Konzeptdokument enthalten:
 | Bautagebuch | Nein (lokal) | B (Arbeitskräfte) | ✅ Lokal |
 | Dashboard | Nein (lokal) | A | ✅ Lokal |
 | Outlook | Nein (COM Interop, lokal) | B (E-Mail-Metadaten) | ✅ Lokal |
-| Wetter | Ja (OpenMeteo) | A (GPS-Koordinaten) | ✅ Unbedenklich (anonym, kein Key) |
+| Wetter | Ja (OpenMeteo) | A (GPS-Koordinaten) | ✅ Unbedenklich (anonym, kein Key) — nur der registrierte Abruf bei api.open-meteo.com; die Google-Wege aus ModuleWetter erst nach Eintrag im Register (Kap. 4.4, E17) |
 | GIS (Steiermark) | Ja (gis.stmk.gv.at) | A (Koordinaten) | ✅ Öffentliche API |
 | GIS (Google) | Ja (Google Maps) | A (Adressen) | ⚠️ API-Key, Google-DPA |
 | Task-Management | Ja (ClickUp etc.) | B (Projekt + Material) | ⚠️ US-Anbieter, DPA nötig |
@@ -610,7 +633,7 @@ Bevor ein Modul implementiert wird, muss das Konzeptdokument enthalten:
 | Speicherort | Inhalt | Synct? |
 |---|---|---|
 | `bpm.db` (%LocalAppData%) | Projekte, Clients, Participants | Nein |
-| `planmanager.db` (%LocalAppData%) | Plan-Cache, Import-Journal, Undo | Nein |
+| `planmanager.db` (%LocalAppData%) | Planindex (autorierte Daten, ADR-066), Import-Journal, Undo | Nein |
 | Logs/ (%LocalAppData%) | Serilog-Dateien | Nein |
 
 Kein Cloud-Zwang. Kein Account. Kein externer Datenspeicher.
@@ -622,7 +645,10 @@ Kein Cloud-Zwang. Kein Account. Kein externer Datenspeicher.
 | `registry.json` | Kontaktdaten (Name, E-Mail, Telefon) | B |
 | `settings.json` | Pfade, Einstellungen | A |
 | `.bpm/profiles/*.json` | Plantyp-Muster | A |
+| `.bpm/project.json` | Vollexport des Projekts inkl. Kontaktdaten von Auftraggeber und Beteiligten (Firma, Kontaktperson, Telefon, E-Mail, Notizen) | B |
 | Excel Zeiterfassung | Mitarbeiterdaten, Arbeitszeiten | B |
+
+**`.bpm/project.json` als Klasse-B-Datei (Audit Review 01, R01-001 E3, entschieden 2026-09-24):** Die Datei trägt die Kontaktdaten bewusst vollständig, weil sie dem Re-Import des Projekts aus dem Projektordner dient (Gerätewechsel, Übergabe, Wiederherstellung — ADR-046); ohne die Kontakte gingen sie beim Re-Import verloren. Die registry.json-Whitelist (Kap. 9.3) gilt für diese Datei nicht. Beim Löschen eines Projekts werden die Kontakte darin bereinigt (Kap. 9.5).
 
 **Regel:** BPM informiert den User, dass Cloud-Sync die Verantwortung des Users ist. BPM selbst sendet keine Daten an Cloud-Anbieter — der Cloud-Speicher-Client (OneDrive, Dropbox etc.) macht das.
 
@@ -683,23 +709,26 @@ Kein Cloud-Zwang. Kein Account. Kein externer Datenspeicher.
 
 - Schlüssel aus DPAPI ableiten (an Windows-User gebunden)
 - Kein hardcoded Key im Code
-- Bei Gerätewechsel: DB kann aus Cloud-Speicher-Daten + Dateisystem-Scan rekonstruiert werden (ADR-004)
+- Bei Gerätewechsel: Projektdaten aus `bpm.db` lassen sich über `.bpm/project.json` (Projekt importieren, stabile ULIDs — nach Umsetzung von ADR-066; Umsetzung im Code offen) wiederherstellen; `planmanager.db` ist autorierte Daten und nicht aus dem Dateisystem rekonstruierbar — sie muss gesichert werden (ADR-066)
 
 **Lizenz-Dateien:**
 
-- HMAC-SHA256 signiert (Integritätsschutz, nicht Vertraulichkeit)
+- Asymmetrisch signiert (Ed25519/RSA, ADR-053 P.23 — die HMAC-SHA256-Signatur aus ADR-034/042 ist abgelöst; Audit Review 01, R01-001 E17, entschieden 2026-09-24) — Integritätsschutz, nicht Vertraulichkeit
 - Kein Datenschutz-Risiko (enthalten nur Firmennamen + Lizenz-ID)
 
 ### 9.5 Löschkonzept
 
 | Datenart | Aufbewahrungsfrist | Löschung |
 |---|---|---|
-| Serilog-Logs | 30 Tage | Automatisch (Serilog `retainedFileCountLimit`) |
+| Serilog-Logs | 30 Logdateien | Automatisch (Serilog, Tagesrollierung `RollingInterval.Day` + `retainedFileCountLimit: 30` in `App.xaml.cs`). Wie umgesetzt entspricht das 30 Tagen **mit App-Nutzung**, nicht 30 Kalendertagen; Stand geprüft 2026-11 (Audit Review 01, R01-001 E2, entschieden 2026-09-24) |
 | Audit-Log (ext. Calls) | 90 Tage | Automatisch |
 | Mitarbeiterdaten (Zeiterfassung) | 7 Jahre nach Austritt (§ 132 BAO) | Manuell (AktivBis + 7 Jahre) |
 | Projektdaten | Unbegrenzt | Manuell (Projekt auf Completed setzen → Ordner in ArchivePath verschieben, oder Projekt löschen) |
 | Import-Journal | Pro Projekt, unbegrenzt | Manuell (Projekt löschen) |
-| Stammdaten (Clients, Participants, Links) | Projektgebunden | Bei Projektlöschung: CASCADE für Participants/Links. Clients: Prüfung ob noch von anderem Projekt referenziert — wenn nein, User wird gefragt ob Client mitgelöscht werden soll. Clients werden bewusst als potenziell wiederverwendbare Entität behandelt (Vorbereitung ADR-021). |
+| Stammdaten (Clients, Participants, Links) | Projektgebunden | Bei Projektlöschung: Tombstone statt physischem Löschen — Participants/Links werden soft-gelöscht (`is_deleted = 1`, bleibt für den Sync, ADR-053) und die Klasse-B-Felder (Firma, Kontaktperson, Telefon, E-Mail) dabei geleert; dasselbe gilt für einzeln entfernte Beteiligte. Clients: Prüfung ob noch von anderem Projekt referenziert — wenn nein, User wird gefragt ob Client mitgelöscht werden soll (dann ebenfalls Tombstone mit geleerten Klasse-B-Feldern). Clients werden bewusst als potenziell wiederverwendbare Entität behandelt (Vorbereitung ADR-021). |
+| `.bpm/project.json` (Cloud-Projektordner) | Solange das Projekt besteht | Bei Projektlöschung leert bzw. entfernt `DeleteProject` die Kontakte (Auftraggeber, Beteiligte) in der Datei, damit ein Re-Import des Ordners gelöschte Kontakte nicht wiederherstellt. |
+
+**Löschen = Tombstone mit Anonymisierung (Audit Review 01, R01-001 E3, entschieden 2026-09-24 — Umsetzung im Code offen):** Das Soft-Delete bleibt für den Sync (ADR-050/053) erhalten, personenbezogene Inhalte nicht: Beim Löschen werden die Klasse-B-Felder Firma, Kontaktperson, Telefon und E-Mail geleert, die Tombstone-Zeile (ID, `is_deleted`, Sync-Metadaten) bleibt. So ist das Löschrecht erfüllt, ohne die Sync-Semantik zu brechen.
 
 ---
 
@@ -707,7 +736,7 @@ Kein Cloud-Zwang. Kein Account. Kein externer Datenspeicher.
 
 ### 10.1 V1 — Solo-Betrieb (PFLICHT)
 
-- Single-Writer Mutex (ADR-016): Nur eine App-Instanz schreibt gleichzeitig
+- Single-Writer-Mutex (V1-Pflicht; Audit Review 01, R01-001 E7, entschieden 2026-09-24 — ADR-016 enthält keinen Mutex): Nur eine App-Instanz läuft und schreibt gleichzeitig
 - Keine offenen Dateien im System — Zugriff nur über App
 - API-Keys in DPAPI — nicht im Klartext lesbar
 
@@ -731,7 +760,7 @@ Wenn Multi-User und Cloud-Sync zusammenkommen, müssen die Betriebsmodi klar get
 | Betriebsmodus | Klasse-A-Daten | Klasse-B-Daten | Klasse-C-Daten |
 |---|---|---|---|
 | **Lokal (Modus A)** | ✅ Frei | ✅ Frei | ✅ Nur lokal |
-| **Cloud-Sync (Modus A/B)** | ✅ Synct | ⚠️ Nur Whitelist (Kap. 9.3) | ❌ Nicht syncen |
+| **Cloud-Sync (Modus A/B)** | ✅ Synct | ⚠️ Nur Whitelist (Kap. 9.3) bzw. `.bpm/project.json` (Kap. 9.2) | ❌ Nicht syncen |
 | **Geteilte DB (Modus B)** | ✅ Alle sehen | ⚠️ Nur berechtigte Rollen | ❌ Nicht in DB |
 | **Server (Modus C)** | ✅ API liefert | ⚠️ Rollenbasiert gefiltert | ❌ Nicht über API |
 
@@ -756,15 +785,19 @@ Wenn Multi-User und Cloud-Sync zusammenkommen, müssen die Betriebsmodi klar get
 - Personalnummern
 - Dokumenteninhalte
 - API-Keys
+- Volle Pfade — stattdessen nur Datei- bzw. Ordnername
+- Windows-Benutzername (`Environment.UserName`) — auch nicht im DevTools-Bug-Report
+
+**Pfade und Gerätemerkmale (Audit Review 01, R01-001 E2, entschieden 2026-09-24; angeglichen an ADR-060):** Pfade gelten als potenziell personenbezogen (Kap. 3) und werden **zentral vor dem Loggen maskiert** (Datei-/Ordnername statt voller Pfad) — über einen zentralen Maskierungs-Helper (Name bei Umsetzung), nicht je Aufrufer. Die Maskierung im Dateisystem-Adapter (ADR-060) reicht allein nicht, weil Services und ViewModels dieselben Pfade sonst unmaskiert loggen. Der Rechnername ist als technisches Gerätemerkmal erlaubt. Logging-API ist statisches Serilog (`Log.*`, kein `ILogger<T>`), siehe CODING_STANDARDS Kap. 8 und 17.1.
 
 **Regel (aus CODING_STANDARDS.md Kapitel 17):**
 
 ```csharp
 // RICHTIG:
-_logger.LogInformation("Client {ClientId} aktualisiert", client.Id);
+Log.Information("Client {ClientId} aktualisiert", client.Id);
 
 // FALSCH:
-_logger.LogInformation("Client {Name} ({Email}) aktualisiert",
+Log.Information("Client {Name} ({Email}) aktualisiert",
     client.ContactPerson, client.Email);
 ```
 
@@ -922,7 +955,9 @@ In den Systemeinstellungen (5-Tab-Dialog → neuer Tab oder Unter-Tab):
 | Maßnahme | Aufwand |
 |---|---|
 | Keine Personendaten in Serilog-Nachrichten (Prüfung bestehender Code) | 1–2h |
-| Log-Rotation: 30 Tage (Serilog-Config) | 5 Min |
+| Zentrale Pfadmaskierung vor dem Loggen (Datei-/Ordnername statt voller Pfad) und Windows-Benutzername aus Logs und Bug-Report entfernen — Kap. 11.2 (E2) | Mittel (rund 30 Dateien loggen volle Pfade, Befund DS-07) |
+| Log-Rotation: 30 Tage (Serilog-Config) | 5 Min — ✅ umgesetzt (30 Logdateien, Tagesrollierung; Kap. 9.5) |
+| Single-Writer-Mutex (Kap. 10.1, E7) | Klein (benannter Mutex beim App-Start) |
 | CODING_STANDARDS.md: Kapitel 17 „Datenschutz im Code" | 30 Min |
 
 ### MUSS vor erstem Online-Modul
@@ -967,10 +1002,10 @@ In den Systemeinstellungen (5-Tab-Dialog → neuer Tab oder Unter-Tab):
 
 | Risiko | Begründung |
 |---|---|
-| Kontaktdaten in registry.json im Cloud-Ordner | User-Entscheidung, berechtigtes Interesse |
+| Kontaktdaten in registry.json und `.bpm/project.json` im Cloud-Ordner | User-Entscheidung, berechtigtes Interesse; `project.json` für den Re-Import (Kap. 9.2) |
 | SQLite nicht verschlüsselt (V1) | Lokale Datei, Desktop-PC, User-kontrolliert |
 | Kein Passwort bei Multi-User Modus A/B | Vertrauensbasis im Baustellenteam |
-| Log-Dateien enthalten Projektpfade | Keine Personendaten, lokal |
+| Log-Dateien enthalten Projekt-, Datei- und Ordnernamen (nach zentraler Maskierung — keine vollen Pfade, kein Windows-Benutzername) und den Rechnernamen | Lokal, nur Fehlerdiagnose; Rechnername ist technisches Gerätemerkmal (Kap. 11.2, E2) |
 | Kein formales Verarbeitungsverzeichnis (V1) | Für interne Solo-Nutzung zunächst zurückgestellt; spätestens vor Verkauf an Dritte erstellen |
 
 ---
@@ -1077,6 +1112,8 @@ Vor Implementierung jedes Moduls mit externem Kontakt oder Klasse-B/C-Daten dies
 | ADR-027 | KI-API-Import — Fallback ohne API-Transfer |
 | ADR-034 | Modul-Aktivierung — Module einzeln deaktivierbar |
 | **ADR-035** | **IExternalCommunicationService** (neu, aus diesem Dokument) |
+| ADR-060 | Dateisystem-Ports — Pfade potenziell personenbezogen, Maskierung beim Logging |
+| ADR-066 | `planmanager.db` als autorierte Projektdaten + geräteübergreifendes Identitätsmodell (stabile ULIDs) — Sicherung statt Rebuild |
 
 ---
 
@@ -1089,6 +1126,7 @@ Vor Implementierung jedes Moduls mit externem Kontakt oder Klasse-B/C-Daten dies
 | 1.2 | 03.04.2026 | Überarbeitung auf Basis externer Review: `DataClassification` Enum statt bool (Kap. 4.2), Policy Enforcement im Service (Kap. 4.2), `decision_reason` im Audit-Log (Kap. 11.3), KI Klasse C Default-Block statt Warnung (Kap. 7.3), registry.json Klasse-B-Whitelist (Kap. 9.3), Multi-User Betriebsmodi-Matrix (Kap. 10.2), Verarbeitungsverzeichnis defensiver formuliert (Kap. 15), Modul-Implementierungs-Checkliste (Kap. 18) |
 | 1.3 | 03.04.2026 | IPrivacyPolicy als austauschbare Komponente (Kap. 4.3): Strategy Pattern für Internal/Commercial-Modus, RelaxedPrivacyPolicy + StrictPrivacyPolicy, Lizenz-gesteuerte DI-Registrierung, Session-Override für Klasse B |
 | 1.4 | 03.04.2026 | Kern-Dokumenten-Review (Claude + ChatGPT, 3 Runden): Dienststatus-Modell Disabled/EnabledManual/EnabledAuto (Kap. 4.5), Anonymisierung als eigener Service (Kap. 7.3), Löschkonzept für Stammdaten (Kap. 9.5), Audit-Log Negativliste + decision_reason-Katalog (Kap. 11.3) |
+| 1.5 | 12.11.2026 | Audit Review 01 (R01-001, entschieden 2026-09-24): Pfade potenziell personenbezogen + zentrale Maskierung, Windows-Benutzername nie in Logs/Bug-Report, Rechnername als Gerätemerkmal Klasse A, statisches Serilog (Kap. 3, 8.2, 11.2, 15 — E2); Log-Aufbewahrung wie umgesetzt (Kap. 9.5); Löschen = Tombstone mit Anonymisierung, `.bpm/project.json` als Klasse-B-Datei (Kap. 3, 9.2, 9.5, 10.2 — E3); `planmanager.db` als autorierte Daten (Kap. 3, 9.1, 9.4 — ADR-066/E4); Single-Writer-Mutex V1-Pflicht ohne ADR-016-Verweis (Kap. 10.1, 15 — E7); Register-Regel für Gateway-Endpunkte inkl. Wetter-Datenwege, Lizenzsignatur asymmetrisch (Kap. 4.4, 9.4 — E17); „Klasse A/B/C“ nur für DSGVO-Datenklassen, Sync-Kategorie für ADR-047 (Kap. 3 — E16); AI-Quickload-Kapitelliste vollständig ausgeschrieben |
 
 ---
 

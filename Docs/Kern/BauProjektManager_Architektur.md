@@ -30,12 +30,12 @@ supersedes: []
 - Pflichtlesen:
   - Kapitel 2 (Speicherstrategie) bei jeder Persistenz-Änderung
   - Kapitel 5 (Solution-Struktur) bei neuem Service/Interface/Projekt
-  - Kapitel 3.4 (VBA-Kompatibilitäts-Regeln) bei registry.json-Änderung
+  - Kapitel 3.3 (Vertragsstand) + 3.4 (VBA-Kompatibilitäts-Regeln) bei registry.json-Änderung
 - Fachliche Invarianten:
   - SQLite ist System of Record in Modus A (Solo) — in Modus C (Server) ist PostgreSQL SoR, SQLite = Offline-Cache (ADR-050)
   - Dependency-Regel: Domain→NICHTS, Infrastructure→nur Domain, App→alles
   - registry.json ist versionierter Exportvertrag — Felder entfernen ist Breaking Change
-  - Modularer Monolith — feste DI-Registrierung geplant (V1: manuelles new, DI-Container Post-V1), kein Plugin-System (ADR-001)
+  - Modularer Monolith — feste Registrierung, kein Plugin-System (ADR-001); DI zweistufig (DI-Container seit BPM-077): Services, Ports und DB-Klassen nur per DI (Container bzw. registrierte Factory je Projekt), ViewModels per Konstruktor, Views dürfen View-first zusammensetzen — Regeln und Ausnahmen in CODING_STANDARDS Kap. 8
   - Offline-first — Client arbeitet immer local-first, Server nur für Auth + Sync (ADR-051). Kein Abo, kein SaaS.
 
 ---
@@ -72,14 +72,16 @@ Ausführliche Vision, Schmerzpunkte und Zielgruppe: siehe [VISION.md](../Referen
 
 ### 1.2 Architekturmodell: Modularer Monolith
 
-Eine einzige Anwendung (`BauProjektManager.exe`) mit fest registrierten Feature-Modulen. Kein Plugin-System, kein dynamisches Laden, kein `IBpmModule` Interface. Module sind separate C#-Projekte (DLLs), werden aber direkt im DI-Container als konkrete Typen registriert. (ADR-001)
+Eine einzige Anwendung (`BauProjektManager.exe`) mit fest registrierten Feature-Modulen. Kein Plugin-System, kein dynamisches Laden, kein `IBpmModule` Interface. Module sind separate C#-Projekte (DLLs), werden aber, soweit im DI-Container registriert, als konkrete Typen registriert (ADR-001).
 
 ```csharp
-// DI-Registrierung: direkt, kein Interface
+// ADR-001: konkrete Typen, kein Modul-Interface (Illustration — ViewModels müssen nicht registriert sein, siehe unten)
 services.AddTransient<PlanManagerViewModel>();
 services.AddTransient<SettingsViewModel>();
 // Navigation fest in MainWindow.xaml definiert
 ```
+
+**DI zweistufig (Audit Review 01, R01-001 E1, entschieden 2026-09-24):** Der DI-Container existiert seit BPM-077. Services, Ports und DB-Klassen kommen nur per DI (Container bzw. registrierte Factory je Projekt, eine Instanz-Welt). ViewModels erhalten ihre Abhängigkeiten per Konstruktor; Views dürfen View-first zusammensetzen — eine Registrierung jedes ViewModels im Container ist nicht Pflicht. Ausnahmen (Bootstrap vor DI, reine UI-Aktionen, Ports an XAML-UserControls über ViewModel/DataContext) und die Interface-Regel stehen in [CODING_STANDARDS.md](CODING_STANDARDS.md) Kap. 8.
 
 ```
 BauProjektManager.exe
@@ -109,7 +111,7 @@ BauProjektManager.exe
 | **Outlook** | COM Interop, Anhänge extrahieren | Nach V1 | [Konzepte/ModuleOutlook.md](../Konzepte/ModuleOutlook.md) |
 | **Wetter** | API-Anbindung pro Baustelle | Nach V1 | [Konzepte/ModuleWetter.md](../Konzepte/ModuleWetter.md) |
 | **Vorlagen** | Excel/Word mit Projektdaten befüllen | Nach V1 | [Konzepte/ModuleVorlagen.md](../Konzepte/ModuleVorlagen.md) |
-| **Plankopf-Extraktion** | Revisionstabelle aus PDF lesen (PdfPig), KI-API | Nach V1 | [Konzepte/Moduleplanheader.md](../Konzepte/Moduleplanheader.md) |
+| **Plankopf-Extraktion** | Revisionstabelle aus PDF lesen (PdfPig) — keine KI im Importpfad (ADR-065 P.2; Audit Review 01, R01-001 E17, entschieden 2026-09-24) | Nach V1 | [Konzepte/Moduleplanheader.md](../Konzepte/Moduleplanheader.md) |
 | **GIS-Integration** | Katasterdaten, Koordinaten automatisch befüllen | Nach V1 | [Konzepte/ModuleGIS.md](../Konzepte/ModuleGIS.md) |
 | **KI-Assistent** | LV-Analyse, Dokumentensuche, ChatGPT/Claude API | Nach V1 | [Konzepte/ModuleKiAssistent.md](../Konzepte/ModuleKiAssistent.md) |
 | **Mobile PWA** | Bautagebuch + Plan-Viewer am Handy | Nach V1 | BPM-Mobile-Konzept.md |
@@ -161,8 +163,13 @@ Detailliertes Ökosystem-Diagramm mit Datenflüssen: siehe [DEPENDENCY-MAP.md](.
 - **Zwei Geräte:** PC zuhause + Laptop auf der Baustelle
 - **Sync:** Cloud-Speicher (OneDrive, Google Drive, Dropbox etc.) synchronisiert Nutzdaten + Konfiguration
 - **Operativer State:** Lokal (`%LocalAppData%`), synct NICHT
-- **Sortiert auf beiden Geräten:** Ja — Profile synchen über den Cloud-Speicher
-- **Cache-Rebuild:** Wenn auf dem zweiten Gerät gearbeitet wird, baut sich der SQLite-Cache beim ersten Scan automatisch aus dem Dateisystem (Cloud-Ordner) neu auf
+- **Sortiert auf beiden Geräten:** Ja — Profile synchen über den Cloud-Speicher (Voraussetzung: stabile IDs, siehe unten; Planindex auf dem Zweitgerät: offen, siehe unten)
+- **Planindex (`planmanager.db`):** autorierte, zu sichernde Projektdaten — **kein rebuildbarer Cache** (ADR-066). Es gibt keinen automatischen Neuaufbau aus dem Dateisystem; manuell vergebene Plan-Identitäten (ADR-059) lassen sich daraus nicht rekonstruieren.
+- **Geräteübergreifende Identität (stabile ULIDs, ADR-066):** Die ULIDs aller Stammdaten werden in `.bpm/project.json` exportiert und beim Import übernommen (ADR-046 geändert). Dokumenttypen, Kategorien und Custom-Segmenttypen werden mitexportiert, Seeds laufen idempotent über `key`. ADR-065 P.12 (projektlokale ULID) bleibt gültig.
+- **Schutzmaßnahmen für geteilte Dateien:** WorkspaceId beim Laden vergleichen und bei Abweichung warnen; Cloud-Konfliktkopien erkennen und nicht als Profile laden; Temp-Dateien mit Gerätesuffix und Lock-Retry schreiben.
+- **Offen (ADR-066):** wie das Zweitgerät vor ADR-053 zu einem Planindex kommt sowie Sicherungsweg und -ort für `planmanager.db`.
+
+*(Audit Review 01, R01-001 E4, entschieden 2026-09-24 — Umsetzung im Code offen.)*
 
 ### 1.7 Projektname-Format
 
@@ -195,6 +202,8 @@ Projektnummer wird automatisch aus dem Projektstart-Datum generiert (YYYYMM).
 | **Konfiguration (geteilt)** | Cloud-Speicher (`.AppData/`) | `shared-config.json`, `registry.json`, `pattern-templates.json`, `templates.json` | Ja |
 | **Operativer State** | Lokal (`%LocalAppData%\BauProjektManager\`) | SQLite-DBs, Logs, Cache, Undo-Journal, Temp | Nein |
 
+> **Hinweis:** `bpm.db` und `planmanager.db` liegen lokal und synchronisieren nicht, sind aber autorierte, zu sichernde Daten (ADR-002, ADR-066) — kein rebuildbarer Cache.
+
 ### 2.3 Speicher-Matrix (komplett)
 
 | Datei/Daten | Format | Ort | Synct? | Schreiber | Leser | Änderung |
@@ -203,11 +212,11 @@ Projektnummer wird automatisch aus dem Projektstart-Datum generiert (YYYYMM).
 | `registry.json` | JSON | Cloud-Speicher `.AppData/` | Ja | C# (auto) | VBA, C# | Bei Projekt-Änderung |
 | `device-settings.json` | JSON | Lokal `%LocalAppData%\BauProjektManager\` | Nein | C# | C# | Selten | Geräte-spezifische Einstellungen (Pfade, DeviceId) — ADR-052. Schema: DB-SCHEMA Kap. 10.2 |
 | `shared-config.json` | JSON | Cloud-Speicher `.AppData/` | Ja | C# | C# | Selten | Geteilte Konfiguration (FolderTemplate, Listen) — ADR-052. Schema: DB-SCHEMA Kap. 10.3 |
-| ~~`settings.json`~~ *(legacy)* | JSON | Lokal `%LocalAppData%\` | Nein | — | C# (nur Migration) | — | Veraltet — wird beim ersten Start automatisch in `device-settings.json` + `shared-config.json` migriert (DB-SCHEMA Kap. 10.7) |
+| ~~`settings.json`~~ *(legacy)* | JSON | Lokal `%LocalAppData%\` | Nein | — | C# (nur Entsorgung) | — | Veraltet — wird seit BPM-069 beim Start nur entsorgt, nicht migriert (DB-SCHEMA Kap. 10.7) |
 | ~~`profiles.json`~~ | — | ~~`.AppData/Projects/<P>/`~~ → `.bpm/profiles/*.json` im Projektordner (ADR-046) | Ja | C# | C# | Beim Anlernen |
 | `pattern-templates.json` | JSON | Cloud-Speicher `.AppData/` | Ja | C# | C# | Beim Anlernen |
 | `templates.json` | JSON | Cloud-Speicher `.AppData/` | Ja | C# | C# | Selten |
-| Plan-Cache | SQLite | Lokal `planmanager.db` | Nein | C# | C# | Bei Scan/Import |
+| Planindex (autoriert, ADR-066) | SQLite | Lokal `planmanager.db` | Nein | C# | C# | Bei Erfassung/Import |
 | Import-Journal | SQLite | Lokal `planmanager.db` | Nein | C# | C# | Bei Import |
 | Undo-Daten | SQLite | Lokal `planmanager.db` | Nein | C# | C# | Bei Import |
 | Logs | Dateien | Lokal `Logs/` | Nein | Serilog | Dev | Ständig |
@@ -279,7 +288,7 @@ Cloud-Speicher/02Arbeit/
 ├── bpm.db                                     ← Haupt-SQLite
 ├── Projects/
 │   ├── 202512_OeWG-Dobl/
-│   │   └── planmanager.db                     ← Cache, Journal, Undo
+│   │   └── planmanager.db                     ← Planindex (autoriert, ADR-066), Journal, Undo
 │   └── 202302_Kapfenberg/
 │       └── planmanager.db
 ├── Logs/
@@ -287,19 +296,16 @@ Cloud-Speicher/02Arbeit/
 │   └── BPM_2026-03-27.log
 ├── Thumbnails/                                ← Foto-Modul Cache
 ├── Tools/                                     ← FFmpeg etc.
-├── Backups/
-│   └── pre-import/
-│       └── 2026-03-27_1432/
-│           ├── bpm.db.bak
-│           └── planmanager.db.bak
 └── Temp/
 ```
+
+Der frühere Ordner `Backups/pre-import/` entfällt mit „Backup vor Import“ (gestrichen, BPM-018 / ADR-064; Audit Review 01, R01-001 E7, entschieden 2026-09-24). `planmanager.db` ist als autorierte Daten in die Sicherung einzubeziehen (ADR-066); Sicherungsweg und -ort werden bei der Umsetzung festgelegt.
 
 ### 2.6 Hidden-Attribute
 
 | Ordner/Datei | Hidden? | Warum |
 |---|---|---|
-| `.AppData/` | Ja (Hidden + System) | Nicht für User sichtbar |
+| `.AppData/` | Ja (Hidden, **kein** System-Attribut — Sync-Risiko; Audit Review 01, R01-001 E4, entschieden 2026-09-24) | Nicht für User sichtbar |
 | `.bpm/` | Ja (Hidden) | Nicht für Kollegen sichtbar |
 | `_Eingang/` | Nein | User muss hier Dateien reinwerfen |
 | `_Archiv/` | Nein | User soll alte Pläne finden |
@@ -427,6 +433,13 @@ public enum ProjectStatus { Active, Completed }
 
 ### 3.3 registry.json (Generierter Export — flach für VBA)
 
+> **Vertragsstand (Audit Review 01, R01-001 E5, entschieden 2026-09-24):** Der Exportvertrag 1.0 wird aus einer Bestandsaufnahme der VBA-Makros neu geschnitten — er enthält dann nur die Felder, die die Makros tatsächlich lesen; danach gilt die Breaking-Change-Regel aus Kap. 3.5. **Offen:** Zuarbeit Herbert (VBA-Makros bzw. Liste der gelesenen Felder). **Bis dahin gilt der Code-Ist** (`RegistryJsonExporter`), nicht das Beispiel unten. Bekannte Abweichungen des Beispiels vom Code: kein `settings`-Block und kein `folderName`; zusätzlich exportiert der Code `clientCompany`/`clientContact`/`clientPhone`/`clientEmail`, `street`/`houseNumber`/`postalCode`/`city` und `rootPath`; `buildings` ohne Geschossliste; `planTypes` ist eine fest verdrahtete Liste.
+>
+> Unabhängig von der Bestandsaufnahme gilt:
+> - `generatedAt` künftig als ISO 8601 **mit Offset** (heute Lokalzeit ohne Offset).
+> - `planTypes` wird gestrichen oder aus den Dokumenttyp-Stammdaten erzeugt; die Geschossliste im `buildings`-String nur, wenn ein Makro sie nutzt.
+> - Schreiber: Bis zum Server-Sync (ADR-053) exportiert nur ein Gerät mit passender WorkspaceId die geteilte `registry.json`.
+
 ```json
 {
   "registryVersion": "1.0",
@@ -520,11 +533,11 @@ Projektordner/
 
 **manifest.json** (schlank — nur Ausweis): projectId, projectNumber, name, updatedAtUtc, createdByMachine, modules (Flags welche Module aktiv sind).
 
-**project.json** (Vollexport): Alle Projektdaten für Import/Übergabe. Keine DB-IDs, eigene DTOs. Wird bei jedem Speichern aktualisiert.
+**project.json** (Vollexport): Alle Projektdaten für Import/Übergabe, eigene DTOs. Wird bei jedem Speichern aktualisiert. **Stabile IDs statt „keine DB-IDs“ (ADR-066, ADR-046 geändert; Audit Review 01, R01-001 E4, entschieden 2026-09-24 — Umsetzung offen):** Die ULIDs aller Stammdaten werden mitexportiert und beim Import übernommen; zusätzlich Dokumenttypen, Kategorien und Custom-Segmenttypen, Seeds idempotent über `key`. Enthält die Kontaktdaten von Auftraggeber und Beteiligten (Klasse B) — Einstufung, Begründung und Bereinigung beim Löschen: [DSGVO-Architektur Kap. 9.2/9.5](DSVGO-Architektur.md) (E3).
 
 **profiles/**: Eine JSON-Datei pro Plantyp-Profil. Synct über Cloud-Speicher zwischen Geräten.
 
-Bei Ordner-Umbenennung: BPM sucht über `.bpm/manifest.json` automatisch den neuen Pfad und aktualisiert die DB. Vorwärtsmigration (`ManifestService.EnsureMigrated`, idempotent): alte `.bpm-manifest`-Datei → beide Dateien schreiben, alte Datei löschen; `manifest.json` mit SchemaVersion 1 (früherer Vollexport) → in `project.json` + schlankes `manifest.json` aufteilen. Ein bestehendes `project.json` wird nie überschrieben. Auslöser: Projekt-Import in den Einstellungen und jedes Speichern im Projektdialog.
+Bei Ordner-Umbenennung: BPM sucht über `.bpm/manifest.json` automatisch den neuen Pfad und aktualisiert die DB. Vorwärtsmigration (`ManifestService.EnsureMigrated`, idempotent): alte `.bpm-manifest`-Datei → beide Dateien schreiben, alte Datei löschen; `manifest.json` mit SchemaVersion 1 (früherer Vollexport) → in `project.json` + schlankes `manifest.json` aufteilen. Ein bestehendes `project.json` wird nie überschrieben. Auslöser: Projekt-Import in den Einstellungen und jedes Speichern im Projektdialog. Diese Migration ist eine ausdrücklich freigegebene Ausnahme von der Projekt-Phase (INDEX.md „Projekt-Phase“; Audit Review 01, R01-001 E6, entschieden 2026-09-24) und entfällt, sobald alle eigenen Projektordner auf `manifest.json` v2 + `project.json` umgestellt sind.
 
 ### 3.6 Automatische Projektordner-Erstellung
 
@@ -554,7 +567,7 @@ Dort dokumentiert:
 - IndexSource-Modell (FileName / None / PlanHeader, ADR-045)
 - Undo-Journal (3 SQLite-Tabellen), Recovery, Preflight
 - Manueller Sortier-Modus + Umbenennung
-- Bestandsmanifest (`.bpm/plan-index.json`), Cache-Rebuild
+- Bestandsmanifest (`.bpm/plan-index.json`), Cache-Rebuild — *überholt: kein `plan-index.json` (ADR-061 Modell A) und kein Cache-Rebuild, `planmanager.db` ist autorierte Daten (ADR-066)*
 - DB-Schema (planmanager.db, 6 Tabellen v1.0 — Schema v2.0 mit Drei-Ebenen-Modell für Foundation Slice in BPM-109 geplant, ADR-058)
 - Planlisten Import/Export (V1.1)
 - Solution-Struktur + Implementierungsreihenfolge
@@ -706,12 +719,13 @@ Zusammenfassung der wichtigsten Entscheidungen:
 | **Adressbuch** | Getrennt von Projekt-Beteiligten | ADR-024 |
 | **Status** | Nur Active + Completed | ADR-025 |
 | **Portal-Typen** | Editierbare Liste | ADR-026 |
-| **KI-API-Import** | ChatGPT/Claude für Datenextraktion | ADR-027 |
+| **KI-API-Import** | ChatGPT/Claude für Datenextraktion — nicht im Plan-Importpfad (ADR-065 P.2, E17) | ADR-027 |
 | **Datenschutz** | IExternalCommunicationService als zentrales Privacy Gate | ADR-035 |
 | **Privacy Policy** | IPrivacyPolicy austauschbar (Relaxed/Strict), Lizenz-gesteuert | ADR-036 |
 | **ID-Schema** | ULID als TEXT PRIMARY KEY, global eindeutig, offline erzeugbar | ADR-039 |
 | **Ansichtsprofile** | ViewProfiles als UI-Sichtschicht über Modul-Aktivierung, Resolver-basiert | ADR-048 |
 | **Pfad-Resolution** | Relativer folder_name + Manifest-Fallback (Option C) — kein absoluter root_path in DB | ADR-049 |
+| **Planindex + Identität** | `planmanager.db` als autorierte Projektdaten (kein rebuildbarer Cache) + geräteübergreifend stabile ULIDs über `project.json` | ADR-066 |
 
 ---
 
@@ -778,17 +792,19 @@ Detaillierte Feature-Liste mit Status: siehe [BACKLOG.md](BACKLOG.md).
 
 ### V1-Pflicht Standards
 
+Herkunft: ADR-016 (Coding Standards + DoD). Single-Writer-Mutex, Thread-Regel und die Eingrenzung des CancellationToken stammen nicht aus ADR-016 (dort steht kein Mutex), sondern aus Audit Review 01, R01-001 E7, entschieden 2026-09-24. „Backup vor Import“ ist gestrichen (BPM-018, ADR-064; E7).
+
 | Standard | Umsetzung |
 |----------|-----------|
 | Nullable Reference Types | `<Nullable>enable</Nullable>` in allen .csproj |
 | `.editorconfig` | Einmal erstellen, erzwingt einheitliche Formatierung |
-| Logging | Serilog, Structured Logging, `{PropertyName}` Platzhalter |
-| CancellationToken | Alle async Methoden bekommen CancellationToken |
+| Logging | Statisches Serilog (`Log.*`, kein `ILogger<T>`), Structured Logging, `{PropertyName}` Platzhalter; Pfade zentral maskiert, Windows-Benutzername nie (Audit Review 01, R01-001 E2, entschieden 2026-09-24 — Details CODING_STANDARDS Kap. 8/17, DSGVO-Architektur Kap. 11.2) |
+| CancellationToken | Nur für lang laufende Vorgänge (Import, Hashing, PDF-Rendern) — nicht flächendeckend für alle async-Methoden (E7) |
+| Thread-Regel | DB-Zugriff nur auf dem UI-Thread; `Task.Run` nur für Datei-/CPU-Arbeit ohne DB (E7; Details CODING_STANDARDS Kap. 11) |
 | Verbot `async void` | Nur erlaubt für UI Event-Handler |
 | IDisposable | `using`-Statement Pflicht |
-| Single-Writer | Mutex beim App-Start — nur eine Instanz läuft |
+| Single-Writer | Mutex beim App-Start — nur eine Instanz läuft. **V1-Pflicht** (E7) |
 | Schema-Version | `"schemaVersion": "1.0"` in jeder DB und JSON |
-| Backup vor Import | SQLite-DB + JSON als .bak kopieren |
 | Atomische JSON-Writes | Write-to-temp-then-rename |
 
 Detaillierte Coding Standards: siehe [CODING_STANDARDS.md](CODING_STANDARDS.md).
@@ -817,11 +833,11 @@ Bevor ein Feature als "fertig" gilt:
 | `templates.json` | Cloud-Speicher `.AppData/` | JSON | Vorlagen-Verzeichnis | C#-App |
 | ~~`profiles.json`~~ | ~~Cloud-Speicher `.AppData/Projects/<P>/`~~ | — | Wandert nach `.bpm/profiles/` (ADR-046) | — |
 | `bpm.db` | Lokal | SQLite | Haupt-DB (Projekte) | C#-App |
-| `planmanager.db` | Lokal `Projects/<P>/` | SQLite | Cache, Journal, Undo | C#-App |
+| `planmanager.db` | Lokal `Projects/<P>/` | SQLite | Planindex (autoriert, ADR-066), Journal, Undo | C#-App |
 | `.bpm/manifest.json` | Cloud-Speicher Projektordner | JSON | Projekt-Identität | C#-App |
 | `.bpm/project.json` | Cloud-Speicher Projektordner | JSON | Vollständiger Projektexport | C#-App |
 | `.bpm/profiles/*.json` | Cloud-Speicher Projektordner | JSON | Plantyp-Profile | C#-App |
-| `.bpm/plan-index.json` | Cloud-Speicher Projektordner | JSON | Bestandsmanifest (Soll-Planliste) | C#-App |
+| ~~`.bpm/plan-index.json`~~ | ~~Cloud-Speicher Projektordner~~ | — | Gestrichen (BPM-046, ADR-061 Modell A); kein Rebuild-Manifest nötig, `planmanager.db` ist autorierte Daten (ADR-066) | — |
 
 ---
 

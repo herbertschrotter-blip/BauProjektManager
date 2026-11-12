@@ -143,11 +143,19 @@ public class RecoveryExecutorService
         // bleiben dann ebenfalls unangetastet fuer den naechsten Versuch.
         if (failed == 0)
         {
-            var pending = _db.GetImportActions(importId, statusFilter: "pending");
-            foreach (var action in pending)
-                _db.CompleteImportAction(action.Id, success: false, errorMessage: "cancelled by rollback");
-            _db.CompleteImportJournal(importId, success: false,
-                errorMessage: "Recovery Rollback erfolgreich.");
+            // R01-006.03 (ADR-064 P.1/P.5): nach vollstaendigem Disk-Reverse auch den
+            // Plan-Cache zuruecksetzen — sonst zaehlt die in den Eingang
+            // zurueckgeschobene Datei weiter als Bestand und wuerde beim naechsten
+            // Bestaetigen als Dublette geloescht. Eine Transaction mit dem Abschluss.
+            _db.ExecuteInTransaction(() =>
+            {
+                new ImportReverseApplier(_db).RevertDatabase(importId, "Recovery Rollback");
+                var pending = _db.GetImportActions(importId, statusFilter: "pending");
+                foreach (var action in pending)
+                    _db.CompleteImportAction(action.Id, success: false, errorMessage: "cancelled by rollback");
+                _db.CompleteImportJournal(importId, success: false,
+                    errorMessage: "Recovery Rollback erfolgreich.");
+            });
         }
         else
         {

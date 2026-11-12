@@ -157,4 +157,58 @@ public class ImportReverseEndStateTests
         Assert.Equal(1, forward.FailedCount);
         Assert.Equal(revA.Id, env.Repo.GetCurrentRevisionForDocument(docId)!.Id);
     }
+
+    // ── 006.03 / PM-02: Rollback setzt den Plan-Cache zurueck ──
+
+    private static ImportDecision LinkDecision(string fileName, string md5) => new(
+        new ClassifiedImportFile(
+            new ParsedImportFile(Path.Combine("_Eingang", fileName), fileName,
+                Path.GetExtension(fileName), 12, md5,
+                null, new Dictionary<string, string>(), ParseConfidence.High, []),
+            "polierplan", "Polierplan", Key, "5998-300", null, RevisionKind.None,
+            IndexSourceType.None, ImportStage.Unknown, new Dictionary<string, string>(), []),
+        ImportStatus.ChangedNoIndex, Key, null, Path.Combine(TargetRelDir, fileName), []);
+
+    [Fact]
+    public void Rollback_AfterCompletedNewAction_RevertsPlanCacheAndAllowsReimport()
+    {
+        using var env = new TestEnv();
+        Assert.Equal(0, env.Import(FileName, "md5-a").Failed);
+        var importId = env.Repo.GetLastCompletedImportId()!;
+
+        var rollback = env.Recovery().ExecuteRollback(importId, env.Root);
+
+        Assert.Equal(0, rollback.FailedCount);
+        Assert.True(env.Fake.FileExists(env.InboxAbs(FileName)));
+        Assert.Null(env.Repo.GetDocumentByKey(Key));                       // Dokument zurueckgenommen
+        Assert.False(env.Repo.GetKnownMd5Lookup().ContainsKey("md5-a"));   // keine Dublette mehr
+
+        // Folge-Import derselben Datei laeuft sauber (kein Dublettenloeschen, kein UNIQUE-Fehler)
+        Assert.Equal(0, env.Import(FileName, "md5-a", addFile: false).Failed);
+        Assert.NotNull(env.Repo.GetDocumentByKey(Key));
+    }
+
+    [Fact]
+    public void Undo_OfLinkedAdditionalFile_UnlinksItFromExistingRevision()
+    {
+        using var env = new TestEnv();
+        Assert.Equal(0, env.Import(FileName, "md5-pdf").Failed);
+        var docId = env.Repo.GetDocumentByKey(Key)!.Id;
+        var rev = env.Repo.GetCurrentRevisionForDocument(docId)!;
+
+        // DWG wird in einem zweiten Import an die bestehende Revision angehaengt
+        const string dwg = "5998-300_OG2.dwg";
+        env.Fake.AddFile(env.InboxAbs(dwg));
+        Assert.Equal(0, env.Executor().Execute([LinkDecision(dwg, "md5-dwg")], env.Root, "_Eingang").Failed);
+        Assert.Equal(2, env.Repo.GetFilesForRevision(rev.Id).Count);
+
+        Assert.True(env.Undo().UndoLastImport(env.Root).Success);
+
+        Assert.True(env.Fake.FileExists(env.InboxAbs(dwg)));
+        Assert.Equal(rev.Id, env.Repo.GetCurrentRevisionForDocument(docId)!.Id); // PDF-Revision bleibt
+        Assert.Single(env.Repo.GetFilesForRevision(rev.Id));                      // DWG entknuepft
+        var known = env.Repo.GetKnownMd5Lookup();
+        Assert.False(known.ContainsKey("md5-dwg"));
+        Assert.True(known.ContainsKey("md5-pdf"));
+    }
 }

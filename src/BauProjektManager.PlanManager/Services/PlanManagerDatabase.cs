@@ -1340,6 +1340,60 @@ public class PlanManagerDatabase : IDisposable
         return result;
     }
 
+    /// <summary>
+    /// Dateien, die dieser Import an eine Revision angehaengt hat (Events 'file_linked',
+    /// note = Dateiname) — Rueckbau-Kern R01-006.03.
+    /// </summary>
+    public List<(string RevisionId, string FileName)> GetFilesLinkedByImport(string importId)
+    {
+        var result = new List<(string, string)>();
+        var cmd = GetConnection().CreateCommand();
+        cmd.CommandText = """
+            SELECT revision_id, note FROM plan_revision_events
+            WHERE import_id = @iid AND event_type = 'file_linked'
+            """;
+        cmd.Parameters.AddWithValue("@iid", importId);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+            if (!reader.IsDBNull(1))
+                result.Add((reader.GetString(0), reader.GetString(1)));
+        return result;
+    }
+
+    /// <summary>
+    /// Entknuepft eine Datei von einer Revision und entfernt den Datei-Cache-Eintrag
+    /// (plan_files/revision_file_links sind Cache-Tabellen ohne Sync-Felder) — R01-006.03.
+    /// </summary>
+    public void UnlinkFileFromRevision(string revisionId, string fileName)
+    {
+        var conn = GetConnection();
+        var find = conn.CreateCommand();
+        find.CommandText = """
+            SELECT pf.id FROM plan_files pf
+            JOIN revision_file_links rfl ON rfl.file_id = pf.id
+            WHERE rfl.revision_id = @rid AND pf.file_name = @fn
+            """;
+        find.Parameters.AddWithValue("@rid", revisionId);
+        find.Parameters.AddWithValue("@fn", fileName);
+        var fileIds = new List<string>();
+        using (var reader = find.ExecuteReader())
+            while (reader.Read())
+                fileIds.Add(reader.GetString(0));
+
+        foreach (var fileId in fileIds)
+        {
+            var del = conn.CreateCommand();
+            del.CommandText = """
+                DELETE FROM revision_file_links WHERE revision_id = @rid AND file_id = @fid;
+                DELETE FROM plan_files WHERE id = @fid
+                    AND NOT EXISTS (SELECT 1 FROM revision_file_links WHERE file_id = @fid);
+                """;
+            del.Parameters.AddWithValue("@rid", revisionId);
+            del.Parameters.AddWithValue("@fid", fileId);
+            del.ExecuteNonQuery();
+        }
+    }
+
     /// <summary>Soft Delete einer Revision (Undo: vom Import angelegte Revision zuruecknehmen).</summary>
     public void SoftDeleteRevision(string revisionId)
     {

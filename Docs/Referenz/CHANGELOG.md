@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.199] — 2026-11-12
+
+### Fix: Recovery-Rollback setzt auch den Plan-Cache zurück — gemeinsamer Rückbau-Kern mit dem Undo (R01-006.03)
+
+`RecoveryExecutorService.ExecuteRollback` schob nur die Dateien zurück und ließ Revisionen, Dokumente, Datei-Links und ein Supersede in `planmanager.db` stehen. Die zurückgeschobene Datei zählte damit weiter als Bestand, wurde beim nächsten Erfassen als Dublette (Bucket A) eingestuft und beim Bestätigen gelöscht — die einzige Kopie. Neu ist `ImportReverseApplier.RevertDatabase` als gemeinsamer DB-Rückbau (ADR-064 P.5 „ApplyReverse“): angelegte Revisionen soft-deleten, an fremde Revisionen angehängte Zusatzdateien (Events `file_linked`, z. B. DWG zu einer bestehenden PDF-Revision) entknüpfen, superseded Revisionen wieder current setzen, Dokumente ohne Revision soft-deleten. Undo und Rollback nutzen ihn, jeweils erst nach vollständigem Disk-Reverse und in einer Transaction mit dem Journal-Abschluss. Damit behebt der Commit dieselbe Lücke auch beim Undo einer angehängten Zusatzdatei. Neue DB-Primitive `GetFilesLinkedByImport`, `UnlinkFileFromRevision`; zwei neue Tests, 512/512 grün. (Audit Review 01, R01-006 / PM-02)
+
+---
 ## [v0.28.198] — 2026-11-12
 
 ### Fix: Fehlende Quelldatei ergibt keinen DB-Eintrag ohne Datei mehr (R01-006.02)

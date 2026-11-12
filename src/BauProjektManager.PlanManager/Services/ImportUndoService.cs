@@ -145,22 +145,10 @@ public class ImportUndoService
         // 2. DB-Rollback in EINER SQLite-Transaction inkl. 'undone' (T7/AK 14):
         //    angelegte Revisionen soft-deleten, Dokumente ohne Revisionen
         //    soft-deleten, superseded Revisionen restaurieren, Journal markieren.
+        //    R01-006.03: gemeinsamer Rueckbau-Kern mit dem Recovery-Rollback.
         _db.ExecuteInTransaction(() =>
         {
-            var created = _db.GetRevisionsCreatedByImport(importId);
-            foreach (var (revisionId, _) in created)
-                _db.SoftDeleteRevision(revisionId);
-
-            foreach (var revisionId in _db.GetRevisionIdsSupersededByImport(importId))
-            {
-                _db.RestoreRevisionToCurrent(revisionId);
-                _db.InsertRevisionEvent(revisionId, importId,
-                    PlanArchive.EventType.MadeCurrent, "Undo letzter Import");
-            }
-
-            foreach (var documentId in created.Select(c => c.DocumentId).Distinct())
-                _db.SoftDeleteDocumentIfNoRevisions(documentId);
-
+            new ImportReverseApplier(_db).RevertDatabase(importId, "Undo letzter Import");
             _db.MarkImportUndone(importId);
         });
 

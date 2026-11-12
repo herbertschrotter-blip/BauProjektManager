@@ -130,7 +130,8 @@ Triage-Regel (Audit Review 01, R01-001 E13, entschieden 2026-09-24): Datenintegr
 | 76 | Import-Time-Validation der Soft-References | Vor dem Schreiben nach `planmanager.db` Bauteil-, Geschoss-, Dokumenttyp- und Segmenttyp-IDs gegen `bpm.db` prüfen, Fail-Fast (BPM-109.03, ADR-058-Addendum; E13) | ⬜ |
 | 77 | Quellen-Spalte für Segmente | `plan_document_segments` bekommt eine Quellen-Spalte (Dateiname geparst, Radial, PDF-Markierung, manuell) — jetzt anlegen, Reset statt Migration (Projekt-Phase); BPM-121 lernt daraus (E13) | ⬜ |
 | 78 | SQLitePCLRaw-Sicherheitsupdate | Update von Microsoft.Data.Sqlite bzw. expliziter SQLitePCLRaw-Pin auf eine Version ohne GHSA-2m69-gcr7-jv3q (Build-Warnung NU1903). **Freigabe erteilt** (Audit Review 01, R01-001 E20, entschieden 2026-09-24) | ⬜ |
-| 79 | Zentrale Pfadmaskierung + Bug-Report ohne Benutzername | Pfade vor dem Loggen zentral auf Datei-/Ordnernamen maskieren (zentraler Maskierungs-Helper, Name bei Umsetzung); Windows-Benutzername aus Logs und DevTools-Bug-Report entfernen (DSGVO-Architektur Kap. 11.2/15; Audit Review 01, R01-001 E2, entschieden 2026-09-24) | ⬜ |
+| 79 | Zentrale Pfadmaskierung + Bug-Report ohne Benutzername | Pfade vor dem Loggen zentral auf Datei-/Ordnernamen maskieren (zentraler Maskierungs-Helper, Name bei Umsetzung); Windows-Benutzername aus Logs und DevTools-Bug-Report entfernen (DSGVO-Architektur Kap. 11.2/15; Audit Review 01, R01-001 E2, entschieden 2026-09-24; V1 bestätigt 2026-11-12) | ⬜ |
+| 80 | Listen im Detail-Panel (Tastaturpfad + Fallback zum Radial) | Auswahl für Dokumenttyp, Bauteil/Kategorie und Geschoss über Listen im Detail-Panel — Tastatur-Alternative zum Radial nach dem A11y-Mindeststandard V1 (UI_UX_Guidelines Kap. 15) und zugleich Fallback bei vielen Bauteilen (ADR-059 P.5/P.6, ADR-058-Addendum Zusagen-Triage P.5). Klärung Herbert 2026-11-12: E15 hat Vorrang vor E13 | ⬜ |
 
 ---
 
@@ -253,7 +254,6 @@ Gute Ideen, aber erst nach einem funktionierenden PlanManager. Konzepte sind dok
 | **Audit-Trail** | [ADR-053](../Referenz/ADR.md) | audit_log Tabelle für kritische Operationen (Nachkalkulation, Freigaben). Erst mit Nachkalkulation |
 | ADR-056-Health-Gating | [ADR-056 P.5](../Referenz/ADR.md) | Komfortfunktion — in V1 gibt es keinen Profil-Import; post-V1 per ADR-Addendum, ADR-056-Status anpassen (Audit Review 01, R01-001 E13, entschieden 2026-09-24) |
 | Relink-Bestätigung im PlanManager | [ADR-061 P.6](../Referenz/ADR.md) | MD5-Relink-Vorschlag mit Bestätigung durch den Nutzer — Komfortfunktion, post-V1 per ADR-Addendum (E13) |
-| Listen-Fallback im Detail-Panel | [ADR-059 P.5/P.6](../Referenz/ADR.md) | Auswahl für Dokumenttyp, Bauteil/Kategorie und Geschoss ohne Radial — post-V1 per ADR-Addendum, außer Projekte mit mehr als 25 Bauteilen sind schon V1-Realität, dann V1 (E13). Abgleich offen: Nach E15 ist die Tastatur-Alternative zum Radial über die Listen im Detail-Panel Teil des A11y-Mindeststandards V1 (UI_UX_Guidelines Kap. 15) — Klärung durch Herbert, bis dahin kein ADR-059-Addendum |
 
 ---
 

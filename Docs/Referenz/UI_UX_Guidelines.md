@@ -627,7 +627,7 @@ Eigenes Muster neben Dialog und Inline-Editing (Audit Review 01, R01-001 E15, en
 **Mindeststandard V1 (hart)** — gilt für alle V1-Screens, -Dialoge und -Overlays; nur der DevToolsDialog (nur DEBUG) hat niedrige Priorität (Audit Review 01, R01-001 E15, entschieden 2026-09-24):
 
 1. **Sichtbarer Fokus:** Jedes fokussierbare Element zeigt einen sichtbaren Fokus (Focus-Ring, Kap. 15.2). Fokusrahmen dürfen nicht ersatzlos entfernt werden.
-2. **Tastaturpfad für die Kernabläufe:** Kernabläufe sind ohne Maus bedienbar. Radial (Manuell sortieren): Tastatur-Alternative über die Listen im Detail-Panel (Kap. 9.1) — Abgleich mit dem Listen-Fallback im Detail-Panel (post-V1 laut BACKLOG; Audit Review 01, R01-001 E13, entschieden 2026-09-24) offen, Klärung durch Herbert. Projektliste: Mausklick darf navigieren, Tastaturauswahl erst mit Enter (Kap. 14).
+2. **Tastaturpfad für die Kernabläufe:** Kernabläufe sind ohne Maus bedienbar. Radial (Manuell sortieren): Tastatur-Alternative über die Listen im Detail-Panel (Kap. 9.1) — V1, dieselben Listen dienen als Fallback bei vielen Bauteilen (BACKLOG #80, ADR-058-Addendum Zusagen-Triage P.5; Klärung Herbert 2026-11-12: E15 hat Vorrang vor E13). Projektliste: Mausklick darf navigieren, Tastaturauswahl erst mit Enter (Kap. 14).
 3. **Escape schließt Overlays:** Escape schließt Dialoge und Overlays (bei Formulardialogen mit Dirty-Check, Kap. 8.4).
 4. **Kontrast ≥ 4,5:1** für Text (WCAG AA, Kap. 15.1). Auf `warning`-Gelb immer dunkle Schrift.
 
@@ -752,7 +752,7 @@ Einsatzbereich: Globales ± 0,00 Niveau, zukünftig alle An/Aus-Einstellungen im
 *- Statusleisten-Hintergrund in 6.5 nach Mockup 01_Sidebar.html und Code (accent-primary), Rangfolge Kap. 1.4*
 *- Regel in 1.4 präzisiert: nur Layout- und Maßangaben zu konkreten Screens sind Richtwerte, Tokens und Komponenten-Regeln bleiben maßgeblich; Einzelentscheidungen E14 gehen abweichenden Mockups vor*
 *- Gestaltungsregeln gelockert: ein Primary je Dialog-Footer (P2, 8.1 inkl. Button-Tabelle), Unterdialoge höchstens eine Ebene tief, Bestätigungs-, Hinweis- und Dirty-Check-Abfragen zählen nicht als Ebene (8.4), Detail-Panel als eigenes Muster (9.1), Inline-Editing nur für Einzelwerte (9), Suchfeld links (10), Schriftgrößen-Regel nur für den Content-Bereich (4.3)*
-*- A11y-Mindeststandard V1 (hart) in Kap. 15 (Abgleich Radial-Tastaturalternative mit dem Listen-Fallback E13 offen), Ausnahme Projektliste in Kap. 14, Kontrast-Zeilen für Warning-Gelb (dunkle Schrift 8,6:1 = AAA)*
+*- A11y-Mindeststandard V1 (hart) in Kap. 15 (Radial-Tastaturalternative über die Listen im Detail-Panel ist V1, Klärung Herbert 2026-11-12), Ausnahme Projektliste in Kap. 14, Kontrast-Zeilen für Warning-Gelb (dunkle Schrift 8,6:1 = AAA)*
 *- AI-Quickload: Kapitel-Liste an die H2 angeglichen, Pflichtlesen auf Kap. 7 (Screen States) und 8.7 (Icons) korrigiert*
 *- BpmButtonSuccess entfällt (8.1), Dialog-Basis-Styles verwenden oder löschen (8.4), Sprachregel „Geschoß“ (13)*
 *- Version-Kopf 2.1 → 2.3*

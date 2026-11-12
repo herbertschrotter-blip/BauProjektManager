@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.195] — 2026-11-12
+
+### Docs: Vier Klärungen zu R01-001 nachgetragen (Detail-Panel-Listen V1, Bucket D, Pfadmaskierung V1, Dialogebene)
+
+Nach dem Übertrag waren vier Punkte als „offen“ markiert; Herbert hat sie entschieden. **Listen im Detail-Panel sind V1:** Die Auswahl von Dokumenttyp, Bauteil/Kategorie und Geschoss über Listen ist die Tastatur-Alternative zum Radial (A11y-Mindeststandard, E15 hat Vorrang vor E13) und zugleich der Fallback bei vielen Bauteilen — ADR-058-Addendum Zusagen-Triage P.5, neuer BACKLOG-Punkt #80 (die post-V1-Zeile entfällt), UI_UX_Guidelines Kap. 15 ohne „Abgleich offen“. **Gleicher Dateiname + anderer MD5 ohne Index (IndexSource `None`) → Bucket D (Konflikt):** ADR-045-Addendum P.5, Verweis im ADR-059-Addendum Bucket-Modell P.3. **BACKLOG #79** (zentrale Pfadmaskierung, Bug-Report ohne Windows-Benutzername) bleibt V1. **Kurze Abfragen** (Bestätigen, Hinweis, ungespeicherte Änderungen) zählen nicht als weitere Dialogebene — bestätigt, die Formulierung in UI_UX 8.4, WPF 5.4, CODING_STANDARDS 18.1 und UI_Navigation Regel 7 bleibt. Keine Code-Änderung.
+
+---
 ## [v0.28.194] — 2026-11-12
 
 ### Docs: DSVGO-Architektur.md → DSGVO-Architektur.md (Dateiname, doc_id, alle Verweise)

@@ -1907,7 +1907,7 @@ Pro Projekt und Plantyp (= im RecognitionProfile) wird ein `IndexSource` Feld ge
 3. **Index optional:** Ist im Profil kein `planIndex`-Segment zugewiesen, warnt der Wizard statt zu blockieren (Regel siehe ADR-059-Addendum Tokenisierung). (Audit Review 01, R01-001 E11, entschieden 2026-09-24)
 4. **MD5-Ablage:** Die Konsequenz „MD5-Hash wird in `import_action_files.md5_hash` gespeichert" ist überholt — `import_action_files` entfällt (ADR-054-Addendum); der Hash steht in `plan_files.md5_hash` (ADR-054 P.6) und im Journal in `import_actions`. (Audit Review 01, R01-001 E10, entschieden 2026-09-24)
 
-**Offen (Entscheidung Herbert):** In welchen Bucket (A–D) der Fall „gleicher Dateiname + anderer MD5" bei IndexSource `None` fällt, ist noch nicht festgelegt.
+5. **Gleicher Dateiname + anderer MD5 bei IndexSource `None` → Bucket D (Konflikt):** Ohne Index ist nicht erkennbar, ob die Datei neuer ist. Die Zeile landet im Konflikt-Bucket und wird im Detail-Panel bzw. Auswahldialog aufgelöst (als neue Revision übernehmen oder verwerfen); kein stilles Update, kein Radial (ADR-059-Addendum Bucket-Modell P.3). (Klärung Herbert, 2026-11-12, zu R01-001 E9)
 
 **Betrifft:** ADR-054 (Statuslogik, Journal), ADR-059 (Bucket-Modell), ADR-064 (journalisierte `archive_path`), PlanManager.md (Archiv-/Versionierungskapitel), Characterization-Test des `ImportExecutionService`.
 
@@ -2925,6 +2925,7 @@ Das Modell entspricht den Drei-Ebenen-Mustern von Procore (Drawing/Revision/Shee
 2. **Warnbadge für verwaiste Referenzen ist V1:** Pläne mit soft-gelöschten Bauteil-/Geschoss-Referenzen (Sub-Entscheidung (b)) zeigen in V1 Warnung + Badge. Der App-Level Delete Guard bleibt post-V1.
 3. **Quellen-Spalte für Segmente:** `plan_document_segments` erhält jetzt eine Spalte für die Quelle des Segmentwerts (Name bei Umsetzung). Frühphase: projektbezogene `planmanager.db` löschen, BPM erzeugt sie neu.
 4. **P.8/Stub vor BPM-109.05 anpassen:** Der Vertrag von `CreatePlanContextSnapshotAsync` und der Interface-Stub (.05a) werden vor der Umsetzung von BPM-109.05 um `projectId` und `link_type` ergänzt.
+5. **Listen im Detail-Panel sind V1:** Die Auswahl von Dokumenttyp, Bauteil/Kategorie und Geschoss über Listen im Detail-Panel (ADR-059 P.5/P.6) ist die Tastatur-Alternative zum Radial nach dem A11y-Mindeststandard V1 (UI_UX_Guidelines Kap. 15, R01-001 E15) und deckt zugleich den Fallback bei vielen Bauteilen ab. E15 hat hier Vorrang vor der Komfort-Einstufung aus E13. (Klärung Herbert, 2026-11-12; BACKLOG #80)
 
 **Betrifft:** ADR-056-Addendum (Health-Gating post-V1), ADR-065 (Segmentquelle als Lerngrundlage für BPM-121), DB-SCHEMA.md Kap. 6 (`plan_document_segments`, `plan_context_links`), ClickUp BPM-109.03/.05.
 
@@ -3013,7 +3014,7 @@ Das bisherige Erkennungs-Modell extrahiert Identitätsfelder (haus/geschoss/plan
 
 1. **Einzige V1-Statuslogik:** Die Buckets A–D aus ADR-059 P.5 sind die V1-Wahrheit. Die 7-Status-Matrix aus PlanManager.md entfällt, tote Status-Enums werden entfernt (ADR-054-Addendum). (Audit Review 01, R01-001 E9, entschieden 2026-09-24)
 2. **Bucket B (Update-Karten):** In V1 mit den Aktionen „Übernehmen" und „Überspringen"; Akzeptanzkriterien und Mockup werden angeglichen. (Audit Review 01, R01-001 E9, entschieden 2026-09-24)
-3. **Bucket D (Konflikte):** Konflikte werden nur über das Detail-Panel bzw. einen Auswahldialog aufgelöst, nie per Radial als Erstaufnahme — Konfliktzeilen sind für das Radial gesperrt wie Bucket A und B. (Audit Review 01, R01-001 E9, entschieden 2026-09-24)
+3. **Bucket D (Konflikte):** Konflikte werden nur über das Detail-Panel bzw. einen Auswahldialog aufgelöst, nie per Radial als Erstaufnahme — Konfliktzeilen sind für das Radial gesperrt wie Bucket A und B. (Audit Review 01, R01-001 E9, entschieden 2026-09-24) Dazu gehört auch „gleicher Dateiname + anderer MD5“ bei IndexSource `None` (ADR-045-Addendum P.5; Klärung Herbert 2026-11-12).
 4. **PDF/DWG/DXF-Paarung:** DXF wird in die Paarung aufgenommen (wie ADR-054 P.3 „pdf+dxf"); der Default-Vorschlag „eine Revision" nach ADR-059 P.6 (im Panel bestätigt) bleibt. (Audit Review 01, R01-001 E9, entschieden 2026-09-24)
 5. **Kategorialer `document_key` (PM-49):** Teil-43-Addendum P.6 nennt `Datum ?? Dateiname`, der Code bildet `Plannummer ?? Dateiname`. Fachlich zu prüfen; bis dahin gilt der Code-Ist. (Audit Review 01, R01-001 E9, entschieden 2026-09-24)
 6. **Pending-Zuordnungen:** Verlässt der User die Projektansicht mit offenen Pending-Zuordnungen (ADR-059 P.5), warnt BPM vorher (V1, Schutz vor Datenverlust). (Audit Review 01, R01-001 E13, entschieden 2026-09-24)

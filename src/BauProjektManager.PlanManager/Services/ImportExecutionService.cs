@@ -119,7 +119,10 @@ public class ImportExecutionService
                 archiveRelPath,
                 decision.File.Parsed.Md5,
                 decision.File.Parsed.FileSize,
-                decision.File.DocumentTypeId);
+                decision.File.DocumentTypeId,
+                decision.File.DocumentTypeDisplayName,
+                decision.File.BuildingPartId,
+                decision.File.BuildingLevelId);
             planned.Add((decision, actionId, archiveRelPath));
         }
 
@@ -327,7 +330,7 @@ public class ImportExecutionService
         var classified = new ClassifiedImportFile(
             Parsed: parsed,
             DocumentTypeId: action.DocumentTypeId,
-            DocumentTypeDisplayName: null,
+            DocumentTypeDisplayName: action.DocumentType,
             DocumentKey: action.DocumentKey,
             PlanNumber: action.PlanNumber,
             RevisionToken: action.PlanIndex,
@@ -335,7 +338,9 @@ public class ImportExecutionService
             RevisionSource: action.PlanIndex is null ? IndexSourceType.None : IndexSourceType.FileName,
             Stage: ImportStage.Unknown,
             IdentityFields: new Dictionary<string, string>(),
-            Evidence: []);
+            Evidence: [],
+            BuildingPartId: action.BuildingPartId,
+            BuildingLevelId: action.BuildingLevelId);
         var status = action.ActionType switch
         {
             "indexUpdate" => ImportStatus.UpdateNewerIndex,
@@ -402,7 +407,7 @@ public class ImportExecutionService
             rootFolder,                                  // target_folder = root_relative_path (ADR-061)
             resolvedDir,                                 // relative_directory (voller aufgeloester Ordner)
             // BPM-126: Stammdaten-IDs der Radial-Zuordnung mitschreiben (Cross-DB
-            // SoftRef). Bei Recovery bleiben sie null — das Journal traegt sie nicht.
+            // SoftRef). Recovery Forward liest sie seit R01-006 aus dem Journal.
             decision.File.BuildingPartId,
             decision.File.BuildingLevelId);
 

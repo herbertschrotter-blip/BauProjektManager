@@ -302,6 +302,9 @@ public class PlanManagerDatabase : IDisposable
                 md5 TEXT,
                 file_size INTEGER,
                 document_type_id TEXT,
+                document_type TEXT,                 -- Anzeigename (R01-006, ADR-064-Addendum P.2)
+                building_part_id TEXT,              -- SoftRef bpm.db.building_parts(id) (R01-006)
+                building_level_id TEXT,             -- SoftRef bpm.db.building_levels(id) (R01-006)
                 error_message TEXT,
                 FOREIGN KEY (import_id) REFERENCES import_journal(id)
             );
@@ -1107,7 +1110,8 @@ public class PlanManagerDatabase : IDisposable
         string? documentKey, string planNumber, string? planIndex,
         string? oldIndex, string sourcePath, string? destinationPath,
         string? archivePath, string? md5 = null, long? fileSize = null,
-        string? documentTypeId = null)
+        string? documentTypeId = null, string? documentType = null,
+        string? buildingPartId = null, string? buildingLevelId = null)
     {
         var conn = GetConnection();
         var id = _idGenerator.NewId();
@@ -1115,8 +1119,10 @@ public class PlanManagerDatabase : IDisposable
         cmd.CommandText = """
             INSERT INTO import_actions (id, import_id, action_order, action_type,
                 action_status, document_key, plan_number, plan_index, old_index,
-                source_path, destination_path, archive_path, md5, file_size, document_type_id)
-            VALUES (@id, @iid, @ao, @at, 'pending', @dk, @pn, @pi, @oi, @sp, @dp, @ap, @md5, @fs, @dti)
+                source_path, destination_path, archive_path, md5, file_size, document_type_id,
+                document_type, building_part_id, building_level_id)
+            VALUES (@id, @iid, @ao, @at, 'pending', @dk, @pn, @pi, @oi, @sp, @dp, @ap, @md5, @fs, @dti,
+                @dt, @bp, @bl)
             """;
         cmd.Parameters.AddWithValue("@id", id);
         cmd.Parameters.AddWithValue("@iid", importId);
@@ -1132,6 +1138,9 @@ public class PlanManagerDatabase : IDisposable
         cmd.Parameters.AddWithValue("@md5", (object?)md5 ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@fs", (object?)fileSize ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@dti", (object?)documentTypeId ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@dt", (object?)documentType ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@bp", (object?)buildingPartId ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@bl", (object?)buildingLevelId ?? DBNull.Value);
         cmd.ExecuteNonQuery();
         return id;
     }
@@ -1169,7 +1178,7 @@ public class PlanManagerDatabase : IDisposable
             cmd.CommandText = """
                 SELECT id, action_type, action_status, source_path, destination_path,
                     archive_path, md5, file_size, document_key, plan_number, plan_index,
-                    document_type_id
+                    document_type_id, document_type, building_part_id, building_level_id
                 FROM import_actions WHERE import_id = @iid
                 ORDER BY action_order ASC
                 """;
@@ -1179,7 +1188,7 @@ public class PlanManagerDatabase : IDisposable
             cmd.CommandText = """
                 SELECT id, action_type, action_status, source_path, destination_path,
                     archive_path, md5, file_size, document_key, plan_number, plan_index,
-                    document_type_id
+                    document_type_id, document_type, building_part_id, building_level_id
                 FROM import_actions WHERE import_id = @iid AND action_status = @st
                 ORDER BY action_order ASC
                 """;
@@ -1219,9 +1228,18 @@ public class PlanManagerDatabase : IDisposable
                     : reader.GetString(reader.GetOrdinal("plan_index")),
                 DocumentTypeId: reader.IsDBNull(reader.GetOrdinal("document_type_id"))
                     ? null
-                    : reader.GetString(reader.GetOrdinal("document_type_id"))));
+                    : reader.GetString(reader.GetOrdinal("document_type_id")),
+                DocumentType: NullableString(reader, "document_type"),
+                BuildingPartId: NullableString(reader, "building_part_id"),
+                BuildingLevelId: NullableString(reader, "building_level_id")));
         }
         return result;
+    }
+
+    private static string? NullableString(SqliteDataReader reader, string column)
+    {
+        var ordinal = reader.GetOrdinal(column);
+        return reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
     }
 
     /// <summary>

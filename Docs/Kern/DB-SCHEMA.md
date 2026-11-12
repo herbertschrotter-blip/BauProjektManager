@@ -984,6 +984,11 @@ CREATE TABLE import_actions (
     file_size INTEGER,                  -- BPM-120 T2: Groesse der Quelldatei
     document_type_id TEXT,              -- BPM-120 T5: fuer die vollstaendige
                                        -- Struktur-Herstellung im Recovery Forward (AK 9)
+    document_type TEXT,                 -- R01-006: Anzeigename des Typs (plan_documents.document_type)
+    building_part_id TEXT,              -- R01-006: SoftRef bpm.db.building_parts(id), kein FK (Cross-DB)
+    building_level_id TEXT,             -- R01-006: SoftRef bpm.db.building_levels(id), kein FK (Cross-DB)
+                                       -- → Recovery Forward stellt denselben Endzustand her
+                                       --   wie der normale Import (ADR-064-Addendum P.2)
     error_message TEXT,
     FOREIGN KEY (import_id) REFERENCES import_journal(id)
 );
@@ -1002,6 +1007,17 @@ journalisiert + recovery-fähig (ADR-064 P.7), bewusst NICHT undo-bar.
 Betroffene Datei: `%LocalAppData%\BauProjektManager\Projects\<ProjektID>\planmanager.db`.
 Aktion: User löscht die Datei → BPM erstellt sie beim nächsten App-Start neu
 (`destination_path` nullable, neue Spalten `md5` + `file_size` + `document_type_id`).
+
+**Schema-Änderung mit R01-006 (Frühphase, keine Migration):** neue Spalten `document_type`,
+`building_part_id`, `building_level_id` (ADR-064-Addendum P.2). Betroffene Datei: dieselbe projektbezogene
+`planmanager.db` — User löscht sie, BPM erstellt sie beim nächsten Start neu.
+
+**Re-Import nach Undo/Rollback (R01-006):** `plan_documents.document_key` bleibt voll UNIQUE; ein
+soft-gelöschtes Dokument mit gleichem Schlüssel wird beim Re-Import **reaktiviert** (gleiche ID,
+`sync_version + 1`), nicht neu angelegt. Undo und Recovery-Rollback nehmen die DB-Writes eines Imports
+über denselben Rückbau-Kern zurück (`ImportReverseApplier`: angelegte Revisionen soft-deleten,
+angehängte Zusatzdateien entknüpfen, superseded Revisionen wieder current, Dokumente ohne Revision
+soft-deleten).
 
 ### 6.6 import_action_files
 

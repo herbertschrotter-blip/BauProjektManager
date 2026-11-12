@@ -211,4 +211,58 @@ public class ImportReverseEndStateTests
         Assert.False(known.ContainsKey("md5-dwg"));
         Assert.True(known.ContainsKey("md5-pdf"));
     }
+
+    // ── DB-34: Recovery Forward stellt die volle Klassifikation her (ADR-064-Addendum P.2) ──
+
+    [Fact]
+    public void RecoveryForward_RestoresTypeAndBuildingIdsFromJournal()
+    {
+        using var env = new TestEnv();
+        // Datei verschwindet waehrend des Imports nicht — aber der Prozess stirbt nach der
+        // Journalisierung: Action von Hand auf pending zuruecksetzen und DB-Writes fehlen lassen.
+        env.Fake.AddFile(env.InboxAbs(FileName));
+        var pending = NewPending(FileName, "md5-a", "bp-ulid-1", "bl-ulid-1");
+        var decision = CaptureConfirmService.BuildDecisions([pending], new PlanValueNormalizer()).Single();
+        var importId = env.Repo.CreateImportJournal("_Eingang", 1, profileId: null);
+        env.Repo.InsertImportAction(importId, 0, "new", decision.DocumentKey, "5998-300", null, null,
+            decision.File.Parsed.RelativePath, decision.TargetRelativePath, null, "md5-a", 12,
+            decision.File.DocumentTypeId, decision.File.DocumentTypeDisplayName,
+            decision.File.BuildingPartId, decision.File.BuildingLevelId);
+
+        var forward = env.Recovery().ExecuteForward(importId, env.Root);
+
+        Assert.Equal(0, forward.FailedCount);
+        var doc = env.Repo.GetDocumentByKey(decision.DocumentKey!);
+        Assert.NotNull(doc);
+        Assert.Equal("Polierplan", doc!.DocumentType);        // nicht mehr 'unknown'
+        Assert.Equal("bp-ulid-1", doc.BuildingPartId);
+        Assert.Equal("bl-ulid-1", doc.BuildingLevelId);
+    }
+
+    // ── PM-39: Undo-Kette mit Preflight (ADR-064-Addendum P.3) ──
+
+    [Fact]
+    public void UndoChain_EachStepSeparatelyWithPreflight()
+    {
+        using var env = new TestEnv();
+        const string second = "5998-301_OG2.pdf";
+        Assert.Equal(0, env.Import(FileName, "md5-a").Failed);
+        var first = env.Repo.GetLastCompletedImportId();
+        env.Fake.AddFile(env.InboxAbs(second));
+        var pending2 = NewPending(second, "md5-b", null, null) with { PlanNumber = "5998-301" };
+        Assert.Equal(0, env.Executor().Execute(
+            CaptureConfirmService.BuildDecisions([pending2], new PlanValueNormalizer()), env.Root, "_Eingang").Failed);
+
+        // Schritt 1: nur der letzte Import
+        Assert.True(env.Undo().UndoLastImport(env.Root).Success);
+        Assert.True(env.Fake.FileExists(env.InboxAbs(second)));
+        Assert.True(env.Fake.FileExists(env.TargetAbs(FileName)));     // erster Import unberuehrt
+        Assert.Equal(first, env.Repo.GetLastCompletedImportId());       // jetzt der naechste Kandidat
+
+        // Schritt 2: eigener Preflight, dann der davorliegende Import
+        Assert.True(env.Undo().Preflight(env.Root).CanUndo);
+        Assert.True(env.Undo().UndoLastImport(env.Root).Success);
+        Assert.True(env.Fake.FileExists(env.InboxAbs(FileName)));
+        Assert.Null(env.Repo.GetLastCompletedImportId());
+    }
 }

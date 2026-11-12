@@ -9,8 +9,9 @@ namespace BauProjektManager.PlanManager.Services;
 /// rueckgaengig — Dateien zurueck in den Eingang, Archiv-Dateien zurueck ans
 /// Ziel, DB-Revisionen zurueckgesetzt (Soft Delete + Supersede-Restore).
 ///
-/// Invarianten (PlanManager.md Kap. 11 + ADR-064 P.5/P.7): NUR letzter Import,
-/// IMMER Preflight-Trockenlauf vor der Ausfuehrung; skipDuplicate-Actions sind
+/// Invarianten (PlanManager.md Kap. 11 + ADR-064 P.5/P.7 + Addendum P.3): je Schritt nur
+/// der letzte noch nicht rueckgaengig gemachte Import (Undo-Kette zulaessig, kein
+/// Multi-Rollback in einem Schritt), IMMER Preflight-Trockenlauf vor der Ausfuehrung; skipDuplicate-Actions sind
 /// journalisiert aber bewusst NICHT undo-bar (kein Papierkorb). DB-Rollback +
 /// MarkImportUndone laufen NUR nach vollstaendig erfolgreichem Disk-Reverse,
 /// in einer SQLite-Transaction (BPM-120 T7).

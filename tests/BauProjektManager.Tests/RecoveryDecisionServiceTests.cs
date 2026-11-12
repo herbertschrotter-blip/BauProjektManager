@@ -65,16 +65,30 @@ public class RecoveryDecisionServiceTests
     }
 
     [Fact]
-    public void Recommend_Szenario4_WithFailed_ReturnsCleanup()
+    public void Recommend_Szenario4_WithFailed_ReturnsForwardWithConfirmation()
     {
-        // 2 completed, 2 pending, 1 failed → Cleanup (Mix-State, manuelle Untersuchung)
+        // 2 completed, 2 pending, 1 failed → Fortsetzen mit Bestaetigung
+        // (failed ist retry-faehig, ADR-064-Addendum P.1 / R01-001 E10)
         var info = MakeInfo(completed: 2, pending: 2, failed: 1);
 
         var rec = _sut.Recommend(info);
 
-        Assert.Equal(RecoveryAction.Cleanup, rec.Action);
+        Assert.Equal(RecoveryAction.Forward, rec.Action);
         Assert.False(rec.IsAutomaticAllowed);
         Assert.Contains("fehlgeschlagene", rec.Reason);
+    }
+
+    [Fact]
+    public void Recommend_Szenario5_MixedState_NeverRecommendsRollback()
+    {
+        // Szenario 5 (Recovery-Szenarien.md): Mischzustand — empfohlen wird Fortsetzen;
+        // Zuruecksetzen ist nur eine bewusste Entscheidung des Nutzers, nie die Empfehlung.
+        foreach (var info in new[]
+        {
+            MakeInfo(completed: 3, pending: 1, failed: 0),
+            MakeInfo(completed: 1, pending: 0, failed: 2),
+        })
+            Assert.NotEqual(RecoveryAction.Rollback, _sut.Recommend(info).Action);
     }
 
     [Fact]

@@ -11,8 +11,9 @@ namespace BauProjektManager.Tests;
 
 /// <summary>
 /// BPM-120 T8 (ADR-064): Fault-/Crash-Matrix — Abbruch nach jedem Schritt einer
-/// Update-Action (Journal → Archiv → tmp-Move → Rename → DB-Commit) × Forward/
-/// Rollback/Undo. Jeder Zwischenzustand wird direkt konstruiert (FakeFileStore
+/// Update-Action (Journal → Archiv → tmp-Move → Rename → DB-Commit). Forward laeuft
+/// fuer alle 5 Punkte, Rollback aus C0, Undo mit Archiv-Restore-Fehler (Rollback-/
+/// Undo-Endzustaende inkl. Plan-Cache: ImportReverseEndStateTests, R01-006). Jeder Zwischenzustand wird direkt konstruiert (FakeFileStore
 /// + echte SQLite-Temp-DB); Recovery Forward muss aus JEDEM Zustand denselben
 /// Endzustand herstellen (AK 4–13), Undo darf die DB nie inkonsistent
 /// hinterlassen (AK 14). Alter Inhalt = 3 Bytes, neuer Inhalt = 4 Bytes —

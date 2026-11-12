@@ -8,7 +8,7 @@ namespace BauProjektManager.PlanManager.Services;
 /// für einen pending Import-Vorgang. Pure Domain-Logik, keine Disk- oder DB-Operationen.
 ///
 /// Entscheidungsreihenfolge (Priorität von oben nach unten):
-/// 1. <see cref="RecoveryAction.Cleanup"/> wenn FailedActions &gt; 0 (Mix-State, manuelle Untersuchung)
+/// 1. <see cref="RecoveryAction.Forward"/> wenn FailedActions &gt; 0 (retry-faehig, mit Bestaetigung)
 /// 2. <see cref="RecoveryAction.Forward"/> wenn IsRollbackTrivial (nichts wurde verschoben — Re-Run risikolos)
 /// 3. <see cref="RecoveryAction.Forward"/> wenn IsForwardTrivial (alle Aktionen completed, nur Journal-Finalize)
 /// 4. <see cref="RecoveryAction.Forward"/> wenn PendingActions &gt; 0 (Mix Completed+Pending ohne Failed)
@@ -23,14 +23,17 @@ public class RecoveryDecisionService
     /// </summary>
     public RecoveryRecommendation Recommend(PendingImportInfo info)
     {
-        // 1. Mix-State mit Fehlern → manuelle Untersuchung
+        // 1. Fehlgeschlagene Aktionen → Fortsetzen (ADR-064 P.6/T6: failed ist auf
+        //    Action-Ebene retry-faehig; ADR-064-Addendum P.1, R01-001 E10). Mit
+        //    Bestaetigung, weil vorher etwas schiefging; scheitert es erneut, bleiben
+        //    Zuruecksetzen oder Abschliessen.
         if (info.FailedActions > 0)
         {
             return new RecoveryRecommendation(
-                Action: RecoveryAction.Cleanup,
-                Reason: $"{info.FailedActions} fehlgeschlagene Aktion(en). " +
-                        $"Automatische Reparatur nicht sicher — Journal als 'failed' markieren, " +
-                        $"manuelle Untersuchung empfohlen.",
+                Action: RecoveryAction.Forward,
+                Reason: $"{info.FailedActions} fehlgeschlagene Aktion(en). Fortsetzen empfohlen — " +
+                        $"die fehlgeschlagenen Aktionen werden erneut versucht. Scheitern sie wieder, " +
+                        $"Import zuruecksetzen oder abschliessen.",
                 IsAutomaticAllowed: false);
         }
 

@@ -26,7 +26,7 @@ supersedes: []
 - Fachliche Invarianten:
   - Recovery-Empfehlung ist deterministisch aus PendingImportInfo-Counts (siehe RecoveryDecisionService)
   - Forward bei IsRollbackTrivial oder IsForwardTrivial → IsAutomaticAllowed=true
-  - Cleanup bei FailedActions > 0 → IsAutomaticAllowed=false (Code-Ist; Ziel nach ADR-064-Addendum P.1: bei failed „Fortsetzen“ empfehlen — Test-Guide wird mit dem Code nachgezogen, Audit Review 01, R01-001 E10, entschieden 2026-09-24)
+  - Fortsetzen bei FailedActions > 0 → IsAutomaticAllowed=false (failed ist retry-fähig, ADR-064-Addendum P.1; umgesetzt mit R01-006)
   - Rollback ist NIE Empfehlung — nur als manuelle User-Wahl
   - Cleanup macht KEINE Disk-Operation, nur Status-Update
 
@@ -176,10 +176,11 @@ WHERE id IN (
 
 ---
 
-### Szenario 4 — Cleanup bei FailedActions
+### Szenario 4 — Fortsetzen bei FailedActions
 
-**Hintergrund:** Mix-State mit fehlgeschlagenen Aktionen. Automatische Reparatur
-nicht sicher — Cleanup als manuelle Pflicht.
+**Hintergrund:** Mix-State mit fehlgeschlagenen Aktionen. failed ist auf Action-Ebene
+retry-fähig (ADR-064 P.6/T6) — empfohlen wird Fortsetzen mit Bestätigung; scheitert es
+erneut, wählt der User Rückgängig oder Verwerfen.
 
 **Vorbereitung (SQL):**
 ```sql
@@ -208,10 +209,13 @@ WHERE id IN (
 
 **Erwartung:**
 - Counts: `X fertig · 1 ausstehend · 1 fehlgeschlagen`
-- Empfehlung: **Verwerfen** mit Hinweis „1 fehlgeschlagene Aktion(en). Automatische Reparatur nicht sicher — Journal als 'failed' markieren, manuelle Untersuchung empfohlen."
+- Empfehlung (seit R01-006): **Fortsetzen** mit Hinweis „1 fehlgeschlagene Aktion(en). Fortsetzen empfohlen — die fehlgeschlagenen Aktionen werden erneut versucht. Scheitern sie wieder, Import zuruecksetzen oder abschliessen.“
+- Früher: **Verwerfen** mit Hinweis „1 fehlgeschlagene Aktion(en). Automatische Reparatur nicht sicher — Journal als 'failed' markieren, manuelle Untersuchung empfohlen."
 - Auto-Hint **NICHT** sichtbar
 
-**Akzeptanz nach „Verwerfen":**
+**Akzeptanz nach „Fortsetzen":** wie Szenario 3; die failed Action wird erneut versucht.
+
+**Akzeptanz nach „Verwerfen" (bewusste User-Wahl):**
 - DB: `import_journal.status = 'failed'`, `error_message LIKE 'Cleanup:%'`
 - DB: pending-Actions auf 'failed' mit „cleanup: user choice"
 - Disk: **unverändert** (Cleanup macht keine Disk-Operation)
@@ -240,6 +244,7 @@ geändert wurden und der Import nicht mehr aktuell ist).
 - DB: pending-Actions auf 'failed' mit „cancelled by rollback"
 - Disk: zurück verschobene Dateien sind wieder in `_Eingang/`
 - Disk: archivierte Dateien (`_Archiv/`) sind zurück an Original-Destination
+- DB (R01-006): Plan-Cache zurückgesetzt — vom Import angelegte Revisionen soft-deleted, superseded Revisionen wieder current, Dokumente ohne Revision soft-deleted; die zurückgeschobenen Dateien gelten beim nächsten Erfassen **nicht** als Dublette
 - Log: `Recovery Rollback fertig: N ok, 0 fehler`
 
 ---

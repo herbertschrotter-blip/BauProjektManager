@@ -32,6 +32,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.200] — 2026-11-12
+
+### Fix: Recovery empfiehlt bei failed „Fortsetzen“, Journal mit voller Klassifikation, Undo-Kette getestet (R01-006 Rest)
+
+Restliche Punkte aus R01-006 nach ADR-064-Addendum P.1–P.3 (R01-001 E10). **failed → Fortsetzen:** `RecoveryDecisionService` empfiehlt bei fehlgeschlagenen Aktionen Fortsetzen mit Bestätigung statt Verwerfen (failed ist retry-fähig, P.6/T6). **Journal vollständig:** `import_actions` führt zusätzlich `document_type`, `building_part_id`, `building_level_id`; Recovery Forward legt das Dokument damit mit Typ, Bauteil und Geschoss an statt mit `unknown`. **Undo-Kette:** Test sichert ab, dass nach einem Undo der davorliegende Import mit eigenem Preflight rückgängig gemacht werden kann. Neue Tests für Szenario 5 (Mischzustand empfiehlt nie Rollback). Docs: DB-SCHEMA 6.5 (neue Spalten, Re-Import-Reaktivierung, Rückbau-Kern), Recovery-Szenarien (Szenario 4 Fortsetzen, Szenario 5 mit DB-Akzeptanz), ADR-064-Implementierungszeile auf die tatsächliche Testabdeckung korrigiert. 515/515 grün.
+
+**Schema-Änderung (Frühphase, keine Migration):** Betroffen ist jede projektbezogene `planmanager.db` (`%LocalAppData%\BauProjektManager\Projects\<ProjektID>\planmanager.db`) — löschen, BPM erstellt sie beim nächsten Start neu. (Audit Review 01, R01-006 / PM-24, DB-34, PM-39, TE-02, TE-06)
+
+---
 ## [v0.28.199] — 2026-11-12
 
 ### Fix: Recovery-Rollback setzt auch den Plan-Cache zurück — gemeinsamer Rückbau-Kern mit dem Undo (R01-006.03)

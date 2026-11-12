@@ -25,4 +25,9 @@ public sealed record ImportActionRow(
     string? DocumentKey = null,
     string? PlanNumber = null,
     string? PlanIndex = null,
-    string? DocumentTypeId = null);
+    string? DocumentTypeId = null,
+    // R01-006 (ADR-064-Addendum P.2): Klassifikation vollstaendig im Journal, damit
+    // Recovery Forward denselben Endzustand herstellt wie der normale Import.
+    string? DocumentType = null,
+    string? BuildingPartId = null,
+    string? BuildingLevelId = null);

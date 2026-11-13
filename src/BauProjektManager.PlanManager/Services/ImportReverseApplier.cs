@@ -10,6 +10,8 @@ namespace BauProjektManager.PlanManager.Services;
 /// </summary>
 public sealed class ImportReverseApplier
 {
+    // Reine Pfad-String-Operationen fuer das Archiv-Namensschema (ADR-060-Ausnahme Pfad-Strings).
+    private static readonly BauProjektManager.Infrastructure.Services.LocalFileSystem _path = new();
     private readonly PlanManagerDatabase _db;
 
     public ImportReverseApplier(PlanManagerDatabase db) => _db = db;
@@ -32,6 +34,10 @@ public sealed class ImportReverseApplier
 
         foreach (var revisionId in createdIds)
             _db.SoftDeleteRevision(revisionId);
+
+        // R01-007.03: archivierte Vorgaenger-Dateien zeigen wieder auf ihren alten Pfad
+        foreach (var action in _db.GetImportActions(importId).Where(a => a.ArchivePath is not null))
+            _db.RestoreArchivedFilePath(action.ArchivePath!, ArchivePathScheme.OriginalOf(_path, action.ArchivePath!));
 
         foreach (var revisionId in _db.GetRevisionIdsSupersededByImport(importId))
         {

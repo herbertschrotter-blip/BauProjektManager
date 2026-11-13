@@ -980,7 +980,9 @@ CREATE TABLE import_actions (
     source_path TEXT NOT NULL,          -- relativ zum Projektordner
     destination_path TEXT,              -- relativ; NULL bei skipDuplicate (BPM-120 T2)
     archive_path TEXT,                  -- relativ; bei indexUpdate deterministisch VOR
-                                       -- der ersten Mutation journalisiert (ADR-064 AK 5)
+                                       -- der ersten Mutation journalisiert (ADR-064 AK 5);
+                                       -- Schema <Ordner der alten Datei>/_Archiv/<Name>_<yyyyMMdd_HHmmss><ext>,
+                                       -- Originalpfad daraus ableitbar (R01-007.03, ArchivePathScheme)
     md5 TEXT,                           -- BPM-120 T2: Fingerprint der Quelldatei
                                        -- (Pflichtinhalt bei skipDuplicate — Recovery-Verify P.7)
     file_size INTEGER,                  -- BPM-120 T2: Groesse der Quelldatei

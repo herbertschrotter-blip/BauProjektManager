@@ -159,6 +159,8 @@ public class ImportExecutionCharacterizationTests
             PlanArchive.Status.Current, now, null, now, lastImportId: oldImportId);
         File.WriteAllText(
             Path.Combine(env.Root, targetRelDir, "5998-300_OG2.pdf"), "old-content");
+        env.Repo.InsertFileForRevision(revAId, "5998-300_OG2.pdf",
+            Path.Combine(targetRelDir, "5998-300_OG2.pdf"), ".pdf", "md5-a", 11, isPrimary: true);
 
         File.WriteAllText(Path.Combine(env.Root, "_Eingang", "5998-300-B_OG2.pdf"), "new-content");
         var match = new KnownPlanDocument(docId, key, "5998-300", "Polierplan",
@@ -186,10 +188,13 @@ public class ImportExecutionCharacterizationTests
         Assert.NotNull(revA.SupersededAt);
         Assert.Equal(revA.SupersededAt, revB.CurrentFrom);
 
-        // Kein Datenverlust: neue Datei am Ziel, alte Datei bleibt erhalten
-        // (anderer Dateiname → heute kein Archiv-Move; siehe SameFileName-Test).
+        // R01-007.03 (ADR-059-Addendum P.2): die abgeloeste Datei wandert nach _Archiv,
+        // auch bei neuem Dateinamen — frueher pinnte dieser Test das Liegenbleiben (LU7-01).
         Assert.True(File.Exists(Path.Combine(env.Root, targetRelDir, "5998-300-B_OG2.pdf")));
-        Assert.True(File.Exists(Path.Combine(env.Root, targetRelDir, "5998-300_OG2.pdf")));
+        Assert.False(File.Exists(Path.Combine(env.Root, targetRelDir, "5998-300_OG2.pdf")));
+        var archived = Assert.Single(Directory.GetFiles(Path.Combine(env.Root, targetRelDir, "_Archiv")));
+        Assert.StartsWith("5998-300_OG2_", Path.GetFileName(archived));
+        Assert.Equal("old-content", File.ReadAllText(archived));
 
         // Journal des Update-Imports: completed, Action-Typ indexUpdate
         var updateJournal = GetJournalRows(env).Single(j => j.Id != oldImportId);

@@ -307,4 +307,91 @@ public class ImportReverseEndStateTests
 
         Assert.True(env.Undo().Preflight(env.Root).CanUndo);
     }
+
+    // ── R01-007.03 / LU7-01: Indexwechsel mit neuem Dateinamen archiviert den Vorgaenger ──
+
+    private const string NewIndexFile = "5998-300-B_OG2.pdf";
+
+    private static ImportExecutionResult ImportIndexUpdate(TestEnv env)
+    {
+        env.Fake.AddFile(env.InboxAbs(NewIndexFile));
+        var match = env.Repo.GetCurrentDocumentLookup().Single();
+        var scan = new ScannedFile(Path.Combine("_Eingang", NewIndexFile), NewIndexFile, ".pdf", 12, DateTime.UtcNow);
+        var pending = new PendingAssignment(new FingerprintedFile(scan, "md5-b"), CaptureBucket.UpdateProposal,
+            match.DocumentTypeId ?? "", match.DocumentType, null, null, match.PlanNumber, "B",
+            match.RelativeDirectory, match);
+        var decisions = CaptureConfirmService.BuildDecisions([pending], new PlanValueNormalizer());
+        return env.Executor().Execute(decisions, env.Root, "_Eingang");
+    }
+
+    private static string? ArchivedFile(TestEnv env) =>
+        env.Fake.EnumerateFiles(Path.Combine(env.Root, TargetRelDir, "_Archiv")).SingleOrDefault();
+
+    [Fact]
+    public void IndexUpdate_NewFileName_ArchivesPredecessor_AndCacheFollows()
+    {
+        using var env = new TestEnv();
+        Assert.Equal(0, env.Import(FileName, "md5-a").Failed);
+
+        Assert.Equal(0, ImportIndexUpdate(env).Failed);
+
+        Assert.True(env.Fake.FileExists(env.TargetAbs(NewIndexFile)));
+        Assert.False(env.Fake.FileExists(env.TargetAbs(FileName)));
+        var archived = ArchivedFile(env);
+        Assert.NotNull(archived);
+        Assert.StartsWith("5998-300_OG2_", Path.GetFileName(archived));
+        // Plan-Cache: die abgeloeste Revision zeigt auf ihren _Archiv-Pfad
+        var doc = env.Repo.GetDocumentByKey(Key)!;
+        var superseded = env.Repo.GetRevisionsForDocument(doc.Id)
+            .Single(r => r.RevisionStatus == PlanArchive.Status.Superseded);
+        Assert.Contains("_Archiv", Assert.Single(env.Repo.GetFilesForRevision(superseded.Id)).RelativePath);
+    }
+
+    [Fact]
+    public void Undo_IndexUpdateWithNewFileName_RestoresPredecessorUnderOldName()
+    {
+        using var env = new TestEnv();
+        Assert.Equal(0, env.Import(FileName, "md5-a").Failed);
+        Assert.Equal(0, ImportIndexUpdate(env).Failed);
+
+        var undo = env.Undo().UndoLastImport(env.Root);
+
+        Assert.True(undo.Success, string.Join(", ", undo.Errors));
+        Assert.True(env.Fake.FileExists(env.TargetAbs(FileName)));      // alter Name, alter Platz
+        Assert.False(env.Fake.FileExists(env.TargetAbs(NewIndexFile)));
+        Assert.True(env.Fake.FileExists(env.InboxAbs(NewIndexFile)));
+        Assert.Null(ArchivedFile(env));
+        var doc = env.Repo.GetDocumentByKey(Key)!;
+        var current = env.Repo.GetCurrentRevisionForDocument(doc.Id)!;
+        Assert.Equal(Path.Combine(TargetRelDir, FileName),
+            Assert.Single(env.Repo.GetFilesForRevision(current.Id)).RelativePath);
+    }
+
+    [Fact]
+    public void RecoveryForward_AfterCrashBehindArchive_CompletesIndexUpdate()
+    {
+        using var env = new TestEnv();
+        Assert.Equal(0, env.Import(FileName, "md5-a").Failed);
+        // Crash-Fenster: Vorgaenger schon archiviert, Publish ueber .bpm_tmp scheitert
+        env.Fake.FailNext(FakeFileStore.FileOp.Move, ".bpm_tmp", new UnauthorizedAccessException("gesperrt"));
+        Assert.Equal(1, ImportIndexUpdate(env).Failed);
+        var pending = Assert.Single(env.Repo.GetPendingImports());
+
+        var result = env.Recovery().ExecuteForward(pending.Id, env.Root);
+
+        Assert.Equal(0, result.FailedCount);
+        Assert.True(env.Fake.FileExists(env.TargetAbs(NewIndexFile)));
+        Assert.False(env.Fake.FileExists(env.TargetAbs(FileName)));
+        Assert.NotNull(ArchivedFile(env));
+    }
+
+    [Fact]
+    public void ArchivePathScheme_RoundTrip()
+    {
+        var fs = new FakeFileStore();
+        var original = Path.Combine("Pläne", "A", "5998-300_OG2.pdf");
+        var archive = ArchivePathScheme.Build(fs, original, new DateTime(2026, 11, 13, 10, 20, 30));
+        Assert.Equal(Path.Combine("Pläne", "A", "_Archiv", "5998-300_OG2_20261113_102030.pdf"), archive);
+        Assert.Equal(original, ArchivePathScheme.OriginalOf(fs, archive));
+    }
 }

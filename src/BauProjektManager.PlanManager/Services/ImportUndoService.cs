@@ -82,6 +82,16 @@ public class ImportUndoService
                 && !_reader.FileExists(_path.Combine(projectRootPath, action.ArchivePath)))
                 conflicts.Add(new UndoActionConflict(action.Id, fileName,
                     "Archivierte Vorgaenger-Datei fehlt"));
+
+            // R01-007.03: Vorgaenger mit anderem Namen — sein alter Platz muss frei sein
+            if (action.ArchivePath is not null)
+            {
+                var original = ArchivePathScheme.OriginalOf(_path, action.ArchivePath);
+                if (!ArchiveMoveTargetGuard.SamePath(original, action.DestinationPath!)
+                    && _reader.FileExists(_path.Combine(projectRootPath, original)))
+                    conflicts.Add(new UndoActionConflict(action.Id, fileName,
+                        "Platz der Vorgaenger-Datei ist belegt"));
+            }
         }
 
         return new UndoPreflightReport(importId, actions.Count, conflicts);
@@ -133,7 +143,9 @@ public class ImportUndoService
                 if (action.ArchivePath is not null)
                 {
                     var archive = _path.Combine(projectRootPath, action.ArchivePath);
-                    _writer.MoveFile(archive, destination);
+                    // R01-007.03: an den alten Platz + Namen, nicht an den Namen der neuen Datei
+                    _writer.MoveFile(archive, _path.Combine(projectRootPath,
+                        ArchivePathScheme.OriginalOf(_path, action.ArchivePath)));
                 }
             }
             catch (Exception ex)

@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.207] — 2026-11-13
+
+### Fix: Indexwechsel archiviert den Vorgänger auch bei neuem Dateinamen (R01-007.03)
+
+Umsetzung von ADR-059-Addendum P.2 (Audit Review 01, R01-007 / LU7-01). Bisher archivierte der Import nur bei einer Namenskollision am Ziel; bei üblichem Index im Dateinamen (`5998-300_OG2` → `5998-300-B_OG2`) blieb die abgelöste Datei neben der neuen liegen, und ein Characterization-Test schrieb das als Soll fest. **Jetzt:** Bei einem Index-Update wird die Datei der abgelösten current-Revision mit derselben Endung (PDF bzw. DWG) deterministisch nach `<ihr Ordner>/_Archiv/<Name>_<Zeitstempel><ext>` verschoben — geplant und journalisiert vor der ersten Mutation. Neuer `ArchivePathScheme` baut den Archivpfad und leitet daraus Ort und Namen des Vorgängers ab, damit **Undo**, **Recovery Forward** und **Rollback** die Datei an ihren alten Platz unter altem Namen zurückbringen (statt unter dem Namen der neuen Datei); keine Schema-Änderung. Der Plan-Cache folgt (ADR-061): die abgelöste Revision zeigt auf den Archivpfad, Undo/Rollback setzen ihn zurück. Liegt am Ziel zusätzlich eine fremde Datei, wird die Action nicht geplant statt sie zu überschreiben; der Undo-Preflight meldet einen belegten alten Platz. Tests: Characterization-Test korrigiert, 4 neue Tests in `ImportReverseEndStateTests` (Archivierung + Cache, Undo mit altem Namen, Recovery nach Crash hinter dem Archiv-Move, Namensschema). Damit ist R01-007 vollständig.
+
+---
 ## [v0.28.206] — 2026-11-13
 
 ### Fix: Manueller Importpfad — Konflikte nicht per Radial, MD5-Pflicht, echte Dokumenttyp-ID bei Updates, Text-Zuweisung nur wo wirksam (R01-007.01/.02/.04)

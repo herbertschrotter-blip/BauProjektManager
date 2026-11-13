@@ -256,8 +256,10 @@ public class RecoveryExecutorService
             if (!string.IsNullOrEmpty(action.ArchivePath))
             {
                 var archiveAbs = _path.Combine(projectRootPath, action.ArchivePath);
+                var originalAbs = _path.Combine(projectRootPath,
+                    ArchivePathScheme.OriginalOf(_path, action.ArchivePath));
                 if (_reader.FileExists(archiveAbs))
-                    _writer.MoveFile(archiveAbs, destAbs, overwrite: false);
+                    _writer.MoveFile(archiveAbs, originalAbs, overwrite: false);
             }
 
             return null;

@@ -130,6 +130,42 @@ public partial class PlanManagerDatabase
         return Convert.ToInt64(cmd.ExecuteScalar()) > 0;
     }
 
+    /// <summary>
+    /// Archivierte Vorgaenger-Datei auf ihren _Archiv-Pfad setzen (R01-007.03, ADR-061).
+    /// Trifft nur Dateien, die an KEINER current-Revision haengen — idempotent, und bei
+    /// gleichem Dateinamen bleibt die neue Datei am Zielpfad unberuehrt.
+    /// </summary>
+    public void RelocateSupersededFile(string originalRelPath, string archiveRelPath)
+    {
+        var cmd = GetConnection().CreateCommand();
+        cmd.CommandText = """
+            UPDATE plan_files SET relative_path = @ap, updated_at = @ua
+            WHERE REPLACE(relative_path, '', '/') = REPLACE(@op, '', '/') COLLATE NOCASE
+              AND id NOT IN (
+                  SELECT rfl.file_id FROM revision_file_links rfl
+                  JOIN plan_revisions pr ON pr.id = rfl.revision_id
+                  WHERE pr.revision_status = 'current' AND pr.is_deleted = 0)
+            """;
+        cmd.Parameters.AddWithValue("@ap", archiveRelPath);
+        cmd.Parameters.AddWithValue("@op", originalRelPath);
+        cmd.Parameters.AddWithValue("@ua", DateTime.UtcNow.ToString("o"));
+        cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>Rueckbau zu <see cref="RelocateSupersededFile"/> (Undo/Rollback, R01-007.03).</summary>
+    public void RestoreArchivedFilePath(string archiveRelPath, string originalRelPath)
+    {
+        var cmd = GetConnection().CreateCommand();
+        cmd.CommandText = """
+            UPDATE plan_files SET relative_path = @op, updated_at = @ua
+            WHERE REPLACE(relative_path, '', '/') = REPLACE(@ap, '', '/') COLLATE NOCASE
+            """;
+        cmd.Parameters.AddWithValue("@ap", archiveRelPath);
+        cmd.Parameters.AddWithValue("@op", originalRelPath);
+        cmd.Parameters.AddWithValue("@ua", DateTime.UtcNow.ToString("o"));
+        cmd.ExecuteNonQuery();
+    }
+
     /// <summary>True, wenn das Journal ein Archiv-Move ist (Actions vom Typ 'moved').</summary>
     public bool IsMoveJournal(string importId)
     {

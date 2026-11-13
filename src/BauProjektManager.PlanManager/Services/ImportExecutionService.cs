@@ -95,6 +95,7 @@ public class ImportExecutionService
             inboxRelativePath, plannable.Count + duplicates.Count, profileId: null);
 
         var planned = new List<(ImportDecision Decision, string ActionId, string? ArchiveRelPath)>();
+        var archivedOriginals = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var order = 0;
         foreach (var decision in plannable)
         {
@@ -111,9 +112,17 @@ public class ImportExecutionService
             // Deterministischer Archivpfad (AK 5): VOR der ersten Mutation
             // festgelegt und journalisiert — kein ad-hoc-Name bei der Ausfuehrung.
             string? archiveRelPath = null;
-            if (decision.Status == ImportStatus.UpdateNewerIndex
-                && _reader.FileExists(_path.Combine(projectRootPath, targetRelPath)))
-                archiveRelPath = BuildArchiveRelPath(targetRelPath);
+            if (decision.Status == ImportStatus.UpdateNewerIndex)
+            {
+                var (archive, blocked) = PlanArchiveTarget(decision, projectRootPath, targetRelPath, archivedOriginals);
+                if (blocked is not null)
+                {
+                    failed++;
+                    errors.Add($"{decision.File.Parsed.FileName}: {blocked}");
+                    continue;
+                }
+                archiveRelPath = archive;
+            }
 
             var actionId = _db.InsertImportAction(
                 importId, order++, actionType,
@@ -222,7 +231,9 @@ public class ImportExecutionService
             //     Archiv an den journalisierten Pfad (AK 5) + Publish via .bpm_tmp (T3).
             //     Crash nach der Disk-Phase: Recovery schreibt die DB nach (AK 9). ---
             if (decision.Status == ImportStatus.UpdateNewerIndex && archiveRelPath is not null)
-                ArchiveExistingFile(targetPath, _path.Combine(projectRootPath, archiveRelPath));
+                ArchiveExistingFile(
+                    _path.Combine(projectRootPath, ArchivePathScheme.OriginalOf(_path, archiveRelPath)),
+                    _path.Combine(projectRootPath, archiveRelPath));
 
             PublishIncomingFile(sourcePath, targetPath);
             Log.Information("Datei verschoben: {Source} → {Target}",
@@ -233,7 +244,7 @@ public class ImportExecutionService
             //     rollt alles zurueck — weder partielle Aenderungen noch eine
             //     completed-Action bleiben stehen. ---
             _db.ExecuteInTransaction(() =>
-                ApplyActionToDatabase(decision, importId, actionId, targetRelPath, actionTime));
+                ApplyActionToDatabase(decision, importId, actionId, targetRelPath, actionTime, archiveRelPath));
 
             return new ActionResult(true, null);
         }
@@ -272,16 +283,19 @@ public class ImportExecutionService
             if (action.ArchivePath is not null)
             {
                 var archiveAbs = _path.Combine(projectRootPath, action.ArchivePath);
+                // R01-007.03: der Vorgaenger liegt an SEINEM Pfad (ggf. anderer Name als das Ziel)
+                var originalAbs = _path.Combine(projectRootPath,
+                    ArchivePathScheme.OriginalOf(_path, action.ArchivePath));
                 // R01-006.02: Archiv fehlt, Ziel liegt, aber weder Quelle noch tmp —
                 // am Ziel liegt dann der VORGAENGER, nicht die neue Datei (Quelle vor
                 // der ersten Mutation verschwunden). Nie als neue Revision uebernehmen.
-                if (!_reader.FileExists(archiveAbs) && _reader.FileExists(targetAbs)
+                if (!_reader.FileExists(archiveAbs) && _reader.FileExists(originalAbs)
                     && !_reader.FileExists(sourceAbs) && !_reader.FileExists(tmpAbs))
-                    return $"RecoveryConflict: Quelldatei fehlt, am Ziel liegt noch der Vorgaenger ({action.SourcePath})";
+                    return $"RecoveryConflict: Quelldatei fehlt, der Vorgaenger liegt noch an seinem Platz ({action.SourcePath})";
                 if (!_reader.FileExists(archiveAbs)
-                    && _reader.FileExists(targetAbs)
+                    && _reader.FileExists(originalAbs)
                     && (_reader.FileExists(sourceAbs) || _reader.FileExists(tmpAbs)))
-                    ArchiveExistingFile(targetAbs, archiveAbs);
+                    ArchiveExistingFile(originalAbs, archiveAbs);
             }
 
             if (_reader.FileExists(sourceAbs))
@@ -305,7 +319,7 @@ public class ImportExecutionService
 
             var decision = BuildRecoveryDecision(action, targetRelPath);
             _db.ExecuteInTransaction(() =>
-                ApplyActionToDatabase(decision, importId, action.Id, targetRelPath, actionTime));
+                ApplyActionToDatabase(decision, importId, action.Id, targetRelPath, actionTime, action.ArchivePath));
             return null;
         }
         catch (Exception ex)
@@ -374,7 +388,7 @@ public class ImportExecutionService
     /// </summary>
     private void ApplyActionToDatabase(
         ImportDecision decision, string importId, string actionId,
-        string targetRelPath, string actionTime)
+        string targetRelPath, string actionTime, string? archiveRelPath)
     {
         // Supersede: bei Index-Update die alte current-Revision abloesen — seit
         // T4 NACH der Disk-Phase, innerhalb der Action-Transaction.
@@ -395,6 +409,11 @@ public class ImportExecutionService
                         PlanArchive.EventType.Superseded, "Durch neue Revision ersetzt");
                 }
             }
+
+            // R01-007.03 (ADR-061: DB = Ordner-Wahrheit): die archivierte Vorgaenger-Datei
+            // zeigt im Plan-Cache auf ihren _Archiv-Pfad (idempotent, nur nicht-current Dateien).
+            if (archiveRelPath is not null)
+                _db.RelocateSupersededFile(ArchivePathScheme.OriginalOf(_path, archiveRelPath), archiveRelPath);
         }
 
         // ADR-061 Slice 0.6c: target_folder kommt aus dem aufgeloesten Zielpfad
@@ -502,17 +521,37 @@ public class ImportExecutionService
     }
 
     /// <summary>
-    /// Deterministischer Archivpfad relativ zum Projekt-Root (BPM-120 T2, AK 5):
-    /// _Archiv-Unterordner neben dem Ziel, Name + Zeitstempel der PLANUNG.
-    /// Recovery und Undo verwenden exakt diesen journalisierten Pfad.
+    /// Archivplanung eines Index-Updates (BPM-120 T2/AK 5, R01-007.03 / ADR-059-Addendum P.2):
+    /// archiviert wird die Datei der abgeloesten current-Revision mit derselben Endung —
+    /// auch wenn die neue Datei anders heisst. Ohne solche Datei schuetzt der Fallback eine
+    /// fremde Datei am Ziel vor dem Ueberschreiben. Liegen BEIDE vor (Vorgaenger unter altem
+    /// Namen UND eine andere Datei am Ziel), wird die Action nicht geplant. Der Pfad steht
+    /// VOR der ersten Mutation fest und wird journalisiert (ArchivePathScheme).
     /// </summary>
-    private string BuildArchiveRelPath(string targetRelPath)
+    private (string? ArchiveRelPath, string? Blocked) PlanArchiveTarget(
+        ImportDecision decision, string projectRootPath, string targetRelPath, HashSet<string> taken)
     {
-        var dir = _path.GetDirectoryName(targetRelPath) ?? "";
-        var fileName = _path.GetFileName(targetRelPath);
-        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        var archiveName = $"{_path.GetFileNameWithoutExtension(fileName)}_{timestamp}{_path.GetExtension(fileName)}";
-        return _path.Combine(dir, "_Archiv", archiveName);
+        string? original = null;
+        var doc = decision.DocumentKey is null ? null : _db.GetDocumentByKey(decision.DocumentKey);
+        var current = doc is null ? null : _db.GetCurrentRevisionForDocument(doc.Id);
+        if (current is not null)
+            original = _db.GetFilesForRevision(current.Id)
+                .Where(f => string.Equals(_path.GetExtension(f.FileName), decision.File.Parsed.Extension,
+                    StringComparison.OrdinalIgnoreCase))
+                .Select(f => f.RelativePath)
+                .FirstOrDefault(p => !taken.Contains(p) && _reader.FileExists(_path.Combine(projectRootPath, p)));
+
+        var targetOccupied = _reader.FileExists(_path.Combine(projectRootPath, targetRelPath));
+        if (original is not null && targetOccupied
+            && !ArchiveMoveTargetGuard.SamePath(original, targetRelPath))
+            return (null, "Zielpfad ist durch eine andere Datei belegt — Import nicht geplant");
+        if (original is null && targetOccupied)
+            original = targetRelPath;
+        if (original is null)
+            return (null, null);
+
+        taken.Add(original);
+        return (ArchivePathScheme.Build(_path, original, DateTime.Now), null);
     }
 
     /// <summary>

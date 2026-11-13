@@ -6,7 +6,7 @@
         MinWidth="660" MaxWidth="660"
         MinHeight="440"
         WindowStartupLocation="CenterOwner"
-        Background="{DynamicResource BpmBgWindow}"
+        Background="{DynamicResource BpmBgBase}"
         ResizeMode="CanResize"
         ShowInTaskbar="False">
     <Grid>
@@ -31,7 +31,7 @@
         </Border>
 
         <!-- Toolbar -->
-        <Border Grid.Row="1" Background="{DynamicResource BpmBgWindow}" Padding="16,8">
+        <Border Grid.Row="1" Background="{DynamicResource BpmBgBase}" Padding="16,8">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -61,7 +61,7 @@
 
             <!-- LISTE -->
             <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto"
-                          Background="{DynamicResource BpmBgWindow}"
+                          Background="{DynamicResource BpmBgBase}"
                           BorderBrush="{DynamicResource BpmBorderDefault}"
                           BorderThickness="0,0,1,0">
                 <ItemsControl ItemsSource="{Binding Groups}">

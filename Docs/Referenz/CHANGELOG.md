@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.205] — 2026-11-13
+
+### Fix: Schriftgrößen-Tokens definiert, BpmBgWindow ersetzt, Test gegen undefinierte Theme-Keys (R01-009)
+
+Seit BPM-076 (v0.28.48) referenzierten 8 XAML-Dateien `BpmFontSizeBody/Label/Small/Caption` (101 Stellen), die nirgends definiert waren — DynamicResource lief still ins Leere (Standardgröße statt Token), der Default-TabItem-Style in `Dialogs.xaml` nutzte den Key sogar per StaticResource (Risiko XamlParseException). **Fix:** `Typography.xaml` definiert jetzt `BpmFontSizeH1…Caption` als `sys:Double` (24/18/15/13/12/11/10 nach UI_UX_Guidelines 4.2), die Text-Styles nutzen dieselben Keys statt fester Zahlen. `SegmentTypeManagerDialog` verwendete den nicht existierenden Hintergrund `BpmBgWindow` (3×) und nutzt jetzt `BpmBgBase` wie die übrigen Dialoge. **Test:** neuer `ThemeResourceKeyTests` prüft, dass jeder in XAML referenzierte `Bpm*`-Key per `x:Key` definiert ist (gegengetestet: ohne Fix meldet er genau die Audit-Befunde) und die Größen den Guidelines entsprechen. Sichtbar: Texte mit diesen Tokens haben jetzt die vorgesehene Größe (z.B. Captions 10 statt 12). (Audit Review 01, R01-009 / UT-01, UT-02, UT-03)
+
+---
 ## [v0.28.204] — 2026-11-13
 
 ### Change: Paket-Warnung — NuGet-Audit bricht den Build, Dependabot meldet Updates

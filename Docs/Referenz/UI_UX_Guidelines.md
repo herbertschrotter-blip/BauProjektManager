@@ -336,6 +336,8 @@ Inverse Variante. Farb-Token bleiben gleich, nur Werte ändern sich.
 | `small` | 11px | Regular (400) | Statusleiste, Tooltips |
 | `caption` | 10px | Regular (400) | Fußnoten, Version |
 
+**XAML-Keys** (`Themes/Typography.xaml`, `sys:Double`): `BpmFontSizeH1` · `H2` · `H3` · `Body` · `Label` · `Small` · `Caption` — Views und Komponenten-Styles setzen `FontSize` nur über diese Keys. Ein Test (`ThemeResourceKeyTests`) prüft, dass jeder in XAML referenzierte `Bpm*`-Key definiert ist (R01-009).
+
 ### 4.3 Typografie-Regeln
 
 - **Zeilenhöhe:** 1.4× Schriftgröße

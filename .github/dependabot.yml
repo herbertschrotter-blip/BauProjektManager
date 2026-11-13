@@ -1,0 +1,23 @@
+# Dependabot: prueft die NuGet-Pakete auf den GitHub-Servern (kein Build noetig) und legt
+# fuer veraltete Pakete Pull Requests an. Uebernommen wird nur, was Herbert freigibt
+# (CLAUDE.md: keine neuen Libraries ohne Freigabe — Dependabot schlaegt nur Updates vor).
+# Wirksam erst, wenn diese Datei auf dem Default-Branch (main) liegt.
+# Sicherheits-Alerts zusaetzlich in den Repo-Einstellungen aktivieren:
+# Settings -> Code security -> Dependabot alerts / Dependabot security updates.
+version: 2
+updates:
+  - package-ecosystem: "nuget"
+    directory: "/"
+    target-branch: "feature/planmanager-v1"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    groups:
+      # Patch-/Minor-Updates gesammelt in einem PR statt einem PR je Paket
+      nuget-minor-patch:
+        update-types: ["minor", "patch"]
+    ignore:
+      # Major-Spruenge (z.B. Pakete fuer .NET 11) nicht vorschlagen — BPM bleibt auf
+      # .NET 10 LTS; ein Wechsel ist eine bewusste Entscheidung.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]

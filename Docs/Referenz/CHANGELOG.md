@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.204] — 2026-11-13
+
+### Change: Paket-Warnung — NuGet-Audit bricht den Build, Dependabot meldet Updates
+
+Damit veraltete oder unsichere Pakete nicht wieder unbemerkt liegen bleiben (Anlass: NU1903 aus v0.28.203). **Build:** `Directory.Build.props` aktiviert den NuGet-Audit für direkte und transitive Pakete (`NuGetAuditMode=all`, ab Schweregrad `moderate`) und macht NU1902–NU1904 zu Build-Fehlern — eine bekannte Sicherheitslücke stoppt damit den lokalen Build vor jedem Commit (gegengetestet: mit Microsoft.Data.Sqlite 10.0.5 bricht der Build mit `error NU1903` ab). **Dependabot:** neue `.github/dependabot.yml` prüft die NuGet-Pakete monatlich auf GitHub und legt für Minor-/Patch-Updates einen gesammelten Pull Request gegen `feature/planmanager-v1` an; Major-Sprünge (z.B. Pakete für .NET 11) werden bewusst nicht vorgeschlagen. Wirksam erst, wenn die Datei auf `main` liegt; Sicherheits-Alerts zusätzlich in den Repo-Einstellungen einschalten. Keine Code-Änderung.
+
+---
 ## [v0.28.203] — 2026-11-12
 
 ### Fix: SQLite-Sicherheitsupdate — Microsoft.Data.Sqlite 10.0.5 → 10.0.15 (NU1903 behoben)

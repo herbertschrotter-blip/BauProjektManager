@@ -506,7 +506,7 @@
                                         </StackPanel>
                                     </Border>
 
-                                    <Button Content="⬆ Update übernehmen"
+                                    <Button Content="{Binding TakeUpdateLabel}"
                                             Style="{DynamicResource BpmButtonPrimary}"
                                             Margin="0,0,0,12"
                                             MaxWidth="296" MinWidth="296" HorizontalAlignment="Left"

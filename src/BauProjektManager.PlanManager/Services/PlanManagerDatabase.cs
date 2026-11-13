@@ -899,7 +899,8 @@ public partial class PlanManagerDatabase : IDisposable
         var cmd = conn.CreateCommand();
         cmd.CommandText = """
             SELECT pd.id, pd.document_key, pd.plan_number, pd.document_type,
-                   pd.target_folder, pd.relative_directory, pr.plan_index, pr.id
+                   pd.target_folder, pd.relative_directory, pr.plan_index, pr.id,
+                   pd.document_type_id, pd.building_part_id, pd.building_level_id
             FROM plan_documents pd
             JOIN plan_revisions pr ON pr.document_id = pd.id
                 AND pr.revision_status = 'current' AND pr.is_deleted = 0
@@ -912,7 +913,10 @@ public partial class PlanManagerDatabase : IDisposable
                 reader.GetString(0), reader.GetString(1), reader.GetString(2),
                 reader.GetString(3), reader.GetString(4), reader.GetString(5),
                 reader.IsDBNull(6) ? null : reader.GetString(6),
-                reader.GetString(7)));
+                reader.GetString(7),
+                reader.GetString(8),
+                reader.IsDBNull(9) ? null : reader.GetString(9),
+                reader.IsDBNull(10) ? null : reader.GetString(10)));
         }
         Log.Debug("planmanager.db: {Count} bekannte Dokumente (Capture-Lookup)", result.Count);
         return result;

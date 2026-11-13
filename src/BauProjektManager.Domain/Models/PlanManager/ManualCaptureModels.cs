@@ -23,7 +23,12 @@ public sealed record KnownPlanDocument(
     string TargetFolder,
     string RelativeDirectory,
     string? CurrentIndex,
-    string CurrentRevisionId);
+    string CurrentRevisionId,
+    // R01-007.04 (PM-04): echte Klassifikation des Bestandsdokuments — die
+    // Update-Uebernahme (Bucket B) journalisiert sie statt der Dokument-Id.
+    string? DocumentTypeId = null,
+    string? BuildingPartId = null,
+    string? BuildingLevelId = null);
 
 /// <summary>
 /// Eine klassifizierte Eingangs-Datei des ManualFirstCapture-Workflows.

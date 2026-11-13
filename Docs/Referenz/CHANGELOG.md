@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.206] — 2026-11-13
+
+### Fix: Manueller Importpfad — Konflikte nicht per Radial, MD5-Pflicht, echte Dokumenttyp-ID bei Updates, Text-Zuweisung nur wo wirksam (R01-007.01/.02/.04)
+
+Korrekturen am V1-Importpfad (Audit Review 01, R01-007; ADR-059-Addendum Bucket-Modell P.3). **Bucket D gesperrt (K14-03):** Konfliktzeilen öffnen das Radial nicht mehr (Hold-Geste, Erfassen, Paar-Partner) und laufen damit nie mehr als „Manuelle Erstaufnahme“ in den Import; neue Zeilen-Eigenschaft `CanOpenRadial` (nur Bucket C). Aufgelöst wird im Detail-Panel: Konflikte mit eindeutigem Bestandsdokument (gleicher Index, anderer Inhalt) bekommen „⬆ Als neue Revision übernehmen“; mehrdeutige Konflikte bleiben über Plannummer/Index-Edit und Re-Match lösbar. **MD5-Pflicht (LU4-01):** Scheitert die MD5-Berechnung, landet die Datei als Konflikt ohne Match („nicht importierbar“) statt mit leerem Hash in Bucket C; zusätzlich lehnt `ImportExecutionService` Actions ohne MD5 vor der Journalisierung ab. **Update-Übernahme (PM-04):** Bucket B journalisierte bisher `plan_documents.id` als `document_type_id`; `KnownPlanDocument` führt jetzt Dokumenttyp-ID, Bauteil und Geschoss des Bestandsdokuments, die Übernahme gibt sie weiter. **Text-Zuweisung (K28-03):** Aus der Vorschau gibt es bei Dubletten und bei der Bezeichnung von Update-/Konflikt-Übernahmen keine falsche Erfolgsmeldung mehr, sondern einen Hinweis. 9 neue Tests in `CaptureImportPathTests`. Offen in R01-007: Archivierung der alten Indexdatei bei neuem Dateinamen (LU7-01, folgt).
+
+---
 ## [v0.28.205] — 2026-11-13
 
 ### Fix: Schriftgrößen-Tokens definiert, BpmBgWindow ersetzt, Test gegen undefinierte Theme-Keys (R01-009)

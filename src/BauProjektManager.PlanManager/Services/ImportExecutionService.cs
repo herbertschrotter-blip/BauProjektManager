@@ -71,6 +71,13 @@ public class ImportExecutionService
                 errors.Add($"{decision.File.Parsed.FileName}: Kein Zielpfad berechnet");
                 continue;
             }
+            // R01-007.02: ohne MD5 kein Import (Fingerprint-Pflicht, PlanManager.md Invarianten)
+            if (string.IsNullOrEmpty(decision.File.Parsed.Md5))
+            {
+                failed++;
+                errors.Add($"{decision.File.Parsed.FileName}: Kein MD5 — Datei nicht importierbar");
+                continue;
+            }
             plannable.Add(decision);
         }
 

@@ -88,6 +88,15 @@ public class ManualFirstCaptureService
             var file = fp.File;
             var candidates = extractor.ExtractCandidates(file.Scan.FileName);
 
+            // R01-007.02 (LU4-01): MD5 + file_size sind Pflicht — ohne gueltigen Hash
+            // ist die Datei nicht importierbar (Konflikt ohne Match: kein Radial, kein Uebernehmen).
+            if (fp.Error is not null || string.IsNullOrEmpty(file.Md5))
+            {
+                items.Add(new CaptureItem(file, candidates, CaptureBucket.Conflict, null,
+                    $"MD5 nicht berechenbar ({fp.Error ?? "leer"}) — Datei nicht importierbar, Datei pruefen und neu analysieren"));
+                continue;
+            }
+
             // Bucket A — exakte Dublette per MD5 (Fingerprint-Invariante)
             if (!string.IsNullOrEmpty(file.Md5)
                 && knownMd5ToDocumentKey.TryGetValue(file.Md5, out var dupKey))

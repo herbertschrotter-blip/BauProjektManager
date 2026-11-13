@@ -30,6 +30,12 @@ public partial class CaptureRowViewModel : ObservableObject
     public bool IsUpdate => Item.Bucket == CaptureBucket.UpdateProposal;
     public bool IsDuplicate => Item.Bucket == CaptureBucket.Duplicate;
     public bool IsConflict => Item.Bucket == CaptureBucket.Conflict;
+
+    /// <summary>
+    /// Nur Bucket C oeffnet das Radial (ADR-059 P.5 + Addendum Bucket-Modell P.3, R01-007.01):
+    /// Dubletten (A), Update-Karten (B) und Konflikte (D) sind gesperrt.
+    /// </summary>
+    public bool CanOpenRadial => !IsDuplicate && !IsUpdate && !IsConflict;
     public string? Reason => Item.Reason;
 
     /// <summary>Kombi-Plan erkannt (mehrere Plantyp-Keywords im Namen, 111.07 Slice C) — Badge + Panel-Warnhinweis.</summary>
@@ -277,7 +283,7 @@ public partial class ManualCaptureViewModel : ObservableObject
             anchorRow.IsSelected = true;
         }
 
-        var selected = SelectedRows.Where(r => !r.IsDuplicate && !r.IsUpdate).ToList();
+        var selected = SelectedRows.Where(r => r.CanOpenRadial).ToList();
         var effective = ExpandWithPairedRows(selected, Rows);
         var check = BulkPrecheck.Evaluate(effective);
         if (check.Gate == BulkGate.Blocked)
@@ -295,6 +301,21 @@ public partial class ManualCaptureViewModel : ObservableObject
         var controller = new RadialSelectionController(_types, _parts);
         controller.Reset();
         return controller;
+    }
+
+    /// <summary>
+    /// R01-007 (K28-03): Grund, warum eine Text-Zuweisung aus der Vorschau fuer diese
+    /// Zeile wirkungslos waere — null, wenn sie wirkt. Dubletten werden nicht importiert;
+    /// bei Update-Uebernahmen (und Konflikt-Uebernahmen) bleibt die Bezeichnung des
+    /// Bestandsdokuments (title gilt nur fuer Erstaufnahmen).
+    /// </summary>
+    public static string? TextAssignmentRejection(CaptureRowViewModel row, bool isDescription)
+    {
+        if (row.IsDuplicate)
+            return "Dublette wird nicht importiert — Zuweisung nicht übernommen";
+        if (isDescription && (row.IsUpdate || (row.IsConflict && row.Item.Match is not null)))
+            return "Bezeichnung gilt nur für Erstaufnahmen — das bestehende Dokument behält seine";
+        return null;
     }
 
     public IReadOnlyList<CaptureRowViewModel> SelectedRows =>
@@ -399,7 +420,7 @@ public partial class ManualCaptureViewModel : ObservableObject
             return;
 
         var targetDir = controller.BuildTargetDirectory(_plansRelativePath);
-        var selected = SelectedRows.Where(r => !r.IsDuplicate && !r.IsUpdate).ToList();
+        var selected = SelectedRows.Where(r => r.CanOpenRadial).ToList();
         var rows = ExpandWithPairedRows(selected, Rows);
         var pairedCount = rows.Count - selected.Count;
 
@@ -459,15 +480,19 @@ public partial class ManualCaptureViewModel : ObservableObject
     private void AssignUpdate(CaptureRowViewModel row, KnownPlanDocument match)
     {
         var c = row.Item.Candidates;
+        // R01-007.04 (PM-04): Dokumenttyp-ID + Bauteil/Geschoss des Bestandsdokuments
+        // (frueher stand hier die plan_documents.id an der Typ-ID-Position).
         _pending.Assign(new PendingAssignment(
             row.Item.File, row.Item.Bucket,
-            match.DocumentId, match.DocumentType,
+            match.DocumentTypeId ?? "", match.DocumentType,
             BuildingPart: null, Level: null,
             c.PlanNumber ?? match.PlanNumber, c.Index,
             match.RelativeDirectory, match,
             ChangeNote: NormalizeText(row.ChangeNote),
             ReleasedAt: row.ReleasedAtIso,
-            AssignedSegments: [.. row.AssignedSegments.Values]));
+            AssignedSegments: [.. row.AssignedSegments.Values],
+            BuildingPartId: match.BuildingPartId,
+            BuildingLevelId: match.BuildingLevelId));
         row.PendingTarget = match.RelativeDirectory;
     }
 
@@ -714,7 +739,7 @@ public partial class ManualCaptureViewModel : ObservableObject
                 continue;
 
             var partner = FindPairedRow(row, allRows, pairedExtension);
-            if (partner is null || partner.IsDuplicate || partner.IsUpdate || result.Contains(partner))
+            if (partner is null || !partner.CanOpenRadial || result.Contains(partner))
                 continue;
             result.Add(partner);
         }

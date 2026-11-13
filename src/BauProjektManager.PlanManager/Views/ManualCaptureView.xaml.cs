@@ -118,8 +118,8 @@ public partial class ManualCaptureView : UserControl
         var container = ItemsControl.ContainerFromElement(FileList, (DependencyObject)e.OriginalSource) as ListBoxItem;
         if (container?.DataContext is not CaptureRowViewModel row)
             return;
-        if (row.IsDuplicate || row.IsUpdate)
-            return; // Dubletten/Updates oeffnen das Radial nicht (Buckets A/B)
+        if (!row.CanOpenRadial)
+            return; // Dubletten/Updates/Konflikte oeffnen das Radial nicht (Buckets A/B/D)
 
         _downRow = row;
         _downPoint = e.GetPosition(RootGrid);
@@ -602,6 +602,14 @@ public partial class ManualCaptureView : UserControl
         var detail = ViewModel.SelectedDetail;
 
         var text = e.Text.Trim();
+        // R01-007 (K28-03): keine Erfolgsmeldung fuer Werte, die beim Import verworfen wuerden.
+        var rejection = ManualCaptureViewModel.TextAssignmentRejection(row,
+            e.Kind == PdfAssignKind.Segment && e.SegmentTypeId == SegmentTypeIds.Description);
+        if (rejection is not null)
+        {
+            ViewModel.StatusText = "⚠ " + rejection;
+            return;
+        }
         switch (e.Kind)
         {
             case PdfAssignKind.ChangeNote:

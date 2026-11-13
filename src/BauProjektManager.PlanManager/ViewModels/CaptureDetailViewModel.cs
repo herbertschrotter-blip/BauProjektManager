@@ -99,6 +99,14 @@ public sealed partial class CaptureDetailViewModel : ObservableObject
     public string? ReasonText => Row.Reason;
     public bool HasReason => !string.IsNullOrWhiteSpace(Row.Reason);
 
-    /// <summary>"Update übernehmen" nur für Update-Zeilen die noch nicht pending sind.</summary>
-    public bool CanTakeUpdate => Row.IsUpdate && !Row.IsPending;
+    /// <summary>
+    /// "Update übernehmen" für Update-Zeilen; bei Konflikten mit eindeutigem Bestandsdokument
+    /// (gleicher Index, anderer Inhalt) als "Als neue Revision übernehmen" — Konfliktauflösung
+    /// im Panel statt per Radial (ADR-059-Addendum Bucket-Modell P.3, R01-007.01).
+    /// </summary>
+    public bool CanTakeUpdate =>
+        (Row.IsUpdate || (Row.IsConflict && Row.Item.Match is not null)) && !Row.IsPending;
+
+    /// <summary>Beschriftung des Übernehmen-Buttons je Bucket.</summary>
+    public string TakeUpdateLabel => Row.IsConflict ? "⬆ Als neue Revision übernehmen" : "⬆ Update übernehmen";
 }

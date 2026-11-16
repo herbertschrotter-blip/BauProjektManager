@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.209] — 2026-11-16
+
+### Fix: Ordnervorlage verliert die Dokumenttyp-Metadaten nicht mehr (R01-004.04)
+
+Die Vorlagen-UI (`FolderTemplateControl`) kannte die Typ-Metadaten aus ADR-061 Punkt 2 nicht (`CreatesDocumentType`, `DocumentTypeKey`, Anzeigename, `Ring2Source`, Kategorien). Jedes Verschieben, Umschalten oder Hinzufügen in den Einstellungen schrieb die Vorlage ohne diese Knoten nach `shared-config.json`, ebenso das Template aus dem Projekt-Dialog (Audit Review 01, R01-004 / SE-05). Neuer Domain-Wert `FolderTypeMetadata`: der Baum führt die Metadaten je Knoten unsichtbar mit, `ToTemplate()` schreibt sie unverändert zurück; neu angelegte Ordner tragen keinen Dokumenttyp. Voraussetzung für den Seed aus der echten Projektvorlage (R01-004.05). Hinweis: Wer seine Vorlage seit v0.28.48 in den Einstellungen geändert hat, hat dort keine Typ-Knoten mehr — `shared-config.json` löschen stellt die Standardvorlage mit Typ-Knoten wieder her (Frühphase, keine Migration). Neue Tests `FolderTypeMetadataTests` (Round-Trip über die Standardvorlage).
+
+---
 ## [v0.28.208] — 2026-11-16
 
 ### Fix: Neues Projekt legt verschachtelte Unterordner der Vorlage an (R01-004.06)

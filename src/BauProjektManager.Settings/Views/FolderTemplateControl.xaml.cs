@@ -75,7 +75,8 @@ public partial class FolderTemplateControl : UserControl
                 Name = entry.Name,
                 Position = mainPos++,
                 IsMainFolder = true,
-                HasInbox = entry.HasInbox
+                HasInbox = entry.HasInbox,
+                TypeMetadata = FolderTypeMetadata.From(entry)
             };
 
             LoadSubFolders(mainItem.Children, entry.SubFolders);
@@ -98,7 +99,8 @@ public partial class FolderTemplateControl : UserControl
                 Name = sub.Name,
                 Position = sub.HasPrefix ? subPos++ : -1,
                 IsMainFolder = false,
-                HasPrefix = sub.HasPrefix
+                HasPrefix = sub.HasPrefix,
+                TypeMetadata = FolderTypeMetadata.From(sub)
             };
             LoadSubFolders(subItem.Children, sub.SubFolders);
             target.Add(subItem);
@@ -193,6 +195,8 @@ public partial class FolderTemplateControl : UserControl
                 HasInbox = main.HasInbox,
                 SubFolders = ConvertChildrenToSubFolders(main.Children)
             };
+            // R01-004.04 (SE-05): Typ-Metadaten (ADR-061) unveraendert zurueckschreiben
+            main.TypeMetadata.ApplyTo(entry);
             result.Add(entry);
         }
         return result;
@@ -200,11 +204,16 @@ public partial class FolderTemplateControl : UserControl
 
     private List<SubFolderEntry> ConvertChildrenToSubFolders(ObservableCollection<FolderTreeItem> children)
     {
-        return children.Select(sub => new SubFolderEntry
+        return children.Select(sub =>
         {
-            Name = sub.Name,
-            HasPrefix = sub.HasPrefix,
-            SubFolders = ConvertChildrenToSubFolders(sub.Children)
+            var entry = new SubFolderEntry
+            {
+                Name = sub.Name,
+                HasPrefix = sub.HasPrefix,
+                SubFolders = ConvertChildrenToSubFolders(sub.Children)
+            };
+            sub.TypeMetadata.ApplyTo(entry);
+            return entry;
         }).ToList();
     }
 
@@ -479,6 +488,12 @@ public class FolderTreeItem
     public bool HasPrefix { get; set; } = true;
     public bool IsExisting { get; set; }
     public ObservableCollection<FolderTreeItem> Children { get; set; } = [];
+
+    /// <summary>
+    /// Typ-Metadaten aus der Vorlage (ADR-061), in der UI unsichtbar mitgefuehrt und beim
+    /// Speichern zurueckgeschrieben (R01-004.04). Neue Ordner: kein Dokumenttyp.
+    /// </summary>
+    public FolderTypeMetadata TypeMetadata { get; set; } = FolderTypeMetadata.None;
 
     public string DisplayName => IsMainFolder
         ? $"{Position:D2} {Name}"

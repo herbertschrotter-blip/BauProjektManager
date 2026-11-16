@@ -461,6 +461,13 @@ public sealed class ClaudeCodeAssistantTests
         Assert.True(SystemClaudeProcessRunner.IsRedirectingVariable("ANTHROPIC_AUTH_TOKEN"));
         Assert.True(SystemClaudeProcessRunner.IsRedirectingVariable("anthropic_base_url"));
         Assert.True(SystemClaudeProcessRunner.IsRedirectingVariable("CLAUDE_CODE_USE_BEDROCK"));
+        // von einer Host-Sitzung (Desktop-App) geerbt: Bare-Modus, Einstiegspunkt, Host-Anmeldung
+        Assert.True(SystemClaudeProcessRunner.IsRedirectingVariable("CLAUDE_CODE_SIMPLE"));
+        Assert.True(SystemClaudeProcessRunner.IsRedirectingVariable("CLAUDE_CODE_ENTRYPOINT"));
+        Assert.True(SystemClaudeProcessRunner.IsRedirectingVariable("CLAUDE_CODE_OAUTH_SCOPES"));
+        Assert.True(SystemClaudeProcessRunner.IsRedirectingVariable("ANTHROPIC_MODEL"));
+        Assert.True(SystemClaudeProcessRunner.IsRedirectingVariable("CLAUDECODE"));
+        Assert.False(SystemClaudeProcessRunner.IsRedirectingVariable("CLAUDE_CODE_GIT_BASH_PATH"));
         Assert.False(SystemClaudeProcessRunner.IsRedirectingVariable("PATH"));
         Assert.False(SystemClaudeProcessRunner.IsRedirectingVariable("USERPROFILE"));
     }

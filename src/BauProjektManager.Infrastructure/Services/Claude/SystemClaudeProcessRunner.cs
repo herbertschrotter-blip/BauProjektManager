@@ -38,12 +38,17 @@ public sealed class SystemClaudeProcessRunner : IClaudeProcessRunner
         return new SystemClaudeProcess(process);
     }
 
-    /// <summary>Umgebungsvariablen, die Anmeldung oder Ziel von Claude Code umlenken.</summary>
+    /// <summary>
+    /// Umgebungsvariablen, die Anmeldung, Ziel oder Betriebsart von Claude Code umlenken: alle ANTHROPIC_*
+    /// (Key, Token, Base-URL, Modell) und alle CLAUDE_CODE_* bis auf den Pfad zur Git-Bash. Wird BPM aus einer
+    /// Claude-Sitzung heraus gestartet (Desktop-App, Terminal), erbt es sonst deren Host-Anmeldung und z. B.
+    /// CLAUDE_CODE_SIMPLE (Bare-Modus nur mit API-Key) — der Kindprozess meldet dann "Failed to authenticate".
+    /// </summary>
     internal static bool IsRedirectingVariable(string name) =>
-        name.Equals("ANTHROPIC_API_KEY", StringComparison.OrdinalIgnoreCase)
-        || name.Equals("ANTHROPIC_AUTH_TOKEN", StringComparison.OrdinalIgnoreCase)
-        || name.Equals("ANTHROPIC_BASE_URL", StringComparison.OrdinalIgnoreCase)
-        || name.StartsWith("CLAUDE_CODE_USE_", StringComparison.OrdinalIgnoreCase);
+        name.StartsWith("ANTHROPIC_", StringComparison.OrdinalIgnoreCase)
+        || name.Equals("CLAUDECODE", StringComparison.OrdinalIgnoreCase)
+        || (name.StartsWith("CLAUDE_CODE_", StringComparison.OrdinalIgnoreCase)
+            && !name.Equals("CLAUDE_CODE_GIT_BASH_PATH", StringComparison.OrdinalIgnoreCase));
 
     private sealed class SystemClaudeProcess(Process process) : IClaudeProcess
     {

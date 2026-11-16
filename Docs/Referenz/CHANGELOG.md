@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.220] — 2026-11-16
+
+### Fix: Mit Claude sortieren – geerbte Claude-/Anthropic-Variablen werden entfernt (BPM-131)
+
+Echter Testlauf mit Claude Code: Wird BPM aus einer Claude-Sitzung heraus gestartet (Desktop-App, Terminal), erbt der Claude-Prozess deren Umgebung, z. B. `CLAUDE_CODE_SIMPLE` (Bare-Modus nur mit API-Key), `CLAUDE_CODE_ENTRYPOINT`, `CLAUDE_CODE_OAUTH_*` und `ANTHROPIC_BASE_URL`. Bisher wurden nur Key, Token, Base-URL und `CLAUDE_CODE_USE_*` entfernt. Jetzt entfernt `SystemClaudeProcessRunner` alle `ANTHROPIC_*`, `CLAUDECODE` und alle `CLAUDE_CODE_*` außer `CLAUDE_CODE_GIT_BASH_PATH`, damit die eigene Anmeldung von Claude Code auf dem PC gilt. Der Testlauf selbst zeigte, dass der Port startet, den Stream liest und einen Anmeldefehler sauber als Fehlerrunde meldet; die CLI-Anmeldung auf dem PC war abgelaufen (muss Herbert erneuern). Tracker: BPM-131 angelegt, Zähler auf BPM-132.
+
+---
 ## [v0.28.219] — 2026-11-16
 
 ### Docs: Seitenliste aktualisiert

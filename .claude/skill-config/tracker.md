@@ -24,7 +24,7 @@ ClickUp · Workspace `90152410319` · Space „BPM“ `901510792907`
 - Hauptaufgaben: `BPM-<NNN> | <KÜRZEL> | <Kurzbeschreibung>`, dreistellig, global über alle BPM-Listen, nie
   wiederverwendet. Beispiel: `BPM-016 | PM | Recovery nach Crash`
 - Unteraufgaben: `<Parent-NNN>.<Sub-NN> — <Kurzbeschreibung>`, z. B. `016.01 — GetPendingImports() Detail-Infos`
-- **Nächste freie Nummer: BPM-131** ← nach jedem `tracker neu` +1 und mit committen
+- **Nächste freie Nummer: BPM-132** ← nach jedem `tracker neu` +1 und mit committen
 
 ## Listen und Routing
 

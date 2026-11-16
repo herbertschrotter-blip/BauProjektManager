@@ -104,6 +104,7 @@ public sealed partial class ClaudeSortViewModel
     private void ZeigeEntwurf(ClaudeSortPruefErgebnis ergebnis)
     {
         _pruefung = ergebnis;
+        _offen = [.. ergebnis.GueltigeZeilen];
         var gueltig = ergebnis.GueltigeZeilen;
         var unsicher = gueltig.Count(z => z.Unsicher.Count > 0);
         var ohne = _auftrag!.Dateien.Count - gueltig.Count;
@@ -112,12 +113,10 @@ public sealed partial class ClaudeSortViewModel
             marks[item.File.Scan.RelativePath] = new ClaudeRowMark(ClaudeRowMarkKind.Invalid, "✕ kein gültiger Vorschlag");
         foreach (var z in gueltig)
             marks[z.Item.File.Scan.RelativePath] = Kennzeichen(z);
-        _host.SetClaudeMarks(marks);
+        _marks = marks;
+        _host.SetClaudeMarks(new Dictionary<string, ClaudeRowMark>(marks, StringComparer.OrdinalIgnoreCase));
 
-        DraftSummary = $"{gueltig.Count} Vorschläge" + (unsicher > 0 ? $" · {unsicher} unsicher" : "") +
-                       (ohne > 0 ? $" · {ohne} ohne gültigen Vorschlag" : "");
-        DraftButtonText = $"{gueltig.Count} Vorschläge übernehmen";
-        StatusDetail = DraftSummary;
+        AktualisiereEntwurfText();
         var text = ergebnis.IstGueltig
             ? $"Entwurf geprüft ✓ {DraftSummary}"
             : $"Entwurf geprüft: {gueltig.Count} Vorschläge gültig, {ergebnis.Fehler.Count} Fehler bleiben offen – " +
@@ -128,6 +127,17 @@ public sealed partial class ClaudeSortViewModel
         Phase = gueltig.Count > 0 ? ClaudeSortPhase.Draft : ClaudeSortPhase.Waiting;
         Log.Information("Claude-Sortierung: Entwurf {Name} angezeigt ({Valid} gueltig, {Uncertain} unsicher)",
             _auftrag.Name, gueltig.Count, unsicher);
+    }
+
+    /// <summary>Leiste und Statuszeile aus den noch offenen Vorschlaegen.</summary>
+    private void AktualisiereEntwurfText()
+    {
+        var unsicher = _offen.Count(z => z.Unsicher.Count > 0);
+        var ohne = _marks.Values.Count(m => m.Kind == ClaudeRowMarkKind.Invalid);
+        DraftSummary = $"{_offen.Count} Vorschläge" + (unsicher > 0 ? $" · {unsicher} unsicher" : "") +
+                       (ohne > 0 ? $" · {ohne} ohne gültigen Vorschlag" : "");
+        DraftButtonText = $"{_offen.Count} Vorschläge übernehmen";
+        StatusDetail = DraftSummary;
     }
 
     private void MarkiereBeiClaude()

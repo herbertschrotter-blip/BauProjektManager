@@ -174,6 +174,54 @@ public sealed partial class ClaudeSortAuftragBuilder
         }
     }
 
+    /// <summary>
+    /// Loescht die Dateien eines Auftrags (kontext.json mit Plankopf-Text, Entwurf, Auftrag, Schema) und die
+    /// Regeln-Datei — Datenminimierung nach Ende der Sitzung (ADR-067 E8). Der leere Ordner bleibt (der
+    /// FS-Port kennt kein Ordner-Loeschen); er stoert nicht, die Nummern zaehlen weiter. Wirft nicht.
+    /// </summary>
+    public void Aufraeumen(string auftragsOrdner)
+    {
+        try
+        {
+            if (_reader.DirectoryExists(auftragsOrdner))
+                foreach (var datei in _reader.EnumerateFiles(auftragsOrdner).ToList())
+                    _writer.DeleteFile(datei);
+            var regeln = RegelnDatei(auftragsOrdner);
+            if (_reader.FileExists(regeln))
+                _writer.DeleteFile(regeln);
+            Log.Information("Claude-Sortierung: Auftrag {Name} aufgeraeumt", _path.GetFileName(auftragsOrdner));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Log.Warning("Claude-Sortierung: Aufraeumen fehlgeschlagen ({Error})", ex.GetType().Name);
+        }
+    }
+
+    /// <summary>
+    /// Raeumt Auftraege unter <paramref name="claudeRoot"/> auf, deren Dateien alle aelter als
+    /// <paramref name="alter"/> sind (z. B. nach einem Absturz liegen gebliebene Plankopf-Texte). Wirft nicht.
+    /// </summary>
+    public void AlteAufraeumen(string claudeRoot, TimeSpan alter)
+    {
+        try
+        {
+            if (!_reader.DirectoryExists(claudeRoot))
+                return;
+            var grenze = _time.GetUtcNow().UtcDateTime - alter;
+            foreach (var ordner in _reader.EnumerateDirectories(claudeRoot)
+                         .Where(o => AuftragsNameRegex().IsMatch(_path.GetFileName(o))).ToList())
+            {
+                var dateien = _reader.EnumerateFiles(ordner).ToList();
+                if (dateien.Count > 0 && dateien.All(d => _reader.GetFileInfo(d).LastWriteTimeUtc < grenze))
+                    Aufraeumen(ordner);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Log.Warning("Claude-Sortierung: Aufraeumen alter Auftraege fehlgeschlagen ({Error})", ex.GetType().Name);
+        }
+    }
+
     /// <summary>Regeln-Datei neben dem Auftragsordner: &lt;Basis&gt;/A-0001.regeln.md.</summary>
     public static string RegelnDatei(string auftragsOrdner)
         => Path.TrimEndingDirectorySeparator(auftragsOrdner) + ".regeln.md";

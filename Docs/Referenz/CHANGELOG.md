@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.218] — 2026-11-16
+
+### Feature: Mit Claude sortieren – einzelne Vorschläge annehmen/ablehnen, Aufräumen, Ziffern-Tasten
+
+Rest des abgenommenen Mockups 3.4. **Detail-Panel:** Bei einer Zeile mit Claude-Vorschlag zeigt ein Block „✦ Vorschlag von Claude“ die Zuordnung, die Begründung und die unsicheren Felder; „Nur diesen übernehmen“ macht nur diese Zeile pending, „Ablehnen“ verwirft den Vorschlag und die Zeile ist wieder offen. Die Vorschlagsleiste zählt mit, nach dem letzten offenen Vorschlag endet der Entwurf. Nach der Übernahme zeigt der Block „Pending · aus Vorschlag von Claude“ weiter Begründung und Unsicherheit. **Aufräumen (ADR-067 E8):** Beim Beenden der Sitzung und beim Schließen des Projekts werden die Auftragsdateien (inkl. `kontext.json` mit Plankopf-Text) und die Regeln-Datei gelöscht; liegen gebliebene Aufträge (z. B. nach einem Absturz) werden nach 30 Tagen beim Öffnen des Tabs entfernt. **Chat:** Ziffer 1–9 wählt die Antwort der offenen Rückfrage, bei Mehrfachfragen sendet Enter. ADR-067 nachgeführt. Tests: 666.
+
+---
 ## [v0.28.217] — 2026-11-16
 
 ### Docs: Seitenliste aktualisiert

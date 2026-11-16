@@ -430,6 +430,39 @@
                                                TextWrapping="Wrap"
                                                Margin="0,0,0,10"/>
 
+                                    <!-- "Mit Claude sortieren" (Seitenliste 3.4): Vorschlag, Begruendung, unsichere Felder,
+                                         Einzel-Annahme/Ablehnung solange der Entwurf offen ist -->
+                                    <Border Margin="0,0,0,10" Padding="8,6" Background="{DynamicResource BpmBgBase}"
+                                            BorderBrush="{DynamicResource BpmAccentPrimary}" BorderThickness="3,0,0,0"
+                                            Visibility="{Binding Row.HasClaudeInfo, Converter={StaticResource BoolToVis}}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Row.ClaudeInfoTitle}" Margin="0,0,0,4"
+                                                       Foreground="{DynamicResource BpmAccentPrimary}"
+                                                       FontSize="{DynamicResource BpmFontSizeCaption}"/>
+                                            <TextBlock Text="{Binding Row.ClaudeMarkText}" TextWrapping="Wrap"
+                                                       Foreground="{DynamicResource BpmTextBright}"
+                                                       FontSize="{DynamicResource BpmFontSizeSmall}"
+                                                       Visibility="{Binding Row.IsClaudeDraft, Converter={StaticResource BoolToVis}}"/>
+                                            <TextBlock Text="{Binding Row.ClaudeInfo.Reason}" TextWrapping="Wrap" Margin="0,4,0,0"
+                                                       Foreground="{DynamicResource BpmTextPrimary}"
+                                                       FontSize="{DynamicResource BpmFontSizeCaption}"/>
+                                            <TextBlock Text="{Binding Row.ClaudeUncertainText}" TextWrapping="Wrap" Margin="0,4,0,0"
+                                                       Foreground="{DynamicResource BpmWarning}"
+                                                       FontSize="{DynamicResource BpmFontSizeCaption}"
+                                                       Visibility="{Binding Row.IsClaudeUncertain, Converter={StaticResource BoolToVis}}"/>
+                                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0"
+                                                        Visibility="{Binding Row.IsClaudeDraft, Converter={StaticResource BoolToVis}}">
+                                                <Button Content="Nur diesen übernehmen" Style="{DynamicResource BpmButtonSecondary}"
+                                                        Margin="0,0,6,0"
+                                                        Command="{Binding DataContext.ClaudeSort.TakeOverOneCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding Row.RelativePath}"/>
+                                                <Button Content="Ablehnen" Style="{DynamicResource BpmButtonSecondary}"
+                                                        Command="{Binding DataContext.ClaudeSort.RejectOneCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding Row.RelativePath}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+
                                     <TextBlock Text="Zielordner"
                                                Foreground="{DynamicResource BpmTextSecondary}"
                                                FontSize="{DynamicResource BpmFontSizeCaption}"/>

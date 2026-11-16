@@ -55,6 +55,10 @@ public sealed partial class ClaudeSortViewModel : ObservableObject, IAsyncDispos
     private ClaudeSortAuftrag? _auftrag;
     private IClaudeSession? _session;
     private ClaudeSortPruefErgebnis? _pruefung;
+    /// <summary>Gueltige Zeilen des Entwurfs, die noch weder uebernommen noch abgelehnt sind.</summary>
+    private List<ClaudeSortZeile> _offen = [];
+    private Dictionary<string, ClaudeRowMark> _marks = new(StringComparer.OrdinalIgnoreCase);
+    private int _uebernommen;
     private int _retries;
 
     /// <param name="assistant">Port zu Claude Code; NULL = nicht verfuegbar (Knopf bleibt aus).</param>
@@ -70,6 +74,9 @@ public sealed partial class ClaudeSortViewModel : ObservableObject, IAsyncDispos
         _host = host;
         _isEnabled = isEnabled;
         _jobRoot = jobRoot;
+        // Nach einem Absturz liegen gebliebene Auftraege (mit Plankopf-Text) nach 30 Tagen entfernen (ADR-067 E8)
+        if (!string.IsNullOrWhiteSpace(host.ProjectId))
+            _builder.AlteAufraeumen(Path.Combine(_jobRoot, host.ProjectId), TimeSpan.FromDays(30));
         RefreshButton();
     }
 
@@ -223,6 +230,8 @@ public sealed partial class ClaudeSortViewModel : ObservableObject, IAsyncDispos
                 $"Auftrag {_auftrag.Name} angelegt · {_auftrag.Dateien.Count} Dateien (Erstaufnahme)" +
                 (PlankopfMitsenden ? " mit Plankopf-Text" : " ohne Plankopf-Text") + " · Claude Code gestartet");
             MarkiereBeiClaude();
+            _uebernommen = 0;
+            _offen = [];
             _retries = 0;
             StatusDetail = $"{_auftrag.Dateien.Count} Dateien";
             _session = await _assistant.StartSessionAsync(
@@ -275,18 +284,65 @@ public sealed partial class ClaudeSortViewModel : ObservableObject, IAsyncDispos
     [RelayCommand]
     private async Task TakeOverAsync()
     {
-        if (_pruefung is null || Phase != ClaudeSortPhase.Draft)
+        if (_pruefung is null || Phase != ClaudeSortPhase.Draft || _offen.Count == 0)
             return;
-        var ergebnis = ClaudeSortUebernahme.Uebernehmen(_pruefung.GueltigeZeilen, _host.PendingStore);
+        var ergebnis = ClaudeSortUebernahme.Uebernehmen(_offen, _host.PendingStore);
+        _uebernommen += ergebnis.Uebernommen.Count;
+        _offen = [];
+        _marks.Clear();
         _host.SetClaudeMarks(new Dictionary<string, ClaudeRowMark>());
         await _host.ReanalyzeAsync();
         Phase = ClaudeSortPhase.Applied;
-        StatusDetail = $"{ergebnis.Uebernommen.Count} pending";
+        StatusDetail = $"{_uebernommen} pending";
         var text = $"{ergebnis.Uebernommen.Count} Vorschläge übernommen → pending. Importiert wird erst mit " +
                    "„Import bestätigen“.";
         if (ergebnis.Uebersprungen.Count > 0)
             text += $" {ergebnis.Uebersprungen.Count} Datei(en) hattest du schon von Hand zugeordnet – die bleiben.";
         Add(ClaudeChatEntryKind.SystemOk, text);
+    }
+
+    /// <summary>"Nur diesen übernehmen" im Detail-Panel (Mockup Zustand 5). Parameter = relativer Pfad der Zeile.</summary>
+    [RelayCommand]
+    private async Task TakeOverOneAsync(string? relativePath)
+    {
+        if (Phase != ClaudeSortPhase.Draft || Finde(relativePath) is not { } zeile)
+            return;
+        var ergebnis = ClaudeSortUebernahme.Uebernehmen([zeile], _host.PendingStore);
+        _uebernommen += ergebnis.Uebernommen.Count;
+        EntferneAusEntwurf(zeile);
+        await _host.ReanalyzeAsync();
+        Add(ergebnis.Uebernommen.Count > 0 ? ClaudeChatEntryKind.SystemOk : ClaudeChatEntryKind.System,
+            ergebnis.Uebernommen.Count > 0
+                ? $"{zeile.Item.File.Scan.FileName} übernommen → pending."
+                : $"{zeile.Item.File.Scan.FileName} hattest du schon von Hand zugeordnet – bleibt.");
+    }
+
+    /// <summary>"Ablehnen" im Detail-Panel: Vorschlag verworfen, die Zeile ist wieder offen.</summary>
+    [RelayCommand]
+    private void RejectOne(string? relativePath)
+    {
+        if (Phase != ClaudeSortPhase.Draft || Finde(relativePath) is not { } zeile)
+            return;
+        EntferneAusEntwurf(zeile);
+        Add(ClaudeChatEntryKind.System, $"Vorschlag für {zeile.Item.File.Scan.FileName} abgelehnt – Zeile wieder offen.");
+    }
+
+    private ClaudeSortZeile? Finde(string? relativePath) =>
+        relativePath is null ? null
+            : _offen.FirstOrDefault(z => string.Equals(z.Item.File.Scan.RelativePath, relativePath, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>Zeile aus dem offenen Entwurf nehmen, Kennzeichen und Leiste nachziehen.</summary>
+    private void EntferneAusEntwurf(ClaudeSortZeile zeile)
+    {
+        _offen.Remove(zeile);
+        _marks.Remove(zeile.Item.File.Scan.RelativePath);
+        _host.SetClaudeMarks(new Dictionary<string, ClaudeRowMark>(_marks, StringComparer.OrdinalIgnoreCase));
+        AktualisiereEntwurfText();
+        if (_offen.Count == 0)
+        {
+            Phase = _uebernommen > 0 ? ClaudeSortPhase.Applied : ClaudeSortPhase.Waiting;
+            StatusDetail = _uebernommen > 0 ? $"{_uebernommen} pending" : "";
+        }
     }
 
     [RelayCommand]
@@ -295,6 +351,8 @@ public sealed partial class ClaudeSortViewModel : ObservableObject, IAsyncDispos
         if (Phase != ClaudeSortPhase.Draft)
             return;
         _pruefung = null;
+        _offen = [];
+        _marks.Clear();
         _host.SetClaudeMarks(new Dictionary<string, ClaudeRowMark>());
         Phase = ClaudeSortPhase.Waiting;
         StatusDetail = "Entwurf verworfen";
@@ -310,6 +368,7 @@ public sealed partial class ClaudeSortViewModel : ObservableObject, IAsyncDispos
     private async Task AbortAsync()
     {
         await BeendeSitzungAsync();
+        RaeumeAuftragAuf();
         _host.SetClaudeMarks(new Dictionary<string, ClaudeRowMark>());
         _auftrag = null;
         _pruefung = null;
@@ -323,12 +382,24 @@ public sealed partial class ClaudeSortViewModel : ObservableObject, IAsyncDispos
     private async Task RetryAsync()
     {
         await BeendeSitzungAsync();
+        RaeumeAuftragAuf();
         _auftrag = null;
         Phase = ClaudeSortPhase.Idle;
         await StartAsync();
     }
 
-    public async ValueTask DisposeAsync() => await BeendeSitzungAsync();
+    /// <summary>Sitzung beenden und die Auftragsdateien (mit Plankopf-Text) loeschen.</summary>
+    public async ValueTask DisposeAsync()
+    {
+        await BeendeSitzungAsync();
+        RaeumeAuftragAuf();
+    }
+
+    private void RaeumeAuftragAuf()
+    {
+        if (_auftrag is not null)
+            _builder.Aufraeumen(_auftrag.Ordner);
+    }
 
     private async Task BeendeSitzungAsync()
     {

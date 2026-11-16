@@ -91,7 +91,8 @@ public partial class CaptureRowViewModel : ObservableObject
     /// <summary>Kennzeichen waehrend "Mit Claude sortieren" (bei Claude / Vorschlag / ungueltig), NULL = keins.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsClaudeAtWork), nameof(IsClaudeDraft), nameof(IsClaudeUncertain),
-        nameof(IsClaudeInvalid), nameof(ClaudeMarkText), nameof(RowToolTip))]
+        nameof(IsClaudeInvalid), nameof(ClaudeMarkText), nameof(RowToolTip), nameof(ClaudeInfo), nameof(HasClaudeInfo),
+        nameof(ClaudeInfoTitle), nameof(ClaudeUncertainText))]
     private ClaudeRowMark? _claudeMark;
 
     public bool IsClaudeAtWork => ClaudeMark?.Kind == ClaudeRowMarkKind.AtClaude;
@@ -100,6 +101,18 @@ public partial class CaptureRowViewModel : ObservableObject
                                      || ClaudeSuggestion is { IsUncertain: true };
     public bool IsClaudeInvalid => ClaudeMark?.Kind == ClaudeRowMarkKind.Invalid;
     public string ClaudeMarkText => ClaudeMark?.Text ?? "";
+
+    /// <summary>Was Claude zu dieser Zeile sagt — aus dem offenen Entwurf oder dem uebernommenen Vorschlag.</summary>
+    public ClaudeSuggestionInfo? ClaudeInfo => ClaudeMark?.Info ?? ClaudeSuggestion;
+
+    public bool HasClaudeInfo => ClaudeInfo is not null;
+
+    /// <summary>Kopf des Claude-Blocks im Detail-Panel.</summary>
+    public string ClaudeInfoTitle => IsClaudeDraft ? "✦ VORSCHLAG VON CLAUDE" : "✦ PENDING · AUS VORSCHLAG VON CLAUDE";
+
+    public string ClaudeUncertainText => ClaudeInfo is { IsUncertain: true } info
+        ? $"⚠ unsicher: {string.Join(", ", info.UncertainFields)}" + (string.IsNullOrWhiteSpace(info.Note) ? "" : $" – {info.Note}")
+        : "";
 
     /// <summary>Tooltip der Zeile: Begruendung von Claude (Entwurf oder uebernommener Vorschlag).</summary>
     public string? RowToolTip => ClaudeMark?.Info is { } entwurf ? Begruendung(entwurf)
@@ -122,7 +135,8 @@ public partial class CaptureRowViewModel : ObservableObject
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsClaudeSuggestion), nameof(ClaudeText), nameof(PendingText),
-        nameof(IsClaudeUncertain), nameof(RowToolTip))]
+        nameof(IsClaudeUncertain), nameof(RowToolTip), nameof(ClaudeInfo), nameof(HasClaudeInfo),
+        nameof(ClaudeInfoTitle), nameof(ClaudeUncertainText))]
     private ClaudeSuggestionInfo? _claudeSuggestion;
 
     public bool IsClaudeSuggestion => ClaudeSuggestion is not null;

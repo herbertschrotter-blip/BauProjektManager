@@ -226,4 +226,74 @@ public partial class ClaudeSortierungTests
         Assert.Equal(ClaudeSortPhase.Idle, vm.Phase);
         Assert.Empty(host.Marks);
     }
+
+    private static readonly string PdfPfad = Path.Combine("_Eingang", "5998-100_EG.pdf");
+
+    [Fact]
+    public async Task Chat_TakeOverOne_OnlyThisRow_DraftEnds()
+    {
+        var (vm, claude, host) = ChatVm();
+        await vm.StartCommand.ExecuteAsync(null);
+        SchreibeEntwurf(claude, Entwurf(PolierplanZeile()));
+        await vm.NachRundeAsync();
+
+        await vm.TakeOverOneCommand.ExecuteAsync(PdfPfad);
+
+        Assert.True(Assert.Single(host.PendingStore.Snapshot()).IsClaudeSuggestion);
+        Assert.False(host.Marks.ContainsKey(PdfPfad));
+        Assert.Equal(ClaudeSortPhase.Applied, vm.Phase); // kein offener Vorschlag mehr
+    }
+
+    [Fact]
+    public async Task Chat_RejectOne_RowOpenAgain_NothingPending()
+    {
+        var (vm, claude, host) = ChatVm();
+        await vm.StartCommand.ExecuteAsync(null);
+        SchreibeEntwurf(claude, Entwurf(PolierplanZeile()));
+        await vm.NachRundeAsync();
+
+        vm.RejectOneCommand.Execute(PdfPfad);
+
+        Assert.Empty(host.PendingStore.Snapshot());
+        Assert.False(host.Marks.ContainsKey(PdfPfad));
+        Assert.Equal(ClaudeSortPhase.Waiting, vm.Phase);
+        Assert.Equal("0 Vorschläge übernehmen", vm.DraftButtonText);
+    }
+
+    [Fact]
+    public async Task Chat_Dispose_DeletesJobFilesAndRules()
+    {
+        var (vm, claude, _) = ChatVm();
+        await vm.StartCommand.ExecuteAsync(null);
+        var ordner = claude.Request!.WorkingDirectory;
+        Assert.True(_fs.FileExists(Path.Combine(ordner, ClaudeSortArten.KontextDatei)));
+
+        await vm.DisposeAsync();
+
+        Assert.Empty(_fs.EnumerateFiles(ordner));
+        Assert.False(_fs.FileExists(claude.Request.SystemPromptFile!));
+        Assert.True(claude.Session.IsEnded);
+    }
+
+    /// <summary>Feste "Jetzt"-Zeit relativ zum Zeitstempel des FakeFileStore (01.01.2026 UTC).</summary>
+    private sealed class FesteZeit(int tageNachStempel) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() =>
+            new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero).AddDays(tageNachStempel);
+    }
+
+    [Fact]
+    public async Task Builder_AlteAufraeumen_OnlyOldJobs()
+    {
+        var auftrag = await ErstelleAuftragAsync();
+        var root = Path.GetDirectoryName(auftrag.Ordner)!;
+
+        new ClaudeSortAuftragBuilder(_bpmDb, _planDb, _fs, _fs, _fs, time: new FesteZeit(1))
+            .AlteAufraeumen(root, TimeSpan.FromDays(30));
+        Assert.NotEmpty(_fs.EnumerateFiles(auftrag.Ordner)); // 1 Tag alt → bleibt
+
+        new ClaudeSortAuftragBuilder(_bpmDb, _planDb, _fs, _fs, _fs, time: new FesteZeit(31))
+            .AlteAufraeumen(root, TimeSpan.FromDays(30));
+        Assert.Empty(_fs.EnumerateFiles(auftrag.Ordner));
+    }
 }

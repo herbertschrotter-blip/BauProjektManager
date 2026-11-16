@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.222] — 2026-11-16
+
+### Docs: Seitenliste aktualisiert
+
+3.4 Mit Claude sortieren Code 1.1 (Fix Anmeldefehler, Aussehen wie Mockup 1.0).
+
+---
 ## [v0.28.221] — 2026-11-16
 
 ### Fix: Mit Claude sortieren – Anmeldefehler zeigt die Fehlerkarte mit Abhilfe (BPM-131)

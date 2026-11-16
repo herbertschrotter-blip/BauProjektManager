@@ -87,30 +87,42 @@ public class ProjectFolderService
                 project.Paths.Inbox = _path.Combine(numberedName, "_Eingang");
             }
 
-            // Create subfolders
-            int subPosition = 0;
-            foreach (var sub in entry.SubFolders)
-            {
-                var subName = sub.GetDisplayName(subPosition);
-                var subFolderPath = _path.Combine(subPath, subName);
-
-                if (!_reader.DirectoryExists(subFolderPath))
-                {
-                    _writer.CreateDirectory(subFolderPath);
-                    Log.Information("    Subfolder created: {Parent}/{Name}", numberedName, subName);
-                    Log.Debug("Created subfolder {Folder}", subName);
-                }
-
-                // Only increment position for prefixed subfolders
-                if (sub.HasPrefix)
-                    subPosition++;
-            }
+            // Create subfolders (rekursiv, R01-004.06 / SE-07: SubFolderEntry ist verschachtelt)
+            CreateSubFolders(_reader, _writer, _path, subPath, entry.SubFolders);
         }
 
         Log.Information("Project folder structure complete: {Count} folders in {Root}",
             template.Count, projectRoot);
 
         return projectRoot;
+    }
+
+    /// <summary>
+    /// Legt Unterordner einer Ebene an und steigt in deren Unterordner ab (R01-004.06).
+    /// Nummerierung wie bisher: nur Unterordner mit Prefix zaehlen die Position hoch.
+    /// Statisch und nur auf FS-Ports angewiesen — ohne AppSettingsService testbar.
+    /// </summary>
+    public static void CreateSubFolders(IFileSystemReader reader, IFileSystemWriter writer,
+        IPathService path, string parentPath, List<SubFolderEntry> subs)
+    {
+        int subPosition = 0;
+        foreach (var sub in subs)
+        {
+            var subName = sub.GetDisplayName(subPosition);
+            var subFolderPath = path.Combine(parentPath, subName);
+
+            if (!reader.DirectoryExists(subFolderPath))
+            {
+                writer.CreateDirectory(subFolderPath);
+                Log.Debug("Created subfolder {Folder}", subName);
+            }
+
+            if (sub.SubFolders.Count > 0)
+                CreateSubFolders(reader, writer, path, subFolderPath, sub.SubFolders);
+
+            if (sub.HasPrefix)
+                subPosition++;
+        }
     }
 
     /// <summary>

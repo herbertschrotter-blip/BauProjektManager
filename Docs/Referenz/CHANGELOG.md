@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.208] — 2026-11-16
+
+### Fix: Neues Projekt legt verschachtelte Unterordner der Vorlage an (R01-004.06)
+
+`ProjectFolderService.CreateProjectFolders` erzeugte von der Ordnervorlage nur eine Ebene Unterordner und ignorierte tiefere `SubFolderEntry`-Ebenen, obwohl die Vorlage sie erlaubt und die Vorschau sie zeigt (Audit Review 01, R01-004 / SE-07). Die Unterordner-Anlage ist jetzt rekursiv (`CreateSubFolders`, gleiche Nummerierung wie bisher: nur Ordner mit Präfix zählen hoch) und als statischer Helfer ohne Einstellungsdienst testbar. Neuer Test `ProjectFolderCreationTests` mit zweistufiger Vorlage.
+
+---
 ## [v0.28.207] — 2026-11-13
 
 ### Fix: Indexwechsel archiviert den Vorgänger auch bei neuem Dateinamen (R01-007.03)

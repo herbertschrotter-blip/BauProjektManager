@@ -62,7 +62,7 @@ public class DocumentTypeMasterDataTests : IDisposable
     public void InsertAndGetDocumentTypes_RoundtripsWithCategories()
     {
         var typeId = _db.InsertDocumentType(ProjectId, "Protokolle", null, "#555555",
-            Ring2Source.Categories, sortOrder: 10);
+            Ring2Source.Categories, sortOrder: 10, key: "protokolle", rootRelativePath: "06 Protokolle");
         _db.InsertDocumentTypeCategory(typeId, "Baubesprechung", null, 10);
         _db.InsertDocumentTypeCategory(typeId, "Sicherheit", null, 20);
 
@@ -81,7 +81,7 @@ public class DocumentTypeMasterDataTests : IDisposable
     {
         // folder_name aus Name erzeugt (Umlaute bleiben, ungueltige Zeichen raus)
         var typeId = _db.InsertDocumentType(ProjectId, "Pläne: Sonstiges?", null, null,
-            Ring2Source.None, 10);
+            Ring2Source.None, 10, key: "sonstiges", rootRelativePath: "01 Planunterlagen");
 
         var t = Assert.Single(_db.GetDocumentTypes(ProjectId));
         Assert.Equal(typeId, t.Id);
@@ -161,14 +161,15 @@ public class DocumentTypeMasterDataTests : IDisposable
     }
 
     [Fact]
-    public void InsertDocumentType_DefaultsKeyAndRootToEmpty()
+    public void InsertDocumentType_WithoutKeyOrRoot_FailsFast()
     {
-        // Permissive Defaults (Slice 0.2/0.3): ohne explizite Werte -> leer, kein NULL.
-        _db.InsertDocumentType(ProjectId, "Sonstiges", null, null, Ring2Source.None, 10);
-
-        var t = Assert.Single(_db.GetDocumentTypes(ProjectId));
-        Assert.Equal(string.Empty, t.Key);
-        Assert.Equal(string.Empty, t.RootRelativePath);
+        // R01-004.02 (DB-09, ADR-061 P.1): key und Ablage-Root sind Pflicht —
+        // frueher legten die permissiven Defaults leere Werte an.
+        Assert.Throws<ArgumentException>(() =>
+            _db.InsertDocumentType(ProjectId, "Sonstiges", null, null, Ring2Source.None, 10));
+        Assert.Throws<ArgumentException>(() =>
+            _db.InsertDocumentType(ProjectId, "Sonstiges", null, null, Ring2Source.None, 10, key: "sonstiges"));
+        Assert.Empty(_db.GetDocumentTypes(ProjectId));
     }
 
     [Fact]

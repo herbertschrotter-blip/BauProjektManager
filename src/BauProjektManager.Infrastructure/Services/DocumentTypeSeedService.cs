@@ -92,6 +92,8 @@ public class DocumentTypeSeedService
     private void SeedType(string projectId, string? key, string name, Ring2Source ring2,
         List<FolderTemplateCategory> categories, string rootRelativePath, string folderName, int sortOrder)
     {
+        // R01-004.02: kein Seed-Fallback auf leeren key — ein Typ-Knoten ohne key ist ein
+        // Vorlagenfehler (Fail-Fast in InsertDocumentType).
         var typeKey = key ?? string.Empty;
         var color = _colorByKey.TryGetValue(typeKey, out var c) ? c : null;
 

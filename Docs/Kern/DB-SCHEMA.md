@@ -535,8 +535,8 @@ CREATE TABLE document_types (
     project_id TEXT NOT NULL,
     name TEXT NOT NULL,                    -- Anzeigename (z.B. "Polierplan")
     folder_name TEXT NOT NULL,             -- physischer Typordner unter dem Root, EINMAL erzeugt; LEER bei Root-Typ (ADR-061)
-    key TEXT NOT NULL DEFAULT '',          -- ADR-061: stabiler Schlüssel, != UI-Name, nach Anlage gesperrt (Default '' bis Seed 0.4)
-    root_relative_path TEXT NOT NULL DEFAULT '', -- ADR-061: echter Ablage-Root je Typ ("01 Planunterlagen"/"06 Protokolle"); CHECK<>'' folgt in 0.4
+    key TEXT NOT NULL DEFAULT '',          -- ADR-061: stabiler Schlüssel, != UI-Name, nach Anlage gesperrt; nie leer (im Code erzwungen, R01-004.02)
+    root_relative_path TEXT NOT NULL DEFAULT '', -- ADR-061: echter Ablage-Root je Typ ("01 Planunterlagen"/"06 Protokolle"); nie leer (im Code erzwungen, R01-004.02; DB-CHECK folgt beim nächsten bpm.db-Reset)
     color_hex TEXT,                        -- Radial-Segmentfarbe (Seed: Mockup-Palette)
     ring2_source TEXT NOT NULL DEFAULT 'building_parts'
         CHECK (ring2_source IN ('building_parts', 'categories', 'none')),

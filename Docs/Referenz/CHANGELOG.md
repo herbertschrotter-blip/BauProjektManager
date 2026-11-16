@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.212] — 2026-11-16
+
+### Fix: Dokumenttypen ohne key oder Ablage-Root werden abgelehnt (R01-004.02)
+
+ADR-061 P.1 verlangt `key` und `root_relative_path` als Pflicht; das Schema hat seit Slice 0.2 nur permissive Defaults (`DEFAULT ''`), der Seed konnte einen leeren key schreiben und das Domain-Modell behauptete einen DB-CHECK, den es nicht gibt (Audit Review 01, R01-004 / DB-09). **Entscheidung Herbert:** Prüfung im Code statt Schema-Änderung — kein bpm.db-Reset. `ProjectDatabase.InsertDocumentType` wirft jetzt bei leerem key oder Root (Fail-Fast, gilt für Seed und `DocumentTypeCreationService`); der DB-CHECK folgt beim nächsten ohnehin fälligen bpm.db-Reset. DB-SCHEMA 4.12 und der Modell-Kommentar sind angeglichen. Test: `InsertDocumentType_WithoutKeyOrRoot_FailsFast` ersetzt den Test, der die leeren Defaults als Soll festschrieb.
+
+---
 ## [v0.28.211] — 2026-11-16
 
 ### Fix: Projekt bearbeiten → Ordnerstruktur nummeriert bestehende Ordner nicht mehr scheinbar um (R01-004.03)

@@ -928,6 +928,14 @@ public class ProjectDatabase : IDisposable
         Ring2Source ring2Source, int sortOrder, bool isBuiltin = false, string? id = null,
         string key = "", string rootRelativePath = "")
     {
+        // R01-004.02 (DB-09, ADR-061 P.1): key und Ablage-Root sind Pflicht. Fail-Fast im
+        // Code statt CHECK im Schema (kein bpm.db-Reset in der Fruehphase noetig);
+        // die DB-CHECKs folgen beim naechsten ohnehin faelligen Schema-Reset.
+        if (string.IsNullOrWhiteSpace(key))
+            throw new ArgumentException("Dokumenttyp braucht einen key (ADR-061).", nameof(key));
+        if (string.IsNullOrWhiteSpace(rootRelativePath))
+            throw new ArgumentException("Dokumenttyp braucht einen Ablage-Root (ADR-061).", nameof(rootRelativePath));
+
         var conn = GetConnection();
         var typeId = id ?? _idGenerator.NewId();
         var utcNow = DateTime.UtcNow.ToString("o");
@@ -944,7 +952,7 @@ public class ProjectDatabase : IDisposable
         // ADR-061: null = Ordnername aus Name ableiten; "" = bewusst leer (Root-Typ); sonst uebernehmen
         cmd.Parameters.AddWithValue("@fn", folderName is null
             ? _normalizer.NormalizeForFolderName(name) : folderName);
-        // ADR-061: key (gesperrt nach Anlage) + Ablage-Root. Permissive Defaults bis Seed 0.4 sie befuellt.
+        // ADR-061: key (gesperrt nach Anlage) + Ablage-Root — oben als Pflicht geprueft.
         cmd.Parameters.AddWithValue("@key", key);
         cmd.Parameters.AddWithValue("@rrp", rootRelativePath);
         cmd.Parameters.AddWithValue("@color", (object?)colorHex ?? DBNull.Value);

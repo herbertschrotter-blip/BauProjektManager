@@ -21,7 +21,8 @@ namespace BauProjektManager.Domain.Models.PlanManager;
 /// </param>
 /// <param name="RootRelativePath">
 /// Echter Ablage-Root je Typ, relativ zum Projektroot (z. B. "01 Planunterlagen" / "06 Protokolle", ADR-061).
-/// Trailing-Default fuer additive Slice 0.1 — befuellt ab Slice 0.3/0.4; DB-seitig NOT NULL / CHECK &lt;&gt; '' (Slice 0.2).
+/// Pflicht (nie leer): beim Anlegen im Code erzwungen (ProjectDatabase.InsertDocumentType, R01-004.02);
+/// DB-seitig nur NOT NULL — der CHECK &lt;&gt; '' folgt beim naechsten bpm.db-Schema-Reset.
 /// </param>
 public sealed record PlanDocumentType(
     string Id,

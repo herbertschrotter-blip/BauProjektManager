@@ -7,7 +7,7 @@
   "mockup_ablage": "Docs/Mockups",
   "code_wurzel": "src",
   "start": "1.1",
-  "link": "",
+  "link": "https://claude.ai/artifact/GKebFZ2bnSS4F4J2vMwXGV",
   "theme": { "befehl": ["node", "Tools/mockup_theme.mjs"], "dateien": ["Docs/Mockups/theme-app.css"] },
   "themeabgleich": {
     "ziel": "Docs/Mockups/theme-hinweise.json",

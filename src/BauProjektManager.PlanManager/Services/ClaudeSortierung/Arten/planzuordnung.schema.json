@@ -1,0 +1,50 @@
+{
+  "$comment": "Vorschlag der Art planzuordnung: je Eingangsdatei (kontext.eingangsdateien) Dokumenttyp, Bauteil ODER Kategorie, Geschoss, Plannummer, Index und Bezeichnung; Dateien ohne Zuordnung mit Grund. IDs nur aus kontext.json. Vorschrift: planzuordnung.md",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["zuordnungen"],
+  "properties": {
+    "zuordnungen": {
+      "type": "array",
+      "maxItems": 500,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["datei_id", "dokumenttyp_id", "begruendung"],
+        "properties": {
+          "datei_id": { "type": "string", "pattern": "^D-\\d{3,5}$" },
+          "dokumenttyp_id": { "type": "string", "minLength": 1 },
+          "bauteil_id": { "type": ["string", "null"] },
+          "kategorie_id": { "type": ["string", "null"] },
+          "geschoss_id": { "type": ["string", "null"] },
+          "plannummer": { "type": ["string", "null"], "maxLength": 100 },
+          "index": { "type": ["string", "null"], "maxLength": 20 },
+          "bezeichnung": { "type": ["string", "null"], "maxLength": 200 },
+          "unsicher": {
+            "type": "array",
+            "maxItems": 10,
+            "items": {
+              "enum": ["dokumenttyp_id", "bauteil_id", "kategorie_id", "geschoss_id", "plannummer", "index", "bezeichnung"]
+            }
+          },
+          "hinweise": { "type": ["string", "null"], "maxLength": 300 },
+          "begruendung": { "type": "string", "maxLength": 300 }
+        }
+      }
+    },
+    "nicht_zuordenbar": {
+      "type": "array",
+      "maxItems": 500,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["datei_id", "grund"],
+        "properties": {
+          "datei_id": { "type": "string", "pattern": "^D-\\d{3,5}$" },
+          "grund": { "type": "string", "maxLength": 300 }
+        }
+      }
+    },
+    "hinweise": { "type": "array", "maxItems": 20, "items": { "type": "string", "maxLength": 300 } }
+  }
+}

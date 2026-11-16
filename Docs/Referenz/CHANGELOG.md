@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.215] — 2026-11-16
+
+### Feature: Mit Claude sortieren – Backend (Claude-Code-Port, Auftrag, Prüfung, Übernahme)
+
+Grundlage für „Mit Claude sortieren“ (ADR-067 in Vorbereitung, Mockup 3.4 abgenommen). **Infrastructure:** Port `IClaudeAssistant` mit Adapter `ClaudeCodeAssistant` startet `claude -p` (stream-json) lokal über Herberts Abo, ohne API-Schlüssel und ohne HTTP aus BPM. Abgeschottet mit `--restricted`, `--safe-mode`, `--strict-mcp-config`, nur Read/Write/Edit/Glob; Arbeitsordner nur als echter Unterordner des Auftrags-Basisordners; Regeln per `--append-system-prompt-file` außerhalb des Auftragsordners; umlenkende Umgebungsvariablen (API-Key, Auth-Token, Base-URL, Bedrock/Vertex) werden entfernt; nur voll qualifizierte `claude.exe`. Wiederaufnahme nach Absturz (`--resume` ab system/init, Rückfall bei abgelehntem Start), keine zweite Nachricht während einer offenen Runde, Fehlermeldung bei Prozessende mitten in der Runde. **PlanManager:** Auftrag (`kontext.json` nur Bucket C, Plankopf-Text nur mit ausdrücklicher Freigabe, Auftragsordner A-#### außerhalb des Projekts), Prüfung von `entwurf.json` (Stammdaten-IDs, Resolver-Ziel mit Cache, bekannter Plan = Update wird abgelehnt, gleiche Schlüssel und PDF/DWG-Paare werden geprüft, max. 2 MB), Übernahme nur als Pending-Vorschlag mit Begründung und unsicheren Feldern. Bezeichnung und Änderungshinweis bleiben beim Neuladen der Tabelle erhalten. Import weiterhin nur über „Import bestätigen“ (ADR-064). Noch ohne Oberfläche. Tests: 652.
+
+---
 ## [v0.28.214] — 2026-11-16
 
 ### Docs: Seitenliste als Wahrheit für die Mockups, Abnahme „Mit Claude sortieren“

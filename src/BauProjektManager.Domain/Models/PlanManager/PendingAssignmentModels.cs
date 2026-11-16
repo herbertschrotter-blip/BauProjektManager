@@ -23,6 +23,7 @@ namespace BauProjektManager.Domain.Models.PlanManager;
 /// <param name="ChangeNote">Aenderungshinweis der einlaufenden Revision (BPM-118) — fliesst in plan_revisions.change_note. NULL = keiner.</param>
 /// <param name="ReleasedAt">Index-Datum der einlaufenden Revision als ISO-UTC (BPM-118) — fliesst in plan_revisions.released_at. NULL = unbekannt.</param>
 /// <param name="AssignedSegments">Per Text-Zuweisung vorgemerkte Segmentwerte (BPM-118) — fliessen in plan_document_segments. NULL/leer = keine.</param>
+/// <param name="Source">Herkunft: Manual (Radial/Panel) oder ClaudeSuggestion ("Mit Claude sortieren", als Vorschlag markiert).</param>
 public sealed record PendingAssignment(
     FingerprintedFile File,
     CaptureBucket SourceBucket,
@@ -42,7 +43,31 @@ public sealed record PendingAssignment(
     // ID-basierten document_key — umbenennungsstabil, projektlokal (ADR-061).
     string? BuildingPartId = null,
     string? BuildingLevelId = null,
-    string? CategoryId = null);
+    string? CategoryId = null,
+    // "Mit Claude sortieren": Herkunft der Zuordnung — Vorschlag wird in der Liste
+    // markiert; importiert wird trotzdem erst mit "Import bestaetigen" (ADR-064).
+    PendingAssignmentSource Source = PendingAssignmentSource.Manual,
+    // Begruendung, unsichere Felder und Hinweis eines Claude-Vorschlags — bleiben am
+    // Vorschlag, damit die Zeile sie auch nach Neuladen zeigt (nur bei ClaudeSuggestion).
+    ClaudeSuggestionInfo? Suggestion = null)
+{
+    /// <summary>True, wenn die Zuordnung ein noch unangefasster Vorschlag von Claude ist.</summary>
+    public bool IsClaudeSuggestion => Source == PendingAssignmentSource.ClaudeSuggestion;
+}
+
+/// <summary>
+/// Was Claude zu einem Vorschlag sagt: woran erkannt, welche Felder geraten, Hinweis.
+/// Feldnamen wie im entwurf.json (dokumenttyp_id, bauteil_id, kategorie_id, geschoss_id,
+/// plannummer, index, bezeichnung).
+/// </summary>
+public sealed record ClaudeSuggestionInfo(
+    string Reason,
+    IReadOnlyList<string> UncertainFields,
+    string? Note)
+{
+    /// <summary>True, wenn Claude bei mindestens einem Feld unsicher ist.</summary>
+    public bool IsUncertain => UncertainFields.Count > 0;
+}
 
 /// <summary>
 /// Ein per Text-Zuweisung (BPM-118) vorgemerkter Segmentwert. TokenKey wird

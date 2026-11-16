@@ -86,6 +86,25 @@ public partial class CaptureRowViewModel : ObservableObject
 
     public bool IsPending => PendingTarget is not null;
     public string PendingText => PendingTarget is null ? "" : $"⏳ {PendingTarget}";
+
+    /// <summary>
+    /// "Mit Claude sortieren": Begruendung und unsichere Felder, solange die Zeile ein unangefasster
+    /// Vorschlag von Claude ist (NULL = manuell oder nicht zugeordnet).
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsClaudeSuggestion))]
+    [NotifyPropertyChangedFor(nameof(ClaudeText))]
+    private ClaudeSuggestionInfo? _claudeSuggestion;
+
+    public bool IsClaudeSuggestion => ClaudeSuggestion is not null;
+
+    /// <summary>Zeile unter dem Dateinamen: Begruendung, bei Unsicherheit mit den geratenen Feldern.</summary>
+    public string ClaudeText => ClaudeSuggestion switch
+    {
+        null => "",
+        { IsUncertain: true } s => $"✦ {s.Reason} — unsicher: {string.Join(", ", s.UncertainFields)}",
+        var s => $"✦ {s.Reason}"
+    };
 }
 
 /// <summary>
@@ -233,9 +252,15 @@ public partial class ManualCaptureViewModel : ObservableObject
         Rows.Clear();
         foreach (var item in result.Items)
         {
+            // Bezeichnung/Aenderungshinweis aus dem Store vorbelegen: ConfirmImportAsync schreibt die
+            // Zeilenwerte zurueck — ohne Vorbelegung gingen sie (und Claudes "bezeichnung") nach Neuladen verloren.
+            var pending = _pending.Get(item.File.Scan.RelativePath);
             var row = new CaptureRowViewModel(item)
             {
-                PendingTarget = _pending.Get(item.File.Scan.RelativePath)?.TargetRelativeDirectory
+                PendingTarget = pending?.TargetRelativeDirectory,
+                Title = pending?.Title,
+                ChangeNote = pending?.ChangeNote,
+                ClaudeSuggestion = pending is { IsClaudeSuggestion: true } ? pending.Suggestion : null
             };
             Rows.Add(row);
         }

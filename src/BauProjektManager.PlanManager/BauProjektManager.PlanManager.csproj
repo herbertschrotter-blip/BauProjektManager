@@ -19,4 +19,10 @@
         <InternalsVisibleTo Include="BauProjektManager.Tests" />
     </ItemGroup>
 
+    <!-- "Mit Claude sortieren": Arten-Vorschriften (Rahmen, Vorschrift, Schema) als eingebettete Ressourcen -->
+    <ItemGroup>
+        <EmbeddedResource Include="Services\ClaudeSortierung\Arten\*.md;Services\ClaudeSortierung\Arten\*.json"
+                          LogicalName="BauProjektManager.PlanManager.ClaudeSortierung.Arten.%(Filename)%(Extension)" />
+    </ItemGroup>
+
 </Project>

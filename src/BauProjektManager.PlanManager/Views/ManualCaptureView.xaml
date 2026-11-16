@@ -446,6 +446,10 @@
                                             <TextBlock Text="{Binding Row.ClaudeInfo.Reason}" TextWrapping="Wrap" Margin="0,4,0,0"
                                                        Foreground="{DynamicResource BpmTextPrimary}"
                                                        FontSize="{DynamicResource BpmFontSizeCaption}"/>
+                                            <TextBlock Text="{Binding Row.ClaudeDetailsText}" TextWrapping="Wrap" Margin="0,4,0,0"
+                                                       Foreground="{DynamicResource BpmTextSecondary}"
+                                                       FontSize="{DynamicResource BpmFontSizeCaption}"
+                                                       Visibility="{Binding Row.HasClaudeDetails, Converter={StaticResource BoolToVis}}"/>
                                             <TextBlock Text="{Binding Row.ClaudeUncertainText}" TextWrapping="Wrap" Margin="0,4,0,0"
                                                        Foreground="{DynamicResource BpmWarning}"
                                                        FontSize="{DynamicResource BpmFontSizeCaption}"

@@ -60,7 +60,11 @@ public sealed record ClaudeSortZeile(
     IReadOnlyList<string> Unsicher,
     string? Hinweise,
     string Begruendung,
-    string TargetRelativeDirectory);
+    string TargetRelativeDirectory,
+    string? IndexDatum = null,
+    IReadOnlyList<AssignedSegmentValue>? Segmente = null,
+    IReadOnlyList<string>? Tags = null,
+    string? Details = null);
 
 /// <summary>
 /// Ergebnis der Entwurf-Pruefung. Fehler sind deutsch und gehen als

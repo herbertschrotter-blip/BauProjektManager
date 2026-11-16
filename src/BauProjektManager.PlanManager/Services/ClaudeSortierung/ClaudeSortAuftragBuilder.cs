@@ -29,13 +29,14 @@ public sealed partial class ClaudeSortAuftragBuilder
     private readonly IPathService _path;
     private readonly IPdfTextService? _pdfText;
     private readonly TimeProvider _time;
+    private readonly ISegmentTypeCatalog? _segmentTypes;
 
     /// <param name="pdfText">Optional: ohne Port bleibt plankopf_text leer; gelesen wird nur mit
     /// <see cref="ClaudeSortAuftragAnfrage.PlankopfTextMitsenden"/>.</param>
     public ClaudeSortAuftragBuilder(
         ProjectDatabase bpmDb, PlanManagerDatabase planDb,
         IFileSystemReader reader, IFileSystemWriter writer, IPathService path,
-        IPdfTextService? pdfText = null, TimeProvider? time = null)
+        IPdfTextService? pdfText = null, TimeProvider? time = null, ISegmentTypeCatalog? segmentTypes = null)
     {
         _bpmDb = bpmDb;
         _planDb = planDb;
@@ -44,6 +45,7 @@ public sealed partial class ClaudeSortAuftragBuilder
         _path = path;
         _pdfText = pdfText;
         _time = time ?? TimeProvider.System;
+        _segmentTypes = segmentTypes;
     }
 
     [GeneratedRegex(@"^A-(\d{4,6})$")]
@@ -137,8 +139,12 @@ public sealed partial class ClaudeSortAuftragBuilder
                 d.PlanNumber, d.CurrentIndex, d.DocumentTypeId, d.DocumentType,
                 d.BuildingPartId, d.BuildingLevelId, d.RelativeDirectory))
             .ToList();
+        var segmenttypen = ErlaubteSegmenttypen(_segmentTypes)
+            .Select(t => new KontextSegmenttyp(t.Id, t.Name))
+            .ToList();
+        var tags = _planDb.GetAllTags().Take(100).ToList();
         var heute = _time.GetLocalNow().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-        return new ClaudeSortKontext(name, heute, typen, bauteile, plaene, eingangsdateien);
+        return new ClaudeSortKontext(name, heute, typen, bauteile, segmenttypen, tags, plaene, eingangsdateien);
     }
 
     private async Task<KontextEingangsdatei> BaueEingangsdateiAsync(
@@ -237,6 +243,11 @@ public sealed partial class ClaudeSortAuftragBuilder
         return p.Equals(w, StringComparison.OrdinalIgnoreCase)
             || p.StartsWith(w + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
     }
+
+    /// <summary>Segmenttypen, die Claude vergeben darf: alle aktiven ausser "ignorieren" und dem Dokumenttyp-Feld.</summary>
+    internal static IEnumerable<SegmentTypeDefinition> ErlaubteSegmenttypen(ISegmentTypeCatalog? katalog) =>
+        (katalog?.GetEffectiveActive() ?? [])
+            .Where(t => t.Id != SegmentTypeIds.Ignore && t.Id != SegmentTypeIds.DocumentTypeField);
 
     private static string Unterteilung(Ring2Source source) => source switch
     {

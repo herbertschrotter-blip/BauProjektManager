@@ -29,8 +29,11 @@ public static class ClaudeSortUebernahme
         BuildingPartId: zeile.Part?.Id,
         BuildingLevelId: zeile.Level?.Id,
         CategoryId: zeile.Category?.Id,
+        ReleasedAt: zeile.IndexDatum,
+        AssignedSegments: zeile.Segmente,
+        Tags: zeile.Tags,
         Source: PendingAssignmentSource.ClaudeSuggestion,
-        Suggestion: new ClaudeSuggestionInfo(zeile.Begruendung, zeile.Unsicher, zeile.Hinweise));
+        Suggestion: new ClaudeSuggestionInfo(zeile.Begruendung, zeile.Unsicher, zeile.Hinweise, zeile.Details));
 
     /// <summary>
     /// Setzt die Zeilen in den Store. Eine Datei, die der User schon selbst

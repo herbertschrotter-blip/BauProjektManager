@@ -26,7 +26,11 @@ public sealed record ClassifiedImportFile(
     // durchgereicht (Cross-DB SoftRef, ADR-058-Addendum) — Grundlage fuer die
     // Plandaten-Ansicht und spaetere Cross-Modul-Abfragen (IPlanLookupService).
     string? BuildingPartId = null,
-    string? BuildingLevelId = null);
+    string? BuildingLevelId = null,
+    // "Mit Claude sortieren" (ADR-067): Tags fuer plan_document_tags und Herkunft der Zuordnung —
+    // ein bestaetigter Claude-Vorschlag wird im Revisions-Verlauf so vermerkt (Lern-Evidenz mit Herkunft).
+    IReadOnlyList<string>? Tags = null,
+    bool FromClaudeSuggestion = false);
 
 /// <summary>
 /// Final import decision for one file — ready for execution (ImportExecutionService).

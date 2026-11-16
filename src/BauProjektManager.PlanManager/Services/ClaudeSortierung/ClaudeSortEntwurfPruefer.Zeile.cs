@@ -11,11 +11,13 @@ public sealed partial class ClaudeSortEntwurfPruefer
     private static readonly string[] ZeilenFelder =
     [
         "datei_id", "dokumenttyp_id", "bauteil_id", "kategorie_id", "geschoss_id",
-        "plannummer", "index", "bezeichnung", "unsicher", "hinweise", "begruendung"
+        "plannummer", "index", "bezeichnung", "index_datum", "segmente", "tags",
+        "unsicher", "hinweise", "begruendung"
     ];
 
     private static readonly HashSet<string> UnsicherFelder =
-        ["dokumenttyp_id", "bauteil_id", "kategorie_id", "geschoss_id", "plannummer", "index", "bezeichnung"];
+        ["dokumenttyp_id", "bauteil_id", "kategorie_id", "geschoss_id", "plannummer", "index", "bezeichnung",
+         "index_datum", "segmente", "tags"];
 
     /// <summary>Aufgeloeste Stammdaten einer Zeile.</summary>
     private sealed record Stamm(
@@ -45,9 +47,12 @@ public sealed partial class ClaudeSortEntwurfPruefer
         var unsicher = f.Werte("unsicher", UnsicherFelder);
         var hinweise = f.Text("hinweise", pflicht: false, maxLaenge: 300);
         var begruendung = f.Text("begruendung", pflicht: true, maxLaenge: 300) ?? string.Empty;
+        var indexDatum = PruefeDatum(lauf, ort, f.Text("index_datum", pflicht: false, maxLaenge: 10));
 
         var item = dateiId is null ? null : PruefeDatei(lauf, dateiId, ort);
         var stamm = typId is null ? null : PruefeStammdaten(lauf, ort, typId, bauteilId, kategorieId, geschossId);
+        var segmente = item is null ? [] : PruefeSegmente(lauf, ort, el, item);
+        var tags = PruefeTags(lauf, ort, el);
         if (dateiId is null || item is null || stamm is null || lauf.Fehler.Count > fehlerVorher)
             return;
         if (LoeseZiel(lauf, ort, stamm) is not { } zielOrdner)
@@ -55,7 +60,8 @@ public sealed partial class ClaudeSortEntwurfPruefer
 
         var zeile = new ClaudeSortZeile(
             dateiId, item, stamm.Type, stamm.Part, stamm.Level, stamm.Category,
-            plannummer, index, bezeichnung, unsicher, hinweise, begruendung, zielOrdner);
+            plannummer, index, bezeichnung, unsicher, hinweise, begruendung, zielOrdner,
+            indexDatum, segmente, tags, Details(lauf, indexDatum, segmente, tags));
         if (PruefeBekannterPlan(lauf, ort, zeile))
             lauf.Zeilen.Add(zeile);
     }

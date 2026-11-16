@@ -28,16 +28,19 @@ public sealed partial class ClaudeSortEntwurfPruefer
     private readonly IFileSystemReader _reader;
     private readonly IPathService _path;
     private readonly IPlanValueNormalizer _normalizer;
+    private readonly ISegmentTypeCatalog? _segmentTypes;
 
     public ClaudeSortEntwurfPruefer(
         ProjectDatabase bpmDb, DocumentTargetPathResolver resolver,
-        IFileSystemReader reader, IPathService path, IPlanValueNormalizer normalizer)
+        IFileSystemReader reader, IPathService path, IPlanValueNormalizer normalizer,
+        ISegmentTypeCatalog? segmentTypes = null)
     {
         _bpmDb = bpmDb;
         _resolver = resolver;
         _reader = reader;
         _path = path;
         _normalizer = normalizer;
+        _segmentTypes = segmentTypes;
     }
 
     /// <summary>True, wenn Claude im Auftragsordner ein entwurf.json geschrieben hat.</summary>
@@ -72,7 +75,8 @@ public sealed partial class ClaudeSortEntwurfPruefer
         using (doc)
         {
             var lauf = new Lauf(auftrag, aktuelleAnalyse,
-                _bpmDb.GetDocumentTypes(auftrag.ProjectId), _bpmDb.GetBuildingParts(auftrag.ProjectId));
+                _bpmDb.GetDocumentTypes(auftrag.ProjectId), _bpmDb.GetBuildingParts(auftrag.ProjectId),
+                ClaudeSortAuftragBuilder.ErlaubteSegmenttypen(_segmentTypes).ToDictionary(t => t.Id, StringComparer.Ordinal));
             PruefeWurzel(lauf, doc.RootElement);
             var ergebnis = new ClaudeSortPruefErgebnis(lauf.Zeilen, lauf.NichtZuordenbar, lauf.Fehler, lauf.Hinweise);
             Log.Information("Claude-Sortierung: Entwurf {Name} geprueft — {Ok} gueltig, {Nz} nicht zuordenbar, {Err} Fehler",
@@ -189,8 +193,10 @@ public sealed partial class ClaudeSortEntwurfPruefer
     /// <summary>Zustand eines Pruefdurchlaufs.</summary>
     private sealed class Lauf(
         ClaudeSortAuftrag auftrag, IReadOnlyList<CaptureItem> aktuelleAnalyse,
-        IReadOnlyList<PlanDocumentType> types, IReadOnlyList<BuildingPart> parts)
+        IReadOnlyList<PlanDocumentType> types, IReadOnlyList<BuildingPart> parts,
+        IReadOnlyDictionary<string, SegmentTypeDefinition> segmenttypen)
     {
+        public IReadOnlyDictionary<string, SegmentTypeDefinition> Segmenttypen { get; } = segmenttypen;
         public ClaudeSortAuftrag Auftrag { get; } = auftrag;
         public IReadOnlyList<PlanDocumentType> Types { get; } = types;
         public IReadOnlyList<BuildingPart> Parts { get; } = parts;

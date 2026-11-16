@@ -12,6 +12,8 @@ internal sealed record ClaudeSortKontext(
     string Heute,
     IReadOnlyList<KontextDokumenttyp> Dokumenttypen,
     IReadOnlyList<KontextBauteil> Bauteile,
+    IReadOnlyList<KontextSegmenttyp> Segmenttypen,
+    IReadOnlyList<string> VorhandeneTags,
     IReadOnlyList<KontextBekannterPlan> BekanntePlaene,
     IReadOnlyList<KontextEingangsdatei> Eingangsdateien);
 
@@ -32,6 +34,8 @@ internal sealed record KontextBauteil(
     IReadOnlyList<KontextGeschoss> Geschosse);
 
 internal sealed record KontextGeschoss(string Id, string Name, string Beschreibung);
+
+internal sealed record KontextSegmenttyp(string Id, string Name);
 
 internal sealed record KontextBekannterPlan(
     string Plannummer,

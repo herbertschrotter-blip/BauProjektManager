@@ -472,7 +472,9 @@ public class ImportExecutionService
                 decision.File.ReleasedAt,                    // released_at (BPM-118 Text-Zuweisung)
                 decision.File.ChangeNote ?? "");             // change_note (BPM-118 Text-Zuweisung)
             _db.InsertRevisionEvent(revisionId, importId,
-                PlanArchive.EventType.Created, "Neue Revision angelegt");
+                PlanArchive.EventType.Created, decision.File.FromClaudeSuggestion
+                    ? "Neue Revision angelegt · Herkunft: Vorschlag von Claude, bestätigt"
+                    : "Neue Revision angelegt");
             _db.InsertFileForRevision(revisionId,
                 decision.File.Parsed.FileName, targetRelPath,
                 decision.File.Parsed.Extension,
@@ -486,6 +488,10 @@ public class ImportExecutionService
         foreach (var seg in decision.File.AssignedSegments ?? [])
             _db.UpsertSegment(documentId, seg.SegmentTypeId, seg.TokenKey,
                 seg.Value, _normalizer.NormalizeForMatch(seg.Value));
+
+        // Tags aus "Mit Claude sortieren" (ADR-067) — vorhandene werden reaktiviert, nicht verdoppelt.
+        foreach (var tag in decision.File.Tags ?? [])
+            _db.AddTag(documentId, tag);
 
         _db.CompleteImportAction(actionId, true);
     }

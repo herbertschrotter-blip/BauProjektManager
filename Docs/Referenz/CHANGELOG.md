@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.223] — 2026-11-16
+
+### Feature: Mit Claude sortieren – Index-Datum, Segmente und Tags (BPM-131)
+
+Wunsch Herbert nach dem ersten Lauf: Claude liefert jetzt je Datei auch das Index-Datum (Dateiname vor Index-Tabelle des Plankopfs), die Segmente des Dateinamens (Plannummer, Planart, Haus, Geschoss …) und bis zu 5 Tags. `kontext.json` enthält dafür `segmenttypen` und `vorhandene_tags`; Schema und Vorschrift sind erweitert. Die Prüfung lehnt unbekannte Segmenttypen, Werte, die nicht wörtlich im Dateinamen stehen, doppelte Typen, ungültige oder zukünftige Daten und mehr als 5 Tags ab. Die Übernahme füllt Freigabedatum und Segmente der Zeile (sichtbar im Detail-Panel und im Segment-Editor), der Import schreibt die Tags und vermerkt im Revisionsverlauf „Herkunft: Vorschlag von Claude, bestätigt“ – bestätigte Claude-Zuordnungen zählen so mit Herkunft für das Lernen (ADR-067 P.1/P.9 präzisiert). Tests: 681.
+
+---
 ## [v0.28.222] — 2026-11-16
 
 ### Docs: Seitenliste aktualisiert

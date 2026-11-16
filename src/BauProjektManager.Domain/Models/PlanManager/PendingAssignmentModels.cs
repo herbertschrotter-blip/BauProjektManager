@@ -49,7 +49,9 @@ public sealed record PendingAssignment(
     PendingAssignmentSource Source = PendingAssignmentSource.Manual,
     // Begruendung, unsichere Felder und Hinweis eines Claude-Vorschlags — bleiben am
     // Vorschlag, damit die Zeile sie auch nach Neuladen zeigt (nur bei ClaudeSuggestion).
-    ClaudeSuggestionInfo? Suggestion = null)
+    ClaudeSuggestionInfo? Suggestion = null,
+    // Tags fuer plan_document_tags — werden beim Import angelegt ("Mit Claude sortieren", ADR-067).
+    IReadOnlyList<string>? Tags = null)
 {
     /// <summary>True, wenn die Zuordnung ein noch unangefasster Vorschlag von Claude ist.</summary>
     public bool IsClaudeSuggestion => Source == PendingAssignmentSource.ClaudeSuggestion;
@@ -60,10 +62,12 @@ public sealed record PendingAssignment(
 /// Feldnamen wie im entwurf.json (dokumenttyp_id, bauteil_id, kategorie_id, geschoss_id,
 /// plannummer, index, bezeichnung).
 /// </summary>
+/// <param name="Details">Zusatz fuer die Anzeige: Index-Datum, Segmente, Tags (NULL = keiner).</param>
 public sealed record ClaudeSuggestionInfo(
     string Reason,
     IReadOnlyList<string> UncertainFields,
-    string? Note)
+    string? Note,
+    string? Details = null)
 {
     /// <summary>True, wenn Claude bei mindestens einem Feld unsicher ist.</summary>
     public bool IsUncertain => UncertainFields.Count > 0;

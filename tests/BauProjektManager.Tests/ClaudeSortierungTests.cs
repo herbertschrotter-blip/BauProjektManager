@@ -109,13 +109,13 @@ public partial class ClaudeSortierungTests : IDisposable
     }
 
     private ClaudeSortAuftragBuilder Builder(IPdfTextService? pdf = null)
-        => new(_bpmDb, _planDb, _fs, _fs, _fs, pdf);
+        => new(_bpmDb, _planDb, _fs, _fs, _fs, pdf, segmentTypes: Katalog);
 
     private ClaudeSortEntwurfPruefer Pruefer()
     {
         var normalizer = new PlanValueNormalizer();
         return new ClaudeSortEntwurfPruefer(_bpmDb,
-            new DocumentTargetPathResolver(_bpmDb, normalizer, _fs), _fs, _fs, normalizer);
+            new DocumentTargetPathResolver(_bpmDb, normalizer, _fs), _fs, _fs, normalizer, Katalog);
     }
 
     private Task<ClaudeSortAuftrag> ErstelleAuftragAsync(IPdfTextService? pdf = null, bool plankopf = true)

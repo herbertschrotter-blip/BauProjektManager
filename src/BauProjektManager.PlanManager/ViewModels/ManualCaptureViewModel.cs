@@ -92,7 +92,7 @@ public partial class CaptureRowViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsClaudeAtWork), nameof(IsClaudeDraft), nameof(IsClaudeUncertain),
         nameof(IsClaudeInvalid), nameof(ClaudeMarkText), nameof(RowToolTip), nameof(ClaudeInfo), nameof(HasClaudeInfo),
-        nameof(ClaudeInfoTitle), nameof(ClaudeUncertainText))]
+        nameof(ClaudeInfoTitle), nameof(ClaudeUncertainText), nameof(ClaudeDetailsText), nameof(HasClaudeDetails))]
     private ClaudeRowMark? _claudeMark;
 
     public bool IsClaudeAtWork => ClaudeMark?.Kind == ClaudeRowMarkKind.AtClaude;
@@ -109,6 +109,11 @@ public partial class CaptureRowViewModel : ObservableObject
 
     /// <summary>Kopf des Claude-Blocks im Detail-Panel.</summary>
     public string ClaudeInfoTitle => IsClaudeDraft ? "✦ VORSCHLAG VON CLAUDE" : "✦ PENDING · AUS VORSCHLAG VON CLAUDE";
+
+    /// <summary>Index-Datum, Segmente und Tags des Vorschlags (Detail-Panel), leer wenn keine.</summary>
+    public string ClaudeDetailsText => ClaudeInfo?.Details ?? "";
+
+    public bool HasClaudeDetails => !string.IsNullOrEmpty(ClaudeInfo?.Details);
 
     public string ClaudeUncertainText => ClaudeInfo is { IsUncertain: true } info
         ? $"⚠ unsicher: {string.Join(", ", info.UncertainFields)}" + (string.IsNullOrWhiteSpace(info.Note) ? "" : $" – {info.Note}")
@@ -136,7 +141,7 @@ public partial class CaptureRowViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsClaudeSuggestion), nameof(ClaudeText), nameof(PendingText),
         nameof(IsClaudeUncertain), nameof(RowToolTip), nameof(ClaudeInfo), nameof(HasClaudeInfo),
-        nameof(ClaudeInfoTitle), nameof(ClaudeUncertainText))]
+        nameof(ClaudeInfoTitle), nameof(ClaudeUncertainText), nameof(ClaudeDetailsText), nameof(HasClaudeDetails))]
     private ClaudeSuggestionInfo? _claudeSuggestion;
 
     public bool IsClaudeSuggestion => ClaudeSuggestion is not null;
@@ -303,8 +308,12 @@ public partial class ManualCaptureViewModel : ObservableObject
                 PendingTarget = pending?.TargetRelativeDirectory,
                 Title = pending?.Title,
                 ChangeNote = pending?.ChangeNote,
-                ClaudeSuggestion = pending is { IsClaudeSuggestion: true } ? pending.Suggestion : null
+                ClaudeSuggestion = pending is { IsClaudeSuggestion: true } ? pending.Suggestion : null,
+                // Index-Datum und Segmente ebenso: ConfirmImportAsync schreibt sie aus der Zeile zurueck
+                ReleasedAtIso = pending?.ReleasedAt
             };
+            foreach (var seg in pending?.AssignedSegments ?? [])
+                row.AssignedSegments[seg.SegmentTypeId] = seg;
             Rows.Add(row);
         }
         ApplyClaudeMarks();

@@ -161,9 +161,9 @@ public partial class ProjectDetailView : UserControl
         var fs = new Infrastructure.Services.LocalFileSystem();
         var normalizer = new Infrastructure.Services.PlanValueNormalizer();
         var builder = new Services.ClaudeSortierung.ClaudeSortAuftragBuilder(
-            _bpmDb, _manualSortDb, fs, fs, fs, _pdfTextService);
+            _bpmDb, _manualSortDb, fs, fs, fs, _pdfTextService, segmentTypes: _segmentTypeCatalog);
         var pruefer = new Services.ClaudeSortierung.ClaudeSortEntwurfPruefer(
-            _bpmDb, new DocumentTargetPathResolver(_bpmDb, normalizer, fs), fs, fs, normalizer);
+            _bpmDb, new DocumentTargetPathResolver(_bpmDb, normalizer, fs), fs, fs, normalizer, _segmentTypeCatalog);
         var settings = _settingsService;
         return new ClaudeSortViewModel(_claudeAssistant, builder, pruefer, captureVm,
             () => settings.LoadDevice().Claude.SortingEnabled,

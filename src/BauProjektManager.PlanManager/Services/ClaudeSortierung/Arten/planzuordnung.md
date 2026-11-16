@@ -14,6 +14,8 @@ Du verschiebst und benennst nichts: Den Ablageordner baut die App aus deiner Zuo
 | `auftrag`, `heute` | Name des Auftrags, Datum heute (`JJJJ-MM-TT`) |
 | `dokumenttypen` | je Typ `id`, `key`, `name`, `unterteilung`, `ablage` (Ordner relativ zum Projekt), `kategorien` (`id`, `name`) |
 | `bauteile` | je Bauteil `id`, `kurzname`, `beschreibung`, `geschosse` (`id`, `name`, `beschreibung`) |
+| `segmenttypen` | je Segmenttyp `id`, `name` (z. B. Plannummer, Index, Geschoss, Haus, Planart) – für `segmente` |
+| `vorhandene_tags` | Tags, die Herbert in diesem Projekt schon verwendet (häufigste zuerst) |
 | `bekannte_plaene` | schon im Archiv: `plannummer`, `index` (aktuell), `dokumenttyp_id`, `dokumenttyp`, `bauteil_id`, `geschoss_id`, `ordner` |
 | `eingangsdateien` | zu ordnen: `id` (z. B. `D-001`), `dateiname`, `groesse_kb`, `aus_dateiname` (was die App im Namen gefunden hat: `plannummer`, `index`, `geschoss`, `bauteil`), `plankopf_text` (Text aus dem Plankopf eines PDFs, leer wenn keiner lesbar ist) |
 
@@ -37,6 +39,13 @@ Du verschiebst und benennst nichts: Den Ablageordner baut die App aus deiner Zuo
       "plannummer": "5998-100",
       "index": "B",
       "bezeichnung": "Polierplan Decke über EG",
+      "index_datum": "2026-04-03",
+      "segmente": [
+        { "segmenttyp_id": "plan_number", "wert": "5998-100" },
+        { "segmenttyp_id": "planart", "wert": "Polierplan" },
+        { "segmenttyp_id": "geschoss", "wert": "EG" }
+      ],
+      "tags": ["Decke"],
       "unsicher": ["geschoss_id"],
       "hinweise": "Geschoss nur aus dem Dateinamen („EG“), Plankopf nicht lesbar",
       "begruendung": "Plankopf: Polierplan, Haus A, Plan-Nr. 5998-100, Index B"
@@ -56,6 +65,14 @@ Du verschiebst und benennst nichts: Den Ablageordner baut die App aus deiner Zuo
 - `plannummer` und `index` wie auf dem Plan (Plankopf vor Dateiname), sonst `null`. Protokolle und andere Dokumente
   ohne Nummer: `plannummer` `null`. Erstausgabe ohne Index: `index` `null`.
 - `bezeichnung`: der Plantitel bzw. Betreff aus dem Plankopf, kurz (höchstens 200 Zeichen), sonst `null`.
+- `index_datum`: Datum des aktuellen Index als `JJJJ-MM-TT`. Steht es im Dateinamen, gilt der Dateiname, sonst die
+  Zeile des aktuellen Index in der Index-Tabelle des Plankopfs. Nicht raten: findest du keins, `null`.
+- `segmente`: die Teile des Dateinamens mit ihrem Segmenttyp aus `segmenttypen`, z. B. `6100-204` → Plannummer,
+  `Polierplan` → Planart, `H2` → Haus, `UG` → Geschoss. `wert` ist **wörtlich ein Teil des Dateinamens** (ohne
+  Endung) – nichts aus dem Plankopf, nichts umgeschrieben. Je Segmenttyp höchstens ein Wert. Teile, die du nicht
+  sicher deuten kannst, lässt du weg; nur IDs aus `segmenttypen`, keine neuen Typen.
+- `tags`: höchstens 5 kurze Schlagworte, die beim Wiederfinden helfen (z. B. `Scan`, `Detail Attika`,
+  `Bauleiter`). Nimm bevorzugt passende aus `vorhandene_tags`; sonst leer lassen statt viele neue zu erfinden.
 - `unsicher`: Feldnamen dieser Zeile, bei denen du unsicher bist; `hinweise`: warum (ein Satz).
 - `begruendung`: ein kurzer Satz, woran du es erkannt hast. Herbert liest ihn unter der Zeile.
 

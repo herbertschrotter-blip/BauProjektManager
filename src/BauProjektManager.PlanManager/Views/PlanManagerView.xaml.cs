@@ -77,6 +77,7 @@ public partial class PlanManagerView : UserControl
     private readonly IFileLauncher? _fileLauncher;
     private readonly AppSettingsService? _settingsService;
     private readonly IPdfTextService? _pdfTextService;
+    private readonly IClaudeAssistant? _claudeAssistant;
 
     public PlanManagerView(
         ProjectDatabase db,
@@ -88,7 +89,8 @@ public partial class PlanManagerView : UserControl
         IPdfRenderService? pdfRenderService = null,
         IFileLauncher? fileLauncher = null,
         AppSettingsService? settingsService = null,
-        IPdfTextService? pdfTextService = null)
+        IPdfTextService? pdfTextService = null,
+        IClaudeAssistant? claudeAssistant = null)
     {
         _db = db;
         _idGenerator = idGenerator;
@@ -100,6 +102,7 @@ public partial class PlanManagerView : UserControl
         _fileLauncher = fileLauncher;
         _settingsService = settingsService;
         _pdfTextService = pdfTextService;
+        _claudeAssistant = claudeAssistant;
         // BPM-112.01/.05: JSON-Persistenz + Pfade ueber FS-Ports (eine Instanz).
         _templateService = new PatternTemplateService(_idGenerator, _fs, _fs, _fs, persistenceRegistry);
         Resources.Add("BoolToVis", _boolToVis);
@@ -139,7 +142,7 @@ public partial class PlanManagerView : UserControl
         var detailView = new ProjectDetailView(
             project, _boolToVis, _profileManager, _idGenerator, _templateService, appDataPath,
             _persistenceRegistry, _segmentTypeCatalog, _segmentTypeRepository, _db,
-            _pdfRenderService, _fileLauncher, _settingsService, _pdfTextService);
+            _pdfRenderService, _fileLauncher, _settingsService, _pdfTextService, _claudeAssistant);
         detailView.ViewModel.NavigateBack += NavigateToList;
 
         ProjectListPanel.Visibility = Visibility.Collapsed;

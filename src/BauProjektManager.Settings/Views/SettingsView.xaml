@@ -99,6 +99,17 @@
                                        VerticalAlignment="Center" Margin="5,4,0,4"/>
                         </Grid>
 
+                        <!-- Mit Claude sortieren (ADR-067) — geraete-lokal, Standard aus -->
+                        <Rectangle Height="1" Fill="{DynamicResource BpmBorderDefault}" Margin="0,20,0,12"/>
+                        <TextBlock Text="── Claude ──" Foreground="{DynamicResource BpmAccentPrimary}"
+                                   FontWeight="Bold" FontSize="{DynamicResource BpmFontSizeBody}" Margin="0,0,0,8"/>
+                        <CheckBox IsChecked="{Binding ClaudeSortingEnabled}"
+                                  Foreground="{DynamicResource BpmTextPrimary}"
+                                  FontSize="{DynamicResource BpmFontSizeLabel}"
+                                  Content="„Mit Claude sortieren“ im PlanManager einschalten"/>
+                        <TextBlock Style="{DynamicResource BpmSmallText}" TextWrapping="Wrap" Margin="20,4,0,0"
+                                   Text="Claude Code auf diesem PC schlägt Zuordnungen für neue Pläne vor. Dabei gehen Dateinamen, die Stammdaten des Projekts und – wenn du es beim Start ankreuzt – der Plankopf-Text über dein Claude-Abo an Anthropic. Importiert wird erst, wenn du bestätigst. Gilt nur für dieses Gerät."/>
+
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

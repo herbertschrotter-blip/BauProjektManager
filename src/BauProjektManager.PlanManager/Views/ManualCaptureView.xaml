@@ -15,18 +15,108 @@
             <ColumnDefinition Width="*" MinWidth="220"/>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition x:Name="RightColumn" Width="320"/>
+            <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
+
+        <!-- Chatfenster "Mit Claude sortieren" (Seitenliste 3.4) rechts aussen; DataContext im Code-Behind -->
+        <views:ClaudeChatPanel x:Name="ClaudeChat" Grid.Column="3" Width="390" Visibility="Collapsed"
+                               BorderBrush="{DynamicResource BpmBorderSubtle}" BorderThickness="1,0,0,0"/>
 
         <!-- Sub-Tabs Neue Pläne / Archiv (111.07 Slice D) — Styles via Default BpmTabControl/BpmTabItem -->
         <TabControl Grid.Column="0" Margin="0,0,8,0">
         <TabItem Header="{Binding InboxTabHeader}">
         <!-- Eingangs-Tabelle (Hold-Geste startet das Radial, siehe Code-Behind) -->
         <DockPanel Margin="0,8,0,0">
-            <TextBlock DockPanel.Dock="Top" Margin="0,0,0,6"
-                       Foreground="{DynamicResource BpmTextSecondary}"
-                       FontSize="{DynamicResource BpmFontSizeCaption}">
-                <Run Text="Klick = Auswahl · Strg+Klick = mehrere · "/><Run FontWeight="SemiBold" Text="Halten"/><Run Text=" = Radial zuordnen"/>
-            </TextBlock>
+            <!-- Hinweis + Knopf "Mit Claude sortieren" (Seitenliste 3.4); DataContext = ClaudeSortViewModel (Code-Behind) -->
+            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                <Grid x:Name="ClaudeBar" DockPanel.Dock="Right" Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding OffHint}" VerticalAlignment="Center" Margin="0,0,8,0"
+                                   Foreground="{DynamicResource BpmTextSecondary}"
+                                   FontSize="{DynamicResource BpmFontSizeCaption}"/>
+                        <Button x:Name="ClaudeButton" Style="{DynamicResource BpmButtonSecondary}"
+                                Command="{Binding ToggleStartCommand}"
+                                IsEnabled="{Binding IsButtonEnabled}"
+                                ToolTip="{Binding ButtonToolTip}"
+                                ToolTipService.ShowOnDisabled="True">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="✦" Foreground="{DynamicResource BpmAccentPrimary}" Margin="0,0,6,0"/>
+                                <TextBlock Text="{Binding ButtonText}"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                    <!-- Startdialog (Zustand 1): was geht an Claude, Plankopf-Haken (ADR-067 E2) -->
+                    <Popup IsOpen="{Binding IsConfirmOpen, Mode=OneWay}" PlacementTarget="{Binding ElementName=ClaudeButton}"
+                           Placement="Bottom" HorizontalOffset="-220" StaysOpen="True" AllowsTransparency="True">
+                        <Border Width="380" Padding="14" CornerRadius="4" Background="{DynamicResource BpmBgSurface}"
+                                BorderBrush="{DynamicResource BpmAccentPrimary}" BorderThickness="1"
+                                KeyDown="OnClaudeConfirmKeyDown">
+                            <StackPanel>
+                                <TextBlock Text="Mit Claude sortieren?" Margin="0,0,0,8" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource BpmTextBright}" FontSize="{DynamicResource BpmFontSizeBody}"/>
+                                <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource BpmTextPrimary}"
+                                           FontSize="{DynamicResource BpmFontSizeSmall}">
+                                    <Run Text="Claude bekommt"/>
+                                    <Run Text="{Binding ConfirmCountText, Mode=OneWay}" FontWeight="SemiBold"
+                                         Foreground="{DynamicResource BpmTextBright}"/>
+                                    <Run Text="(Erstaufnahme) und schlägt Zuordnungen vor. Importiert wird erst, wenn du bestätigst."/>
+                                </TextBlock>
+                                <Border Margin="0,10" Padding="8,6" CornerRadius="3" Background="{DynamicResource BpmBgBase}">
+                                    <StackPanel>
+                                        <TextBlock FontSize="{DynamicResource BpmFontSizeCaption}" Foreground="{DynamicResource BpmTextPrimary}">
+                                            <Run Text="✓" Foreground="{DynamicResource BpmSuccess}"/>
+                                            <Run Text="Dateinamen, Größe und Kandidaten aus dem Namen"/>
+                                        </TextBlock>
+                                        <TextBlock FontSize="{DynamicResource BpmFontSizeCaption}" Foreground="{DynamicResource BpmTextPrimary}">
+                                            <Run Text="✓" Foreground="{DynamicResource BpmSuccess}"/>
+                                            <Run Text="Dokumenttypen, Bauteile, Kategorien, Geschoße dieses Projekts (IDs)"/>
+                                        </TextBlock>
+                                        <CheckBox IsChecked="{Binding PlankopfMitsenden}" Margin="0,4,0,2"
+                                                  Foreground="{DynamicResource BpmTextPrimary}" FontSize="{DynamicResource BpmFontSizeCaption}"
+                                                  Content="Plankopf-Text mitsenden (kann Namen und Adressen von Planern enthalten)"/>
+                                        <TextBlock Text="✕ keine Plandateien, keine anderen Projekte" Margin="0,2,0,0"
+                                                   FontSize="{DynamicResource BpmFontSizeCaption}" Foreground="{DynamicResource BpmTextSecondary}"/>
+                                        <TextBlock Text="{Binding ExcludedText}" FontSize="{DynamicResource BpmFontSizeCaption}"
+                                                   Foreground="{DynamicResource BpmTextSecondary}"/>
+                                    </StackPanel>
+                                </Border>
+                                <TextBlock Text="Läuft über Claude Code auf diesem PC mit deinem Abo (Anthropic)." Margin="0,0,0,10"
+                                           TextWrapping="Wrap" FontSize="{DynamicResource BpmFontSizeCaption}"
+                                           Foreground="{DynamicResource BpmTextSecondary}"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Content="Abbrechen" Style="{DynamicResource BpmButtonSecondary}" Margin="0,0,8,0"
+                                            Command="{Binding CancelStartCommand}"/>
+                                    <Button Content="Starten" Style="{DynamicResource BpmButtonPrimary}"
+                                            Command="{Binding StartCommand}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Popup>
+                </Grid>
+                <TextBlock VerticalAlignment="Center"
+                           Foreground="{DynamicResource BpmTextSecondary}"
+                           FontSize="{DynamicResource BpmFontSizeCaption}">
+                    <Run Text="Klick = Auswahl · Strg+Klick = mehrere · "/><Run FontWeight="SemiBold" Text="Halten"/><Run Text=" = Radial zuordnen"/>
+                </TextBlock>
+            </DockPanel>
+
+            <!-- Vorschlags-Leiste (Zustand 5): Entwurf geprueft, noch nicht uebernommen -->
+            <Border x:Name="ClaudeDraftBar" DockPanel.Dock="Top" Margin="0,0,0,6" Padding="10,6"
+                    Background="{DynamicResource BpmBgSurface}" BorderBrush="{DynamicResource BpmAccentPrimary}"
+                    BorderThickness="3,0,0,0" Visibility="Collapsed">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Content="{Binding DraftButtonText}" Style="{DynamicResource BpmButtonPrimary}"
+                            Command="{Binding TakeOverCommand}" Margin="8,0,0,0"/>
+                    <Button DockPanel.Dock="Right" Content="Verwerfen" Style="{DynamicResource BpmButtonSecondary}"
+                            Command="{Binding DiscardCommand}"/>
+                    <TextBlock VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                               FontSize="{DynamicResource BpmFontSizeSmall}">
+                        <Run Text="✦" Foreground="{DynamicResource BpmAccentPrimary}"/>
+                        <Run Text="Entwurf von Claude – bitte prüfen" Foreground="{DynamicResource BpmTextBright}"/>
+                        <Run Text="{Binding DraftSummary, Mode=OneWay}" Foreground="{DynamicResource BpmTextSecondary}"/>
+                    </TextBlock>
+                </DockPanel>
+            </Border>
 
             <ListBox x:Name="FileList"
                      ItemsSource="{Binding Rows}"
@@ -51,7 +141,8 @@
                                 BorderThickness="3,0,0,0"
                                 BorderBrush="Transparent"
                                 Padding="8,6"
-                                MinHeight="36">
+                                MinHeight="36"
+                                ToolTip="{Binding RowToolTip}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -112,10 +203,27 @@
                             <DataTrigger Binding="{Binding IsDuplicate}" Value="True">
                                 <Setter TargetName="RowBorder" Property="Opacity" Value="0.5"/>
                             </DataTrigger>
+                            <!-- "Mit Claude sortieren": bei Claude / Vorschlag / unsicher / ungueltig (Pending gewinnt, steht danach) -->
+                            <DataTrigger Binding="{Binding IsClaudeAtWork}" Value="True">
+                                <Setter TargetName="AssignText" Property="Text" Value="{Binding ClaudeMarkText}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsClaudeDraft}" Value="True">
+                                <Setter TargetName="RowBorder" Property="BorderBrush" Value="{DynamicResource BpmAccentPrimary}"/>
+                                <Setter TargetName="AssignText" Property="Foreground" Value="{DynamicResource BpmAccentPrimary}"/>
+                                <Setter TargetName="AssignText" Property="Text" Value="{Binding ClaudeMarkText}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsClaudeInvalid}" Value="True">
+                                <Setter TargetName="RowBorder" Property="BorderBrush" Value="{DynamicResource BpmError}"/>
+                                <Setter TargetName="AssignText" Property="Foreground" Value="{DynamicResource BpmError}"/>
+                                <Setter TargetName="AssignText" Property="Text" Value="{Binding ClaudeMarkText}"/>
+                            </DataTrigger>
                             <DataTrigger Binding="{Binding IsPending}" Value="True">
                                 <Setter TargetName="RowBorder" Property="BorderBrush" Value="{DynamicResource BpmWarning}"/>
                                 <Setter TargetName="AssignText" Property="Foreground" Value="{DynamicResource BpmWarning}"/>
                                 <Setter TargetName="AssignText" Property="Text" Value="{Binding PendingText}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsClaudeUncertain}" Value="True">
+                                <Setter TargetName="AssignText" Property="FontStyle" Value="Italic"/>
                             </DataTrigger>
                             <Trigger SourceName="RowBorder" Property="IsMouseOver" Value="True">
                                 <Setter TargetName="RowBorder" Property="Background" Value="{DynamicResource BpmBgHover}"/>
@@ -543,7 +651,7 @@
 
         <!-- Radial-Overlay (Gesten-Host steuert Sichtbarkeit + Position) -->
         <Canvas x:Name="OverlayCanvas"
-                Grid.ColumnSpan="3"
+                Grid.ColumnSpan="4"
                 Visibility="Collapsed"
                 Background="Transparent"
                 IsHitTestVisible="False">

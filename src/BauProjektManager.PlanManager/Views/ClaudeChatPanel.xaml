@@ -1,0 +1,256 @@
+<UserControl x:Class="BauProjektManager.PlanManager.Views.ClaudeChatPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:BauProjektManager.PlanManager.ViewModels"
+             UseLayoutRounding="True">
+    <!-- Chatfenster "Mit Claude sortieren" (Seitenliste 3.4, Mockup 02_ManuellSortieren_Claude.html):
+         Kopf · Statuszeile · Verlauf (Claude/Du/App/Aktivitaet/Rueckfrage) · Fehlerkarte · Eingabe -->
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <Style x:Key="ChatMsg" TargetType="Border">
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="9,6"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+
+        <!-- Antwort-Knopf einer Rueckfrage: Empfehlung mit Akzent-Rahmen, Erklaerung klein darunter -->
+        <Style x:Key="AnswerButton" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource BpmBgElevated}"/>
+            <Setter Property="Foreground" Value="{DynamicResource BpmTextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BpmBorderDefault}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="3" Padding="8,5">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource BpmBgHover}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.6"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="AnswerTemplate" DataType="{x:Type vm:ClaudeAnswerViewModel}">
+            <Button x:Name="AnswerBtn" Style="{StaticResource AnswerButton}"
+                    Command="{Binding DataContext.AnswerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    CommandParameter="{Binding}"
+                    IsEnabled="{Binding Question.IsAnswered, Converter={x:Static vm:ClaudeChatConverters.Not}}">
+                <DockPanel>
+                    <Border x:Name="Num" DockPanel.Dock="Left" Width="20" Height="20" CornerRadius="10"
+                            Background="{DynamicResource BpmBgActive}" Margin="0,0,8,0" VerticalAlignment="Top">
+                        <TextBlock x:Name="NumText" Text="{Binding Number}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource BpmTextBright}" FontSize="{DynamicResource BpmFontSizeCaption}"/>
+                    </Border>
+                    <StackPanel>
+                        <TextBlock TextWrapping="Wrap" FontSize="{DynamicResource BpmFontSizeSmall}">
+                            <Run Text="{Binding Text, Mode=OneWay}"/>
+                            <Run x:Name="RecTag" Text=" (Empfehlung)" Foreground="{DynamicResource BpmAccentPrimary}"
+                                 FontSize="{DynamicResource BpmFontSizeCaption}"/>
+                        </TextBlock>
+                        <TextBlock Text="{Binding Explanation}" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource BpmTextSecondary}"
+                                   FontSize="{DynamicResource BpmFontSizeCaption}"
+                                   Visibility="{Binding HasExplanation, Converter={StaticResource BoolToVis}}"/>
+                    </StackPanel>
+                </DockPanel>
+            </Button>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsRecommended}" Value="True">
+                    <Setter TargetName="AnswerBtn" Property="BorderBrush" Value="{DynamicResource BpmAccentPrimary}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsRecommended}" Value="False">
+                    <Setter TargetName="RecTag" Property="Text" Value=""/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsChecked}" Value="True">
+                    <Setter TargetName="Num" Property="Background" Value="{DynamicResource BpmAccentPrimary}"/>
+                    <Setter TargetName="NumText" Property="Text" Value="✓"/>
+                    <Setter TargetName="AnswerBtn" Property="BorderBrush" Value="{DynamicResource BpmAccentPrimary}"/>
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <DataTemplate x:Key="EntryTemplate" DataType="{x:Type vm:ClaudeChatEntry}">
+            <StackPanel>
+                <!-- Claude / Du -->
+                <TextBlock x:Name="Who" Text="Claude" Visibility="Collapsed" Margin="0,0,0,2"
+                           Foreground="{DynamicResource BpmTextSecondary}" FontSize="{DynamicResource BpmFontSizeCaption}"/>
+                <Border x:Name="Msg" Style="{StaticResource ChatMsg}" Visibility="Collapsed"
+                        Background="{DynamicResource BpmBgSurface}">
+                    <TextBlock Text="{Binding Text}" TextWrapping="Wrap"
+                               Foreground="{DynamicResource BpmTextPrimary}" FontSize="{DynamicResource BpmFontSizeSmall}"/>
+                </Border>
+                <!-- Meldung der App -->
+                <TextBlock x:Name="Sys" Text="{Binding Text}" TextWrapping="Wrap" Visibility="Collapsed"
+                           Margin="0,0,0,10" HorizontalAlignment="Center" TextAlignment="Center"
+                           Foreground="{DynamicResource BpmTextSecondary}" FontSize="{DynamicResource BpmFontSizeCaption}"/>
+                <!-- Aktivitaet (Werkzeug) -->
+                <TextBlock x:Name="Act" Text="{Binding Text}" Visibility="Collapsed" Margin="6,0,0,2"
+                           Foreground="{DynamicResource BpmTextSecondary}" FontFamily="Consolas"
+                           FontSize="{DynamicResource BpmFontSizeCaption}" TextTrimming="CharacterEllipsis"/>
+                <!-- Rueckfrage -->
+                <Border x:Name="Q" Visibility="Collapsed" Margin="0,0,0,10" Padding="10,8" CornerRadius="4"
+                        Background="{DynamicResource BpmBgSurface}" BorderBrush="{DynamicResource BpmWarning}"
+                        BorderThickness="3,0,0,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Question.CaptionText}" Margin="0,0,0,4"
+                                   Foreground="{DynamicResource BpmTextSecondary}" FontSize="{DynamicResource BpmFontSizeCaption}"/>
+                        <TextBlock Text="{Binding Question.Title}" TextWrapping="Wrap" Margin="0,0,0,8"
+                                   Foreground="{DynamicResource BpmTextBright}" FontSize="{DynamicResource BpmFontSizeSmall}"/>
+                        <ItemsControl ItemsSource="{Binding Question.Answers}" ItemTemplate="{StaticResource AnswerTemplate}"/>
+                        <Button Content="{Binding Question.SendMultipleText}" HorizontalAlignment="Right" Margin="0,4,0,0"
+                                Style="{DynamicResource BpmButtonPrimary}"
+                                Command="{Binding DataContext.SendMultipleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding Question}"
+                                Visibility="{Binding Question.AllowMultiple, Converter={StaticResource BoolToVis}}"
+                                IsEnabled="{Binding Question.IsAnswered, Converter={x:Static vm:ClaudeChatConverters.Not}}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Kind}" Value="{x:Static vm:ClaudeChatEntryKind.Claude}">
+                    <Setter TargetName="Who" Property="Visibility" Value="Visible"/>
+                    <Setter TargetName="Msg" Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="{x:Static vm:ClaudeChatEntryKind.User}">
+                    <Setter TargetName="Who" Property="Visibility" Value="Visible"/>
+                    <Setter TargetName="Who" Property="Text" Value="Du"/>
+                    <Setter TargetName="Who" Property="HorizontalAlignment" Value="Right"/>
+                    <Setter TargetName="Msg" Property="Visibility" Value="Visible"/>
+                    <Setter TargetName="Msg" Property="Background" Value="{DynamicResource BpmBgActive}"/>
+                    <Setter TargetName="Msg" Property="HorizontalAlignment" Value="Right"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="{x:Static vm:ClaudeChatEntryKind.System}">
+                    <Setter TargetName="Sys" Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="{x:Static vm:ClaudeChatEntryKind.SystemOk}">
+                    <Setter TargetName="Sys" Property="Visibility" Value="Visible"/>
+                    <Setter TargetName="Sys" Property="Foreground" Value="{DynamicResource BpmSuccess}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="{x:Static vm:ClaudeChatEntryKind.SystemError}">
+                    <Setter TargetName="Sys" Property="Visibility" Value="Visible"/>
+                    <Setter TargetName="Sys" Property="Foreground" Value="{DynamicResource BpmError}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="{x:Static vm:ClaudeChatEntryKind.Activity}">
+                    <Setter TargetName="Act" Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="{x:Static vm:ClaudeChatEntryKind.Question}">
+                    <Setter TargetName="Q" Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <DockPanel Background="{DynamicResource BpmBgBase}">
+        <!-- Kopf -->
+        <Border DockPanel.Dock="Top" Background="{DynamicResource BpmBgSurface}"
+                BorderBrush="{DynamicResource BpmBorderSubtle}" BorderThickness="0,0,0,1" Padding="10,7">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Content="✕" Style="{DynamicResource BpmButtonGhost}"
+                        ToolTip="Chat schließen (Sitzung bleibt)" Command="{Binding CloseChatCommand}"/>
+                <TextBlock Text="✦" Foreground="{DynamicResource BpmAccentPrimary}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                <TextBlock Text="Claude" Foreground="{DynamicResource BpmTextBright}" FontWeight="SemiBold"
+                           FontSize="{DynamicResource BpmFontSizeSmall}" VerticalAlignment="Center"/>
+                <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"
+                           Foreground="{DynamicResource BpmTextSecondary}" FontSize="{DynamicResource BpmFontSizeCaption}">
+                    <Run Text="Sortierauftrag"/>
+                    <Run Text="{Binding AuftragName, Mode=OneWay}"/>
+                </TextBlock>
+            </DockPanel>
+        </Border>
+
+        <!-- Statuszeile -->
+        <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource BpmBorderSubtle}" BorderThickness="0,0,0,1"
+                Padding="12,6">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Content="Abbrechen" Style="{DynamicResource BpmButtonSecondary}"
+                        Command="{Binding AbortCommand}" Margin="8,0,0,0"
+                        Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}"/>
+                <TextBlock DockPanel.Dock="Right" Text="{Binding StatusDetail}" VerticalAlignment="Center"
+                           Foreground="{DynamicResource BpmTextSecondary}" FontSize="{DynamicResource BpmFontSizeCaption}"/>
+                <TextBlock x:Name="StatusLine" VerticalAlignment="Center" FontSize="{DynamicResource BpmFontSizeSmall}">
+                    <Run Text="●"/>
+                    <Run Text="{Binding StatusText, Mode=OneWay}"/>
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{DynamicResource BpmTextSecondary}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Phase}" Value="{x:Static vm:ClaudeSortPhase.Running}">
+                                    <Setter Property="Foreground" Value="{DynamicResource BpmTextPrimary}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Phase}" Value="{x:Static vm:ClaudeSortPhase.Waiting}">
+                                    <Setter Property="Foreground" Value="{DynamicResource BpmWarning}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Phase}" Value="{x:Static vm:ClaudeSortPhase.Draft}">
+                                    <Setter Property="Foreground" Value="{DynamicResource BpmSuccess}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Phase}" Value="{x:Static vm:ClaudeSortPhase.Applied}">
+                                    <Setter Property="Foreground" Value="{DynamicResource BpmSuccess}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Phase}" Value="{x:Static vm:ClaudeSortPhase.Unavailable}">
+                                    <Setter Property="Foreground" Value="{DynamicResource BpmError}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </DockPanel>
+        </Border>
+
+        <!-- Eingabe -->
+        <Border DockPanel.Dock="Bottom" Background="{DynamicResource BpmBgSurface}"
+                BorderBrush="{DynamicResource BpmBorderSubtle}" BorderThickness="0,1,0,0" Padding="10,8">
+            <StackPanel>
+                <TextBox x:Name="InputBox" Text="{Binding InputText, UpdateSourceTrigger=PropertyChanged}"
+                         IsEnabled="{Binding CanType}" AcceptsReturn="True" TextWrapping="Wrap"
+                         MinHeight="44" MaxHeight="120" VerticalScrollBarVisibility="Auto"
+                         Background="{DynamicResource BpmBgInput}" Foreground="{DynamicResource BpmTextPrimary}"
+                         BorderBrush="{DynamicResource BpmBorderDefault}" FontSize="{DynamicResource BpmFontSizeSmall}"
+                         PreviewKeyDown="OnInputKeyDown"
+                         ToolTip="Eigene Antwort oder Korrektur, z. B. „B-101 ist Haus 2“ – Enter sendet, Umschalt+Enter = neue Zeile"/>
+                <DockPanel Margin="0,6,0,0">
+                    <Button DockPanel.Dock="Right" Content="Senden" Style="{DynamicResource BpmButtonPrimary}"
+                            Command="{Binding SendCommand}"/>
+                    <TextBlock Text="Claude liest nur den Auftragsordner · importiert nichts" VerticalAlignment="Center"
+                               Foreground="{DynamicResource BpmTextSecondary}" FontSize="{DynamicResource BpmFontSizeCaption}"/>
+                </DockPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Verlauf + Fehlerkarte -->
+        <ScrollViewer x:Name="LogScroll" VerticalScrollBarVisibility="Auto" Padding="12,12,12,4">
+            <StackPanel>
+                <ItemsControl ItemsSource="{Binding Entries}" ItemTemplate="{StaticResource EntryTemplate}"/>
+                <Border Visibility="{Binding IsUnavailable, Converter={StaticResource BoolToVis}}"
+                        Background="{DynamicResource BpmBgSurface}" BorderBrush="{DynamicResource BpmError}"
+                        BorderThickness="1" CornerRadius="4" Padding="12">
+                    <StackPanel>
+                        <TextBlock Text="Claude ist nicht erreichbar" FontWeight="SemiBold" Margin="0,0,0,4"
+                                   Foreground="{DynamicResource BpmError}" FontSize="{DynamicResource BpmFontSizeSmall}"/>
+                        <TextBlock Text="{Binding UnavailableText}" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource BpmTextPrimary}" FontSize="{DynamicResource BpmFontSizeSmall}"/>
+                        <TextBlock TextWrapping="Wrap" Margin="0,8,0,8"
+                                   Foreground="{DynamicResource BpmTextSecondary}" FontSize="{DynamicResource BpmFontSizeCaption}"
+                                   Text="Abhilfe: Claude Code installieren, im Terminal einmal „claude“ starten und anmelden. Deine Dateien sind unverändert – von Hand sortieren geht weiter."/>
+                        <Button Content="Erneut prüfen" HorizontalAlignment="Left" Style="{DynamicResource BpmButtonPrimary}"
+                                Command="{Binding RetryCommand}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

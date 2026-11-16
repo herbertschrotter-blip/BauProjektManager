@@ -16,7 +16,7 @@ supersedes: []
 - Autorität: source_of_truth
 - Lesen wenn: Neue Architekturentscheidung treffen, bestehende ADR prüfen, Status ändern, Entscheidung nachschlagen
 - Nicht zuständig für: Implementierungs-Details (→ jeweilige Modul-Docs), Code-Standards (→ CODING_STANDARDS.md)
-- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-066; ADR-057 nicht vergeben)
+- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-067; ADR-057 nicht vergeben)
 - Pflichtlesen: keine (gezieltes Nachschlagen per ADR-Nummer)
 - Fachliche Invarianten:
   - Statusmodell: Decision Status (Proposed/Accepted/Superseded/Deprecated) getrennt von Implementation Status (Not Started/Partial/Implemented)
@@ -115,6 +115,7 @@ Ein ADR kann "Accepted" sein ohne implementiert zu sein (z.B. ADR-035: Entscheid
 | 064 | Import-Transaktions-Härtung — idempotente Journal-/Recovery-/Undo-Semantik | ✅ Entschieden | 2026-08 |
 | 065 | Lernende Planerkennung — hierarchisches Evidenz-Scoping + Dokumenttyp als Hauptobjekt | ✅ Accepted / Not Started (post-V1) | 2026-08 |
 | 066 | planmanager.db als autorierte Projektdaten + geräteübergreifendes Identitätsmodell (stabile ULIDs) | ✅ Accepted / Not Started | 2026-09 |
+| 067 | Claude-Sortierassistent im PlanManager — lokale Claude-Code-Sitzung über das Abo, Entwurf nur als Pending-Vorschlag | ✅ Accepted / In Progress | 2026-11 |
 
 ---
 
@@ -3466,6 +3467,44 @@ Gleichzeitig gilt `planmanager.db` als „rebuildbarer Cache" (ADR-004, ADR-041,
 **DSGVO:** Die ULIDs selbst sind Klasse A. Der Inhalt von `project.json` bleibt Klasse B (Kontakte der Beteiligten; Löschen nach ADR-050-Addendum).
 
 **Betrifft:** ADR-002, ADR-004, ADR-041, ADR-046, ADR-050-Addendum, ADR-053, ADR-054 P.6 (`md5_hash`-Begründung „Cache-Rebuild"), ADR-056 (Custom-Segmenttypen), ADR-058-Addendum Cross-DB (P.1–P.3, offener Punkt), ADR-059 P.3 (`document_key`), ADR-061 (DB als Ordner-Wahrheit), ADR-065 P.12, DB-SCHEMA.md, Architektur-Doc Kap. 1.6/2.6/3.6.
+
+---
+
+## ADR-067: Claude-Sortierassistent im PlanManager — lokale Claude-Code-Sitzung über das Abo, Entwurf nur als Pending-Vorschlag
+
+**Datum:** 2026-11-16
+**Status:** ✅ Accepted (Entscheidungen Herbert 2026-11-16: Teil von V1; E1–E3 und Freigabe-Umfang siehe unten)
+**Implementierung:** In Progress — Backend v0.28.215, Chatfenster + Einstellung v0.28.216; offen siehe „Noch nicht umgesetzt“
+**Herkunft:** Wunsch Herbert: Eingangspläne nicht einzeln über das Radial erfassen. Vorbild sind ha-hausbau („Mit Claude ausfüllen“: Auftragsordner, Rahmen + Vorschrift, `kontext.json`, `FRAGE:`-Format, `entwurf.json` mit Prüfung, Speichern nur durch die App) und ha-finanzen (`claude.py`). Mockup: Seitenliste 3.4 (`02_ManuellSortieren_Claude.html`, abgenommen 2026-11-16).
+
+**Kontext:**
+
+V1 importiert über die manuelle Erstaufnahme (ADR-059, Strategie B) und den journalisierten Import (ADR-064). Bei 30–80 neuen Plänen eines Planverfassers ist das viel Klickarbeit, obwohl Dateiname und Plankopf die Zuordnung meist zeigen. Bisher galt: Cloud-KI bewusst vermieden (ADR-059), kein LLM im Importpfad (ADR-065 P.2), Weg nach außen nur über `IExternalCommunicationService` (ADR-035 — im Code noch nicht vorhanden, HTTP-förmig). Herbert hat ein Claude-Abo mit Claude Code auf dem Rechner.
+
+**Entscheidung:**
+
+1. **Assistenz für Bucket C, nie Entscheider.** „Mit Claude sortieren“ ist eine Funktion im Tab „Manuell sortieren“. Claude schlägt für Erstaufnahmen (Bucket C) Dokumenttyp, Bauteil bzw. Kategorie, Geschoss, Plannummer, Index und Bezeichnung vor (`AutoSuggested` im Sinne von ADR-059 P.2). Bucket A/B/D gehen nicht an Claude.
+2. **Lokaler Prozess über Herberts Abo.** Port `IClaudeAssistant` (Domain), Adapter `ClaudeCodeAssistant` (Infrastructure): `claude -p` mit stream-json, `--restricted --safe-mode --strict-mcp-config`, nur `Read,Write,Edit,Glob`, `--permission-mode acceptEdits --permission-prompts none`, Regeln per `--append-system-prompt-file`, `--session-id` bzw. `--resume`. BPM speichert keinen Schlüssel und macht keinen HTTP-Aufruf; Umgebungsvariablen, die Anmeldung oder Ziel umlenken (`ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_BASE_URL`, `CLAUDE_CODE_USE_*`), werden für den Kindprozess entfernt. Nur eine voll qualifizierte `claude.exe` (kein `.cmd`/`.bat`). Leerlauf 15 min → Prozess endet, Sitzung bleibt fortsetzbar; 10 min ohne Ausgabe in einer Runde → Runde abgebrochen.
+3. **Auftragsordner außerhalb von Projekt, Cloud und Repo:** `%LOCALAPPDATA%\BauProjektManager\claude\<Projekt-ID>\A-0001`. Der Port startet nur in einem echten Unterordner dieses Basisordners; der Builder lehnt Ordner im Projektordner und Namen außer `A-####` ab. Inhalt: `auftrag.md`, `planzuordnung.schema.json`, `kontext.json` (Stammdaten-IDs, bekannte Pläne, je Bucket-C-Datei `D-001`, Dateiname, Größe, Kandidaten aus dem Namen, ggf. Plankopf-Text). Keine PDFs, keine Pfade. Die Regeln (Rahmen + Vorschrift) liegen **neben** dem Ordner (`A-0001.regeln.md`), damit Claude sie nicht umschreiben kann; die Zuordnung `D-001` → Datei lebt nur in BPM.
+4. **Rückfragen im FRAGE-Format** (Empfehlung zuerst, „(Empfehlung)“, Erklärung nach Gedankenstrich, `FRAGE (mehrere):`). Das Chatfenster macht Knöpfe daraus; freie Antwort ist immer möglich. Während einer offenen Runde nimmt die Sitzung keine zweite Nachricht an.
+5. **`entwurf.json` wird von BPM geprüft** (von Hand, ohne Schema-Bibliothek, max. 2 MB): `datei_id` aus diesem Auftrag, noch Bucket C mit gleichem MD5; IDs existieren und passen zur Unterteilung; Ziel über `DocumentTargetPathResolver` (ADR-061). Zusätzlich: gleicher `document_key` wie ein Archivdokument = Update → abgelehnt (sonst hinge der Import die Datei still als Zusatzdatei an); zwei Zeilen mit gleichem Schlüssel und gleicher Endung → abgelehnt; PDF und DWG desselben Plans müssen gleich zugeordnet sein. Ungültig → Meldung an Claude, **höchstens zweimal je Nachricht**, danach gilt, was gültig ist.
+6. **Übernahme nur als Pending-Vorschlag.** „n Vorschläge übernehmen“ macht gültige Zeilen zu `PendingAssignment` mit `Source = ClaudeSuggestion` und `Suggestion` (Begründung, unsichere Felder, Hinweis). Eine Datei, die Herbert schon von Hand zugeordnet hat, wird nie überschrieben. Importiert wird nur mit „Import bestätigen“ über den journalisierten Weg (ADR-064). Claude verschiebt, importiert und löscht nie etwas.
+7. **Nur auf Klick, abschaltbar, Standard aus (E5, Entscheidung Herbert):** Einstellung „Mit Claude sortieren“ geräte-lokal in `device-settings.json` (`claude.sortingEnabled`, Standard `false`), Bestätigungsdialog vor jedem Auftrag (Zahl der Dateien, was gesendet wird, ausgenommene Dateien, Haken „Plankopf-Text mitsenden“), Log-Eintrag je Auftrag ohne Inhalt (Auftragsname, Zahl der Dateien, ob Plankopf-Text mitging). Der volle Gate-Kern nach ADR-035 (`DataClassification`, Policy, `external_call_log`) folgt mit dem ersten HTTP-Modul; dann wird dieser Kanal dort eingehängt.
+8. **DSGVO-Einstufung:** Dateinamen und Stammdaten Klasse A; **Plankopf-Text Klasse C** (Daten Dritter: Planverfasser, Bauherr, Adressen). Der Auftrag gilt als Klasse C, solange Plankopf-Text mitgeht.
+   - **E1 (Entscheidung Herbert):** Ein privates Abo ist nicht durch eine AVV gedeckt. Für den Solo-Betrieb als **bewusstes Restrisiko** eingetragen (DSGVO-Architektur Kap. 15), mit abgeschalteter Trainingsnutzung im Konto; Freigabe durch den Arbeitgeber liegt bei Herbert. Vor einem Verkauf an Dritte: Wechsel auf ein Produkt mit AVV (API über das Gate oder Team/Enterprise).
+   - **E2 (Entscheidung Herbert):** Plankopf-Text per Haken je Auftrag, vorbelegt an. Ohne Haken liest BPM den Plankopf gar nicht (`ClaudeSortAuftragAnfrage.PlankopfTextMitsenden` ohne Standardwert).
+   - **E3 (Entscheidung Herbert):** Ausschnitt rechtes unteres Viertel der ersten Seite, gekürzt auf 4000 Zeichen; ohne Text dort Rückfall auf die ganze erste Seite. Kalibrierung, keine Invariante.
+9. **Lernen nur in der App.** Claude merkt sich nichts (`--safe-mode`: keine CLAUDE.md, Skills, Hooks, Memory). Claude-Vorschläge sind keine Lern-Evidenz (ADR-065); Evidenz bleibt, was Herbert bestätigt.
+
+**Noch nicht umgesetzt (offen, Empfehlungen im Entwurf):** Annahme/Ablehnung einzelner Vorschläge im Detail-Panel (Mockup Zustand 5; heute: alle übernehmen oder verwerfen, danach Radial bzw. „Pending verwerfen“); Löschen der Auftragsordner und Claude-Sitzungsdaten nach Übernahme bzw. nach 30 Tagen (E8); Modellwahl und Höchstzahl Dateien je Auftrag (E9); Schnellanlage fehlender Stammdaten aus einem Hinweis (E11); Planverfasser-Hinweise (E7, post-V1); echter Lauf mit Herberts Abo ist noch nicht erfolgt.
+
+**Verhältnis zu bestehenden ADRs:** ADR-035 — prozessbasierter Kanal, Gate-Kern folgt (Addendum beim Bau des Gates). ADR-059 — bleibt gültig, Claude ist eine weitere `AutoSuggested`-Quelle nur für Bucket C; die DSGVO-Zeile „Cloud-KI vermieden“ hat diese bewusste, abschaltbare Ausnahme. ADR-064 — unberührt, Import nur über „Import bestätigen“. ADR-065 P.2 — kein LLM im Importpfad bleibt; abweichend vom Zeitpunkt „post-V1“ ist diese On-Demand-Assistenz in V1 zulässig. ADR-027 Phase 2 (API mit Schlüssel) wird nicht genutzt. ADR-042 nicht berührt. ADR-060/061/063: FS-Ports, Resolver, PDF-Text-Port.
+
+**Alternativen:** Anthropic-API mit eigenem Schlüssel (sauber mit AVV, aber Schlüsselverwaltung und Kosten je Aufruf — der Weg für einen Verkauf); manuell kopieren (ADR-027 Phase 1, kein Rückfragen); lokales LLM (neue Bibliothek, schwächer); Claude im Projektordner arbeiten lassen (bricht ADR-061/064) — verworfen.
+
+**Konsequenzen:** Erster externer Kontakt des PlanManagers in V1. `PendingAssignment` hat Herkunft und Vorschlagsinfo; keine Schemaänderung (Pending bleibt in-memory). Neue Ressourcen in der PlanManager-DLL: `_rahmen.md`, `planzuordnung.md`, `planzuordnung.schema.json`.
+
+**Betrifft:** ADR-027, ADR-035, ADR-042, ADR-059, ADR-060, ADR-061, ADR-063, ADR-064, ADR-065, DSGVO-Architektur Kap. 15, PlanManager.md, Seitenliste 3.3/3.4.
 
 ---
 

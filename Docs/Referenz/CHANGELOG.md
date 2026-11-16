@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.216] — 2026-11-16
+
+### Feature: Mit Claude sortieren – Chatfenster, Einstellung, ADR-067
+
+Umsetzung des abgenommenen Mockups 3.4. Im Tab „Manuell sortieren“ gibt es rechts in der Hinweiszeile den Knopf **„✦ Mit Claude sortieren“**; er ist aktiv, wenn die neue Einstellung (Einstellungen › Allgemein › Claude, geräte-lokal, **Standard aus**) eingeschaltet ist und neue Pläne (Bucket C) im Eingang liegen. Der **Startdialog** zeigt, was an Claude geht und was ausgenommen ist, mit dem Haken „Plankopf-Text mitsenden“ (vorbelegt an). Das **Chatfenster** rechts außen zeigt Statuszeile, Verlauf mit Aktivitäten, Rückfragen als Knöpfe (Empfehlung hervorgehoben, Mehrfachauswahl mit „Antworten senden“), Freitext (Enter sendet) und eine Fehlerkarte mit „Erneut prüfen“, wenn Claude Code nicht erreichbar ist. Nach jeder Runde prüft BPM `entwurf.json`; Ungültiges geht höchstens zweimal an Claude zurück. Die Tabelle kennzeichnet Dateien „◌ bei Claude“, Vorschläge „✦ Typ › Bauteil › Geschoss“ (unsicher kursiv mit „?“, Begründung als Tooltip) und „✕ kein gültiger Vorschlag“; die **Vorschlagsleiste** übernimmt alle gültigen Vorschläge als Pending („⏳ ✦ …“) oder verwirft den Entwurf. Importiert wird weiter nur mit „Import bestätigen“. **ADR-067** (Accepted, In Progress) mit den Entscheidungen E1–E3 und Freigabe-Umfang; DSGVO-Architektur Kap. 15: bewusstes Restrisiko privates Abo ohne AVV. Noch offen: einzelne Vorschläge im Detail-Panel annehmen/ablehnen, Aufräumen der Auftragsordner, echter Lauf mit dem Abo. Tests: 662.
+
+---
 ## [v0.28.215] — 2026-11-16
 
 ### Feature: Mit Claude sortieren – Backend (Claude-Code-Port, Auftrag, Prüfung, Übernahme)

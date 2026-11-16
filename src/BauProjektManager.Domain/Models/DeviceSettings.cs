@@ -62,6 +62,24 @@ public class DeviceSettings
     /// Monitor-/Fenstergrößen unterscheiden sich je Maschine.
     /// </summary>
     public UiLayoutSettings UiLayout { get; set; } = new();
+
+    /// <summary>
+    /// "Mit Claude sortieren" (ADR-067): bewusst geraete-lokal — Claude Code und die Anmeldung
+    /// (Abo) liegen auf diesem PC. Standard aus (DSGVO Kap. 4.5: externer Dienst Default Disabled).
+    /// </summary>
+    public ClaudeSettings Claude { get; set; } = new();
+}
+
+/// <summary>
+/// Einstellungen fuer "Mit Claude sortieren" — in device-settings.json unter "claude".
+/// </summary>
+public class ClaudeSettings
+{
+    /// <summary>
+    /// True = Knopf "Mit Claude sortieren" ist im Tab "Manuell sortieren" aktiv. Standard false:
+    /// Daten gehen erst an Claude, wenn Herbert die Funktion bewusst einschaltet.
+    /// </summary>
+    public bool SortingEnabled { get; set; }
 }
 
 /// <summary>

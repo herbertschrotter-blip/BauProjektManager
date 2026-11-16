@@ -24,6 +24,8 @@ public partial class ProjectDetailView : UserControl
     private readonly IFileLauncher? _fileLauncher;
     private readonly Infrastructure.Persistence.AppSettingsService? _settingsService;
     private readonly IPdfTextService? _pdfTextService;
+    private readonly IClaudeAssistant? _claudeAssistant;
+    private ClaudeSortViewModel? _claudeSort;
     private PlanManagerDatabase? _manualSortDb;
     private bool _manualSortInitialized;
 
@@ -38,7 +40,8 @@ public partial class ProjectDetailView : UserControl
         IPdfRenderService? pdfRenderService = null,
         IFileLauncher? fileLauncher = null,
         Infrastructure.Persistence.AppSettingsService? settingsService = null,
-        IPdfTextService? pdfTextService = null)
+        IPdfTextService? pdfTextService = null,
+        IClaudeAssistant? claudeAssistant = null)
     {
         _profileManager = profileManager;
         _idGenerator = idGenerator;
@@ -52,6 +55,7 @@ public partial class ProjectDetailView : UserControl
         _fileLauncher = fileLauncher;
         _settingsService = settingsService;
         _pdfTextService = pdfTextService;
+        _claudeAssistant = claudeAssistant;
         Resources.Add("BoolToVis", boolToVis);
         // BPM-006: der Profile-Tab braucht zusaetzlich den inversen Converter
         // (Empty-State), den diese View bisher nicht registriert hatte.
@@ -84,6 +88,9 @@ public partial class ProjectDetailView : UserControl
         Unloaded += (_, _) =>
         {
             ExplorerHost.StopWatching();
+            // ADR-067: laufende Claude-Sitzung beenden (Prozess stoppen), bevor die DB freigegeben wird
+            _ = _claudeSort?.DisposeAsync().AsTask();
+            _claudeSort = null;
             _manualSortDb?.Dispose();
             _manualSortDb = null;
         };
@@ -126,7 +133,7 @@ public partial class ProjectDetailView : UserControl
             // Plandaten spiegeln den Bestand — nach Import/Undo nachziehen (BPM-126)
             PlanDataHost.ReloadKeepingSelection();
         };
-        ManualSortHost.Content = new ManualCaptureView
+        var captureView = new ManualCaptureView
         {
             DataContext = captureVm,
             PdfRenderService = _pdfRenderService,
@@ -135,8 +142,32 @@ public partial class ProjectDetailView : UserControl
             PdfTextService = _pdfTextService,
             SegmentTypeCatalog = _segmentTypeCatalog
         };
+        _claudeSort = CreateClaudeSort(captureVm);
+        captureVm.ClaudeSort = _claudeSort;
+        captureView.ClaudeSort = _claudeSort;
+        ManualSortHost.Content = captureView;
 
         _ = InitializeManualSortAsync(captureVm, project);
+    }
+
+    /// <summary>
+    /// "Mit Claude sortieren" (ADR-067): Chatfenster fuer diesen Tab. NULL ohne Claude-Port oder
+    /// Einstellungen — dann bleibt der Knopf unsichtbar.
+    /// </summary>
+    private ClaudeSortViewModel? CreateClaudeSort(ManualCaptureViewModel captureVm)
+    {
+        if (_claudeAssistant is null || _settingsService is null || _bpmDb is null || _manualSortDb is null)
+            return null;
+        var fs = new Infrastructure.Services.LocalFileSystem();
+        var normalizer = new Infrastructure.Services.PlanValueNormalizer();
+        var builder = new Services.ClaudeSortierung.ClaudeSortAuftragBuilder(
+            _bpmDb, _manualSortDb, fs, fs, fs, _pdfTextService);
+        var pruefer = new Services.ClaudeSortierung.ClaudeSortEntwurfPruefer(
+            _bpmDb, new DocumentTargetPathResolver(_bpmDb, normalizer, fs), fs, fs, normalizer);
+        var settings = _settingsService;
+        return new ClaudeSortViewModel(_claudeAssistant, builder, pruefer, captureVm,
+            () => settings.LoadDevice().Claude.SortingEnabled,
+            Infrastructure.Services.Claude.ClaudeAssistantOptions.DefaultJobRoot());
     }
 
     private static async Task InitializeManualSortAsync(ManualCaptureViewModel vm, Project project)

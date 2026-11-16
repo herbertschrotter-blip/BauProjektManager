@@ -52,6 +52,22 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private string _cloudStoragePath = "";
 
+    /// <summary>"Mit Claude sortieren" (ADR-067) — geraete-lokal, Standard aus.</summary>
+    [ObservableProperty]
+    private bool _claudeSortingEnabled;
+
+    private bool _loadingSettings;
+
+    partial void OnClaudeSortingEnabledChanged(bool value)
+    {
+        if (_loadingSettings)
+            return;
+        var device = _settingsService.LoadDevice();
+        device.Claude.SortingEnabled = value;
+        _settingsService.SaveDevice(device);
+        Log.Information("Setting changed: {Key} = {Value}", "Claude.SortingEnabled", value);
+    }
+
     // === Suche + Filter ===
 
     [ObservableProperty]
@@ -209,6 +225,9 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         BasePath = device.BasePath;
         ArchivePath = device.ArchivePath;
         CloudStoragePath = device.CloudStoragePath;
+        _loadingSettings = true;
+        ClaudeSortingEnabled = device.Claude.SortingEnabled;
+        _loadingSettings = false;
         _shared = _settingsService.LoadSharedOrDefault();
         BuildFolderTree(_shared.FolderTemplate);
     }

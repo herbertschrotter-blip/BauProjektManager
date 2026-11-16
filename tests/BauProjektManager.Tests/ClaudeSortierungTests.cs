@@ -19,7 +19,7 @@ namespace BauProjektManager.Tests;
 /// Temp-DBs), Entwurf-Pruefer (gueltig, falsche ID, nicht aufloesbar, fremde
 /// datei-id, Bucket-A-Datei, Vollstaendigkeit) und Uebernahme als Vorschlag.
 /// </summary>
-public class ClaudeSortierungTests : IDisposable
+public partial class ClaudeSortierungTests : IDisposable
 {
     private sealed class FakeUserContext : IUserContext
     {

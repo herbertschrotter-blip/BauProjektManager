@@ -40,6 +40,10 @@ public sealed partial class ClaudeSortEntwurfPruefer
         _normalizer = normalizer;
     }
 
+    /// <summary>True, wenn Claude im Auftragsordner ein entwurf.json geschrieben hat.</summary>
+    public bool EntwurfVorhanden(ClaudeSortAuftrag auftrag)
+        => _reader.FileExists(_path.Combine(auftrag.Ordner, ClaudeSortArten.EntwurfDatei));
+
     /// <summary>Liest entwurf.json aus dem Auftragsordner und prueft ihn.</summary>
     public ClaudeSortPruefErgebnis PruefeOrdner(ClaudeSortAuftrag auftrag, IReadOnlyList<CaptureItem> aktuelleAnalyse)
     {

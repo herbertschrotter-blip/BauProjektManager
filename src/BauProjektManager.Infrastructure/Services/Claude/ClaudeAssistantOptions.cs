@@ -6,6 +6,13 @@ namespace BauProjektManager.Infrastructure.Services.Claude;
 /// </summary>
 public sealed class ClaudeAssistantOptions
 {
+    /// <summary>
+    /// Standard-Basisordner der Auftraege: %LOCALAPPDATA%\BauProjektManager\claude — ausserhalb von Projekt-,
+    /// Cloud- und Repo-Ordnern (ADR-067 P.3). Je Projekt ein Unterordner, darin A-0001, A-0002 …
+    /// </summary>
+    public static string DefaultJobRoot() => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BauProjektManager", "claude");
+
     /// <summary>Werkzeuge, die Claude im Auftragsordner benutzen darf (sonst keine).</summary>
     public static readonly IReadOnlyList<string> DefaultTools = ["Read", "Write", "Edit", "Glob"];
 

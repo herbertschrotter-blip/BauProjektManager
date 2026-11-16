@@ -1007,6 +1007,7 @@ In den Systemeinstellungen (5-Tab-Dialog → neuer Tab oder Unter-Tab):
 | Kein Passwort bei Multi-User Modus A/B | Vertrauensbasis im Baustellenteam |
 | Log-Dateien enthalten Projekt-, Datei- und Ordnernamen (nach zentraler Maskierung — keine vollen Pfade, kein Windows-Benutzername) und den Rechnernamen | Lokal, nur Fehlerdiagnose; Rechnername ist technisches Gerätemerkmal (Kap. 11.2, E2) |
 | Kein formales Verarbeitungsverzeichnis (V1) | Für interne Solo-Nutzung zunächst zurückgestellt; spätestens vor Verkauf an Dritte erstellen |
+| „Mit Claude sortieren“ (ADR-067): Dateinamen, Stammdaten und — per Haken je Auftrag — Plankopf-Text (Klasse C) gehen über Herberts privates Claude-Abo an Anthropic; keine AVV | Entscheidung Herbert 2026-11-16 (E1): nur Solo-Betrieb, Standard aus, nur auf Klick mit Bestätigungsdialog, Trainingsnutzung im Konto aus, Freigabe des Arbeitgebers liegt bei Herbert; vor Verkauf an Dritte Wechsel auf ein Produkt mit AVV |
 
 ---
 
@@ -1127,6 +1128,7 @@ Vor Implementierung jedes Moduls mit externem Kontakt oder Klasse-B/C-Daten dies
 | 1.3 | 03.04.2026 | IPrivacyPolicy als austauschbare Komponente (Kap. 4.3): Strategy Pattern für Internal/Commercial-Modus, RelaxedPrivacyPolicy + StrictPrivacyPolicy, Lizenz-gesteuerte DI-Registrierung, Session-Override für Klasse B |
 | 1.4 | 03.04.2026 | Kern-Dokumenten-Review (Claude + ChatGPT, 3 Runden): Dienststatus-Modell Disabled/EnabledManual/EnabledAuto (Kap. 4.5), Anonymisierung als eigener Service (Kap. 7.3), Löschkonzept für Stammdaten (Kap. 9.5), Audit-Log Negativliste + decision_reason-Katalog (Kap. 11.3) |
 | 1.5 | 12.11.2026 | Audit Review 01 (R01-001, entschieden 2026-09-24): Pfade potenziell personenbezogen + zentrale Maskierung, Windows-Benutzername nie in Logs/Bug-Report, Rechnername als Gerätemerkmal Klasse A, statisches Serilog (Kap. 3, 8.2, 11.2, 15 — E2); Log-Aufbewahrung wie umgesetzt (Kap. 9.5); Löschen = Tombstone mit Anonymisierung, `.bpm/project.json` als Klasse-B-Datei (Kap. 3, 9.2, 9.5, 10.2 — E3); `planmanager.db` als autorierte Daten (Kap. 3, 9.1, 9.4 — ADR-066/E4); Single-Writer-Mutex V1-Pflicht ohne ADR-016-Verweis (Kap. 10.1, 15 — E7); Register-Regel für Gateway-Endpunkte inkl. Wetter-Datenwege, Lizenzsignatur asymmetrisch (Kap. 4.4, 9.4 — E17); „Klasse A/B/C“ nur für DSGVO-Datenklassen, Sync-Kategorie für ADR-047 (Kap. 3 — E16); AI-Quickload-Kapitelliste vollständig ausgeschrieben |
+| 1.6 | 16.11.2026 | Kap. 15: bewusstes Restrisiko „Mit Claude sortieren“ über privates Abo ohne AVV (ADR-067, E1); Plankopf-Text als Klasse C nur per Haken je Auftrag |
 
 ---
 

@@ -504,7 +504,8 @@
     ],
     "stand_commit": "6e15643",
     "version_abgenommen": "1.0",
-    "code_stand": "da39a3ee5e"
+    "code": "BauProjektManager.PlanManager/Views/ClaudeChatPanel.xaml, BauProjektManager.PlanManager/Views/ClaudeChatPanel.xaml.cs, BauProjektManager.PlanManager/Views/ManualCaptureView.Claude.cs, BauProjektManager.PlanManager/ViewModels/ClaudeSortViewModel.cs, BauProjektManager.PlanManager/ViewModels/ClaudeSortViewModel.Events.cs, BauProjektManager.PlanManager/ViewModels/ClaudeChatModels.cs, BauProjektManager.PlanManager/ViewModels/ManualCaptureViewModel.Claude.cs",
+    "code_stand": "8adba003fa"
    },
    {
     "nr": "3.5",

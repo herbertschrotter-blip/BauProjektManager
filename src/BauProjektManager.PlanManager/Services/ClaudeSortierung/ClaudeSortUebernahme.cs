@@ -60,6 +60,6 @@ public static class ClaudeSortUebernahme
     }
 
     // Wie RadialSelectionController.EffectivePartName: Kurzname, sonst Beschreibung.
-    private static string PartName(BuildingPart part)
+    internal static string PartName(BuildingPart part)
         => !string.IsNullOrWhiteSpace(part.ShortName) ? part.ShortName : part.Description;
 }

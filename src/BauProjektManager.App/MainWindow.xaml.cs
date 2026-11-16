@@ -37,7 +37,8 @@ public partial class MainWindow : Window
         IProfileArchiveService? profileArchiveService = null,
         IPdfRenderService? pdfRenderService = null,
         IFileLauncher? fileLauncher = null,
-        IPdfTextService? pdfTextService = null)
+        IPdfTextService? pdfTextService = null,
+        IClaudeAssistant? claudeAssistant = null)
     {
         InitializeComponent();
         _devTools = devTools;
@@ -47,7 +48,7 @@ public partial class MainWindow : Window
 
         _planManagerView = new PlanManagerView(db, idGenerator, profileManager, persistenceRegistry,
             segmentTypeCatalog, segmentTypeRepository, pdfRenderService, fileLauncher, settingsService,
-            pdfTextService);
+            pdfTextService, claudeAssistant);
         _settingsView = new SettingsView(db, dialogService, settingsService, persistenceRegistry);
 
         // BPM-067: Sidebar-Zustand (Text 220 / Icons 56) geraetelokal wiederherstellen

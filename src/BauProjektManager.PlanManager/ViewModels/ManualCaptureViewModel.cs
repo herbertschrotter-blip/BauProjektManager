@@ -85,15 +85,44 @@ public partial class CaptureRowViewModel : ObservableObject
     private string? _pendingTarget;
 
     public bool IsPending => PendingTarget is not null;
-    public string PendingText => PendingTarget is null ? "" : $"⏳ {PendingTarget}";
+    public string PendingText => PendingTarget is null ? ""
+        : IsClaudeSuggestion ? $"⏳ ✦ {PendingTarget}" : $"⏳ {PendingTarget}";
+
+    /// <summary>Kennzeichen waehrend "Mit Claude sortieren" (bei Claude / Vorschlag / ungueltig), NULL = keins.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsClaudeAtWork), nameof(IsClaudeDraft), nameof(IsClaudeUncertain),
+        nameof(IsClaudeInvalid), nameof(ClaudeMarkText), nameof(RowToolTip))]
+    private ClaudeRowMark? _claudeMark;
+
+    public bool IsClaudeAtWork => ClaudeMark?.Kind == ClaudeRowMarkKind.AtClaude;
+    public bool IsClaudeDraft => ClaudeMark?.Kind is ClaudeRowMarkKind.Draft or ClaudeRowMarkKind.DraftUncertain;
+    public bool IsClaudeUncertain => ClaudeMark?.Kind == ClaudeRowMarkKind.DraftUncertain
+                                     || ClaudeSuggestion is { IsUncertain: true };
+    public bool IsClaudeInvalid => ClaudeMark?.Kind == ClaudeRowMarkKind.Invalid;
+    public string ClaudeMarkText => ClaudeMark?.Text ?? "";
+
+    /// <summary>Tooltip der Zeile: Begruendung von Claude (Entwurf oder uebernommener Vorschlag).</summary>
+    public string? RowToolTip => ClaudeMark?.Info is { } entwurf ? Begruendung(entwurf)
+        : ClaudeSuggestion is { } vorschlag ? Begruendung(vorschlag)
+        : null;
+
+    private static string Begruendung(ClaudeSuggestionInfo info)
+    {
+        var text = "Claude: " + info.Reason;
+        if (info.IsUncertain)
+            text += $"\nunsicher: {string.Join(", ", info.UncertainFields)}";
+        if (!string.IsNullOrWhiteSpace(info.Note))
+            text += $"\n{info.Note}";
+        return text;
+    }
 
     /// <summary>
     /// "Mit Claude sortieren": Begruendung und unsichere Felder, solange die Zeile ein unangefasster
     /// Vorschlag von Claude ist (NULL = manuell oder nicht zugeordnet).
     /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsClaudeSuggestion))]
-    [NotifyPropertyChangedFor(nameof(ClaudeText))]
+    [NotifyPropertyChangedFor(nameof(IsClaudeSuggestion), nameof(ClaudeText), nameof(PendingText),
+        nameof(IsClaudeUncertain), nameof(RowToolTip))]
     private ClaudeSuggestionInfo? _claudeSuggestion;
 
     public bool IsClaudeSuggestion => ClaudeSuggestion is not null;
@@ -264,6 +293,7 @@ public partial class ManualCaptureViewModel : ObservableObject
             };
             Rows.Add(row);
         }
+        ApplyClaudeMarks();
         UpdatePairFlags();
         UpdatePendingState();
         LoadArchive();
@@ -272,6 +302,7 @@ public partial class ManualCaptureViewModel : ObservableObject
                      $"{result.ConflictCount} Konflikte";
         StatusText = _summaryStatusText;
         SetSelectedRow();
+        ClaudeSort?.RefreshButton();
         InboxChanged?.Invoke(this, EventArgs.Empty);
     }
 

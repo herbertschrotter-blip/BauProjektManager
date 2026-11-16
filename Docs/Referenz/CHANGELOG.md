@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.224] — 2026-11-16
+
+### Docs: Seitenliste aktualisiert
+
+3.3 Manuell sortieren Code 0.5 (Claude-Vorschlag mit Index-Datum, Segmenten und Tags im Detail-Panel).
+
+---
 ## [v0.28.223] — 2026-11-16
 
 ### Feature: Mit Claude sortieren – Index-Datum, Segmente und Tags (BPM-131)

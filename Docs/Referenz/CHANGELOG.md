@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.221] — 2026-11-16
+
+### Fix: Mit Claude sortieren – Anmeldefehler zeigt die Fehlerkarte mit Abhilfe (BPM-131)
+
+Erster Lauf in BPM (Herbert): Bei abgelaufener Anmeldung von Claude Code stand die Meldung doppelt im Chat (als Claude-Nachricht und als Fehler) und die Statuszeile sagte „wartet auf deine Antwort“. Jetzt erkennt BPM einen Anmeldefehler („Failed to authenticate“, „/login“, „OAuth“), beendet die Sitzung, löscht die Auftragsdateien, nimmt die Kennzeichen aus der Tabelle und zeigt die Fehlerkarte „Claude ist nicht erreichbar“ mit dem Hinweis, dass nichts an Claude geschickt wurde, und der Abhilfe „im Terminal claude starten, /login, danach Erneut prüfen“. Doppelte Fehlermeldungen einer Runde erscheinen nur noch einmal. Tests: 671.
+
+---
 ## [v0.28.220] — 2026-11-16
 
 ### Fix: Mit Claude sortieren – geerbte Claude-/Anthropic-Variablen werden entfernt (BPM-131)

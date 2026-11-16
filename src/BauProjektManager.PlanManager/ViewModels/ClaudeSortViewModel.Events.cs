@@ -21,6 +21,12 @@ public sealed partial class ClaudeSortViewModel
                 Add(ClaudeChatEntryKind.Activity, $"↳ {Verb(e.ToolName)} {e.ToolTarget}".TrimEnd());
                 break;
             case ClaudeEventKind.TurnCompleted when e.IsError:
+                EntferneDoppelteFehlermeldung(e.Text);
+                if (IstAnmeldefehler(e.Text))
+                {
+                    _ = AnmeldungFehltAsync();
+                    break;
+                }
                 Add(ClaudeChatEntryKind.SystemError, e.Text ?? "Claude hat die Runde mit einem Fehler beendet.");
                 Phase = ClaudeSortPhase.Waiting;
                 break;
@@ -33,6 +39,39 @@ public sealed partial class ClaudeSortViewModel
                     Phase = ClaudeSortPhase.Waiting;
                 break;
         }
+    }
+
+    /// <summary>
+    /// Claude Code meldet einen Fehler der Runde zusaetzlich als Text-Nachricht — die Kopie als "Claude"-Eintrag
+    /// entfernen, damit die Meldung nur einmal (als Fehler) im Chat steht.
+    /// </summary>
+    private void EntferneDoppelteFehlermeldung(string? text)
+    {
+        if (text is not null && Entries.Count > 0 && Entries[^1] is { Kind: ClaudeChatEntryKind.Claude } letzte
+            && string.Equals(letzte.Text.Trim(), text.Trim(), StringComparison.Ordinal))
+            Entries.RemoveAt(Entries.Count - 1);
+    }
+
+    /// <summary>Anmeldung von Claude Code fehlt oder ist abgelaufen ("Failed to authenticate", "/login").</summary>
+    internal static bool IstAnmeldefehler(string? text) =>
+        text is not null
+        && (text.Contains("authenticate", StringComparison.OrdinalIgnoreCase)
+            || text.Contains("/login", StringComparison.OrdinalIgnoreCase)
+            || text.Contains("OAuth", StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// Ohne gueltige Anmeldung kann Claude nichts tun: Sitzung beenden, Auftragsdateien loeschen, Kennzeichen
+    /// weg und Fehlerkarte mit Abhilfe zeigen ("Erneut pruefen" startet einen neuen Auftrag).
+    /// </summary>
+    private async Task AnmeldungFehltAsync()
+    {
+        Log.Warning("Claude-Sortierung: Claude Code ist nicht angemeldet");
+        await BeendeSitzungAsync();
+        RaeumeAuftragAuf();
+        _auftrag = null;
+        _host.SetClaudeMarks(new Dictionary<string, ClaudeRowMark>());
+        ZeigeNichtErreichbar("Claude Code ist auf diesem PC nicht angemeldet oder die Anmeldung ist abgelaufen. " +
+                             "Es wurde nichts an Claude geschickt.");
     }
 
     private void ZeigeText(ClaudeEvent e)

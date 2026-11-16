@@ -245,7 +245,7 @@
                                    Foreground="{DynamicResource BpmTextPrimary}" FontSize="{DynamicResource BpmFontSizeSmall}"/>
                         <TextBlock TextWrapping="Wrap" Margin="0,8,0,8"
                                    Foreground="{DynamicResource BpmTextSecondary}" FontSize="{DynamicResource BpmFontSizeCaption}"
-                                   Text="Abhilfe: Claude Code installieren, im Terminal einmal „claude“ starten und anmelden. Deine Dateien sind unverändert – von Hand sortieren geht weiter."/>
+                                   Text="Abhilfe: In einem Terminal „claude“ starten, „/login“ eingeben und mit deinem Abo anmelden (ist Claude Code nicht installiert, zuerst installieren). Danach hier „Erneut prüfen“. Deine Dateien sind unverändert – von Hand sortieren geht weiter."/>
                         <Button Content="Erneut prüfen" HorizontalAlignment="Left" Style="{DynamicResource BpmButtonPrimary}"
                                 Command="{Binding RetryCommand}"/>
                     </StackPanel>

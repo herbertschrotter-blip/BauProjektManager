@@ -215,6 +215,33 @@ public partial class ClaudeSortierungTests
     }
 
     [Fact]
+    public async Task Chat_AuthFailure_ShowsErrorCard_NoDuplicate_CleansUp()
+    {
+        var (vm, claude, host) = ChatVm();
+        await vm.StartCommand.ExecuteAsync(null);
+        var ordner = claude.Request!.WorkingDirectory;
+        const string meldung = "Failed to authenticate: OAuth session expired and could not be refreshed";
+
+        vm.OnEvent(new ClaudeEvent(ClaudeEventKind.Text, Text: meldung, Questions: []));
+        vm.OnEvent(new ClaudeEvent(ClaudeEventKind.TurnCompleted, Text: meldung, IsError: true));
+
+        Assert.Equal(ClaudeSortPhase.Unavailable, vm.Phase);
+        Assert.Contains("nicht angemeldet", vm.UnavailableText);
+        Assert.DoesNotContain(vm.Entries, e => e.Text == meldung);
+        Assert.True(claude.Session.IsEnded);
+        Assert.Empty(host.Marks);
+        Assert.Empty(_fs.EnumerateFiles(ordner));
+    }
+
+    [Theory]
+    [InlineData("Failed to authenticate: OAuth session expired", true)]
+    [InlineData("Invalid API key · Please run /login", true)]
+    [InlineData("Entwurf ungültig: D-001 fehlt", false)]
+    [InlineData(null, false)]
+    public void IstAnmeldefehler_ErkenntLoginProbleme(string? text, bool erwartet)
+        => Assert.Equal(erwartet, ClaudeSortViewModel.IstAnmeldefehler(text));
+
+    [Fact]
     public async Task Chat_Abort_EndsSession()
     {
         var (vm, claude, host) = ChatVm();

@@ -71,6 +71,21 @@ public class DocumentTargetPathResolverTests : IDisposable
     }
 
     [Fact]
+    public void Resolve_ByStammdatenIds_AsRadialPassesThem()
+    {
+        // R01-004.01 (AR-01): das Radial uebergibt Typ-, Bauteil- und Geschoss-IDs —
+        // Ergebnis: Geschoss-folder_name ("00 EG") statt Anzeigename, Root aus dem Typ.
+        var partId = _db.InsertBuildingPart(_projectId, "Haus A");
+        _db.InsertBuildingLevel(partId, "EG");
+        var typeId = _db.GetDocumentTypes(_projectId).Single(t => t.Key == "polierplan").Id;
+        var levelId = _db.GetBuildingParts(_projectId).Single(p => p.Id == partId).Levels.Single().Id;
+
+        var r = _sut.Resolve(_projectId, new DocumentTargetRequest(typeId, partId, levelId, "_"));
+
+        Assert.Equal(Path.Combine("01 Planunterlagen", "01 Polierpläne", "Haus A", "00 EG"), r.RelativeDirectory);
+    }
+
+    [Fact]
     public void Resolve_BuildingParts_WithoutLevel_OmitsRing3()
     {
         _db.InsertBuildingPart(_projectId, "Haus A");

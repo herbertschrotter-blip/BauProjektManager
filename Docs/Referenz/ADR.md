@@ -3122,7 +3122,7 @@ Archivname und Archivierung bei Indexwechsel: ADR-045-Addendum.
 
 **Datum:** 2026-06-24
 **Status:** ✅ Entschieden (Sign-off via CGR-2026-06-22-bpm-architektur, 4 Runden)
-**Implementierung:** ✅ Umgesetzt — BPM-113 komplett: Slices 0.1–0.6c done (v0.28.86–.98). `profile.TargetFolder` entfernt, `RecognitionProfile`/`PatternTemplate` SchemaVersion 5, Zielpfad ausschließlich über `DocumentTargetPathResolver`. Ergänzt/präzisiert ADR-059-Addendum.
+**Implementierung:** ✅ Umgesetzt — BPM-113 komplett: Slices 0.1–0.6c done (v0.28.86–.98). `profile.TargetFolder` entfernt, `RecognitionProfile`/`PatternTemplate` SchemaVersion 5, Zielpfad ausschließlich über `DocumentTargetPathResolver`. Ergänzt/präzisiert ADR-059-Addendum. *— Nachtrag Audit Review 01 (R01-004, v0.28.208–.213): seit BPM-083 bildete das Radial den Pfad wieder selbst; jetzt Radial-Erfassung und Archiv-Move über den Resolver, Seed aus der echten Projektvorlage, Vorlagen-Metadaten bleiben erhalten, key/Root-Pflicht im Code (DB-CHECK folgt beim nächsten bpm.db-Reset), rekursive Unterordner.*
 **Herkunft:** Live-Test BPM-111.05 (Teil 44) — Radial-Import legte „Polierplan" an statt das vorhandene „01 Polierpläne" zu treffen.
 
 **Kontext:**

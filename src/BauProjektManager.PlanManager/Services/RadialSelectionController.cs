@@ -36,7 +36,6 @@ public class RadialSelectionController
 
     // folder_name-Erzeugung fuer den Fallback ohne gespeicherten folder_name —
     // spiegelt die statische Normalizer-Nutzung in ProjectDatabase (ADR-059-Addendum).
-    private static readonly PlanValueNormalizer _normalizer = new();
 
     private bool _ring2Visible;
     private bool _ring3Visible;
@@ -246,34 +245,6 @@ public class RadialSelectionController
             default:
                 return new RadialUpdate(null, false, null, false, "");
         }
-    }
-
-    /// <summary>Zielordner relativ zum Projekt aus den gespeicherten folder_names.</summary>
-    public string BuildTargetDirectory(string plansRelativePath)
-    {
-        var segments = new List<string> { plansRelativePath };
-        if (SelectedType is not null)
-            segments.Add(SelectedType.FolderName);
-
-        if (SelectedType?.Ring2Source == Ring2Source.BuildingParts && SelectedPart is not null)
-        {
-            var part = _parts.FirstOrDefault(p => EffectivePartName(p) == SelectedPart);
-            // Gespeicherten folder_name bevorzugen; bei Altdaten ohne folder_name
-            // den Anzeigenamen normalisieren (kein leerer Pfad-Teil mehr).
-            segments.Add(part?.FolderName is { Length: > 0 } fn
-                ? fn
-                : _normalizer.NormalizeForFolderName(SelectedPart));
-            // Gespeicherten folder_name des Geschosses bevorzugen (wie DocumentTargetPathResolver).
-            if (SelectedLevel is not null)
-                segments.Add(SelectedBuildingLevel?.FolderName is { Length: > 0 } lf ? lf : SelectedLevel);
-        }
-        else if (SelectedType?.Ring2Source == Ring2Source.Categories && SelectedPart is not null)
-        {
-            var category = SelectedType.Categories.FirstOrDefault(c => c.Name == SelectedPart);
-            segments.Add(category?.FolderName is { Length: > 0 } fn ? fn : SelectedPart);
-        }
-
-        return string.Join('/', segments.Where(s => !string.IsNullOrWhiteSpace(s)));
     }
 
     private IReadOnlyList<RadialSegmentItem> BuildRing2(PlanFileCandidates? candidates)

@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.213] — 2026-11-16
+
+### Fix: Radial-Import und Archiv-Move bilden den Zielpfad über den DocumentTargetPathResolver (R01-004.01)
+
+ADR-061 P.3/P.4 verlangt den Zielpfad ausschließlich über den `DocumentTargetPathResolver` aus den Stammdaten; seit BPM-083 hatte der Resolver nur noch Test-Aufrufer, und das Radial setzte den Pfad selbst aus `ProjectPaths.Plans` + Typ-Ordner + Bauteil + Geschoss-**Name** zusammen (Audit Review 01, R01-004 / AR-01). Folgen waren u. a. Geschossordner „EG“ statt „00 EG“, Root-Typen wie „Protokolle“ unter dem Plan-Ordner statt unter ihrem eigenen Root und ein falsches `target_folder`. **Jetzt:** „Manuell sortieren“ (Erfassen und Archiv-Move) löst den Ablageordner aus Typ-, Bauteil-/Kategorie- und Geschoss-ID über den Resolver auf (`root_relative_path / folder_name / Ring 2 / Geschoss-folder_name`); ist ein Pflicht-Ring nicht gewählt oder eine Stammdate ohne Ordnernamen, gibt es eine Meldung statt eines Teilpfads, und nichts wird zugeordnet. `ProjectPaths.Plans` ist kein Pfad-Input mehr. Der alte Pfadbau `RadialSelectionController.BuildTargetDirectory` und seine zwei Tests sind entfernt; neuer Resolver-Test mit den IDs, die das Radial übergibt. Bereits importierte Pläne bleiben, wo sie liegen; nur neue Zuordnungen und Moves nutzen die Resolver-Pfade. Damit ist R01-004 bis auf die Nebenbefunde (SE-12, CS-47, SE-76, LU6-28) umgesetzt.
+
+---
 ## [v0.28.212] — 2026-11-16
 
 ### Fix: Dokumenttypen ohne key oder Ablage-Root werden abgelehnt (R01-004.02)

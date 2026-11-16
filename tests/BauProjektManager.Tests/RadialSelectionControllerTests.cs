@@ -142,27 +142,6 @@ public class RadialSelectionControllerTests
     }
 
     [Fact]
-    public void BuildTargetDirectory_Spatial_UsesFolderNames()
-    {
-        var sut = Make();
-        sut.Commit(1, "Polierplan", null);
-        sut.Commit(2, "Haus 1", null);
-        sut.Commit(3, "OG1", null);
-
-        Assert.Equal("Pläne/Polierplan/Haus 1/OG1", sut.BuildTargetDirectory("Pläne"));
-    }
-
-    [Fact]
-    public void BuildTargetDirectory_Category_NoLevelSegment()
-    {
-        var sut = Make();
-        sut.Commit(1, "Protokolle", null);
-        sut.Commit(2, "Baubesprechung", null);
-
-        Assert.Equal("Pläne/Protokolle/Baubesprechung", sut.BuildTargetDirectory("Pläne"));
-    }
-
-    [Fact]
     public void BuildRing1_AppendsAddItem()
     {
         var sut = Make();

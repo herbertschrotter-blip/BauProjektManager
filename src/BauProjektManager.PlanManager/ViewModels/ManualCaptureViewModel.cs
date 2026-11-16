@@ -119,11 +119,11 @@ public partial class ManualCaptureViewModel : ObservableObject
     private readonly ProjectDatabase _bpmDb;
     private readonly DocumentTypeSeedService _seed;
     private readonly DocumentTypeCreationService _creation;
+    private readonly DocumentTargetPathResolver _resolver;
 
     private string _projectId = string.Empty;
     private string _projectRootPath = string.Empty;
     private string _inboxRelativePath = "_Eingang";
-    private string _plansRelativePath = "Pläne";
 
     private IReadOnlyList<PlanDocumentType> _types = [];
     private IReadOnlyList<BuildingPart> _parts = [];
@@ -144,6 +144,8 @@ public partial class ManualCaptureViewModel : ObservableObject
         _bpmDb = bpmDb;
         _seed = new DocumentTypeSeedService(bpmDb);
         _creation = new DocumentTypeCreationService(bpmDb, new PlanValueNormalizer());
+        // R01-004.01 (AR-01, ADR-061 P.3/P.4): Zielpfad AUSSCHLIESSLICH ueber den Resolver
+        _resolver = new DocumentTargetPathResolver(bpmDb, new PlanValueNormalizer(), fs);
     }
 
     public ObservableCollection<CaptureRowViewModel> Rows { get; } = [];
@@ -216,7 +218,7 @@ public partial class ManualCaptureViewModel : ObservableObject
         _projectId = projectId;
         _projectRootPath = projectRootPath;
         _inboxRelativePath = inboxRelativePath;
-        _plansRelativePath = plansRelativePath;
+        // plansRelativePath ist seit R01-004.01 kein Pfad-Input mehr (ADR-061: ProjectPaths.Plans nur Navigation).
         await RefreshAsync();
     }
 
@@ -346,7 +348,9 @@ public partial class ManualCaptureViewModel : ObservableObject
         if (controller.SelectedType is not { } type)
             return;
 
-        var targetDir = controller.BuildTargetDirectory(_plansRelativePath);
+        var targetDir = ResolveTargetDirectory(controller);
+        if (targetDir is null)
+            return;
         var reclassification = new ArchiveReclassification(
             type.Id, type.Name,
             controller.SelectedBuildingPart?.Id,
@@ -357,6 +361,29 @@ public partial class ManualCaptureViewModel : ObservableObject
             ? $"↷ {row.FileName} verschoben nach {targetDir} ({result.MovedFiles} Datei(en), Journal)"
             : $"⚠ Verschieben fehlgeschlagen: {result.Error}";
         LoadArchive();
+    }
+
+    /// <summary>
+    /// Ablageordner der Radial-Wahl ueber den DocumentTargetPathResolver (R01-004.01, ADR-061
+    /// P.3/P.4): root_relative_path / folder_name / Bauteil- bzw. Kategorie-Ordner /
+    /// Geschoss-folder_name — aus Stammdaten-IDs, Fail-Fast statt Teilpfad. Null = nicht
+    /// aufloesbar (Grund steht in der Statuszeile, es wird nichts zugeordnet).
+    /// </summary>
+    private string? ResolveTargetDirectory(RadialSelectionController controller)
+    {
+        try
+        {
+            var ring2 = controller.SelectedBuildingPart?.Id ?? controller.SelectedCategory?.Id;
+            var target = _resolver.Resolve(_projectId, new DocumentTargetRequest(
+                controller.SelectedType!.Id, ring2, controller.SelectedBuildingLevel?.Id, FileName: "_"));
+            return target.RelativeDirectory;
+        }
+        catch (DocumentTargetResolutionException ex)
+        {
+            StatusText = "⚠ Ablageziel nicht auflösbar: " + ex.Message;
+            Log.Warning("Radial: Ablageziel nicht aufloesbar ({Message})", ex.Message);
+            return null;
+        }
     }
 
     // ── Schnellanlage „+ Neu…" (Slice 3) ────────────────────────────
@@ -419,7 +446,9 @@ public partial class ManualCaptureViewModel : ObservableObject
         if (controller.SelectedType is null)
             return;
 
-        var targetDir = controller.BuildTargetDirectory(_plansRelativePath);
+        var targetDir = ResolveTargetDirectory(controller);
+        if (targetDir is null)
+            return;
         var selected = SelectedRows.Where(r => r.CanOpenRadial).ToList();
         var rows = ExpandWithPairedRows(selected, Rows);
         var pairedCount = rows.Count - selected.Count;

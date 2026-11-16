@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.219] — 2026-11-16
+
+### Docs: Seitenliste aktualisiert
+
+3.3 Manuell sortieren Code 0.4 (Claude-Block im Detail-Panel); 3.4 Mit Claude sortieren bleibt Code 1.0 = abgenommenes Mockup, jetzt vollständig gebaut (Einzel-Annahme, Aufräumen, Ziffern-Tasten).
+
+---
 ## [v0.28.218] — 2026-11-16
 
 ### Feature: Mit Claude sortieren – einzelne Vorschläge annehmen/ablehnen, Aufräumen, Ziffern-Tasten

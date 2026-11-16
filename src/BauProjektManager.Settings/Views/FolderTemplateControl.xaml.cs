@@ -227,6 +227,19 @@ public partial class FolderTemplateControl : UserControl
                 : "Löschen";
             BtnRemove.Opacity = IsProjectMode ? 0.4 : 1.0;
         }
+
+        // R01-004.03 (K15-02, ADR-061): bestehende Projektordner sind rename-stabil —
+        // eine neue Reihenfolge wuerde nur die Vorschau umnummerieren und beim Speichern
+        // stillschweigend verworfen. Im Projektmodus daher kein Umsortieren.
+        foreach (var btn in new[] { BtnMoveUp, BtnMoveDown })
+        {
+            if (btn is null) continue;
+            btn.IsEnabled = !IsProjectMode;
+            btn.Opacity = IsProjectMode ? 0.4 : 1.0;
+            btn.ToolTip = IsProjectMode
+                ? "Bestehende Projektordner werden nicht umnummeriert"
+                : null;
+        }
     }
 
     // ── Interne Logik ────────────────────────────────────────
@@ -356,7 +369,7 @@ public partial class FolderTemplateControl : UserControl
 
     private void OnMoveUp(object sender, RoutedEventArgs e)
     {
-        if (_selectedItem is not { IsMainFolder: true }) return;
+        if (IsProjectMode || _selectedItem is not { IsMainFolder: true }) return;
         var idx = _folderTreeItems.IndexOf(_selectedItem);
         if (idx <= 0) return;
         _folderTreeItems.Move(idx, idx - 1);
@@ -365,7 +378,7 @@ public partial class FolderTemplateControl : UserControl
 
     private void OnMoveDown(object sender, RoutedEventArgs e)
     {
-        if (_selectedItem is not { IsMainFolder: true }) return;
+        if (IsProjectMode || _selectedItem is not { IsMainFolder: true }) return;
         var idx = _folderTreeItems.IndexOf(_selectedItem);
         if (idx < 0 || idx >= _folderTreeItems.Count - 1) return;
         _folderTreeItems.Move(idx, idx + 1);

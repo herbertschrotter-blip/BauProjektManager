@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.211] — 2026-11-16
+
+### Fix: Projekt bearbeiten → Ordnerstruktur nummeriert bestehende Ordner nicht mehr scheinbar um (R01-004.03)
+
+Im Projektmodus des Ordnerstruktur-Tabs ließen sich bestehende Hauptordner per ▲/▼ verschieben; Vorschau und Anzeigenamen zeigten neue Nummern, beim Speichern verwarf `SyncNewFolders` die Reihenfolge aber ohne Hinweis — bestehende Projektordner sind nach ADR-061 rename-stabil (Audit Review 01, R01-004 / K15-02). ▲/▼ sind im Projektmodus jetzt wie „Löschen“ gesperrt (ausgegraut, Tooltip „Bestehende Projektordner werden nicht umnummeriert“), die Handler prüfen den Modus zusätzlich. Neue Ordner werden weiterhin angehängt. In der globalen Vorlage (Einstellungen) bleibt Umsortieren möglich. Reine UI-Änderung im Code-Behind, kein automatisierter Test.
+
+---
 ## [v0.28.210] — 2026-11-16
 
 ### Fix: Neues Projekt seedet seine Dokumenttypen aus der eigenen Ordnervorlage (R01-004.05)

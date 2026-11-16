@@ -68,39 +68,39 @@
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "token": "BpmColorBgElevated",
    "wert": "#2D2D30",
-   "zeile": 316
+   "zeile": 335
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "token": "BpmColorTextPrimary",
    "wert": "#CCCCCC",
-   "zeile": 324
+   "zeile": 343
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "token": "BpmColorBgBase",
    "wert": "#1E1E1E",
-   "zeile": 330
+   "zeile": 349
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "token": "BpmColorTextPrimary",
    "wert": "#CCCCCC",
-   "zeile": 332
+   "zeile": 351
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
    "token": null,
    "wert": "#3E3E42",
-   "zeile": 334
+   "zeile": 353
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
    "token": null,
    "wert": "#007ACC",
-   "zeile": 344
+   "zeile": 363
   }
  ],
  "2.10": [
@@ -311,39 +311,39 @@
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "token": "BpmColorBgElevated",
    "wert": "#2D2D30",
-   "zeile": 316
+   "zeile": 335
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "token": "BpmColorTextPrimary",
    "wert": "#CCCCCC",
-   "zeile": 324
+   "zeile": 343
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "token": "BpmColorBgBase",
    "wert": "#1E1E1E",
-   "zeile": 330
+   "zeile": 349
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "token": "BpmColorTextPrimary",
    "wert": "#CCCCCC",
-   "zeile": 332
+   "zeile": 351
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
    "token": null,
    "wert": "#3E3E42",
-   "zeile": 334
+   "zeile": 353
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
    "token": null,
    "wert": "#007ACC",
-   "zeile": 344
+   "zeile": 363
   }
  ],
  "2.3": [
@@ -351,39 +351,39 @@
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "token": "BpmColorBgElevated",
    "wert": "#2D2D30",
-   "zeile": 316
+   "zeile": 335
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "token": "BpmColorTextPrimary",
    "wert": "#CCCCCC",
-   "zeile": 324
+   "zeile": 343
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "token": "BpmColorBgBase",
    "wert": "#1E1E1E",
-   "zeile": 330
+   "zeile": 349
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "token": "BpmColorTextPrimary",
    "wert": "#CCCCCC",
-   "zeile": 332
+   "zeile": 351
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
    "token": null,
    "wert": "#3E3E42",
-   "zeile": 334
+   "zeile": 353
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
    "token": null,
    "wert": "#007ACC",
-   "zeile": 344
+   "zeile": 363
   },
   {
    "datei": "src/BauProjektManager.Settings/Views/FolderTemplateControl.xaml.cs",
@@ -403,39 +403,39 @@
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "token": "BpmColorBgElevated",
    "wert": "#2D2D30",
-   "zeile": 316
+   "zeile": 335
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "token": "BpmColorTextPrimary",
    "wert": "#CCCCCC",
-   "zeile": 324
+   "zeile": 343
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "token": "BpmColorBgBase",
    "wert": "#1E1E1E",
-   "zeile": 330
+   "zeile": 349
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "token": "BpmColorTextPrimary",
    "wert": "#CCCCCC",
-   "zeile": 332
+   "zeile": 351
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
    "token": null,
    "wert": "#3E3E42",
-   "zeile": 334
+   "zeile": 353
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
    "token": null,
    "wert": "#007ACC",
-   "zeile": 344
+   "zeile": 363
   }
  ],
  "2.5": [
@@ -443,39 +443,39 @@
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "token": "BpmColorBgElevated",
    "wert": "#2D2D30",
-   "zeile": 316
+   "zeile": 335
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "token": "BpmColorTextPrimary",
    "wert": "#CCCCCC",
-   "zeile": 324
+   "zeile": 343
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "token": "BpmColorBgBase",
    "wert": "#1E1E1E",
-   "zeile": 330
+   "zeile": 349
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "token": "BpmColorTextPrimary",
    "wert": "#CCCCCC",
-   "zeile": 332
+   "zeile": 351
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
    "token": null,
    "wert": "#3E3E42",
-   "zeile": 334
+   "zeile": 353
   },
   {
    "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
    "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
    "token": null,
    "wert": "#007ACC",
-   "zeile": 344
+   "zeile": 363
   }
  ],
  "2.6": [
@@ -1429,7 +1429,7 @@
    "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
    "token": null,
    "wert": "#6E6E6E",
-   "zeile": 395
+   "zeile": 451
   }
  ],
  "3.8": [

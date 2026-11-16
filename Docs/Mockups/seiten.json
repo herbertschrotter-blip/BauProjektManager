@@ -9,13 +9,20 @@
     "art": "Seite",
     "schluessel": "fenster:MainWindow",
     "code": "BauProjektManager.App/MainWindow.xaml, BauProjektManager.App/MainWindow.xaml.cs",
-    "version_code": "0.1",
+    "version_code": "0.2",
     "verlauf": [
      {
       "v": "0.1",
       "datum": "16.11.2026",
       "was": "Bestand beim Anlegen der Seitenliste",
       "art": "code"
+     },
+     {
+      "v": "0.2",
+      "datum": "16.11.2026",
+      "was": "Claude-Port wird an den PlanManager weitergereicht (keine sichtbare Änderung)",
+      "art": "code",
+      "commit": "f9b2628"
      }
     ],
     "mockup_alt": "App/01_Shell/01_Sidebar.html",
@@ -25,9 +32,9 @@
      "3.1"
     ],
     "nutzt": [],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
-    "code_stand": "ff45df8c5d"
+    "code_stand": "1dc0a26ec0"
    },
    {
     "nr": "1.2",
@@ -50,7 +57,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
     "code_stand": "313084ddb6"
    },
@@ -73,7 +80,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
     "code_stand": "ef7f6eb1ea"
    },
@@ -96,7 +103,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
     "code_stand": "5cafb06a88"
    },
@@ -122,7 +129,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
     "code_stand": "710fc123d4"
    },
@@ -146,7 +153,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
     "code_stand": "710fc123d4"
    }
@@ -162,13 +169,20 @@
     "art": "Blatt",
     "schluessel": "einstellungen:Allgemein",
     "code": "BauProjektManager.Settings/Views/SettingsView.xaml, BauProjektManager.Settings/Views/SettingsView.xaml.cs, BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
-    "version_code": "0.1",
+    "version_code": "0.2",
     "verlauf": [
      {
       "v": "0.1",
       "datum": "16.11.2026",
       "was": "Bestand beim Anlegen der Seitenliste",
       "art": "code"
+     },
+     {
+      "v": "0.2",
+      "datum": "16.11.2026",
+      "was": "Neuer Abschnitt Claude: Schalter „Mit Claude sortieren“ (geräte-lokal, Standard aus) mit Erklärung",
+      "art": "code",
+      "commit": "f9b2628"
      }
     ],
     "mockup_alt": "Settings/01_Einstellungen/01_Allgemein.html",
@@ -179,9 +193,9 @@
      "2.5"
     ],
     "nutzt": [],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
-    "code_stand": "6db4dbc807"
+    "code_stand": "516f97f287"
    },
    {
     "nr": "2.2",
@@ -204,9 +218,9 @@
      "2.6"
     ],
     "nutzt": [],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
-    "code_stand": "6db4dbc807"
+    "code_stand": "516f97f287"
    },
    {
     "nr": "2.3",
@@ -227,9 +241,9 @@
     "nutzt": [
      "Ordnervorlage"
     ],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
-    "code_stand": "709e73c176"
+    "code_stand": "1399d29b19"
    },
    {
     "nr": "2.4",
@@ -248,9 +262,9 @@
     ],
     "zu": [],
     "nutzt": [],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
-    "code_stand": "6db4dbc807"
+    "code_stand": "516f97f287"
    },
    {
     "nr": "2.5",
@@ -269,9 +283,9 @@
     ],
     "zu": [],
     "nutzt": [],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
-    "code_stand": "6db4dbc807"
+    "code_stand": "516f97f287"
    },
    {
     "nr": "2.6",
@@ -297,7 +311,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
     "code_stand": "27d7a90892"
    },
@@ -320,7 +334,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
     "code_stand": "673fcb483d"
    },
@@ -343,7 +357,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
     "code_stand": "8ce496ff4e"
    },
@@ -366,7 +380,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
     "code_stand": "b1a855c477"
    },
@@ -390,7 +404,7 @@
      "Ordnervorlage",
      "Dialograhmen"
     ],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
     "code_stand": "23d914694a"
    }
@@ -406,13 +420,20 @@
     "art": "Seite",
     "schluessel": "view:PlanManagerView",
     "code": "BauProjektManager.PlanManager/Views/PlanManagerView.xaml, BauProjektManager.PlanManager/Views/PlanManagerView.xaml.cs, BauProjektManager.PlanManager/ViewModels/PlanManagerViewModel.cs",
-    "version_code": "0.1",
+    "version_code": "0.2",
     "verlauf": [
      {
       "v": "0.1",
       "datum": "16.11.2026",
       "was": "Bestand beim Anlegen der Seitenliste",
       "art": "code"
+     },
+     {
+      "v": "0.2",
+      "datum": "16.11.2026",
+      "was": "Claude-Port wird an das Projektdetail weitergereicht (keine sichtbare Änderung)",
+      "art": "code",
+      "commit": "f9b2628"
      }
     ],
     "mockup_alt": "PlanManager/01_Projektuebersicht/01_Projektuebersicht.html",
@@ -420,9 +441,9 @@
      "3.2"
     ],
     "nutzt": [],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
-    "code_stand": "5ba7dd5299"
+    "code_stand": "5b8667e11e"
    },
    {
     "nr": "3.2",
@@ -449,9 +470,9 @@
      "3.11"
     ],
     "nutzt": [],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
-    "code_stand": "2cb2fb51c7"
+    "code_stand": "f0c510658d"
    },
    {
     "nr": "3.3",
@@ -459,13 +480,27 @@
     "art": "Blatt",
     "schluessel": "projektdetail:Manuell sortieren",
     "code": "BauProjektManager.PlanManager/Views/ProjectDetailView.xaml, BauProjektManager.PlanManager/Views/ProjectDetailView.xaml.cs, BauProjektManager.PlanManager/ViewModels/ProjectDetailViewModel.cs, BauProjektManager.PlanManager/Views/ManualCaptureView.xaml, BauProjektManager.PlanManager/Views/ManualCaptureView.xaml.cs, BauProjektManager.PlanManager/ViewModels/ManualCaptureViewModel.cs, BauProjektManager.PlanManager/ViewModels/CaptureDetailViewModel.cs, BauProjektManager.PlanManager/Controls/RadialCaptureControl.xaml, BauProjektManager.PlanManager/Controls/RadialCaptureControl.xaml.cs, BauProjektManager.PlanManager/Views/PlanPreviewPanel.xaml, BauProjektManager.PlanManager/Views/PlanPreviewPanel.xaml.cs",
-    "version_code": "0.1",
+    "version_code": "0.3",
     "verlauf": [
      {
       "v": "0.1",
       "datum": "16.11.2026",
       "was": "Bestand beim Anlegen der Seitenliste",
       "art": "code"
+     },
+     {
+      "v": "0.2",
+      "datum": "16.11.2026",
+      "was": "Bezeichnung und Änderungshinweis bleiben nach dem Neuladen der Tabelle erhalten (gingen beim Import verloren)",
+      "art": "code",
+      "commit": "096003e"
+     },
+     {
+      "v": "0.3",
+      "datum": "16.11.2026",
+      "was": "Knopf „Mit Claude sortieren“ in der Hinweiszeile, Vorschlagsleiste, Zeilen-Kennzeichen (bei Claude / Vorschlag / ungültig), Pending-Vorschläge mit ✦ und Begründung als Tooltip",
+      "art": "code",
+      "commit": "f9b2628"
      }
     ],
     "mockup_alt": "PlanManager/02_Projektdetail/02_ManuellSortieren.html",
@@ -477,9 +512,9 @@
      "Plan-Vorschau",
      "Radial-Erfassung"
     ],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
-    "code_stand": "8318b4697c"
+    "code_stand": "7b0f13bcbe"
    },
    {
     "nr": "3.4",
@@ -494,6 +529,13 @@
       "datum": "16.11.2026",
       "was": "Chatfenster neben „Manuell sortieren“, 9 Zustände (Start, Rückfrage, Entwurf, Fehler, Übernahme) – Mockup abgenommen (Herbert)",
       "art": "mockup"
+     },
+     {
+      "v": "1.0",
+      "datum": "16.11.2026",
+      "was": "Chatfenster nach abgenommenem Mockup gebaut: Startdialog mit Plankopf-Haken, Statuszeile, Rückfragen als Knöpfe, Freitext, Fehlerkarte, Übernahme als Pending (ohne Einzel-Annahme im Detail-Panel)",
+      "art": "code",
+      "commit": "f9b2628"
      }
     ],
     "zu": [
@@ -502,10 +544,11 @@
     "nutzt": [
      "Plan-Vorschau"
     ],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": "1.0",
     "code": "BauProjektManager.PlanManager/Views/ClaudeChatPanel.xaml, BauProjektManager.PlanManager/Views/ClaudeChatPanel.xaml.cs, BauProjektManager.PlanManager/Views/ManualCaptureView.Claude.cs, BauProjektManager.PlanManager/ViewModels/ClaudeSortViewModel.cs, BauProjektManager.PlanManager/ViewModels/ClaudeSortViewModel.Events.cs, BauProjektManager.PlanManager/ViewModels/ClaudeChatModels.cs, BauProjektManager.PlanManager/ViewModels/ManualCaptureViewModel.Claude.cs",
-    "code_stand": "8adba003fa"
+    "code_stand": "3e3e10c986",
+    "version_code": "1.0"
    },
    {
     "nr": "3.5",
@@ -529,9 +572,9 @@
     "nutzt": [
      "Segment-Editor"
     ],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
-    "code_stand": "6c53b2cdbf"
+    "code_stand": "7b388bb170"
    },
    {
     "nr": "3.6",
@@ -553,9 +596,9 @@
      "3.8"
     ],
     "nutzt": [],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
-    "code_stand": "68d7adff9f"
+    "code_stand": "eb5ef2c9cb"
    },
    {
     "nr": "3.7",
@@ -574,9 +617,9 @@
     ],
     "zu": [],
     "nutzt": [],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
-    "code_stand": "136a1983b7"
+    "code_stand": "95a348437e"
    },
    {
     "nr": "3.8",
@@ -600,7 +643,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
     "code_stand": "5f4d263f4f"
    },
@@ -624,7 +667,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
     "code_stand": "e1fda6fd68"
    },
@@ -647,7 +690,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
     "code_stand": "fd8115c115"
    },
@@ -670,7 +713,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "6e15643",
+    "stand_commit": "f9b2628",
     "version_abgenommen": null,
     "code_stand": "2cfe320b9b"
    }

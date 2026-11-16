@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.217] — 2026-11-16
+
+### Docs: Seitenliste aktualisiert
+
+Nachtrag der Versionen nach v0.28.215/.216: 3.3 Manuell sortieren Code 0.3 (Bezeichnung bleibt beim Neuladen; Claude-Knopf, Vorschlagsleiste, Zeilen-Kennzeichen), 3.4 Mit Claude sortieren Code 1.0 (abgenommenes Mockup gebaut), 2.1 Allgemein 0.2 (Schalter Claude), 1.1 und 3.1 je 0.2 (Weitergabe des Claude-Ports, unsichtbar). Theme-Abgleich neu gelaufen, keine festen Werte in den neuen Dateien.
+
+---
 ## [v0.28.216] — 2026-11-16
 
 ### Feature: Mit Claude sortieren – Chatfenster, Einstellung, ADR-067

@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.210] — 2026-11-16
+
+### Fix: Neues Projekt seedet seine Dokumenttypen aus der eigenen Ordnervorlage (R01-004.05)
+
+Der Dokumenttyp-Seed (ADR-061 Slice 0.4) lief nur lazy beim ersten Öffnen von „Manuell sortieren“ und dann immer gegen die Standardvorlage — nicht gegen die Vorlage, mit der die Projektordner tatsächlich angelegt wurden (Audit Review 01, R01-004 / SE-06). Wurde die Vorlage umbenannt oder umsortiert, zeigte `root_relative_path` auf Ordner, die es nicht gibt. Jetzt seedet „Neues Projekt“ direkt nach dem Speichern aus derselben Vorlage wie `CreateProjectFolders` (Dialog-Vorlage, sonst `shared-config.json`); der Lazy-Seed bleibt nur Fallback für ältere Projekte. Voraussetzung war R01-004.04 (Metadaten bleiben in der Vorlage erhalten). Neuer Test: Seed folgt einer umbenannten und umsortierten Vorlage.
+
+---
 ## [v0.28.209] — 2026-11-16
 
 ### Fix: Ordnervorlage verliert die Dokumenttyp-Metadaten nicht mehr (R01-004.04)

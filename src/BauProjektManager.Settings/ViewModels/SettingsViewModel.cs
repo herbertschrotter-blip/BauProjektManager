@@ -7,6 +7,7 @@ using BauProjektManager.Domain.Enums;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models;
 using BauProjektManager.Infrastructure.Persistence;
+using BauProjektManager.Infrastructure.Services;
 using BauProjektManager.Settings.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -569,6 +570,10 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
                 dialog.Project.Paths.Root = projectRoot;
 
                 _db.SaveProject(dialog.Project);
+                // R01-004.05 (SE-06, ADR-061 Slice 0.4): Dokumenttypen aus DERSELBEN Vorlage
+                // seeden, mit der die Ordner gerade angelegt wurden — nicht aus dem Default.
+                new DocumentTypeSeedService(_db).EnsureSeeded(
+                    dialog.Project.Id, dialog.FolderTemplate ?? shared.FolderTemplate);
                 WriteBpmFolder(dialog.Project, projectRoot);
                 Projects.Add(dialog.Project);
                 SelectedProject = dialog.Project;

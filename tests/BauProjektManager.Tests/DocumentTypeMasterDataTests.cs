@@ -1,3 +1,4 @@
+using BauProjektManager.Domain.Models;
 using System.IO;
 using BauProjektManager.Domain.Enums;
 using BauProjektManager.Domain.Enums.PlanManager;
@@ -180,6 +181,24 @@ public class DocumentTypeMasterDataTests : IDisposable
         var part = Assert.Single(_db.GetBuildingParts(ProjectId));
         var level = Assert.Single(part.Levels);
         Assert.Equal("00 EG", level.FolderName);
+    }
+
+    [Fact]
+    public void Seed_FromCustomTemplate_FollowsRenamedAndReorderedFolders()
+    {
+        // R01-004.05 (SE-06): Projektanlage seedet aus der tatsaechlich verwendeten Vorlage —
+        // umbenannte/umsortierte Hauptordner landen als root_relative_path in der DB.
+        var template = SharedConfigDefaults.GetDefaultFolderTemplate();
+        var plans = template.First(e => e.SubFolders.Any(s => s.CreatesDocumentType));
+        plans.Name = "Pläne neu";
+        template.Remove(plans);
+        template.Insert(0, plans);
+
+        new DocumentTypeSeedService(_db).EnsureSeeded(ProjectId, template);
+
+        var subTypes = _db.GetDocumentTypes(ProjectId).Where(t => !string.IsNullOrEmpty(t.FolderName)).ToList();
+        Assert.NotEmpty(subTypes);
+        Assert.All(subTypes, t => Assert.Equal("00 Pläne neu", t.RootRelativePath));
     }
 
     [Fact]

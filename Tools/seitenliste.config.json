@@ -1,0 +1,131 @@
+{
+  "titel": "BPM Seitenliste",
+  "quelle": "Docs/Mockups/seiten.json",
+  "doku": "Docs/Mockups/SEITENLISTE.md",
+  "seite": "Docs/Mockups/index.html",
+  "vorlage": "Tools/seitenliste_vorlage.html",
+  "mockup_ablage": "Docs/Mockups",
+  "code_wurzel": "src",
+  "start": "1.1",
+  "link": "",
+  "theme": { "befehl": ["node", "Tools/mockup_theme.mjs"], "dateien": ["Docs/Mockups/theme-app.css"] },
+  "themeabgleich": {
+    "ziel": "Docs/Mockups/theme-hinweise.json",
+    "token": ["Docs/Mockups/theme-app.css"],
+    "eigenschaften": ["padding", "margin", "gap", "border-radius", "font-size", "box-shadow"],
+    "ausnahmen": ["0", "0px", "1px", "2px"]
+  },
+  "seiten_im_code": [
+    { "praefix": "einstellungen", "datei": "src/BauProjektManager.Settings/Views/SettingsView.xaml", "block": "(?s)(.*)", "eintrag": "<TabItem Header=\"([^\"]+)\"" },
+    { "praefix": "projekt", "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml", "block": "(?s)(.*)", "eintrag": "<TabItem Header=\"([^\"]+)\"" },
+    { "praefix": "projektdetail", "datei": "src/BauProjektManager.PlanManager/Views/ProjectDetailView.xaml", "block": "(?s)(.*)", "eintrag": "<TabItem Header=\"([^\"]+)\"" },
+    { "praefix": "fenster", "datei": "src/BauProjektManager.App/MainWindow.xaml", "block": "x:Class=\"[\\w.]+\\.(\\w+)\"", "eintrag": "(\\w+)" },
+    { "praefix": "view", "datei": "src/BauProjektManager.PlanManager/Views/PlanManagerView.xaml", "block": "x:Class=\"[\\w.]+\\.(\\w+)\"", "eintrag": "(\\w+)" },
+    { "praefix": "dialog", "datei": "src/BauProjektManager.App/SetupDialog.xaml", "block": "x:Class=\"[\\w.]+\\.(\\w+)\"", "eintrag": "(\\w+)" },
+    { "praefix": "dialog", "datei": "src/BauProjektManager.App/BpmConfirmDialog.xaml", "block": "x:Class=\"[\\w.]+\\.(\\w+)\"", "eintrag": "(\\w+)" },
+    { "praefix": "dialog", "datei": "src/BauProjektManager.App/BpmInfoDialog.xaml", "block": "x:Class=\"[\\w.]+\\.(\\w+)\"", "eintrag": "(\\w+)" },
+    { "praefix": "dialog", "datei": "src/BauProjektManager.App/DevToolsDialog.xaml", "block": "x:Class=\"[\\w.]+\\.(\\w+)\"", "eintrag": "(\\w+)" },
+    { "praefix": "dialog", "datei": "src/BauProjektManager.PlanManager/Views/ProfileWizardDialog.xaml", "block": "x:Class=\"[\\w.]+\\.(\\w+)\"", "eintrag": "(\\w+)" },
+    { "praefix": "dialog", "datei": "src/BauProjektManager.PlanManager/Views/SegmentTypeManagerDialog.xaml", "block": "x:Class=\"[\\w.]+\\.(\\w+)\"", "eintrag": "(\\w+)" },
+    { "praefix": "dialog", "datei": "src/BauProjektManager.PlanManager/Views/RecoveryDialog.xaml", "block": "x:Class=\"[\\w.]+\\.(\\w+)\"", "eintrag": "(\\w+)" },
+    { "praefix": "dialog", "datei": "src/BauProjektManager.PlanManager/Views/FolderPickerDialog.xaml", "block": "x:Class=\"[\\w.]+\\.(\\w+)\"", "eintrag": "(\\w+)" }
+  ],
+  "daten": {
+    "quelle": "Docs/Mockups/daten.json",
+    "doku": "Docs/Mockups/DATENLISTE.md",
+    "schema_befehl": ["python", "Tools/schema_leer.py"],
+    "gruppen": [
+      { "bereich": "bpm.db – Projekte und Kunden", "seiten": ["2.2", "2.6", "2.8", "2.9", "3.1"], "tabellen": {
+        "clients": "Auftraggeber (Firma, Kontakt)",
+        "projects": "Projekte mit Stammdaten, Pfaden und Status",
+        "project_participants": "Beteiligte je Projekt (Rolle, Firma, Kontakt)",
+        "project_links": "Portale und Links je Projekt" } },
+      { "bereich": "bpm.db – Bauwerk", "seiten": ["2.7", "3.3"], "tabellen": {
+        "building_parts": "Bauteile je Projekt (Kürzel, Bauwerkstyp, ±0,00)",
+        "building_levels": "Geschosse je Bauteil (Höhen, Präfix)" } },
+      { "bereich": "bpm.db – Dokumenttypen", "seiten": ["2.10", "3.3", "3.6"], "tabellen": {
+        "document_types": "Dokumenttypen je Projekt mit Ablage-Ordner (ADR-061)",
+        "document_type_categories": "Kategorien je Dokumenttyp" } },
+      { "bereich": "bpm.db – Segmenttypen", "seiten": ["3.8", "3.9"], "tabellen": {
+        "segment_type_groups": "Gruppen der Segmenttypen (ADR-056)",
+        "segment_types": "Segmenttypen für die Planerkennung" } },
+      { "bereich": "planmanager.db – Planarchiv (je Projekt)", "seiten": ["3.2", "3.3", "3.5"], "tabellen": {
+        "plan_documents": "Logisches Plandokument über alle Revisionen (ADR-058)",
+        "plan_revisions": "Revisionen (Index) je Plandokument",
+        "plan_files": "Dateien mit Pfad und MD5",
+        "revision_file_links": "Zuordnung Datei zu Revision (PDF, DWG)",
+        "plan_document_segments": "Segmentwerte je Plandokument (Lernquelle der Erkennung)",
+        "plan_document_tags": "Schlagworte je Plandokument",
+        "plan_revision_events": "Verlauf je Revision (Import, Verschieben, Ersetzen)",
+        "plan_context_links": "Bezüge zu Bauteil, Geschoss und Kontext" } },
+      { "bereich": "planmanager.db – Import-Journal (je Projekt)", "seiten": ["3.3", "3.10"], "tabellen": {
+        "import_journal": "Importläufe mit Status (ADR-064, Undo und Recovery)",
+        "import_actions": "Aktionen je Importlauf",
+        "import_action_files": "Dateischritte je Aktion" } },
+      { "bereich": "Schema-Verwaltung", "tabellen": {
+        "schema_version": "Schema-Stand von bpm.db",
+        "planmanager.schema_version": "Schema-Stand von planmanager.db" } }
+    ],
+    "orte": [
+      { "bereich": "Gerät (LocalAppData\\BauProjektManager)", "art": "Datei", "seiten": ["1.2", "1.5", "2.1"], "eintraege": {
+        "device-settings.json": "Geräteeinstellungen (Basisordner, Fenster)",
+        "Logs/BPM_*.log": "Protokoll (Serilog, ohne Personendaten)" } },
+      { "bereich": "Cloud-Ordner (geteilt)", "art": "Datei", "seiten": ["2.3", "2.4", "3.8"], "eintraege": {
+        "shared-config.json": "Geteilte Einstellungen und Standard-Ordnervorlage",
+        "registry.json": "Projekt-Registry, flach für VBA/Excel",
+        "pattern-templates.json": "Bibliothek der Plan-Muster (PatternTemplate)" } },
+      { "bereich": "Projektordner (.bpm)", "art": "Datei", "seiten": ["2.6", "3.6", "3.8"], "eintraege": {
+        ".bpm/manifest.json": "Projekt-Ausweis: Identität und Modul-Flags (ADR-046)",
+        ".bpm/project.json": "Vollständiger Projektexport für Import und Übergabe",
+        ".bpm/profiles/*.json": "Erkennungsprofil je Dokumenttyp (ADR-010)" } },
+      { "bereich": "Speicher (nur während der Sitzung)", "art": "Speicher", "seiten": ["3.3", "3.4"], "eintraege": {
+        "PendingAssignmentStore": "Vorgemerkte Zuordnungen bis „Import bestätigen“ (auch Claude-Vorschläge)" } }
+    ]
+  },
+  "beziehungen": {
+    "dateien": "*.cs",
+    "kopf": "^\\s*(?:public|private|internal|protected)\\b[^=;\\n(]*?\\b(\\w+)\\s*\\(",
+    "einstieg": {
+      "1.1": ["MainWindow.xaml.cs:*"],
+      "1.5": ["DevToolsDialog.xaml.cs:*"],
+      "2.2": ["SettingsViewModel.cs:*"],
+      "3.1": ["PlanManagerView.xaml.cs:*"],
+      "3.2": ["ExplorerView.xaml.cs:*"],
+      "3.5": ["PlanDataView.xaml.cs:*"],
+      "3.8": ["ProfileWizardDialog.xaml.cs:*"]
+    },
+    "ziel": {
+      "\\bnew SetupDialog\\(": ["1.2"],
+      "\\bnew BpmConfirmDialog\\(": ["1.3"],
+      "\\bnew BpmInfoDialog\\(": ["1.4"],
+      "\\bnew DevToolsDialog\\(": ["1.5"],
+      "\\bnew SettingsView\\(": ["2.1"],
+      "\\bnew ProjectEditDialog\\(": ["2.6"],
+      "\\bnew PlanManagerView\\(": ["3.1"],
+      "\\bnew ProjectDetailView\\(": ["3.2"],
+      "\\bnew ProfileWizardDialog\\(": ["3.8"],
+      "\\bnew SegmentTypeManagerDialog\\(": ["3.9"],
+      "\\bnew RecoveryDialog\\(": ["3.10"],
+      "\\bnew FolderPickerDialog\\(": ["3.11"]
+    },
+    "hand": {
+      "1.1": ["2.1", "3.1"],
+      "1.2": ["1.1"],
+      "2.2": ["1.3", "1.4"],
+      "1.5": ["1.6"],
+      "2.1": ["2.2", "2.3", "2.4", "2.5"],
+      "2.6": ["2.7", "2.8", "2.9", "2.10"],
+      "3.2": ["3.3", "3.5", "3.6", "3.7", "3.10"],
+      "3.3": ["3.4", "3.10"],
+      "3.4": ["3.3"],
+      "3.6": ["3.8"]
+    },
+    "bausteine": {
+      "Plan-Vorschau": ["3.3", "3.4"],
+      "Radial-Erfassung": ["3.3"],
+      "Segment-Editor": ["3.5"],
+      "Ordnervorlage": ["2.3", "2.10"],
+      "Dialograhmen": ["1.2", "1.3", "1.4", "1.5", "1.6", "2.6", "2.7", "2.8", "2.9", "2.10", "3.8", "3.9", "3.10", "3.11"]
+    }
+  }
+}

@@ -270,3 +270,5 @@ NICHT als Referenz (bis zur Sanierung, R01-015/R01-040): DevToolsDialog.xaml/.cs
 | Neue Abhängigkeit | DEPENDENCY-MAP.md |
 | Konzept geändert | BACKLOG.md prüfen |
 | Doc geändert | Frontmatter + Quickload prüfen |
+| Seite oder Mockup geändert / abgenommen | `Docs/Mockups/seiten.json` (Seitenliste, Wahrheit für Mockups), dann `python Tools/seitenliste.py` |
+| Tabelle oder Speicherort geändert | `SchemaSnapshotTests` schreibt `Docs/Mockups/schema-*.sql` neu → `python Tools/datenliste.py` + `python Tools/seitenliste.py` |

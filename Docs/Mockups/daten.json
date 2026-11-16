@@ -1,0 +1,1975 @@
+{
+ "schema": "bpm.db + planmanager.db, Stand b5d857d4",
+ "gruppen": [
+  {
+   "nr": "D1",
+   "bereich": "bpm.db – Projekte und Kunden",
+   "seiten": [
+    "2.2",
+    "2.6",
+    "2.8",
+    "2.9",
+    "3.1"
+   ],
+   "seiten_liste": [
+    {
+     "nr": "D1.1",
+     "name": "clients",
+     "art": "Tabelle",
+     "zweck": "Auftraggeber (Firma, Kontakt)",
+     "felder": [
+      [
+       "id",
+       "TEXT",
+       true
+      ],
+      [
+       "company",
+       "TEXT",
+       false
+      ],
+      [
+       "contact_person",
+       "TEXT",
+       false
+      ],
+      [
+       "phone",
+       "TEXT",
+       false
+      ],
+      [
+       "email",
+       "TEXT",
+       false
+      ],
+      [
+       "notes",
+       "TEXT",
+       false
+      ],
+      [
+       "created_at",
+       "TEXT",
+       false
+      ],
+      [
+       "created_by",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_at",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_by",
+       "TEXT",
+       false
+      ],
+      [
+       "sync_version",
+       "INTEGER",
+       false
+      ],
+      [
+       "is_deleted",
+       "INTEGER",
+       false
+      ]
+     ],
+     "zu": []
+    },
+    {
+     "nr": "D1.2",
+     "name": "projects",
+     "art": "Tabelle",
+     "zweck": "Projekte mit Stammdaten, Pfaden und Status",
+     "felder": [
+      [
+       "id",
+       "TEXT",
+       true
+      ],
+      [
+       "project_number",
+       "TEXT",
+       false
+      ],
+      [
+       "name",
+       "TEXT",
+       false
+      ],
+      [
+       "full_name",
+       "TEXT",
+       false
+      ],
+      [
+       "status",
+       "TEXT",
+       false
+      ],
+      [
+       "project_type",
+       "TEXT",
+       false
+      ],
+      [
+       "client_id",
+       "TEXT",
+       false
+      ],
+      [
+       "street",
+       "TEXT",
+       false
+      ],
+      [
+       "house_number",
+       "TEXT",
+       false
+      ],
+      [
+       "postal_code",
+       "TEXT",
+       false
+      ],
+      [
+       "city",
+       "TEXT",
+       false
+      ],
+      [
+       "municipality",
+       "TEXT",
+       false
+      ],
+      [
+       "district",
+       "TEXT",
+       false
+      ],
+      [
+       "state",
+       "TEXT",
+       false
+      ],
+      [
+       "coordinate_system",
+       "TEXT",
+       false
+      ],
+      [
+       "coordinate_east",
+       "REAL",
+       false
+      ],
+      [
+       "coordinate_north",
+       "REAL",
+       false
+      ],
+      [
+       "cadastral_kg",
+       "TEXT",
+       false
+      ],
+      [
+       "cadastral_kg_name",
+       "TEXT",
+       false
+      ],
+      [
+       "cadastral_gst",
+       "TEXT",
+       false
+      ],
+      [
+       "project_start",
+       "TEXT",
+       false
+      ],
+      [
+       "construction_start",
+       "TEXT",
+       false
+      ],
+      [
+       "planned_end",
+       "TEXT",
+       false
+      ],
+      [
+       "actual_end",
+       "TEXT",
+       false
+      ],
+      [
+       "root_path",
+       "TEXT",
+       false
+      ],
+      [
+       "plans_path",
+       "TEXT",
+       false
+      ],
+      [
+       "inbox_path",
+       "TEXT",
+       false
+      ],
+      [
+       "photos_path",
+       "TEXT",
+       false
+      ],
+      [
+       "documents_path",
+       "TEXT",
+       false
+      ],
+      [
+       "protocols_path",
+       "TEXT",
+       false
+      ],
+      [
+       "invoices_path",
+       "TEXT",
+       false
+      ],
+      [
+       "use_global_zero_level",
+       "INTEGER",
+       false
+      ],
+      [
+       "global_zero_level",
+       "REAL",
+       false
+      ],
+      [
+       "tags",
+       "TEXT",
+       false
+      ],
+      [
+       "notes",
+       "TEXT",
+       false
+      ],
+      [
+       "created_at",
+       "TEXT",
+       false
+      ],
+      [
+       "created_by",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_at",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_by",
+       "TEXT",
+       false
+      ],
+      [
+       "sync_version",
+       "INTEGER",
+       false
+      ],
+      [
+       "is_deleted",
+       "INTEGER",
+       false
+      ]
+     ],
+     "zu": [
+      "D1.1"
+     ]
+    },
+    {
+     "nr": "D1.3",
+     "name": "project_participants",
+     "art": "Tabelle",
+     "zweck": "Beteiligte je Projekt (Rolle, Firma, Kontakt)",
+     "felder": [
+      [
+       "id",
+       "TEXT",
+       true
+      ],
+      [
+       "project_id",
+       "TEXT",
+       false
+      ],
+      [
+       "role",
+       "TEXT",
+       false
+      ],
+      [
+       "company",
+       "TEXT",
+       false
+      ],
+      [
+       "contact_person",
+       "TEXT",
+       false
+      ],
+      [
+       "phone",
+       "TEXT",
+       false
+      ],
+      [
+       "email",
+       "TEXT",
+       false
+      ],
+      [
+       "contact_id",
+       "TEXT",
+       false
+      ],
+      [
+       "sort_order",
+       "INTEGER",
+       false
+      ],
+      [
+       "created_at",
+       "TEXT",
+       false
+      ],
+      [
+       "created_by",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_at",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_by",
+       "TEXT",
+       false
+      ],
+      [
+       "sync_version",
+       "INTEGER",
+       false
+      ],
+      [
+       "is_deleted",
+       "INTEGER",
+       false
+      ]
+     ],
+     "zu": [
+      "D1.2"
+     ]
+    },
+    {
+     "nr": "D1.4",
+     "name": "project_links",
+     "art": "Tabelle",
+     "zweck": "Portale und Links je Projekt",
+     "felder": [
+      [
+       "id",
+       "TEXT",
+       true
+      ],
+      [
+       "project_id",
+       "TEXT",
+       false
+      ],
+      [
+       "name",
+       "TEXT",
+       false
+      ],
+      [
+       "url",
+       "TEXT",
+       false
+      ],
+      [
+       "link_type",
+       "TEXT",
+       false
+      ],
+      [
+       "sort_order",
+       "INTEGER",
+       false
+      ],
+      [
+       "created_at",
+       "TEXT",
+       false
+      ],
+      [
+       "created_by",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_at",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_by",
+       "TEXT",
+       false
+      ],
+      [
+       "sync_version",
+       "INTEGER",
+       false
+      ],
+      [
+       "is_deleted",
+       "INTEGER",
+       false
+      ]
+     ],
+     "zu": [
+      "D1.2"
+     ]
+    }
+   ]
+  },
+  {
+   "nr": "D2",
+   "bereich": "bpm.db – Bauwerk",
+   "seiten": [
+    "2.7",
+    "3.3"
+   ],
+   "seiten_liste": [
+    {
+     "nr": "D2.1",
+     "name": "building_parts",
+     "art": "Tabelle",
+     "zweck": "Bauteile je Projekt (Kürzel, Bauwerkstyp, ±0,00)",
+     "felder": [
+      [
+       "id",
+       "TEXT",
+       true
+      ],
+      [
+       "project_id",
+       "TEXT",
+       false
+      ],
+      [
+       "short_name",
+       "TEXT",
+       false
+      ],
+      [
+       "folder_name",
+       "TEXT",
+       false
+      ],
+      [
+       "description",
+       "TEXT",
+       false
+      ],
+      [
+       "building_type",
+       "TEXT",
+       false
+      ],
+      [
+       "zero_level_absolute",
+       "REAL",
+       false
+      ],
+      [
+       "sort_order",
+       "INTEGER",
+       false
+      ],
+      [
+       "created_at",
+       "TEXT",
+       false
+      ],
+      [
+       "created_by",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_at",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_by",
+       "TEXT",
+       false
+      ],
+      [
+       "sync_version",
+       "INTEGER",
+       false
+      ],
+      [
+       "is_deleted",
+       "INTEGER",
+       false
+      ]
+     ],
+     "zu": [
+      "D1.2"
+     ]
+    },
+    {
+     "nr": "D2.2",
+     "name": "building_levels",
+     "art": "Tabelle",
+     "zweck": "Geschosse je Bauteil (Höhen, Präfix)",
+     "felder": [
+      [
+       "id",
+       "TEXT",
+       true
+      ],
+      [
+       "building_part_id",
+       "TEXT",
+       false
+      ],
+      [
+       "prefix",
+       "INTEGER",
+       false
+      ],
+      [
+       "name",
+       "TEXT",
+       false
+      ],
+      [
+       "description",
+       "TEXT",
+       false
+      ],
+      [
+       "rdok",
+       "REAL",
+       false
+      ],
+      [
+       "fbok",
+       "REAL",
+       false
+      ],
+      [
+       "rduk",
+       "REAL",
+       false
+      ],
+      [
+       "sort_order",
+       "INTEGER",
+       false
+      ],
+      [
+       "folder_name",
+       "TEXT",
+       false
+      ],
+      [
+       "created_at",
+       "TEXT",
+       false
+      ],
+      [
+       "created_by",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_at",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_by",
+       "TEXT",
+       false
+      ],
+      [
+       "sync_version",
+       "INTEGER",
+       false
+      ],
+      [
+       "is_deleted",
+       "INTEGER",
+       false
+      ]
+     ],
+     "zu": [
+      "D2.1"
+     ]
+    }
+   ]
+  },
+  {
+   "nr": "D3",
+   "bereich": "bpm.db – Dokumenttypen",
+   "seiten": [
+    "2.10",
+    "3.3",
+    "3.6"
+   ],
+   "seiten_liste": [
+    {
+     "nr": "D3.1",
+     "name": "document_types",
+     "art": "Tabelle",
+     "zweck": "Dokumenttypen je Projekt mit Ablage-Ordner (ADR-061)",
+     "felder": [
+      [
+       "id",
+       "TEXT",
+       true
+      ],
+      [
+       "project_id",
+       "TEXT",
+       false
+      ],
+      [
+       "name",
+       "TEXT",
+       false
+      ],
+      [
+       "folder_name",
+       "TEXT",
+       false
+      ],
+      [
+       "key",
+       "TEXT",
+       false
+      ],
+      [
+       "root_relative_path",
+       "TEXT",
+       false
+      ],
+      [
+       "color_hex",
+       "TEXT",
+       false
+      ],
+      [
+       "ring2_source",
+       "TEXT",
+       false
+      ],
+      [
+       "sort_order",
+       "INTEGER",
+       false
+      ],
+      [
+       "is_builtin",
+       "INTEGER",
+       false
+      ],
+      [
+       "created_at",
+       "TEXT",
+       false
+      ],
+      [
+       "created_by",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_at",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_by",
+       "TEXT",
+       false
+      ],
+      [
+       "sync_version",
+       "INTEGER",
+       false
+      ],
+      [
+       "is_deleted",
+       "INTEGER",
+       false
+      ]
+     ],
+     "zu": [
+      "D1.2"
+     ]
+    },
+    {
+     "nr": "D3.2",
+     "name": "document_type_categories",
+     "art": "Tabelle",
+     "zweck": "Kategorien je Dokumenttyp",
+     "felder": [
+      [
+       "id",
+       "TEXT",
+       true
+      ],
+      [
+       "document_type_id",
+       "TEXT",
+       false
+      ],
+      [
+       "name",
+       "TEXT",
+       false
+      ],
+      [
+       "folder_name",
+       "TEXT",
+       false
+      ],
+      [
+       "sort_order",
+       "INTEGER",
+       false
+      ],
+      [
+       "created_at",
+       "TEXT",
+       false
+      ],
+      [
+       "created_by",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_at",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_by",
+       "TEXT",
+       false
+      ],
+      [
+       "sync_version",
+       "INTEGER",
+       false
+      ],
+      [
+       "is_deleted",
+       "INTEGER",
+       false
+      ]
+     ],
+     "zu": [
+      "D3.1"
+     ]
+    }
+   ]
+  },
+  {
+   "nr": "D4",
+   "bereich": "bpm.db – Segmenttypen",
+   "seiten": [
+    "3.8",
+    "3.9"
+   ],
+   "seiten_liste": [
+    {
+     "nr": "D4.1",
+     "name": "segment_type_groups",
+     "art": "Tabelle",
+     "zweck": "Gruppen der Segmenttypen (ADR-056)",
+     "felder": [
+      [
+       "id",
+       "TEXT",
+       true
+      ],
+      [
+       "name",
+       "TEXT",
+       false
+      ],
+      [
+       "sort_order",
+       "INTEGER",
+       false
+      ],
+      [
+       "is_active",
+       "INTEGER",
+       false
+      ],
+      [
+       "is_builtin",
+       "INTEGER",
+       false
+      ],
+      [
+       "builtin_version",
+       "INTEGER",
+       false
+      ],
+      [
+       "user_modified_name",
+       "INTEGER",
+       false
+      ],
+      [
+       "user_modified_sort",
+       "INTEGER",
+       false
+      ],
+      [
+       "user_modified_active",
+       "INTEGER",
+       false
+      ],
+      [
+       "created_at",
+       "TEXT",
+       false
+      ],
+      [
+       "created_by",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_at",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_by",
+       "TEXT",
+       false
+      ],
+      [
+       "sync_version",
+       "INTEGER",
+       false
+      ],
+      [
+       "is_deleted",
+       "INTEGER",
+       false
+      ]
+     ],
+     "zu": []
+    },
+    {
+     "nr": "D4.2",
+     "name": "segment_types",
+     "art": "Tabelle",
+     "zweck": "Segmenttypen für die Planerkennung",
+     "felder": [
+      [
+       "id",
+       "TEXT",
+       true
+      ],
+      [
+       "name",
+       "TEXT",
+       false
+      ],
+      [
+       "color",
+       "TEXT",
+       false
+      ],
+      [
+       "token_key",
+       "TEXT",
+       false
+      ],
+      [
+       "semantic_role",
+       "TEXT",
+       false
+      ],
+      [
+       "group_id",
+       "TEXT",
+       false
+      ],
+      [
+       "sort_order",
+       "INTEGER",
+       false
+      ],
+      [
+       "is_active",
+       "INTEGER",
+       false
+      ],
+      [
+       "is_builtin",
+       "INTEGER",
+       false
+      ],
+      [
+       "builtin_version",
+       "INTEGER",
+       false
+      ],
+      [
+       "user_modified_name",
+       "INTEGER",
+       false
+      ],
+      [
+       "user_modified_color",
+       "INTEGER",
+       false
+      ],
+      [
+       "user_modified_sort",
+       "INTEGER",
+       false
+      ],
+      [
+       "user_modified_active",
+       "INTEGER",
+       false
+      ],
+      [
+       "user_modified_group",
+       "INTEGER",
+       false
+      ],
+      [
+       "created_at",
+       "TEXT",
+       false
+      ],
+      [
+       "created_by",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_at",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_by",
+       "TEXT",
+       false
+      ],
+      [
+       "sync_version",
+       "INTEGER",
+       false
+      ],
+      [
+       "is_deleted",
+       "INTEGER",
+       false
+      ]
+     ],
+     "zu": [
+      "D4.1"
+     ]
+    }
+   ]
+  },
+  {
+   "nr": "D5",
+   "bereich": "planmanager.db – Planarchiv (je Projekt)",
+   "seiten": [
+    "3.2",
+    "3.3",
+    "3.5"
+   ],
+   "seiten_liste": [
+    {
+     "nr": "D5.1",
+     "name": "plan_documents",
+     "art": "Tabelle",
+     "zweck": "Logisches Plandokument über alle Revisionen (ADR-058)",
+     "felder": [
+      [
+       "id",
+       "TEXT",
+       true
+      ],
+      [
+       "project_id",
+       "TEXT",
+       false
+      ],
+      [
+       "document_key",
+       "TEXT",
+       false
+      ],
+      [
+       "document_type_id",
+       "TEXT",
+       false
+      ],
+      [
+       "plan_number",
+       "TEXT",
+       false
+      ],
+      [
+       "document_type",
+       "TEXT",
+       false
+      ],
+      [
+       "title",
+       "TEXT",
+       false
+      ],
+      [
+       "target_folder",
+       "TEXT",
+       false
+      ],
+      [
+       "relative_directory",
+       "TEXT",
+       false
+      ],
+      [
+       "building_part_id",
+       "TEXT",
+       false
+      ],
+      [
+       "building_level_id",
+       "TEXT",
+       false
+      ],
+      [
+       "created_at",
+       "TEXT",
+       false
+      ],
+      [
+       "created_by",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_at",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_by",
+       "TEXT",
+       false
+      ],
+      [
+       "sync_version",
+       "INTEGER",
+       false
+      ],
+      [
+       "is_deleted",
+       "INTEGER",
+       false
+      ]
+     ],
+     "zu": []
+    },
+    {
+     "nr": "D5.2",
+     "name": "plan_revisions",
+     "art": "Tabelle",
+     "zweck": "Revisionen (Index) je Plandokument",
+     "felder": [
+      [
+       "id",
+       "TEXT",
+       true
+      ],
+      [
+       "document_id",
+       "TEXT",
+       false
+      ],
+      [
+       "plan_index",
+       "TEXT",
+       false
+      ],
+      [
+       "index_source",
+       "TEXT",
+       false
+      ],
+      [
+       "revision_status",
+       "TEXT",
+       false
+      ],
+      [
+       "current_from",
+       "TEXT",
+       false
+      ],
+      [
+       "superseded_at",
+       "TEXT",
+       false
+      ],
+      [
+       "received_at",
+       "TEXT",
+       false
+      ],
+      [
+       "released_at",
+       "TEXT",
+       false
+      ],
+      [
+       "change_note",
+       "TEXT",
+       false
+      ],
+      [
+       "last_import_id",
+       "TEXT",
+       false
+      ],
+      [
+       "created_at",
+       "TEXT",
+       false
+      ],
+      [
+       "created_by",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_at",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_by",
+       "TEXT",
+       false
+      ],
+      [
+       "sync_version",
+       "INTEGER",
+       false
+      ],
+      [
+       "is_deleted",
+       "INTEGER",
+       false
+      ]
+     ],
+     "zu": [
+      "D5.1",
+      "D6.1"
+     ]
+    },
+    {
+     "nr": "D5.3",
+     "name": "plan_files",
+     "art": "Tabelle",
+     "zweck": "Dateien mit Pfad und MD5",
+     "felder": [
+      [
+       "id",
+       "TEXT",
+       true
+      ],
+      [
+       "file_name",
+       "TEXT",
+       false
+      ],
+      [
+       "relative_path",
+       "TEXT",
+       false
+      ],
+      [
+       "file_type",
+       "TEXT",
+       false
+      ],
+      [
+       "md5_hash",
+       "TEXT",
+       false
+      ],
+      [
+       "file_size",
+       "INTEGER",
+       false
+      ],
+      [
+       "origin_mode",
+       "TEXT",
+       false
+      ],
+      [
+       "created_at",
+       "TEXT",
+       false
+      ],
+      [
+       "updated_at",
+       "TEXT",
+       false
+      ]
+     ],
+     "zu": []
+    },
+    {
+     "nr": "D5.4",
+     "name": "revision_file_links",
+     "art": "Tabelle",
+     "zweck": "Zuordnung Datei zu Revision (PDF, DWG)",
+     "felder": [
+      [
+       "revision_id",
+       "TEXT",
+       true
+      ],
+      [
+       "file_id",
+       "TEXT",
+       true
+      ],
+      [
+       "link_mode",
+       "TEXT",
+       false
+      ],
+      [
+       "is_primary",
+       "INTEGER",
+       false
+      ]
+     ],
+     "zu": [
+      "D5.2",
+      "D5.3"
+     ]
+    },
+    {
+     "nr": "D5.5",
+     "name": "plan_document_segments",
+     "art": "Tabelle",
+     "zweck": "Segmentwerte je Plandokument (Lernquelle der Erkennung)",
+     "felder": [
+      [
+       "id",
+       "TEXT",
+       true
+      ],
+      [
+       "document_id",
+       "TEXT",
+       false
+      ],
+      [
+       "segment_type_id",
+       "TEXT",
+       false
+      ],
+      [
+       "segment_key",
+       "TEXT",
+       false
+      ],
+      [
+       "raw_value",
+       "TEXT",
+       false
+      ],
+      [
+       "normalized_value",
+       "TEXT",
+       false
+      ],
+      [
+       "created_at",
+       "TEXT",
+       false
+      ],
+      [
+       "created_by",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_at",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_by",
+       "TEXT",
+       false
+      ],
+      [
+       "sync_version",
+       "INTEGER",
+       false
+      ],
+      [
+       "is_deleted",
+       "INTEGER",
+       false
+      ]
+     ],
+     "zu": [
+      "D5.1"
+     ]
+    },
+    {
+     "nr": "D5.6",
+     "name": "plan_document_tags",
+     "art": "Tabelle",
+     "zweck": "Schlagworte je Plandokument",
+     "felder": [
+      [
+       "id",
+       "TEXT",
+       true
+      ],
+      [
+       "document_id",
+       "TEXT",
+       false
+      ],
+      [
+       "tag",
+       "TEXT",
+       false
+      ],
+      [
+       "normalized_tag",
+       "TEXT",
+       false
+      ],
+      [
+       "created_at",
+       "TEXT",
+       false
+      ],
+      [
+       "created_by",
+       "TEXT",
+       false
+      ],
+      [
+       "sync_version",
+       "INTEGER",
+       false
+      ],
+      [
+       "is_deleted",
+       "INTEGER",
+       false
+      ]
+     ],
+     "zu": [
+      "D5.1"
+     ]
+    },
+    {
+     "nr": "D5.7",
+     "name": "plan_revision_events",
+     "art": "Tabelle",
+     "zweck": "Verlauf je Revision (Import, Verschieben, Ersetzen)",
+     "felder": [
+      [
+       "id",
+       "TEXT",
+       true
+      ],
+      [
+       "revision_id",
+       "TEXT",
+       false
+      ],
+      [
+       "import_id",
+       "TEXT",
+       false
+      ],
+      [
+       "event_type",
+       "TEXT",
+       false
+      ],
+      [
+       "event_at",
+       "TEXT",
+       false
+      ],
+      [
+       "event_by",
+       "TEXT",
+       false
+      ],
+      [
+       "note",
+       "TEXT",
+       false
+      ],
+      [
+       "created_at",
+       "TEXT",
+       false
+      ],
+      [
+       "created_by",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_at",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_by",
+       "TEXT",
+       false
+      ],
+      [
+       "sync_version",
+       "INTEGER",
+       false
+      ],
+      [
+       "is_deleted",
+       "INTEGER",
+       false
+      ]
+     ],
+     "zu": [
+      "D5.2",
+      "D6.1"
+     ]
+    },
+    {
+     "nr": "D5.8",
+     "name": "plan_context_links",
+     "art": "Tabelle",
+     "zweck": "Bezüge zu Bauteil, Geschoss und Kontext",
+     "felder": [
+      [
+       "id",
+       "TEXT",
+       true
+      ],
+      [
+       "source_module",
+       "TEXT",
+       false
+      ],
+      [
+       "source_id",
+       "TEXT",
+       false
+      ],
+      [
+       "target_document_id",
+       "TEXT",
+       false
+      ],
+      [
+       "target_revision_id",
+       "TEXT",
+       false
+      ],
+      [
+       "resolution_mode",
+       "TEXT",
+       false
+      ],
+      [
+       "context_time",
+       "TEXT",
+       false
+      ],
+      [
+       "link_type",
+       "TEXT",
+       false
+      ],
+      [
+       "created_at",
+       "TEXT",
+       false
+      ],
+      [
+       "created_by",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_at",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_by",
+       "TEXT",
+       false
+      ],
+      [
+       "sync_version",
+       "INTEGER",
+       false
+      ],
+      [
+       "is_deleted",
+       "INTEGER",
+       false
+      ]
+     ],
+     "zu": [
+      "D5.1",
+      "D5.2"
+     ]
+    }
+   ]
+  },
+  {
+   "nr": "D6",
+   "bereich": "planmanager.db – Import-Journal (je Projekt)",
+   "seiten": [
+    "3.3",
+    "3.10"
+   ],
+   "seiten_liste": [
+    {
+     "nr": "D6.1",
+     "name": "import_journal",
+     "art": "Tabelle",
+     "zweck": "Importläufe mit Status (ADR-064, Undo und Recovery)",
+     "felder": [
+      [
+       "id",
+       "TEXT",
+       true
+      ],
+      [
+       "timestamp",
+       "TEXT",
+       false
+      ],
+      [
+       "completed_at",
+       "TEXT",
+       false
+      ],
+      [
+       "status",
+       "TEXT",
+       false
+      ],
+      [
+       "source_path",
+       "TEXT",
+       false
+      ],
+      [
+       "file_count",
+       "INTEGER",
+       false
+      ],
+      [
+       "profile_id",
+       "TEXT",
+       false
+      ],
+      [
+       "machine_name",
+       "TEXT",
+       false
+      ],
+      [
+       "error_message",
+       "TEXT",
+       false
+      ]
+     ],
+     "zu": []
+    },
+    {
+     "nr": "D6.2",
+     "name": "import_actions",
+     "art": "Tabelle",
+     "zweck": "Aktionen je Importlauf",
+     "felder": [
+      [
+       "id",
+       "TEXT",
+       true
+      ],
+      [
+       "import_id",
+       "TEXT",
+       false
+      ],
+      [
+       "action_order",
+       "INTEGER",
+       false
+      ],
+      [
+       "action_type",
+       "TEXT",
+       false
+      ],
+      [
+       "action_status",
+       "TEXT",
+       false
+      ],
+      [
+       "document_key",
+       "TEXT",
+       false
+      ],
+      [
+       "plan_number",
+       "TEXT",
+       false
+      ],
+      [
+       "plan_index",
+       "TEXT",
+       false
+      ],
+      [
+       "old_index",
+       "TEXT",
+       false
+      ],
+      [
+       "source_path",
+       "TEXT",
+       false
+      ],
+      [
+       "destination_path",
+       "TEXT",
+       false
+      ],
+      [
+       "archive_path",
+       "TEXT",
+       false
+      ],
+      [
+       "md5",
+       "TEXT",
+       false
+      ],
+      [
+       "file_size",
+       "INTEGER",
+       false
+      ],
+      [
+       "document_type_id",
+       "TEXT",
+       false
+      ],
+      [
+       "document_type",
+       "TEXT",
+       false
+      ],
+      [
+       "building_part_id",
+       "TEXT",
+       false
+      ],
+      [
+       "building_level_id",
+       "TEXT",
+       false
+      ],
+      [
+       "error_message",
+       "TEXT",
+       false
+      ]
+     ],
+     "zu": [
+      "D6.1"
+     ]
+    },
+    {
+     "nr": "D6.3",
+     "name": "import_action_files",
+     "art": "Tabelle",
+     "zweck": "Dateischritte je Aktion",
+     "felder": [
+      [
+       "id",
+       "TEXT",
+       true
+      ],
+      [
+       "action_id",
+       "TEXT",
+       false
+      ],
+      [
+       "file_id",
+       "TEXT",
+       false
+      ],
+      [
+       "file_name",
+       "TEXT",
+       false
+      ],
+      [
+       "original_file_name",
+       "TEXT",
+       false
+      ],
+      [
+       "final_file_name",
+       "TEXT",
+       false
+      ],
+      [
+       "file_type",
+       "TEXT",
+       false
+      ],
+      [
+       "source_path",
+       "TEXT",
+       false
+      ],
+      [
+       "destination_path",
+       "TEXT",
+       false
+      ],
+      [
+       "md5_hash",
+       "TEXT",
+       false
+      ],
+      [
+       "file_size",
+       "INTEGER",
+       false
+      ]
+     ],
+     "zu": [
+      "D6.2"
+     ]
+    }
+   ]
+  },
+  {
+   "nr": "D7",
+   "bereich": "Schema-Verwaltung",
+   "seiten": [],
+   "seiten_liste": [
+    {
+     "nr": "D7.1",
+     "name": "schema_version",
+     "art": "Tabelle",
+     "zweck": "Schema-Stand von bpm.db",
+     "felder": [
+      [
+       "version",
+       "TEXT",
+       false
+      ]
+     ],
+     "zu": []
+    },
+    {
+     "nr": "D7.2",
+     "name": "planmanager.schema_version",
+     "art": "Tabelle",
+     "zweck": "Schema-Stand von planmanager.db",
+     "felder": [
+      [
+       "version",
+       "TEXT",
+       false
+      ]
+     ],
+     "zu": []
+    }
+   ]
+  },
+  {
+   "nr": "S1",
+   "bereich": "Gerät (LocalAppData\\BauProjektManager)",
+   "seiten": [
+    "1.2",
+    "1.5",
+    "2.1"
+   ],
+   "seiten_liste": [
+    {
+     "nr": "S1.1",
+     "name": "device-settings.json",
+     "art": "Datei",
+     "zweck": "Geräteeinstellungen (Basisordner, Fenster)",
+     "felder": [],
+     "zu": []
+    },
+    {
+     "nr": "S1.2",
+     "name": "Logs/BPM_*.log",
+     "art": "Datei",
+     "zweck": "Protokoll (Serilog, ohne Personendaten)",
+     "felder": [],
+     "zu": []
+    }
+   ]
+  },
+  {
+   "nr": "S2",
+   "bereich": "Cloud-Ordner (geteilt)",
+   "seiten": [
+    "2.3",
+    "2.4",
+    "3.8"
+   ],
+   "seiten_liste": [
+    {
+     "nr": "S2.1",
+     "name": "shared-config.json",
+     "art": "Datei",
+     "zweck": "Geteilte Einstellungen und Standard-Ordnervorlage",
+     "felder": [],
+     "zu": []
+    },
+    {
+     "nr": "S2.2",
+     "name": "registry.json",
+     "art": "Datei",
+     "zweck": "Projekt-Registry, flach für VBA/Excel",
+     "felder": [],
+     "zu": []
+    },
+    {
+     "nr": "S2.3",
+     "name": "pattern-templates.json",
+     "art": "Datei",
+     "zweck": "Bibliothek der Plan-Muster (PatternTemplate)",
+     "felder": [],
+     "zu": []
+    }
+   ]
+  },
+  {
+   "nr": "S3",
+   "bereich": "Projektordner (.bpm)",
+   "seiten": [
+    "2.6",
+    "3.6",
+    "3.8"
+   ],
+   "seiten_liste": [
+    {
+     "nr": "S3.1",
+     "name": ".bpm/manifest.json",
+     "art": "Datei",
+     "zweck": "Projekt-Ausweis: Identität und Modul-Flags (ADR-046)",
+     "felder": [],
+     "zu": []
+    },
+    {
+     "nr": "S3.2",
+     "name": ".bpm/project.json",
+     "art": "Datei",
+     "zweck": "Vollständiger Projektexport für Import und Übergabe",
+     "felder": [],
+     "zu": []
+    },
+    {
+     "nr": "S3.3",
+     "name": ".bpm/profiles/*.json",
+     "art": "Datei",
+     "zweck": "Erkennungsprofil je Dokumenttyp (ADR-010)",
+     "felder": [],
+     "zu": []
+    }
+   ]
+  },
+  {
+   "nr": "S4",
+   "bereich": "Speicher (nur während der Sitzung)",
+   "seiten": [
+    "3.3",
+    "3.4"
+   ],
+   "seiten_liste": [
+    {
+     "nr": "S4.1",
+     "name": "PendingAssignmentStore",
+     "art": "Speicher",
+     "zweck": "Vorgemerkte Zuordnungen bis „Import bestätigen“ (auch Claude-Vorschläge)",
+     "felder": [],
+     "zu": []
+    }
+   ]
+  }
+ ]
+}

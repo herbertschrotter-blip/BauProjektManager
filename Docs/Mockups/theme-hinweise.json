@@ -1,0 +1,1723 @@
+{
+ "1.5": [
+  {
+   "datei": "src/BauProjektManager.App/DevToolsDialog.xaml.cs",
+   "token": "BpmColorBgHover",
+   "wert": "#37373D",
+   "zeile": 265
+  },
+  {
+   "datei": "src/BauProjektManager.App/DevToolsDialog.xaml.cs",
+   "token": "BpmColorBgActive",
+   "wert": "#04395E",
+   "zeile": 266
+  },
+  {
+   "datei": "src/BauProjektManager.App/DevToolsDialog.xaml.cs",
+   "token": "BpmColorFieldPlanNumber",
+   "wert": "#0F6E56",
+   "zeile": 267
+  },
+  {
+   "datei": "src/BauProjektManager.App/DevToolsDialog.xaml.cs",
+   "token": "BpmColorBgHover",
+   "wert": "#37373D",
+   "zeile": 268
+  },
+  {
+   "datei": "src/BauProjektManager.App/DevToolsDialog.xaml.cs",
+   "token": "BpmColorBgHover",
+   "wert": "#37373D",
+   "zeile": 1019
+  }
+ ],
+ "1.6": [
+  {
+   "datei": "src/BauProjektManager.App/DevToolsDialog.xaml.cs",
+   "token": "BpmColorBgHover",
+   "wert": "#37373D",
+   "zeile": 265
+  },
+  {
+   "datei": "src/BauProjektManager.App/DevToolsDialog.xaml.cs",
+   "token": "BpmColorBgActive",
+   "wert": "#04395E",
+   "zeile": 266
+  },
+  {
+   "datei": "src/BauProjektManager.App/DevToolsDialog.xaml.cs",
+   "token": "BpmColorFieldPlanNumber",
+   "wert": "#0F6E56",
+   "zeile": 267
+  },
+  {
+   "datei": "src/BauProjektManager.App/DevToolsDialog.xaml.cs",
+   "token": "BpmColorBgHover",
+   "wert": "#37373D",
+   "zeile": 268
+  },
+  {
+   "datei": "src/BauProjektManager.App/DevToolsDialog.xaml.cs",
+   "token": "BpmColorBgHover",
+   "wert": "#37373D",
+   "zeile": 1019
+  }
+ ],
+ "2.1": [
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 316
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 324
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "token": "BpmColorBgBase",
+   "wert": "#1E1E1E",
+   "zeile": 330
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 332
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3E3E42",
+   "zeile": 334
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 344
+  }
+ ],
+ "2.10": [
+  {
+   "datei": "src/BauProjektManager.Settings/Views/FolderTemplateControl.xaml.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 516
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/FolderTemplateControl.xaml.cs",
+   "token": "BpmColorTextSecondary",
+   "wert": "#858585",
+   "zeile": 516
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 18
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 20
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgBase",
+   "wert": "#1E1E1E",
+   "zeile": 21
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 21
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3E3E42",
+   "zeile": 21
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 22
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 34
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgBase",
+   "wert": "#1E1E1E",
+   "zeile": 36
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 36
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3E3E42",
+   "zeile": 36
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 38
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#C62828",
+   "zeile": 40
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 43
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 55
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgBase",
+   "wert": "#1E1E1E",
+   "zeile": 62
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 62
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3E3E42",
+   "zeile": 62
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 79
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 82
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 85
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgInput",
+   "wert": "#3C3C3C",
+   "zeile": 86
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 86
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#555",
+   "zeile": 347
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#EF9F27",
+   "zeile": 357
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#5DCAA5",
+   "zeile": 409
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#EF9F27",
+   "zeile": 438
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#EF9F27",
+   "zeile": 444
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#085041",
+   "zeile": 564
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#5DCAA5",
+   "zeile": 564
+  }
+ ],
+ "2.2": [
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 316
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 324
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "token": "BpmColorBgBase",
+   "wert": "#1E1E1E",
+   "zeile": 330
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 332
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3E3E42",
+   "zeile": 334
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 344
+  }
+ ],
+ "2.3": [
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 316
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 324
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "token": "BpmColorBgBase",
+   "wert": "#1E1E1E",
+   "zeile": 330
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 332
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3E3E42",
+   "zeile": 334
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 344
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/FolderTemplateControl.xaml.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 516
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/FolderTemplateControl.xaml.cs",
+   "token": "BpmColorTextSecondary",
+   "wert": "#858585",
+   "zeile": 516
+  }
+ ],
+ "2.4": [
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 316
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 324
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "token": "BpmColorBgBase",
+   "wert": "#1E1E1E",
+   "zeile": 330
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 332
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3E3E42",
+   "zeile": 334
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 344
+  }
+ ],
+ "2.5": [
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 316
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 324
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "token": "BpmColorBgBase",
+   "wert": "#1E1E1E",
+   "zeile": 330
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 332
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3E3E42",
+   "zeile": 334
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 344
+  }
+ ],
+ "2.6": [
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 18
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 20
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgBase",
+   "wert": "#1E1E1E",
+   "zeile": 21
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 21
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3E3E42",
+   "zeile": 21
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 22
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 34
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgBase",
+   "wert": "#1E1E1E",
+   "zeile": 36
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 36
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3E3E42",
+   "zeile": 36
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 38
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#C62828",
+   "zeile": 40
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 43
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 55
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgBase",
+   "wert": "#1E1E1E",
+   "zeile": 62
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 62
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3E3E42",
+   "zeile": 62
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 79
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 82
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 85
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgInput",
+   "wert": "#3C3C3C",
+   "zeile": 86
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 86
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#555",
+   "zeile": 347
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#EF9F27",
+   "zeile": 357
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#5DCAA5",
+   "zeile": 409
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#EF9F27",
+   "zeile": 438
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#EF9F27",
+   "zeile": 444
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#085041",
+   "zeile": 564
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#5DCAA5",
+   "zeile": 564
+  }
+ ],
+ "2.7": [
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Bauwerk.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 293
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Bauwerk.cs",
+   "token": "BpmColorFieldDescription",
+   "wert": "#555555",
+   "zeile": 299
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.BauwerkDialoge.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 26
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.BauwerkDialoge.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 50
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.BauwerkDialoge.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 105
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.BauwerkDialoge.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 148
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.BauwerkDialoge.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 195
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.BauwerkDialoge.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 241
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.BauwerkDialoge.cs",
+   "token": "BpmColorBgInput",
+   "wert": "#3C3C3C",
+   "zeile": 251
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.BauwerkDialoge.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 302
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.BauwerkDialoge.cs",
+   "token": "BpmColorBgBase",
+   "wert": "#1E1E1E",
+   "zeile": 314
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.BauwerkDialoge.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 315
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.BauwerkDialoge.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3E3E42",
+   "zeile": 316
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.BauwerkDialoge.cs",
+   "token": "BpmColorBgBase",
+   "wert": "#1E1E1E",
+   "zeile": 317
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.BauwerkDialoge.cs",
+   "token": "BpmColorBgBase",
+   "wert": "#1E1E1E",
+   "zeile": 318
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.BauwerkDialoge.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3E3E42",
+   "zeile": 320
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.BauwerkDialoge.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 324
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.BauwerkDialoge.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 336
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.BauwerkDialoge.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#C62828",
+   "zeile": 350
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.BauwerkDialoge.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 362
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 18
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 20
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgBase",
+   "wert": "#1E1E1E",
+   "zeile": 21
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 21
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3E3E42",
+   "zeile": 21
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 22
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 34
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgBase",
+   "wert": "#1E1E1E",
+   "zeile": 36
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 36
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3E3E42",
+   "zeile": 36
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 38
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#C62828",
+   "zeile": 40
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 43
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 55
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgBase",
+   "wert": "#1E1E1E",
+   "zeile": 62
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 62
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3E3E42",
+   "zeile": 62
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 79
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 82
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 85
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgInput",
+   "wert": "#3C3C3C",
+   "zeile": 86
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 86
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#555",
+   "zeile": 347
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#EF9F27",
+   "zeile": 357
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#5DCAA5",
+   "zeile": 409
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#EF9F27",
+   "zeile": 438
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#EF9F27",
+   "zeile": 444
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#085041",
+   "zeile": 564
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#5DCAA5",
+   "zeile": 564
+  }
+ ],
+ "2.8": [
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Beteiligte.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 114
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Beteiligte.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 131
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 18
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 20
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgBase",
+   "wert": "#1E1E1E",
+   "zeile": 21
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 21
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3E3E42",
+   "zeile": 21
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 22
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 34
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgBase",
+   "wert": "#1E1E1E",
+   "zeile": 36
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 36
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3E3E42",
+   "zeile": 36
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 38
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#C62828",
+   "zeile": 40
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 43
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 55
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgBase",
+   "wert": "#1E1E1E",
+   "zeile": 62
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 62
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3E3E42",
+   "zeile": 62
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 79
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 82
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 85
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgInput",
+   "wert": "#3C3C3C",
+   "zeile": 86
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 86
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#555",
+   "zeile": 347
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#EF9F27",
+   "zeile": 357
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#5DCAA5",
+   "zeile": 409
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#EF9F27",
+   "zeile": 438
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#EF9F27",
+   "zeile": 444
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#085041",
+   "zeile": 564
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#5DCAA5",
+   "zeile": 564
+  }
+ ],
+ "2.9": [
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 18
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 20
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgBase",
+   "wert": "#1E1E1E",
+   "zeile": 21
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 21
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3E3E42",
+   "zeile": 21
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 22
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 34
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgBase",
+   "wert": "#1E1E1E",
+   "zeile": 36
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 36
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3E3E42",
+   "zeile": 36
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 38
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#C62828",
+   "zeile": 40
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 43
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 55
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgBase",
+   "wert": "#1E1E1E",
+   "zeile": 62
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 62
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3E3E42",
+   "zeile": 62
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 79
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 82
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 85
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorBgInput",
+   "wert": "#3C3C3C",
+   "zeile": 86
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 86
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.PortaleLinks.cs",
+   "token": "BpmColorBgElevated",
+   "wert": "#2D2D30",
+   "zeile": 108
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.PortaleLinks.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#007ACC",
+   "zeile": 134
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.PortaleLinks.cs",
+   "token": "BpmColorAccentPressed",
+   "wert": "#005A9E",
+   "zeile": 170
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.PortaleLinks.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3E3E42",
+   "zeile": 182
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.PortaleLinks.cs",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 182
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.PortaleLinks.cs",
+   "token": "BpmColorFieldDescription",
+   "wert": "#555555",
+   "zeile": 193
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#555",
+   "zeile": 347
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#EF9F27",
+   "zeile": 357
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#5DCAA5",
+   "zeile": 409
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#EF9F27",
+   "zeile": 438
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#EF9F27",
+   "zeile": 444
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#085041",
+   "zeile": 564
+  },
+  {
+   "datei": "src/BauProjektManager.Settings/Views/ProjectEditDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#5DCAA5",
+   "zeile": 564
+  }
+ ],
+ "3.3": [
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/ManualCaptureViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#6E6E6E",
+   "zeile": 395
+  }
+ ],
+ "3.8": [
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/ProfileWizardViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#A87142",
+   "zeile": 86
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/ProfileWizardViewModel.cs",
+   "token": "BpmColorFieldPlanNumber",
+   "wert": "#0F6E56",
+   "zeile": 99
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/ProfileWizardViewModel.cs",
+   "token": "BpmColorFieldPlanIndex",
+   "wert": "#993C1D",
+   "zeile": 99
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/ProfileWizardViewModel.cs",
+   "token": "BpmColorFieldProjectNumber",
+   "wert": "#534AB7",
+   "zeile": 99
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/ProfileWizardViewModel.cs",
+   "token": "BpmColorFieldGeschoss",
+   "wert": "#185FA5",
+   "zeile": 99
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/ProfileWizardViewModel.cs",
+   "token": "BpmColorFieldPlanart",
+   "wert": "#1F7280",
+   "zeile": 100
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/ProfileWizardViewModel.cs",
+   "token": "BpmColorFieldDescription",
+   "wert": "#555555",
+   "zeile": 100
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/ProfileWizardViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#7A1F5C",
+   "zeile": 100
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/ProfileWizardViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#A87142",
+   "zeile": 100
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/ProfileWizardViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3D7B47",
+   "zeile": 101
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/ProfileWizardViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#8B6914",
+   "zeile": 101
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/ProfileWizardViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#5C3D8E",
+   "zeile": 101
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/ProfileWizardViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#2E7D8A",
+   "zeile": 101
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/ProfileWizardViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#A87142",
+   "zeile": 841
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/Views/ProfileWizardDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#88000000",
+   "zeile": 630
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/Views/ProfileWizardDialog.xaml.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#A87142",
+   "zeile": 205
+  }
+ ],
+ "3.9": [
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/SegmentTypeManagerViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#A87142",
+   "zeile": 59
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/SegmentTypeManagerViewModel.cs",
+   "token": "BpmColorFieldPlanNumber",
+   "wert": "#0F6E56",
+   "zeile": 102
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/SegmentTypeManagerViewModel.cs",
+   "token": "BpmColorFieldPlanIndex",
+   "wert": "#993C1D",
+   "zeile": 102
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/SegmentTypeManagerViewModel.cs",
+   "token": "BpmColorFieldProjectNumber",
+   "wert": "#534AB7",
+   "zeile": 102
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/SegmentTypeManagerViewModel.cs",
+   "token": "BpmColorFieldGeschoss",
+   "wert": "#185FA5",
+   "zeile": 102
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/SegmentTypeManagerViewModel.cs",
+   "token": "BpmColorFieldPlanart",
+   "wert": "#1F7280",
+   "zeile": 103
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/SegmentTypeManagerViewModel.cs",
+   "token": "BpmColorFieldDescription",
+   "wert": "#555555",
+   "zeile": 103
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/SegmentTypeManagerViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#7A1F5C",
+   "zeile": 103
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/SegmentTypeManagerViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#A87142",
+   "zeile": 103
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/SegmentTypeManagerViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#3D7B47",
+   "zeile": 104
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/SegmentTypeManagerViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#8B6914",
+   "zeile": 104
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/SegmentTypeManagerViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#5C3D8E",
+   "zeile": 104
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/SegmentTypeManagerViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#2E7D8A",
+   "zeile": 104
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/SegmentTypeManagerViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#A87142",
+   "zeile": 115
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/ViewModels/SegmentTypeManagerViewModel.cs",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#A87142",
+   "zeile": 265
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/Views/SegmentTypeManagerDialog.xaml",
+   "token": "BpmColorBgInput",
+   "wert": "#3C3C3C",
+   "zeile": 91
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/Views/SegmentTypeManagerDialog.xaml",
+   "token": "BpmColorFieldPlanNumber",
+   "wert": "#0F6E56",
+   "zeile": 94
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/Views/SegmentTypeManagerDialog.xaml",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 102
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/Views/SegmentTypeManagerDialog.xaml",
+   "token": "BpmColorTextBright",
+   "wert": "#FFFFFF",
+   "zeile": 107
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/Views/SegmentTypeManagerDialog.xaml",
+   "grund": "kein Token mit diesem Wert: neuer Token in Colors.xaml oder begruendet lassen",
+   "token": null,
+   "wert": "#22FFFFFF",
+   "zeile": 156
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/Views/SegmentTypeManagerDialog.xaml",
+   "token": "BpmColorBgHover",
+   "wert": "#37373D",
+   "zeile": 168
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/Views/SegmentTypeManagerDialog.xaml",
+   "token": "BpmColorTextSecondary",
+   "wert": "#858585",
+   "zeile": 171
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/Views/SegmentTypeManagerDialog.xaml",
+   "token": "BpmColorBgActive",
+   "wert": "#04395E",
+   "zeile": 173
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/Views/SegmentTypeManagerDialog.xaml",
+   "token": "BpmColorInfo",
+   "wert": "#3794FF",
+   "zeile": 176
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/Views/SegmentTypeManagerDialog.xaml",
+   "token": "BpmColorBgInput",
+   "wert": "#3C3C3C",
+   "zeile": 187
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/Views/SegmentTypeManagerDialog.xaml",
+   "token": "BpmColorFieldPlanNumber",
+   "wert": "#0F6E56",
+   "zeile": 190
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/Views/SegmentTypeManagerDialog.xaml",
+   "token": "BpmColorTextPrimary",
+   "wert": "#CCCCCC",
+   "zeile": 200
+  },
+  {
+   "datei": "src/BauProjektManager.PlanManager/Views/SegmentTypeManagerDialog.xaml",
+   "token": "BpmColorTextBright",
+   "wert": "#FFFFFF",
+   "zeile": 205
+  }
+ ]
+}

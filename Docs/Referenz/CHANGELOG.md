@@ -32,6 +32,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.214] — 2026-11-16
+
+### Docs: Seitenliste als Wahrheit für die Mockups, Abnahme „Mit Claude sortieren“
+
+**Entscheidung Herbert:** Ab jetzt gilt die Seitenliste `Docs/Mockups/seiten.json` als Wahrheit für die Mockups (Standard Seitenliste aus mockup-erstellen). Sie führt 27 Seiten in drei Bereichen (Shell, Einstellungen, PlanManager), je Seite feste Nummer, Code-Dateien, Mockup- und Code-Version, Abnahme, Verlauf, Verbindungen und Bausteine. Alle gebauten Seiten stehen auf Code-Version 0.1 („Bestand“), die vorhandenen Mockups sind als `mockup_alt` zugeordnet. Seite **3.4 „Mit Claude sortieren“** ist mit Mockup-Version 1.0 abgenommen (`02_ManuellSortieren_Claude.html`, „das mockup passt so“), Code folgt.
+
+Erzeugt werden `Docs/Mockups/SEITENLISTE.md` und die Seite `Docs/Mockups/index.html`, dazu der Reiter „Daten“ (`daten.json`, `DATENLISTE.md`) mit allen 23 Tabellen aus bpm.db und planmanager.db sowie den JSON-Speicherorten. Das leere Schema schreibt der neue Test `SchemaSnapshotTests` aus frisch angelegten Datenbanken nach `Docs/Mockups/schema-bpm.sql` und `schema-planmanager.sql`; bei einer Schema-Änderung schlägt er fehl, bis Datei und Datenliste neu sind. Das Mockup-Theme `theme-app.css` entsteht aus `Colors.xaml` und `Typography.xaml` (`Tools/mockup_theme.mjs`). Der Theme-Abgleich meldet 262 feste Farbwerte im Code auf 15 Seiten als Hinweis (ohne Sperre). Neuer Pre-Commit-Check `seitenliste` (`python Tools/seitenliste_check.py`); Werkzeuge unter `Tools/`, Skill-Profil (Bereich Mockup, Commit-Modul Tools) und INDEX §6 ergänzt.
+
+---
 ## [v0.28.213] — 2026-11-16
 
 ### Fix: Radial-Import und Archiv-Move bilden den Zielpfad über den DocumentTargetPathResolver (R01-004.01)

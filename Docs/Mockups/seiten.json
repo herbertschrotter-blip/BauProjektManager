@@ -1,0 +1,678 @@
+[
+ {
+  "nr": "1",
+  "bereich": "Shell",
+  "seiten": [
+   {
+    "nr": "1.1",
+    "name": "Hauptfenster",
+    "art": "Seite",
+    "schluessel": "fenster:MainWindow",
+    "code": "BauProjektManager.App/MainWindow.xaml, BauProjektManager.App/MainWindow.xaml.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "mockup_alt": "App/01_Shell/01_Sidebar.html",
+    "zu": [
+     "1.5",
+     "2.1",
+     "3.1"
+    ],
+    "nutzt": [],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "ff45df8c5d"
+   },
+   {
+    "nr": "1.2",
+    "name": "Ersteinrichtung",
+    "art": "Formular",
+    "schluessel": "dialog:SetupDialog",
+    "code": "BauProjektManager.App/SetupDialog.xaml, BauProjektManager.App/SetupDialog.xaml.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "zu": [
+     "1.1"
+    ],
+    "nutzt": [
+     "Dialograhmen"
+    ],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "313084ddb6"
+   },
+   {
+    "nr": "1.3",
+    "name": "Bestätigung",
+    "art": "Formular",
+    "schluessel": "dialog:BpmConfirmDialog",
+    "code": "BauProjektManager.App/BpmConfirmDialog.xaml, BauProjektManager.App/BpmConfirmDialog.xaml.cs, BauProjektManager.App/BpmDialogService.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "zu": [],
+    "nutzt": [
+     "Dialograhmen"
+    ],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "ef7f6eb1ea"
+   },
+   {
+    "nr": "1.4",
+    "name": "Hinweis",
+    "art": "Formular",
+    "schluessel": "dialog:BpmInfoDialog",
+    "code": "BauProjektManager.App/BpmInfoDialog.xaml, BauProjektManager.App/BpmInfoDialog.xaml.cs, BauProjektManager.App/BpmDialogService.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "zu": [],
+    "nutzt": [
+     "Dialograhmen"
+    ],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "5cafb06a88"
+   },
+   {
+    "nr": "1.5",
+    "name": "Entwicklerwerkzeuge – Log",
+    "art": "Formular",
+    "schluessel": "dialog:DevToolsDialog",
+    "code": "BauProjektManager.App/DevToolsDialog.xaml, BauProjektManager.App/DevToolsDialog.xaml.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "mockup_alt": "Settings/02_DevTools/01_Log.html",
+    "zu": [
+     "1.6"
+    ],
+    "nutzt": [
+     "Dialograhmen"
+    ],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "710fc123d4"
+   },
+   {
+    "nr": "1.6",
+    "name": "Entwicklerwerkzeuge – Zurücksetzen",
+    "art": "Formular",
+    "schluessel": "dialog:DevToolsDialog#reset",
+    "code": "BauProjektManager.App/DevToolsDialog.xaml, BauProjektManager.App/DevToolsDialog.xaml.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "mockup_alt": "Settings/02_DevTools/02_Reset.html",
+    "zu": [],
+    "nutzt": [
+     "Dialograhmen"
+    ],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "710fc123d4"
+   }
+  ]
+ },
+ {
+  "nr": "2",
+  "bereich": "Einstellungen",
+  "seiten": [
+   {
+    "nr": "2.1",
+    "name": "Allgemein",
+    "art": "Blatt",
+    "schluessel": "einstellungen:Allgemein",
+    "code": "BauProjektManager.Settings/Views/SettingsView.xaml, BauProjektManager.Settings/Views/SettingsView.xaml.cs, BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "mockup_alt": "Settings/01_Einstellungen/01_Allgemein.html",
+    "zu": [
+     "2.2",
+     "2.3",
+     "2.4",
+     "2.5"
+    ],
+    "nutzt": [],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "6db4dbc807"
+   },
+   {
+    "nr": "2.2",
+    "name": "Projekte",
+    "art": "Blatt",
+    "schluessel": "einstellungen:Projekte",
+    "code": "BauProjektManager.Settings/Views/SettingsView.xaml, BauProjektManager.Settings/Views/SettingsView.xaml.cs, BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "zu": [
+     "1.3",
+     "1.4",
+     "2.6"
+    ],
+    "nutzt": [],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "6db4dbc807"
+   },
+   {
+    "nr": "2.3",
+    "name": "Standard-Ordnerstruktur",
+    "art": "Blatt",
+    "schluessel": "einstellungen:Standard-Ordnerstruktur",
+    "code": "BauProjektManager.Settings/Views/SettingsView.xaml, BauProjektManager.Settings/Views/SettingsView.xaml.cs, BauProjektManager.Settings/ViewModels/SettingsViewModel.cs, BauProjektManager.Settings/Views/FolderTemplateControl.xaml, BauProjektManager.Settings/Views/FolderTemplateControl.xaml.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "zu": [],
+    "nutzt": [
+     "Ordnervorlage"
+    ],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "709e73c176"
+   },
+   {
+    "nr": "2.4",
+    "name": "Sync-Defaults",
+    "art": "Blatt",
+    "schluessel": "einstellungen:Sync-Defaults",
+    "code": "BauProjektManager.Settings/Views/SettingsView.xaml, BauProjektManager.Settings/Views/SettingsView.xaml.cs, BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "zu": [],
+    "nutzt": [],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "6db4dbc807"
+   },
+   {
+    "nr": "2.5",
+    "name": "Über",
+    "art": "Blatt",
+    "schluessel": "einstellungen:Über",
+    "code": "BauProjektManager.Settings/Views/SettingsView.xaml, BauProjektManager.Settings/Views/SettingsView.xaml.cs, BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "zu": [],
+    "nutzt": [],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "6db4dbc807"
+   },
+   {
+    "nr": "2.6",
+    "name": "Projekt bearbeiten – Stammdaten",
+    "art": "Formular",
+    "schluessel": "projekt:Stammdaten",
+    "code": "BauProjektManager.Settings/Views/ProjectEditDialog.xaml, BauProjektManager.Settings/Views/ProjectEditDialog.xaml.cs, BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs, BauProjektManager.Settings/Views/ProjectEditDialog.Stammdaten.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "zu": [
+     "2.7",
+     "2.8",
+     "2.9",
+     "2.10"
+    ],
+    "nutzt": [
+     "Dialograhmen"
+    ],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "27d7a90892"
+   },
+   {
+    "nr": "2.7",
+    "name": "Projekt bearbeiten – Bauwerk",
+    "art": "Formular",
+    "schluessel": "projekt:Bauwerk",
+    "code": "BauProjektManager.Settings/Views/ProjectEditDialog.xaml, BauProjektManager.Settings/Views/ProjectEditDialog.xaml.cs, BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs, BauProjektManager.Settings/Views/ProjectEditDialog.Bauwerk.cs, BauProjektManager.Settings/Views/ProjectEditDialog.BauwerkDialoge.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "zu": [],
+    "nutzt": [
+     "Dialograhmen"
+    ],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "673fcb483d"
+   },
+   {
+    "nr": "2.8",
+    "name": "Projekt bearbeiten – Beteiligte",
+    "art": "Formular",
+    "schluessel": "projekt:Beteiligte",
+    "code": "BauProjektManager.Settings/Views/ProjectEditDialog.xaml, BauProjektManager.Settings/Views/ProjectEditDialog.xaml.cs, BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs, BauProjektManager.Settings/Views/ProjectEditDialog.Beteiligte.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "zu": [],
+    "nutzt": [
+     "Dialograhmen"
+    ],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "8ce496ff4e"
+   },
+   {
+    "nr": "2.9",
+    "name": "Projekt bearbeiten – Portale + Links",
+    "art": "Formular",
+    "schluessel": "projekt:Portale + Links",
+    "code": "BauProjektManager.Settings/Views/ProjectEditDialog.xaml, BauProjektManager.Settings/Views/ProjectEditDialog.xaml.cs, BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs, BauProjektManager.Settings/Views/ProjectEditDialog.PortaleLinks.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "zu": [],
+    "nutzt": [
+     "Dialograhmen"
+    ],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "b1a855c477"
+   },
+   {
+    "nr": "2.10",
+    "name": "Projekt bearbeiten – Ordnerstruktur",
+    "art": "Formular",
+    "schluessel": "projekt:Ordnerstruktur",
+    "code": "BauProjektManager.Settings/Views/ProjectEditDialog.xaml, BauProjektManager.Settings/Views/ProjectEditDialog.xaml.cs, BauProjektManager.Settings/Views/ProjectEditDialog.Helpers.cs, BauProjektManager.Settings/Views/ProjectEditDialog.Ordnerstruktur.cs, BauProjektManager.Settings/Views/FolderTemplateControl.xaml, BauProjektManager.Settings/Views/FolderTemplateControl.xaml.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "zu": [],
+    "nutzt": [
+     "Ordnervorlage",
+     "Dialograhmen"
+    ],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "23d914694a"
+   }
+  ]
+ },
+ {
+  "nr": "3",
+  "bereich": "PlanManager",
+  "seiten": [
+   {
+    "nr": "3.1",
+    "name": "Projektübersicht",
+    "art": "Seite",
+    "schluessel": "view:PlanManagerView",
+    "code": "BauProjektManager.PlanManager/Views/PlanManagerView.xaml, BauProjektManager.PlanManager/Views/PlanManagerView.xaml.cs, BauProjektManager.PlanManager/ViewModels/PlanManagerViewModel.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "mockup_alt": "PlanManager/01_Projektuebersicht/01_Projektuebersicht.html",
+    "zu": [
+     "3.2"
+    ],
+    "nutzt": [],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "5ba7dd5299"
+   },
+   {
+    "nr": "3.2",
+    "name": "Explorer",
+    "art": "Blatt",
+    "schluessel": "projektdetail:Explorer",
+    "code": "BauProjektManager.PlanManager/Views/ProjectDetailView.xaml, BauProjektManager.PlanManager/Views/ProjectDetailView.xaml.cs, BauProjektManager.PlanManager/ViewModels/ProjectDetailViewModel.cs, BauProjektManager.PlanManager/Views/ExplorerView.xaml, BauProjektManager.PlanManager/Views/ExplorerView.xaml.cs, BauProjektManager.PlanManager/ViewModels/ExplorerViewModel.cs, BauProjektManager.PlanManager/ViewModels/ArchiveRowViewModel.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "mockup_alt": "PlanManager/02_Projektdetail/04_Explorer.html",
+    "zu": [
+     "3.3",
+     "3.5",
+     "3.6",
+     "3.7",
+     "3.10",
+     "3.11"
+    ],
+    "nutzt": [],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "2cb2fb51c7"
+   },
+   {
+    "nr": "3.3",
+    "name": "Manuell sortieren",
+    "art": "Blatt",
+    "schluessel": "projektdetail:Manuell sortieren",
+    "code": "BauProjektManager.PlanManager/Views/ProjectDetailView.xaml, BauProjektManager.PlanManager/Views/ProjectDetailView.xaml.cs, BauProjektManager.PlanManager/ViewModels/ProjectDetailViewModel.cs, BauProjektManager.PlanManager/Views/ManualCaptureView.xaml, BauProjektManager.PlanManager/Views/ManualCaptureView.xaml.cs, BauProjektManager.PlanManager/ViewModels/ManualCaptureViewModel.cs, BauProjektManager.PlanManager/ViewModels/CaptureDetailViewModel.cs, BauProjektManager.PlanManager/Controls/RadialCaptureControl.xaml, BauProjektManager.PlanManager/Controls/RadialCaptureControl.xaml.cs, BauProjektManager.PlanManager/Views/PlanPreviewPanel.xaml, BauProjektManager.PlanManager/Views/PlanPreviewPanel.xaml.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "mockup_alt": "PlanManager/02_Projektdetail/02_ManuellSortieren.html",
+    "zu": [
+     "3.4",
+     "3.10"
+    ],
+    "nutzt": [
+     "Plan-Vorschau",
+     "Radial-Erfassung"
+    ],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "8318b4697c"
+   },
+   {
+    "nr": "3.4",
+    "name": "Mit Claude sortieren",
+    "art": "Blatt",
+    "schluessel": "projektdetail:Manuell sortieren#claude",
+    "mockup_alt": "PlanManager/02_Projektdetail/02_ManuellSortieren_Claude.html",
+    "version_mockup": "1.0",
+    "verlauf": [
+     {
+      "v": "1.0",
+      "datum": "16.11.2026",
+      "was": "Chatfenster neben „Manuell sortieren“, 9 Zustände (Start, Rückfrage, Entwurf, Fehler, Übernahme) – Mockup abgenommen (Herbert)",
+      "art": "mockup"
+     }
+    ],
+    "zu": [
+     "3.3"
+    ],
+    "nutzt": [
+     "Plan-Vorschau"
+    ],
+    "stand_commit": "6e15643",
+    "version_abgenommen": "1.0",
+    "code_stand": "da39a3ee5e"
+   },
+   {
+    "nr": "3.5",
+    "name": "Plandaten",
+    "art": "Blatt",
+    "schluessel": "projektdetail:Plandaten",
+    "code": "BauProjektManager.PlanManager/Views/ProjectDetailView.xaml, BauProjektManager.PlanManager/Views/ProjectDetailView.xaml.cs, BauProjektManager.PlanManager/ViewModels/ProjectDetailViewModel.cs, BauProjektManager.PlanManager/Views/PlanDataView.xaml, BauProjektManager.PlanManager/Views/PlanDataView.xaml.cs, BauProjektManager.PlanManager/ViewModels/PlanDataViewModel.cs, BauProjektManager.PlanManager/Views/SegmentEditorControl.xaml, BauProjektManager.PlanManager/Views/SegmentEditorControl.xaml.cs, BauProjektManager.PlanManager/ViewModels/SegmentEditorViewModel.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "mockup_alt": "PlanManager/02_Projektdetail/05_Plandaten.html",
+    "zu": [
+     "3.9"
+    ],
+    "nutzt": [
+     "Segment-Editor"
+    ],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "6c53b2cdbf"
+   },
+   {
+    "nr": "3.6",
+    "name": "Profile",
+    "art": "Blatt",
+    "schluessel": "projektdetail:Profile",
+    "code": "BauProjektManager.PlanManager/Views/ProjectDetailView.xaml, BauProjektManager.PlanManager/Views/ProjectDetailView.xaml.cs, BauProjektManager.PlanManager/ViewModels/ProjectDetailViewModel.cs, BauProjektManager.PlanManager/ViewModels/DocumentTypeOverviewViewModel.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "mockup_alt": "PlanManager/02_Projektdetail/01_Profile.html",
+    "zu": [
+     "3.8"
+    ],
+    "nutzt": [],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "68d7adff9f"
+   },
+   {
+    "nr": "3.7",
+    "name": "Sync",
+    "art": "Blatt",
+    "schluessel": "projektdetail:Sync",
+    "code": "BauProjektManager.PlanManager/Views/ProjectDetailView.xaml, BauProjektManager.PlanManager/Views/ProjectDetailView.xaml.cs, BauProjektManager.PlanManager/ViewModels/ProjectDetailViewModel.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "zu": [],
+    "nutzt": [],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "136a1983b7"
+   },
+   {
+    "nr": "3.8",
+    "name": "Profil-Wizard",
+    "art": "Formular",
+    "schluessel": "dialog:ProfileWizardDialog",
+    "code": "BauProjektManager.PlanManager/Views/ProfileWizardDialog.xaml, BauProjektManager.PlanManager/Views/ProfileWizardDialog.xaml.cs, BauProjektManager.PlanManager/ViewModels/ProfileWizardViewModel.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "mockup_alt": "PlanManager/03_ProfilWizard/01_Datei.html",
+    "zu": [
+     "3.9"
+    ],
+    "nutzt": [
+     "Dialograhmen"
+    ],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "5f4d263f4f"
+   },
+   {
+    "nr": "3.9",
+    "name": "Segmenttypen",
+    "art": "Formular",
+    "schluessel": "dialog:SegmentTypeManagerDialog",
+    "code": "BauProjektManager.PlanManager/Views/SegmentTypeManagerDialog.xaml, BauProjektManager.PlanManager/Views/SegmentTypeManagerDialog.xaml.cs, BauProjektManager.PlanManager/ViewModels/SegmentTypeManagerViewModel.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "mockup_alt": "PlanManager/04_FeldtypManager/01_Uebersicht.html",
+    "zu": [],
+    "nutzt": [
+     "Dialograhmen"
+    ],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "e1fda6fd68"
+   },
+   {
+    "nr": "3.10",
+    "name": "Wiederherstellung",
+    "art": "Formular",
+    "schluessel": "dialog:RecoveryDialog",
+    "code": "BauProjektManager.PlanManager/Views/RecoveryDialog.xaml, BauProjektManager.PlanManager/Views/RecoveryDialog.xaml.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "zu": [],
+    "nutzt": [
+     "Dialograhmen"
+    ],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "fd8115c115"
+   },
+   {
+    "nr": "3.11",
+    "name": "Zielordner wählen",
+    "art": "Formular",
+    "schluessel": "dialog:FolderPickerDialog",
+    "code": "BauProjektManager.PlanManager/Views/FolderPickerDialog.xaml, BauProjektManager.PlanManager/Views/FolderPickerDialog.xaml.cs",
+    "version_code": "0.1",
+    "verlauf": [
+     {
+      "v": "0.1",
+      "datum": "16.11.2026",
+      "was": "Bestand beim Anlegen der Seitenliste",
+      "art": "code"
+     }
+    ],
+    "zu": [],
+    "nutzt": [
+     "Dialograhmen"
+    ],
+    "stand_commit": "6e15643",
+    "version_abgenommen": null,
+    "code_stand": "2cfe320b9b"
+   }
+  ]
+ }
+]

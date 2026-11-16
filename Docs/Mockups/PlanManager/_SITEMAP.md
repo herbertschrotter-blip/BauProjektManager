@@ -15,12 +15,14 @@ Wird vor jedem neuen Mockup gelesen und nach Mockup-Änderungen aktualisiert.
 - 🔷 implementiert ohne Mockup — Screen ist im Code umgesetzt, ein Mockup gibt es nicht und wird nicht nachgezogen; der Code gilt als Ist (Audit Review 01, R01-001 E14, entschieden 2026-09-24)
 - ❌ kaputt — Pfad-Inkonsistenz
 
+**Seitenliste (ab 2026-11-16):** Wahrheit für Mockups ist `Docs/Mockups/seiten.json` (Nummer, Versionen, Abnahme; erzeugt `SEITENLISTE.md` und `index.html`, Entscheidung Herbert). Diese Sitemap führt nur noch die Kanten der älteren Mockups.
+
 ## Fenster
 
 | Ordner | Aufrufer | Trigger | Status | Datei(en) |
 |---|---|---|---|---|
 | 01_Projektuebersicht | (Sidebar / App-Start) | – | ✅ aktiv | 01_Projektuebersicht.html |
-| 02_Projektdetail | 01_Projektuebersicht | Projekt-Karte (Klick) | 🟡 in Arbeit | 01_Profile.html, 02_ManuellSortieren.html (Radial-Erfassung BPM-111.01), 04_Explorer.html (BPM-112.06), 05_Plandaten.html (Teil 50; 03_Sync=BPM-005 fehlt) |
+| 02_Projektdetail | 01_Projektuebersicht | Projekt-Karte (Klick) | 🟡 in Arbeit | 01_Profile.html, 02_ManuellSortieren.html (Radial-Erfassung BPM-111.01), 02_ManuellSortieren_Claude.html („Mit Claude sortieren“, Chat-Panel, abgenommen 2026-11-16 von Herbert, Seitenliste 3.4 v1.0), 04_Explorer.html (BPM-112.06), 05_Plandaten.html (Teil 50; 03_Sync=BPM-005 fehlt) |
 | 03_ProfilWizard | 02_Projektdetail (Profile-Tab) | "✎ Profil" / "+ Neues Profil anlernen" | ✅ aktiv | 01_Datei.html, 02_Segmente.html, 02_Segmente_NeuerCustom.html (Inline-Popover BPM-108), 03_IndexSource.html, 04_Zielordner.html, 05_Erkennung.html |
 | 04_FeldtypManager | 03_ProfilWizard/02_Segmente.html | "⚙ Segmenttypen verwalten…" | ✅ aktiv | 01_Uebersicht.html (CRUD + Gruppen + Drag-Reorder + Farbpalette + Built-in Rollen-Read-only, BPM-108; Drag-Reorder post-V1, Audit Review 01, R01-001 E14, entschieden 2026-09-24) |
 | – | 02_Projektdetail (Tab "Manuell sortieren") | Öffnen des Tabs bei nicht abgeschlossenem Import (Recovery) | 🔷 implementiert ohne Mockup | – (WPF: `RecoveryDialog.xaml`) |
@@ -46,6 +48,13 @@ Wird vor jedem neuen Mockup gelesen und nach Mockup-Änderungen aktualisiert.
 | 02_Projektdetail/01_Profile.html | 02_Projektdetail/05_Plandaten.html | Tab "Plandaten" | ✅ aktiv |
 | 02_Projektdetail/02_ManuellSortieren.html | 02_Projektdetail/04_Explorer.html | Tab "Explorer" | ✅ aktiv |
 | 02_Projektdetail/02_ManuellSortieren.html | 02_Projektdetail/05_Plandaten.html | Tab "Plandaten" | ✅ aktiv |
+| 02_Projektdetail/02_ManuellSortieren.html | 02_Projektdetail/02_ManuellSortieren_Claude.html | Knopf "✦ Mit Claude sortieren" (Hinweiszeile rechts) | ⚪ geplant (der Knopf steht im abgenommenen 02_ManuellSortieren_Claude.html; das ältere Grund-Mockup bleibt unverändert) |
+| 02_Projektdetail/02_ManuellSortieren_Claude.html | 02_Projektdetail/02_ManuellSortieren.html | Tab "Manuell sortieren" + Sub-Tab "Archiv" | ✅ aktiv |
+| 02_Projektdetail/02_ManuellSortieren_Claude.html | 02_Projektdetail/04_Explorer.html | Tab "Explorer" | ✅ aktiv |
+| 02_Projektdetail/02_ManuellSortieren_Claude.html | 02_Projektdetail/05_Plandaten.html | Tab "Plandaten" | ✅ aktiv |
+| 02_Projektdetail/02_ManuellSortieren_Claude.html | 02_Projektdetail/01_Profile.html | Tab "Profile" | ✅ aktiv |
+| 02_Projektdetail/02_ManuellSortieren_Claude.html | 01_Projektuebersicht/01_Projektuebersicht.html | ← Zurück-Pfeil | ✅ aktiv |
+| 02_Projektdetail/02_ManuellSortieren_Claude.html | 02_Projektdetail/03_Sync.html | Tab "Sync" | 🟡 tot |
 | 02_Projektdetail/04_Explorer.html | 02_Projektdetail/02_ManuellSortieren.html | Tab "Manuell sortieren" + Kontextmenü "Im PlanManager anzeigen" | ✅ aktiv |
 | 02_Projektdetail/04_Explorer.html | 02_Projektdetail/05_Plandaten.html | Tab "Plandaten" | ✅ aktiv |
 | 02_Projektdetail/04_Explorer.html | 02_Projektdetail/01_Profile.html | Tab "Profile" | ✅ aktiv |
@@ -82,6 +91,7 @@ Wird vor jedem neuen Mockup gelesen und nach Mockup-Änderungen aktualisiert.
 |---|---|---|---|
 | 01_Projektuebersicht/01_Projektuebersicht.html | ../Settings/01_Einstellungen/01_Allgemein.html | Sidebar "⚙ Einstellungen" | ✅ aktiv |
 | 02_Projektdetail/01_Profile.html | ../Settings/01_Einstellungen/01_Allgemein.html | Sidebar "⚙ Einstellungen" | ✅ aktiv |
+| 02_Projektdetail/02_ManuellSortieren_Claude.html | ../Settings/01_Einstellungen/01_Allgemein.html | "Einstellungen" (Zustand 7 nicht erreichbar / 8 Claude aus) | ✅ aktiv |
 
 ## Hinweise (Teil 50)
 

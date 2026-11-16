@@ -69,15 +69,28 @@ src/
 ### Checks
 - build: dotnet build BauProjektManager.slnx [src/**; tests/**]
 - test: dotnet test tests/BauProjektManager.Tests/BauProjektManager.Tests.csproj [src/**; tests/**]
+- seitenliste: python Tools/seitenliste_check.py [Docs/Mockups/**; Tools/**; src/**]
 
 ### Commit
 - Format: [vX.Y.Z] <Modul>, <Typ>: <Kurztitel> (Modul auch kombiniert mit +, z.B. INF+Docs)
-- Module: App=src/BauProjektManager.App/**; DevTools=src/BauProjektManager.App/DevTools*; Domain=src/BauProjektManager.Domain/**; INF=src/BauProjektManager.Infrastructure/**; PlanManager=src/BauProjektManager.PlanManager/**; Settings=src/BauProjektManager.Settings/**; Tests=tests/**; Docs=Docs/**, INDEX.md, CLAUDE.md, .claude/skill-config/**; Build=Directory.Build.props, BauProjektManager.slnx, .gitignore
+- Module: App=src/BauProjektManager.App/**; DevTools=src/BauProjektManager.App/DevTools*; Domain=src/BauProjektManager.Domain/**; INF=src/BauProjektManager.Infrastructure/**; PlanManager=src/BauProjektManager.PlanManager/**; Settings=src/BauProjektManager.Settings/**; Tests=tests/**; Docs=Docs/**, INDEX.md, CLAUDE.md, .claude/skill-config/**; Tools=Tools/**; Build=Directory.Build.props, BauProjektManager.slnx, .gitignore
 - Versionsquelle: Directory.Build.props#Version
 - Versionsregel: jeder Commit +1 PATCH (auch Feature) mit Eintrag in Docs/Referenz/CHANGELOG.md; MINOR/MAJOR nur auf Ansage von Herbert
 - Push-Policy: user-only
-- Pre-Commit-Checks: build; test
+- Pre-Commit-Checks: build; test; seitenliste
 - Doku-Check: ref:INDEX.md#6-doc-pflege-policy
+
+### Mockup
+- Ablage: Docs/Mockups
+- Designquelle: src/BauProjektManager.App/Themes/Colors.xaml; src/BauProjektManager.App/Themes/Typography.xaml; Docs/Referenz/UI_UX_Guidelines.md; Docs/Referenz/WPF_UI_Architecture.md
+- Ansichten: Desktop
+- Abnahme-Ort: Docs/Mockups/seiten.json (version_abgenommen + Verlauf; die Seitenliste ist die Wahrheit für Mockups, Entscheidung Herbert 2026-11-16); Altbestand zusätzlich Status in Docs/Mockups/<Modul>/_SITEMAP.md
+- Seitenliste: Docs/Mockups/seiten.json; python Tools/seitenliste.py; Tools/seitenliste_vorlage.html, Tools/seitenliste.config.json, Tools/themeabgleich.py, Tools/seitenliste_check.py
+- Theme: Docs/Mockups/theme-app.css, Docs/Mockups/theme.js; node Tools/mockup_theme.mjs
+- Beziehungen: python Tools/seitenbeziehungen.py
+- Pruefung: seitenliste
+- Datenliste: Docs/Mockups/daten.json; python Tools/datenliste.py; Docs/Mockups/DATENLISTE.md; Schema aus Docs/Mockups/schema-bpm.sql + schema-planmanager.sql (geschrieben von SchemaSnapshotTests)
+- Dev-Schalter: none
 
 ### Tracker
 - Provider: clickup

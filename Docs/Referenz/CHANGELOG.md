@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.230] — 2026-11-18
+
+### Refactor: Mit Claude sortieren – Verdrahtung über ClaudeSortFactory aus dem DI-Container (BPM-131)
+
+`ProjectDetailView` baute Dateisystem, Normalizer, Builder, Prüfer und Schnellanlage bisher selbst mit `new` zusammen (Verstoß gegen die DI-Regel der CLAUDE.md). Neu: `ClaudeSortFactory` (Factory je Projekt) bekommt die app-weiten Dienste aus dem Container und erzeugt mit der Plan-DB des Projekts das Chatfenster; `ClaudeAssistantOptions`, `IClaudeProcessRunner`, `IPlanValueNormalizer` und die Factory sind registriert. MainWindow, PlanManagerView und ProjectDetailView reichen statt `IClaudeAssistant` nur noch die Factory durch. Kein sichtbarer Unterschied. Tests: 701.
+
+---
 ## [v0.28.229] — 2026-11-18
 
 ### Docs: Seitenliste aktualisiert

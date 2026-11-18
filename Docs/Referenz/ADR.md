@@ -3474,7 +3474,7 @@ Gleichzeitig gilt `planmanager.db` als „rebuildbarer Cache" (ADR-004, ADR-041,
 
 **Datum:** 2026-11-16
 **Status:** ✅ Accepted (Entscheidungen Herbert 2026-11-16: Teil von V1; E1–E3 und Freigabe-Umfang siehe unten)
-**Implementierung:** In Progress — Backend v0.28.215, Chatfenster + Einstellung v0.28.216, Einzel-Annahme + Aufräumen v0.28.218, Index-Datum/Segmente/Tags v0.28.223, Löschen der Claude-Sitzungsdaten v0.28.225, Schnellanlage fehlender Stammdaten v0.28.228; offen siehe „Noch nicht umgesetzt“
+**Implementierung:** In Progress — Backend v0.28.215, Chatfenster + Einstellung v0.28.216, Einzel-Annahme + Aufräumen v0.28.218, Index-Datum/Segmente/Tags v0.28.223, Löschen der Claude-Sitzungsdaten v0.28.225, Schnellanlage fehlender Stammdaten v0.28.228, Verdrahtung über `ClaudeSortFactory` (DI) v0.28.230; offen siehe „Noch nicht umgesetzt“
 **Herkunft:** Wunsch Herbert: Eingangspläne nicht einzeln über das Radial erfassen. Vorbild sind ha-hausbau („Mit Claude ausfüllen“: Auftragsordner, Rahmen + Vorschrift, `kontext.json`, `FRAGE:`-Format, `entwurf.json` mit Prüfung, Speichern nur durch die App) und ha-finanzen (`claude.py`). Mockup: Seitenliste 3.4 (`02_ManuellSortieren_Claude.html`, abgenommen 2026-11-16).
 
 **Kontext:**
@@ -3508,7 +3508,7 @@ V1 importiert über die manuelle Erstaufnahme (ADR-059, Strategie B) und den jou
 
 **Alternativen:** Anthropic-API mit eigenem Schlüssel (sauber mit AVV, aber Schlüsselverwaltung und Kosten je Aufruf — der Weg für einen Verkauf); manuell kopieren (ADR-027 Phase 1, kein Rückfragen); lokales LLM (neue Bibliothek, schwächer); Claude im Projektordner arbeiten lassen (bricht ADR-061/064) — verworfen.
 
-**Konsequenzen:** Erster externer Kontakt des PlanManagers in V1. `PendingAssignment` hat Herkunft und Vorschlagsinfo; keine Schemaänderung (Pending bleibt in-memory). Neue Ressourcen in der PlanManager-DLL: `_rahmen.md`, `planzuordnung.md`, `planzuordnung.schema.json`.
+**Konsequenzen:** Erster externer Kontakt des PlanManagers in V1. `PendingAssignment` hat Herkunft und Vorschlagsinfo; keine Schemaänderung (Pending bleibt in-memory). Neue Ressourcen in der PlanManager-DLL: `_rahmen.md`, `planzuordnung.md`, `planzuordnung.schema.json`. Verdrahtung (v0.28.230): `ClaudeAssistantOptions`, `IClaudeProcessRunner`, `IClaudeAssistant` und `ClaudeSortFactory` sind im DI-Container registriert; die Factory setzt je Projekt (mit dessen Plan-DB) Builder, Prüfer, Schnellanlage und Chatfenster zusammen, die Views reichen nur die Factory durch.
 
 **Betrifft:** ADR-027, ADR-035, ADR-042, ADR-059, ADR-060, ADR-061, ADR-063, ADR-064, ADR-065, DSGVO-Architektur Kap. 15, PlanManager.md, Seitenliste 3.3/3.4.
 

@@ -152,10 +152,24 @@ public partial class App : Application
 
         // ADR-067 "Mit Claude sortieren": lokaler Claude-Code-Prozess ueber Herberts Abo (kein HTTP, kein Key).
         // Ob die Funktion aktiv ist, entscheidet die Einstellung (device-settings.json, Standard aus).
+        sc.AddSingleton(new Infrastructure.Services.Claude.ClaudeAssistantOptions
+        {
+            JobRootDirectory = Infrastructure.Services.Claude.ClaudeAssistantOptions.DefaultJobRoot()
+        });
+        sc.AddSingleton<Infrastructure.Services.Claude.IClaudeProcessRunner, Infrastructure.Services.Claude.SystemClaudeProcessRunner>();
         sc.AddSingleton<IClaudeAssistant>(sp => new Infrastructure.Services.Claude.ClaudeCodeAssistant(
-            new Infrastructure.Services.Claude.ClaudeAssistantOptions { JobRootDirectory = Infrastructure.Services.Claude.ClaudeAssistantOptions.DefaultJobRoot() },
-            new Infrastructure.Services.Claude.SystemClaudeProcessRunner(), sp.GetRequiredService<IFileSystemReader>(),
-            sp.GetRequiredService<IFileSystemWriter>()));
+            sp.GetRequiredService<Infrastructure.Services.Claude.ClaudeAssistantOptions>(),
+            sp.GetRequiredService<Infrastructure.Services.Claude.IClaudeProcessRunner>(),
+            sp.GetRequiredService<IFileSystemReader>(), sp.GetRequiredService<IFileSystemWriter>()));
+        sc.AddSingleton<IPlanValueNormalizer, PlanValueNormalizer>();
+        // Factory je Projekt (CLAUDE.md DI-Regel): setzt das Chatfenster mit der Plan-DB des Projekts zusammen
+        sc.AddSingleton(sp => new PlanManager.Services.ClaudeSortierung.ClaudeSortFactory(
+            sp.GetRequiredService<IClaudeAssistant>(), sp.GetRequiredService<ProjectDatabase>(),
+            sp.GetRequiredService<IFileSystemReader>(), sp.GetRequiredService<IFileSystemWriter>(),
+            sp.GetRequiredService<IPathService>(), sp.GetRequiredService<IPlanValueNormalizer>(),
+            sp.GetRequiredService<AppSettingsService>(),
+            sp.GetRequiredService<Infrastructure.Services.Claude.ClaudeAssistantOptions>().JobRootDirectory!,
+            sp.GetService<IPdfTextService>(), sp.GetService<ISegmentTypeCatalog>()));
 
         // BPM-108: Segmenttyp-Katalog (Phase A) — vor ProfileManager registrieren,
         // damit der Manager ihn fuer ProfileHealth-Berechnung bekommt.
@@ -208,7 +222,7 @@ public partial class App : Application
             var pdfRender = sp.GetService<IPdfRenderService>();
             var pdfText = sp.GetService<IPdfTextService>();
             var fileLauncher = sp.GetService<IFileLauncher>();
-            var claude = sp.GetService<IClaudeAssistant>();
+            var claude = sp.GetService<PlanManager.Services.ClaudeSortierung.ClaudeSortFactory>();
 #if DEBUG
             var devTools = sp.GetService<IDeveloperToolsService>();
             var registry = sp.GetService<IPersistenceRegistry>();
@@ -219,7 +233,7 @@ public partial class App : Application
                 persistenceRegistry: null, segmentTypeCatalog: catalog,
                 segmentTypeRepository: repo, profileArchiveService: archive,
                 pdfRenderService: pdfRender, fileLauncher: fileLauncher,
-                pdfTextService: pdfText, claudeAssistant: claude);
+                pdfTextService: pdfText, claudeSortFactory: claude);
 #endif
         });
 

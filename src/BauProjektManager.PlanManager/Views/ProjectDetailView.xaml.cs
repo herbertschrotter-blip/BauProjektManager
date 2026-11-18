@@ -24,7 +24,7 @@ public partial class ProjectDetailView : UserControl
     private readonly IFileLauncher? _fileLauncher;
     private readonly Infrastructure.Persistence.AppSettingsService? _settingsService;
     private readonly IPdfTextService? _pdfTextService;
-    private readonly IClaudeAssistant? _claudeAssistant;
+    private readonly Services.ClaudeSortierung.ClaudeSortFactory? _claudeSortFactory;
     private ClaudeSortViewModel? _claudeSort;
     private PlanManagerDatabase? _manualSortDb;
     private bool _manualSortInitialized;
@@ -41,7 +41,7 @@ public partial class ProjectDetailView : UserControl
         IFileLauncher? fileLauncher = null,
         Infrastructure.Persistence.AppSettingsService? settingsService = null,
         IPdfTextService? pdfTextService = null,
-        IClaudeAssistant? claudeAssistant = null)
+        Services.ClaudeSortierung.ClaudeSortFactory? claudeSortFactory = null)
     {
         _profileManager = profileManager;
         _idGenerator = idGenerator;
@@ -55,7 +55,7 @@ public partial class ProjectDetailView : UserControl
         _fileLauncher = fileLauncher;
         _settingsService = settingsService;
         _pdfTextService = pdfTextService;
-        _claudeAssistant = claudeAssistant;
+        _claudeSortFactory = claudeSortFactory;
         Resources.Add("BoolToVis", boolToVis);
         // BPM-006: der Profile-Tab braucht zusaetzlich den inversen Converter
         // (Empty-State), den diese View bisher nicht registriert hatte.
@@ -151,26 +151,13 @@ public partial class ProjectDetailView : UserControl
     }
 
     /// <summary>
-    /// "Mit Claude sortieren" (ADR-067): Chatfenster fuer diesen Tab. NULL ohne Claude-Port oder
-    /// Einstellungen — dann bleibt der Knopf unsichtbar.
+    /// "Mit Claude sortieren" (ADR-067): Chatfenster fuer diesen Tab ueber die Factory aus dem DI-Container.
+    /// NULL ohne Factory — dann bleibt der Knopf unsichtbar.
     /// </summary>
     private ClaudeSortViewModel? CreateClaudeSort(ManualCaptureViewModel captureVm)
-    {
-        if (_claudeAssistant is null || _settingsService is null || _bpmDb is null || _manualSortDb is null)
-            return null;
-        var fs = new Infrastructure.Services.LocalFileSystem();
-        var normalizer = new Infrastructure.Services.PlanValueNormalizer();
-        var builder = new Services.ClaudeSortierung.ClaudeSortAuftragBuilder(
-            _bpmDb, _manualSortDb, fs, fs, fs, _pdfTextService, segmentTypes: _segmentTypeCatalog);
-        var pruefer = new Services.ClaudeSortierung.ClaudeSortEntwurfPruefer(
-            _bpmDb, new DocumentTargetPathResolver(_bpmDb, normalizer, fs), fs, fs, normalizer, _segmentTypeCatalog);
-        var settings = _settingsService;
-        var schnellanlage = new Services.ClaudeSortierung.ClaudeSortSchnellanlage(
-            _bpmDb, new Infrastructure.Services.DocumentTypeCreationService(_bpmDb, normalizer));
-        return new ClaudeSortViewModel(_claudeAssistant, builder, pruefer, captureVm,
-            () => settings.LoadDevice().Claude.SortingEnabled,
-            Infrastructure.Services.Claude.ClaudeAssistantOptions.DefaultJobRoot(), schnellanlage);
-    }
+        => _claudeSortFactory is null || _manualSortDb is null
+            ? null
+            : _claudeSortFactory.Create(captureVm, _manualSortDb);
 
     private static async Task InitializeManualSortAsync(ManualCaptureViewModel vm, Project project)
     {

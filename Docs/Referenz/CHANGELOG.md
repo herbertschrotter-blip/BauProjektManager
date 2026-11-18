@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.229] — 2026-11-18
+
+### Docs: Seitenliste aktualisiert
+
+3.3 Manuell sortieren Code 0.6 (Zeile „fehlt im Projekt“); 3.4 Mit Claude sortieren Code 1.3 = abgenommenes Mockup 1.3 (Schnellanlage) gebaut.
+
+---
 ## [v0.28.228] — 2026-11-18
 
 ### Feature: Mit Claude sortieren – Schnellanlage fehlender Stammdaten aus dem Chat (BPM-131, E11)

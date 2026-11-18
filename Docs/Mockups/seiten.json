@@ -32,7 +32,7 @@
      "3.1"
     ],
     "nutzt": [],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "1dc0a26ec0"
    },
@@ -57,7 +57,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "313084ddb6"
    },
@@ -80,7 +80,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "ef7f6eb1ea"
    },
@@ -103,7 +103,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "5cafb06a88"
    },
@@ -129,7 +129,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "710fc123d4"
    },
@@ -153,7 +153,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "710fc123d4"
    }
@@ -193,7 +193,7 @@
      "2.5"
     ],
     "nutzt": [],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "516f97f287"
    },
@@ -218,7 +218,7 @@
      "2.6"
     ],
     "nutzt": [],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "516f97f287"
    },
@@ -241,7 +241,7 @@
     "nutzt": [
      "Ordnervorlage"
     ],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "1399d29b19"
    },
@@ -262,7 +262,7 @@
     ],
     "zu": [],
     "nutzt": [],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "516f97f287"
    },
@@ -283,7 +283,7 @@
     ],
     "zu": [],
     "nutzt": [],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "516f97f287"
    },
@@ -311,7 +311,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "27d7a90892"
    },
@@ -334,7 +334,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "673fcb483d"
    },
@@ -357,7 +357,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "8ce496ff4e"
    },
@@ -380,7 +380,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "b1a855c477"
    },
@@ -404,7 +404,7 @@
      "Ordnervorlage",
      "Dialograhmen"
     ],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "23d914694a"
    }
@@ -441,7 +441,7 @@
      "3.2"
     ],
     "nutzt": [],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "5b8667e11e"
    },
@@ -470,7 +470,7 @@
      "3.11"
     ],
     "nutzt": [],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "f0c510658d"
    },
@@ -526,7 +526,7 @@
      "Plan-Vorschau",
      "Radial-Erfassung"
     ],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "2cd909d599"
    },
@@ -564,6 +564,13 @@
       "was": "Anmeldefehler von Claude Code: Fehlerkarte mit Login-Hinweis statt doppelter Meldung und „wartet auf deine Antwort“",
       "art": "code",
       "commit": "0e1cbea"
+     },
+     {
+      "v": "1.2",
+      "datum": "18.11.2026",
+      "was": "Beim Beenden der Sitzung und beim Öffnen des Tabs werden auch die Sitzungsverläufe von Claude Code gelöscht (kein sichtbarer Unterschied)",
+      "art": "code",
+      "commit": "1454d96"
      }
     ],
     "zu": [
@@ -572,11 +579,11 @@
     "nutzt": [
      "Plan-Vorschau"
     ],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": "1.0",
     "code": "BauProjektManager.PlanManager/Views/ClaudeChatPanel.xaml, BauProjektManager.PlanManager/Views/ClaudeChatPanel.xaml.cs, BauProjektManager.PlanManager/Views/ManualCaptureView.Claude.cs, BauProjektManager.PlanManager/ViewModels/ClaudeSortViewModel.cs, BauProjektManager.PlanManager/ViewModels/ClaudeSortViewModel.Events.cs, BauProjektManager.PlanManager/ViewModels/ClaudeChatModels.cs, BauProjektManager.PlanManager/ViewModels/ManualCaptureViewModel.Claude.cs",
-    "code_stand": "39619fb873",
-    "version_code": "1.1"
+    "code_stand": "84569c2de3",
+    "version_code": "1.2"
    },
    {
     "nr": "3.5",
@@ -600,7 +607,7 @@
     "nutzt": [
      "Segment-Editor"
     ],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "7b388bb170"
    },
@@ -624,7 +631,7 @@
      "3.8"
     ],
     "nutzt": [],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "eb5ef2c9cb"
    },
@@ -645,7 +652,7 @@
     ],
     "zu": [],
     "nutzt": [],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "95a348437e"
    },
@@ -671,7 +678,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "5f4d263f4f"
    },
@@ -695,7 +702,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "e1fda6fd68"
    },
@@ -718,7 +725,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "fd8115c115"
    },
@@ -741,7 +748,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "7b8ba19",
+    "stand_commit": "1454d96",
     "version_abgenommen": null,
     "code_stand": "2cfe320b9b"
    }

@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.226] — 2026-11-18
+
+### Docs: Seitenliste aktualisiert
+
+3.4 Mit Claude sortieren Code 1.2 (Sitzungsverläufe von Claude Code werden mit gelöscht, Aussehen unverändert).
+
+---
 ## [v0.28.225] — 2026-11-18
 
 ### Feature: Mit Claude sortieren – Sitzungsdaten von Claude Code werden gelöscht (BPM-131, E8)

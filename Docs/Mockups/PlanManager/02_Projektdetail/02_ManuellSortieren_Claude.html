@@ -6,7 +6,7 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 „Mit Claude sortieren" — Mockup-Entwurf (Variante zu 02_ManuellSortieren.html)
-Stand: 2026-11-16 · Entwurf, NICHT abgenommen · Radial/Vorschau/Archiv siehe
+Stand: 2026-11-18 · v1.3 Entwurf (Schnellanlage, BPM-131 E11) · Radial/Vorschau/Archiv siehe
 02_ManuellSortieren.html (unverändert, hier nur angedeutet)
 ═══════════════════════════════════════════════════════════════════════════
 
@@ -61,6 +61,26 @@ ABLAUF (Zustände oben im Mockup-Umschalter, nicht Teil der App):
                   Händisches Sortieren geht unverändert weiter.
  8 Claude aus     Funktion in den Einstellungen ausgeschaltet: Knopf
                   ausgeblendet bzw. deaktiviert, Hinweis mit Link.
+ 9/10 Fehlt im    (NEU v1.3, E11) Passt eine Datei nur zu etwas, das es im
+    Projekt       Projekt noch nicht gibt, schreibt Claude es in
+                  entwurf.json unter `fehlende_stammdaten` (Art, Vorschlag,
+                  Datei-IDs, Grund) statt eine ID zu erfinden. BPM prüft
+                  (Art bauteil | geschoss | dokumenttyp, Name noch frei,
+                  Dateien aus dem Auftrag) und zeigt je Eintrag eine Karte
+                  im Chat mit vorbefülltem Formular:
+                   - Bauteil: Kurzname, Beschreibung, Geschoße (Komma-Liste)
+                   - Geschoß: Bauteil (Auswahl), Name, Beschreibung
+                   - Dokumenttyp: Name, Unterteilung (keine/Bauteile/
+                     Kategorien); Farbe automatisch
+                  [Anlegen] [Nicht anlegen]. Claude legt nie selbst etwas an.
+                  Die Zeile in der Tabelle: „＋ fehlt im Projekt“ (Warnfarbe).
+                  Statuszeile „wartet auf deine Entscheidung“.
+11 Angelegt      BPM legt über die normalen Stammdaten-Dienste an (wie
+                  in den Projekteinstellungen; der Ordner entsteht erst
+                  beim Import), schreibt kontext.json neu und meldet es
+                  Claude („neu: Bauteil TG …, bitte D-010 neu zuordnen“).
+                  Claude ordnet neu zu, BPM prüft wie in Zustand 5.
+                  „Nicht anlegen“: Datei bleibt ohne Vorschlag (von Hand).
 
 REGELN FÜR DIE UMSETZUNG (aus dem Vorbild ha-hausbau, _rahmen.md):
 - Claude liest/schreibt nur im Auftragsordner; der maßgebliche Kopf liegt
@@ -205,10 +225,10 @@ Claude bekommt <b style="color:var(--TextBright)">11 Dateien</b> (Erstaufnahme) 
 <div id="propBar" style="display:none;align-items:center;gap:12px;padding:8px 16px;background:var(--BgSurface);border-bottom:1px solid var(--BorderSubtle);border-left:3px solid var(--AccentPrimary)">
 <span style="color:var(--AccentPrimary);font-size:14px">&#10022;</span>
 <span style="font-size:12px;color:var(--TextBright)">Entwurf von Claude &ndash; bitte pr&uuml;fen</span>
-<span style="font-size:12px;color:var(--TextSecondary)">9 Vorschl&auml;ge (10 Dateien) &middot; <span style="color:var(--Warning)">2 unsicher</span> &middot; 1 ohne g&uuml;ltigen Vorschlag &middot; 1 Update ausgenommen</span>
+<span id="propTxt" style="font-size:12px;color:var(--TextSecondary)"></span>
 <span style="flex:1"></span>
 <button class="btn" style="height:28px" onclick="discardDraft()">Verwerfen</button>
-<button class="btnP" style="height:28px" onclick="go(6)">9 Vorschl&auml;ge &uuml;bernehmen</button>
+<button id="propBtn" class="btnP" style="height:28px" onclick="go(6)">9 Vorschl&auml;ge &uuml;bernehmen</button>
 </div>
 
 <!-- Content -->
@@ -263,8 +283,8 @@ Claude bekommt <b style="color:var(--TextBright)">11 Dateien</b> (Erstaufnahme) 
 
 <script>
 /* Zustände: 0 Ausgangslage · 1 Start · 2 liest · 3 Frage · 4 Frage mehrere · 5 Entwurf · 6 übernommen · 7 nicht erreichbar · 8 aus */
-var STATES=['0 Ausgangslage','1 Start bestätigen','2 Liest Pläne','3 Rückfrage','4 Rückfrage (mehrere)','5 Entwurf bereit','6 Übernommen','7 Nicht erreichbar','8 Claude aus'];
-var state=0,selId=6,multi={1:false,2:false,3:false},chatOpen=false;
+var STATES=['0 Ausgangslage','1 Start bestätigen','2 Liest Pläne','3 Rückfrage','4 Rückfrage (mehrere)','5 Entwurf bereit','6 Übernommen','7 Nicht erreichbar','8 Claude aus','9 Fehlt: Bauteil','10 Fehlt: Dokumenttyp','11 Angelegt, neu zugeordnet'];
+var state=0,selId=6,multi={1:false,2:false,3:false},chatOpen=false,kind='bauteil';
 /* b: Bucket (C = an Claude, B = Update) · v: Vorschlag [Typ, Ebene2, Ebene3] · u: unsichere Stelle (Index in v oder 'typ')
    why: Begründung von Claude · bad: kein gültiger Vorschlag (Grund) · pair: Partner-ID */
 var FILES=[
@@ -285,13 +305,20 @@ var LV=['Typ','Bauteil','Geschoß'];
 function $(id){return document.getElementById(id);}
 function byId(id){return FILES.find(function(f){return f.id===id;});}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
-function hasDraft(){return state===5||state===6;}
+function hasDraft(){return state===5||state===6||state>=9;}
+/* E11: Datei 10 (Statik) fehlt im Projekt (9/10) bzw. ist nach dem Anlegen zugeordnet (11) */
+function missing(f){return (state===9||state===10)&&f.id===10;}
+function fixed(f){return state===11&&f.id===10;}
+function vOf(f){return fixed(f)?(kind==='bauteil'?['Statik','TG','UG2']:['Statik-Berechnung']):f.v;}
+function bad(f){return f.bad&&!missing(f)&&!fixed(f);}
+function running(){return (state>=2&&state<=6)||state>=9;}
 
 /* Devbar */
 (function(){var d=$('devbar');STATES.forEach(function(s,i){var b=document.createElement('button');b.className='dv';b.textContent=s;b.onclick=function(){go(i);};d.appendChild(b);});})();
 
-function go(s){state=s;chatOpen=(s>=2&&s<=7);if(s===3||s===4)multi={1:false,2:false,3:false};
-if(s===5||s===6)selId=6;render();}
+function go(s){state=s;chatOpen=(s>=2&&s<=7)||s>=9;if(s===3||s===4)multi={1:false,2:false,3:false};
+if(s===9)kind='bauteil';if(s===10)kind='dokumenttyp';
+if(s===5||s===6)selId=6;if(s>=9)selId=10;render();}
 function onClaudeBtn(){if(state===0)go(1);else if(state===1)go(0);else {chatOpen=true;render();}}
 function closeChat(){chatOpen=false;render();}
 function msg(t){$('dMsg').textContent=t;}
@@ -300,12 +327,13 @@ $('log').innerHTML+='<div class="sys">Entwurf verworfen. Die Sitzung bleibt offe
 
 /* ---------- Tabelle ---------- */
 function zuordnung(f){
-if(f.b==='B')return '<span style="color:var(--Info)">&#11014; Index B neu &mdash; bekannter Plan</span>'+(state>=2&&state<=6?' <span style="color:var(--TextSecondary)">&middot; nicht an Claude</span>':'');
+if(f.b==='B')return '<span style="color:var(--Info)">&#11014; Index B neu &mdash; bekannter Plan</span>'+(running()?' <span style="color:var(--TextSecondary)">&middot; nicht an Claude</span>':'');
 if(state===2)return '<span style="color:var(--TextSecondary)">&#9676; bei Claude</span>';
 if(state===3||state===4)return f.id===3?'<span style="color:var(--Warning)">? R&uuml;ckfrage im Chat</span>':(f.id===13&&state===4?'<span style="color:var(--Warning)">? R&uuml;ckfrage im Chat</span>':'<span style="color:var(--TextSecondary)">&#9676; bei Claude</span>');
 if(hasDraft()){
- if(f.bad)return '<span style="color:var(--Error)">&#10005; kein g&uuml;ltiger Vorschlag</span>';
- var h='';f.v.forEach(function(x,i){var uns=(f.u===i)||(f.u==='typ'&&i===0);
+ if(missing(f))return '<span style="color:var(--Warning)">&#65291; fehlt im Projekt &ndash; siehe Chat</span>';
+ if(bad(f))return '<span style="color:var(--Error)">&#10005; kein g&uuml;ltiger Vorschlag</span>';
+ var h='';vOf(f).forEach(function(x,i){var uns=(f.u===i)||(f.u==='typ'&&i===0);
   if(i)h+='<span class="sep">&rsaquo;</span>';
   h+='<span class="chip'+(uns?' uns':'')+'" title="'+(uns?'unsicher: '+esc(f.why):'')+'">'+esc(x)+(uns?' ?':'')+'</span>';});
  return h;}
@@ -313,9 +341,9 @@ return '<span style="color:var(--TextSecondary)">&mdash;</span>';}
 function render(){
 var h='<tr class="cap"><td style="padding:6px 8px;width:28px;border-top:none"></td><td style="padding:6px 8px;border-top:none">Datei</td><td style="padding:6px 8px;width:64px;border-top:none">Gr&ouml;&szlig;e</td><td style="padding:6px 8px;width:290px;border-top:none">Zuordnung</td></tr>';
 FILES.forEach(function(f){var on=hasDraft()&&selId===f.id;
- var prop=hasDraft()&&f.b==='C'&&!f.bad;
+ var prop=hasDraft()&&f.b==='C'&&!bad(f)&&!missing(f);
  var pend=state===6&&prop;
- var bl=pend?'3px solid var(--Warning)':prop?'3px dashed var(--AccentPrimary)':(hasDraft()&&f.bad)?'3px solid var(--Error)':f.b==='B'?'3px solid var(--Info)':'3px solid transparent';
+ var bl=pend?'3px solid var(--Warning)':prop?'3px dashed var(--AccentPrimary)':missing(f)?'3px dashed var(--Warning)':(hasDraft()&&bad(f))?'3px solid var(--Error)':f.b==='B'?'3px solid var(--Info)':'3px solid transparent';
  var bg=on?'var(--BgActive)':pend?'var(--BgSurface)':'transparent';
  var tag='';
  var z=zuordnung(f);
@@ -329,16 +357,20 @@ FILES.forEach(function(f){var on=hasDraft()&&selId===f.id;
 $('tbl').innerHTML=h;
 $('legend').innerHTML=hasDraft()?
  (state===6?'<span style="color:var(--Warning)">&#9632; Pending (aus Claude-Vorschlag, &#10022;)</span>':'<span style="color:var(--AccentPrimary)">&#9476; Vorschlag von Claude (noch nicht &uuml;bernommen)</span>')+
- '<span style="color:var(--Warning)">&#9633; ? unsicheres Feld</span><span style="color:var(--Error)">&#9632; kein g&uuml;ltiger Vorschlag</span><span style="color:var(--Info)">&#9632; Update &mdash; nicht an Claude</span>'
+ (state===9||state===10?'<span style="color:var(--Warning)">&#65291; fehlt im Projekt (Chat)</span>':'')+'<span style="color:var(--Warning)">&#9633; ? unsicheres Feld</span><span style="color:var(--Error)">&#9632; kein g&uuml;ltiger Vorschlag</span><span style="color:var(--Info)">&#9632; Update &mdash; nicht an Claude</span>'
  :'<span style="color:var(--Warning)">&#9632; Pending</span><span style="color:var(--Info)">&#9632; Update &mdash; bekannter Plan</span><span style="color:var(--TextSecondary)">&#9632; offen</span>';
-$('propBar').style.display=state===5?'flex':'none';
+$('propBar').style.display=(state===5||state>=9)?'flex':'none';
+$('propTxt').innerHTML=state===11?'10 Vorschl&auml;ge (11 Dateien) &middot; <span style="color:var(--Warning)">2 unsicher</span> &middot; 1 Update ausgenommen'
+ :state>=9?'9 Vorschl&auml;ge (10 Dateien) &middot; <span style="color:var(--Warning)">2 unsicher</span> &middot; <span style="color:var(--Warning)">1 fehlt im Projekt</span> &middot; 1 Update ausgenommen'
+ :'9 Vorschl&auml;ge (10 Dateien) &middot; <span style="color:var(--Warning)">2 unsicher</span> &middot; 1 ohne g&uuml;ltigen Vorschlag &middot; 1 Update ausgenommen';
+$('propBtn').textContent=(state===11?10:9)+' Vorschläge übernehmen';
 /* Knopf */
 var b=$('claudeBtn'),bt=$('claudeBtnTxt'),oh=$('offHint');
-b.disabled=(state===7||state===8);b.className='claudeBtn'+(state>=2&&state<=6?' run':'');
+b.disabled=(state===7||state===8);b.className='claudeBtn'+(running()?' run':'');
 oh.style.display=(state===7||state===8)?'inline':'none';
 if(state===7){bt.textContent='Mit Claude sortieren';b.title='Claude Code nicht erreichbar: „claude“ nicht gefunden oder nicht angemeldet';oh.innerHTML='<span style="color:var(--Error)">&#9679;</span> Claude nicht erreichbar';}
 else if(state===8){bt.textContent='Mit Claude sortieren';b.title='In den Einstellungen ausgeschaltet';oh.innerHTML='Claude ist ausgeschaltet &middot; <a href="../../Settings/01_Einstellungen/01_Allgemein.html" style="color:var(--AccentPrimary)">Einstellungen</a>';}
-else if(state>=2&&state<=6){bt.textContent=chatOpen?'Claude-Sitzung S-0003':'Sitzung fortsetzen';b.title='';}
+else if(running()){bt.textContent=chatOpen?'Claude-Sitzung S-0003':'Sitzung fortsetzen';b.title='';}
 else {bt.textContent='Mit Claude sortieren';b.title='11 Dateien (Erstaufnahme) von Claude vorsortieren lassen';}
 $('startPop').style.display=state===1?'block':'none';
 /* Pending */
@@ -346,7 +378,7 @@ var pc=state===6?10:0;
 $('dPend').innerHTML=pc?'<span style="color:var(--Warning)">'+pc+' Datei(en)</span> <span style="color:var(--TextSecondary)">(&#10022; 10)</span>':'&mdash;';
 $('dOk').disabled=!pc;$('dOk').textContent='Import bestätigen ('+pc+')';
 $('dOk').onclick=function(){msg('✓ würde 10 Dateien über den journalisierten Import (ADR-064) verschieben');};
-$('sbInfo').textContent=['bereit','bereit','Claude: liest Pläne (6/11) …','Claude wartet auf deine Antwort','Claude wartet auf deine Antwort','Claude: Entwurf bereit – 9 Vorschläge','10 pending (aus Claude-Vorschlag)','Claude nicht erreichbar','bereit'][state];
+$('sbInfo').textContent=['bereit','bereit','Claude: liest Pläne (6/11) …','Claude wartet auf deine Antwort','Claude wartet auf deine Antwort','Claude: Entwurf bereit – 9 Vorschläge','10 pending (aus Claude-Vorschlag)','Claude nicht erreichbar','bereit','Claude wartet auf deine Entscheidung (fehlt im Projekt)','Claude wartet auf deine Entscheidung (fehlt im Projekt)','Claude: Entwurf bereit – 10 Vorschläge'][state];
 document.querySelectorAll('.dv').forEach(function(x,i){x.className='dv'+(i===state?' on':'');});
 detail();chat();}
 function pick(id){if(!hasDraft())return;selId=id;render();}
@@ -357,13 +389,14 @@ if(!hasDraft()){d.innerHTML='<div style="color:var(--TextSecondary);font-size:12
 var f=byId(selId);if(!f){d.innerHTML='';return;}
 var h='<div style="font-family:Consolas,monospace;font-size:12px;color:var(--TextBright);margin-bottom:10px;word-break:break-all">'+esc(f.n)+'</div>';
 if(f.b==='B'){d.innerHTML=h+'<div style="font-size:12px;color:var(--Info)">Update eines bekannten Plans &ndash; wird nicht an Claude gegeben (nur Erstaufnahme). &bdquo;Update &uuml;bernehmen&ldquo; wie bisher.</div>';return;}
-if(f.bad){d.innerHTML=h+'<div style="background:var(--BgBase);border-left:3px solid var(--Error);padding:8px 10px;font-size:12px;line-height:1.5"><div style="color:var(--Error);margin-bottom:3px">&#10005; Kein g&uuml;ltiger Vorschlag</div><div style="color:var(--TextPrimary)">BPM-Pr&uuml;fung: '+esc(f.bad)+'.</div><div style="color:var(--TextSecondary);margin-top:4px">Claude: &bdquo;'+esc(f.why)+'&ldquo;</div></div><div style="font-size:11px;color:var(--TextSecondary);margin-top:8px">Bitte von Hand zuordnen (Halten = Radial).</div>';return;}
+if(missing(f)){d.innerHTML=h+'<div style="background:var(--BgBase);border-left:3px solid var(--Warning);padding:8px 10px;font-size:12px;line-height:1.5"><div style="color:var(--Warning);margin-bottom:3px">&#65291; Fehlt im Projekt</div><div style="color:var(--TextPrimary)">Claude schl&auml;gt vor, '+(kind==='bauteil'?'das Bauteil &bdquo;Tiefgarage&ldquo;':'den Dokumenttyp &bdquo;Statik-Berechnung&ldquo;')+' anzulegen. Entscheidung im Chat.</div><div style="color:var(--TextSecondary);margin-top:4px">Claude legt nichts selbst an.</div></div><div style="font-size:11px;color:var(--TextSecondary);margin-top:8px">Oder von Hand zuordnen (Halten = Radial).</div>';return;}
+if(bad(f)){d.innerHTML=h+'<div style="background:var(--BgBase);border-left:3px solid var(--Error);padding:8px 10px;font-size:12px;line-height:1.5"><div style="color:var(--Error);margin-bottom:3px">&#10005; Kein g&uuml;ltiger Vorschlag</div><div style="color:var(--TextPrimary)">BPM-Pr&uuml;fung: '+esc(f.bad)+'.</div><div style="color:var(--TextSecondary);margin-top:4px">Claude: &bdquo;'+esc(f.why)+'&ldquo;</div></div><div style="font-size:11px;color:var(--TextSecondary);margin-top:8px">Bitte von Hand zuordnen (Halten = Radial).</div>';return;}
 var pend=state===6;
 h+='<div class="lbl">'+(pend?'Pending &middot; aus Vorschlag von Claude':'Vorschlag von Claude')+'</div>';
 h+='<div style="background:var(--BgBase);border-left:3px '+(pend?'solid var(--Warning)':'dashed var(--AccentPrimary)')+';padding:8px 10px;margin-bottom:10px">';
-f.v.forEach(function(x,i){var uns=(f.u===i)||(f.u==='typ'&&i===0);var lv=(i===1&&f.v.length===2)?'Kategorie':LV[i];
+var vv=vOf(f);vv.forEach(function(x,i){var uns=(f.u===i)||(f.u==='typ'&&i===0);var lv=(i===1&&vv.length===2)?'Kategorie':LV[i];
  h+='<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0"><span style="color:var(--TextSecondary)">'+lv+'</span><span style="color:'+(uns?'var(--Warning)':'var(--TextBright)')+'">'+esc(x)+(uns?' ?':'')+'</span></div>';});
-h+='<div style="font-size:11px;color:var(--TextSecondary);margin-top:6px">Ziel: <span style="color:var(--TextPrimary)">Pl&auml;ne/'+f.v.join('/')+'/</span></div></div>';
+h+='<div style="font-size:11px;color:var(--TextSecondary);margin-top:6px">Ziel: <span style="color:var(--TextPrimary)">Pl&auml;ne/'+vv.join('/')+'/</span></div></div>';
 if(f.u!=null)h+='<div style="background:var(--BgBase);border-left:3px solid var(--Warning);padding:7px 9px;font-size:11px;line-height:1.5;margin-bottom:10px"><span style="color:var(--Warning)">&#9888; unsicher: '+(f.u==='typ'?'Typ':LV[f.u])+'</span><br><span style="color:var(--TextPrimary)">'+esc(f.why)+'</span></div>';
 else h+='<div class="lbl">Begr&uuml;ndung</div><div style="font-size:12px;color:var(--TextPrimary);line-height:1.5;margin-bottom:10px">'+esc(f.why)+'</div>';
 if(f.pair)h+='<div style="font-size:11px;color:var(--Info);margin-bottom:10px">&#9939; Paar &ndash; Vorschlag gilt f&uuml;r beide Dateien (eine Revision).</div>';
@@ -399,7 +432,10 @@ var STAT={2:['<span class="spin"></span>','liest Pläne','6 / 11','var(--TextPri
 5:['<span style="color:var(--Success)">&#9679;</span>','Entwurf bereit','9 Vorschläge · 2 unsicher','var(--Success)'],
 6:['<span style="color:var(--Success)">&#10003;</span>','Vorschläge übernommen','10 pending','var(--Success)'],
 7:['<span style="color:var(--Error)">&#9679;</span>','nicht erreichbar','','var(--Error)'],
-0:['<span style="color:var(--TextSecondary)">&#9675;</span>','bereit','Entwurf verworfen','var(--TextSecondary)']};
+0:['<span style="color:var(--TextSecondary)">&#9675;</span>','bereit','Entwurf verworfen','var(--TextSecondary)'],
+9:['<span style="color:var(--Warning)">&#9679;</span>','wartet auf deine Entscheidung','1 fehlt im Projekt','var(--Warning)'],
+10:['<span style="color:var(--Warning)">&#9679;</span>','wartet auf deine Entscheidung','1 fehlt im Projekt','var(--Warning)'],
+11:['<span style="color:var(--Success)">&#9679;</span>','Entwurf bereit','10 Vorschläge · 2 unsicher','var(--Success)']};
 var s=STAT[state]||STAT[0];
 st.innerHTML=s[0]+'<span style="color:'+s[3]+'">'+s[1]+'</span><span style="color:var(--TextSecondary);margin-left:auto;font-size:11px">'+s[2]+'</span>'+
 (state===2?'<button class="btn" style="height:22px;font-size:11px;padding:0 8px" onclick="go(0)">Abbrechen</button>':'');
@@ -417,6 +453,14 @@ h+=START+READ;
 if(state===2)h+='<div class="who">Claude</div><div class="msg mC dots" style="width:56px"><span></span><span></span><span></span></div>';
 if(state>=3||state===0){h+=C('10 von 11 Dateien sind klar. Eine Sache zum Polierplan OG3:')+Q1(state!==3);}
 if(state>=4||state===0){h+=H('1. Haus 2 / OG3')+C('Danke. Noch zum Kombi-Plan:')+Q2(state!==4);}
+if(state>=9){h+=H('1. Schalung')+
+ S('Entwurf gepr&uuml;ft &#10003; 9 Vorschl&auml;ge (10 Dateien) g&uuml;ltig &middot; 1 Datei: fehlt im Projekt','ok')+
+ C(kind==='bauteil'?'F&uuml;r die <b>Statik-Hauptberechnung</b> fehlt ein Bauteil: Der Plankopf nennt &bdquo;Tiefgarage &ndash; Bodenplatte UG2&ldquo;, im Projekt gibt es nur Haus 1 und Haus 2. Ich lege nichts selbst an &ndash; du entscheidest:'
+  :'Die <b>Statik-Hauptberechnung</b> ist eine Berechnung, kein Plan &ndash; sie passt zu keinem Dokumenttyp des Projekts. Ich lege nichts selbst an &ndash; du entscheidest:')+MISS(state===11);
+ if(state===11)h+=S('&#10003; '+(kind==='bauteil'?'Bauteil TG &bdquo;Tiefgarage&ldquo; mit Gescho&szlig;en UG2, UG1':'Dokumenttyp &bdquo;Statik-Berechnung&ldquo; (ohne Unterteilung)')+' angelegt &middot; Kontext aktualisiert &middot; an Claude gemeldet','ok')+
+  C('Danke. <b>Statik_2026-03</b> &rarr; '+(kind==='bauteil'?'Statik &rsaquo; TG &rsaquo; UG2 (Plankopf &bdquo;Bodenplatte UG2&ldquo;).':'Statik-Berechnung.'))+
+  S('Entwurf gepr&uuml;ft &#10003; 10 Vorschl&auml;ge (11 Dateien) g&uuml;ltig','ok');
+ lg.innerHTML=h;lg.scrollTop=lg.scrollHeight;return;}
 if(state>=5||state===0){h+=H('1. Schalung')+
  S('Entwurf gepr&uuml;ft: <span style="color:var(--Error)">ung&uuml;ltig</span> &ndash; Statik_2026-03: Bauteil-ID 9 nicht im Kontext. An Claude zur&uuml;ck (Versuch 1/2).','err')+
  C('Statik: Im Kontext gibt es keinen Ordner f&uuml;r die Hauptberechnung. Ich lasse die Zeile offen, bitte von Hand zuordnen.')+
@@ -424,6 +468,25 @@ if(state>=5||state===0){h+=H('1. Schalung')+
  C('Entwurf ist fertig. Unsicher sind zwei Stellen: <b>B-101</b> &ndash; Haus 1 oder 2 (gemeinsame Decke), und der <b>Typ von 5998-150</b> (Kombi). Beide sind in der Liste markiert.');}
 if(state===6)h+=S('9 Vorschl&auml;ge &uuml;bernommen &rarr; 10 Dateien pending. Importiert wird erst mit &bdquo;Import best&auml;tigen&ldquo;.','ok');
 lg.innerHTML=h;lg.scrollTop=lg.scrollHeight;}
+/* E11: Karte „fehlt im Projekt“ mit vorbefülltem Formular */
+function FLD(lbl,val,done,hint){return '<div style="margin-bottom:6px"><div class="lbl" style="font-size:11px">'+lbl+'</div>'+
+ '<input value="'+val+'" '+(done?'disabled':'')+' style="width:100%;height:26px;background:var(--BgInput);border:1px solid var(--BgInput);color:var(--TextBright);font-family:inherit;font-size:12px;border-radius:3px;padding:0 8px">'+
+ (hint?'<div style="font-size:10px;color:var(--TextSecondary);margin-top:2px">'+hint+'</div>':'')+'</div>';}
+function MISS(done){var b=kind==='bauteil';
+ var h='<div class="q" style="border-color:var(--Warning)"><div class="cap" style="margin-bottom:4px;color:var(--Warning)">&#65291; Fehlt im Projekt</div>'+
+ '<div class="qT">'+(b?'Bauteil &bdquo;Tiefgarage&ldquo; anlegen?':'Dokumenttyp &bdquo;Statik-Berechnung&ldquo; anlegen?')+'</div>'+
+ '<div style="font-size:11px;color:var(--TextSecondary);margin:-4px 0 8px;line-height:1.45">f&uuml;r <span style="font-family:Consolas,monospace;color:var(--TextPrimary)">Statik_2026-03_Hauptberechnung.pdf</span></div>';
+ if(b)h+=FLD('Kurzname','TG',done)+FLD('Beschreibung','Tiefgarage',done)+FLD('Gescho&szlig;e','UG2, UG1',done,'von unten nach oben, mit Komma &middot; sp&auml;ter in den Projekteinstellungen &auml;nderbar');
+ else h+=FLD('Name','Statik-Berechnung',done)+'<div style="margin-bottom:6px"><div class="lbl" style="font-size:11px">Unterteilung</div>'+
+  '<select '+(done?'disabled':'')+' style="width:100%;height:26px;background:var(--BgInput);border:1px solid var(--BgInput);color:var(--TextBright);font-family:inherit;font-size:12px;border-radius:3px;padding:0 6px"><option>keine (Empfehlung)</option><option>Bauteile</option><option>Kategorien</option></select>'+
+  '<div style="font-size:10px;color:var(--TextSecondary);margin-top:2px">Ordner Pl&auml;ne/Statik-Berechnung/ entsteht erst beim Import &middot; Farbe automatisch</div></div>';
+ if(done)h+='<div style="font-size:12px;color:var(--Success);margin-top:4px">&#10003; angelegt</div>';
+ else h+='<div style="display:flex;gap:8px;align-items:center;margin-top:4px"><button class="btnP" style="height:28px" onclick="go(11)">Anlegen</button>'+
+  '<button class="btn" style="height:28px" onclick="notNow()">Nicht anlegen</button><span style="flex:1"></span>'+
+  '<span style="font-size:11px;color:var(--AccentPrimary);cursor:pointer" onclick="msg(\'▶ würde die Projekteinstellungen öffnen\')">Projekteinstellungen &#8599;</span></div>'+
+  '<div style="font-size:10px;color:var(--TextSecondary);margin-top:6px">Claude legt nie selbst etwas an &middot; nach dem Anlegen ordnet Claude die Datei neu zu</div>';
+ return h+'</div>';}
+function notNow(){$('log').innerHTML+=S('Nicht angelegt &ndash; Statik_2026-03 bleibt ohne Vorschlag (von Hand zuordnen).')+C('In Ordnung, die Datei bleibt offen.');$('log').scrollTop=1e6;}
 function sendFree(){var v=$('inp').value.trim();if(!v)return;$('log').innerHTML+=H(esc(v))+S('&#8635; Claude schreibt den Entwurf neu …');$('inp').value='';$('log').scrollTop=1e6;}
 document.addEventListener('keydown',function(e){
  if(e.key==='Escape'&&state===1){go(0);}

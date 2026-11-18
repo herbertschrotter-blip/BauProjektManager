@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.227] — 2026-11-18
+
+### Docs: Mockup 3.4 v1.3 – Schnellanlage fehlender Stammdaten abgenommen (BPM-131, E11)
+
+`02_ManuellSortieren_Claude.html` um die Zustände 9–11 erweitert: Passt eine Datei nur zu einem Bauteil, Geschoss oder Dokumenttyp, den es im Projekt noch nicht gibt, schreibt Claude ihn als `fehlende_stammdaten` in den Entwurf statt eine ID zu erfinden. Im Chat erscheint die Karte „Fehlt im Projekt“ mit vorbefülltem Formular (Bauteil: Kurzname, Beschreibung, Geschosse; Geschoss: Bauteil, Name, Beschreibung; Dokumenttyp: Name, Unterteilung) und „Anlegen“ / „Nicht anlegen“. Nach dem Anlegen bekommt Claude Bescheid und ordnet neu zu; Claude legt nie selbst etwas an. Abgenommen von Herbert, Seitenliste 3.4 Mockup 1.3.
+
+---
 ## [v0.28.226] — 2026-11-18
 
 ### Docs: Seitenliste aktualisiert

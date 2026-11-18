@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3.8 Profil-Wizard</title>
+<link rel="stylesheet" href="../theme-app.css">
+<script src="../theme.js"></script>
+<!--
+3.8 Profil-Wizard – Neuzuschnitt BPM-130 (Entscheidung Herbert 2026-11-18: 4 Schritte).
+ADR-065 P.7: Das Erkennungsprofil hängt am Dokumenttyp (0..1). Kein eigenes Namensfeld, kein Schritt „Zielordner“
+(der Ablageort kommt seit ADR-061 aus dem Dokumenttyp über den DocumentTargetPathResolver).
+  1 Dokumenttyp + Beispieldatei   Typ wählen (Typen mit vorhandenem Profil: Hinweis „ersetzt Profil“), Datei aus dem Eingang
+  2 Segmente                      vorhandener Segment-Editor (BPM-126c, SegmentEditorControl): Kacheln, Trenner, Drag-Drop
+                                  der Segmenttypen; Endung und Kopiermarker „_(1)“, „ (2)“, „ - Kopie“ sind nie ein Segment
+  3 Index                         „im Dateinamen“ / „kein Index“; fehlt das Index-Segment, warnt der Schritt nur (optional)
+  4 Erkennung + Speichern         Segmente anklicken, die den Typ erkennen (Token-basiert, nicht Position); Speichern legt
+                                  das Profil am Dokumenttyp ab (ProfileBuilder → ProfileManager.Save mit Guard)
+Der Wizard ist Lern-Eingabe (BPM-121): Zuweisungen landen in plan_document_segments.
+-->
+<style>
+  .dlg{background:var(--BpmBgBase);height:100%;display:flex;flex-direction:column;font-size:13px;color:var(--BpmTextPrimary);font-family:'Segoe UI',sans-serif}
+  .ttl{background:var(--BpmBgSurface);border-bottom:1px solid var(--BpmBorderDefault);padding:10px 16px;color:var(--BpmTextBright);font-weight:600}
+  .hd{background:var(--BpmBgSurface);border-bottom:1px solid var(--BpmBorderSubtle);padding:12px 16px}
+  .st{color:var(--BpmTextBright);font-size:15px;font-weight:600;margin-bottom:8px}
+  .dots{display:flex;gap:6px;align-items:center;font-size:11px;color:var(--BpmTextSecondary)}
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--BpmBorderDefault)}
+  .dot.done{background:var(--BpmBgActive)} .dot.on{background:var(--BpmAccentPrimary)}
+  .bd{flex:1;padding:16px 20px;overflow:auto}
+  .lbl{color:var(--BpmTextSecondary);font-size:12px;margin:10px 0 4px}
+  .hint{color:var(--BpmTextSecondary);font-size:11px;line-height:1.5}
+  .sel,.inp{background:var(--BpmBgInput);border:1px solid var(--BpmBorderDefault);color:var(--BpmTextBright);padding:6px 8px;border-radius:3px;font:inherit;width:360px}
+  .list{border:1px solid var(--BpmBorderDefault);border-radius:4px;max-width:620px}
+  .row{padding:7px 10px;border-top:1px solid var(--BpmBorderSubtle);font-family:Consolas,monospace;font-size:12px;cursor:pointer}
+  .row:first-child{border-top:none} .row.on{background:var(--BpmBgActive);color:var(--BpmTextBright)}
+  .warn{border-left:3px solid var(--BpmWarning);background:var(--BpmBgSurface);padding:8px 10px;font-size:12px;margin-top:10px;max-width:600px}
+  .ok{border-left:3px solid var(--BpmSuccess);background:var(--BpmBgSurface);padding:8px 10px;font-size:12px;margin-top:10px;max-width:600px}
+  .ex{background:var(--BpmBgSurface);border:1px solid var(--BpmBorderDefault);border-radius:4px;padding:12px 14px;margin-bottom:12px}
+  .fn{font-family:Consolas,monospace;font-size:11px;color:var(--BpmTextSecondary);margin-bottom:10px}
+  .tiles{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+  .tile{display:flex;flex-direction:column;align-items:center;padding:5px 10px;border-radius:4px;min-width:46px;cursor:pointer;color:#fff}
+  .tile b{font-family:Consolas,monospace;font-size:13px;font-weight:500} .tile i{font-style:normal;font-size:9px;opacity:.85}
+  .tile.unset{background:var(--BpmBgElevated);border:1px dashed var(--BpmTextSecondary);color:var(--BpmTextPrimary)}
+  .tile.pick{outline:2px solid var(--BpmAccentPrimary);outline-offset:1px}
+  .sep{color:var(--BpmTextSecondary);font-family:Consolas,monospace;padding:0 1px;cursor:pointer}
+  .ext,.copy{font-family:Consolas,monospace;font-size:12px;color:var(--BpmTextSecondary);padding:4px 6px;border:1px dashed var(--BpmBorderDefault);border-radius:4px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .chip{font-size:11px;padding:3px 9px;border-radius:10px;color:#fff;cursor:grab}
+  .rad{display:flex;gap:8px;align-items:flex-start;margin:6px 0;cursor:pointer}
+  .ft{display:flex;gap:8px;justify-content:flex-end;padding:10px 16px;border-top:1px solid var(--BpmBorderDefault);background:var(--BpmBgSurface)}
+  .btn{background:transparent;border:1px solid var(--BpmBorderDefault);color:var(--BpmTextPrimary);height:30px;padding:0 14px;border-radius:3px;font:inherit;cursor:pointer}
+  .btnP{background:var(--BpmAccentPrimary);border:none;color:var(--BpmTextOnAccent);height:30px;padding:0 16px;border-radius:3px;font:inherit;cursor:pointer}
+  .btnP:disabled{opacity:.4;cursor:default}
+</style>
+</head>
+<body>
+<script>
+const M = Mockup;
+const C = {nr:'var(--BpmFieldPlanNumber)', ix:'var(--BpmFieldPlanIndex)', art:'var(--BpmFieldPlanart)', ge:'var(--BpmFieldGeschoss)', ha:'var(--BpmFieldProjectNumber)', ig:'var(--BpmFieldIgnore)'};
+const SCHRITTE = ['Dokumenttyp und Beispieldatei', 'Segmente zuweisen', 'Index', 'Erkennung'];
+
+function kopf(n){
+  const d = SCHRITTE.map((_, i) => `<span class="dot ${i+1 < n ? 'done' : i+1 === n ? 'on' : ''}"></span>`).join('');
+  return `<div class="ttl">Erkennung für „Polierplan“ einrichten</div>
+  <div class="hd"><div class="st">Schritt ${n}: ${SCHRITTE[n-1]}</div><div class="dots">${d}<span style="margin-left:6px">Schritt ${n} von 4</span></div></div>`;
+}
+function fuss(n, weiterOk = true){
+  return `<div class="ft"><button class="btn" onclick="alert('Wizard schließen – nichts gespeichert')">Abbrechen</button>
+  <button class="btn" ${n === 1 ? 'disabled style="opacity:.4"' : `onclick="M.setz('z','s${n-1}')"`}>Zurück</button>
+  ${n < 4 ? `<button class="btnP" ${weiterOk ? '' : 'disabled'} onclick="M.setz('z','s${n+1}')">Weiter</button>`
+          : `<button class="btnP" onclick="alert('Profil am Dokumenttyp „Polierplan“ gespeichert (ProfileBuilder → ProfileManager.Save)')">Speichern</button>`}</div>`;
+}
+function tiles(opts = {}){
+  const t = [['6100',C.nr,'Plannr.'],['-',null],['140',C.nr,'Plannr.'],['_',null],['B',C.ix,'Index'],['_',null],
+             ['Polierplan',C.art,'Planart'],['_',null],['H1',C.ha,'Haus'],['_',null],['EG',C.ge,'Geschoss']];
+  return t.map(([v,c,l]) => c === null ? `<span class="sep" title="Trenner – klicken zum Verbinden/Trennen">${v}</span>`
+    : (opts.unset && v === 'H1') ? `<span class="tile unset"><b>${v}</b><i>? zuweisen</i></span>`
+    : `<span class="tile ${opts.pick && opts.pick.includes(v) ? 'pick' : ''}" style="background:${c}" ${opts.click ? `onclick="this.classList.toggle('pick')"` : ''}><b>${v}</b><i>${l}</i></span>`).join('');
+}
+
+function s1(){ return kopf(1) + `<div class="bd">
+  <div class="lbl">Dokumenttyp</div>
+  <select class="sel"><option>Polierplan</option><option>Bewehrung</option><option>Schalung (hat schon eine Erkennung)</option><option>Statik</option></select>
+  <div class="hint" style="margin-top:4px">Die Erkennung gehört zum Dokumenttyp – der Name und der Ablageordner kommen von dort.</div>
+  <div class="lbl" style="margin-top:16px">Beispieldatei aus dem Eingang</div>
+  <div class="list">
+    <div class="row on">6100-140_B_Polierplan_H1_EG_(1).pdf</div>
+    <div class="row">6100-101_Polierplan_H1_KG.pdf</div>
+    <div class="row">6100-205_Polierplan_H2_OG1.dwg</div>
+  </div>
+  <div class="hint" style="margin-top:6px">Oder <a href="#" style="color:var(--BpmAccentPrimary)" onclick="alert('Dateiauswahl')">andere Datei wählen …</a> · Endung und Kopiermarker werden nicht zerlegt.</div>
+</div>` + fuss(1); }
+
+function s2(unset){ return kopf(2) + `<div class="bd">
+  <div class="ex"><div class="fn">6100-140_B_Polierplan_H1_EG_(1).pdf</div>
+    <div class="tiles">${tiles({unset})}<span class="copy" title="Kopiermarker – kein Segment">_(1)</span><span class="ext">.pdf</span></div></div>
+  <div class="hint">Segmenttyp auf eine Kachel ziehen · Trenner anklicken verbindet/trennt Kacheln · „_(1)“ ist ein Kopiermarker und wird ignoriert.</div>
+  <div class="chips">
+    <span class="chip" style="background:${C.nr}">Plannummer</span><span class="chip" style="background:${C.ix}">Index</span>
+    <span class="chip" style="background:${C.art}">Planart</span><span class="chip" style="background:${C.ha}">Haus</span>
+    <span class="chip" style="background:${C.ge}">Geschoss</span><span class="chip" style="background:${C.ig}">Ignorieren</span>
+    <span class="chip" style="background:var(--BpmBgElevated);border:1px dashed var(--BpmTextSecondary);color:var(--BpmTextPrimary)" onclick="alert('Segmenttypen verwalten')">+ Typen verwalten</span></div>
+  ${unset ? `<div class="warn">1 Kachel ohne Typ (H1). Zuweisen oder „Ignorieren“ – <a href="#" style="color:var(--BpmAccentPrimary)" onclick="M.setz('z','s2')">alle offenen auf Ignorieren</a>.</div>`
+          : `<div class="ok">Alle Kacheln haben einen Typ. Plannummer ist zugewiesen.</div>`}
+</div>` + fuss(2, !unset); }
+
+function s3(fehlt){ return kopf(3) + `<div class="bd">
+  <div class="lbl">Wo steht der Index?</div>
+  <label class="rad"><input type="radio" name="ix" ${fehlt ? '' : 'checked'}><span>Im Dateinamen<div class="hint">Segment „Index“ aus Schritt 2${fehlt ? '' : ' (hier: „B“)'}; fehlt er bei einer Datei, ist der Plan ohne Index.</div></span></label>
+  <label class="rad"><input type="radio" name="ix" ${fehlt ? 'checked' : ''}><span>Kein Index im Dateinamen<div class="hint">Der Index wird beim Erfassen von Hand oder aus dem Plankopf gesetzt.</div></span></label>
+  ${fehlt ? `<div class="warn">In der Beispieldatei ist kein Index-Segment zugewiesen. Das ist erlaubt – weiter geht es trotzdem.</div>` : ''}
+</div>` + fuss(3); }
+
+function s4(){ return kopf(4) + `<div class="bd">
+  <div class="ex"><div class="fn">Welche Teile zeigen, dass es ein Polierplan ist? Anklicken (mehrere möglich).</div>
+    <div class="tiles">${tiles({pick:['Polierplan'], click:true})}<span class="copy">_(1)</span><span class="ext">.pdf</span></div></div>
+  <div class="ok">Erkennung: Dateiname enthält „Polierplan“ – an beliebiger Stelle (nicht an Position 3), denn ein fehlender Index verschiebt alles dahinter.</div>
+  <div class="hint" style="margin-top:12px">Gespeichert wird am Dokumenttyp „Polierplan“. Gibt es dort schon eine Erkennung, wird sie ersetzt (Hinweis vor dem Speichern).</div>
+</div>` + fuss(4); }
+
+M.start({ nr: '3.8', titel: 'Profil-Wizard', version: '0.2',
+  zustaende: [['s1','1 Dokumenttyp'],['s2','2 Segmente'],['s2o','2 Segment offen'],['s3','3 Index'],['s3f','3 ohne Index'],['s4','4 Erkennung']],
+  zeige: (s) => `<div class="dlg">${({s1:s1(), s2:s2(false), s2o:s2(true), s3:s3(false), s3f:s3(true), s4:s4()})[s.z]}</div>`,
+});
+</script>
+</body>
+</html>

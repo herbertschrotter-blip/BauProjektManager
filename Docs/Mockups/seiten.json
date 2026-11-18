@@ -703,6 +703,12 @@
       "datum": "16.11.2026",
       "was": "Bestand beim Anlegen der Seitenliste",
       "art": "code"
+     },
+     {
+      "v": "0.2",
+      "datum": "18.11.2026",
+      "was": "Neuzuschnitt BPM-130: 4 Schritte (Dokumenttyp + Beispieldatei, Segmente über Segment-Editor, Index optional, Erkennung + Speichern), kein Namensfeld, kein Zielordner-Schritt; neue Seite nach Seitenlisten-Standard (aus altem Mockup übernommen) – Mockup abgenommen (Herbert)",
+      "art": "mockup"
      }
     ],
     "mockup_alt": "PlanManager/03_ProfilWizard/01_Datei.html",
@@ -713,8 +719,10 @@
      "Dialograhmen"
     ],
     "stand_commit": "be5ad51",
-    "version_abgenommen": null,
-    "code_stand": "5f4d263f4f"
+    "version_abgenommen": "0.2",
+    "code_stand": "5f4d263f4f",
+    "mockup": "seiten/profil-wizard.html",
+    "version_mockup": "0.2"
    },
    {
     "nr": "3.9",

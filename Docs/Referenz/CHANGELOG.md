@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.234] — 2026-11-18
+
+### Docs: Mockup 3.8 v0.2 – Profil-Wizard mit 4 Schritten abgenommen (BPM-130)
+
+Neue Seite `Docs/Mockups/seiten/profil-wizard.html` nach Seitenlisten-Standard (Theme, Zustände als Umschalter), aus den alten Wizard-Mockups übernommen (`mockup_alt` bleibt). Entscheidung Herbert: 4 Schritte – Dokumenttyp + Beispieldatei, Segmente über den Segment-Editor (Endung und Kopiermarker sind nie ein Segment), Index (optional, nur Hinweis), Erkennung + Speichern am Dokumenttyp. Kein Namensfeld, kein Schritt „Zielordner“ (ADR-061/065 P.7). Abgenommen über die Seitenliste.
+
+---
 ## [v0.28.233] — 2026-11-18
 
 ### Docs: Seitenliste aktualisiert

@@ -165,9 +165,11 @@ public partial class ProjectDetailView : UserControl
         var pruefer = new Services.ClaudeSortierung.ClaudeSortEntwurfPruefer(
             _bpmDb, new DocumentTargetPathResolver(_bpmDb, normalizer, fs), fs, fs, normalizer, _segmentTypeCatalog);
         var settings = _settingsService;
+        var schnellanlage = new Services.ClaudeSortierung.ClaudeSortSchnellanlage(
+            _bpmDb, new Infrastructure.Services.DocumentTypeCreationService(_bpmDb, normalizer));
         return new ClaudeSortViewModel(_claudeAssistant, builder, pruefer, captureVm,
             () => settings.LoadDevice().Claude.SortingEnabled,
-            Infrastructure.Services.Claude.ClaudeAssistantOptions.DefaultJobRoot());
+            Infrastructure.Services.Claude.ClaudeAssistantOptions.DefaultJobRoot(), schnellanlage);
     }
 
     private static async Task InitializeManualSortAsync(ManualCaptureViewModel vm, Project project)

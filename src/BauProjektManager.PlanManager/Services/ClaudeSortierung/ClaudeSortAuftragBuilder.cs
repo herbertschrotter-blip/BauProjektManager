@@ -120,6 +120,23 @@ public sealed partial class ClaudeSortAuftragBuilder
         return new ClaudeSortAuftrag(name, anfrage.AuftragsOrdner, regeln, anfrage.ProjectId, dateien, bekannte);
     }
 
+    /// <summary>
+    /// Schreibt Dokumenttypen und Bauteile in kontext.json neu (nach einer Schnellanlage, ADR-067 E11). Eingangsdateien
+    /// und Plankopf-Text bleiben, wie sie sind — die Dateien werden nicht noch einmal gelesen.
+    /// </summary>
+    public void KontextAktualisieren(ClaudeSortAuftrag auftrag)
+    {
+        var datei = _path.Combine(auftrag.Ordner, ClaudeSortArten.KontextDatei);
+        if (System.Text.Json.Nodes.JsonNode.Parse(_reader.ReadAllText(datei)) is not System.Text.Json.Nodes.JsonObject alt)
+            throw new InvalidOperationException("kontext.json ist kein JSON-Objekt.");
+        var neu = System.Text.Json.Nodes.JsonNode.Parse(JsonSerializer.Serialize(
+            BaueKontext(auftrag.ProjectId, auftrag.Name, [], []), ClaudeSortJson.Options))!.AsObject();
+        foreach (var feld in new[] { "dokumenttypen", "bauteile" })
+            alt[feld] = neu[feld]?.DeepClone();
+        _writer.WriteAllText(datei, alt.ToJsonString(ClaudeSortJson.Options));
+        Log.Information("Claude-Sortierung: Kontext von Auftrag {Name} aktualisiert (Stammdaten)", auftrag.Name);
+    }
+
     private ClaudeSortKontext BaueKontext(
         string projectId, string name,
         IReadOnlyList<KnownPlanDocument> bekannte, IReadOnlyList<KontextEingangsdatei> eingangsdateien)

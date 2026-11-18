@@ -41,7 +41,8 @@ public sealed record ClaudeSortAuftrag(
     IReadOnlyList<KnownPlanDocument> BekanntePlaene);
 
 /// <summary>Eine Datei, die Claude bewusst nicht zuordnen konnte.</summary>
-public sealed record ClaudeSortNichtZuordenbar(string DateiId, CaptureItem Item, string Grund);
+/// <param name="Fehlt">Vorschlag von Claude, was im Projekt fehlt (ADR-067 E11); NULL = nichts vorgeschlagen.</param>
+public sealed record ClaudeSortNichtZuordenbar(string DateiId, CaptureItem Item, string Grund, ClaudeSortFehlt? Fehlt = null);
 
 /// <summary>
 /// Eine gepruefte, gueltige Entwurfszeile: alle IDs sind in den Stammdaten

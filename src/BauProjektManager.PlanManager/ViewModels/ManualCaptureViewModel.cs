@@ -91,7 +91,7 @@ public partial class CaptureRowViewModel : ObservableObject
     /// <summary>Kennzeichen waehrend "Mit Claude sortieren" (bei Claude / Vorschlag / ungueltig), NULL = keins.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsClaudeAtWork), nameof(IsClaudeDraft), nameof(IsClaudeUncertain),
-        nameof(IsClaudeInvalid), nameof(ClaudeMarkText), nameof(RowToolTip), nameof(ClaudeInfo), nameof(HasClaudeInfo),
+        nameof(IsClaudeInvalid), nameof(IsClaudeMissing), nameof(ClaudeMarkText), nameof(RowToolTip), nameof(ClaudeInfo), nameof(HasClaudeInfo),
         nameof(ClaudeInfoTitle), nameof(ClaudeUncertainText), nameof(ClaudeDetailsText), nameof(HasClaudeDetails))]
     private ClaudeRowMark? _claudeMark;
 
@@ -100,6 +100,7 @@ public partial class CaptureRowViewModel : ObservableObject
     public bool IsClaudeUncertain => ClaudeMark?.Kind == ClaudeRowMarkKind.DraftUncertain
                                      || ClaudeSuggestion is { IsUncertain: true };
     public bool IsClaudeInvalid => ClaudeMark?.Kind == ClaudeRowMarkKind.Invalid;
+    public bool IsClaudeMissing => ClaudeMark?.Kind == ClaudeRowMarkKind.Missing;
     public string ClaudeMarkText => ClaudeMark?.Text ?? "";
 
     /// <summary>Was Claude zu dieser Zeile sagt — aus dem offenen Entwurf oder dem uebernommenen Vorschlag.</summary>

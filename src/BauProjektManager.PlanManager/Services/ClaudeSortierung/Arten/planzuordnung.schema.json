@@ -57,7 +57,20 @@
         "required": ["datei_id", "grund"],
         "properties": {
           "datei_id": { "type": "string", "pattern": "^D-\\d{3,5}$" },
-          "grund": { "type": "string", "maxLength": 300 }
+          "grund": { "type": "string", "maxLength": 300 },
+          "fehlt": {
+            "type": ["object", "null"],
+            "additionalProperties": false,
+            "required": ["art", "name"],
+            "properties": {
+              "art": { "enum": ["bauteil", "geschoss", "dokumenttyp"] },
+              "name": { "type": "string", "minLength": 1, "maxLength": 40 },
+              "beschreibung": { "type": ["string", "null"], "maxLength": 100 },
+              "bauteil_id": { "type": ["string", "null"] },
+              "geschosse": { "type": "array", "maxItems": 20, "items": { "type": "string", "minLength": 1, "maxLength": 40 } },
+              "unterteilung": { "enum": ["keine", "bauteile", "kategorien", null] }
+            }
+          }
         }
       }
     },

@@ -141,12 +141,13 @@ public sealed partial class ClaudeSortEntwurfPruefer
             lauf.Fehler.Add($"{ort}: muss ein Objekt sein.");
             return;
         }
-        var feld = new ClaudeSortFeldLeser(lauf.Fehler, ort, el, ["datei_id", "grund"]);
+        var feld = new ClaudeSortFeldLeser(lauf.Fehler, ort, el, ["datei_id", "grund", "fehlt"]);
         var dateiId = feld.Text("datei_id", pflicht: true, maxLaenge: 20);
         var grund = feld.Text("grund", pflicht: true, maxLaenge: 300) ?? string.Empty;
+        var fehlt = PruefeFehlt(lauf, ort, el);
         if (dateiId is null || PruefeDatei(lauf, dateiId, ort) is not { } item)
             return;
-        lauf.NichtZuordenbar.Add(new ClaudeSortNichtZuordenbar(dateiId, item, grund));
+        lauf.NichtZuordenbar.Add(new ClaudeSortNichtZuordenbar(dateiId, item, grund, fehlt));
     }
 
     /// <summary>

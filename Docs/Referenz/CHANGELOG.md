@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.228] — 2026-11-18
+
+### Feature: Mit Claude sortieren – Schnellanlage fehlender Stammdaten aus dem Chat (BPM-131, E11)
+
+Umsetzung von Mockup 3.4 v1.3: Claude schlägt fehlende Bauteile, Geschosse oder Dokumenttypen in `nicht_zuordenbar[].fehlt` vor (Schema und Vorschrift erweitert) statt eine ID zu erfinden. Die Prüfung lehnt Vorschläge für schon Vorhandenes, unbekannte Arten (auch Kategorie) und fehlerhafte Felder ab. Im Chat erscheint je Vorschlag die Karte „Fehlt im Projekt“ (Bauteil: Kurzname, Beschreibung, Geschosse; Geschoss: Bauteil, Name, Beschreibung; Dokumenttyp: Name, Unterteilung) mit „Anlegen“ / „Nicht anlegen“, die Zeile zeigt „＋ fehlt im Projekt – siehe Chat“. „Anlegen“ legt über `ClaudeSortSchnellanlage` an (Beschreibung jetzt auch bei `InsertBuildingPart` / `InsertBuildingLevel`), lädt die Stammdaten des Tabs neu, schreibt `kontext.json` (Dokumenttypen, Bauteile) neu und schickt Claude die neuen IDs. Während Claude noch arbeitet, wird nichts angelegt; Fehler beim Anlegen stehen in der Karte. ADR-067 nachgezogen. Tests: 701.
+
+---
 ## [v0.28.227] — 2026-11-18
 
 ### Docs: Mockup 3.4 v1.3 – Schnellanlage fehlender Stammdaten abgenommen (BPM-131, E11)

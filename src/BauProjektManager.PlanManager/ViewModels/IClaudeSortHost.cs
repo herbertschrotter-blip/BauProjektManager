@@ -1,3 +1,4 @@
+using BauProjektManager.Domain.Models;
 using BauProjektManager.Domain.Models.PlanManager;
 using BauProjektManager.PlanManager.Services;
 
@@ -22,6 +23,12 @@ public interface IClaudeSortHost
 
     /// <summary>Eingang neu analysieren und die Tabelle neu aufbauen.</summary>
     Task ReanalyzeAsync();
+
+    /// <summary>Bauteile des Projekts (Auswahl in der Karte „Fehlt im Projekt“).</summary>
+    IReadOnlyList<BuildingPart> BuildingParts { get; }
+
+    /// <summary>Stammdaten nach einer Schnellanlage aus dem Chat neu laden (Radial sieht die Neuanlage).</summary>
+    void StammdatenNeuLaden();
 
     /// <summary>Zeilen kennzeichnen (Schluessel = relativer Pfad); leere Liste nimmt alle Kennzeichen weg.</summary>
     void SetClaudeMarks(IReadOnlyDictionary<string, ClaudeRowMark> marks);

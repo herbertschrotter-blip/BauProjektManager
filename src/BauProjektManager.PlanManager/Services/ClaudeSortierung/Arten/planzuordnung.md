@@ -87,6 +87,14 @@ Du verschiebst und benennst nichts: Den Ablageordner baut die App aus deiner Zuo
 - **PDF und DWG desselben Plans** (gleicher Name, andere Endung) bekommen dieselbe Zuordnung.
 - **Nichts passt** (kein Dokumenttyp, kein Bauteil im Kontext): in `nicht_zuordenbar` mit Grund. Lege nichts an und
   erfinde keine IDs – Herbert legt fehlende Stammdaten selbst an.
+- **Fehlt im Projekt:** Nennt der Plankopf klar ein Bauteil, ein Geschoss oder einen Dokumenttyp, den es im Kontext
+  nicht gibt, schlag ihn in `nicht_zuordenbar` unter `fehlt` vor, z. B.
+  `"fehlt": { "art": "bauteil", "name": "TG", "beschreibung": "Tiefgarage", "geschosse": ["UG2", "UG1"] }`,
+  `{ "art": "geschoss", "bauteil_id": "…", "name": "OG3" }` oder
+  `{ "art": "dokumenttyp", "name": "Statik-Berechnung", "unterteilung": "keine" }`. Bauteil: `name` = Kurzname,
+  Geschosse von unten nach oben. Herbert entscheidet in der App, ob er es anlegt; dann bekommst du die neuen IDs und
+  ordnest die Dateien neu zu. Gibt es etwas schon (auch anders geschrieben), nimm die vorhandene ID. Kategorien
+  schlägst du nicht vor.
 - Passt eine Datei zu zwei Typen oder Bauteilen gleich gut, frag einmal (Format aus dem Rahmen); hängen mehrere Dateien
   an derselben Frage, stell sie für alle zusammen.
 

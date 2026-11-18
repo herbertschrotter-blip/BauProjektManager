@@ -1,3 +1,4 @@
+using BauProjektManager.Domain.Models;
 using BauProjektManager.Domain.Models.PlanManager;
 using BauProjektManager.PlanManager.Services;
 
@@ -20,6 +21,14 @@ public partial class ManualCaptureViewModel : IClaudeSortHost
     PendingAssignmentStore IClaudeSortHost.PendingStore => _pending;
 
     Task IClaudeSortHost.ReanalyzeAsync() => RefreshAsync();
+
+    IReadOnlyList<BuildingPart> IClaudeSortHost.BuildingParts => _parts;
+
+    void IClaudeSortHost.StammdatenNeuLaden()
+    {
+        _types = _bpmDb.GetDocumentTypes(_projectId);
+        _parts = _bpmDb.GetBuildingParts(_projectId);
+    }
 
     void IClaudeSortHost.SetClaudeMarks(IReadOnlyDictionary<string, ClaudeRowMark> marks)
     {

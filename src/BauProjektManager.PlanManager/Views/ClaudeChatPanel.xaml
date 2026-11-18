@@ -120,6 +120,56 @@
                                 IsEnabled="{Binding Question.IsAnswered, Converter={x:Static vm:ClaudeChatConverters.Not}}"/>
                     </StackPanel>
                 </Border>
+                <!-- Fehlt im Projekt: Schnellanlage aus dem Chat (Mockup 3.4 v1.3, ADR-067 E11) -->
+                <Border x:Name="Miss" Visibility="Collapsed" Margin="0,0,0,10" Padding="10,8" CornerRadius="4"
+                        Background="{DynamicResource BpmBgSurface}" BorderBrush="{DynamicResource BpmWarning}"
+                        BorderThickness="1" DataContext="{Binding Fehlt}">
+                    <StackPanel>
+                        <TextBlock Text="＋ FEHLT IM PROJEKT" Margin="0,0,0,4"
+                                   Foreground="{DynamicResource BpmWarning}" FontSize="{DynamicResource BpmFontSizeCaption}"/>
+                        <TextBlock Text="{Binding Titel}" TextWrapping="Wrap" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource BpmTextBright}" FontSize="{DynamicResource BpmFontSizeSmall}"/>
+                        <TextBlock Text="{Binding DateienText}" TextWrapping="Wrap" Margin="0,2,0,8" Foreground="{DynamicResource BpmTextSecondary}" FontSize="{DynamicResource BpmFontSizeCaption}"/>
+                        <StackPanel Visibility="{Binding IsGeschoss, Converter={StaticResource BoolToVis}}" Margin="0,0,0,6">
+                            <TextBlock Text="Bauteil" Margin="0,0,0,2" Foreground="{DynamicResource BpmTextSecondary}" FontSize="{DynamicResource BpmFontSizeCaption}"/>
+                            <ComboBox ItemsSource="{Binding Bauteile}" SelectedItem="{Binding Bauteil}" DisplayMemberPath="ShortName"
+                                      Style="{DynamicResource BpmComboBox}" IsEnabled="{Binding IsOpen}"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding NameLabel}" Margin="0,0,0,2" Foreground="{DynamicResource BpmTextSecondary}" FontSize="{DynamicResource BpmFontSizeCaption}"/>
+                        <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsOpen}" Margin="0,0,0,6"/>
+                        <StackPanel Visibility="{Binding HasBeschreibung, Converter={StaticResource BoolToVis}}" Margin="0,0,0,6">
+                            <TextBlock Text="Beschreibung" Margin="0,0,0,2" Foreground="{DynamicResource BpmTextSecondary}" FontSize="{DynamicResource BpmFontSizeCaption}"/>
+                            <TextBox Text="{Binding Beschreibung, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsOpen}"/>
+                        </StackPanel>
+                        <StackPanel Visibility="{Binding IsBauteil, Converter={StaticResource BoolToVis}}" Margin="0,0,0,6">
+                            <TextBlock Text="Geschosse" Margin="0,0,0,2" Foreground="{DynamicResource BpmTextSecondary}" FontSize="{DynamicResource BpmFontSizeCaption}"/>
+                            <TextBox Text="{Binding GeschosseText, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsOpen}"/>
+                            <TextBlock Text="von unten nach oben, mit Komma · später in den Projekteinstellungen änderbar"
+                                       TextWrapping="Wrap" Margin="0,2,0,0" Foreground="{DynamicResource BpmTextSecondary}" FontSize="{DynamicResource BpmFontSizeCaption}"/>
+                        </StackPanel>
+                        <StackPanel Visibility="{Binding IsDokumenttyp, Converter={StaticResource BoolToVis}}" Margin="0,0,0,6">
+                            <TextBlock Text="Unterteilung" Margin="0,0,0,2" Foreground="{DynamicResource BpmTextSecondary}" FontSize="{DynamicResource BpmFontSizeCaption}"/>
+                            <ComboBox ItemsSource="{x:Static vm:ClaudeSortFehltViewModel.Unterteilungen}" SelectedItem="{Binding Unterteilung}"
+                                      DisplayMemberPath="Text" Style="{DynamicResource BpmComboBox}" IsEnabled="{Binding IsOpen}"/>
+                            <TextBlock Text="Der Ordner entsteht erst beim Import · Farbe automatisch" TextWrapping="Wrap"
+                                       Margin="0,2,0,0" Foreground="{DynamicResource BpmTextSecondary}" FontSize="{DynamicResource BpmFontSizeCaption}"/>
+                        </StackPanel>
+                        <TextBlock x:Name="MissResult" Text="{Binding ErgebnisText}" TextWrapping="Wrap" Margin="0,2,0,4"
+                                   Visibility="{Binding HasErgebnis, Converter={StaticResource BoolToVis}}"
+                                   Foreground="{DynamicResource BpmTextSecondary}" FontSize="{DynamicResource BpmFontSizeSmall}"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0"
+                                    Visibility="{Binding IsOpen, Converter={StaticResource BoolToVis}}">
+                            <Button Content="Anlegen" Style="{DynamicResource BpmButtonPrimary}" Margin="0,0,8,0"
+                                    Command="{Binding DataContext.CreateMissingCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}"/>
+                            <Button Content="Nicht anlegen" Style="{DynamicResource BpmButtonSecondary}"
+                                    Command="{Binding DataContext.SkipMissingCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}"/>
+                        </StackPanel>
+                        <TextBlock Text="Claude legt nie selbst etwas an · nach dem Anlegen ordnet Claude die Datei neu zu"
+                                   TextWrapping="Wrap" Margin="0,6,0,0" Foreground="{DynamicResource BpmTextSecondary}" FontSize="{DynamicResource BpmFontSizeCaption}"/>
+                    </StackPanel>
+                </Border>
             </StackPanel>
             <DataTemplate.Triggers>
                 <DataTrigger Binding="{Binding Kind}" Value="{x:Static vm:ClaudeChatEntryKind.Claude}">
@@ -150,6 +200,12 @@
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Kind}" Value="{x:Static vm:ClaudeChatEntryKind.Question}">
                     <Setter TargetName="Q" Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="{x:Static vm:ClaudeChatEntryKind.Missing}">
+                    <Setter TargetName="Miss" Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Fehlt.IsErgebnisOk}" Value="True">
+                    <Setter TargetName="MissResult" Property="Foreground" Value="{DynamicResource BpmSuccess}"/>
                 </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>

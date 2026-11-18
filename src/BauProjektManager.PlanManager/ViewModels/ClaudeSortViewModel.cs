@@ -51,6 +51,7 @@ public sealed partial class ClaudeSortViewModel : ObservableObject, IAsyncDispos
     private readonly IClaudeSortHost _host;
     private readonly Func<bool> _isEnabled;
     private readonly string _jobRoot;
+    private readonly ClaudeSortSchnellanlage? _schnellanlage;
 
     private ClaudeSortAuftrag? _auftrag;
     private IClaudeSession? _session;
@@ -64,10 +65,12 @@ public sealed partial class ClaudeSortViewModel : ObservableObject, IAsyncDispos
     /// <param name="assistant">Port zu Claude Code; NULL = nicht verfuegbar (Knopf bleibt aus).</param>
     /// <param name="isEnabled">Schalter aus den Einstellungen (geraete-lokal, Standard aus).</param>
     /// <param name="jobRoot">Basisordner der Auftraege (ClaudeAssistantOptions.JobRootDirectory).</param>
+    /// <param name="schnellanlage">Anlegen fehlender Stammdaten aus dem Chat; NULL = Karten ohne Wirkung.</param>
     public ClaudeSortViewModel(
         IClaudeAssistant? assistant, ClaudeSortAuftragBuilder builder, ClaudeSortEntwurfPruefer pruefer,
-        IClaudeSortHost host, Func<bool> isEnabled, string jobRoot)
+        IClaudeSortHost host, Func<bool> isEnabled, string jobRoot, ClaudeSortSchnellanlage? schnellanlage = null)
     {
+        _schnellanlage = schnellanlage;
         _assistant = assistant;
         _builder = builder;
         _pruefer = pruefer;

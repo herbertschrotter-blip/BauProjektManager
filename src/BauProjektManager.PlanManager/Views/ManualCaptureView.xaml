@@ -217,6 +217,11 @@
                                 <Setter TargetName="AssignText" Property="Foreground" Value="{DynamicResource BpmError}"/>
                                 <Setter TargetName="AssignText" Property="Text" Value="{Binding ClaudeMarkText}"/>
                             </DataTrigger>
+                            <DataTrigger Binding="{Binding IsClaudeMissing}" Value="True">
+                                <Setter TargetName="RowBorder" Property="BorderBrush" Value="{DynamicResource BpmWarning}"/>
+                                <Setter TargetName="AssignText" Property="Foreground" Value="{DynamicResource BpmWarning}"/>
+                                <Setter TargetName="AssignText" Property="Text" Value="{Binding ClaudeMarkText}"/>
+                            </DataTrigger>
                             <DataTrigger Binding="{Binding IsPending}" Value="True">
                                 <Setter TargetName="RowBorder" Property="BorderBrush" Value="{DynamicResource BpmWarning}"/>
                                 <Setter TargetName="AssignText" Property="Foreground" Value="{DynamicResource BpmWarning}"/>

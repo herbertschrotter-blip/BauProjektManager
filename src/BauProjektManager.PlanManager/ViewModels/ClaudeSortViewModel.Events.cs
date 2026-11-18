@@ -150,6 +150,8 @@ public sealed partial class ClaudeSortViewModel
         var marks = new Dictionary<string, ClaudeRowMark>(StringComparer.OrdinalIgnoreCase);
         foreach (var item in _auftrag.Dateien.Values)
             marks[item.File.Scan.RelativePath] = new ClaudeRowMark(ClaudeRowMarkKind.Invalid, "✕ kein gültiger Vorschlag");
+        foreach (var n in ergebnis.NichtZuordenbar.Where(n => n.Fehlt is not null))
+            marks[n.Item.File.Scan.RelativePath] = new ClaudeRowMark(ClaudeRowMarkKind.Missing, FehltMarke);
         foreach (var z in gueltig)
             marks[z.Item.File.Scan.RelativePath] = Kennzeichen(z);
         _marks = marks;
@@ -163,6 +165,7 @@ public sealed partial class ClaudeSortViewModel
         Add(ergebnis.IstGueltig ? ClaudeChatEntryKind.SystemOk : ClaudeChatEntryKind.SystemError, text);
         foreach (var hinweis in ergebnis.Hinweise)
             Add(ClaudeChatEntryKind.System, hinweis);
+        ZeigeFehlendes(ergebnis);
         Phase = gueltig.Count > 0 ? ClaudeSortPhase.Draft : ClaudeSortPhase.Waiting;
         Log.Information("Claude-Sortierung: Entwurf {Name} angezeigt ({Valid} gueltig, {Uncertain} unsicher)",
             _auftrag.Name, gueltig.Count, unsicher);
@@ -173,7 +176,9 @@ public sealed partial class ClaudeSortViewModel
     {
         var unsicher = _offen.Count(z => z.Unsicher.Count > 0);
         var ohne = _marks.Values.Count(m => m.Kind == ClaudeRowMarkKind.Invalid);
+        var fehlt = _marks.Values.Count(m => m.Kind == ClaudeRowMarkKind.Missing);
         DraftSummary = $"{_offen.Count} Vorschläge" + (unsicher > 0 ? $" · {unsicher} unsicher" : "") +
+                       (fehlt > 0 ? $" · {fehlt} fehlt im Projekt" : "") +
                        (ohne > 0 ? $" · {ohne} ohne gültigen Vorschlag" : "");
         DraftButtonText = $"{_offen.Count} Vorschläge übernehmen";
         StatusDetail = DraftSummary;

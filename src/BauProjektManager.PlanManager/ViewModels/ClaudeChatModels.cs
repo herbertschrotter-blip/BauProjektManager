@@ -21,15 +21,19 @@ public enum ClaudeChatEntryKind
     /// <summary>Werkzeugnutzung von Claude ("↳ liest kontext.json").</summary>
     Activity,
     /// <summary>Rueckfrage mit Antwort-Knoepfen.</summary>
-    Question
+    Question,
+    /// <summary>Karte „Fehlt im Projekt“ mit Formular (Schnellanlage, ADR-067 E11).</summary>
+    Missing
 }
 
 /// <summary>Ein Eintrag im Chatverlauf.</summary>
-public sealed class ClaudeChatEntry(ClaudeChatEntryKind kind, string text, ClaudeQuestionViewModel? question = null)
+public sealed class ClaudeChatEntry(ClaudeChatEntryKind kind, string text, ClaudeQuestionViewModel? question = null,
+    ClaudeSortFehltViewModel? fehlt = null)
 {
     public ClaudeChatEntryKind Kind { get; } = kind;
     public string Text { get; } = text;
     public ClaudeQuestionViewModel? Question { get; } = question;
+    public ClaudeSortFehltViewModel? Fehlt { get; } = fehlt;
 }
 
 /// <summary>Rueckfrage im FRAGE-Format: Knoepfe je Antwort, bei "mehrere" Kontrollkaestchen.</summary>
@@ -88,7 +92,9 @@ public enum ClaudeRowMarkKind
     /// <summary>Gueltiger Vorschlag mit unsicheren Feldern.</summary>
     DraftUncertain,
     /// <summary>Kein gueltiger Vorschlag (nicht zuordenbar oder von der Pruefung abgelehnt).</summary>
-    Invalid
+    Invalid,
+    /// <summary>Claude schlaegt vor, etwas anzulegen, das im Projekt fehlt (Karte im Chat).</summary>
+    Missing
 }
 
 /// <summary>Kennzeichnung samt Anzeigetext und (bei Vorschlaegen) Begruendung.</summary>

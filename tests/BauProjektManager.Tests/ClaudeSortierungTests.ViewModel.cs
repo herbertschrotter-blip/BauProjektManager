@@ -35,6 +35,10 @@ public partial class ClaudeSortierungTests
         }
 
         public void SetClaudeMarks(IReadOnlyDictionary<string, ClaudeRowMark> marks) => Marks = marks;
+
+        public IReadOnlyList<BauProjektManager.Domain.Models.BuildingPart> BuildingParts { get; set; } = [];
+        public int StammdatenGeladen { get; private set; }
+        public void StammdatenNeuLaden() => StammdatenGeladen++;
     }
 
     private sealed class FakeSession : IClaudeSession

@@ -51,6 +51,7 @@ public sealed class ClaudeSortFactory
             new DocumentTargetPathResolver(_bpmDb, _normalizer, _path), _reader, _path, _normalizer, _segmentTypes);
         var schnellanlage = new ClaudeSortSchnellanlage(_bpmDb, new DocumentTypeCreationService(_bpmDb, _normalizer));
         return new ClaudeSortViewModel(_assistant, builder, pruefer, host,
-            () => _settings.LoadDevice().Claude.SortingEnabled, _jobRoot, schnellanlage);
+            () => _settings.LoadDevice().Claude.SortingEnabled, _jobRoot, schnellanlage,
+            () => Domain.Models.ClaudeSettings.NormalizeModel(_settings.LoadDevice().Claude.Model));
     }
 }

@@ -109,6 +109,21 @@
                                   Content="„Mit Claude sortieren“ im PlanManager einschalten"/>
                         <TextBlock Style="{DynamicResource BpmSmallText}" TextWrapping="Wrap" Margin="20,4,0,0"
                                    Text="Claude Code auf diesem PC schlägt Zuordnungen für neue Pläne vor. Dabei gehen Dateinamen, die Stammdaten des Projekts und – wenn du es beim Start ankreuzt – der Plankopf-Text über dein Claude-Abo an Anthropic. Importiert wird erst, wenn du bestätigst. Gilt nur für dieses Gerät."/>
+                        <!-- Modellwahl (BPM-131 E9, Seitenliste 2.1 Mockup 0.3) -->
+                        <Grid Margin="20,10,0,0" IsEnabled="{Binding ClaudeSortingEnabled}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="70"/>
+                                <ColumnDefinition Width="240"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Modell:" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource BpmTextPrimary}" FontSize="{DynamicResource BpmFontSizeLabel}"/>
+                            <ComboBox Grid.Column="1" Style="{DynamicResource BpmComboBox}"
+                                      ItemsSource="{x:Static vm:SettingsViewModel.ClaudeModelOptions}"
+                                      SelectedItem="{Binding ClaudeModel}" DisplayMemberPath="Text"/>
+                            <TextBlock Grid.Column="2" Text="gilt ab dem nächsten Auftrag" Margin="8,0,0,0"
+                                       VerticalAlignment="Center" Style="{DynamicResource BpmSmallText}"/>
+                        </Grid>
 
                     </StackPanel>
                 </ScrollViewer>

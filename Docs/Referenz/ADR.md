@@ -3474,7 +3474,7 @@ Gleichzeitig gilt `planmanager.db` als „rebuildbarer Cache" (ADR-004, ADR-041,
 
 **Datum:** 2026-11-16
 **Status:** ✅ Accepted (Entscheidungen Herbert 2026-11-16: Teil von V1; E1–E3 und Freigabe-Umfang siehe unten)
-**Implementierung:** In Progress — Backend v0.28.215, Chatfenster + Einstellung v0.28.216, Einzel-Annahme + Aufräumen v0.28.218, Index-Datum/Segmente/Tags v0.28.223, Löschen der Claude-Sitzungsdaten v0.28.225, Schnellanlage fehlender Stammdaten v0.28.228, Verdrahtung über `ClaudeSortFactory` (DI) v0.28.230; offen siehe „Noch nicht umgesetzt“
+**Implementierung:** In Progress — Backend v0.28.215, Chatfenster + Einstellung v0.28.216, Einzel-Annahme + Aufräumen v0.28.218, Index-Datum/Segmente/Tags v0.28.223, Löschen der Claude-Sitzungsdaten v0.28.225, Schnellanlage fehlender Stammdaten v0.28.228, Verdrahtung über `ClaudeSortFactory` (DI) v0.28.230, Modellwahl v0.28.232; offen siehe „Noch nicht umgesetzt“
 **Herkunft:** Wunsch Herbert: Eingangspläne nicht einzeln über das Radial erfassen. Vorbild sind ha-hausbau („Mit Claude ausfüllen“: Auftragsordner, Rahmen + Vorschrift, `kontext.json`, `FRAGE:`-Format, `entwurf.json` mit Prüfung, Speichern nur durch die App) und ha-finanzen (`claude.py`). Mockup: Seitenliste 3.4 (`02_ManuellSortieren_Claude.html`, abgenommen 2026-11-16).
 
 **Kontext:**
@@ -3502,7 +3502,9 @@ V1 importiert über die manuelle Erstaufnahme (ADR-059, Strategie B) und den jou
 
 **Umgesetzt in v0.28.228 (E11, Mockup 3.4 v1.3):** Nennt der Plankopf ein Bauteil, ein Geschoss oder einen Dokumenttyp, den es im Projekt nicht gibt, schreibt Claude die Datei in `nicht_zuordenbar` mit dem Feld `fehlt` (`art` bauteil | geschoss | dokumenttyp, `name`, optional `beschreibung`, `bauteil_id` beim Geschoss, `geschosse` beim Bauteil, `unterteilung` beim Dokumenttyp). Kategorien schlägt Claude nicht vor. Die Prüfung lehnt Vorschläge für Vorhandenes ab („nimm die vorhandene ID“). Je Vorschlag zeigt der Chat eine Karte „Fehlt im Projekt“ mit vorbefülltem Formular; „Anlegen“ legt über dieselben Stammdaten-Wege wie „+ Neu…“ im Radial an (`ClaudeSortSchnellanlage`, neuer Dokumenttyp im häufigsten Ablagebereich, Farbe Theme-Standard; der Ordner entsteht erst beim Import), schreibt Dokumenttypen und Bauteile in `kontext.json` neu und schickt Claude die neuen IDs mit der Bitte, die Dateien neu zuzuordnen. „Nicht anlegen“ schickt nichts an Claude, die Datei bleibt ohne Vorschlag. Claude legt nie selbst etwas an.
 
-**Noch nicht umgesetzt (offen, Empfehlungen im Entwurf):** Leere Auftragsordner bleiben stehen (FS-Port ohne Ordner-Löschen); Modellwahl und Höchstzahl Dateien je Auftrag (E9); Planverfasser-Hinweise (E7, post-V1).
+**Umgesetzt in v0.28.232 (E9, Entscheidung Herbert 2026-11-18, Mockup 2.1 v0.3):** Das Modell ist einstellbar (Einstellungen › Allgemein › Claude, geräte-lokal `claude.model`): „Standard von Claude Code“ (kein `--model`), Sonnet oder Opus; nur diese Werte gehen an Claude Code (`ClaudeSettings.NormalizeModel`), gilt ab dem nächsten Auftrag. Eine Höchstzahl Dateien je Auftrag gibt es bewusst nicht – alle Erstaufnahmen gehen in einen Auftrag.
+
+**Noch nicht umgesetzt (offen):** Leere Auftragsordner bleiben stehen (FS-Port ohne Ordner-Löschen); Planverfasser-Hinweise (E7, post-V1).
 
 **Verhältnis zu bestehenden ADRs:** ADR-035 — prozessbasierter Kanal, Gate-Kern folgt (Addendum beim Bau des Gates). ADR-059 — bleibt gültig, Claude ist eine weitere `AutoSuggested`-Quelle nur für Bucket C; die DSGVO-Zeile „Cloud-KI vermieden“ hat diese bewusste, abschaltbare Ausnahme. ADR-064 — unberührt, Import nur über „Import bestätigen“. ADR-065 P.2 — kein LLM im Importpfad bleibt; abweichend vom Zeitpunkt „post-V1“ ist diese On-Demand-Assistenz in V1 zulässig. ADR-027 Phase 2 (API mit Schlüssel) wird nicht genutzt. ADR-042 nicht berührt. ADR-060/061/063: FS-Ports, Resolver, PDF-Text-Port.
 

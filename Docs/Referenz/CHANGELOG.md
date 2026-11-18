@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.232] — 2026-11-18
+
+### Feature: Mit Claude sortieren – Modell einstellbar (BPM-131, E9)
+
+Umsetzung von Mockup 2.1 v0.3: In Einstellungen › Allgemein › Claude gibt es die Auswahl „Modell“ (Standard von Claude Code / Sonnet / Opus), gespeichert geräte-lokal in `device-settings.json` unter `claude.model`; gesperrt, solange „Mit Claude sortieren“ aus ist. Die `ClaudeSortFactory` gibt das Modell je Auftrag in `ClaudeSessionRequest.Model`; nur bekannte Werte gehen als `--model` an Claude Code (`ClaudeSettings.NormalizeModel`), alles andere gilt als Standard. Keine Höchstzahl Dateien je Auftrag (Entscheidung Herbert). Kein Reset nötig: fehlendes `claude.model` = Standard. ADR-067 nachgezogen. Tests: 707.
+
+---
 ## [v0.28.231] — 2026-11-18
 
 ### Docs: Mockup 2.1 v0.3 – Claude-Modellwahl in den Einstellungen abgenommen (BPM-131, E9)

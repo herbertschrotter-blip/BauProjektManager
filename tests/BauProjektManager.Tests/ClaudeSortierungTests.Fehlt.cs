@@ -171,6 +171,27 @@ public partial class ClaudeSortierungTests
         Assert.Contains(vm.Entries, e => e.Kind == ClaudeChatEntryKind.System && e.Text.Contains("D-002 bleibt ohne Vorschlag"));
     }
 
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData("sonnet", "sonnet")]
+    [InlineData(" Opus ", "opus")]
+    [InlineData("haiku", null)]
+    [InlineData("--dangerously-skip-permissions", null)]
+    public void ClaudeSettings_NormalizeModel_OnlyKnownModels(string? gespeichert, string? erwartet)
+        => Assert.Equal(erwartet, BauProjektManager.Domain.Models.ClaudeSettings.NormalizeModel(gespeichert));
+
+    [Fact]
+    public async Task Chat_Start_PassesModelFromSettings()
+    {
+        var claude = new FakeAssistant();
+        var vm = new ClaudeSortViewModel(claude, Builder(), Pruefer(), new FakeHost(_analyse) { ProjectId = _projectId },
+            () => true, JobRoot, model: () => "opus");
+
+        await vm.StartCommand.ExecuteAsync(null);
+
+        Assert.Equal("opus", claude.Request!.Model);
+    }
+
     private System.Text.Json.JsonElement LeseKontextVon(FakeAssistant claude)
         => System.Text.Json.JsonDocument.Parse(_fs.ReadAllText(
             Path.Combine(claude.Request!.WorkingDirectory, ClaudeSortArten.KontextDatei))).RootElement;

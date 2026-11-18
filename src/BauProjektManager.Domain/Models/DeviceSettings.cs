@@ -80,6 +80,22 @@ public class ClaudeSettings
     /// Daten gehen erst an Claude, wenn Herbert die Funktion bewusst einschaltet.
     /// </summary>
     public bool SortingEnabled { get; set; }
+
+    public const string ModelSonnet = "sonnet";
+    public const string ModelOpus = "opus";
+
+    /// <summary>
+    /// Modell fuer Sortierauftraege (BPM-131 E9): "sonnet", "opus" oder NULL = Standard von Claude Code (kein --model).
+    /// </summary>
+    public string? Model { get; set; }
+
+    /// <summary>Nur bekannte Modelle gehen an Claude Code; alles andere gilt als Standard (NULL).</summary>
+    public static string? NormalizeModel(string? model) => model?.Trim().ToLowerInvariant() switch
+    {
+        ModelSonnet => ModelSonnet,
+        ModelOpus => ModelOpus,
+        _ => null
+    };
 }
 
 /// <summary>

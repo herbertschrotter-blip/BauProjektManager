@@ -52,6 +52,7 @@ public sealed partial class ClaudeSortViewModel : ObservableObject, IAsyncDispos
     private readonly Func<bool> _isEnabled;
     private readonly string _jobRoot;
     private readonly ClaudeSortSchnellanlage? _schnellanlage;
+    private readonly Func<string?>? _model;
 
     private ClaudeSortAuftrag? _auftrag;
     private IClaudeSession? _session;
@@ -66,11 +67,14 @@ public sealed partial class ClaudeSortViewModel : ObservableObject, IAsyncDispos
     /// <param name="isEnabled">Schalter aus den Einstellungen (geraete-lokal, Standard aus).</param>
     /// <param name="jobRoot">Basisordner der Auftraege (ClaudeAssistantOptions.JobRootDirectory).</param>
     /// <param name="schnellanlage">Anlegen fehlender Stammdaten aus dem Chat; NULL = Karten ohne Wirkung.</param>
+    /// <param name="model">Modell aus den Einstellungen je Auftrag (BPM-131 E9); NULL bzw. Ergebnis NULL = Standard.</param>
     public ClaudeSortViewModel(
         IClaudeAssistant? assistant, ClaudeSortAuftragBuilder builder, ClaudeSortEntwurfPruefer pruefer,
-        IClaudeSortHost host, Func<bool> isEnabled, string jobRoot, ClaudeSortSchnellanlage? schnellanlage = null)
+        IClaudeSortHost host, Func<bool> isEnabled, string jobRoot, ClaudeSortSchnellanlage? schnellanlage = null,
+        Func<string?>? model = null)
     {
         _schnellanlage = schnellanlage;
+        _model = model;
         _assistant = assistant;
         _builder = builder;
         _pruefer = pruefer;
@@ -240,7 +244,8 @@ public sealed partial class ClaudeSortViewModel : ObservableObject, IAsyncDispos
             _retries = 0;
             StatusDetail = $"{_auftrag.Dateien.Count} Dateien";
             _session = await _assistant.StartSessionAsync(
-                new ClaudeSessionRequest(_auftrag.Ordner, FirstMessage, SystemPromptFile: _auftrag.RegelnDatei),
+                new ClaudeSessionRequest(_auftrag.Ordner, FirstMessage, SystemPromptFile: _auftrag.RegelnDatei,
+                    Model: _model?.Invoke()),
                 new Progress<ClaudeEvent>(OnEvent));
             OnPropertyChanged(nameof(CanType));
         }

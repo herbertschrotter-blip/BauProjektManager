@@ -227,6 +227,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         CloudStoragePath = device.CloudStoragePath;
         _loadingSettings = true;
         ClaudeSortingEnabled = device.Claude.SortingEnabled;
+        ClaudeModel = ClaudeModelFor(device.Claude.Model);
         _loadingSettings = false;
         _shared = _settingsService.LoadSharedOrDefault();
         BuildFolderTree(_shared.FolderTemplate);

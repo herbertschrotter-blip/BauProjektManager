@@ -154,7 +154,8 @@ public partial class App : Application
         // Ob die Funktion aktiv ist, entscheidet die Einstellung (device-settings.json, Standard aus).
         sc.AddSingleton<IClaudeAssistant>(sp => new Infrastructure.Services.Claude.ClaudeCodeAssistant(
             new Infrastructure.Services.Claude.ClaudeAssistantOptions { JobRootDirectory = Infrastructure.Services.Claude.ClaudeAssistantOptions.DefaultJobRoot() },
-            new Infrastructure.Services.Claude.SystemClaudeProcessRunner(), sp.GetRequiredService<IFileSystemReader>()));
+            new Infrastructure.Services.Claude.SystemClaudeProcessRunner(), sp.GetRequiredService<IFileSystemReader>(),
+            sp.GetRequiredService<IFileSystemWriter>()));
 
         // BPM-108: Segmenttyp-Katalog (Phase A) — vor ProfileManager registrieren,
         // damit der Manager ihn fuer ProfileHealth-Berechnung bekommt.

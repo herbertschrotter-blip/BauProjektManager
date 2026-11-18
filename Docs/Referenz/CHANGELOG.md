@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.225] — 2026-11-18
+
+### Feature: Mit Claude sortieren – Sitzungsdaten von Claude Code werden gelöscht (BPM-131, E8)
+
+Claude Code speichert je Auftragsordner einen eigenen Gesprächsverlauf unter `~/.claude/projects/` – mit dem Inhalt von `kontext.json`, also ggf. Plankopf-Text (Klasse C). Neu: `IClaudeAssistant.DeleteSessionData` löscht diese Dateien, wenn die Sitzung endet (zusammen mit den Auftragsdateien), und beim Öffnen des Tabs für alle schon erledigten Aufträge des Projekts. Gelöscht wird nur zu Ordnern unter dem Auftrags-Basisordner; der Ordnername wird wie bei Claude Code gebildet (jedes Zeichen außer A–Z, a–z, 0–9 wird „-“), `CLAUDE_CONFIG_DIR` wird beachtet. ADR-067 und DSGVO-Architektur Kap. 15 (v1.7) nachgezogen. Tests: 688.
+
+---
 ## [v0.28.224] — 2026-11-16
 
 ### Docs: Seitenliste aktualisiert

@@ -3474,7 +3474,7 @@ Gleichzeitig gilt `planmanager.db` als „rebuildbarer Cache" (ADR-004, ADR-041,
 
 **Datum:** 2026-11-16
 **Status:** ✅ Accepted (Entscheidungen Herbert 2026-11-16: Teil von V1; E1–E3 und Freigabe-Umfang siehe unten)
-**Implementierung:** In Progress — Backend v0.28.215, Chatfenster + Einstellung v0.28.216, Einzel-Annahme + Aufräumen v0.28.218, Index-Datum/Segmente/Tags v0.28.223; offen siehe „Noch nicht umgesetzt“
+**Implementierung:** In Progress — Backend v0.28.215, Chatfenster + Einstellung v0.28.216, Einzel-Annahme + Aufräumen v0.28.218, Index-Datum/Segmente/Tags v0.28.223, Löschen der Claude-Sitzungsdaten v0.28.225; offen siehe „Noch nicht umgesetzt“
 **Herkunft:** Wunsch Herbert: Eingangspläne nicht einzeln über das Radial erfassen. Vorbild sind ha-hausbau („Mit Claude ausfüllen“: Auftragsordner, Rahmen + Vorschrift, `kontext.json`, `FRAGE:`-Format, `entwurf.json` mit Prüfung, Speichern nur durch die App) und ha-finanzen (`claude.py`). Mockup: Seitenliste 3.4 (`02_ManuellSortieren_Claude.html`, abgenommen 2026-11-16).
 
 **Kontext:**
@@ -3498,7 +3498,9 @@ V1 importiert über die manuelle Erstaufnahme (ADR-059, Strategie B) und den jou
 
 **Umgesetzt in v0.28.218:** Einzel-Annahme/Ablehnung im Detail-Panel („Nur diesen übernehmen“ / „Ablehnen“); Aufräumen (E8): beim Beenden der Sitzung bzw. Schließen des Projekts werden die Auftragsdateien (inkl. `kontext.json` mit Plankopf-Text) und die Regeln-Datei gelöscht, liegen gebliebene Aufträge nach 30 Tagen beim Öffnen des Tabs; Ziffern 1–9 beantworten die offene Rückfrage.
 
-**Noch nicht umgesetzt (offen, Empfehlungen im Entwurf):** Löschen der Sitzungsdaten von Claude Code selbst (`~/.claude/projects/…`, E8); leere Auftragsordner bleiben stehen (FS-Port ohne Ordner-Löschen); Modellwahl und Höchstzahl Dateien je Auftrag (E9); Schnellanlage fehlender Stammdaten aus einem Hinweis (E11); Planverfasser-Hinweise (E7, post-V1); echter Lauf mit Herberts Abo ist noch nicht erfolgt.
+**Umgesetzt in v0.28.225 (E8, Rest):** Claude Code legt je Auftragsordner einen eigenen Sitzungsverlauf an (`<Konfig>/projects/<Pfad mit „-“>/<Session-ID>.jsonl`, Konfig = `CLAUDE_CONFIG_DIR` bzw. `%USERPROFILE%\.claude`); er enthält den Inhalt von `kontext.json`, also ggf. Plankopf-Text. `IClaudeAssistant.DeleteSessionData` löscht diese Dateien nach dem Ende der Sitzung zusammen mit den Auftragsdateien, nur für Ordner unter dem Auftrags-Basisordner. Beim Öffnen des Tabs werden die Sitzungsdaten aller erledigten (leeren) Auftragsordner des Projekts mit entfernt. Leere Ordner bleiben stehen (FS-Port ohne Ordner-Löschen).
+
+**Noch nicht umgesetzt (offen, Empfehlungen im Entwurf):** Leere Auftragsordner bleiben stehen (FS-Port ohne Ordner-Löschen); Modellwahl und Höchstzahl Dateien je Auftrag (E9); Schnellanlage fehlender Stammdaten aus einem Hinweis (E11); Planverfasser-Hinweise (E7, post-V1).
 
 **Verhältnis zu bestehenden ADRs:** ADR-035 — prozessbasierter Kanal, Gate-Kern folgt (Addendum beim Bau des Gates). ADR-059 — bleibt gültig, Claude ist eine weitere `AutoSuggested`-Quelle nur für Bucket C; die DSGVO-Zeile „Cloud-KI vermieden“ hat diese bewusste, abschaltbare Ausnahme. ADR-064 — unberührt, Import nur über „Import bestätigen“. ADR-065 P.2 — kein LLM im Importpfad bleibt; abweichend vom Zeitpunkt „post-V1“ ist diese On-Demand-Assistenz in V1 zulässig. ADR-027 Phase 2 (API mit Schlüssel) wird nicht genutzt. ADR-042 nicht berührt. ADR-060/061/063: FS-Ports, Resolver, PDF-Text-Port.
 

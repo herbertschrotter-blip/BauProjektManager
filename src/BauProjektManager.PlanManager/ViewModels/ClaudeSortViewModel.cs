@@ -74,9 +74,11 @@ public sealed partial class ClaudeSortViewModel : ObservableObject, IAsyncDispos
         _host = host;
         _isEnabled = isEnabled;
         _jobRoot = jobRoot;
-        // Nach einem Absturz liegen gebliebene Auftraege (mit Plankopf-Text) nach 30 Tagen entfernen (ADR-067 E8)
+        // Nach einem Absturz liegen gebliebene Auftraege (mit Plankopf-Text) nach 30 Tagen entfernen, dazu die
+        // Sitzungsdaten bei Claude zu allen erledigten Auftraegen (ADR-067 E8)
         if (!string.IsNullOrWhiteSpace(host.ProjectId))
-            _builder.AlteAufraeumen(Path.Combine(_jobRoot, host.ProjectId), TimeSpan.FromDays(30));
+            foreach (var ordner in _builder.AlteAufraeumen(Path.Combine(_jobRoot, host.ProjectId), TimeSpan.FromDays(30)))
+                _assistant?.DeleteSessionData(ordner);
         RefreshButton();
     }
 
@@ -397,8 +399,11 @@ public sealed partial class ClaudeSortViewModel : ObservableObject, IAsyncDispos
 
     private void RaeumeAuftragAuf()
     {
-        if (_auftrag is not null)
-            _builder.Aufraeumen(_auftrag.Ordner);
+        if (_auftrag is null)
+            return;
+        _builder.Aufraeumen(_auftrag.Ordner);
+        // Erst nach BeendeSitzungAsync: der Prozess haelt die Verlaufsdatei offen
+        _assistant?.DeleteSessionData(_auftrag.Ordner);
     }
 
     private async Task BeendeSitzungAsync()

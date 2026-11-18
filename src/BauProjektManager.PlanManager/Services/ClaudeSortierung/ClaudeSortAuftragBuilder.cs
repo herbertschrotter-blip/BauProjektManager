@@ -207,12 +207,15 @@ public sealed partial class ClaudeSortAuftragBuilder
     /// Raeumt Auftraege unter <paramref name="claudeRoot"/> auf, deren Dateien alle aelter als
     /// <paramref name="alter"/> sind (z. B. nach einem Absturz liegen gebliebene Plankopf-Texte). Wirft nicht.
     /// </summary>
-    public void AlteAufraeumen(string claudeRoot, TimeSpan alter)
+    /// <returns>Auftragsordner ohne Dateien (jetzt oder frueher aufgeraeumt) — deren Sitzungsdaten bei Claude
+    /// koennen weg (ADR-067 E8).</returns>
+    public IReadOnlyList<string> AlteAufraeumen(string claudeRoot, TimeSpan alter)
     {
+        var erledigt = new List<string>();
         try
         {
             if (!_reader.DirectoryExists(claudeRoot))
-                return;
+                return erledigt;
             var grenze = _time.GetUtcNow().UtcDateTime - alter;
             foreach (var ordner in _reader.EnumerateDirectories(claudeRoot)
                          .Where(o => AuftragsNameRegex().IsMatch(_path.GetFileName(o))).ToList())
@@ -220,12 +223,15 @@ public sealed partial class ClaudeSortAuftragBuilder
                 var dateien = _reader.EnumerateFiles(ordner).ToList();
                 if (dateien.Count > 0 && dateien.All(d => _reader.GetFileInfo(d).LastWriteTimeUtc < grenze))
                     Aufraeumen(ordner);
+                if (!_reader.EnumerateFiles(ordner).Any())
+                    erledigt.Add(ordner);
             }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             Log.Warning("Claude-Sortierung: Aufraeumen alter Auftraege fehlgeschlagen ({Error})", ex.GetType().Name);
         }
+        return erledigt;
     }
 
     /// <summary>Regeln-Datei neben dem Auftragsordner: &lt;Basis&gt;/A-0001.regeln.md.</summary>

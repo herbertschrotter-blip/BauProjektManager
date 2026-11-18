@@ -495,4 +495,50 @@ public sealed class ClaudeCodeAssistantTests
         Assert.True(index >= 0, $"Option {option} fehlt");
         Assert.Equal(value, args[index + 1]);
     }
+
+    // ── Sitzungsdaten bei Claude (ADR-067 E8) ──
+
+    private const string ConfigDir = @"C:\Users\x\.claude";
+
+    [Theory]
+    [InlineData(@"C:\Users\herbe\AppData\Local\BauProjektManager\claude\01M1EJ\A-0005",
+        "C--Users-herbe-AppData-Local-BauProjektManager-claude-01M1EJ-A-0005")]
+    [InlineData(@"C:\appdata\claude\_livetest\A-1644\", "C--appdata-claude--livetest-A-1644")]
+    [InlineData(@"D:\Ü Ordner\A-0001", "D----Ordner-A-0001")]
+    public void ProjectFolderName_LikeClaudeCode(string pfad, string erwartet)
+        => Assert.Equal(erwartet, ClaudeCodeAssistant.ProjectFolderName(pfad));
+
+    [Fact]
+    public void DeleteSessionData_DeletesOnlyFilesOfThisJob()
+    {
+        var eigene = Path.Combine(ConfigDir, "projects", "C--Auftraege-A-0007");
+        var fremde = Path.Combine(ConfigDir, "projects", "C--Auftraege-A-0008");
+        _fileSystem.AddFile(Path.Combine(eigene, "0f8fad5b-d9cb-469f-a165-70867728950e.jsonl"), [1]);
+        _fileSystem.AddFile(Path.Combine(eigene, "0f8fad5b-d9cb-469f-a165-70867728950e", "tool-results", "a.txt"), [1]);
+        _fileSystem.AddFile(Path.Combine(fremde, "7c9e6679-7425-40de-944b-e07fc1f90ae7.jsonl"), [1]);
+        var assistant = new ClaudeCodeAssistant(
+            new ClaudeAssistantOptions { ExecutablePath = FakeExe, JobRootDirectory = JobRoot, ConfigDirectory = ConfigDir },
+            _runner, _fileSystem, _fileSystem);
+
+        assistant.DeleteSessionData(WorkDir);
+
+        Assert.Empty(_fileSystem.EnumerateFiles(eigene, "*", recursive: true));
+        Assert.Single(_fileSystem.EnumerateFiles(fremde));
+    }
+
+    [Theory]
+    [InlineData(@"C:\Auftraege")]          // Basisordner selbst
+    [InlineData(@"C:\Projekte\A-0007")]   // ausserhalb
+    public void DeleteSessionData_OutsideJobRoot_DeletesNothing(string ordner)
+    {
+        var daten = Path.Combine(ConfigDir, "projects", ClaudeCodeAssistant.ProjectFolderName(ordner), "s.jsonl");
+        _fileSystem.AddFile(daten, [1]);
+        var assistant = new ClaudeCodeAssistant(
+            new ClaudeAssistantOptions { ExecutablePath = FakeExe, JobRootDirectory = JobRoot, ConfigDirectory = ConfigDir },
+            _runner, _fileSystem, _fileSystem);
+
+        assistant.DeleteSessionData(ordner);
+
+        Assert.True(_fileSystem.FileExists(daten));
+    }
 }

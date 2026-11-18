@@ -63,6 +63,14 @@ public partial class ClaudeSortierungTests
     {
         public FakeSession Session { get; } = new();
         public ClaudeSessionRequest? Request { get; private set; }
+        public List<string> DeletedSessionData { get; } = [];
+
+        public void DeleteSessionData(string workingDirectory)
+        {
+            // Wie der echte Adapter: erst nach dem Ende der Sitzung
+            Assert.True(Request is null || Session.IsEnded, "Sitzungsdaten vor dem Ende der Sitzung geloescht");
+            DeletedSessionData.Add(workingDirectory);
+        }
 
         public Task<ClaudeAvailability> CheckAvailabilityAsync(CancellationToken cancellationToken = default)
             => Task.FromResult(new ClaudeAvailability(available, available ? "2.1" : null,
@@ -300,6 +308,23 @@ public partial class ClaudeSortierungTests
         Assert.Empty(_fs.EnumerateFiles(ordner));
         Assert.False(_fs.FileExists(claude.Request.SystemPromptFile!));
         Assert.True(claude.Session.IsEnded);
+        Assert.Equal([ordner], claude.DeletedSessionData);
+    }
+
+    [Fact]
+    public void Chat_Open_DeletesSessionDataOfFinishedJobsOnly()
+    {
+        var basis = Path.Combine(JobRoot, _projectId);
+        _fs.AddFile(Path.Combine(basis, "A-0001", ClaudeSortArten.KontextDatei), [1]); // frisch, laeuft evtl. noch
+        var leer = Path.Combine(basis, "A-0002");
+        _fs.CreateDirectory(leer);                                                     // frueher aufgeraeumt
+
+        var claude = new FakeAssistant();
+        var builder = new ClaudeSortAuftragBuilder(_bpmDb, _planDb, _fs, _fs, _fs, time: new FesteZeit(1));
+        _ = new ClaudeSortViewModel(claude, builder, Pruefer(), new FakeHost(_analyse) { ProjectId = _projectId },
+            () => true, JobRoot);
+
+        Assert.Equal([leer], claude.DeletedSessionData);
     }
 
     /// <summary>Feste "Jetzt"-Zeit relativ zum Zeitstempel des FakeFileStore (01.01.2026 UTC).</summary>

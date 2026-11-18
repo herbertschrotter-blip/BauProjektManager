@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models.Claude;
 using Serilog;
@@ -9,17 +10,24 @@ namespace BauProjektManager.Infrastructure.Services.Claude;
 /// stream-json) als lokalen Prozess im Auftragsordner. Kein HttpClient, kein API-Key —
 /// die CLI nutzt Herberts Anmeldung (Abo). Vorbild: tools/chat_dienst.py (ha-hausbau).
 /// </summary>
-public sealed class ClaudeCodeAssistant : IClaudeAssistant
+public sealed partial class ClaudeCodeAssistant : IClaudeAssistant
 {
+    /// <summary>Laengster Ordnername, den Claude Code unveraendert bildet (darueber kuerzt es mit Hash).</summary>
+    private const int MaxProjectFolderName = 200;
+
     private readonly ClaudeAssistantOptions _options;
     private readonly IClaudeProcessRunner _runner;
     private readonly IFileSystemReader _fileSystem;
+    private readonly IFileSystemWriter? _writer;
 
-    public ClaudeCodeAssistant(ClaudeAssistantOptions options, IClaudeProcessRunner runner, IFileSystemReader fileSystem)
+    /// <param name="writer">Zum Loeschen der Sitzungsdaten; NULL = <see cref="DeleteSessionData"/> tut nichts.</param>
+    public ClaudeCodeAssistant(ClaudeAssistantOptions options, IClaudeProcessRunner runner, IFileSystemReader fileSystem,
+        IFileSystemWriter? writer = null)
     {
         _options = options;
         _runner = runner;
         _fileSystem = fileSystem;
+        _writer = writer;
     }
 
     public async Task<ClaudeAvailability> CheckAvailabilityAsync(CancellationToken cancellationToken = default)
@@ -112,6 +120,62 @@ public sealed class ClaudeCodeAssistant : IClaudeAssistant
         }
         return session;
     }
+
+    public void DeleteSessionData(string workingDirectory)
+    {
+        if (_writer is null || !IsInsideJobRoot(workingDirectory, _options.JobRootDirectory))
+            return;
+        var ordner = SessionDataDirectory(workingDirectory);
+        var name = ClaudeCodeSession.FolderName(workingDirectory);
+        if (ordner is null)
+        {
+            Log.Warning("Claude: Sitzungsdaten zu Auftrag {Folder} nicht geloescht (Pfad zu lang)", name);
+            return;
+        }
+        try
+        {
+            if (!_fileSystem.DirectoryExists(ordner))
+                return;
+            var dateien = _fileSystem.EnumerateFiles(ordner, "*", recursive: true).ToList();
+            foreach (var datei in dateien)
+                _writer.DeleteFile(datei);
+            if (dateien.Count > 0)
+                Log.Information("Claude: Sitzungsdaten zu Auftrag {Folder} geloescht ({Count} Datei(en))", name, dateien.Count);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Log.Warning("Claude: Sitzungsdaten zu Auftrag {Folder} nicht geloescht ({Error})", name, ex.GetType().Name);
+        }
+    }
+
+    /// <summary>
+    /// Ordner, in dem Claude Code die Sitzungen zu <paramref name="workingDirectory"/> ablegt:
+    /// &lt;Konfig&gt;/projects/&lt;Pfad mit '-' statt jedem Zeichen ausser A-Z, a-z, 0-9&gt;.
+    /// NULL, wenn der Name so lang ist, dass Claude Code ihn kuerzt (dann nicht sicher bestimmbar).
+    /// </summary>
+    internal string? SessionDataDirectory(string workingDirectory)
+    {
+        var name = ProjectFolderName(workingDirectory);
+        if (name.Length > MaxProjectFolderName)
+            return null;
+        var config = string.IsNullOrWhiteSpace(_options.ConfigDirectory) ? DefaultConfigDirectory() : _options.ConfigDirectory;
+        return Path.Combine(config, "projects", name);
+    }
+
+    /// <summary>Ordnername wie bei Claude Code: voller Pfad, jedes Zeichen ausser A-Z, a-z, 0-9 wird '-'.</summary>
+    internal static string ProjectFolderName(string workingDirectory)
+        => NichtAlphanumerisch().Replace(Path.TrimEndingDirectorySeparator(Path.GetFullPath(workingDirectory)), "-");
+
+    private static string DefaultConfigDirectory()
+    {
+        var env = Environment.GetEnvironmentVariable("CLAUDE_CONFIG_DIR");
+        return string.IsNullOrWhiteSpace(env)
+            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".claude")
+            : env;
+    }
+
+    [GeneratedRegex("[^a-zA-Z0-9]")]
+    private static partial Regex NichtAlphanumerisch();
 
     /// <summary>
     /// True, wenn <paramref name="path"/> ein echter Unterpfad von <paramref name="root"/> ist (normalisiert, ohne

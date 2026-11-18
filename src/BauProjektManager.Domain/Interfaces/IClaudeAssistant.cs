@@ -34,6 +34,13 @@ public interface IClaudeAssistant
         ClaudeSessionRequest request,
         IProgress<ClaudeEvent> events,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Loescht, was Claude Code selbst zu einem Auftragsordner gespeichert hat (Sitzungsverlauf mit
+    /// kontext.json-Inhalt, ggf. Plankopf-Text — ADR-067 E8). Nur fuer Ordner unter dem Auftrags-Basisordner;
+    /// die Sitzung muss beendet sein. Wirft nicht.
+    /// </summary>
+    void DeleteSessionData(string workingDirectory);
 }
 
 /// <summary>

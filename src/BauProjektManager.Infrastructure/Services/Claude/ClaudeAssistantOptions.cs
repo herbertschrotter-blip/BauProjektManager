@@ -29,6 +29,12 @@ public sealed class ClaudeAssistantOptions
     /// </summary>
     public string? JobRootDirectory { get; init; }
 
+    /// <summary>
+    /// Konfigurationsordner von Claude Code (dort liegen unter projects/ die Sitzungsverlaeufe).
+    /// NULL/leer = wie Claude Code selbst: CLAUDE_CONFIG_DIR, sonst %USERPROFILE%\.claude.
+    /// </summary>
+    public string? ConfigDirectory { get; init; }
+
     /// <summary>Erlaubte Werkzeuge (--tools und --allowedTools).</summary>
     public IReadOnlyList<string> Tools { get; init; } = DefaultTools;
 

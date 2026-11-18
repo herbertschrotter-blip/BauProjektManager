@@ -183,6 +183,12 @@
       "was": "Neuer Abschnitt Claude: Schalter „Mit Claude sortieren“ (geräte-lokal, Standard aus) mit Erklärung",
       "art": "code",
       "commit": "f9b2628"
+     },
+     {
+      "v": "0.3",
+      "datum": "18.11.2026",
+      "was": "Bereich „Claude“ im Mockup nachgetragen (Schalter wie gebaut) und neue Auswahl „Modell“ (Standard von Claude Code / Sonnet / Opus, geräte-lokal, BPM-131 E9) – Mockup abgenommen (Herbert)",
+      "art": "mockup"
      }
     ],
     "mockup_alt": "Settings/01_Einstellungen/01_Allgemein.html",
@@ -194,8 +200,9 @@
     ],
     "nutzt": [],
     "stand_commit": "20e4249",
-    "version_abgenommen": null,
-    "code_stand": "516f97f287"
+    "version_abgenommen": "0.3",
+    "code_stand": "516f97f287",
+    "version_mockup": "0.3"
    },
    {
     "nr": "2.2",

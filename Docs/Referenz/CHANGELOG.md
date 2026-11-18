@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.231] — 2026-11-18
+
+### Docs: Mockup 2.1 v0.3 – Claude-Modellwahl in den Einstellungen abgenommen (BPM-131, E9)
+
+`Settings/01_Einstellungen/01_Allgemein.html`: Bereich „Claude“ nachgetragen (Schalter „Mit Claude sortieren“ wie gebaut) und neue Auswahl „Modell“ (Standard von Claude Code / Sonnet / Opus, geräte-lokal, gilt ab dem nächsten Auftrag). Entscheidung Herbert: Modell einstellbar, keine Höchstzahl Dateien je Auftrag. Abgenommen über die Seitenliste (Seite 2.1 Mockup 0.3).
+
+---
 ## [v0.28.230] — 2026-11-18
 
 ### Refactor: Mit Claude sortieren – Verdrahtung über ClaudeSortFactory aus dem DI-Container (BPM-131)

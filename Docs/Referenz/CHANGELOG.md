@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.233] — 2026-11-18
+
+### Docs: Seitenliste aktualisiert
+
+2.1 Allgemein Code 0.3 = abgenommenes Mockup 0.3 (Claude-Modellwahl) gebaut.
+
+---
 ## [v0.28.232] — 2026-11-18
 
 ### Feature: Mit Claude sortieren – Modell einstellbar (BPM-131, E9)

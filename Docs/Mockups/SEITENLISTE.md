@@ -19,7 +19,7 @@ gebaut. **1.0** = überarbeitet und abgenommen, **0.1** = noch nicht durchgegang
 
 | Nr. | Seite | Art | Version Mockup | Version Code | Mockup | Code |
 |---|---|---|---|---|---|---|
-| 2.1 | Allgemein | Blatt | 0.3 | 0.2 | `Settings/01_Einstellungen/01_Allgemein.html (alt)` | `BauProjektManager.Settings/Views/SettingsView.xaml, BauProjektManager.Settings/Views/SettingsView.xaml.cs, BauProjektManager.Settings/ViewModels/SettingsViewModel.cs` |
+| 2.1 | Allgemein | Blatt | 0.3 | 0.3 | `Settings/01_Einstellungen/01_Allgemein.html (alt)` | `BauProjektManager.Settings/Views/SettingsView.xaml, BauProjektManager.Settings/Views/SettingsView.xaml.cs, BauProjektManager.Settings/ViewModels/SettingsViewModel.cs` |
 | 2.2 | Projekte | Blatt | – | 0.1 | `–` | `BauProjektManager.Settings/Views/SettingsView.xaml, BauProjektManager.Settings/Views/SettingsView.xaml.cs, BauProjektManager.Settings/ViewModels/SettingsViewModel.cs` |
 | 2.3 | Standard-Ordnerstruktur | Blatt | – | 0.1 | `–` | `BauProjektManager.Settings/Views/SettingsView.xaml, BauProjektManager.Settings/Views/SettingsView.xaml.cs, BauProjektManager.Settings/ViewModels/SettingsViewModel.cs, BauProjektManager.Settings/Views/FolderTemplateControl.xaml, BauProjektManager.Settings/Views/FolderTemplateControl.xaml.cs` |
 | 2.4 | Sync-Defaults | Blatt | – | 0.1 | `–` | `BauProjektManager.Settings/Views/SettingsView.xaml, BauProjektManager.Settings/Views/SettingsView.xaml.cs, BauProjektManager.Settings/ViewModels/SettingsViewModel.cs` |

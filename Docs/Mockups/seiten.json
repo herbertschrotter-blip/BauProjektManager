@@ -696,7 +696,7 @@
     "art": "Formular",
     "schluessel": "dialog:ProfileWizardDialog",
     "code": "BauProjektManager.PlanManager/Views/ProfileWizardDialog.xaml, BauProjektManager.PlanManager/Views/ProfileWizardDialog.xaml.cs, BauProjektManager.PlanManager/ViewModels/ProfileWizardViewModel.cs",
-    "version_code": "0.2",
+    "version_code": "1.0",
     "verlauf": [
      {
       "v": "0.1",
@@ -717,6 +717,21 @@
       "art": "code",
       "ticket": "BPM-130",
       "commit": "5721d74"
+     },
+     {
+      "v": "1.0",
+      "datum": "19.11.2026",
+      "was": "Profil-Wizard mit 4 Schritten überarbeitet und abgenommen (Herbert, nach Test in der App)",
+      "art": "mockup",
+      "ticket": "BPM-130"
+     },
+     {
+      "v": "1.0",
+      "datum": "19.11.2026",
+      "was": "Profil-Wizard in der App getestet und abgenommen (Herbert)",
+      "art": "code",
+      "ticket": "BPM-130",
+      "commit": "5721d74"
      }
     ],
     "mockup_alt": "PlanManager/03_ProfilWizard/01_Datei.html",
@@ -727,10 +742,10 @@
      "Dialograhmen"
     ],
     "stand_commit": "5721d74",
-    "version_abgenommen": "0.2",
+    "version_abgenommen": "1.0",
     "code_stand": "ef3bfbc61c",
     "mockup": "seiten/profil-wizard.html",
-    "version_mockup": "0.2"
+    "version_mockup": "1.0"
    },
    {
     "nr": "3.9",

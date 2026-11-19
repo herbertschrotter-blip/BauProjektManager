@@ -118,7 +118,7 @@ function s4(){ return kopf(4) + `<div class="bd">
   <div class="hint" style="margin-top:12px">Gespeichert wird am Dokumenttyp „Polierplan“. Gibt es dort schon eine Erkennung, wird sie ersetzt (Hinweis vor dem Speichern).</div>
 </div>` + fuss(4); }
 
-M.start({ nr: '3.8', titel: 'Profil-Wizard', version: '0.2',
+M.start({ nr: '3.8', titel: 'Profil-Wizard', version: '1.0',
   zustaende: [['s1','1 Dokumenttyp'],['s2','2 Segmente'],['s2o','2 Segment offen'],['s3','3 Index'],['s3f','3 ohne Index'],['s4','4 Erkennung']],
   zeige: (s) => `<div class="dlg">${({s1:s1(), s2:s2(false), s2o:s2(true), s3:s3(false), s3f:s3(true), s4:s4()})[s.z]}</div>`,
 });

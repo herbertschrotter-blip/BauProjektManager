@@ -32,6 +32,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.237] — 2026-11-19
+
+### Docs: Seitenliste – 3.8 Profil-Wizard auf 1.0 (BPM-130)
+
+Herbert hat den Wizard in der App getestet und abgenommen: Mockup, Abnahme und Code von Seite 3.8 auf 1.0, Version auch in `seiten/profil-wizard.html`.
+
 ## [v0.28.236] — 2026-11-19
 
 ### Docs: Seitenliste – 3.8 Profil-Wizard Code 0.2 gebaut (BPM-130)

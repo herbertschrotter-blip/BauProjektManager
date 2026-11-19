@@ -56,7 +56,7 @@
      "3.1"
     ],
     "nutzt": [],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": "1.1",
     "code_stand": "44babab2f7",
     "mockup": "seiten/hauptfenster.html",
@@ -83,7 +83,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": null,
     "code_stand": "313084ddb6"
    },
@@ -106,7 +106,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": null,
     "code_stand": "ef7f6eb1ea"
    },
@@ -129,7 +129,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": null,
     "code_stand": "5cafb06a88"
    },
@@ -173,7 +173,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": "1.1",
     "code_stand": "710fc123d4",
     "mockup": "seiten/dev-log.html",
@@ -217,7 +217,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": "1.1",
     "code_stand": "710fc123d4",
     "mockup": "seiten/dev-zuruecksetzen.html",
@@ -290,7 +290,7 @@
      "2.5"
     ],
     "nutzt": [],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": "1.1",
     "code_stand": "01d622dd6b",
     "version_mockup": "1.1",
@@ -317,7 +317,7 @@
      "2.6"
     ],
     "nutzt": [],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": null,
     "code_stand": "516f97f287"
    },
@@ -340,7 +340,7 @@
     "nutzt": [
      "Ordnervorlage"
     ],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": null,
     "code_stand": "1399d29b19"
    },
@@ -361,7 +361,7 @@
     ],
     "zu": [],
     "nutzt": [],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": null,
     "code_stand": "516f97f287"
    },
@@ -382,7 +382,7 @@
     ],
     "zu": [],
     "nutzt": [],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": null,
     "code_stand": "516f97f287"
    },
@@ -410,7 +410,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": null,
     "code_stand": "27d7a90892"
    },
@@ -433,7 +433,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": null,
     "code_stand": "673fcb483d"
    },
@@ -456,7 +456,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": null,
     "code_stand": "8ce496ff4e"
    },
@@ -479,7 +479,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": null,
     "code_stand": "b1a855c477"
    },
@@ -503,7 +503,7 @@
      "Ordnervorlage",
      "Dialograhmen"
     ],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": null,
     "code_stand": "23d914694a"
    }
@@ -558,7 +558,7 @@
      "3.2"
     ],
     "nutzt": [],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": "1.1",
     "code_stand": "8272f50c05",
     "mockup": "seiten/projektuebersicht.html",
@@ -607,7 +607,7 @@
      "3.11"
     ],
     "nutzt": [],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": "1.1",
     "code_stand": "562ecb3803",
     "mockup": "seiten/explorer.html",
@@ -696,7 +696,7 @@
      "Plan-Vorschau",
      "Radial-Erfassung"
     ],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": "1.1",
     "code_stand": "47e5ae04cb",
     "mockup": "seiten/manuell-sortieren.html",
@@ -776,7 +776,7 @@
     "nutzt": [
      "Plan-Vorschau"
     ],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": "1.4",
     "code": "BauProjektManager.PlanManager/Views/ClaudeChatPanel.xaml, BauProjektManager.PlanManager/Views/ClaudeChatPanel.xaml.cs, BauProjektManager.PlanManager/Views/ManualCaptureView.Claude.cs, BauProjektManager.PlanManager/ViewModels/ClaudeSortViewModel.cs, BauProjektManager.PlanManager/ViewModels/ClaudeSortViewModel.Events.cs, BauProjektManager.PlanManager/ViewModels/ClaudeChatModels.cs, BauProjektManager.PlanManager/ViewModels/ManualCaptureViewModel.Claude.cs",
     "code_stand": "d3e32f29ad",
@@ -823,7 +823,7 @@
     "nutzt": [
      "Segment-Editor"
     ],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": "1.1",
     "code_stand": "c9aa146113",
     "mockup": "seiten/plandaten.html",
@@ -835,7 +835,7 @@
     "art": "Blatt",
     "schluessel": "projektdetail:Erkennung",
     "code": "BauProjektManager.PlanManager/Views/ProjectDetailView.xaml, BauProjektManager.PlanManager/Views/ProjectDetailView.xaml.cs, BauProjektManager.PlanManager/ViewModels/ProjectDetailViewModel.cs, BauProjektManager.PlanManager/ViewModels/DocumentTypeOverviewViewModel.cs",
-    "version_code": "1.1",
+    "version_code": "2.1",
     "verlauf": [
      {
       "v": "0.1",
@@ -867,6 +867,14 @@
       "was": "Neugestaltung als Tab „Erkennung“ (BPM-121.00): Status je Dokumenttyp (Aktiv / Nicht angelernt / Defekt mit fehlendem Segmenttyp), Regel-Zeile, Anlernen/Bearbeiten über den Wizard, Regex-Regel-Dialog mit Live-Test und Validierung, Löschen nur der Erkennung – Mockup abgenommen (Herbert); Seite umbenannt von „Profile“",
       "art": "mockup",
       "ticket": "BPM-121"
+     },
+     {
+      "v": "2.1",
+      "datum": "19.11.2026",
+      "was": "Tab Erkennung nach Mockup 2.1 gebaut: Status je Dokumenttyp, Anlernen/Bearbeiten ueber den Wizard, Regex-Regel-Dialog, Loeschen nur der Erkennung",
+      "art": "code",
+      "ticket": "BPM-121",
+      "commit": "80b7ee9"
      }
     ],
     "mockup_alt": "PlanManager/02_Projektdetail/01_Profile.html",
@@ -874,9 +882,9 @@
      "3.8"
     ],
     "nutzt": [],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": "2.1",
-    "code_stand": "4528460413",
+    "code_stand": "abd4b9be5b",
     "mockup": "seiten/profile.html",
     "version_mockup": "2.1"
    },
@@ -897,7 +905,7 @@
     ],
     "zu": [],
     "nutzt": [],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": null,
     "code_stand": "95a348437e"
    },
@@ -907,7 +915,7 @@
     "art": "Formular",
     "schluessel": "dialog:ProfileWizardDialog",
     "code": "BauProjektManager.PlanManager/Views/ProfileWizardDialog.xaml, BauProjektManager.PlanManager/Views/ProfileWizardDialog.xaml.cs, BauProjektManager.PlanManager/ViewModels/ProfileWizardViewModel.cs",
-    "version_code": "1.0",
+    "version_code": "1.1",
     "verlauf": [
      {
       "v": "0.1",
@@ -943,6 +951,14 @@
       "art": "code",
       "ticket": "BPM-130",
       "commit": "5721d74"
+     },
+     {
+      "v": "1.1",
+      "datum": "19.11.2026",
+      "was": "Wizard aus dem Tab Erkennung: vorgewaehlter Dokumenttyp, beim Bearbeiten Index-Einstellungen, Kacheln und Segmenttypen des vorhandenen Profils vorbelegt, Regex-Regel bleibt erhalten (Aussehen unveraendert)",
+      "art": "code",
+      "ticket": "BPM-121",
+      "commit": "80b7ee9"
      }
     ],
     "mockup_alt": "PlanManager/03_ProfilWizard/01_Datei.html",
@@ -952,9 +968,9 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": "1.0",
-    "code_stand": "ef3bfbc61c",
+    "code_stand": "5a84d0ab01",
     "mockup": "seiten/profil-wizard.html",
     "version_mockup": "1.0"
    },
@@ -996,7 +1012,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": "1.1",
     "code_stand": "e1fda6fd68",
     "mockup": "seiten/segmenttypen.html",
@@ -1021,7 +1037,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": null,
     "code_stand": "fd8115c115"
    },
@@ -1044,7 +1060,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "25e51e3",
+    "stand_commit": "80b7ee9",
     "version_abgenommen": null,
     "code_stand": "2cfe320b9b"
    }

@@ -32,6 +32,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.243] — 2026-11-19
+
+### Docs: Seitenliste – 3.6 Code 2.1 gebaut, 3.8 Code 1.1 (BPM-121.00)
+
+Seite 3.6 „Erkennung“ Code auf die abgenommene Mockup-Version 2.1 nachgezogen; Seite 3.8 Wizard Code +0.1 (Vorbelegung aus dem Tab, Aussehen unverändert). Commit 80b7ee9.
+
 ## [v0.28.242] — 2026-11-19
 
 ### Feature: BPM-121.00 Tab „Erkennung“ (Seitenliste 3.6 v2.1)

@@ -32,6 +32,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.238] — 2026-11-19
+
+### Docs: Mockup 3.4 „Mit Claude sortieren“ ins Seitenformat übernommen
+
+Neue Seite `Docs/Mockups/seiten/mit-claude-sortieren.html` nach Seitenlisten-Standard (Theme, 12 Zustände in der Vorführleiste), aus dem alten Mockup `PlanManager/02_Projektdetail/02_ManuellSortieren_Claude.html` übernommen; Inhalt unverändert, Version bleibt 1.3 (im Browser je Zustand gegen das alte Mockup abgeglichen). Abgenommen (Herbert). In `PlanManager/_SITEMAP.md` sind das alte Claude-Mockup und die alten Profil-Wizard-Mockups (03_ProfilWizard, abgelöst durch 3.8) als abgelöst vermerkt.
+
 ## [v0.28.237] — 2026-11-19
 
 ### Docs: Seitenliste – 3.8 Profil-Wizard auf 1.0 (BPM-130)

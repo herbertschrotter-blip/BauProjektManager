@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3.4 Mit Claude sortieren</title>
+<link rel="stylesheet" href="../theme-app.css">
+<script src="../theme.js"></script>
+<!--
+═══════════════════════════════════════════════════════════════════════════
+„Mit Claude sortieren" — Seite 3.4 (aus altem Mockup PlanManager/02_Projektdetail/02_ManuellSortieren_Claude.html übernommen)
+Stand: 2026-11-18 · v1.3 Entwurf (Schnellanlage, BPM-131 E11) · Radial/Vorschau/Archiv siehe
+02_ManuellSortieren.html (unverändert, hier nur angedeutet)
+═══════════════════════════════════════════════════════════════════════════
+
+ZWECK: Herbert lässt die Eingangsdateien (nur Bucket C = Erstaufnahme) von
+Claude vorsortieren. Claude schlägt vor, BPM prüft, Herbert übernimmt als
+Pending, importiert wird NUR über „Import bestätigen" (journalisierter
+Import, ADR-064). Claude importiert, verschiebt und speichert nie selbst.
+
+ABLAUF (Zustände in der Vorführleiste oben, nicht Teil der App):
+ 0 Ausgangslage   Knopf „✦ Mit Claude sortieren" in der Hinweis-/Toolbar-
+                  Zeile des Tabs „Neue Pläne" (rechts). Aktiv, sobald ≥1
+                  Datei in Bucket C liegt.
+ 1 Start          Klick → Bestätigungs-Popover am Knopf: was geht an Claude
+                  (Dateiname, Plankopf-Text, Stammdaten-IDs des Projekts),
+                  was nicht (keine Personendaten, keine Dateien selbst),
+                  Anzahl Dateien, ausgenommene Zeilen (Bucket A/B/D,
+                  schon Pending). [Starten] [Abbrechen]. Escape = Abbrechen.
+ 2 Liest Pläne    BPM legt den Auftragsordner an (kontext.json, eingang/
+                  je Datei Dateiname + Plankopf-Text, auftrag.md + Schema),
+                  startet `claude -p` (stream-json). Chat-Panel öffnet
+                  rechts außen (gleicher Platz wie das Vorschau-Panel).
+                  Statuszeile „liest Pläne (n/m)" + Aktivitätszeilen aus
+                  dem Stream (Tool-Aufrufe, grau, eine Zeile je Datei).
+                  Zeilen in der Tabelle: „◌ bei Claude" (grau).
+ 3 Rückfrage      Claude schreibt „FRAGE:" + nummerierte Antworten,
+                  Empfehlung zuerst mit „(Empfehlung)". Die App macht
+                  Knöpfe daraus (Nummer + Text, Erklärung nach „–" klein
+                  darunter), Empfehlung mit Akzent-Rahmen. Freitext bleibt
+                  möglich. Statuszeile „wartet auf deine Antwort".
+                  Tastatur: Ziffer 1–9 wählt die Antwort, Enter sendet.
+ 4 Mehrfach       „FRAGE (mehrere):" → Kontrollkästchen + „Antworten
+                  senden (n)". Freitext ergänzt.
+ 5 Entwurf bereit Claude schreibt entwurf.json. BPM prüft (Schema, IDs nur
+                  aus kontext.json, Zielpfad über DocumentTargetPathResolver,
+                  nur Bucket-C-Zeilen, keine Zeile doppelt). Ungültige
+                  Zeilen gehen als „Entwurf ungültig: …" an Claude zurück
+                  (max. 2 Versuche), danach bleiben sie „kein gültiger
+                  Vorschlag". Tabelle: Vorschlags-Zeilen mit gestrichelter
+                  Akzent-Kante + Pill „✦ Vorschlag", Zuordnung als Chips
+                  (Typ › Bauteil/Kategorie › Geschoß); unsichere Felder
+                  (`unsicher` im Entwurf) als Chip mit Warnfarbe + „?".
+                  Leiste über der Tabelle: „n Vorschläge übernehmen" /
+                  „Verwerfen". Detail-Panel zeigt je Zeile Begründung,
+                  unsichere Felder und „nur diese übernehmen / ablehnen".
+ 6 Übernommen     Vorschläge werden Pending (gelb wie händisch) und
+                  behalten das „✦"-Zeichen (Herkunft Claude) bis zum
+                  Import. Unsichere Felder bleiben markiert. Import nur
+                  über „Import bestätigen (n)" im Detail-Panel.
+ 7 Nicht erreichb. `claude` nicht gefunden / nicht angemeldet / Prozess
+                  abgebrochen: Knopf deaktiviert mit Grund als Tooltip;
+                  im Panel Fehlerkarte mit Abhilfe + „Erneut prüfen".
+                  Händisches Sortieren geht unverändert weiter.
+ 8 Claude aus     Funktion in den Einstellungen ausgeschaltet: Knopf
+                  ausgeblendet bzw. deaktiviert, Hinweis mit Link.
+ 9/10 Fehlt im    (NEU v1.3, E11) Passt eine Datei nur zu etwas, das es im
+    Projekt       Projekt noch nicht gibt, schreibt Claude es in
+                  entwurf.json unter `fehlende_stammdaten` (Art, Vorschlag,
+                  Datei-IDs, Grund) statt eine ID zu erfinden. BPM prüft
+                  (Art bauteil | geschoss | dokumenttyp, Name noch frei,
+                  Dateien aus dem Auftrag) und zeigt je Eintrag eine Karte
+                  im Chat mit vorbefülltem Formular:
+                   - Bauteil: Kurzname, Beschreibung, Geschoße (Komma-Liste)
+                   - Geschoß: Bauteil (Auswahl), Name, Beschreibung
+                   - Dokumenttyp: Name, Unterteilung (keine/Bauteile/
+                     Kategorien); Farbe automatisch
+                  [Anlegen] [Nicht anlegen]. Claude legt nie selbst etwas an.
+                  Die Zeile in der Tabelle: „＋ fehlt im Projekt“ (Warnfarbe).
+                  Statuszeile „wartet auf deine Entscheidung“.
+11 Angelegt      BPM legt über die normalen Stammdaten-Dienste an (wie
+                  in den Projekteinstellungen; der Ordner entsteht erst
+                  beim Import), schreibt kontext.json neu und meldet es
+                  Claude („neu: Bauteil TG …, bitte D-010 neu zuordnen“).
+                  Claude ordnet neu zu, BPM prüft wie in Zustand 5.
+                  „Nicht anlegen“: Datei bleibt ohne Vorschlag (von Hand).
+
+REGELN FÜR DIE UMSETZUNG (aus dem Vorbild ha-hausbau, _rahmen.md):
+- Claude liest/schreibt nur im Auftragsordner; der maßgebliche Kopf liegt
+  außerhalb (Claude kann ihn nicht ändern).
+- Chat-Verlauf und Sitzungs-ID gehören zum Auftrag; ✕ im Panel = Chat
+  schließen (Sitzung bleibt), „Sitzung fortsetzen" öffnet ihn wieder.
+- Händische Zuordnung gewinnt: Wird eine Zeile während der Claude-Runde
+  per Radial zugeordnet, verwirft BPM den Claude-Vorschlag für sie.
+═══════════════════════════════════════════════════════════════════════════
+-->
+<style>
+  .rahmen *{box-sizing:border-box;margin:0;padding:0}
+  .shell{background:var(--BpmBgBase);border-radius:10px;overflow:hidden;border:1px solid var(--BpmBorderSubtle);font-size:13px;color:var(--BpmTextPrimary);display:flex;flex-direction:column;width:100%;height:100%;border-radius:0;border:none}
+  .tab{display:inline-block;border-bottom:3px solid transparent;margin-bottom:-1px;padding:12px 20px;font-size:13px;font-weight:500;color:var(--BpmTextSecondary);cursor:pointer;line-height:1;user-select:none}
+  .tab:hover{background:var(--BpmBgHover);color:var(--BpmTextPrimary)}
+  .tab.on{background:var(--BpmBgBase);color:var(--BpmTextBright);font-weight:600;border-bottom:3px solid var(--BpmAccentPrimary)}
+  .tab.tot{border-bottom:2px dashed var(--BpmTextSecondary);opacity:.7}
+  .btn{background:transparent;border:1px solid var(--BpmBorderDefault);color:var(--BpmTextPrimary);font-size:13px;padding:0 14px;height:32px;border-radius:3px;cursor:pointer;font-family:inherit}
+  .btn:hover{background:var(--BpmBgHover)}
+  .btn:focus-visible,.btnP:focus-visible,.ans:focus-visible,.claudeBtn:focus-visible{outline:2px solid var(--BpmBorderFocus);outline-offset:1px}
+  .btnP{background:var(--BpmAccentPrimary);border:none;color:var(--BpmTextOnAccent);font-size:13px;height:32px;border-radius:3px;cursor:pointer;font-family:inherit;padding:0 14px}
+  .btnP:hover{background:var(--BpmAccentHover)}
+  .btnP:disabled,.btn:disabled{opacity:.4;cursor:default}
+  .claudeBtn{display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px solid var(--BpmAccentPrimary);color:var(--BpmTextBright);font-size:12px;height:26px;padding:0 12px;border-radius:3px;cursor:pointer;font-family:inherit}
+  .claudeBtn:hover{background:var(--BpmBgActive)}
+  .claudeBtn.run{background:var(--BpmBgActive)}
+  .claudeBtn:disabled{border-color:var(--BpmBorderDefault);color:var(--BpmTextSecondary);cursor:not-allowed;background:transparent}
+  .lbl{color:var(--BpmTextSecondary);font-size:12px;font-weight:500;margin-bottom:2px}
+  .cap{color:var(--BpmTextSecondary);font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+  table{border-collapse:collapse;width:100%}
+  td{border-top:1px solid var(--BpmBorderSubtle)}
+  .pill{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;vertical-align:1px}
+  .pVor{background:var(--BpmAccentPrimary);color:var(--BpmTextOnAccent)}
+  .pPair{background:var(--BpmInfo);color:var(--BpmBgBase)}
+  .pCombi{background:var(--BpmWarning);color:var(--BpmBgBase)}
+  .chip{display:inline-block;font-size:11px;padding:1px 7px;border-radius:3px;background:var(--BpmBgElevated);color:var(--BpmTextBright);margin-right:3px;border:1px solid transparent}
+  .chip.uns{border:1px dashed var(--BpmWarning);color:var(--BpmWarning);background:transparent}
+  .sep{color:var(--BpmTextSecondary);margin-right:3px;font-size:11px}
+  /* Chat */
+  .msg{max-width:92%;padding:7px 10px;border-radius:6px;font-size:12px;line-height:1.5;margin-bottom:8px}
+  .mC{background:var(--BpmBgElevated);color:var(--BpmTextPrimary);border-top-left-radius:0}
+  .mH{background:var(--BpmBgActive);color:var(--BpmTextBright);margin-left:auto;border-top-right-radius:0}
+  .who{font-size:10px;color:var(--BpmTextSecondary);margin-bottom:2px}
+  .sys{font-size:11px;color:var(--BpmTextSecondary);margin:4px 0 10px;padding-left:8px;border-left:2px solid var(--BpmBorderDefault);line-height:1.45}
+  .sys.err{border-left-color:var(--BpmError);color:var(--BpmTextPrimary)}
+  .sys.ok{border-left-color:var(--BpmSuccess)}
+  .act{font-family:Consolas,monospace;font-size:11px;color:var(--BpmTextSecondary);padding:1px 0 1px 8px}
+  .q{background:var(--BpmBgSurface);border:1px solid var(--BpmBorderDefault);border-radius:6px;padding:10px;margin-bottom:10px}
+  .qT{color:var(--BpmTextBright);font-size:12px;font-weight:600;margin-bottom:8px;line-height:1.45}
+  .ans{display:flex;gap:8px;align-items:flex-start;width:100%;text-align:left;background:var(--BpmBgBase);border:1px solid var(--BpmBorderDefault);color:var(--BpmTextPrimary);font-family:inherit;font-size:12px;padding:7px 9px;border-radius:4px;cursor:pointer;margin-bottom:6px}
+  .ans:hover{background:var(--BpmBgHover)}
+  .ans.rec{border-color:var(--BpmAccentPrimary)}
+  .ans.chk{background:var(--BpmBgActive);border-color:var(--BpmAccentPrimary)}
+  .ans.done{cursor:default;opacity:.55}
+  .ans.done.picked{opacity:1;background:var(--BpmBgActive);border-color:var(--BpmAccentPrimary)}
+  .num{flex-shrink:0;width:18px;height:18px;border-radius:3px;background:var(--BpmBgElevated);color:var(--BpmTextBright);font-size:11px;display:flex;align-items:center;justify-content:center}
+  .box{flex-shrink:0;width:16px;height:16px;border:1px solid var(--BpmTextSecondary);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--BpmTextBright);margin-top:1px}
+  .ans.chk .box{background:var(--BpmAccentPrimary);border-color:var(--BpmAccentPrimary)}
+  .rec .recTag{color:var(--BpmAccentHover);font-size:11px;margin-left:4px}
+  .expl{display:block;color:var(--BpmTextSecondary);font-size:11px;margin-top:1px}
+  .dots span{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--BpmTextSecondary);margin-right:3px;animation:bl 1.2s infinite}
+  .dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
+  @keyframes bl{0%,80%,100%{opacity:.25}40%{opacity:1}}
+  .spin{display:inline-block;width:9px;height:9px;border:2px solid var(--BpmTextSecondary);border-top-color:transparent;border-radius:50%;animation:sp .9s linear infinite;vertical-align:-1px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  textarea{background:var(--BpmBgInput);border:1px solid var(--BpmBgInput);color:var(--BpmTextBright);font-family:inherit;font-size:12px;border-radius:3px;padding:6px 8px;resize:none;width:100%;height:52px}
+  textarea:focus{border-color:var(--BpmBorderFocus);outline:none}
+  textarea:disabled{opacity:.5}
+</style>
+</head>
+<body>
+<script>
+const M = Mockup;
+/* Zustände: 0 Ausgangslage · 1 Start · 2 liest · 3 Frage · 4 Frage mehrere · 5 Entwurf · 6 übernommen · 7 nicht erreichbar · 8 aus */
+var STATES=['0 Ausgangslage','1 Start bestätigen','2 Liest Pläne','3 Rückfrage','4 Rückfrage (mehrere)','5 Entwurf bereit','6 Übernommen','7 Nicht erreichbar','8 Claude aus','9 Fehlt: Bauteil','10 Fehlt: Dokumenttyp','11 Angelegt, neu zugeordnet'];
+var state=0,selId=6,multi={1:false,2:false,3:false},chatOpen=false,kind='bauteil';
+/* b: Bucket (C = an Claude, B = Update) · v: Vorschlag [Typ, Ebene2, Ebene3] · u: unsichere Stelle (Index in v oder 'typ')
+   why: Begründung von Claude · bad: kein gültiger Vorschlag (Grund) · pair: Partner-ID */
+var FILES=[
+{id:1,n:'5998-200_EG_Polierplan.dwg',s:'144 KB',b:'C',v:['Polierplan','Haus 1','EG'],why:'Plankopf „Polierplan Erdgeschoß – Haus 1“.'},
+{id:2,n:'5998-201_OG1_Polierplan.dwg',s:'147 KB',b:'C',v:['Polierplan','Haus 1','OG1'],why:'Plankopf „1. Obergeschoß – Haus 1“.'},
+{id:3,n:'5998-203_OG3_Polierplan.dwg',s:'148 KB',b:'C',v:['Polierplan','Haus 2','OG3'],why:'Haus 1 hat kein OG3; Plankopf nennt Haus 2. Von dir bestätigt.'},
+{id:11,n:'5998-202_OG2_Polierplan.pdf',s:'146 KB',b:'C',pair:12,v:['Polierplan','Haus 1','OG2'],why:'Plankopf „2. Obergeschoß – Haus 1“. Paar mit der DWG.'},
+{id:12,n:'5998-202_OG2_Polierplan.dwg',s:'151 KB',b:'C',pair:11,v:['Polierplan','Haus 1','OG2'],why:'Partner der PDF (ein Dokument).'},
+{id:13,n:'5998-150_Polierplan+Schalung_H1_EG.pdf',s:'188 KB',b:'C',combi:1,v:['Polierplan','Haus 1','EG'],u:'typ',why:'Kombi-Plan Polierplan + Schalung (deine Antwort). Typ Polierplan, weil der Plankopf ihn zuerst nennt.'},
+{id:5,n:'5998-100-B_KG_Polierplan.dwg',s:'151 KB',b:'B',why:''},
+{id:6,n:'B-101_Bewehrung_OG1.pdf',s:'98 KB',b:'C',v:['Bewehrung','Haus 1','OG1'],u:1,why:'Plankopf nennt „Haus 1 / Haus 2“ (gemeinsame Decke). Haus 1 geraten – bitte prüfen.'},
+{id:7,n:'FT_W04_Wandelemente_H2.pdf',s:'204 KB',b:'C',v:['Fertigteile','Wände'],why:'„Wandelemente“ = Kategorie Wände.'},
+{id:8,n:'BB_2026-04-15_Baubesprechung.pdf',s:'412 KB',b:'C',v:['Protokolle','Baubesprechung'],why:'„BB“ und Plankopf „Baubesprechung Nr. 7“.'},
+{id:9,n:'SiPro_2026-05-02_Geruest.pdf',s:'180 KB',b:'C',v:['Protokolle','Sicherheit'],why:'Sicherheitsprotokoll Gerüst.'},
+{id:10,n:'Statik_2026-03_Hauptberechnung.pdf',s:'2.1 MB',b:'C',bad:'Bauteil-ID 9 nicht im Kontext (2 Versuche)',why:'Kein passender Ordner im Kontext gefunden.'}];
+var LV=['Typ','Bauteil','Geschoß'];
+
+function $(id){return document.getElementById(id);}
+function byId(id){return FILES.find(function(f){return f.id===id;});}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+function hasDraft(){return state===5||state===6||state>=9;}
+/* E11: Datei 10 (Statik) fehlt im Projekt (9/10) bzw. ist nach dem Anlegen zugeordnet (11) */
+function missing(f){return (state===9||state===10)&&f.id===10;}
+function fixed(f){return state===11&&f.id===10;}
+function vOf(f){return fixed(f)?(kind==='bauteil'?['Statik','TG','UG2']:['Statik-Berechnung']):f.v;}
+function bad(f){return f.bad&&!missing(f)&&!fixed(f);}
+function running(){return (state>=2&&state<=6)||state>=9;}
+
+
+/* Zustand setzen; die Vorführleiste (theme.js) zeichnet den Rahmen neu, zeige() ruft dann render() */
+function setzeZustand(s){state=s;chatOpen=(s>=2&&s<=7)||s>=9;if(s===3||s===4)multi={1:false,2:false,3:false};
+if(s===9)kind='bauteil';if(s===10)kind='dokumenttyp';
+if(s===5||s===6)selId=6;if(s>=9)selId=10;}
+function go(s){M.setz('z',String(s));}
+function onClaudeBtn(){if(state===0)go(1);else if(state===1)go(0);else {chatOpen=true;render();}}
+function closeChat(){chatOpen=false;render();}
+function msg(t){$('dMsg').textContent=t;}
+function discardDraft(){state=0;chatOpen=true;render();
+$('log').innerHTML+='<div class="sys">Entwurf verworfen. Die Sitzung bleibt offen &ndash; du kannst Claude um einen neuen Entwurf bitten.</div>';}
+
+/* ---------- Tabelle ---------- */
+function zuordnung(f){
+if(f.b==='B')return '<span style="color:var(--BpmInfo)">&#11014; Index B neu &mdash; bekannter Plan</span>'+(running()?' <span style="color:var(--BpmTextSecondary)">&middot; nicht an Claude</span>':'');
+if(state===2)return '<span style="color:var(--BpmTextSecondary)">&#9676; bei Claude</span>';
+if(state===3||state===4)return f.id===3?'<span style="color:var(--BpmWarning)">? R&uuml;ckfrage im Chat</span>':(f.id===13&&state===4?'<span style="color:var(--BpmWarning)">? R&uuml;ckfrage im Chat</span>':'<span style="color:var(--BpmTextSecondary)">&#9676; bei Claude</span>');
+if(hasDraft()){
+ if(missing(f))return '<span style="color:var(--BpmWarning)">&#65291; fehlt im Projekt &ndash; siehe Chat</span>';
+ if(bad(f))return '<span style="color:var(--BpmError)">&#10005; kein g&uuml;ltiger Vorschlag</span>';
+ var h='';vOf(f).forEach(function(x,i){var uns=(f.u===i)||(f.u==='typ'&&i===0);
+  if(i)h+='<span class="sep">&rsaquo;</span>';
+  h+='<span class="chip'+(uns?' uns':'')+'" title="'+(uns?'unsicher: '+esc(f.why):'')+'">'+esc(x)+(uns?' ?':'')+'</span>';});
+ return h;}
+return '<span style="color:var(--BpmTextSecondary)">&mdash;</span>';}
+function render(){
+var h='<tr class="cap"><td style="padding:6px 8px;width:28px;border-top:none"></td><td style="padding:6px 8px;border-top:none">Datei</td><td style="padding:6px 8px;width:64px;border-top:none">Gr&ouml;&szlig;e</td><td style="padding:6px 8px;width:290px;border-top:none">Zuordnung</td></tr>';
+FILES.forEach(function(f){var on=hasDraft()&&selId===f.id;
+ var prop=hasDraft()&&f.b==='C'&&!bad(f)&&!missing(f);
+ var pend=state===6&&prop;
+ var bl=pend?'3px solid var(--BpmWarning)':prop?'3px dashed var(--BpmAccentPrimary)':missing(f)?'3px dashed var(--BpmWarning)':(hasDraft()&&bad(f))?'3px solid var(--BpmError)':f.b==='B'?'3px solid var(--BpmInfo)':'3px solid transparent';
+ var bg=on?'var(--BpmBgActive)':pend?'var(--BpmBgSurface)':'transparent';
+ var tag='';
+ var z=zuordnung(f);
+ if(prop)z='<span title="'+(pend?'Pending aus Claude-Vorschlag':'Vorschlag von Claude, noch nicht übernommen')+'" style="color:var(--BpmAccentPrimary);margin-right:5px;font-size:12px">&#10022;</span>'+z;
+ if(pend)z='<span style="color:var(--BpmWarning);margin-right:4px">&#9203;</span>'+z;
+ h+='<tr onclick="pick('+f.id+')" style="cursor:pointer;height:36px;background:'+bg+'">'+
+ '<td style="padding:6px 6px 6px 8px;border-left:'+bl+';color:'+(on?'var(--BpmAccentPrimary)':'var(--BpmTextSecondary)')+'">'+(on?'&#10003;':'&#9744;')+'</td>'+
+ '<td style="padding:6px 8px;color:var(--BpmTextBright);font-family:Consolas,monospace;font-size:12px">'+esc(f.n)+(f.pair?' <span class="pill pPair">&#9939; Paar</span>':'')+(f.combi?' <span class="pill pCombi">&#9888; Kombi</span>':'')+tag+'</td>'+
+ '<td style="padding:6px 8px;color:var(--BpmTextSecondary);font-size:12px">'+f.s+'</td>'+
+ '<td style="padding:6px 8px;font-size:11px">'+z+'</td></tr>';});
+$('tbl').innerHTML=h;
+$('legend').innerHTML=hasDraft()?
+ (state===6?'<span style="color:var(--BpmWarning)">&#9632; Pending (aus Claude-Vorschlag, &#10022;)</span>':'<span style="color:var(--BpmAccentPrimary)">&#9476; Vorschlag von Claude (noch nicht &uuml;bernommen)</span>')+
+ (state===9||state===10?'<span style="color:var(--BpmWarning)">&#65291; fehlt im Projekt (Chat)</span>':'')+'<span style="color:var(--BpmWarning)">&#9633; ? unsicheres Feld</span><span style="color:var(--BpmError)">&#9632; kein g&uuml;ltiger Vorschlag</span><span style="color:var(--BpmInfo)">&#9632; Update &mdash; nicht an Claude</span>'
+ :'<span style="color:var(--BpmWarning)">&#9632; Pending</span><span style="color:var(--BpmInfo)">&#9632; Update &mdash; bekannter Plan</span><span style="color:var(--BpmTextSecondary)">&#9632; offen</span>';
+$('propBar').style.display=(state===5||state>=9)?'flex':'none';
+$('propTxt').innerHTML=state===11?'10 Vorschl&auml;ge (11 Dateien) &middot; <span style="color:var(--BpmWarning)">2 unsicher</span> &middot; 1 Update ausgenommen'
+ :state>=9?'9 Vorschl&auml;ge (10 Dateien) &middot; <span style="color:var(--BpmWarning)">2 unsicher</span> &middot; <span style="color:var(--BpmWarning)">1 fehlt im Projekt</span> &middot; 1 Update ausgenommen'
+ :'9 Vorschl&auml;ge (10 Dateien) &middot; <span style="color:var(--BpmWarning)">2 unsicher</span> &middot; 1 ohne g&uuml;ltigen Vorschlag &middot; 1 Update ausgenommen';
+$('propBtn').textContent=(state===11?10:9)+' Vorschläge übernehmen';
+/* Knopf */
+var b=$('claudeBtn'),bt=$('claudeBtnTxt'),oh=$('offHint');
+b.disabled=(state===7||state===8);b.className='claudeBtn'+(running()?' run':'');
+oh.style.display=(state===7||state===8)?'inline':'none';
+if(state===7){bt.textContent='Mit Claude sortieren';b.title='Claude Code nicht erreichbar: „claude“ nicht gefunden oder nicht angemeldet';oh.innerHTML='<span style="color:var(--BpmError)">&#9679;</span> Claude nicht erreichbar';}
+else if(state===8){bt.textContent='Mit Claude sortieren';b.title='In den Einstellungen ausgeschaltet';oh.innerHTML='Claude ist ausgeschaltet &middot; <a href="#" style="color:var(--BpmAccentPrimary)" onclick="M.geh(\'../Settings/01_Einstellungen/01_Allgemein\');return false">Einstellungen</a>';}
+else if(running()){bt.textContent=chatOpen?'Claude-Sitzung S-0003':'Sitzung fortsetzen';b.title='';}
+else {bt.textContent='Mit Claude sortieren';b.title='11 Dateien (Erstaufnahme) von Claude vorsortieren lassen';}
+$('startPop').style.display=state===1?'block':'none';
+/* Pending */
+var pc=state===6?10:0;
+$('dPend').innerHTML=pc?'<span style="color:var(--BpmWarning)">'+pc+' Datei(en)</span> <span style="color:var(--BpmTextSecondary)">(&#10022; 10)</span>':'&mdash;';
+$('dOk').disabled=!pc;$('dOk').textContent='Import bestätigen ('+pc+')';
+$('dOk').onclick=function(){msg('✓ würde 10 Dateien über den journalisierten Import (ADR-064) verschieben');};
+$('sbInfo').textContent=['bereit','bereit','Claude: liest Pläne (6/11) …','Claude wartet auf deine Antwort','Claude wartet auf deine Antwort','Claude: Entwurf bereit – 9 Vorschläge','10 pending (aus Claude-Vorschlag)','Claude nicht erreichbar','bereit','Claude wartet auf deine Entscheidung (fehlt im Projekt)','Claude wartet auf deine Entscheidung (fehlt im Projekt)','Claude: Entwurf bereit – 10 Vorschläge'][state];
+detail();chat();}
+function pick(id){if(!hasDraft())return;selId=id;render();}
+
+/* ---------- Detail-Panel ---------- */
+function detail(){var d=$('detail');
+if(!hasDraft()){d.innerHTML='<div style="color:var(--BpmTextSecondary);font-size:12px">'+(state>=2&&state<=4?'Claude arbeitet &ndash; du kannst weiter von Hand zuordnen. Eine Zuordnung von Hand gewinnt gegen den Vorschlag.':'Keine Auswahl')+'</div>';return;}
+var f=byId(selId);if(!f){d.innerHTML='';return;}
+var h='<div style="font-family:Consolas,monospace;font-size:12px;color:var(--BpmTextBright);margin-bottom:10px;word-break:break-all">'+esc(f.n)+'</div>';
+if(f.b==='B'){d.innerHTML=h+'<div style="font-size:12px;color:var(--BpmInfo)">Update eines bekannten Plans &ndash; wird nicht an Claude gegeben (nur Erstaufnahme). &bdquo;Update &uuml;bernehmen&ldquo; wie bisher.</div>';return;}
+if(missing(f)){d.innerHTML=h+'<div style="background:var(--BpmBgBase);border-left:3px solid var(--BpmWarning);padding:8px 10px;font-size:12px;line-height:1.5"><div style="color:var(--BpmWarning);margin-bottom:3px">&#65291; Fehlt im Projekt</div><div style="color:var(--BpmTextPrimary)">Claude schl&auml;gt vor, '+(kind==='bauteil'?'das Bauteil &bdquo;Tiefgarage&ldquo;':'den Dokumenttyp &bdquo;Statik-Berechnung&ldquo;')+' anzulegen. Entscheidung im Chat.</div><div style="color:var(--BpmTextSecondary);margin-top:4px">Claude legt nichts selbst an.</div></div><div style="font-size:11px;color:var(--BpmTextSecondary);margin-top:8px">Oder von Hand zuordnen (Halten = Radial).</div>';return;}
+if(bad(f)){d.innerHTML=h+'<div style="background:var(--BpmBgBase);border-left:3px solid var(--BpmError);padding:8px 10px;font-size:12px;line-height:1.5"><div style="color:var(--BpmError);margin-bottom:3px">&#10005; Kein g&uuml;ltiger Vorschlag</div><div style="color:var(--BpmTextPrimary)">BPM-Pr&uuml;fung: '+esc(f.bad)+'.</div><div style="color:var(--BpmTextSecondary);margin-top:4px">Claude: &bdquo;'+esc(f.why)+'&ldquo;</div></div><div style="font-size:11px;color:var(--BpmTextSecondary);margin-top:8px">Bitte von Hand zuordnen (Halten = Radial).</div>';return;}
+var pend=state===6;
+h+='<div class="lbl">'+(pend?'Pending &middot; aus Vorschlag von Claude':'Vorschlag von Claude')+'</div>';
+h+='<div style="background:var(--BpmBgBase);border-left:3px '+(pend?'solid var(--BpmWarning)':'dashed var(--BpmAccentPrimary)')+';padding:8px 10px;margin-bottom:10px">';
+var vv=vOf(f);vv.forEach(function(x,i){var uns=(f.u===i)||(f.u==='typ'&&i===0);var lv=(i===1&&vv.length===2)?'Kategorie':LV[i];
+ h+='<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0"><span style="color:var(--BpmTextSecondary)">'+lv+'</span><span style="color:'+(uns?'var(--BpmWarning)':'var(--BpmTextBright)')+'">'+esc(x)+(uns?' ?':'')+'</span></div>';});
+h+='<div style="font-size:11px;color:var(--BpmTextSecondary);margin-top:6px">Ziel: <span style="color:var(--BpmTextPrimary)">Pl&auml;ne/'+vv.join('/')+'/</span></div></div>';
+if(f.u!=null)h+='<div style="background:var(--BpmBgBase);border-left:3px solid var(--BpmWarning);padding:7px 9px;font-size:11px;line-height:1.5;margin-bottom:10px"><span style="color:var(--BpmWarning)">&#9888; unsicher: '+(f.u==='typ'?'Typ':LV[f.u])+'</span><br><span style="color:var(--BpmTextPrimary)">'+esc(f.why)+'</span></div>';
+else h+='<div class="lbl">Begr&uuml;ndung</div><div style="font-size:12px;color:var(--BpmTextPrimary);line-height:1.5;margin-bottom:10px">'+esc(f.why)+'</div>';
+if(f.pair)h+='<div style="font-size:11px;color:var(--BpmInfo);margin-bottom:10px">&#9939; Paar &ndash; Vorschlag gilt f&uuml;r beide Dateien (eine Revision).</div>';
+h+='<details style="margin-bottom:10px"><summary style="font-size:11px;color:var(--BpmTextSecondary);cursor:pointer">Plankopf-Text (an Claude gegeben)</summary><div style="font-family:Consolas,monospace;font-size:11px;color:var(--BpmTextPrimary);background:var(--BpmBgBase);padding:6px 8px;margin-top:4px;line-height:1.5">&Ouml;WG Dobl-Zwaring<br>Bewehrung Decke &uuml;ber OG1<br>Haus 1 / Haus 2 &middot; Plan-Nr B-101 &middot; Index &mdash;</div></details>';
+if(!pend)h+='<div style="display:flex;gap:6px"><button class="btn" style="flex:1;height:28px;font-size:12px" onclick="msg(\'✓ nur dieser Vorschlag übernommen (Pending)\')">Nur diesen &uuml;bernehmen</button><button class="btn" style="height:28px;font-size:12px" onclick="msg(\'Vorschlag abgelehnt – Zeile wieder offen\')">Ablehnen</button></div><div style="font-size:11px;color:var(--BpmTextSecondary);margin-top:6px">&Auml;ndern: Halten = Radial (ersetzt den Vorschlag).</div>';
+else h+='<div style="font-size:11px;color:var(--BpmTextSecondary)">&#10022; bleibt sichtbar bis zum Import. &Auml;ndern wie jede Pending-Zuordnung (Radial).</div>';
+d.innerHTML=h;}
+
+/* ---------- Chat ---------- */
+function C(t){return '<div class="who">Claude</div><div class="msg mC">'+t+'</div>';}
+function H(t){return '<div class="who" style="text-align:right">Du</div><div class="msg mH">'+t+'</div>';}
+function S(t,cls){return '<div class="sys'+(cls?' '+cls:'')+'">'+t+'</div>';}
+function act(list){return '<div style="margin:-2px 0 10px">'+list.map(function(x){return '<div class="act">'+x+'</div>';}).join('')+'</div>';}
+var START=S('Auftrag S-0003 angelegt &middot; 11 Dateien (Erstaufnahme) &middot; 1 Update ausgenommen &middot; Claude Code gestartet');
+var READ=act(['&#8627; liest kontext.json','&#8627; liest eingang/01_5998-200_EG_Polierplan.txt','&#8627; liest eingang/02_5998-201_OG1_Polierplan.txt','&#8627; liest eingang/03_5998-203_OG3_Polierplan.txt','&#8627; liest eingang/04_5998-202_OG2_Polierplan.txt','&#8627; liest eingang/05_5998-150_Polierplan+Schalung … .txt']);
+function Q1(done){var o=[['Haus 2 / OG3','Plankopf nennt „Haus 2, 3. Obergeschoß“',1],['Nicht zuordnen','ich lege OG3 bei Haus 1 selbst an',0],['Haus 1 / DG','OG3 ist dort das Dachgeschoß',0]];
+return '<div class="q"><div class="cap" style="margin-bottom:4px">R&uuml;ckfrage</div><div class="qT">5998-203_OG3_Polierplan: Haus 1 hat kein OG3. Wohin?</div>'+
+o.map(function(a,i){var cls='ans'+(a[2]?' rec':'')+(done?' done'+(i===0?' picked':''):'');
+ return '<button class="'+cls+'" '+(done?'disabled':'onclick="go(4)"')+'><span class="num">'+(i+1)+'</span><span>'+a[0]+(a[2]?'<span class="recTag">(Empfehlung)</span>':'')+'<span class="expl">'+a[1]+'</span></span></button>';}).join('')+
+(done?'':'<div style="font-size:10px;color:var(--BpmTextSecondary)">Taste 1&ndash;3 w&auml;hlt &middot; oder unten frei antworten</div>')+'</div>';}
+function Q2(done){var o=[['Schalung','Plankopf: „Polierplan + Schalung“',1],['Bewehrung','',0],['Durchbrüche','',0]];
+var n=Object.keys(multi).filter(function(k){return multi[k];}).length;
+return '<div class="q"><div class="cap" style="margin-bottom:4px">R&uuml;ckfrage &middot; mehrere m&ouml;glich</div><div class="qT">Was zeigt 5998-150 au&szlig;er dem Polierplan?</div>'+
+o.map(function(a,i){var k=i+1,on=done?(k===1):multi[k];var cls='ans'+(a[2]?' rec':'')+(on?' chk':'')+(done?' done'+(on?' picked':''):'');
+ return '<button class="'+cls+'" '+(done?'disabled':'onclick="tog('+k+')"')+'><span class="box">'+(on?'&#10003;':'')+'</span><span>'+a[0]+(a[2]?'<span class="recTag">(Empfehlung)</span>':'')+(a[1]?'<span class="expl">'+a[1]+'</span>':'')+'</span></button>';}).join('')+
+(done?'':'<div style="display:flex;justify-content:flex-end;gap:8px;align-items:center;margin-top:2px"><span style="font-size:10px;color:var(--BpmTextSecondary);flex:1">Leertaste kreuzt an &middot; Enter sendet</span><button class="btnP" style="height:26px;font-size:12px" '+(n?'':'disabled')+' onclick="go(5)">Antworten senden ('+n+')</button></div>')+'</div>';}
+function tog(k){multi[k]=!multi[k];chat();}
+function chat(){var c=$('chat');c.style.display=chatOpen?'flex':'none';if(!chatOpen)return;
+var st=$('status'),lg=$('log'),inp=$('inp'),sb=$('sendBtn');
+var STAT={2:['<span class="spin"></span>','liest Pläne','6 / 11','var(--BpmTextPrimary)'],
+3:['<span style="color:var(--BpmWarning)">&#9679;</span>','wartet auf deine Antwort','','var(--BpmWarning)'],
+4:['<span style="color:var(--BpmWarning)">&#9679;</span>','wartet auf deine Antwort','','var(--BpmWarning)'],
+5:['<span style="color:var(--BpmSuccess)">&#9679;</span>','Entwurf bereit','9 Vorschläge · 2 unsicher','var(--BpmSuccess)'],
+6:['<span style="color:var(--BpmSuccess)">&#10003;</span>','Vorschläge übernommen','10 pending','var(--BpmSuccess)'],
+7:['<span style="color:var(--BpmError)">&#9679;</span>','nicht erreichbar','','var(--BpmError)'],
+0:['<span style="color:var(--BpmTextSecondary)">&#9675;</span>','bereit','Entwurf verworfen','var(--BpmTextSecondary)'],
+9:['<span style="color:var(--BpmWarning)">&#9679;</span>','wartet auf deine Entscheidung','1 fehlt im Projekt','var(--BpmWarning)'],
+10:['<span style="color:var(--BpmWarning)">&#9679;</span>','wartet auf deine Entscheidung','1 fehlt im Projekt','var(--BpmWarning)'],
+11:['<span style="color:var(--BpmSuccess)">&#9679;</span>','Entwurf bereit','10 Vorschläge · 2 unsicher','var(--BpmSuccess)']};
+var s=STAT[state]||STAT[0];
+st.innerHTML=s[0]+'<span style="color:'+s[3]+'">'+s[1]+'</span><span style="color:var(--BpmTextSecondary);margin-left:auto;font-size:11px">'+s[2]+'</span>'+
+(state===2?'<button class="btn" style="height:22px;font-size:11px;padding:0 8px" onclick="go(0)">Abbrechen</button>':'');
+var h='';
+if(state===7){h=START.replace('Claude Code gestartet','Start versucht')+
+ '<div style="background:var(--BpmBgSurface);border:1px solid var(--BpmError);border-radius:4px;padding:12px;font-size:12px;line-height:1.55">'+
+ '<div style="color:var(--BpmError);font-weight:600;margin-bottom:4px">Claude ist nicht erreichbar</div>'+
+ '<div style="color:var(--BpmTextPrimary)">&bdquo;claude&ldquo; wurde auf diesem PC nicht gefunden oder ist nicht angemeldet.</div>'+
+ '<div style="color:var(--BpmTextSecondary);margin:8px 0">Abhilfe: Claude Code installieren, im Terminal einmal <span style="font-family:Consolas,monospace;color:var(--BpmTextPrimary)">claude</span> starten und anmelden.</div>'+
+ '<div style="color:var(--BpmTextSecondary);font-size:11px;margin-bottom:10px">Deine Dateien sind unver&auml;ndert &ndash; von Hand sortieren geht weiter.</div>'+
+ '<div style="display:flex;gap:8px"><button class="btnP" style="height:28px" onclick="go(2)">Erneut pr&uuml;fen</button><button class="btn" style="height:28px" onclick="M.geh(\'../Settings/01_Einstellungen/01_Allgemein\')">Einstellungen</button></div></div>';
+ lg.innerHTML=h;inp.disabled=true;sb.disabled=true;return;}
+inp.disabled=!(state>=3);sb.disabled=!(state>=3);
+h+=START+READ;
+if(state===2)h+='<div class="who">Claude</div><div class="msg mC dots" style="width:56px"><span></span><span></span><span></span></div>';
+if(state>=3||state===0){h+=C('10 von 11 Dateien sind klar. Eine Sache zum Polierplan OG3:')+Q1(state!==3);}
+if(state>=4||state===0){h+=H('1. Haus 2 / OG3')+C('Danke. Noch zum Kombi-Plan:')+Q2(state!==4);}
+if(state>=9){h+=H('1. Schalung')+
+ S('Entwurf gepr&uuml;ft &#10003; 9 Vorschl&auml;ge (10 Dateien) g&uuml;ltig &middot; 1 Datei: fehlt im Projekt','ok')+
+ C(kind==='bauteil'?'F&uuml;r die <b>Statik-Hauptberechnung</b> fehlt ein Bauteil: Der Plankopf nennt &bdquo;Tiefgarage &ndash; Bodenplatte UG2&ldquo;, im Projekt gibt es nur Haus 1 und Haus 2. Ich lege nichts selbst an &ndash; du entscheidest:'
+  :'Die <b>Statik-Hauptberechnung</b> ist eine Berechnung, kein Plan &ndash; sie passt zu keinem Dokumenttyp des Projekts. Ich lege nichts selbst an &ndash; du entscheidest:')+MISS(state===11);
+ if(state===11)h+=S('&#10003; '+(kind==='bauteil'?'Bauteil TG &bdquo;Tiefgarage&ldquo; mit Gescho&szlig;en UG2, UG1':'Dokumenttyp &bdquo;Statik-Berechnung&ldquo; (ohne Unterteilung)')+' angelegt &middot; Kontext aktualisiert &middot; an Claude gemeldet','ok')+
+  C('Danke. <b>Statik_2026-03</b> &rarr; '+(kind==='bauteil'?'Statik &rsaquo; TG &rsaquo; UG2 (Plankopf &bdquo;Bodenplatte UG2&ldquo;).':'Statik-Berechnung.'))+
+  S('Entwurf gepr&uuml;ft &#10003; 10 Vorschl&auml;ge (11 Dateien) g&uuml;ltig','ok');
+ lg.innerHTML=h;lg.scrollTop=lg.scrollHeight;return;}
+if(state>=5||state===0){h+=H('1. Schalung')+
+ S('Entwurf gepr&uuml;ft: <span style="color:var(--BpmError)">ung&uuml;ltig</span> &ndash; Statik_2026-03: Bauteil-ID 9 nicht im Kontext. An Claude zur&uuml;ck (Versuch 1/2).','err')+
+ C('Statik: Im Kontext gibt es keinen Ordner f&uuml;r die Hauptberechnung. Ich lasse die Zeile offen, bitte von Hand zuordnen.')+
+ S('Entwurf gepr&uuml;ft &#10003; 9 Vorschl&auml;ge (10 Dateien) g&uuml;ltig &middot; 1 Zeile ohne Vorschlag','ok')+
+ C('Entwurf ist fertig. Unsicher sind zwei Stellen: <b>B-101</b> &ndash; Haus 1 oder 2 (gemeinsame Decke), und der <b>Typ von 5998-150</b> (Kombi). Beide sind in der Liste markiert.');}
+if(state===6)h+=S('9 Vorschl&auml;ge &uuml;bernommen &rarr; 10 Dateien pending. Importiert wird erst mit &bdquo;Import best&auml;tigen&ldquo;.','ok');
+lg.innerHTML=h;lg.scrollTop=lg.scrollHeight;}
+/* E11: Karte „fehlt im Projekt“ mit vorbefülltem Formular */
+function FLD(lbl,val,done,hint){return '<div style="margin-bottom:6px"><div class="lbl" style="font-size:11px">'+lbl+'</div>'+
+ '<input value="'+val+'" '+(done?'disabled':'')+' style="width:100%;height:26px;background:var(--BpmBgInput);border:1px solid var(--BpmBgInput);color:var(--BpmTextBright);font-family:inherit;font-size:12px;border-radius:3px;padding:0 8px">'+
+ (hint?'<div style="font-size:10px;color:var(--BpmTextSecondary);margin-top:2px">'+hint+'</div>':'')+'</div>';}
+function MISS(done){var b=kind==='bauteil';
+ var h='<div class="q" style="border-color:var(--BpmWarning)"><div class="cap" style="margin-bottom:4px;color:var(--BpmWarning)">&#65291; Fehlt im Projekt</div>'+
+ '<div class="qT">'+(b?'Bauteil &bdquo;Tiefgarage&ldquo; anlegen?':'Dokumenttyp &bdquo;Statik-Berechnung&ldquo; anlegen?')+'</div>'+
+ '<div style="font-size:11px;color:var(--BpmTextSecondary);margin:-4px 0 8px;line-height:1.45">f&uuml;r <span style="font-family:Consolas,monospace;color:var(--BpmTextPrimary)">Statik_2026-03_Hauptberechnung.pdf</span></div>';
+ if(b)h+=FLD('Kurzname','TG',done)+FLD('Beschreibung','Tiefgarage',done)+FLD('Gescho&szlig;e','UG2, UG1',done,'von unten nach oben, mit Komma &middot; sp&auml;ter in den Projekteinstellungen &auml;nderbar');
+ else h+=FLD('Name','Statik-Berechnung',done)+'<div style="margin-bottom:6px"><div class="lbl" style="font-size:11px">Unterteilung</div>'+
+  '<select '+(done?'disabled':'')+' style="width:100%;height:26px;background:var(--BpmBgInput);border:1px solid var(--BpmBgInput);color:var(--BpmTextBright);font-family:inherit;font-size:12px;border-radius:3px;padding:0 6px"><option>keine (Empfehlung)</option><option>Bauteile</option><option>Kategorien</option></select>'+
+  '<div style="font-size:10px;color:var(--BpmTextSecondary);margin-top:2px">Ordner Pl&auml;ne/Statik-Berechnung/ entsteht erst beim Import &middot; Farbe automatisch</div></div>';
+ if(done)h+='<div style="font-size:12px;color:var(--BpmSuccess);margin-top:4px">&#10003; angelegt</div>';
+ else h+='<div style="display:flex;gap:8px;align-items:center;margin-top:4px"><button class="btnP" style="height:28px" onclick="go(11)">Anlegen</button>'+
+  '<button class="btn" style="height:28px" onclick="notNow()">Nicht anlegen</button><span style="flex:1"></span>'+
+  '<span style="font-size:11px;color:var(--BpmAccentPrimary);cursor:pointer" onclick="msg(\'▶ würde die Projekteinstellungen öffnen\')">Projekteinstellungen &#8599;</span></div>'+
+  '<div style="font-size:10px;color:var(--BpmTextSecondary);margin-top:6px">Claude legt nie selbst etwas an &middot; nach dem Anlegen ordnet Claude die Datei neu zu</div>';
+ return h+'</div>';}
+function notNow(){$('log').innerHTML+=S('Nicht angelegt &ndash; Statik_2026-03 bleibt ohne Vorschlag (von Hand zuordnen).')+C('In Ordnung, die Datei bleibt offen.');$('log').scrollTop=1e6;}
+function sendFree(){var v=$('inp').value.trim();if(!v)return;$('log').innerHTML+=H(esc(v))+S('&#8635; Claude schreibt den Entwurf neu …');$('inp').value='';$('log').scrollTop=1e6;}
+document.addEventListener('keydown',function(e){
+ if(e.key==='Escape'&&state===1){go(0);}
+ if(state===3&&/^[1-3]$/.test(e.key)&&document.activeElement!==$('inp'))go(4);
+ if(state===4&&/^[1-3]$/.test(e.key)&&document.activeElement!==$('inp'))tog(+e.key);});
+
+const SHELL = `<div class="shell" style="user-select:none">
+
+<!-- Header -->
+<div style="display:flex;align-items:center;gap:10px;padding:8px 16px;background:var(--BpmBgSurface);border-bottom:1px solid var(--BpmBorderSubtle);min-height:40px">
+<button class="btn" style="border:none;height:auto;padding:2px 8px;font-size:15px;color:var(--BpmTextSecondary)" onclick="M.geh('../PlanManager/01_Projektuebersicht/01_Projektuebersicht')">&#8592;</button>
+<span style="font-size:14px;font-weight:500;color:var(--BpmTextBright);flex:1">&Ouml;WG Dobl-Zwaring</span>
+<span id="cntBadge" style="background:var(--BpmBgElevated);color:var(--BpmWarning);font-size:12px;padding:3px 10px;border-radius:2px">12 neu</span>
+</div>
+
+<!-- Projektdetail-Tabs -->
+<div style="display:flex;background:var(--BpmBgSurface);border-bottom:1px solid var(--BpmBorderDefault)">
+<div class="tab" onclick="M.geh('../PlanManager/02_Projektdetail/04_Explorer')">Explorer</div>
+<div class="tab on" onclick="M.geh('../PlanManager/02_Projektdetail/02_ManuellSortieren')" title="zur Grundvariante (Radial)">Manuell sortieren</div>
+<div class="tab" onclick="M.geh('../PlanManager/02_Projektdetail/05_Plandaten')">Plandaten</div>
+<div class="tab" onclick="M.geh('../PlanManager/02_Projektdetail/01_Profile')">Profile</div>
+<div class="tab tot" onclick="alert('Mockup folgt: 02_Projektdetail/03_Sync.html (BPM-005)')">Sync</div>
+</div>
+
+<!-- Sub-Tabs -->
+<div style="display:flex;background:var(--BpmBgSurface);border-bottom:1px solid var(--BpmBorderDefault)">
+<div class="tab on">Neue Pl&auml;ne (12)</div>
+<div class="tab" onclick="M.geh('../PlanManager/02_Projektdetail/02_ManuellSortieren')">Archiv (5)</div>
+</div>
+
+<!-- Hinweis + Toolbar-Knopf -->
+<div style="position:relative;display:flex;align-items:center;gap:12px;padding:6px 16px;border-bottom:1px solid var(--BpmBorderSubtle);min-height:38px">
+<span style="font-size:12px;color:var(--BpmAccentPrimary);flex:1">Klick = Auswahl &middot; Strg+Klick = mehrere &middot; <b>Halten</b> = Radial zuordnen</span>
+<span id="offHint" style="font-size:11px;color:var(--BpmTextSecondary);display:none"></span>
+<button id="claudeBtn" class="claudeBtn" onclick="onClaudeBtn()"><span>&#10022;</span><span id="claudeBtnTxt">Mit Claude sortieren</span></button>
+
+<!-- Start-Popover (Zustand 1) -->
+<div id="startPop" style="display:none;position:absolute;right:16px;top:36px;z-index:80;width:380px;background:var(--BpmBgSurface);border:1px solid var(--BpmAccentPrimary);border-radius:4px;padding:14px">
+<div style="color:var(--BpmTextBright);font-size:14px;font-weight:500;margin-bottom:8px">Mit Claude sortieren?</div>
+<div style="font-size:12px;line-height:1.55;color:var(--BpmTextPrimary)">
+Claude bekommt <b style="color:var(--BpmTextBright)">11 Dateien</b> (Erstaufnahme) und schl&auml;gt Zuordnungen vor. Importiert wird erst, wenn du best&auml;tigst.
+</div>
+<div style="margin:10px 0;padding:8px 10px;background:var(--BpmBgBase);border-radius:3px;font-size:11px;line-height:1.6">
+<div><span style="color:var(--BpmSuccess)">&#10003;</span> Dateinamen und Plankopf-Text</div>
+<div><span style="color:var(--BpmSuccess)">&#10003;</span> Dokumenttypen, Bauteile, Kategorien, Gescho&szlig;e dieses Projekts (IDs)</div>
+<div style="color:var(--BpmTextSecondary)">&#10005; keine Plandateien, keine Personendaten, keine anderen Projekte</div>
+<div style="color:var(--BpmTextSecondary)">&#10005; ausgenommen: 1 Update (bekannter Plan)</div>
+</div>
+<div style="font-size:11px;color:var(--BpmTextSecondary);margin-bottom:10px">L&auml;uft &uuml;ber Claude Code auf diesem PC mit deinem Abo.</div>
+<div style="display:flex;gap:8px;justify-content:flex-end">
+<button class="btn" onclick="go(0)">Abbrechen</button>
+<button class="btnP" onclick="go(2)">Starten</button>
+</div>
+</div>
+</div>
+
+<!-- Vorschlags-Leiste (Zustand 5) -->
+<div id="propBar" style="display:none;align-items:center;gap:12px;padding:8px 16px;background:var(--BpmBgSurface);border-bottom:1px solid var(--BpmBorderSubtle);border-left:3px solid var(--BpmAccentPrimary)">
+<span style="color:var(--BpmAccentPrimary);font-size:14px">&#10022;</span>
+<span style="font-size:12px;color:var(--BpmTextBright)">Entwurf von Claude &ndash; bitte pr&uuml;fen</span>
+<span id="propTxt" style="font-size:12px;color:var(--BpmTextSecondary)"></span>
+<span style="flex:1"></span>
+<button class="btn" style="height:28px" onclick="discardDraft()">Verwerfen</button>
+<button id="propBtn" class="btnP" style="height:28px" onclick="go(6)">9 Vorschl&auml;ge &uuml;bernehmen</button>
+</div>
+
+<!-- Content -->
+<div style="display:flex;flex:1;min-height:0">
+
+<!-- Tabelle -->
+<div style="flex:1;padding:10px 16px;min-width:0;overflow:auto">
+<table id="tbl" style="font-size:13px"></table>
+<div id="legend" style="margin-top:10px;font-size:11px;display:flex;gap:16px;flex-wrap:wrap"></div>
+</div>
+
+<!-- Detail-Panel -->
+<div style="width:320px;background:var(--BpmBgSurface);border-left:1px solid var(--BpmBorderSubtle);padding:12px 14px;flex-shrink:0;display:flex;flex-direction:column;overflow:auto">
+<div class="cap" style="margin-bottom:8px">Detail-Panel</div>
+<div id="detail" style="flex:1"></div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0"><span class="lbl" style="margin:0">Pending</span><span id="dPend" style="font-size:12px">&mdash;</span></div>
+<div id="dMsg" style="color:var(--BpmSuccess);font-size:11px;margin-bottom:8px;min-height:14px"></div>
+<button id="dOk" class="btnP" style="width:100%" disabled>Import best&auml;tigen (0)</button>
+<button class="btn" style="width:100%;margin-top:6px" onclick="go(state>=6?5:state)">Pending verwerfen</button>
+</div>
+
+<!-- Chat-Panel (rechts außen, Platz des Vorschau-Panels) -->
+<div id="chat" style="display:none;width:390px;flex-shrink:0;background:var(--BpmBgBase);border-left:1px solid var(--BpmBorderSubtle);flex-direction:column">
+<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--BpmBgSurface);border-bottom:1px solid var(--BpmBorderSubtle)">
+<span style="color:var(--BpmAccentPrimary)">&#10022;</span>
+<span style="color:var(--BpmTextBright);font-size:13px;font-weight:500">Claude</span>
+<span style="color:var(--BpmTextSecondary);font-size:11px;flex:1">Sortierauftrag S-0003</span>
+<span title="Auftragsordner &ouml;ffnen" style="color:var(--BpmTextSecondary);cursor:pointer;font-size:13px;padding:0 4px" onclick="msg('▶ würde den Auftragsordner …\\.bpm\\claude\\S-0003 im Windows-Explorer zeigen')">&#128193;</span>
+<span title="Chat schlie&szlig;en (Sitzung bleibt)" style="color:var(--BpmTextSecondary);cursor:pointer;font-size:14px;padding:0 4px" onclick="closeChat()">&#10005;</span>
+</div>
+<!-- Statuszeile -->
+<div id="status" style="display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--BpmBorderSubtle);font-size:12px"></div>
+<!-- Verlauf -->
+<div id="log" style="flex:1;overflow:auto;padding:12px 12px 4px;min-height:0"></div>
+<!-- Eingabe -->
+<div style="padding:8px 10px;border-top:1px solid var(--BpmBorderSubtle);background:var(--BpmBgSurface)">
+<textarea id="inp" placeholder="Eigene Antwort oder Korrektur, z. B. „B-101 ist Haus 2“ …"></textarea>
+<div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+<span style="font-size:10px;color:var(--BpmTextSecondary);flex:1">Claude liest nur den Auftragsordner &middot; importiert nichts</span>
+<button id="sendBtn" class="btnP" style="height:28px" onclick="sendFree()">Senden</button>
+</div>
+</div>
+</div>
+
+</div>
+
+<!-- Statusleiste -->
+<div style="height:28px;background:var(--BpmAccentPrimary);display:flex;align-items:center;padding:0 16px;font-size:11px;color:var(--BpmTextBright);flex-shrink:0">
+<span>&Ouml;WG &middot; 119 Dok.</span><span style="margin-left:auto" id="sbInfo">bereit</span>
+</div>
+</div>`;
+let erster = true;
+M.start({ nr: '3.4', titel: 'Mit Claude sortieren', version: '1.3',
+  zustaende: [['0','0 Ausgangslage'],['1','1 Start bestätigen'],['2','2 Liest Pläne'],['3','3 Rückfrage'],['4','4 Rückfrage (mehrere)'],['5','5 Entwurf bereit'],['6','6 Übernommen'],['7','7 Nicht erreichbar'],['8','8 Claude aus'],['9','9 Fehlt: Bauteil'],['10','10 Fehlt: Dokumenttyp'],['11','11 Angelegt, neu zugeordnet']],
+  zeige: (s) => {
+    const n = +s.z;
+    if (erster || n !== state) { setzeZustand(n); erster = false; }
+    setTimeout(render);
+    return SHELL;
+  },
+});
+</script>
+</body>
+</html>

@@ -32,6 +32,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.258] — 2026-11-19
+
+### Docs: README auf aktuellen Stand gebracht (R01-049)
+
+- Version verweist auf `Directory.Build.props` und den CHANGELOG statt fester „v0.16.1“; Stand-Tabelle mit dem
+  heutigen PlanManager (Radial, Claude-Sortierung, Plandaten, Erkennung, Journal/Undo/Recovery, PDF-Vorschau).
+- Links: VISION unter `Docs/Referenz/`; Einstieg über INDEX.md.
+- Techstack: PDFium via Docnet.Core statt QuestPDF/PdfPig, DI-Container, xUnit; ClosedXML/QuestPDF als geplant.
+- Struktur: `.slnx`, `tests/`, alle Docs-Ordner.
+- Doku-Tabellen: ADR-Anzahl, Architektur ohne Versionsnummer, Multi-User über ServerArchitektur (MultiUserKonzept
+  historisch); Anbieternamen beim Cloud-Speicher entfernt.
+- Lizenz: Zeile „MIT – siehe LICENSE“ gestrichen (Entscheidung Herbert 2026-11-19: noch keine Lizenz, kommt mit dem
+  Verkauf); BOM am Dateianfang entfernt.
+
 ## [v0.28.257] — 2026-11-19
 
 ### Docs: Produktname „baulotse“ verworfen (R01-063)

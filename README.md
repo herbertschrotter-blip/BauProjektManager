@@ -1,6 +1,6 @@
-﻿# BauProjektManager
+# BauProjektManager
 
-Modulare Desktop-App für Baustellen-Management in Österreich (Steiermark). Offline-fähig, lokal, Sync über beliebigen Cloud-Speicher (OneDrive, Google Drive, Dropbox etc.), kein Cloud-Abo.
+Modulare Desktop-App für Baustellen-Management in Österreich (Steiermark). Offline-fähig, lokal, Sync über beliebigen Cloud-Speicher, kein Cloud-Abo.
 
 ## Vision
 
@@ -16,51 +16,59 @@ Eine einzige App für den gesamten Arbeitsalltag auf der Baustelle: Pläne sorti
   PowerShell (PhotoFolder) ←───┘
 ```
 
-Ausführliche Vision: [Docs/VISION.md](Docs/VISION.md)
+Ausführliche Vision: [Docs/Referenz/VISION.md](Docs/Referenz/VISION.md)
 
 ## Aktueller Stand
 
-**Version:** v0.16.1 (03.04.2026)
+**Version:** steht in `Directory.Build.props`, alle Änderungen in [CHANGELOG](Docs/Referenz/CHANGELOG.md).
+Laufende Arbeit: Branch `feature/planmanager-v1` (V1 = Einstellungen + PlanManager).
 
 | Komponente | Status |
 |-----------|--------|
 | App-Shell + Navigation | ✅ Erledigt |
 | Einstellungen (Projekte, Pfade, Ordnerstruktur) | ✅ Erledigt |
-| SQLite-Datenbank + Auto-IDs | ✅ Erledigt |
+| SQLite-Datenbank (`bpm.db`, `planmanager.db` je Projekt) | ✅ Erledigt |
 | registry.json Export (VBA-kompatibel) | ✅ Erledigt |
 | Automatische Projektordner-Erstellung | ✅ Erledigt |
 | ProjectEditDialog (5 Tabs: Stammdaten, Bauwerk, Beteiligte, Portale, Ordner) | ✅ Erledigt |
 | Theme-System (Resource Dictionaries, Dark Theme) | ✅ Erledigt |
-| PlanManager (Pläne sortieren) | ⬜ Nächste Phase |
+| PlanManager: Explorer, Manuell sortieren (Radial), Mit Claude sortieren, Plandaten, Erkennung | 🔨 V1 in Arbeit, Kern läuft |
+| PlanManager: Import mit Journal, Undo, Recovery, Archiv | ✅ Erledigt |
+| PDF-Vorschau mit Textauswahl (PDFium) | ✅ Erledigt |
 
 ## Techstack
 
 - **Sprache:** C# (.NET 10 LTS)
 - **GUI:** WPF (XAML), Dark Theme
-- **Pattern:** MVVM (CommunityToolkit.Mvvm)
-- **Datenbank:** SQLite (Microsoft.Data.Sqlite)
+- **Pattern:** MVVM (CommunityToolkit.Mvvm), DI-Container (Microsoft.Extensions.DependencyInjection)
+- **Datenbank:** SQLite (Microsoft.Data.Sqlite), IDs als ULID
 - **Logging:** Serilog (File + Console)
-- **Excel:** ClosedXML
-- **PDF:** QuestPDF (Export), PdfPig (Import)
+- **PDF:** PDFium via Docnet.Core (Vorschau und Textebene, eine Engine – ADR-063-Addendum)
+- **Tests:** xUnit
+- **Geplant (nach V1):** ClosedXML (Excel), QuestPDF (PDF-Export)
 - **VBA-Export:** registry.json (flach, read-only)
 
 ## Solution-Struktur
 
 ```
-BauProjektManager.sln
+BauProjektManager.slnx
 │
 ├── src/
-│   ├── BauProjektManager.App/             ← EXE (Shell, DI, MainWindow)
-│   ├── BauProjektManager.Domain/          ← Modelle, Enums (keine Abhängigkeiten)
-│   ├── BauProjektManager.Infrastructure/  ← SQLite, JSON, FileSystem, Logging
+│   ├── BauProjektManager.App/             ← EXE (Shell, DI, MainWindow, Themes)
+│   ├── BauProjektManager.Domain/          ← Modelle, Enums, Ports (keine Abhängigkeiten)
+│   ├── BauProjektManager.Infrastructure/  ← SQLite, JSON, Dateisystem, PDF, Logging
 │   ├── BauProjektManager.Settings/        ← Einstellungen-Modul (WPF)
 │   └── BauProjektManager.PlanManager/     ← PlanManager-Modul (WPF)
 │
-├── Tools/
-│   └── Get-ProjektOrdner.ps1              ← PowerShell Analyse-Tool
+├── tests/
+│   └── BauProjektManager.Tests/           ← xUnit-Tests
 │
-└── Docs/                                  ← Dokumentation (Kern/ + Referenz/ + Konzepte/)
+├── Tools/                                 ← Seitenliste, Datenliste, Mockup-Theme, PowerShell-Hilfen
+│
+└── Docs/                                  ← Kern/, Module/, Konzepte/, Referenz/, Test/, Mockups/
 ```
+
+Einstieg in die Doku: [INDEX.md](INDEX.md).
 
 ## Dokumentation
 
@@ -68,7 +76,7 @@ BauProjektManager.sln
 
 | Dokument | Inhalt |
 |----------|--------|
-| [Architektur v2.0](Docs/Kern/BauProjektManager_Architektur.md) | Technische Spezifikation, Datenmodell, Import-Workflow, GUI-Mockups |
+| [Architektur](Docs/Kern/BauProjektManager_Architektur.md) | Technische Spezifikation, Datenmodell, Import-Workflow, GUI-Mockups |
 | [DB-Schema](Docs/Kern/DB-SCHEMA.md) | Zentrales DB-Leitdokument (Ist + geplant, 18 Tabellen) |
 | [Coding Standards](Docs/Kern/CODING_STANDARDS.md) | Code-Richtlinien für C#/WPF + Datenschutz (Kap. 17) |
 | [DSGVO-Architektur](Docs/Kern/DSGVO-Architektur.md) | Privacy Engineering, IPrivacyPolicy, Datenklassifizierung A/B/C |
@@ -78,7 +86,7 @@ BauProjektManager.sln
 
 | Dokument | Inhalt |
 |----------|--------|
-| [ADR](Docs/Referenz/ADR.md) | 36 Architekturentscheidungen mit Kontext und Alternativen |
+| [ADR](Docs/Referenz/ADR.md) | Architekturentscheidungen (ADR-001 bis ADR-067) mit Kontext und Alternativen |
 | [Vision](Docs/Referenz/VISION.md) | Produktvision, Schmerzpunkte, Zielgruppe, Erfolgskriterien |
 | [Dependency Map](Docs/Referenz/DEPENDENCY-MAP.md) | Solution-Struktur + externes Ökosystem mit Datenflüssen |
 | [UI/UX Guidelines](Docs/Referenz/UI_UX_Guidelines.md) | Komplettes Design-System (Dark Theme, Token, Komponenten) |
@@ -103,7 +111,7 @@ BauProjektManager.sln
 | KI-Assistent | — | [ModuleKiAssistent.md](Docs/Konzepte/ModuleKiAssistent.md) |
 | Task-Management | — | [ModuleTaskManagement.md](Docs/Konzepte/ModuleTaskManagement.md) |
 | Kalkulation | — | [ModuleKalkulation.md](Docs/Konzepte/ModuleKalkulation.md) |
-| Multi-User | — | [MultiUserKonzept.md](Docs/Konzepte/MultiUserKonzept.md) |
+| Multi-User / Server | — | [ServerArchitektur.md](Docs/Konzepte/ServerArchitektur.md) (Sync: ADR-053; MultiUserKonzept ist historisch) |
 | Lizenzierung | — | [ModuleAktivierungLizenzierung.md](Docs/Konzepte/ModuleAktivierungLizenzierung.md) |
 
 ## Voraussetzungen
@@ -116,7 +124,8 @@ BauProjektManager.sln
 
 ## Lizenz
 
-MIT License — siehe [LICENSE](LICENSE)
+Noch keine Lizenz festgelegt (privates Projekt). Das Lizenzmodell kommt mit einem späteren Verkauf (Lizenzsignatur nach
+ADR-053 P.23).
 
 ---
 

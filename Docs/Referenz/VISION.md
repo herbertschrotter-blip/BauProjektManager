@@ -31,7 +31,7 @@ supersedes: []
   - 12. Zusammenfassung
 - Pflichtlesen: keine
 - Fachliche Invarianten:
-  - Offline-first, kein Cloud-Abo — Kernprinzip. Optional self-hosted Server-Modus für Firmenbetrieb (ADR-050/051)
+  - Offline-first, kein Cloud-Abo — Kernprinzip. Optional self-hosted Server-Modus für Firmenbetrieb (ADR-053)
   - Zielgruppe: Poliere und Bauleiter in Österreich (kleine Firmen)
   - Cloud-Speicher-neutral — nie "OneDrive" in Docs, immer "Cloud-Speicher"
 
@@ -98,7 +98,7 @@ Es gibt Bau-Management-Software (PlanRadar, Dalux, BauMaster etc.). Aber:
 - **Kein Offline:** Auf der Baustelle gibt es oft kein WLAN
 - **Kosten:** Monatliche Abos, pro Nutzer, pro Projekt
 
-BPM ist das Gegenteil: lokal, offline, anpassbar, keine laufenden Kosten, eigene Daten auf dem eigenen Cloud-Speicher (OneDrive, Google Drive, Dropbox etc.) oder komplett ohne Cloud. Optional: self-hosted Server-Modus für Multi-User-Betrieb im Firmennetz (kein SaaS, kein externer Cloud-Zwang).
+BPM ist das Gegenteil: lokal, offline, anpassbar, keine laufenden Kosten, eigene Daten auf dem eigenen Cloud-Speicher (beliebiger Anbieter) oder komplett ohne Cloud. Optional: self-hosted Server-Modus für Multi-User-Betrieb (ADR-053; kein SaaS, kein externer Cloud-Zwang).
 
 ---
 
@@ -106,12 +106,12 @@ BPM ist das Gegenteil: lokal, offline, anpassbar, keine laufenden Kosten, eigene
 
 ### 3.1 Was BPM ist
 
-Ein modulares Desktop-Werkzeug (Windows, WPF) das schrittweise den gesamten Arbeitsalltag eines Poliers/Bauleiters digitalisiert. Eine einzige `.exe`, alle Module integriert, Daten lokal im Dateisystem. Synchronisation über jeden Cloud-Speicher der sich als Ordner im Explorer einblendet (OneDrive, Google Drive, Dropbox, Synology Drive, Nextcloud etc.).
+Ein modulares Desktop-Werkzeug (Windows, WPF) das schrittweise den gesamten Arbeitsalltag eines Poliers/Bauleiters digitalisiert. Eine einzige `.exe`, alle Module integriert, Daten lokal im Dateisystem. Synchronisation über jeden Cloud-Speicher der sich als Ordner im Explorer einblendet (beliebiger Anbieter).
 
 ### 3.2 Kern-Prinzipien
 
 **Offline-first.**  
-BPM funktioniert komplett ohne Internet. Alle Daten liegen lokal. Cloud-Speicher (OneDrive, Google Drive, Dropbox etc.) synchronisieren im Hintergrund wenn verfügbar — aber die App braucht keinen Cloud-Dienst zum Arbeiten.
+BPM funktioniert komplett ohne Internet. Alle Daten liegen lokal. Cloud-Speicher synchronisieren im Hintergrund wenn verfügbar — aber die App braucht keinen Cloud-Dienst zum Arbeiten.
 
 **Eigene Daten, eigene Kontrolle.**  
 Kein Cloud-Dienst, kein Abo, keine Daten bei Dritten. Projektordner sind saubere Windows-Ordner die jeder Kollege im Explorer öffnen kann. Nichts ist in einer proprietären Datenbank versteckt.
@@ -137,7 +137,7 @@ Kollegen in der Firma sollen BPM selbst öffnen und nutzen können — nicht nur
 
 - **Rolle:** Polier und Bauleiter, Steiermark, Österreich
 - **Geräte:** PC zuhause (Hauptarbeitsplatz), Laptop auf der Baustelle, Smartphone (später)
-- **Sync:** Cloud-Speicher (z.B. OneDrive), zwei Geräte
+- **Sync:** Cloud-Speicher, zwei Geräte
 - **Technisch:** Kein Programmierer, aber digital versiert. Baut eigene VBA-Makros, PowerShell-Tools, AutoLISP-Skripte
 - **Projekte:** 2–5 aktive Baustellen gleichzeitig (Wohnbau, Reihenhäuser, Sanierungen)
 - **Arbeitsweise:** Strukturiert, liebt Ordnung, nummerierte Ordner, klare Systeme
@@ -151,7 +151,7 @@ Kollegen in der Firma sollen BPM selbst öffnen und nutzen können — nicht nur
 
 ### 4.3 Indirekte Nutzer
 
-- **Lohnbüro:** Liest Zeiterfassungsdaten aus Excel (über OneDrive)
+- **Lohnbüro:** Liest Zeiterfassungsdaten aus Excel (über den Cloud-Speicher)
 - **Auftraggeber/Planer:** Sehen saubere Projektordner, bekommen exportierte Planlisten
 - **Bestehende VBA-Makros:** Lesen `registry.json` für Outlook-Ordner und Excel-Vorlagen
 
@@ -199,11 +199,11 @@ Kollegen in der Firma sollen BPM selbst öffnen und nutzen können — nicht nur
 
 | Horizont | Zeitraum | Module | Ziel |
 |----------|----------|--------|------|
-| **Jetzt** (V1) | 2026 | Einstellungen, PlanManager | Kernproblem lösen: Pläne automatisch sortieren und versionieren |
+| **Jetzt** (V1) | 2026 | Einstellungen, PlanManager | Kernproblem lösen: Pläne schnell einsortieren (Radial-Erfassung oder Sortieren mit Claude, Bestätigung durch den Nutzer) und versionieren |
 | **Bald** (V1.1) | 2026 | Planlisten Import/Export, Adressbuch, Suche | Vollständiges Planmanagement |
 | **Nächste Welle** | 2026–2027 | Foto, Zeiterfassung, Bautagebuch, Dashboard | Täglichen Arbeitsalltag abdecken |
 | **Danach** | 2027+ | Outlook, Wetter, Vorlagen, Mobile PWA | Ökosystem vervollständigen |
-| **Server-Modus** | 2027+ | Server-Architektur, Auth/RBAC, Datasync-Spike | Multi-User: Polier, Bauleiter, Lohnbüro greifen gleichzeitig zu (ADR-050/051) |
+| **Server-Modus** | 2027+ | Server-Architektur, Auth/RBAC, Server-Sync | Multi-User: Polier, Bauleiter, Lohnbüro greifen gleichzeitig zu (ADR-053) |
 | **Nachkalkulation** | 2027+ | Bestellungen, Lieferscheine, Geräte, NU-Rechnungen | Haupttreiber für Server-Modus. Soll/Ist-Vergleich nach 5 Kostenarten |
 | **Langfristig** | offen | GIS-Integration, Kalender, Bestellungen, ClickUp | Vision Dashboard mit allem |
 
@@ -211,7 +211,7 @@ Kollegen in der Firma sollen BPM selbst öffnen und nutzen können — nicht nur
 
 | Modul | Schmerzpunkt | Lösung |
 |-------|-------------|--------|
-| **PlanManager** | Pläne sortieren kostet 15–30 Min pro Lieferung | Automatisch einsortieren nach angelerntem Muster, Index-Vergleich, Archivierung |
+| **PlanManager** | Pläne sortieren kostet 15–30 Min pro Lieferung | Einsortieren per Radial-Erfassung oder mit Claude (Vorschlag, Nutzer bestätigt), Index-Vergleich, Archivierung; lernende Erkennung nur als Assistenz (ADR-059/065) |
 | **Einstellungen** | Ordnerstruktur manuell anlegen | Nummerierte Ordner per Klick erstellen, Template anpassbar |
 | **Dashboard** | Projektinfos überall verstreut | Alles auf einen Blick: Pläne, Fotos, Kontakte, Links, Kennzahlen |
 | **Bautagebuch** | Mühsames tägliches Protokoll | Auto-Befüllung (Wetter, Personal, Pläne), schnelle Eingabe, PDF-Export |
@@ -280,7 +280,7 @@ Diese Prinzipien gelten für alle zukünftigen Module und Entscheidungen:
 | Prinzip | Bedeutung |
 |---------|-----------|
 | **Offline-first** | Jede Funktion muss ohne Internet funktionieren |
-| **Lokal vor Cloud** | Daten im eigenen Dateisystem, sync über beliebigen Cloud-Speicher (OneDrive, Google Drive, Dropbox etc.) |
+| **Lokal vor Cloud** | Daten im eigenen Dateisystem, sync über beliebigen Cloud-Speicher |
 | **Saubere Ordner** | Projektordner müssen im Explorer für Kollegen lesbar bleiben — keine proprietären Dateien sichtbar |
 | **VBA-kompatibel** | registry.json als Brücke zu bestehenden Makros, bis diese abgelöst werden |
 | **Modular** | Jedes Modul ist ein eigenes C#-Projekt, unabhängig entwickelbar |
@@ -332,7 +332,7 @@ BPM wird als internes Werkzeug entwickelt. Falls es irgendwann für andere Baufi
 - Installer / Auto-Update (Feature im Backlog)
 - Dokumentation für Endnutzer (einfache Sprache, Screenshots, pro Feature eine halbe Seite)
 - EULA / Nutzungsbedingungen
-- Lizenzmodell klären (ADR-034: Offline-Lizenzierung)
+- Lizenzmodell klären (Lizenzsignatur nach ADR-053 P.23, löst ADR-034 ab)
 - Preismodell definieren (Einmalzahlung vs. Jahresupdate-Gebühr vs. Modul-Staffelung)
 - Support-Konzept (RAG-basierter Chat-Bot, kontextbezogene Hilfe pro Feature)
 - Automatisierte Fehlerberichte als GitHub Issues (über IExternalCommunicationService, mit User-Zustimmung)
@@ -342,7 +342,7 @@ BPM wird als internes Werkzeug entwickelt. Falls es irgendwann für andere Baufi
 - SQLite-Verschlüsselung (SQLCipher) vor Zeiterfassung mit Mitarbeiterdaten
 - Steuerberater für USt/OSS-Regelung bei digitalen Leistungen in der EU
 
-Das ist kein aktuelles Ziel und beeinflusst keine Architekturentscheidung. Die modulare Struktur und saubere Codebasis machen einen späteren Schritt in diese Richtung aber grundsätzlich möglich.
+Das ist kein aktuelles Ziel. Was die Architektur dafür schon festlegt, steht in den ADRs (Lizenzsignatur ADR-053 P.23, StrictPrivacyPolicy ADR-036); alles andere hier bleibt offen. Die modulare Struktur und saubere Codebasis machen einen späteren Schritt in diese Richtung aber grundsätzlich möglich.
 
 ---
 

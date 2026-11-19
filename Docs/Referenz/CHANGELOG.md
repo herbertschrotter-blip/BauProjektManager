@@ -32,6 +32,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.256] — 2026-11-19
+
+### Docs: VISION auf ADR-053/059/065 nachgezogen (R01-077)
+
+- Server-Modus und Sync verweisen auf ADR-053 statt ADR-050/051 bzw. „Datasync-Spike“ und „Firmennetz“.
+- Cloud-Neutralität: Anbieternamen (OneDrive u. a.) aus dem Text entfernt, wie die eigene Invariante verlangt.
+- V1-Ziel und PlanManager-Nutzen: Einsortieren per Radial-Erfassung oder mit Claude, Bestätigung durch den Nutzer,
+  lernende Erkennung nur als Assistenz (ADR-059/065) – statt „automatisch nach angelerntem Muster“.
+- Verkaufsabschnitt: Lizenzsignatur nach ADR-053 P.23 (löst ADR-034 ab); der Satz „beeinflusst keine
+  Architekturentscheidung“ durch den Verweis auf die schon getroffenen ADRs ersetzt.
+
 ## [v0.28.255] — 2026-11-19
 
 ### Docs: PDF-Engine PDFium/Docnet in den Docs nachgezogen (R01-058)

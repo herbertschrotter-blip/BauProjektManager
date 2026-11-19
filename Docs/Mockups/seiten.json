@@ -685,6 +685,13 @@
       "datum": "19.11.2026",
       "was": "Code entspricht dem abgenommenen Mockup 1.1 (App zeigt die Seite schon so) – Entscheidung Herbert",
       "art": "code"
+     },
+     {
+      "v": "1.2",
+      "datum": "19.11.2026",
+      "was": "Bauteil-Aliasse (BPM-121.03): Bauteil-Hinweis aus dem Dateinamen im Detailbereich, nach dem Zuordnen Vorschlag „„H2“ → Haus 2 – als Alias merken?“ (Merken/Nein, gilt projektweit), gemerkter Alias markiert das Bauteil im Radial als Kandidat; Zustand „Alias-Vorschlag“ – Mockup abgenommen (Herbert)",
+      "art": "mockup",
+      "ticket": "BPM-121"
      }
     ],
     "mockup_alt": "PlanManager/02_Projektdetail/02_ManuellSortieren.html",
@@ -697,10 +704,10 @@
      "Radial-Erfassung"
     ],
     "stand_commit": "80b7ee9",
-    "version_abgenommen": "1.1",
+    "version_abgenommen": "1.2",
     "code_stand": "47e5ae04cb",
     "mockup": "seiten/manuell-sortieren.html",
-    "version_mockup": "1.1"
+    "version_mockup": "1.2"
    },
    {
     "nr": "3.4",

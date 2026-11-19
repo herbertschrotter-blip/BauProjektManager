@@ -148,7 +148,9 @@ var FILES=[
 {id:3,n:'5998-203_OG3_Polierplan.dwg',s:'148 KB',g:'OG3',t:'Polierplan',nr:'5998-203',idx:'—',bez:'Polierplan OG3'},
 {id:11,n:'5998-202_OG2_Polierplan.pdf',s:'146 KB',g:'OG2',t:'Polierplan',nr:'5998-202',idx:'—',bez:'Polierplan OG2'},
 {id:12,n:'5998-202_OG2_Polierplan.dwg',s:'151 KB',g:'OG2',t:'Polierplan',nr:'5998-202',idx:'—',bez:'Polierplan OG2'},
-{id:13,n:'5998-150_Polierplan+Schalung_H1_EG.pdf',s:'188 KB',g:'EG',t:'Polierplan',nr:'5998-150',idx:'—',bez:'Polierplan + Schalung EG',combi:1},
+{id:13,n:'5998-150_Polierplan+Schalung_H1_EG.pdf',s:'188 KB',g:'EG',t:'Polierplan',nr:'5998-150',idx:'—',bez:'Polierplan + Schalung EG',combi:1,bh:'H1'},
+{id:14,n:'S-201_Schalung_H2_EG.pdf',s:'131 KB',g:'EG',t:'Schalung',nr:'S-201',idx:'—',bez:'Schalung Decke EG',bh:'H2'},
+{id:15,n:'S-202_Schalung_H2_OG1.pdf',s:'129 KB',g:'OG1',t:'Schalung',nr:'S-202',idx:'—',bez:'Schalung Decke OG1',bh:'H2'},
 {id:5,n:'5998-100-B_KG_Polierplan.dwg',s:'151 KB',kind:'update',newIdx:'B',newD:'heute',newC:'',nr:'5998-100',idx:'B',bez:'Polierplan KG',target:'Pläne/Polierplan/Haus 1/KG/',hist:[{i:'A',d:'12.05.2026',c:'Seilsicherungssystem durch Auflastgeländer ersetzt'},{i:'—',d:'02.04.2026',c:'Erstausgabe'}]},
 {id:6,n:'B-101_Bewehrung_OG1.pdf',s:'98 KB',g:'OG1',t:'Bewehrung',nr:'B-101',idx:'—',bez:'Bewehrung Decke OG1'},
 {id:7,n:'FT_W04_Wandelemente_H2.pdf',s:'204 KB',g:'',t:'Fertigteile',nr:'FT-W04',idx:'—',bez:'Wandelemente Haus 2'},
@@ -170,6 +172,12 @@ var GESCH_MAP={'Haus 1':['KG','EG','OG1','OG2'],'Haus 2':['KG','EG','OG1','OG2',
 var R={open:false,typ:null,bau:null,ges:null,hov:null,cand:null,candG:null,move:null};
 var DWELL=110,HOLD=260,vis={bau:false,ges:false},addCtx=null;
 var ADD={n:'+ Neu…',add:1};
+/* BPM-121.03 Bauteil-Aliasse (building_part_aliases): exakter Vergleich nach Normalisierung, nur vom User bestaetigt */
+var ALIASE={'h1':'Haus 1'},VORSCHLAG={},NEIN={};
+function normA(s){return (s||'').toLowerCase().replace(/[^a-z0-9äöüß]/g,'');}
+function aliasTeil(f){if(!f||!f.bh)return null;var k=normA(f.bh);if(ALIASE[k])return ALIASE[k];var b=BAUTEILE.find(function(x){return normA(x.n)===k;});return b?b.n:null;}
+function merkeAlias(id){var v=VORSCHLAG[id];if(!v)return;ALIASE[normA(v.hint)]=v.teil;Object.keys(VORSCHLAG).forEach(function(k){if(normA(VORSCHLAG[k].hint)===normA(v.hint))delete VORSCHLAG[k];});document.getElementById('dMsg').textContent='✓ Alias gemerkt: „'+v.hint+'“ = '+v.teil+' (gilt im ganzen Projekt)';render();}
+function verwerfeAlias(id){var v=VORSCHLAG[id];if(!v)return;NEIN[normA(v.hint)+'|'+v.teil]=1;Object.keys(VORSCHLAG).forEach(function(k){if(normA(VORSCHLAG[k].hint)===normA(v.hint))delete VORSCHLAG[k];});render();}
 var rotOff={typ:0,bau:0,ges:0};
 var CX=260,RING1=[72,138],RING2=[146,204],RING3=[212,256],CR=62;
 var SELTXT='erg. Deckendurchbruch 20/20cm (S2)';
@@ -304,7 +312,7 @@ ed.innerHTML='<div style="display:grid;grid-template-columns:1fr 64px;gap:8px;ma
 (a?'<div style="color:var(--BpmTextSecondary);font-size:12px">Ordner: <span style="color:var(--BpmTextPrimary)">'+a.target+'</span></div><div style="color:var(--BpmTextSecondary);font-size:12px;margin-bottom:8px">Hinzugefügt: <span style="color:'+(a.last?'var(--BpmSuccess)':'var(--BpmTextPrimary)')+'">'+a.date+'</span></div>':'')+
 (function(){var pr=a?null:pairOf(f);return pr?'<div style="background:#1c2b38;border-left:3px solid var(--BpmInfo);padding:7px 9px;font-size:11px;color:#85b8d9;line-height:1.5;margin-bottom:8px">⛓ Gepaart mit <span style="font-family:Consolas,monospace;color:var(--BpmTextPrimary)">'+pr.n+'</span><br>Import als <span style="color:var(--BpmTextBright)">EINE Revision mit zwei Dateien</span> (PDF führend, DWG angehängt)</div>':'';})()+
 (f.combi&&!a?'<div style="background:#2a2418;border-left:3px solid var(--BpmWarning);padding:7px 9px;font-size:11px;color:var(--BpmWarning);line-height:1.5;margin-bottom:8px">⚠ <span style="color:var(--BpmTextBright)">Kombi-Plan erkannt</span> (mehrere Plantypen im Namen)<br>V1: kein Auto-Split — als EIN Dokument erfassen, Typ „Kombiplan/Sonstiges" empfohlen (+ Neu…), Inhalte per Text-Zuweisung als Segmente</div>':'')+
-(pend[f.id]?'<div style="color:var(--BpmWarning);font-size:12px;margin-bottom:8px">⏳ '+pend[f.id]+'</div>':'');
+(pend[f.id]?'<div style="color:var(--BpmWarning);font-size:12px;margin-bottom:8px">⏳ '+pend[f.id]+'</div>':'')+aliasBox(f,a);
 var ctx=f.kind==='update'?' · Haus 1/KG':(a?' · '+a.target.replace('Pläne/',''):'');
 hd.innerHTML='<div class="lbl">Index-Historie · '+(f.nr||'—')+ctx+'</div>'+
 '<div style="background:var(--BpmBgElevated);border-radius:3px;padding:4px 4px;margin-bottom:8px;font-size:12px">'+
@@ -312,6 +320,15 @@ hd.innerHTML='<div class="lbl">Index-Historie · '+(f.nr||'—')+ctx+'</div>'+
 histRows(f,a)+'</table></div>'+
 (f.kind==='update'&&!pend[f.id]?'<button onclick="takeUpdate('+f.id+')" style="width:100%;background:#0a3a5e;border:1px solid var(--BpmInfo);color:var(--BpmTextBright);font-size:12px;padding:7px;border-radius:3px;cursor:pointer;margin-bottom:8px;font-family:inherit">⬆ Update übernehmen → bekannter Ordner</button>':'');}
 else ed.innerHTML='<div style="color:#5a5a5a;font-size:12px">'+(sel.size?sel.size+' Datei(en) ausgewählt — halten &amp; ziehen':'Keine Auswahl')+'</div>';}
+function aliasBox(f,a){if(a||!f.bh)return '';var t=aliasTeil(f),v=VORSCHLAG[f.id];
+if(v){var n=Object.keys(VORSCHLAG).filter(function(k){return normA(VORSCHLAG[k].hint)===normA(v.hint);}).length;
+return '<div style="background:var(--BpmBgElevated);border:1px solid var(--BpmAccentPrimary);border-radius:4px;padding:8px 10px;margin-bottom:8px;font-size:12px">'+
+'<div style="color:var(--BpmTextBright);margin-bottom:6px"><span style="font-family:Consolas,monospace">„'+esc(v.hint)+'“</span> → '+esc(v.teil)+' — als Alias merken?</div>'+
+'<div style="color:var(--BpmTextSecondary);font-size:11px;margin-bottom:8px;line-height:1.45">Dann erkennt BPM „'+esc(v.hint)+'“ künftig in allen Dateinamen dieses Projekts als '+esc(v.teil)+'.'+(n>1?' Gilt auch für die anderen '+(n-1)+' Datei(en) mit „'+esc(v.hint)+'“.':'')+'</div>'+
+'<div style="display:flex;gap:6px"><button onclick="merkeAlias('+f.id+')" style="background:var(--BpmAccentPrimary);border:none;color:var(--BpmTextOnAccent);font-size:12px;padding:5px 12px;border-radius:3px;cursor:pointer;font-family:inherit">Als Alias merken</button>'+
+'<button onclick="verwerfeAlias('+f.id+')" style="background:transparent;border:1px solid var(--BpmBorderDefault);color:var(--BpmTextPrimary);font-size:12px;padding:5px 12px;border-radius:3px;cursor:pointer;font-family:inherit">Nein</button></div></div>';}
+if(t)return '<div style="color:var(--BpmTextSecondary);font-size:12px;margin-bottom:8px">Bauteil aus dem Dateinamen: <span style="font-family:Consolas,monospace;color:var(--BpmTextPrimary)">„'+esc(f.bh)+'“</span> = <span style="color:var(--BpmTextBright)">'+esc(t)+'</span>'+(ALIASE[normA(f.bh)]?' (Alias)':'')+'</div>';
+return '<div style="color:var(--BpmTextSecondary);font-size:12px;margin-bottom:8px">Bauteil-Hinweis <span style="font-family:Consolas,monospace;color:var(--BpmTextPrimary)">„'+esc(f.bh)+'“</span> – noch keinem Bauteil zugeordnet. Halten = Radial; danach fragt BPM, ob es ein Alias ist.</div>';}
 function updF(id,k,v){var f=anyById(id);if(f){f[k]=v;if(pvId===id)pvDraw();}}
 function takeUpdate(id){var f=byId(id);if(f)pend[id]=f.target;render();}
 function clearPend(){pend={};document.getElementById('dMsg').textContent='';render();}
@@ -328,7 +345,7 @@ document.getElementById('addBox').style.display='block';
 setTimeout(function(){document.getElementById('addInp').focus();},50);}
 function closeAdd(){addCtx=null;document.getElementById('addBox').style.display='none';}
 function applyTarget(path,files,move){if(move!=null){var a=arcById(move);if(a){a.target=path;document.getElementById('dMsg').textContent='↷ verschoben nach '+path+' (Journal)';}}
-else{var extra=0;files.forEach(function(id){pend[id]=path;
+else{var extra=0,teil=path.split('/')[2]||'';files.forEach(function(id){pend[id]=path;var fz=byId(id);if(fz&&fz.bh&&teil&&!isCat(path.split('/')[1])&&BAUTEILE.some(function(b){return b.n===teil;})&&!aliasTeil(fz)&&!NEIN[normA(fz.bh)+'|'+teil])VORSCHLAG[id]={hint:fz.bh,teil:teil};
 var f=byId(id),pr=f&&pairOf(f);
 if(pr&&!pr.kind&&files.indexOf(pr.id)<0&&!pend[pr.id]){pend[pr.id]=path;extra++;}});
 if(extra)document.getElementById('dMsg').textContent='⛓ '+extra+' gepaarte Datei(en) automatisch mit zugeordnet';}sel.clear();}
@@ -408,7 +425,7 @@ var t2=document.createElementNS('http://www.w3.org/2000/svg','text');
 t2.setAttribute('x',CX);t2.setAttribute('y',CX+14);t2.setAttribute('text-anchor','middle');t2.setAttribute('font-size','11');t2.style.fill=R.typ||!R.combi?'#85b8d9':'var(--BpmWarning)';t2.textContent=R.typ?(R.typ+(R.bau?' › '+R.bau:'')):(R.combi?'⚠ Kombi-Plan':'');svg.appendChild(t2);
 ring(svg,RING1,ring1Items(),'typ',R.typ,R.cand,false);
 var showBau=!!R.typ;
-if(showBau)ring(svg,RING2,ring2Items(),'bau',R.bau,null,!vis.bau);
+if(showBau)ring(svg,RING2,ring2Items(),'bau',R.bau,isCat(R.typ)?null:R.candB,!vis.bau);
 var gl=ring3Items();
 var showGes=gl.length>1;
 if(showGes)ring(svg,RING3,gl,'ges',R.ges,R.cand==='Polierplan'?R.candG:null,!vis.ges);
@@ -425,7 +442,7 @@ g.style.left=(cx-fr.left+16)+'px';g.style.top=(cy-fr.top+14)+'px';}
 function showGhost(cx,cy,label){document.getElementById('ghostTxt').textContent=label;
 document.getElementById('ghost').style.display='flex';moveGhost(cx,cy);}
 function startRadial(f,moveId){R.open=true;R.move=moveId!=null?moveId:null;
-R.typ=null;R.bau=null;R.ges=null;R.hov=null;R.cand=f.t||null;R.candG=f.g||null;R.combi=!!f.combi;
+R.typ=null;R.bau=null;R.ges=null;R.hov=null;R.cand=f.t||null;R.candG=f.g||null;R.candB=aliasTeil(f);R.combi=!!f.combi;
 vis={bau:false,ges:false};rotOff={typ:0,bau:0,ges:0};
 var fr=frame.getBoundingClientRect();var x=downXY[0]-fr.left,y=downXY[1]-fr.top;
 x=Math.max(255,Math.min(fr.width-255,x));y=Math.max(252,Math.min(fr.height-252,y));
@@ -474,7 +491,7 @@ renderRadial();},{passive:false});
 document.addEventListener('contextmenu',function(e){if(R.open){e.preventDefault();e.stopPropagation();closeRadial();}},true);
 
 /* Zustand = Sub-Tab (neu | archiv); die Vorführleiste (theme.js) zeichnet den Rahmen neu, zeige() ruft dann init() */
-function setzeZustand(t){TAB=t;sel.clear();R.open=false;R.move=null;R.hov=null;addCtx=null;clearTimeout(holdT);holdT=null;clearTimeout(dwellT);}
+function setzeZustand(t){if(t==='alias'){TAB='neu';pend[14]='Pläne/Schalung/Haus 2/EG/';VORSCHLAG[14]={hint:'H2',teil:'Haus 2'};VORSCHLAG[15]={hint:'H2',teil:'Haus 2'};pend[15]='Pläne/Schalung/Haus 2/OG1/';sel.clear();sel.add(14);R.open=false;R.move=null;R.hov=null;addCtx=null;clearTimeout(holdT);holdT=null;clearTimeout(dwellT);return;}TAB=t;sel.clear();R.open=false;R.move=null;R.hov=null;addCtx=null;clearTimeout(holdT);holdT=null;clearTimeout(dwellT);}
 /* Element-Listener nach jedem Neuzeichnen binden; offenes Vorschau-Panel bleibt offen */
 function init(){cm=document.getElementById('cmenu');frame=document.getElementById('frame');
 document.getElementById('dOk').addEventListener('click',onOk);
@@ -570,11 +587,11 @@ const SHELL = `<div class="shell" style="user-select:none">
 <span>&Ouml;WG &middot; 119 Dok.</span><span style="margin-left:auto" id="sbInfo">bereit</span>
 </div>
 </div>`;
-let erster = true;
-M.start({ nr: '3.3', titel: 'Manuell sortieren', version: '1.1',
-  zustaende: [['neu','Neue Pläne'],['archiv','Archiv']],
+let erster = true, letzterZ = null;
+M.start({ nr: '3.3', titel: 'Manuell sortieren', version: '1.2',
+  zustaende: [['neu','Neue Pläne'],['archiv','Archiv'],['alias','Alias-Vorschlag']],
   zeige: (s) => {
-    if (erster || s.z !== TAB) { setzeZustand(s.z); erster = false; }
+    if (erster || s.z !== letzterZ) { setzeZustand(s.z); letzterZ = s.z; erster = false; }
     setTimeout(init);
     return SHELL;
   },

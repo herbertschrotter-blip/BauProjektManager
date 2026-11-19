@@ -32,6 +32,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.244] — 2026-11-19
+
+### Docs: Mockup 3.3 v1.2 – Bauteil-Alias-Vorschlag abgenommen (BPM-121.03)
+
+Seite 3.3 „Manuell sortieren“: Bauteil-Hinweis aus dem Dateinamen im Detailbereich; nach dem Zuordnen über das Radial erscheint „„H2“ → Haus 2 – als Alias merken?“ (Merken / Nein, gilt im ganzen Projekt). Ein gemerkter Alias markiert das Bauteil im Radial als Kandidat. Neuer Zustand „Alias-Vorschlag“. Entscheidung Herbert: nur Bauteil-Aliasse (building_part_aliases, DB-SCHEMA 4.11). Abgenommen über die Seitenliste.
+
 ## [v0.28.243] — 2026-11-19
 
 ### Docs: Seitenliste – 3.6 Code 2.1 gebaut, 3.8 Code 1.1 (BPM-121.00)

@@ -16,6 +16,17 @@ supersedes: []
 - Autorität: secondary
 - Lesen wenn: KI-Feature, LV-Analyse, Dokumentensuche, externe KI-API
 - Nicht zuständig für: Plankopf-Extraktion (→ Moduleplanheader.md)
+- Kapitel:
+  - 1. Ziel
+  - 2. Einordnung in BPM
+  - 3. Funktionsbereiche
+  - 4. System-Prompt
+  - 5. Ausgabeformat
+  - 6. UI-Konzept
+  - 7. Technische Architektur
+  - 8. Erweiterungsmöglichkeiten (Zukunft)
+  - 9. Abgrenzung
+  - 10. Abhängigkeiten und Voraussetzungen
 - Pflichtlesen: keine
 - Fachliche Invarianten:
   - DSGVO Klasse C — unverarbeitete Dokumente an externe API

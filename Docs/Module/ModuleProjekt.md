@@ -16,6 +16,22 @@ supersedes: []
 - Autorität: source_of_truth
 - Lesen wenn: Projekt-Feature, ProjectEditDialog, Ordnerstruktur, registry.json, Auftraggeber, Bauteile/Geschosse
 - Nicht zuständig für: PlanManager (→ PlanManager.md), DB-Schema-Details (→ DB-SCHEMA.md), Architektur (→ Architektur.md)
+- Kapitel:
+  - 1. Übersicht
+  - 2. Architektur
+  - 3. Domain-Modelle
+  - 4. Datenbank (ProjectDatabase)
+  - 5. Infrastructure-Services
+  - 6. UI: SettingsView (2-Tab-Seite)
+  - 7. UI: ProjectEditDialog (5-Tab-Dialog, 1100×900, seit BPM-073 vergrößerbar — Größe gerätelokal gemerkt)
+  - 8. FolderTemplateControl (Shared UserControl)
+  - 9. Datenfluss
+  - 10. Editierbare Listen (settings.json)
+  - 11. Bekannte Einschränkungen
+  - 12. Geplante Verbesserungen
+  - 13. Dateien
+  - 14. Verwandte Entscheidungen
+  - 15. Änderungshistorie
 - Pflichtlesen:
   - Kapitel 3 (Datenmodell) bei Projekt-Entitäts-Änderung
   - Kapitel 8 (FolderTemplateControl, Ordnerstruktur) bei FolderTemplate-Änderung

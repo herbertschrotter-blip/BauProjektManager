@@ -16,6 +16,17 @@ supersedes: []
 - Autorität: secondary
 - Lesen wenn: PlanHeader-Feature, Plankopf-Extraktion, PDF-Parsing, IndexSource.PlanHeader
 - Nicht zuständig für: Dateinamen-Parsing (→ PlanManager.md Kap. 13), KI-API allgemein (→ ModuleKiAssistent.md)
+- Kapitel:
+  - 1. Zielsetzung
+  - 2. Kernkonzept: Claude-gestütztes Anlernen
+  - 3. Der Prompt (vorkonfiguriert in BPM)
+  - 4. Beispiel: Claude-Analyse des Spörk ZT Plans (B-221-B)
+  - 5. Technische Umsetzung in BPM
+  - 6. GUI in BPM
+  - 7. Fehlerbehandlung
+  - 8. Vorteile dieses Ansatzes
+  - 9. Architektur-Implikationen
+  - 10. Abgrenzung
 - Pflichtlesen: keine
 - Fachliche Invarianten:
   - Post-V1 Feature — IndexSource.PlanHeader Enum existiert, Implementierung offen

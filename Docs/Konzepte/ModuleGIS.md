@@ -16,6 +16,17 @@ supersedes: []
 - Autorität: secondary
 - Lesen wenn: GIS-Feature, Koordinaten, Kataster-Abfrage, Karten-Integration
 - Nicht zuständig für: Foto-Geodaten (→ ModuleFoto.md)
+- Kapitel:
+  - 1. Zielsetzung
+  - 2. Bereits vorbereitete Felder im Domain-Modell
+  - 3. Datenquellen
+  - 4. Architektur im BPM
+  - 5. Koordinaten-Umrechnung
+  - 6. Offline-Strategie
+  - 7. Zukunft: Karte im Dashboard
+  - 8. API-Key Verwaltung
+  - 9. Umsetzungsreihenfolge
+  - 10. Offene Entscheidungen
 - Pflichtlesen: keine
 - Fachliche Invarianten:
   - Offline-Koordinatentransformation über ProjNet (EPSG:31258↔WGS84)

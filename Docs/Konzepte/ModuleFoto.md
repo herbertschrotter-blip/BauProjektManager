@@ -16,6 +16,20 @@ supersedes: []
 - Autorität: secondary
 - Lesen wenn: Foto-Feature, Bild-Viewer, Foto-Tags, Geodaten
 - Nicht zuständig für: Bautagebuch (→ ModuleBautagebuch.md), PlanManager (→ PlanManager.md)
+- Kapitel:
+  - 1. Zielsetzung
+  - 2. Architektur
+  - 3. Features (aus PhotoFolder V2 übernommen + BPM-spezifisch)
+  - 4. Thumbnail-System (aus PhotoFolder V2)
+  - 5. GUI-Konzept (WPF)
+  - 6. EXIF + Geodaten
+  - 7. Daten-Speicherung
+  - 8. Video-Handling
+  - 9. Bautagebuch-Integration
+  - 10. Lessons Learned aus PhotoFolder V2 (für C# relevant)
+  - 11. NuGet-Pakete
+  - 12. Umsetzungsreihenfolge
+  - 13. Offene Entscheidungen
 - Pflichtlesen: keine
 - Fachliche Invarianten:
   - Fotos bleiben im Dateisystem — nur Metadaten in SQLite

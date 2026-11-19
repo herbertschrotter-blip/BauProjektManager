@@ -16,6 +16,22 @@ supersedes: []
 - Autorität: secondary
 - Lesen wenn: Kalkulation-Feature, Nachkalkulation, Bauzeitprognose, Arbeitspakete
 - Nicht zuständig für: Zeiterfassung-Rohdaten (→ ModuleZeiterfassung.md)
+- Kapitel:
+  - 1. Ziel
+  - 2. Kernproblem: Warum scheitern Nachkalkulationen in der Praxis?
+  - 3. Zentrales Konzept: Das Arbeitspaket
+  - 4. Datenfluss — wie alles zusammenhängt
+  - 5. Arbeitseinteilung (täglich)
+  - 6. Erfassungslogik pro Bauteiltyp
+  - 7. LV-Import und Verknüpfung
+  - 8. Nachkalkulation — Ergebnisse
+  - 9. Braucht man KI?
+  - 10. Bestehende Architektur — Erweiterung, kein Umbau
+  - 11. DB-Schema (Entwurf)
+  - 12. GUI-Mockups
+  - 13. Bestehende Excel-Tools als Datenquelle
+  - 14. Abgrenzung
+  - 15. Implementierungsreihenfolge
 - Pflichtlesen: keine
 - Fachliche Invarianten:
   - Sensitive Finanzdaten (Lohnsätze, Einheitspreise) in eigenen restricted-Tabellen

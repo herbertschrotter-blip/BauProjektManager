@@ -16,6 +16,15 @@ supersedes: []
 - Autorität: secondary
 - Lesen wenn: Outlook-Feature, Email-Integration, Anhänge extrahieren
 - Nicht zuständig für: VBA-Makros (bestehend, extern), PlanManager-Import (→ PlanManager.md)
+- Kapitel:
+  - 1. Konzept
+  - 2. Funktionen
+  - 3. Workflow
+  - 4. GUI-Mockup
+  - 5. Pseudo-Code
+  - 6. COM-Objektfreigabe (Wichtig!)
+  - 7. VBA-Koexistenz
+  - 8. Risiken
 - Pflichtlesen: keine
 - Fachliche Invarianten:
   - COM Interop nur wenn Outlook läuft — kein Hintergrund-Service

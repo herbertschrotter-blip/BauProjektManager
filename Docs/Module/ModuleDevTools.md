@@ -16,6 +16,21 @@ supersedes: []
 - Autorität: source_of_truth
 - Lesen wenn: DevTools-Feature, Debug-Dialog, App-Reset, Log-Viewer
 - Nicht zuständig für: Produktiv-Features, Release-Builds
+- Kapitel:
+  - 1. Übersicht
+  - 2. Architektur
+  - 3. Zugriff und Sichtbarkeit
+  - 4. Interface: IDeveloperToolsService
+  - 5. Dialog: 3 Tabs
+  - 6. Reset-Mechanismus (ADR-043)
+  - 7. Bug-Report (Clipboard-Export)
+  - 8. P/Invoke (Win32 API)
+  - 9. Logging im Modul
+  - 10. Bekannte Einschränkungen
+  - 11. Geplante Verbesserungen (genehmigtes v2-Konzept)
+  - 12. Dateien
+  - 13. Verwandte Entscheidungen
+  - 14. Änderungshistorie
 - Pflichtlesen: keine
 - Fachliche Invarianten:
   - Nur in DEBUG-Builds sichtbar — kein Zugriff in Release

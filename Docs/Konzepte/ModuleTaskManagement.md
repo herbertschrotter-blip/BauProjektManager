@@ -16,6 +16,16 @@ supersedes: []
 - Autorität: secondary
 - Lesen wenn: Task-Feature, Materialbestellung, Arbeitspaket-Verwaltung
 - Nicht zuständig für: Kalkulation (→ ModuleKalkulation.md), Zeiterfassung (→ ModuleZeiterfassung.md)
+- Kapitel:
+  - 1. Ziel
+  - 2. Herberts bestehendes ClickUp-System
+  - 3. BPM-Integration
+  - 4. Interface-Architektur — Nicht an ClickUp gebunden
+  - 5. DB-Schema
+  - 6. GUI-Mockups
+  - 7. Verbindung zu anderen Modulen
+  - 8. Implementierungsreihenfolge
+  - 9. Abgrenzung
 - Pflichtlesen: keine
 - Fachliche Invarianten:
   - BPM ist Master für Arbeitspakete — externe Tools (ClickUp) sind optional Sync

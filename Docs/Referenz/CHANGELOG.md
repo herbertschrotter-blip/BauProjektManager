@@ -32,6 +32,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.253] — 2026-11-19
+
+### Docs: Kapitel-Zeile in 13 Quickloads ergänzt (R01-062)
+
+ModuleDevTools, ModuleProjekt und die Konzept-Docs ModuleFoto, -GIS, -Kalkulation, -KiAssistent, -OrdnerSync,
+-Outlook, -planheader, -TaskManagement, -Vorlagen, -Wetter, -Zeiterfassung haben jetzt im AI-Quickload die Kapitelliste
+(alle H2, vor „Pflichtlesen“). Die BOMs dieser Docs sind seit v0.28.250 entfernt; ein Umbau auf die Kapitelvorlage
+ist laut E19 für Bestands-Docs nicht verlangt.
+
 ## [v0.28.252] — 2026-11-19
 
 ### Docs: Quickload-Kapitel und Pflichtlesen korrigiert (R01-016)

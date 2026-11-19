@@ -16,6 +16,22 @@ supersedes: []
 - Autorität: secondary
 - Lesen wenn: Wetter-Feature, Wetter-API, Google Sheets Worker, Wetter-Sync
 - Nicht zuständig für: Bautagebuch-Auto-Befüllung (→ ModuleBautagebuch.md)
+- Kapitel:
+  - 1. Konzept
+  - 2. Architektur-Übersicht
+  - 3. Google Sheet als Cloud-Worker
+  - 4. Wetter-API: Open-Meteo
+  - 5. BPM-Sync-Architektur
+  - 6. Datenmodell
+  - 7. Dashboard-UI (WPF)
+  - 8. Betonierfreigabe
+  - 9. Bestehendes Google Sheet
+  - 10. Statistiken & Kennzahlen
+  - 11. DSGVO / Datenschutz
+  - 12. Rechtliche Aspekte
+  - 13. Implementierungs-Phasen
+  - 14. Abhängigkeiten
+  - 15. Offene Entscheidungen
 - Pflichtlesen: keine
 - Fachliche Invarianten:
   - Google Sheets als 24/7 Cloud-Worker geplant (Apps Script pollt API stündlich) – BPM-seitiger Abruf aus dem Sheet (CSV-/Web-App-URL, Sheets API) erst nach Eintrag im DSGVO-Gateway-Register (DSGVO-Architektur Kap. 4.4); bis dahin gilt nur der registrierte Abruf bei api.open-meteo.com

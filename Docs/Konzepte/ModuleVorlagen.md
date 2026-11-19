@@ -16,6 +16,16 @@ supersedes: []
 - Autorität: secondary
 - Lesen wenn: Vorlagen-Feature, Excel befüllen, Word befüllen
 - Nicht zuständig für: Bautagebuch-Export (→ ModuleBautagebuch.md)
+- Kapitel:
+  - 1. Konzept
+  - 2. Vorlagen-Ordner
+  - 3. templates.json
+  - 4. Workflow
+  - 5. GUI-Mockup
+  - 6. Technologie pro Dateityp
+  - 7. Platzhalter in Vorlagen
+  - 8. VBA-Anbindung (Entscheidung offen)
+  - 9. Abhängigkeiten
 - Pflichtlesen: keine
 - Fachliche Invarianten:
   - Excel über ClosedXML (kein COM), Word über COM Interop

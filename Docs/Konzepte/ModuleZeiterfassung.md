@@ -16,6 +16,17 @@ supersedes: []
 - Autorität: secondary
 - Lesen wenn: Zeiterfassung-Feature, Stundenzettel, Excel-Export, Personal-Stunden
 - Nicht zuständig für: Kalkulation (→ ModuleKalkulation.md), Bautagebuch-Personal (→ ModuleBautagebuch.md)
+- Kapitel:
+  - 1. Zielsetzung
+  - 2. Architektur-Übersicht
+  - 3. Datenmodell (Excel-Tabellen)
+  - 4. Rollenverteilung
+  - 5. BPM-Dashboard Integration
+  - 6. Multi-User (Zukunft)
+  - 7. SQL-Migrationsfähigkeit
+  - 8. Excel-Datei Aufbau (Sheets)
+  - 9. Umsetzungsreihenfolge
+  - 10. Offene Entscheidungen
 - Pflichtlesen: keine
 - Fachliche Invarianten:
   - Excel bleibt Single Source of Truth für Roh-Zeitbuchungen (ADR-018)

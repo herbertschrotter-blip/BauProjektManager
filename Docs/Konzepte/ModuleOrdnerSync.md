@@ -16,6 +16,16 @@ supersedes: []
 - Autorität: secondary
 - Lesen wenn: Ordner-Sync-Feature, Filesystem-Abgleich
 - Nicht zuständig für: Daten-Sync (→ DatenarchitekturSync.md), PlanManager-Import (→ PlanManager.md)
+- Kapitel:
+  - 1. Problem
+  - 2. Kernkonzept
+  - 3. Sync-Logik
+  - 4. UI-Einordnung
+  - 5. Technische Architektur
+  - 6. Datenschutz (DSGVO)
+  - 7. Abgrenzung
+  - 8. Implementierungsreihenfolge
+  - 9. Offene Architektur-Entscheidungen (spätere ADRs)
 - Pflichtlesen: keine
 - Fachliche Invarianten:
   - Cloud-Speicher-neutral — kein OneDrive-spezifischer Code

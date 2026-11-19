@@ -146,10 +146,12 @@ public sealed partial class ClaudeSortAuftragBuilder
                 t.Id, t.Key, t.Name, Unterteilung(t.Ring2Source), Ablage(t.RootRelativePath, t.FolderName),
                 [.. t.Categories.Select(c => new KontextKategorie(c.Id, c.Name))]))
             .ToList();
+        var schreibweisen = _bpmDb.GetBuildingPartAliasValues(projectId); // gemerkte Aliasse (BPM-121.03)
         var bauteile = _bpmDb.GetBuildingParts(projectId)
             .Select(p => new KontextBauteil(
                 p.Id, p.ShortName, p.Description,
-                [.. p.Levels.Select(l => new KontextGeschoss(l.Id, l.Name, l.Description))]))
+                [.. p.Levels.Select(l => new KontextGeschoss(l.Id, l.Name, l.Description))],
+                schreibweisen.GetValueOrDefault(p.Id) ?? []))
             .ToList();
         var plaene = bekannte
             .Select(d => new KontextBekannterPlan(

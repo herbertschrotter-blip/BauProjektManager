@@ -13,7 +13,7 @@ Du verschiebst und benennst nichts: Den Ablageordner baut die App aus deiner Zuo
 |---|---|
 | `auftrag`, `heute` | Name des Auftrags, Datum heute (`JJJJ-MM-TT`) |
 | `dokumenttypen` | je Typ `id`, `key`, `name`, `unterteilung`, `ablage` (Ordner relativ zum Projekt), `kategorien` (`id`, `name`) |
-| `bauteile` | je Bauteil `id`, `kurzname`, `beschreibung`, `geschosse` (`id`, `name`, `beschreibung`) |
+| `bauteile` | je Bauteil `id`, `kurzname`, `beschreibung`, `geschosse` (`id`, `name`, `beschreibung`), `schreibweisen` (von Herbert bestätigte Kürzel für dieses Bauteil in Dateinamen, z. B. `H2` für „Haus 2“; leer, wenn keine) |
 | `segmenttypen` | je Segmenttyp `id`, `name` (z. B. Plannummer, Index, Geschoss, Haus, Planart) – für `segmente` |
 | `vorhandene_tags` | Tags, die Herbert in diesem Projekt schon verwendet (häufigste zuerst) |
 | `bekannte_plaene` | schon im Archiv: `plannummer`, `index` (aktuell), `dokumenttyp_id`, `dokumenttyp`, `bauteil_id`, `geschoss_id`, `ordner` |
@@ -80,6 +80,8 @@ Du verschiebst und benennst nichts: Den Ablageordner baut die App aus deiner Zuo
 
 - **Plankopf vor Dateiname.** Der Plankopf nennt meist Planart, Bauteil, Geschoss, Plannummer und Index. Der Dateiname
   ist oft gekürzt oder vom Planer frei gewählt; Positionen im Namen sind unzuverlässig.
+- **Schreibweisen sind bestätigt:** Steht ein Kürzel aus den `schreibweisen` eines Bauteils im Dateinamen (z. B. `H2`)
+  und widerspricht der Plankopf nicht, gehört die Datei sicher zu diesem Bauteil – nicht als unsicher markieren.
 - **Bekannte Pläne als Muster:** Gleiche Plannummer-Reihe wie bekannte Pläne → meist gleicher Typ und gleiches Bauteil.
   Steht eine Datei mit derselben Plannummer, demselben Typ, Bauteil und Geschoss schon in `bekannte_plaene`, ist sie
   ein neuer Index eines bekannten Plans, keine Erstaufnahme: nimm sie in `nicht_zuordenbar` mit Grund „schon im

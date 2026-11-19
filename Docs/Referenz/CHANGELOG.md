@@ -32,6 +32,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.247] — 2026-11-19
+
+### Feature: Bauteil-Aliasse an Claude (Folge BPM-121.03)
+
+- `kontext.json` des Claude-Sortierauftrags enthält je Bauteil `schreibweisen`: die in „Manuell sortieren“ gemerkten
+  Aliasse im Original (z. B. „H2“ für Haus 2), alphabetisch, leer wenn keine. Kommt auch über `KontextAktualisieren` mit.
+- Neu: `ProjectDatabase.GetBuildingPartAliasValues(projectId)` (Bauteil → Schreibweisen).
+- Vorschrift `planzuordnung.md`: Feld `schreibweisen` in der Kontext-Tabelle; Regel „Schreibweisen sind bestätigt“ –
+  Kürzel im Dateinamen ohne Widerspruch im Plankopf gilt als sichere Zuordnung.
+- Test `Builder_Kontext_ListsRememberedAliasesAsSchreibweisen` (741 Tests grün).
+
 ## [v0.28.246] — 2026-11-19
 
 ### Docs: Seitenliste – 3.3 Code 1.2 gebaut (BPM-121.03)

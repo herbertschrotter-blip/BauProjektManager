@@ -201,6 +201,23 @@ public partial class ClaudeSortierungTests : IDisposable
         Assert.Equal("", datei.GetProperty("plankopf_text").GetString());
     }
 
+    private static string[] Schreibweisen(JsonElement kontext)
+        => [.. Assert.Single(kontext.GetProperty("bauteile").EnumerateArray()).GetProperty("schreibweisen")
+            .EnumerateArray().Select(s => s.GetString()!)];
+
+    [Fact]
+    public async Task Builder_Kontext_ListsRememberedAliasesAsSchreibweisen()
+    {
+        var auftrag = await ErstelleAuftragAsync();
+        Assert.Empty(Schreibweisen(LeseKontext())); // ohne Alias: leere Liste, nicht null
+
+        _bpmDb.AddBuildingPartAlias(_projectId, _partId, " Hs A ");
+        _bpmDb.AddBuildingPartAlias(_projectId, _partId, "HA");
+        Builder().KontextAktualisieren(auftrag); // nach einer Schnellanlage o. ae. kommen neue Aliasse mit
+
+        Assert.Equal(["HA", "Hs A"], Schreibweisen(LeseKontext())); // Original-Schreibweise, getrimmt, sortiert
+    }
+
     [Fact]
     public async Task Builder_Kontext_ListsKnownPlansWithCurrentIndex()
     {

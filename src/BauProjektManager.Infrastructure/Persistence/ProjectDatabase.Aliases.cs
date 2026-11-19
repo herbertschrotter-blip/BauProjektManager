@@ -26,6 +26,31 @@ public partial class ProjectDatabase
     }
 
     /// <summary>
+    /// building_part_id → gemerkte Schreibweisen im Original (z. B. „H2“), alphabetisch — fuer den Claude-Sortierauftrag
+    /// (kontext.json, Feld <c>schreibweisen</c>). Nur aktive Aliasse.
+    /// </summary>
+    public IReadOnlyDictionary<string, IReadOnlyList<string>> GetBuildingPartAliasValues(string projectId)
+    {
+        using var cmd = GetConnection().CreateCommand();
+        cmd.CommandText = """
+            SELECT building_part_id, alias_value FROM building_part_aliases
+            WHERE project_id = @pid AND is_deleted = 0
+            ORDER BY alias_value
+            """;
+        cmd.Parameters.AddWithValue("@pid", projectId);
+        var result = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var partId = reader.GetString(0);
+            if (!result.TryGetValue(partId, out var values))
+                result[partId] = values = [];
+            values.Add(reader.GetString(1));
+        }
+        return result.ToDictionary(e => e.Key, e => (IReadOnlyList<string>)e.Value, StringComparer.Ordinal);
+    }
+
+    /// <summary>
     /// Merkt einen Alias fuer ein Bauteil. True = neu angelegt, false = gab es schon fuer dieses Bauteil.
     /// Zeigt dieselbe Schreibweise schon auf ein anderes Bauteil, wirft das <see cref="InvalidOperationException"/>
     /// (UNIQUE je Projekt) — ein Alias wird nie still umgebogen.

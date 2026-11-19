@@ -31,7 +31,8 @@ internal sealed record KontextBauteil(
     string Id,
     string Kurzname,
     string Beschreibung,
-    IReadOnlyList<KontextGeschoss> Geschosse);
+    IReadOnlyList<KontextGeschoss> Geschosse,
+    IReadOnlyList<string> Schreibweisen);
 
 internal sealed record KontextGeschoss(string Id, string Name, string Beschreibung);
 

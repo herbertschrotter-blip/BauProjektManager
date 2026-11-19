@@ -32,6 +32,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.259] — 2026-11-19
+
+### Build+Docs: Testprojekt in der Solution, CLAUDE.md-Stack aktualisiert (R01-030)
+
+- `BauProjektManager.slnx` enthält jetzt `tests/BauProjektManager.Tests` (Ordner `/tests/`, Entscheidung Herbert
+  2026-11-19): `dotnet build BauProjektManager.slnx` baut die Tests mit, die IDE zeigt sie an. Der Testbefehl im
+  Skill-Profil bleibt auf das Test-csproj.
+- CLAUDE.md: Stack nennt Docnet.Core (PDFium) statt ClosedXML (geplant), Solution-Struktur mit `tests/`.
+
+Offen bleibt K16-06: Die Option „Change“ im ClickUp-Feld „Typ“ muss in ClickUp angelegt werden (geht nicht über die
+Schnittstelle), danach die Option-ID in `.claude/skill-config/tracker.md` nachtragen.
+
 ## [v0.28.258] — 2026-11-19
 
 ### Docs: README auf aktuellen Stand gebracht (R01-049)

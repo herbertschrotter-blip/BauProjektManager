@@ -6,7 +6,7 @@ BauProjektManager (BPM) — modulare WPF Desktop-App für österreichische
 Baustellen-Manager (Poliere, Bauleiter). Offline-first, Cloud-Speicher-neutral.
 
 - **Version:** In `Directory.Build.props` im Repo-Root
-- **Stack:** C# / .NET 10 LTS, WPF, SQLite, CommunityToolkit.Mvvm, Serilog, ClosedXML
+- **Stack:** C# / .NET 10 LTS, WPF, SQLite, CommunityToolkit.Mvvm, Serilog, Docnet.Core (PDFium); ClosedXML geplant
 - **Architektur:** Modularer Monolith — Single EXE, Module als separate DLLs
 
 ## Wichtige Einstiegspunkte
@@ -31,6 +31,8 @@ src/
 ├── BauProjektManager.Infrastructure/ ← SQLite, Services, Persistence
 ├── BauProjektManager.PlanManager/  ← PlanManager Modul (V1 Kernfeature)
 └── BauProjektManager.Settings/     ← Einstellungen Modul
+tests/
+└── BauProjektManager.Tests/        ← xUnit-Tests (in BauProjektManager.slnx)
 ```
 
 ## Coding Standards (Kurzversion)

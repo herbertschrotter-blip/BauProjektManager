@@ -6,4 +6,7 @@
     <Project Path="src/BauProjektManager.PlanManager/BauProjektManager.PlanManager.csproj" />
     <Project Path="src/BauProjektManager.Settings/BauProjektManager.Settings.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/BauProjektManager.Tests/BauProjektManager.Tests.csproj" />
+  </Folder>
 </Solution>

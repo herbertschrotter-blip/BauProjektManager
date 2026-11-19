@@ -1,6 +1,6 @@
 # Daten
 
-Erzeugt von `tools/datenliste.py` aus einem leeren Schema (bpm.db + planmanager.db, Stand b5d857d4). Nur Aufbau, keine Inhalte.
+Erzeugt von `tools/datenliste.py` aus einem leeren Schema (bpm.db + planmanager.db, Stand 88ef5fe2). Nur Aufbau, keine Inhalte.
 
 ## D1 bpm.db – Projekte und Kunden
 
@@ -17,6 +17,7 @@ Erzeugt von `tools/datenliste.py` aus einem leeren Schema (bpm.db + planmanager.
 |---|---|---|---|---|
 | D2.1 | `building_parts` | Bauteile je Projekt (Kürzel, Bauwerkstyp, ±0,00) | 14 | D1.2 |
 | D2.2 | `building_levels` | Geschosse je Bauteil (Höhen, Präfix) | 16 | D2.1 |
+| D2.3 | `building_part_aliases` | Bauteil-Aliasse: Dateinamen-Schreibweise zu Bauteil (BPM-121.03) | 11 | D1.2, D2.1 |
 
 ## D3 bpm.db – Dokumenttypen
 

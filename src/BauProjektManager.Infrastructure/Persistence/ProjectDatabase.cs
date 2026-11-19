@@ -14,7 +14,7 @@ namespace BauProjektManager.Infrastructure.Persistence;
 /// Schema v2.2: ULID + Sync-Spalten + segment_type_groups/segment_types (BPM-108).
 /// ID generation via IIdGenerator (ADR-039 v2).
 /// </summary>
-public class ProjectDatabase : IDisposable
+public partial class ProjectDatabase : IDisposable
 {
     private readonly string _dbPath;
     private readonly IIdGenerator _idGenerator;
@@ -175,6 +175,25 @@ public class ProjectDatabase : IDisposable
                 is_deleted INTEGER NOT NULL DEFAULT 0,
                 FOREIGN KEY (building_part_id) REFERENCES building_parts(id) ON DELETE CASCADE
             );
+
+            -- Bauteil-Aliasse (DB-SCHEMA 4.11, BPM-121.03): Dateinamen-Schreibweise -> Bauteil, vom User bestaetigt
+            CREATE TABLE IF NOT EXISTS building_part_aliases (
+                id TEXT PRIMARY KEY,
+                project_id TEXT NOT NULL,
+                building_part_id TEXT NOT NULL,
+                alias_value TEXT NOT NULL,
+                normalized_alias_value TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                created_by TEXT NOT NULL DEFAULT '',
+                last_modified_at TEXT NOT NULL,
+                last_modified_by TEXT NOT NULL DEFAULT '',
+                sync_version INTEGER NOT NULL DEFAULT 0,
+                is_deleted INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+                FOREIGN KEY (building_part_id) REFERENCES building_parts(id) ON DELETE CASCADE,
+                UNIQUE (project_id, normalized_alias_value)
+            );
+            CREATE INDEX IF NOT EXISTS idx_building_part_aliases_part_id ON building_part_aliases(building_part_id);
 
             -- Dokumenttyp-Stammdaten (ADR-059-Addendum, DB-SCHEMA Kap. 4.12/4.13)
             CREATE TABLE IF NOT EXISTS document_types (

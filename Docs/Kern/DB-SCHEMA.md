@@ -145,8 +145,8 @@ clients ◄──────────── projects
 | diary_notes | diary_days | diary_day_id | CASCADE | ⬜ Geplant |
 | material_orders | work_packages | work_package_id | — | ⬜ Geplant |
 | project_participants | contacts | contact_id | — | ⬜ Vorbereitet (FK leer) |
-| building_part_aliases | projects | project_id | CASCADE | ⬜ Geplant (BPM-109) |
-| building_part_aliases | building_parts | building_part_id | CASCADE | ⬜ Geplant (BPM-109) |
+| building_part_aliases | projects | project_id | CASCADE | ✅ Implementiert (BPM-121.03) |
+| building_part_aliases | building_parts | building_part_id | CASCADE | ✅ Implementiert (BPM-121.03) |
 
 > **Cross-DB-Soft-References (kein FK, ADR-058-Addendum):** Die Bezüge von `planmanager.db`-Tabellen auf `bpm.db` (`plan_documents.building_part_id`/`building_level_id`, `plan_document_segments.segment_type_id`) sind **logische Referenzen ohne FK** — SQLite erzwingt keine FK über getrennte DB-Dateien. Service-seitige Validierung. Siehe DB-SCHEMA Kap. 6.7 + ADR-058-Addendum.
 
@@ -488,9 +488,13 @@ CREATE UNIQUE INDEX ux_segment_types_token_key_active
 
 **Referenz:** ADR-056 (Zwei-Schichten-Modell), CGR-2026-05-12-segmenttyp-architektur (3-Runden-Review).
 
-### 4.11 building_part_aliases (BPM-109, ⚠ geplant — Foundation Slice)
+### 4.11 building_part_aliases (✅ implementiert, BPM-121.03, v0.28.245)
 
-Auto-Learn-Mapping: merkt sich, welche Dateinamen-Schreibweise (z.B. `H1`, `Haus 1`, `H 1`) auf welches Bauteil zeigt. Wird beim Plan-Import zum Auflösen von Segmentwerten → `building_part_id` genutzt (aktiv erst post-V1, BPM-109.06).
+Auto-Learn-Mapping: merkt sich, welche Dateinamen-Schreibweise (z.B. `H1`, `Haus 1`, `H 1`) auf welches Bauteil zeigt. Wird in „Manuell sortieren“ genutzt (BPM-121.03): Der Bauteil-Hinweis aus dem Dateinamen wird zuerst über die Aliasse, dann über Kürzel/Beschreibung aufgelöst (`BuildingPartHintResolver`), der Treffer ist im Radial als Kandidat markiert. Neue Aliasse entstehen nur nach Bestätigung im Detailbereich („als Alias merken?“), kein Fuzzy, kein Auto-Create (ADR-065 P.14). Nur Bauteile — Geschoß-Aliasse bewusst nicht (Entscheidung Herbert 2026-11-19).
+
+Normalisierung: `normalized_alias_value` = `IPlanValueNormalizer.NormalizeForMatch` (z. B. „H 2“, „h-2“ → „h2“). Gleiche Schreibweise auf ein anderes Bauteil wird abgelehnt (UNIQUE je Projekt), nie still umgebogen.
+
+Schema-Änderung (Frühphase, keine Migration): Die Tabelle wird mit `CREATE TABLE IF NOT EXISTS` beim nächsten Start in bestehenden `bpm.db` angelegt — kein Reset nötig.
 
 Liegt bewusst in `bpm.db` statt `planmanager.db` (ADR-058-Addendum, CGR r3): zentral, gesynct, mit **hartem FK** auf `building_parts(id)` (gleiche DB-Datei) — reduziert die Cross-DB-Soft-References von 4 auf 3.
 
@@ -500,7 +504,7 @@ CREATE TABLE building_part_aliases (
     project_id TEXT NOT NULL,               -- FK projects (Aliase sind projektgebunden)
     building_part_id TEXT NOT NULL,         -- FK building_parts (hart, Innen-FK)
     alias_value TEXT NOT NULL,              -- Original-Schreibweise (z.B. "Haus 1")
-    normalized_alias_value TEXT NOT NULL,   -- Lowercase/normalisiert (z.B. "haus_1")
+    normalized_alias_value TEXT NOT NULL,   -- NormalizeForMatch (z.B. "haus1")
     -- Sync-Felder ADR-050
     created_at TEXT NOT NULL,
     created_by TEXT NOT NULL DEFAULT '',

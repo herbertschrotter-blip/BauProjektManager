@@ -1,5 +1,5 @@
 {
- "schema": "bpm.db + planmanager.db, Stand b5d857d4",
+ "schema": "bpm.db + planmanager.db, Stand 88ef5fe2",
  "gruppen": [
   {
    "nr": "D1",
@@ -633,6 +633,73 @@
       ]
      ],
      "zu": [
+      "D2.1"
+     ]
+    },
+    {
+     "nr": "D2.3",
+     "name": "building_part_aliases",
+     "art": "Tabelle",
+     "zweck": "Bauteil-Aliasse: Dateinamen-Schreibweise zu Bauteil (BPM-121.03)",
+     "felder": [
+      [
+       "id",
+       "TEXT",
+       true
+      ],
+      [
+       "project_id",
+       "TEXT",
+       false
+      ],
+      [
+       "building_part_id",
+       "TEXT",
+       false
+      ],
+      [
+       "alias_value",
+       "TEXT",
+       false
+      ],
+      [
+       "normalized_alias_value",
+       "TEXT",
+       false
+      ],
+      [
+       "created_at",
+       "TEXT",
+       false
+      ],
+      [
+       "created_by",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_at",
+       "TEXT",
+       false
+      ],
+      [
+       "last_modified_by",
+       "TEXT",
+       false
+      ],
+      [
+       "sync_version",
+       "INTEGER",
+       false
+      ],
+      [
+       "is_deleted",
+       "INTEGER",
+       false
+      ]
+     ],
+     "zu": [
+      "D1.2",
       "D2.1"
      ]
     }

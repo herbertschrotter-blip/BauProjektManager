@@ -42,7 +42,8 @@
         "project_links": "Portale und Links je Projekt" } },
       { "bereich": "bpm.db – Bauwerk", "seiten": ["2.7", "3.3"], "tabellen": {
         "building_parts": "Bauteile je Projekt (Kürzel, Bauwerkstyp, ±0,00)",
-        "building_levels": "Geschosse je Bauteil (Höhen, Präfix)" } },
+        "building_levels": "Geschosse je Bauteil (Höhen, Präfix)",
+        "building_part_aliases": "Bauteil-Aliasse: Dateinamen-Schreibweise zu Bauteil (BPM-121.03)" } },
       { "bereich": "bpm.db – Dokumenttypen", "seiten": ["2.10", "3.3", "3.6"], "tabellen": {
         "document_types": "Dokumenttypen je Projekt mit Ablage-Ordner (ADR-061)",
         "document_type_categories": "Kategorien je Dokumenttyp" } },

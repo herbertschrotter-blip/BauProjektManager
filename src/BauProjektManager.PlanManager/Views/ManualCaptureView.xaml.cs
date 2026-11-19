@@ -308,7 +308,7 @@ public partial class ManualCaptureView : UserControl
                 return;
         }
 
-        _controller.RefreshStammdaten(ViewModel.Types, ViewModel.Parts);
+        _controller.RefreshStammdaten(ViewModel.Types, ViewModel.Parts, ViewModel.Hints);
         _controller.Commit(ringIndex, committedName, _captureAnchor?.Item.Candidates);
         CommitRadial();
     }

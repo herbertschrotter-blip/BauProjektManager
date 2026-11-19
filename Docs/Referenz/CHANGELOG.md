@@ -32,6 +32,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.245] — 2026-11-19
+
+### Feature: BPM-121.03 Bauteil-Aliasse (Seitenliste 3.3 v1.2)
+
+- Neue Tabelle `building_part_aliases` in `bpm.db` (DB-SCHEMA 4.11, jetzt implementiert): Dateinamen-Schreibweise → Bauteil, UNIQUE je Projekt, normalisiert über `NormalizeForMatch`. Methoden `GetBuildingPartAliases` / `AddBuildingPartAlias` (`ProjectDatabase.Aliases.cs`).
+- `BuildingPartHintResolver`: Bauteil-Hinweis aus dem Dateinamen zuerst über Aliasse, dann über Kürzel/Beschreibung; das Radial markiert den Treffer als Kandidat.
+- „Manuell sortieren“: Detailbereich zeigt „Bauteil aus dem Dateinamen: „H1“ = Haus 1 (Alias)“; nach dem Zuordnen über das Radial der Vorschlag „„H2“ → Haus 2 — als Alias merken?“ (Merken / Nein, gilt für alle Dateien mit dem Kürzel).
+- Entscheidung Herbert: nur Bauteil-Aliasse; Radial-Komfort-Aufgaben BPM-116/117/119 gestrichen („Manuell sortieren“ ist Backup, Claude sortiert).
+- Datenliste: Tabelle eingeordnet (Bauwerk), Schema-Snapshot neu. Tests: `BuildingPartAliasTests` (8).
+
 ## [v0.28.244] — 2026-11-19
 
 ### Docs: Mockup 3.3 v1.2 – Bauteil-Alias-Vorschlag abgenommen (BPM-121.03)

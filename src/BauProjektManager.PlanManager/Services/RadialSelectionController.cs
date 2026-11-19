@@ -45,12 +45,16 @@ public class RadialSelectionController
     // unveraendert. Index 0 = Ring 1, 1 = Ring 2, 2 = Ring 3.
     private readonly int[] _ringOffset = new int[3];
 
+    private BuildingPartHintResolver? _hints;
+
     public RadialSelectionController(
         IReadOnlyList<PlanDocumentType> types,
-        IReadOnlyList<BuildingPart> parts)
+        IReadOnlyList<BuildingPart> parts,
+        BuildingPartHintResolver? hints = null)
     {
         _types = types;
         _parts = parts;
+        _hints = hints;
     }
 
     public PlanDocumentType? SelectedType { get; private set; }
@@ -79,10 +83,12 @@ public class RadialSelectionController
     /// (gleiche Id), damit z. B. frisch angelegte Kategorien sichtbar werden.
     /// </summary>
     public void RefreshStammdaten(
-        IReadOnlyList<PlanDocumentType> types, IReadOnlyList<BuildingPart> parts)
+        IReadOnlyList<PlanDocumentType> types, IReadOnlyList<BuildingPart> parts,
+        BuildingPartHintResolver? hints = null)
     {
         _types = types;
         _parts = parts;
+        _hints = hints ?? _hints;
         if (SelectedType is not null)
             SelectedType = _types.FirstOrDefault(t => t.Id == SelectedType.Id) ?? SelectedType;
     }
@@ -259,8 +265,7 @@ public class RadialSelectionController
         {
             Ring2Source.BuildingParts => [.. _parts.Select(p => new RadialSegmentItem(
                 EffectivePartName(p),
-                IsCandidate: candidates?.BuildingPartHint is not null
-                    && string.Equals(EffectivePartName(p), candidates.BuildingPartHint, StringComparison.OrdinalIgnoreCase)))],
+                IsCandidate: IsHintedPart(p, candidates?.BuildingPartHint)))],
             Ring2Source.Categories => [.. SelectedType.Categories.Select(c => new RadialSegmentItem(c.Name))],
             _ => []
         };
@@ -275,6 +280,19 @@ public class RadialSelectionController
     /// BPM-111.05 Pflicht im Bauteil-Editor — dieser Fallback schuetzt nur
     /// vor leeren Bestandsdaten und haelt Label/Match/FolderName konsistent.
     /// </summary>
+    /// <summary>
+    /// Bauteil-Kandidat aus dem Dateinamen: ueber Alias oder Namensvergleich (BPM-121.03); ohne Resolver wie bisher
+    /// der exakte Vergleich mit dem Anzeigenamen.
+    /// </summary>
+    private bool IsHintedPart(BuildingPart part, string? hint)
+    {
+        if (hint is null)
+            return false;
+        if (_hints is not null)
+            return _hints.Resolve(hint)?.Id == part.Id;
+        return string.Equals(EffectivePartName(part), hint, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static string EffectivePartName(BuildingPart part) =>
         !string.IsNullOrWhiteSpace(part.ShortName) ? part.ShortName : part.Description;
 

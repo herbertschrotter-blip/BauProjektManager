@@ -21,6 +21,22 @@ CREATE TABLE building_levels (
     is_deleted INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (building_part_id) REFERENCES building_parts(id) ON DELETE CASCADE
 );
+CREATE TABLE building_part_aliases (
+    id TEXT PRIMARY KEY,
+    project_id TEXT NOT NULL,
+    building_part_id TEXT NOT NULL,
+    alias_value TEXT NOT NULL,
+    normalized_alias_value TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    created_by TEXT NOT NULL DEFAULT '',
+    last_modified_at TEXT NOT NULL,
+    last_modified_by TEXT NOT NULL DEFAULT '',
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    is_deleted INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    FOREIGN KEY (building_part_id) REFERENCES building_parts(id) ON DELETE CASCADE,
+    UNIQUE (project_id, normalized_alias_value)
+);
 CREATE TABLE building_parts (
     id TEXT PRIMARY KEY,
     project_id TEXT NOT NULL,

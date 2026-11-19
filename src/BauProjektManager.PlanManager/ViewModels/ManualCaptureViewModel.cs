@@ -296,6 +296,7 @@ public partial class ManualCaptureViewModel : ObservableObject
         _seed.EnsureSeeded(_projectId);
         _types = _bpmDb.GetDocumentTypes(_projectId);
         _parts = _bpmDb.GetBuildingParts(_projectId);
+        ReloadHints();
 
         var result = await _capture.AnalyzeAsync(_projectRootPath, _inboxRelativePath);
         Rows.Clear();
@@ -380,7 +381,7 @@ public partial class ManualCaptureViewModel : ObservableObject
             _statusIsBulkHint = true;
         }
 
-        var controller = new RadialSelectionController(_types, _parts);
+        var controller = new RadialSelectionController(_types, _parts, _hints);
         controller.Reset();
         return controller;
     }
@@ -411,7 +412,7 @@ public partial class ManualCaptureViewModel : ObservableObject
     {
         foreach (var r in ArchiveRows)
             r.IsSelected = ReferenceEquals(r, row);
-        var controller = new RadialSelectionController(_types, _parts);
+        var controller = new RadialSelectionController(_types, _parts, _hints);
         controller.Reset();
         return controller;
     }
@@ -504,6 +505,7 @@ public partial class ManualCaptureViewModel : ObservableObject
     {
         var id = _bpmDb.InsertBuildingPart(_projectId, shortName);
         _parts = _bpmDb.GetBuildingParts(_projectId);
+        ReloadHints();
         return _parts.First(p => p.Id == id);
     }
 
@@ -511,6 +513,7 @@ public partial class ManualCaptureViewModel : ObservableObject
     {
         _bpmDb.InsertBuildingLevel(part.Id, levelName);
         _parts = _bpmDb.GetBuildingParts(_projectId);
+        ReloadHints();
         return _parts.First(p => p.Id == part.Id);
     }
 
@@ -552,6 +555,7 @@ public partial class ManualCaptureViewModel : ObservableObject
             row.PendingTarget = targetDir;
             row.IsSelected = false;
         }
+        SuggestAliases(controller, rows);
         if (pairedCount > 0)
             StatusText = $"⛓ {pairedCount} gepaarte Datei(en) automatisch mit zugeordnet";
         UpdatePendingState();
@@ -880,7 +884,7 @@ public partial class ManualCaptureViewModel : ObservableObject
         var selected = SelectedRows;
         if (selected.Count == 1)
         {
-            SelectedDetail = new CaptureDetailViewModel(selected[0], BuildHistory(selected[0]));
+            SelectedDetail = BuildDetail(selected[0]);
             DetailPlaceholder = string.Empty;
         }
         else

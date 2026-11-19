@@ -589,6 +589,34 @@
                                                Margin="0,0,0,10"
                                                Visibility="{Binding HasReason, Converter={StaticResource BoolToVis}}"/>
 
+                                    <!-- Bauteil-Hinweis und Alias-Vorschlag (Seitenliste 3.3 v1.2, BPM-121.03) -->
+                                    <TextBlock Text="{Binding HintText}"
+                                               Foreground="{DynamicResource BpmTextSecondary}"
+                                               FontSize="{DynamicResource BpmFontSizeCaption}"
+                                               TextWrapping="Wrap" Margin="0,0,0,10"
+                                               Visibility="{Binding HintText, Converter={x:Static views:ProfileWizardDialog.TextToVis}}"/>
+                                    <Border Background="{DynamicResource BpmBgElevated}"
+                                            BorderBrush="{DynamicResource BpmAccentPrimary}" BorderThickness="1"
+                                            CornerRadius="4" Padding="10,8" Margin="0,0,0,10"
+                                            Visibility="{Binding HasAliasSuggestion, Converter={StaticResource BoolToVis}}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding AliasQuestion}" TextWrapping="Wrap"
+                                                       Foreground="{DynamicResource BpmTextBright}"
+                                                       FontSize="{DynamicResource BpmFontSizeLabel}" Margin="0,0,0,6"/>
+                                            <TextBlock Text="{Binding AliasExplanation}" TextWrapping="Wrap"
+                                                       Foreground="{DynamicResource BpmTextSecondary}"
+                                                       FontSize="{DynamicResource BpmFontSizeCaption}" Margin="0,0,0,8"/>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Content="Als Alias merken" Padding="12,4"
+                                                        Style="{DynamicResource BpmButtonPrimary}"
+                                                        Command="{Binding DataContext.RememberAliasCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                                <Button Content="Nein" Padding="12,4" Margin="6,0,0,0"
+                                                        Style="{DynamicResource BpmButtonSecondary}"
+                                                        Command="{Binding DataContext.DeclineAliasCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+
                                     <!-- Index-Historie (Slice D): immer sichtbar, 3 Spalten, neueste oben -->
                                     <TextBlock Text="{Binding HistoryCaption}"
                                                Foreground="{DynamicResource BpmTextSecondary}"

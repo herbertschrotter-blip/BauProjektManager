@@ -831,7 +831,7 @@
    },
    {
     "nr": "3.6",
-    "name": "Profile",
+    "name": "Erkennung",
     "art": "Blatt",
     "schluessel": "projektdetail:Profile",
     "code": "BauProjektManager.PlanManager/Views/ProjectDetailView.xaml, BauProjektManager.PlanManager/Views/ProjectDetailView.xaml.cs, BauProjektManager.PlanManager/ViewModels/ProjectDetailViewModel.cs, BauProjektManager.PlanManager/ViewModels/DocumentTypeOverviewViewModel.cs",
@@ -860,6 +860,13 @@
       "datum": "19.11.2026",
       "was": "Code entspricht dem abgenommenen Mockup 1.1 (App zeigt die Seite schon so) – Entscheidung Herbert",
       "art": "code"
+     },
+     {
+      "v": "2.1",
+      "datum": "19.11.2026",
+      "was": "Neugestaltung als Tab „Erkennung“ (BPM-121.00): Status je Dokumenttyp (Aktiv / Nicht angelernt / Defekt mit fehlendem Segmenttyp), Regel-Zeile, Anlernen/Bearbeiten über den Wizard, Regex-Regel-Dialog mit Live-Test und Validierung, Löschen nur der Erkennung – Mockup abgenommen (Herbert); Seite umbenannt von „Profile“",
+      "art": "mockup",
+      "ticket": "BPM-121"
      }
     ],
     "mockup_alt": "PlanManager/02_Projektdetail/01_Profile.html",
@@ -868,10 +875,10 @@
     ],
     "nutzt": [],
     "stand_commit": "25e51e3",
-    "version_abgenommen": "1.1",
+    "version_abgenommen": "2.1",
     "code_stand": "4528460413",
     "mockup": "seiten/profile.html",
-    "version_mockup": "1.1"
+    "version_mockup": "2.1"
    },
    {
     "nr": "3.7",

@@ -32,6 +32,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.241] — 2026-11-19
+
+### Docs: Mockup 3.6 „Erkennung“ v2.1 abgenommen (BPM-121.00)
+
+Seite 3.6 heißt jetzt „Erkennung“ (Tab statt „Profile“, ADR-065 P.7). Neu: Status je Dokumenttyp (Aktiv / Nicht angelernt / Defekt mit fehlendem Segmenttyp), Regel-Zeile, „Erkennung anlernen“ und „✎ Bearbeiten“ über den Wizard 3.8, Dialog „Regex-Regel…“ mit Live-Test und Validierung (Speichern gesperrt bei ungültigem Muster), Löschen nur der Erkennung. Entscheidung Herbert: Regex-Regel nur bei Typen mit Erkennung, sonst zuerst anlernen. Abgenommen über die Seitenliste.
+
 ## [v0.28.240] — 2026-11-19
 
 ### Docs: Seitenliste – umgezogene Seiten auf 1.1 abgenommen

@@ -37,6 +37,9 @@ supersedes: []
 
 > ⚠️ **Eingefroren – Stand vor ADR-053/058–066** (Audit Review 01, R01-001 E17, entschieden 2026-09-24): Dieses Konzept beschreibt den Planungsstand vor diesen ADRs. Vor der Umsetzung gegen die aktuellen ADRs abgleichen. Bereits verbindlich korrigiert: DSGVO-Datenwege, keine KI im Importpfad, ULIDs.
 
+> 🟡 **Entwurf Firmen-Plattform (ADR-068/069, 2026-11-19, nicht entschieden):** Stunden werden im BPM erfasst (PC und Handy) und von Vorarbeiter oder Bauleitung freigegeben – ohne Lohnsätze. Lohnarten und der Export an die Lohnverrechnung liegen im BauKostenManager. ADR-018 (Excel als Wahrheitsquelle) ist neu zu prüfen.
+> Details: `Docs/Konzepte/Plattform-Drei-Programme.md`.
+
 # BauProjektManager — Konzept: Arbeitszeiterfassung
 
 **Erstellt:** 29.03.2026  

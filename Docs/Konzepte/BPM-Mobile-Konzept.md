@@ -34,6 +34,9 @@ supersedes: []
 
 > ⚠️ **Eingefroren – Stand vor ADR-053/058–066** (Audit Review 01, R01-001 E17, entschieden 2026-09-24): Dieses Konzept beschreibt den Planungsstand vor diesen ADRs. Vor der Umsetzung gegen die aktuellen ADRs abgleichen. Bereits verbindlich korrigiert: DSGVO-Datenwege, keine KI im Importpfad, ULIDs.
 
+> 🟡 **Entwurf Firmen-Plattform (ADR-068/069, 2026-11-19, nicht entschieden):** Die Handy-App wird Haupt-Client der Baustelle. Neue Funktionen: Material bestellen, Lieferung prüfen mit Mängelprotokoll (Fotos, Unterschrift des Fahrers, offline), Stunden, Baustellenkalender mit Kransperren. Preise kommen auf dem Handy nirgends vor.
+> Details: `Docs/Konzepte/Plattform-Drei-Programme.md`.
+
 # BauProjektManager — Mobile Web-App Konzept
 
 **Version:** 0.4  

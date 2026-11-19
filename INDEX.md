@@ -182,6 +182,12 @@ Bei UI-Änderungen zusätzlich:
 - Secondary für Auth/RBAC-Details Phase Verkauf: `Docs/Konzepte/ServerArchitektur.md` (Hosting-Sektion superseded, Auth/RBAC-Inhalte gültig)
 - Cross-Review: `Docs/Referenz/chatgpt-reviews/CGR-2026-04-30-datenarchitektur-sync/` (7 Runden, 28 Files)
 - ⚠️ Historisch / superseded: `Docs/Konzepte/MultiUserKonzept.md` (3-Phasen-Modell), `Docs/Konzepte/DatenarchitekturSync.md` (Outbox/Inbox/FolderSync) — nicht mehr als gültiges Konzept laden
+- 🟡 Entwurf, nicht entschieden: ADR-068 (Firmenserver, nur VPN, Windows-Anmeldung) und ADR-069 (Browser/PWA statt WPF) — siehe „Firmen-Plattform“
+
+### Firmen-Plattform / Schnittstellen zu BauKostenManager und BauLogistikManager (Entwurf)
+- Primary: `Docs/Konzepte/Plattform-Drei-Programme.md` (status draft — gilt erst mit Annahme von ADR-068/069)
+- Secondary: `Docs/Referenz/ADR.md` ADR-068, ADR-069 (Proposed)
+- Betroffen bei Annahme: ADR-051, ADR-053, `ModuleKalkulation.md`, `ModuleZeiterfassung.md`, `BPM-Mobile-Konzept.md`, `ServerArchitektur.md`
 
 ### Lizenzierung
 - Primary: `Docs/Konzepte/ModuleAktivierungLizenzierung.md`

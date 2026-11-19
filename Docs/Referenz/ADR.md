@@ -16,7 +16,7 @@ supersedes: []
 - Autorität: source_of_truth
 - Lesen wenn: Neue Architekturentscheidung treffen, bestehende ADR prüfen, Status ändern, Entscheidung nachschlagen
 - Nicht zuständig für: Implementierungs-Details (→ jeweilige Modul-Docs), Code-Standards (→ CODING_STANDARDS.md)
-- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-067; ADR-057 nicht vergeben)
+- Kapitel: Fortlaufende ADRs (ADR-001 bis ADR-069; ADR-057 nicht vergeben)
 - Pflichtlesen: keine (gezieltes Nachschlagen per ADR-Nummer)
 - Fachliche Invarianten:
   - Statusmodell: Decision Status (Proposed/Accepted/Superseded/Deprecated) getrennt von Implementation Status (Not Started/Partial/Implemented)
@@ -2251,6 +2251,7 @@ Im Server-Modus gilt: "Server gewinnt" bei Daten-Konflikten. Der Server erzwingt
 
 **Datum:** 2026-04-15
 **Status:** ✅ Entschieden
+**Änderung vorgeschlagen:** ADR-069 (Entwurf, 2026-11-19) – local-first nur noch für die Handy-App, PC im Browser online. Bis zur Annahme gilt dieses ADR unverändert.
 **Implementierung:** Not Started — Konzeptionell ab sofort gültig, Implementierung Post-V1
 **Herkunft:** 3-Runden Cross-Review Claude/ChatGPT (ServerArchitektur-Konzept)
 
@@ -2335,6 +2336,7 @@ public enum UserContextSource { Local, Server }
 
 **Datum:** 2026-04-30
 **Status:** ✅ Entschieden
+**Änderung vorgeschlagen:** ADR-068 (Entwurf, 2026-11-19) – Firmenserver statt VPS, nur VPN, Windows-Anmeldung, Migrationen ab den ersten Firmendaten. Bis zur Annahme gilt dieses ADR unverändert.
 **Implementierung:** Not Started — Spike 0 (ProjectDatabase syncfähig) als erster Code-Schritt
 **Herkunft:** 7-Runden Cross-Review Claude/ChatGPT (CGR-2026-04-30-datenarchitektur-sync)
 
@@ -3513,6 +3515,77 @@ V1 importiert über die manuelle Erstaufnahme (ADR-059, Strategie B) und den jou
 **Konsequenzen:** Erster externer Kontakt des PlanManagers in V1. `PendingAssignment` hat Herkunft und Vorschlagsinfo; keine Schemaänderung (Pending bleibt in-memory). Neue Ressourcen in der PlanManager-DLL: `_rahmen.md`, `planzuordnung.md`, `planzuordnung.schema.json`. Verdrahtung (v0.28.230): `ClaudeAssistantOptions`, `IClaudeProcessRunner`, `IClaudeAssistant` und `ClaudeSortFactory` sind im DI-Container registriert; die Factory setzt je Projekt (mit dessen Plan-DB) Builder, Prüfer, Schnellanlage und Chatfenster zusammen, die Views reichen nur die Factory durch.
 
 **Betrifft:** ADR-027, ADR-035, ADR-042, ADR-059, ADR-060, ADR-061, ADR-063, ADR-064, ADR-065, DSGVO-Architektur Kap. 15, PlanManager.md, Seitenliste 3.3/3.4.
+
+---
+
+## ADR-068: Firmen-Plattform mit drei Programmen — Firmenserver, nur VPN, Windows-Anmeldung, Geld nur im BauKostenManager
+
+**Datum:** 2026-11-19
+**Status:** 🟡 Proposed (Entwurf, nicht entschieden – Prüfung durch Herbert)
+**Implementierung:** Not Started
+**Herkunft:** Planung für den Firmenbetrieb (ADR-053 Phase 0/1), November 2026. Ausführlich: `Docs/Konzepte/Plattform-Drei-Programme.md`.
+
+**Kontext:**
+
+ADR-053 plant den BPM-Server auf einem gemieteten Windows-VPS mit direktem HTTPS ohne VPN, eigener Benutzerverwaltung (ASP.NET Core Identity) und DB-Reset bei Schemaänderungen. Für den Firmenbetrieb sind zusätzlich der BauKostenManager (Büro: Einkauf, Rechnungen, Freigaben, Kosten) und der BauLogistikManager (Lager, Fahrer, Disponent) geplant. Anforderungen des Firmenbetriebs: kein Zugang aus dem Internet, nur über VPN, Server im Haus, Anmeldung mit dem Windows-Konto. Poliere sollen nur ein Programm nutzen – den BPM. Geld soll nur im Büro liegen.
+
+**Entscheidung (vorgeschlagen):**
+
+1. **Drei Programme, jede Gruppe in genau einem:** BauKostenManager (BKM) für Büro und Geschäftsführung, BauProjektManager (BPM) für Bauleitung, Poliere und Vorarbeiter, BauLogistikManager (BLM) für Lager, Fahrer und Disponent.
+2. **Stack wie ADR-053 P.1–2:** Windows, PostgreSQL, ASP.NET Core als Windows-Dienst – für alle drei.
+3. **Ändert ADR-053 P.14–20:** Betrieb auf dem Firmenserver oder einer VM darauf statt Windows-VPS. Zugriff nur aus dem Firmennetz oder über das Firmen-VPN; keine öffentliche Domain, internes Zertifikat statt Let's Encrypt.
+4. **Ändert ADR-053 P.7–8:** Anmeldung mit dem Windows-Konto (Active Directory) statt eigener Identity; Rollen aus AD-Gruppen. Am Handy Anmeldung über VPN mit dem AD-Konto; ein Token für Offline-Arbeit am Handy bleibt möglich.
+5. **Geld nur im BKM:** Preise, Lohnsätze, Lohnkosten, Rechnungen, IBAN und Freigaben liegen nie in BPM oder BLM – auch nicht in Schnittstellen-Daten an sie.
+6. **Schnittstellen statt gemeinsamer Datenbank:** Meldungen mit eindeutiger ID, Outbox beim Sender, idempotente Annahme beim Empfänger, Zustellung bis zur Quittung, versionierte Verträge mit DataClassification (ADR-035). Kein Programm greift direkt auf die Datenbank eines anderen zu.
+7. **Gemeinsames Grundgerüst:** eine Projektvorlage für alle drei mit Anmeldung, Rechten, Journal, Melden-Knopf, Sicherung und Update-Ablauf (Konzept Kap. 4).
+8. **Ändert ADR-053 P.26:** Mit den ersten Firmendaten endet die Frühphase (INDEX.md „Projekt-Phase“), ab dann nummerierte Migrationen statt Reset. Den Zeitpunkt entscheidet Herbert.
+9. **Nachkalkulation zweistufig:** Mengen, Stunden und Aufwandswerte im BPM; Kosten in Euro im BKM aus den gemeldeten Mengen.
+
+**Konsequenzen:**
+
+- Bei Annahme ersetzt ein Addendum ADR-053 P.7–8, P.14–20 und P.26; P.1–6 und P.9–13 bleiben. Die Vorgaben gelten für den Firmenbetrieb; für spätere Kunden (ADR-053 P.21–25) bleibt der Betrieb konfigurierbar.
+- `ModuleKalkulation.md`: restricted-Tabellen mit Lohnsätzen und Einheitspreisen entfallen im BPM.
+- `ModuleZeiterfassung.md`: Stunden ohne Lohnsätze; Lohnarten und Lohnexport im BKM; ADR-018 (Excel als Wahrheitsquelle) neu prüfen.
+- Rollen `disponent` und `lohnbüro` (ADR-053 P.9) gehören in BLM bzw. BKM, nicht in den BPM.
+- Neue BPM-Funktionen: Material bestellen, Lieferprüfung mit Mängelprotokoll, Baustellenkalender mit Kransperren – mit Schnittstellen zu BKM und BLM.
+- ADR-067 (Claude-Sortierassistent über die lokale Claude-Code-Sitzung) passt nicht auf einen Firmenserver; im Firmenbetrieb wäre der Weg die Anthropic-API mit Auftragsverarbeitungsvertrag (dort als Alternative genannt) – eigene Entscheidung.
+
+**Betrifft:** ADR-018, ADR-019, ADR-035, ADR-051, ADR-053, ADR-060, ADR-067, `Docs/Konzepte/Plattform-Drei-Programme.md`, `ModuleKalkulation.md`, `ModuleZeiterfassung.md`, `BPM-Mobile-Konzept.md`, `ServerArchitektur.md`.
+
+---
+
+## ADR-069: Client im Firmenbetrieb — Browser am PC, installierbare Web-App am Handy, WPF als Übergang
+
+**Datum:** 2026-11-19
+**Status:** 🟡 Proposed (Entwurf, nicht entschieden – Prüfung durch Herbert)
+**Implementierung:** Not Started
+**Herkunft:** wie ADR-068; Frage Herbert: „Nur über Browser zugreifen oder WPF am PC und nur das Handy über den Browser?“
+
+**Kontext:**
+
+BPM ist heute ein WPF-Programm, local-first (ADR-051), mit geplanter Handy-PWA (ADR-019). BKM und BLM werden Browser-Programme, weil Mac und Windows gefordert sind und nichts auf den PCs installiert werden soll. Poliere brauchen das Handy für Lieferprüfung, Fotos, Mängel und Stunden, auch ohne Netz. Entwickelt wird von einer Person.
+
+| Option | Vorteile | Nachteile |
+|--------|----------|-----------|
+| **A: Browser am PC + Web-App am Handy** | eine Oberfläche für alle Geräte; Updates nur am Server; läuft auf Mac und Windows; nichts zu installieren; gleich wie BKM und BLM | PlanManager-Oberfläche wird neu gebaut; Plandateien liegen zentral auf dem Server statt im Ordner jedes PCs |
+| **B: WPF am PC + Web-App am Handy** | die heutige WPF-Oberfläche bleibt | zwei Oberflächen pflegen; Abgleich zwischen lokaler WPF-Datenbank und Server (ADR-051) bleibt; nur Windows; Updates auf jedem PC (Velopack) |
+| **C: nur WPF** | – | kein Handy, deshalb ausgeschieden |
+
+**Entscheidung (vorgeschlagen):** Option A.
+
+1. PC: Browser gegen den BPM-Server, online über Firmennetz oder VPN.
+2. Handy: installierbare Web-App (ADR-019) mit Offline-Speicher für Lieferprüfung, Mängel, Stunden und Tagebuch; Abgleich nach ADR-053 P.5.
+3. **Ändert ADR-051:** local-first gilt nur noch für die Handy-App.
+4. WPF wird eingefroren: läuft weiter für Herberts eigene Arbeit, bis die Browser-Version die heutigen Funktionen kann; keine neuen WPF-Oberflächen. Die Fachlogik (Domain, Infrastructure, PlanManager) wird weiterentwickelt und auf dem Server genutzt.
+5. Eine Einzelplatz-Version ohne Firmenserver bleibt möglich: Dienst und Browser auf demselben PC.
+
+**Konsequenzen:**
+
+- PlanManager-Oberfläche, Einstellungen und Shell entstehen neu als Web-Oberfläche; die Logik dahinter bleibt.
+- Die Mockup-Quellen der CLAUDE.md (Colors.xaml, Typography.xaml, WPF_UI_Architecture.md) brauchen ein Gegenstück für Web; neue Web-Mockups über die Seitenliste.
+- CLAUDE.md (Stack „WPF“) und `BauProjektManager_Architektur.md` werden bei Annahme nachgezogen.
+
+**Betrifft:** ADR-019, ADR-051, ADR-053, ADR-060, ADR-068, `Docs/Konzepte/Plattform-Drei-Programme.md`, `BPM-Mobile-Konzept.md`.
 
 ---
 

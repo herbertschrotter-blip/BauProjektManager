@@ -32,6 +32,21 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.261] — 2026-11-19
+
+### Docs: Entwurf Firmen-Plattform mit drei Programmen (ADR-068, ADR-069 – Proposed)
+
+- Neues Konzept `Docs/Konzepte/Plattform-Drei-Programme.md` (status draft): BauKostenManager (Büro, Geld),
+  BauProjektManager (Baustelle), BauLogistikManager (Lager, Fahrer, Disponent); Schnittstellen statt gemeinsamer
+  Datenbank, Geld nur im BauKostenManager, Nachkalkulation zweistufig, Lieferprüfung mit Mängelprotokoll, Updates
+  und Module.
+- ADR-068 (Proposed): Firmenserver statt VPS, nur VPN, Windows-Anmeldung, Migrationen ab den ersten Firmendaten.
+- ADR-069 (Proposed): Browser am PC, installierbare Web-App am Handy, WPF als Übergang eingefroren.
+- Hinweise an ADR-051 und ADR-053 sowie Entwurfs-Banner in `ModuleKalkulation.md`, `ModuleZeiterfassung.md`,
+  `BPM-Mobile-Konzept.md`, `ServerArchitektur.md`; INDEX.md-Routing „Firmen-Plattform“.
+
+Nichts davon ist entschieden; bis zur Annahme gelten ADR-051 und ADR-053 unverändert.
+
 ## [v0.28.260] — 2026-11-19
 
 ### Fix: Gespeicherte Zeitstempel konsequent UTC (R01-059)

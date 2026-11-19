@@ -67,6 +67,9 @@ supersedes: []
 
 ---
 
+> 🟡 **Entwurf Firmen-Plattform (ADR-068/069, 2026-11-19, nicht entschieden):** Für den Firmenbetrieb Firmenserver statt VPS, nur VPN, Windows-Anmeldung. Die Rollen `disponent` und `lohnbüro` gehören in BauLogistikManager bzw. BauKostenManager; die Kosten-Nachkalkulation liegt im BauKostenManager.
+> Details: `Docs/Konzepte/Plattform-Drei-Programme.md`.
+
 # BauProjektManager — Server-Architektur (Modus C)
 
 **Erstellt:** 15.04.2026

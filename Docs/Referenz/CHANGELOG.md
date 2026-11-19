@@ -32,6 +32,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.246] — 2026-11-19
+
+### Docs: Seitenliste – 3.3 Code 1.2 gebaut (BPM-121.03)
+
+Seite 3.3 „Manuell sortieren“ Code auf die abgenommene Mockup-Version 1.2 nachgezogen (Commit b7b28d3).
+
 ## [v0.28.245] — 2026-11-19
 
 ### Feature: BPM-121.03 Bauteil-Aliasse (Seitenliste 3.3 v1.2)

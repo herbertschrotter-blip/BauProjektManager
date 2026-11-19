@@ -212,10 +212,10 @@ public class ProfileManagerLoadToleranceTests : IDisposable
         Assert.Empty(all);
     }
 
-    // === Profil mit segment-Rule ohne SegmentPosition wird verworfen ===
+    // === segment-Rule ohne SegmentPosition = Token an beliebiger Stelle (BPM-130) — Profil bleibt ladbar ===
 
     [Fact]
-    public void LoadAll_SegmentRuleWithoutPosition_IsDiscarded()
+    public void LoadAll_SegmentRuleWithoutPosition_IsLoaded()
     {
         const string noPos = """
             {
@@ -232,7 +232,7 @@ public class ProfileManagerLoadToleranceTests : IDisposable
 
         var all = _sut.LoadAll(_tempRoot);
 
-        Assert.Empty(all);
+        Assert.Null(Assert.Single(all).Recognition.Single().SegmentPosition);
     }
 
     // === Profil mit leerem Pattern wird verworfen ===

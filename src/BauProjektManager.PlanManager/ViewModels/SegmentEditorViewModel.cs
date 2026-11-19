@@ -133,6 +133,35 @@ public partial class SegmentEditorViewModel : ObservableObject
             new SegmentAssignmentChangedEventArgs(type, previous, token.Text));
     }
 
+    /// <summary>Kacheln in Reihenfolge (Text + Typ) — fuer den Profil-Wizard (BPM-130).</summary>
+    public IReadOnlyList<SegmentTokenElement> Tokens() => [.. Elements.OfType<SegmentTokenElement>()];
+
+    /// <summary>
+    /// Trennzeichen fuers Profil: jedes Zeichen, das an ALLEN seinen Stellen trennt. Ein Profil kennt nur eine
+    /// Trennerliste — ein Zeichen, das teils trennt und teils verbindet, ist dort nicht abbildbar
+    /// (<see cref="HasMixedSeparators"/>).
+    /// </summary>
+    public IReadOnlyList<char> ActiveDelimiters()
+        => [.. _source.Separators.Distinct()
+            .Where(c => Enumerable.Range(0, _source.Separators.Count)
+                .Where(i => _source.Separators[i] == c).All(i => _separatorState[i]))];
+
+    /// <summary>True, wenn ein Trennzeichen an einer Stelle trennt und an einer anderen verbindet.</summary>
+    public bool HasMixedSeparators()
+        => _source.Separators.Distinct().Any(c =>
+        {
+            var states = Enumerable.Range(0, _source.Separators.Count)
+                .Where(i => _source.Separators[i] == c).Select(i => _separatorState[i]).Distinct().Count();
+            return states > 1;
+        });
+
+    /// <summary>Allen Kacheln ohne Typ denselben Typ geben (z. B. „Ignorieren“, BPM-130).</summary>
+    public void AssignAllOpen(SegmentTypeDefinition type)
+    {
+        foreach (var token in Tokens().Where(t => t.AssignedType is null))
+            AssignType(token.StartAtomIndex, type);
+    }
+
     /// <summary>Aktueller Stand als Wertliste (Typ + Rohwert) — fuer den Host.</summary>
     public IReadOnlyList<(SegmentTypeDefinition Type, string RawValue)> CurrentAssignments()
         => [.. Elements.OfType<SegmentTokenElement>()

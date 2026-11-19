@@ -2,264 +2,32 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Shapes;
-using BauProjektManager.Domain.Enums.PlanManager;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models;
 using BauProjektManager.Domain.Models.PlanManager;
+using BauProjektManager.Infrastructure.Persistence;
 using BauProjektManager.PlanManager.Services;
 using BauProjektManager.PlanManager.ViewModels;
 
 namespace BauProjektManager.PlanManager.Views;
 
 /// <summary>
-/// Native WPF DragAdorner fuer Wizard-Schritt 2 (Field-Type-Chip-Drag).
-/// Rendert eine semi-transparente Kopie des Source-Chips an der Maus-Position,
-/// versetzt um den Klick-Offset (Maus haengt exakt dort wo der User geklickt hat).
+/// Profil-Wizard (Seitenliste 3.8, Mockup 0.2, BPM-130). Schritt 2 bindet den Segment-Editor (BPM-126c) ein; sein
+/// Stand geht nach jeder Aenderung an das ViewModel. Logik im <see cref="ProfileWizardViewModel"/>.
 /// </summary>
-public class DragAdorner : Adorner
-{
-    private readonly Rectangle _content;
-    private readonly Size _adornerSize;
-    private readonly Point _clickOffset;
-    private Point _currentMousePos;
-
-    public DragAdorner(UIElement adornedElement, FrameworkElement source, Point clickOffsetInSource)
-        : base(adornedElement)
-    {
-        _adornerSize = new Size(
-            source.ActualWidth > 0 ? source.ActualWidth : 80,
-            source.ActualHeight > 0 ? source.ActualHeight : 24);
-        _clickOffset = clickOffsetInSource;
-
-        // VisualBrush rendert das Source-Element als Brush — bei statischen Elementen sicher.
-        var brush = new VisualBrush(source)
-        {
-            Stretch = Stretch.None,
-            AlignmentX = AlignmentX.Left,
-            AlignmentY = AlignmentY.Top
-        };
-
-        _content = new Rectangle
-        {
-            Width = _adornerSize.Width,
-            Height = _adornerSize.Height,
-            Fill = brush,
-            RadiusX = 3,
-            RadiusY = 3,
-            Opacity = 0.85,
-            IsHitTestVisible = false
-        };
-        AddVisualChild(_content);
-        IsHitTestVisible = false;
-    }
-
-    public void UpdatePosition(Point mousePos)
-    {
-        _currentMousePos = mousePos;
-        InvalidateArrange();
-    }
-
-    protected override int VisualChildrenCount => 1;
-    protected override Visual GetVisualChild(int index) => _content;
-
-    protected override Size MeasureOverride(Size constraint)
-    {
-        _content.Measure(_adornerSize);
-        return _adornerSize;
-    }
-
-    protected override Size ArrangeOverride(Size finalSize)
-    {
-        var topLeft = new Point(
-            _currentMousePos.X - _clickOffset.X,
-            _currentMousePos.Y - _clickOffset.Y);
-        _content.Arrange(new Rect(topLeft, _adornerSize));
-        return finalSize;
-    }
-}
-
-public class CountToVisInverseConverter : IValueConverter
-{
-    public object Convert(object value, Type targetType,
-        object parameter, CultureInfo culture)
-        => value is int count && count > 0
-            ? Visibility.Visible : Visibility.Collapsed;
-
-    public object ConvertBack(object value, Type targetType,
-        object parameter, CultureInfo culture)
-        => throw new NotImplementedException();
-}
-
-public class CountToVisZeroConverter : IValueConverter
-{
-    public object Convert(object value, Type targetType,
-        object parameter, CultureInfo culture)
-        => value is int count && count == 0
-            ? Visibility.Visible : Visibility.Collapsed;
-
-    public object ConvertBack(object value, Type targetType,
-        object parameter, CultureInfo culture)
-        => throw new NotImplementedException();
-}
-
-public class InverseBoolConverter : IValueConverter
-{
-    public object Convert(object value, Type targetType,
-        object parameter, CultureInfo culture)
-        => value is bool b ? !b : true;
-
-    public object ConvertBack(object value, Type targetType,
-        object parameter, CultureInfo culture)
-        => value is bool b ? !b : true;
-}
-
-/// <summary>
-/// FieldTypeId -> Brush fuer farbige Segment-Tokens (Wizard Schritt 2).
-/// </summary>
-/// <remarks>
-/// BPM-108 Phase C: Loest die Farbe ueber den <see cref="WizardCatalogContext.Catalog"/> auf.
-/// Catalog liefert Hex-Strings (#RRGGBB) — diese werden zur Laufzeit in einen
-/// <see cref="SolidColorBrush"/> konvertiert. Ohne Catalog/unbekannte ID:
-/// <c>BpmBgElevated</c> Fallback aus dem Theme.
-/// </remarks>
-public class FieldTypeToBrushConverter : IValueConverter
-{
-    public object? Convert(object value, Type targetType,
-        object parameter, CultureInfo culture)
-    {
-        var id = value as string;
-        var catalog = WizardCatalogContext.Catalog;
-        if (!string.IsNullOrEmpty(id) && catalog is not null)
-        {
-            var def = catalog.GetIncludingDeleted(id);
-            if (def is not null && !string.IsNullOrEmpty(def.Color))
-            {
-                try
-                {
-                    var color = (Color)ColorConverter.ConvertFromString(def.Color)!;
-                    return new SolidColorBrush(color);
-                }
-                catch
-                {
-                    // ungueltige Hex-Farbe — Fallback
-                }
-            }
-        }
-        return Application.Current?.TryFindResource("BpmBgElevated")
-               ?? new SolidColorBrush(Colors.DimGray);
-    }
-
-    public object ConvertBack(object value, Type targetType,
-        object parameter, CultureInfo culture)
-        => throw new NotImplementedException();
-}
-
-/// <summary>
-/// FieldTypeId -> true wenn nicht zugewiesen (null/empty). Triggert dashed border + unset-Label.
-/// </summary>
-public class FieldTypeIsUnsetConverter : IValueConverter
-{
-    public object Convert(object value, Type targetType,
-        object parameter, CultureInfo culture)
-        => value is not string s || string.IsNullOrWhiteSpace(s);
-
-    public object ConvertBack(object value, Type targetType,
-        object parameter, CultureInfo culture)
-        => throw new NotImplementedException();
-}
-
-/// <summary>
-/// FieldTypeId -> kurzes UI-Label fuer Token-Unterzeile.
-/// </summary>
-/// <remarks>
-/// BPM-108 Phase C: Liefert <c>segment_types.name</c>. Bei <see cref="SegmentSemanticRole.PlanNumber"/>
-/// zusaetzlich Pflicht-Marker (★). Unbekannte ID: <c>Unbekannt (id)</c>. Null/empty: <c>? Typ waehlen</c>.
-/// </remarks>
-public class FieldTypeToLabelConverter : IValueConverter
-{
-    public object Convert(object value, Type targetType,
-        object parameter, CultureInfo culture)
-    {
-        var id = value as string;
-        if (string.IsNullOrWhiteSpace(id)) return "? Typ waehlen";
-
-        var catalog = WizardCatalogContext.Catalog;
-        var def = catalog?.GetIncludingDeleted(id);
-        if (def is null) return $"Unbekannt ({id})";
-
-        return def.SemanticRole == SegmentSemanticRole.PlanNumber
-            ? $"{def.Name} ★"
-            : def.Name;
-    }
-
-    public object ConvertBack(object value, Type targetType,
-        object parameter, CultureInfo culture)
-        => throw new NotImplementedException();
-}
-
-/// <summary>
-/// Hex-String ("#A87142") -> <see cref="Color"/>. Fallback Transparent bei ungueltigem Wert.
-/// </summary>
-public class HexToColorConverter : IValueConverter
-{
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        if (value is string hex && !string.IsNullOrEmpty(hex))
-        {
-            try { return (Color)ColorConverter.ConvertFromString(hex)!; }
-            catch { /* fallback */ }
-        }
-        return Colors.Transparent;
-    }
-
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        => throw new NotImplementedException();
-}
-
-/// <summary>
-/// Leerer String -> Collapsed, sonst Visible. Fuer Fehlermeldungen im Popover.
-/// </summary>
-public class EmptyToVisInverseConverter : IValueConverter
-{
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        => value is string s && !string.IsNullOrWhiteSpace(s)
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        => throw new NotImplementedException();
-}
-
-/// <summary>
-/// FieldTypeId -> Opacity. Ignore-Felder (SemanticRole.Ignore) sind gedaempft (0.55).
-/// </summary>
-public class FieldTypeToOpacityConverter : IValueConverter
-{
-    public object Convert(object value, Type targetType,
-        object parameter, CultureInfo culture)
-    {
-        var id = value as string;
-        if (string.IsNullOrEmpty(id)) return 1.0;
-        var catalog = WizardCatalogContext.Catalog;
-        var def = catalog?.GetIncludingDeleted(id);
-        return def?.SemanticRole == SegmentSemanticRole.Ignore ? 0.55 : 1.0;
-    }
-
-    public object ConvertBack(object value, Type targetType,
-        object parameter, CultureInfo culture)
-        => throw new NotImplementedException();
-}
-
 public partial class ProfileWizardDialog : Window
 {
+    /// <summary>Text → sichtbar, wenn nicht leer.</summary>
+    public static readonly IValueConverter TextToVis = new TextToVisibilityConverter();
+
     private readonly ProfileWizardViewModel _vm;
     private readonly ISegmentTypeCatalog? _segmentTypeCatalog;
     private readonly ISegmentTypeRepository? _segmentTypeRepository;
     private readonly IIdGenerator? _idGenerator;
+    private string? _editorFile;
+    private bool _pushPending;
 
     public ProfileWizardDialog(
         Project? project = null,
@@ -269,232 +37,110 @@ public partial class ProfileWizardDialog : Window
         ISegmentTypeCatalog? segmentTypeCatalog = null,
         ISegmentTypeRepository? segmentTypeRepository = null,
         IIdGenerator? idGenerator = null,
-        Infrastructure.Persistence.ProjectDatabase? bpmDb = null)
+        ProjectDatabase? bpmDb = null)
     {
-        Resources.Add("CountToVisInverse", new CountToVisInverseConverter());
-        Resources.Add("CountToVisZero", new CountToVisZeroConverter());
-        Resources.Add("BoolToVis", new BoolToVisConverter());
-        Resources.Add("BoolToVisInverse2", new InverseBoolConverter());
-        Resources.Add("FieldTypeToBrush", new FieldTypeToBrushConverter());
-        Resources.Add("FieldTypeIsUnset", new FieldTypeIsUnsetConverter());
-        Resources.Add("FieldTypeToLabel", new FieldTypeToLabelConverter());
-        Resources.Add("FieldTypeToOpacity", new FieldTypeToOpacityConverter());
-        Resources.Add("HexToColor", new HexToColorConverter());
-        Resources.Add("EmptyToVisInverse", new EmptyToVisInverseConverter());
         InitializeComponent();
-
         _segmentTypeCatalog = segmentTypeCatalog;
         _segmentTypeRepository = segmentTypeRepository;
         _idGenerator = idGenerator;
-
-        _vm = new ProfileWizardViewModel(project, profileManager, templateService, appDataPath,
-            segmentTypeCatalog, segmentTypeRepository, idGenerator, bpmDb);
+        _vm = new ProfileWizardViewModel(project, profileManager, templateService, appDataPath, segmentTypeCatalog, bpmDb);
         DataContext = _vm;
 
+        // Jede Aenderung im Editor (Zuweisung, Verbinden/Trennen) baut die Kacheln neu → Stand ans ViewModel
+        SegmentEditor.ViewModel.Elements.CollectionChanged += (_, _) => SchiebeEditorStand();
+        SegmentEditor.ManageTypesRequested += OnManageTypesRequested;
         Loaded += (_, _) => UpdateStepVisibility();
     }
 
-    private void OnFileNameKeyDown(object sender, KeyEventArgs e)
+    /// <summary>Mehrere Aenderungen eines Rebuilds zu einer Uebergabe zusammenfassen.</summary>
+    private void SchiebeEditorStand()
     {
-        if (e.Key == Key.Enter)
-            _vm.ParseFileNameCommand.Execute(null);
-    }
-
-    private void OnFieldTypeSelectionChanged(
-        object sender, SelectionChangedEventArgs e)
-    {
-        if (sender is ComboBox combo
-            && combo.DataContext is FileNameSegment segment
-            && combo.SelectedItem is FieldTypeOption option)
-        {
-            _vm.OnFieldTypeChanged(segment, option);
-        }
-    }
-
-    // ── Schritt 2: Native WPF Drag&Drop mit eigenem Adorner ──
-    // Drag-Source: PreviewMouseDown speichert Startpunkt + Klick-Offset.
-    // PreviewMouseMove erkennt Threshold und startet DragDrop.DoDragDrop mit Adorner.
-    // Window's PreviewDragOver updated die Adorner-Position kontinuierlich.
-
-    private Point _dragStartPoint;
-    private FrameworkElement? _dragSourceChip;
-    private Point _clickOffsetInChip;
-    private DragAdorner? _currentAdorner;
-    private AdornerLayer? _adornerLayer;
-
-    private void OnChipPreviewMouseDown(object sender, MouseButtonEventArgs e)
-    {
-        // BPM-108 Phase C: nur reale Segmenttypen sind drag-faehig.
-        // "-- Nicht zugewiesen" (FieldTypeId=null + !IsCustomCreate) wird uebersprungen.
-        // "+ Eigenes" (IsCustomCreate=true) -> oeffnet Popover statt Drag.
-        if (sender is not FrameworkElement fe || fe.DataContext is not FieldTypeOption opt)
+        if (_pushPending)
             return;
-
-        if (opt.IsCustomCreate)
+        _pushPending = true;
+        Dispatcher.BeginInvoke(() =>
         {
-            // Inline-Popover oeffnen; kein Drag. Pre-Bind auf das aktive Segment
-            // gibt es im Wizard noch nicht — kann in Folge-Commit ergaenzt werden.
-            _vm.OpenCustomPopover(assignmentTarget: null);
-            e.Handled = true;
-            return;
-        }
-
-        if (!string.IsNullOrEmpty(opt.FieldTypeId))
-        {
-            _dragStartPoint = e.GetPosition(this);
-            _dragSourceChip = fe;
-            _clickOffsetInChip = e.GetPosition(fe);
-        }
+            _pushPending = false;
+            var editor = SegmentEditor.ViewModel;
+            _vm.ApplyEditorState(
+                [.. editor.Tokens().Select(t => (t.Text, t.AssignedType?.Id))],
+                editor.ActiveDelimiters(), editor.HasMixedSeparators());
+            UpdateStep2Note();
+        });
     }
 
-    /// <summary>
-    /// BPM-108 Phase C: Klick auf eine Farbpalette-Kachel im Inline-Popover.
-    /// Setzt <see cref="ProfileWizardViewModel.CustomTypeColor"/>.
-    /// </summary>
-    private void OnCustomColorClick(object sender, MouseButtonEventArgs e)
+    private void UpdateStep2Note()
+        => Step2Note.BorderBrush = (Brush)FindResource(_vm.Step2Ok ? "BpmSuccess" : "BpmWarning");
+
+    /// <summary>Editor nur neu laden, wenn sich die Beispieldatei geaendert hat (Zurueck/Weiter behaelt die Zuweisungen).</summary>
+    private void LadeEditorBeiBedarf()
     {
-        if (sender is FrameworkElement fe && fe.Tag is string hex)
+        if (_editorFile != _vm.EditorFileName)
         {
-            _vm.CustomTypeColor = hex;
-            e.Handled = true;
+            _editorFile = _vm.EditorFileName;
+            SegmentEditor.Load(_vm.EditorFileName, _segmentTypeCatalog, null);
         }
+        // Immer neu uebergeben: ein Dateiwechsel in Schritt 1 hat die Segmente im ViewModel geleert
+        SchiebeEditorStand();
     }
 
-    /// <summary>
-    /// BPM-108 Phase C Teil 3: Oeffnet den Segmenttypen-Manager-Dialog.
-    /// </summary>
-    private void OnOpenManagerClick(object sender, MouseButtonEventArgs e)
+    private void OnIgnoreOpenClick(object sender, MouseButtonEventArgs e)
+    {
+        if (_vm.IgnoreType is { } ignore)
+            SegmentEditor.ViewModel.AssignAllOpen(ignore);
+    }
+
+    /// <summary>Segmenttyp-Manager; danach Editor mit den bisherigen Zuweisungen neu laden (neue Typen in der Palette).</summary>
+    private void OnManageTypesRequested(object? sender, EventArgs e)
     {
         if (_segmentTypeRepository is null || _segmentTypeCatalog is null || _idGenerator is null)
-        {
             return;
-        }
-
-        var dialog = new SegmentTypeManagerDialog(_segmentTypeRepository, _segmentTypeCatalog, _idGenerator)
-        {
-            Owner = this
-        };
-        dialog.ShowDialog();
-        // Catalog-Invalidate-Events vom Manager-Dialog haben die FieldTypeOptions im Wizard
-        // bereits via Changed-Event aktualisiert — kein zusaetzlicher Refresh hier noetig.
-        e.Handled = true;
+        var bisher = SegmentEditor.ViewModel.CurrentAssignments()
+            .Select(a => new PlanDocumentSegment("", "", a.Type.Id, a.Type.TokenKey ?? "", a.RawValue, a.RawValue))
+            .ToList();
+        new SegmentTypeManagerDialog(_segmentTypeRepository, _segmentTypeCatalog, _idGenerator) { Owner = this }
+            .ShowDialog();
+        SegmentEditor.Load(_vm.EditorFileName, _segmentTypeCatalog, bisher);
+        SchiebeEditorStand();
     }
 
-    private void OnChipPreviewMouseMove(object sender, MouseEventArgs e)
+    private void OnPickFileClick(object sender, MouseButtonEventArgs e)
     {
-        if (e.LeftButton != MouseButtonState.Pressed || _dragSourceChip is null) return;
-
-        var current = e.GetPosition(this);
-        if (Math.Abs(current.X - _dragStartPoint.X) <= SystemParameters.MinimumHorizontalDragDistance
-            && Math.Abs(current.Y - _dragStartPoint.Y) <= SystemParameters.MinimumVerticalDragDistance)
-            return;
-
-        if (_dragSourceChip.DataContext is not FieldTypeOption opt) return;
-
-        var chip = _dragSourceChip;
-        var offset = _clickOffsetInChip;
-        _dragSourceChip = null;
-
-        // Adorner-Layer aus mehreren Quellen versuchen — Window's AdornerDecorator
-        // ist nicht immer direkt erreichbar.
-        var contentRoot = (UIElement)Content;
-        _adornerLayer = AdornerLayer.GetAdornerLayer(contentRoot)
-                        ?? AdornerLayer.GetAdornerLayer(chip);
-
-        if (_adornerLayer != null)
-        {
-            _currentAdorner = new DragAdorner(contentRoot, chip, offset);
-            _currentAdorner.UpdatePosition(current);
-            _adornerLayer.Add(_currentAdorner);
-        }
-
-        try
-        {
-            DragDrop.DoDragDrop(chip,
-                new DataObject(typeof(FieldTypeOption), opt),
-                DragDropEffects.Copy);
-        }
-        finally
-        {
-            if (_currentAdorner != null && _adornerLayer != null)
-            {
-                _adornerLayer.Remove(_currentAdorner);
-            }
-            _currentAdorner = null;
-            _adornerLayer = null;
-        }
-    }
-
-    /// <summary>Updated die Adorner-Position waehrend des Drags (Window-Level Event).</summary>
-    private void OnWindowPreviewDragOver(object sender, DragEventArgs e)
-    {
-        if (_currentAdorner != null)
-        {
-            var pos = e.GetPosition((IInputElement)Content);
-            _currentAdorner.UpdatePosition(pos);
-        }
-    }
-
-    private void OnSegmentDragOver(object sender, DragEventArgs e)
-    {
-        e.Effects = e.Data.GetDataPresent(typeof(FieldTypeOption))
-            ? DragDropEffects.Copy
-            : DragDropEffects.None;
-        e.Handled = true;
-    }
-
-    private void OnSegmentDrop(object sender, DragEventArgs e)
-    {
-        if (sender is FrameworkElement fe
-            && fe.DataContext is FileNameSegment segment
-            && e.Data.GetData(typeof(FieldTypeOption)) is FieldTypeOption option)
-        {
-            _vm.OnFieldTypeChanged(segment, option);
-            e.Handled = true;
-        }
-    }
-
-    /// <summary>
-    /// Rechtsklick auf Token -> Segment-Zuweisung zuruecksetzen (FieldType auf null).
-    /// </summary>
-    private void OnTokenRightClick(object sender, MouseButtonEventArgs e)
-    {
-        if (sender is FrameworkElement fe
-            && fe.DataContext is FileNameSegment segment)
-        {
-            _vm.ResetSegmentFieldType(segment);
-            e.Handled = true;
-        }
+        var dialog = new Microsoft.Win32.OpenFileDialog { Title = "Beispieldatei wählen", CheckFileExists = true };
+        if (dialog.ShowDialog(this) == true)
+            _vm.SampleFileName = System.IO.Path.GetFileName(dialog.FileName);
     }
 
     private void OnIndexSourceChecked(object sender, RoutedEventArgs e)
     {
-        if (sender is RadioButton rb
-            && rb.DataContext is IndexSourceOption option)
-        {
+        if (sender is RadioButton { DataContext: IndexSourceOption option })
             _vm.SelectedIndexSource = option.Value;
-        }
     }
 
-    private void OnHierarchyCheckChanged(object sender, RoutedEventArgs e)
+    private void OnIndexSourceLoaded(object sender, RoutedEventArgs e)
     {
-        _vm.OnHierarchyLevelChanged();
+        if (sender is RadioButton { DataContext: IndexSourceOption option } radio)
+            radio.IsChecked = option.Value == _vm.SelectedIndexSource;
     }
 
-    private void OnRecognitionSegmentClick(object sender, RoutedEventArgs e)
+    private void OnRecognitionSegmentClick(object sender, RoutedEventArgs e) => _vm.OnRecognitionSegmentToggled();
+
+    private void OnNext(object sender, RoutedEventArgs e)
     {
-        if (sender is Button btn
-            && btn.DataContext is RecognitionSegment seg)
+        if (_vm.CurrentStep >= _vm.TotalSteps)
         {
-            seg.IsSelected = !seg.IsSelected;
-            _vm.OnRecognitionSegmentToggled();
+            _vm.SaveProfileCommand.Execute(null);
+            if (_vm.ProfileSaved)
+            {
+                DialogResult = true;
+                Close();
+            }
+            return;
         }
-    }
-
-    private void OnCancel(object sender, RoutedEventArgs e)
-    {
-        DialogResult = false;
-        Close();
+        if (_vm.CurrentStep == 1)
+            LadeEditorBeiBedarf();
+        _vm.GoNextCommand.Execute(null);
+        UpdateStepVisibility();
     }
 
     private void OnBack(object sender, RoutedEventArgs e)
@@ -503,53 +149,34 @@ public partial class ProfileWizardDialog : Window
         UpdateStepVisibility();
     }
 
-    private void OnNext(object sender, RoutedEventArgs e)
+    private void OnCancel(object sender, RoutedEventArgs e)
     {
-        if (_vm.CurrentStep >= _vm.TotalSteps)
-        {
-            _vm.SaveProfileCommand.Execute(null);
-            DialogResult = _vm.ProfileSaved;
-            Close();
-            return;
-        }
-
-        _vm.GoNextCommand.Execute(null);
-        UpdateStepVisibility();
+        DialogResult = false;
+        Close();
     }
 
     private void UpdateStepVisibility()
     {
-        Step1Panel.Visibility = _vm.CurrentStep == 1
-            ? Visibility.Visible : Visibility.Collapsed;
-        Step2Panel.Visibility = _vm.CurrentStep == 2
-            ? Visibility.Visible : Visibility.Collapsed;
-        Step3Panel.Visibility = _vm.CurrentStep == 3
-            ? Visibility.Visible : Visibility.Collapsed;
-        Step4Panel.Visibility = _vm.CurrentStep == 4
-            ? Visibility.Visible : Visibility.Collapsed;
-        Step5Panel.Visibility = _vm.CurrentStep == 5
-            ? Visibility.Visible : Visibility.Collapsed;
+        var step = _vm.CurrentStep;
+        UIElement[] panels = [Step1Panel, Step2Panel, Step3Panel, Step4Panel];
+        System.Windows.Shapes.Ellipse[] dots = [Dot1, Dot2, Dot3, Dot4];
+        for (var i = 0; i < panels.Length; i++)
+        {
+            panels[i].Visibility = i + 1 == step ? Visibility.Visible : Visibility.Collapsed;
+            dots[i].Fill = (Brush)FindResource(i + 1 < step ? "BpmBgActive" : i + 1 == step ? "BpmAccentPrimary" : "BpmBorderDefault");
+        }
+        StepCounter.Text = $"Schritt {step} von {_vm.TotalSteps}";
+        NextButton.Content = step >= _vm.TotalSteps ? "Speichern" : "Weiter";
+        if (step == 2)
+            UpdateStep2Note();
+    }
 
-        // Progress Dots — 3-stufig: done (vergangen) / active (aktuell) / inactive (zukuenftig)
-        var done = (System.Windows.Media.Brush)FindResource("BpmBgActive");
-        var active = (System.Windows.Media.Brush)FindResource("BpmAccentPrimary");
-        var inactive = (System.Windows.Media.Brush)FindResource("BpmBorderDefault");
+    private sealed class TextToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+            => string.IsNullOrEmpty(value as string) ? Visibility.Collapsed : Visibility.Visible;
 
-        System.Windows.Media.Brush DotBrush(int dotIndex) =>
-            _vm.CurrentStep == dotIndex ? active
-            : _vm.CurrentStep > dotIndex ? done
-            : inactive;
-
-        Dot1.Fill = DotBrush(1);
-        Dot2.Fill = DotBrush(2);
-        Dot3.Fill = DotBrush(3);
-        Dot4.Fill = DotBrush(4);
-        Dot5.Fill = DotBrush(5);
-
-        StepCounter.Text =
-            $"Schritt {_vm.CurrentStep} von {_vm.TotalSteps}";
-
-        NextButton.Content = _vm.CurrentStep >= _vm.TotalSteps
-            ? "Speichern" : "Weiter";
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+            => throw new NotSupportedException();
     }
 }

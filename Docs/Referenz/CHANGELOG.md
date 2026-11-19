@@ -32,6 +32,21 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.235] — 2026-11-19
+
+### Feature: BPM-130 Profil-Wizard mit 4 Schritten (Seitenliste 3.8 v0.2)
+
+- Wizard neu nach dem abgenommenen Mockup: 1 Dokumenttyp + Beispieldatei, 2 Segmente über den Segment-Editor, 3 Index (optional), 4 Erkennung + Speichern. Kein Namensfeld, kein Zielordner-Schritt; ein vorhandenes Profil des Dokumenttyps wird ersetzt.
+- Kopiermarker (`_(1)`, ` (2)`, ` - Kopie`) werden vor dem Editor abgeschnitten (`FileNameSegmentation.StripCopyMarker`).
+- Schritt 2 sperrt bei offenen Kacheln, 0 oder >1 Plannummer, gemischten Trennern und wenn der Import-Parser anders zerlegen würde; „Alle offenen auf „Ignorieren““ und „Typen verwalten“ im Editor.
+- Schritt 3: fehlendes Index-Segment ist nur ein Hinweis (Praxis-Bug); IndexMode immer optional.
+- Erkennungsregeln positionsfrei: `segment` ohne `segmentPosition` = Token an beliebiger Stelle (`RecognitionRule.IsValid`, `DocumentTypeRecognizer`).
+- Neu `ProfileBuilder` (ersetzt `IProfileManager.BuildFromWizard`); `ProfileManager.Save` lehnt Profile ohne Dokumenttyp oder mit ungültigen Regeln ab.
+- `HexToColorConverter` in eigene Datei; Tests für das alte Eigenes-Feldtyp-Popover entfernt (im Mockup durch „Typen verwalten“ ersetzt), neue `ProfileWizardTests`.
+- Doku: PlanManager.md Kap. 6 Phase 0 und 15.1 auf 4 Schritte, 15.6 als abgelöst markiert.
+
+---
+
 ## [v0.28.234] — 2026-11-18
 
 ### Docs: Mockup 3.8 v0.2 – Profil-Wizard mit 4 Schritten abgenommen (BPM-130)

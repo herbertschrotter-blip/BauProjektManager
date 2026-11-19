@@ -172,8 +172,9 @@ public class RecognitionRule
     public string Pattern { get; set; } = string.Empty;
 
     /// <summary>
-    /// Nur bei method="segment": 0-basierte Position des Tokens im tokenisierten Dateinamen.
-    /// Muss gesetzt sein wenn Method=segment. Bei regex null.
+    /// Nur bei method="segment": 0-basierte Position des Tokens im tokenisierten Dateinamen. NULL = der Token darf
+    /// an beliebiger Stelle stehen (BPM-130, ADR-065: ein optionaler Index verschiebt alles dahinter — der Wizard
+    /// legt deshalb positionsfreie Regeln an). Bei regex null.
     /// </summary>
     public int? SegmentPosition { get; set; }
 
@@ -194,9 +195,9 @@ public class RecognitionRule
         switch (Method?.ToLowerInvariant())
         {
             case "segment":
-                if (SegmentPosition is null || SegmentPosition < 0)
+                if (SegmentPosition < 0)
                 {
-                    reason = "segment-Regel braucht SegmentPosition >= 0.";
+                    reason = "segment-Regel: SegmentPosition muss >= 0 sein (oder fehlen = beliebige Stelle).";
                     return false;
                 }
                 break;

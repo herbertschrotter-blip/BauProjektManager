@@ -161,7 +161,7 @@ public class ProfileManager : IProfileManager
     /// Prueft Identitaet (Id, DocumentTypeName), Tokenization-Vorhandensein,
     /// Recognition-Count und alle Rule.IsValid()-Checks.
     /// </summary>
-    private static bool IsProfileLoadable(RecognitionProfile profile, out string reason)
+    internal static bool IsProfileLoadable(RecognitionProfile profile, out string reason)
     {
         if (string.IsNullOrWhiteSpace(profile.Id))
         {
@@ -290,8 +290,13 @@ public class ProfileManager : IProfileManager
     /// </summary>
     public void Save(string projectRootPath, RecognitionProfile profile)
     {
+        // BPM-130 (ex 086): Speicherschutz — das Profil haengt am Dokumenttyp (ADR-061/065 P.7) und muss ladbar sein
+        if (string.IsNullOrWhiteSpace(profile.DocumentTypeId))
+            throw new InvalidOperationException("Profil ohne DocumentTypeId kann nicht gespeichert werden.");
         if (string.IsNullOrEmpty(profile.Id))
             profile.Id = _idGenerator.NewId();
+        if (!IsProfileLoadable(profile, out var reason))
+            throw new InvalidOperationException($"Profil ist ungueltig: {reason}");
 
         // Schema bei Save zwingend setzen (Frühphase = Reset, kein Toleranz-Save)
         profile.SchemaVersion = CurrentSchemaVersion;
@@ -340,112 +345,5 @@ public class ProfileManager : IProfileManager
         _persistenceRegistry?.Unregister(filePath);
         Log.Information("Profil geloescht: {Id}", profileId);
         return true;
-    }
-
-    /// <summary>
-    /// Builds a RecognitionProfile from the current wizard state.
-    /// Called by ProfileWizardViewModel.SaveProfile().
-    /// </summary>
-    /// <remarks>
-    /// BPM-108 Phase C: Wizard liefert <see cref="FileNameSegment"/> mit bereits gesetzter
-    /// <see cref="FileNameSegment.FieldTypeId"/> (stabile <c>segment_types.id</c>). Pflicht-
-    /// und Identity-Logik wird ueber den <see cref="ISegmentTypeCatalog"/> aufgeloest
-    /// (<see cref="SegmentSemanticRole.PlanNumber"/> = Pflicht; <see cref="SegmentSemanticRole.PlanNumber"/>
-    /// oder <see cref="SegmentSemanticRole.Spatial"/> = identitaetsbildend).
-    /// </remarks>
-    public RecognitionProfile BuildFromWizard(
-        string documentTypeName,
-        IndexSourceType indexSource,
-        bool indexModeOptional,
-        bool indexCaseInsensitive,
-        List<FileNameSegment> segments,
-        List<string> delimiters,
-        List<string> folderHierarchy,
-        List<RecognitionRule> recognition,
-        int recognitionPriority,
-        string? existingProfileId = null,
-        string? documentTypeId = null)
-    {
-        var snapshot = _segmentTypeCatalog?.SnapshotIncludingDeleted();
-
-        var profileSegments = segments
-            .Where(s => !string.IsNullOrEmpty(s.FieldTypeId))
-            .Select(s =>
-            {
-                var role = LookupRole(snapshot, s.FieldTypeId);
-                return new ProfileSegment
-                {
-                    Position = s.Position,
-                    FieldTypeId = s.FieldTypeId!,
-                    Required = role == SegmentSemanticRole.PlanNumber,
-                    IncludeInIdentity = role is SegmentSemanticRole.PlanNumber or SegmentSemanticRole.Spatial
-                };
-            })
-            .ToList();
-
-        // Build identityFields (v4): documentType-System-Key + alle identitaetsbildenden Segmente
-        var identityFields = new List<string> { DocumentTypeIdentityKey };
-        foreach (var seg in profileSegments.Where(s => s.IncludeInIdentity).OrderBy(s => s.Position))
-        {
-            identityFields.Add(seg.FieldTypeId);
-        }
-
-        // BPM-113.06 Slice 0.6b: Bevorzugt die stabile, vom Wizard gewaehlte type.Id
-        // (resolverbar via DocumentTargetPathResolver). Fallback auf den normalisierten
-        // Namen nur fuer Aufrufer ohne Stammdaten-Auswahl (Tests/Legacy).
-        var resolvedDocumentTypeId = string.IsNullOrWhiteSpace(documentTypeId)
-            ? NormalizeTypeId(documentTypeName)
-            : documentTypeId;
-
-        return new RecognitionProfile
-        {
-            Id = existingProfileId ?? string.Empty,
-            SchemaVersion = CurrentSchemaVersion,
-            DocumentTypeId = resolvedDocumentTypeId,
-            DocumentTypeName = documentTypeName,
-            IndexSource = indexSource,
-            IndexMode = indexModeOptional ? "optional" : "required",
-            IndexComparison = new IndexComparisonConfig
-            {
-                Mode = "alphabetic",
-                CaseInsensitive = indexCaseInsensitive
-            },
-            Tokenization = new TokenizationConfig { Delimiters = delimiters },
-            Segments = profileSegments,
-            IdentityFields = identityFields,
-            Recognition = recognition,
-            RecognitionPriority = recognitionPriority,
-            ConflictPolicy = "askUser",
-            Grouping = new GroupingConfig { Mode = "identity" },
-            FolderHierarchy = folderHierarchy
-        };
-    }
-
-    private static SegmentSemanticRole LookupRole(
-        IReadOnlyDictionary<string, SegmentTypeDefinition>? snapshot,
-        string? fieldTypeId)
-    {
-        if (snapshot is null || string.IsNullOrEmpty(fieldTypeId)) return SegmentSemanticRole.None;
-        return snapshot.TryGetValue(fieldTypeId, out var def)
-            ? def.SemanticRole ?? SegmentSemanticRole.None
-            : SegmentSemanticRole.None;
-    }
-
-    /// <summary>
-    /// Normalizes a document type display name to a stable TypeId.
-    /// Lowercase, no umlauts, no spaces, no special chars.
-    /// </summary>
-    internal static string NormalizeTypeId(string displayName)
-    {
-        if (string.IsNullOrWhiteSpace(displayName))
-            return "unknown";
-
-        var id = displayName.ToLowerInvariant().Trim();
-        id = id.Replace("ä", "ae").Replace("ö", "oe").Replace("ü", "ue").Replace("ß", "ss");
-        id = id.Replace(" ", "_").Replace("-", "_");
-        // Remove plural trailing 'e' for common German patterns (Pläne→Plan)
-        if (id.EndsWith("plaene"))
-            id = id[..^1]; // plaene → plaen... actually just keep it simple
-        return id;
     }
 }

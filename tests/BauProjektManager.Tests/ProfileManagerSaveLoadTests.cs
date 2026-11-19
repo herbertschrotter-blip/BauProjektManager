@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.Json;
+using BauProjektManager.Domain.Enums.PlanManager;
 using BauProjektManager.Domain.Interfaces;
 using BauProjektManager.Domain.Models.PlanManager;
 using BauProjektManager.Infrastructure.Services;
@@ -9,7 +10,7 @@ namespace BauProjektManager.Tests;
 
 /// <summary>
 /// Unit-Tests für <see cref="ProfileManager.Save"/>, <see cref="ProfileManager.LoadAll"/>
-/// und <see cref="ProfileManager.BuildFromWizard"/> (BPM-082.06b).
+/// und <see cref="ProfileBuilder"/> (BPM-082.06b, BPM-130).
 ///
 /// Schwerpunkt: Save-Roundtrip, Profil-JSON-Format mit SchemaVersion=5 (BPM-113.06 Slice 0.6c),
 /// segment-Rules korrekt geschrieben+gelesen, BuildFromWizard-Output.
@@ -47,119 +48,68 @@ public class ProfileManagerSaveLoadTests : IDisposable
         catch { /* ignore cleanup races */ }
     }
 
-    // === BuildFromWizard ===
+    // === ProfileBuilder (BPM-130, ex BuildFromWizard) ===
+
+    private static readonly PlanDocumentType Polierplan =
+        new("TYP-01", "Polierplan", "Polierplaene", null, Ring2Source.BuildingParts, 10, true, []);
+
+    private static RecognitionProfile Build(
+        List<RecognitionRule>? rules = null, List<string>? delimiters = null, string? existingId = null)
+        => ProfileBuilder.Build(null, Polierplan, IndexSourceType.FileName, indexModeOptional: true,
+            indexCaseInsensitive: true, [], delimiters ?? ["-", "_"], rules ?? [], 100, existingId);
 
     [Fact]
-    public void BuildFromWizard_SetsSchemaVersion5()
-    {
-        var profile = _sut.BuildFromWizard(
-            documentTypeName: "Bauprotokoll",
-            indexSource: IndexSourceType.FileName,
-            indexModeOptional: true,
-            indexCaseInsensitive: true,
-            segments: [],
-            delimiters: ["-", "_"],
-            folderHierarchy: [],
-            recognition: [],
-            recognitionPriority: 100);
+    public void ProfileBuilder_SetsSchemaVersion5() => Assert.Equal(5, Build().SchemaVersion);
 
-        Assert.Equal(5, profile.SchemaVersion);
+    [Fact]
+    public void ProfileBuilder_PreservesRecognitionRulesAsGiven()
+    {
+        var profile = Build([new() { Method = "segment", Pattern = "PROT", SegmentPosition = 1 }]);
+
+        var rule = Assert.Single(profile.Recognition);
+        Assert.Equal(("segment", "PROT", (int?)1), (rule.Method, rule.Pattern, rule.SegmentPosition));
     }
 
     [Fact]
-    public void BuildFromWizard_PreservesRecognitionRulesAsGiven()
+    public void ProfileBuilder_TakesIdAndNameFromDocumentType()
     {
-        var rules = new List<RecognitionRule>
-        {
-            new() { Method = "segment", Pattern = "PROT", SegmentPosition = 1 }
-        };
+        var profile = Build();
 
-        var profile = _sut.BuildFromWizard(
-            documentTypeName: "Bauprotokoll",
-            indexSource: IndexSourceType.FileName,
-            indexModeOptional: true,
-            indexCaseInsensitive: true,
-            segments: [],
-            delimiters: ["-", "_"],
-            folderHierarchy: [],
-            recognition: rules,
-            recognitionPriority: 100);
-
-        Assert.Single(profile.Recognition);
-        Assert.Equal("segment", profile.Recognition[0].Method);
-        Assert.Equal("PROT", profile.Recognition[0].Pattern);
-        Assert.Equal(1, profile.Recognition[0].SegmentPosition);
+        Assert.Equal("TYP-01", profile.DocumentTypeId);
+        Assert.Equal("Polierplan", profile.DocumentTypeName);
+        Assert.Empty(profile.FolderHierarchy);
     }
 
     [Fact]
-    public void BuildFromWizard_NormalizesDocumentTypeId()
-    {
-        var profile = _sut.BuildFromWizard(
-            documentTypeName: "Bauprotokoll",
-            indexSource: IndexSourceType.FileName,
-            indexModeOptional: true,
-            indexCaseInsensitive: true,
-            segments: [],
-            delimiters: ["-", "_"],
-            folderHierarchy: [],
-            recognition: [],
-            recognitionPriority: 100);
+    public void ProfileBuilder_KeepsExistingProfileId() => Assert.Equal("KEEP-ME-42", Build(existingId: "KEEP-ME-42").Id);
 
-        Assert.Equal("bauprotokoll", profile.DocumentTypeId);
-        Assert.Equal("Bauprotokoll", profile.DocumentTypeName);
+    [Fact]
+    public void ProfileBuilder_NoExistingId_ResultIsEmpty_SaveAssignsLater() => Assert.Equal(string.Empty, Build().Id);
+
+    [Fact]
+    public void ProfileBuilder_TokenizationConfigUsesGivenDelimiters()
+        => Assert.Equal(["-", "_", "."], Build(delimiters: ["-", "_", "."]).Tokenization!.Delimiters);
+
+    // === Speicherschutz (BPM-130, ex 086) ===
+
+    [Fact]
+    public void Save_WithoutDocumentTypeId_Throws_AndWritesNothing()
+    {
+        var profile = MakeMinimalProfile(id: "ABC");
+        profile.DocumentTypeId = "";
+
+        Assert.Throws<InvalidOperationException>(() => _sut.Save(_tempRoot, profile));
+        Assert.False(File.Exists(Path.Combine(_tempRoot, ".bpm", "profiles", "ABC.json")));
     }
 
     [Fact]
-    public void BuildFromWizard_KeepsExistingProfileId()
+    public void Save_WithoutRecognitionRules_Throws()
     {
-        var profile = _sut.BuildFromWizard(
-            documentTypeName: "X",
-            indexSource: IndexSourceType.FileName,
-            indexModeOptional: true,
-            indexCaseInsensitive: true,
-            segments: [],
-            delimiters: [],
-            folderHierarchy: [],
-            recognition: [],
-            recognitionPriority: 100,
-            existingProfileId: "KEEP-ME-42");
+        var profile = MakeMinimalProfile(id: "ABC");
+        profile.Recognition.Clear();
 
-        Assert.Equal("KEEP-ME-42", profile.Id);
-    }
-
-    [Fact]
-    public void BuildFromWizard_NoExistingId_ResultIsEmpty_SaveAssignsLater()
-    {
-        var profile = _sut.BuildFromWizard(
-            documentTypeName: "X",
-            indexSource: IndexSourceType.FileName,
-            indexModeOptional: true,
-            indexCaseInsensitive: true,
-            segments: [],
-            delimiters: [],
-            folderHierarchy: [],
-            recognition: [],
-            recognitionPriority: 100);
-
-        Assert.Equal(string.Empty, profile.Id);
-    }
-
-    [Fact]
-    public void BuildFromWizard_TokenizationConfigUsesGivenDelimiters()
-    {
-        var profile = _sut.BuildFromWizard(
-            documentTypeName: "X",
-            indexSource: IndexSourceType.FileName,
-            indexModeOptional: true,
-            indexCaseInsensitive: true,
-            segments: [],
-            delimiters: ["-", "_", "."],
-            folderHierarchy: [],
-            recognition: [],
-            recognitionPriority: 100);
-
-        Assert.NotNull(profile.Tokenization);
-        Assert.Equal(["-", "_", "."], profile.Tokenization.Delimiters);
+        var ex = Assert.Throws<InvalidOperationException>(() => _sut.Save(_tempRoot, profile));
+        Assert.Contains("Recognition", ex.Message);
     }
 
     // === Save → Disk ===

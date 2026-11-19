@@ -261,13 +261,14 @@ string BuildDocumentKey(Profile profile, ParsedFile parsed)
 
 ### Phase 0 — Profil anlernen (einmalig pro Dokumenttyp)
 
-5-Schritt-Wizard (auch erreichbar über „✎ Profil" im Projektdetail):
+4-Schritt-Wizard (BPM-130, Seitenliste 3.8, Mockup v0.2; auch erreichbar über „✎ Profil" im Projektdetail):
 
-1. **Datei auswaehlen** → Datei aus Eingang klicken oder Name eingeben, Trennzeichen, Parsen → Segmente als Vorschau
-2. **Segmente zuweisen** → Feldtypen per Dropdown zuweisen (PlanNumber Pflicht)
-3. **IndexSource** → FileName / None / PlanHeader(Post-V1), indexMode, indexComparison
-4. **Zielordner + Ordner-Hierarchie** → Hauptordner + Unterebenen (Geschoss, Haus etc.)
-5. **Erkennung** → Klickbare Segment-Bloecke (Default `Method=segment`, BPM-082) oder Regex-Pattern (Fallback `Method=regex`, BPM-007.02), Live-Test gegen Beispieldatei, Prioritaet. Alte Methoden `prefix`/`contains` sind entfernt (siehe Kap. 14)
+1. **Dokumenttyp + Beispieldatei** → Dokumenttyp wählen (Titel „Erkennung für „X“ einrichten“, kein Namensfeld), Datei aus dem Eingang oder „Datei wählen…“. Ein Kopiermarker am Ende (`_(1)`, ` (2)`, ` - Kopie`) wird abgeschnitten und nie ein Segment. Hat der Typ schon ein Profil, wird es beim Speichern ersetzt.
+2. **Segmente** → Segment-Editor (BPM-126c): Trenner verbinden/trennen, Typen zuweisen, „Alle offenen auf „Ignorieren““, „Typen verwalten“. Weiter nur, wenn jede Kachel einen Typ hat, genau eine Plannummer, ein Trennzeichen überall gleich trennt und der Import-Parser dieselbe Zerlegung ergibt.
+3. **Index** → „Im Dateinamen“ oder „Kein Index im Dateinamen“; Index ist immer optional (fehlt er, ist der Plan ohne Index). Fehlt das Index-Segment, nur Hinweis, keine Sperre.
+4. **Erkennung + Speichern** → Kacheln anklicken (vorgewählt: die Kachel, die wie der Dokumenttyp heißt). Regeln sind positionsfrei (`segment` ohne `segmentPosition` = Token an beliebiger Stelle). Kein Zielordner-Schritt (ADR-061/065: Ziel kommt aus dem Dokumenttyp).
+
+Das Profil baut `ProfileBuilder`; `ProfileManager.Save` lehnt Profile ohne Dokumenttyp oder mit ungültigen Regeln ab.
 
 Ergebnis: RecognitionProfile in `.bpm/profiles/<n>.json` (ADR-046) + PatternTemplate in `pattern-templates.json`.
 
@@ -788,7 +789,7 @@ betroffene `.bpm/profiles/*.json`-Dateien loeschen, im Wizard neu anlegen.
 |--------|-------------|
 | **Hauptseite** | Projektliste mit Eingang-Badge (amber/grün) |
 | **Projektdetail** | 3 Tabs: Profile (gruppiert nach Zielordner, ✎ Profil-Button), Manuell sortieren, Sync |
-| **Profil-Wizard** | 5 Schritte: Datei auswaehlen → Segmente zuweisen → IndexSource → Zielordner → Erkennung (klickbare Segment-Bloecke) |
+| **Profil-Wizard** | 4 Schritte (BPM-130, Seitenliste 3.8): Dokumenttyp + Beispieldatei → Segmente (Segment-Editor) → Index (optional) → Erkennung + Speichern |
 | **Manueller Sortier-Dialog** | Liste mit kontextuellem Radial-Menü beim Klick & Halten |
 
 **Mockup-Verzeichnis:** `Docs/Mockups/PlanManager/` — durchklickbarer HTML-Prototyp.
@@ -932,6 +933,8 @@ Mausklick-und-Halten auf einem Dokument **um das Dokument herum** erscheint.
 ---
 
 ### 15.6 Profil-Wizard — 5 Schritte (modaler Dialog)
+
+> **Abgelöst (BPM-130, 2026-11-19):** Der Wizard hat 4 Schritte nach Seitenliste 3.8 / Mockup `Docs/Mockups/seiten/profil-wizard.html` v0.2 (Beschreibung: Kap. 6, Phase 0). Die Unterkapitel 15.6.1–15.6.5 beschreiben den alten Stand (5 Schritte, Zielordner, Profil-Name, Feldtyp-Chips) und bleiben als Historie.
 
 **Mockup-Verzeichnis:** `Docs/Mockups/PlanManager/03_ProfilWizard/`
 

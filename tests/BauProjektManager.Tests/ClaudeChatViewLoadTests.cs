@@ -32,4 +32,13 @@ public class ClaudeChatViewLoadTests
         var view = new ManualCaptureView();
         Assert.Null(view.ClaudeSort); // ohne Claude-Port bleibt alles unsichtbar
     });
+
+    /// <summary>Profil-Wizard 3.8 (BPM-130): XAML mit Segment-Editor und 4 Schritten laesst sich erzeugen.</summary>
+    [Fact]
+    public void ProfileWizardDialog_LoadsXaml() => OnSta(() =>
+    {
+        var dialog = new ProfileWizardDialog();
+        Assert.Equal(4, ((BauProjektManager.PlanManager.ViewModels.ProfileWizardViewModel)dialog.DataContext).TotalSteps);
+        dialog.Close();
+    });
 }

@@ -167,13 +167,13 @@ public class DocumentTypeRecognizer
     }
 
     /// <summary>
-    /// Position-genauer Token-Vergleich (BPM-082, segment-Methode).
-    /// Schlank gehalten: kein Trim, kein Strip, keine Sonderlogik.
-    /// IsValid() wird in MatchesRule vorgelagert — daher SegmentPosition!.Value sicher.
+    /// Token-Vergleich (BPM-082, segment-Methode): mit Position genau dort, ohne Position (BPM-130) an beliebiger
+    /// Stelle. Schlank gehalten: kein Trim, kein Strip, keine Sonderlogik.
     /// </summary>
     private static bool MatchesSegment(RecognitionContext ctx, RecognitionRule rule)
     {
-        var pos = rule.SegmentPosition!.Value;
+        if (rule.SegmentPosition is not { } pos)
+            return ctx.Tokens.Any(t => string.Equals(t, rule.Pattern, StringComparison.OrdinalIgnoreCase));
         return pos >= 0
             && pos < ctx.Tokens.Count
             && string.Equals(

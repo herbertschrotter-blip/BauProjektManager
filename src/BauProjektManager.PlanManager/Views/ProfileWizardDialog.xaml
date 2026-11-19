@@ -1,14 +1,33 @@
 <Window x:Class="BauProjektManager.PlanManager.Views.ProfileWizardDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Profil erstellen"
-        Width="750" Height="580"
-        MinWidth="600" MinHeight="480"
+        xmlns:views="clr-namespace:BauProjektManager.PlanManager.Views"
+        Title="{Binding DialogTitle}"
+        Width="780" Height="600"
+        MinWidth="640" MinHeight="480"
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource BpmBgElevated}"
-        Foreground="{DynamicResource BpmTextPrimary}"
-        AllowDrop="True"
-        PreviewDragOver="OnWindowPreviewDragOver">
+        Foreground="{DynamicResource BpmTextPrimary}">
+    <!-- Profil-Wizard (Seitenliste 3.8, Mockup 0.2, BPM-130): 4 Schritte, Erkennung haengt am Dokumenttyp -->
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <Style x:Key="WizHint" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource BpmTextSecondary}"/>
+            <Setter Property="FontSize" Value="{DynamicResource BpmFontSizeSmall}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+        <Style x:Key="WizLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource BpmTextSecondary}"/>
+            <Setter Property="FontSize" Value="{DynamicResource BpmFontSizeLabel}"/>
+            <Setter Property="Margin" Value="0,10,0,4"/>
+        </Style>
+        <Style x:Key="WizNote" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource BpmBgSurface}"/>
+            <Setter Property="BorderThickness" Value="3,0,0,0"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Margin" Value="0,10,0,0"/>
+        </Style>
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -16,702 +35,156 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Header: 5 Progress Dots -->
+        <!-- Kopf: Schritt-Titel + 4 Punkte -->
         <Border Grid.Row="0" Background="{DynamicResource BpmBgSurface}" Padding="16,12">
             <StackPanel>
-                <TextBlock FontSize="15" FontWeight="SemiBold"
-                           Foreground="{DynamicResource BpmTextBright}"
-                           Text="{Binding StepTitle}"/>
+                <TextBlock FontSize="{DynamicResource BpmFontSizeBody}" FontWeight="SemiBold"
+                           Foreground="{DynamicResource BpmTextBright}" Text="{Binding StepTitle}"/>
                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                    <Ellipse x:Name="Dot1" Width="10" Height="10" Margin="0,0,6,0"
-                             Fill="{DynamicResource BpmAccentPrimary}"/>
-                    <Ellipse x:Name="Dot2" Width="10" Height="10" Margin="0,0,6,0"
-                             Fill="{DynamicResource BpmBorderDefault}"/>
-                    <Ellipse x:Name="Dot3" Width="10" Height="10" Margin="0,0,6,0"
-                             Fill="{DynamicResource BpmBorderDefault}"/>
-                    <Ellipse x:Name="Dot4" Width="10" Height="10" Margin="0,0,6,0"
-                             Fill="{DynamicResource BpmBorderDefault}"/>
-                    <Ellipse x:Name="Dot5" Width="10" Height="10"
-                             Fill="{DynamicResource BpmBorderDefault}"/>
-                    <TextBlock x:Name="StepCounter"
-                               Text="Schritt 1 von 5"
-                               Foreground="{DynamicResource BpmTextSecondary}"
-                               FontSize="11" Margin="12,0,0,0"
-                               VerticalAlignment="Center"/>
+                    <Ellipse x:Name="Dot1" Width="10" Height="10" Margin="0,0,6,0"/>
+                    <Ellipse x:Name="Dot2" Width="10" Height="10" Margin="0,0,6,0"/>
+                    <Ellipse x:Name="Dot3" Width="10" Height="10" Margin="0,0,6,0"/>
+                    <Ellipse x:Name="Dot4" Width="10" Height="10"/>
+                    <TextBlock x:Name="StepCounter" Margin="12,0,0,0" VerticalAlignment="Center"
+                               Foreground="{DynamicResource BpmTextSecondary}" FontSize="{DynamicResource BpmFontSizeSmall}"/>
                 </StackPanel>
             </StackPanel>
         </Border>
 
         <Grid Grid.Row="1">
-
-            <!-- === SCHRITT 1: Datei auswaehlen + Parsen === -->
-            <ScrollViewer x:Name="Step1Panel" VerticalScrollBarVisibility="Auto" Padding="16">
+            <!-- === SCHRITT 1: Dokumenttyp + Beispieldatei === -->
+            <ScrollViewer x:Name="Step1Panel" VerticalScrollBarVisibility="Auto" Padding="20,16">
                 <StackPanel>
-                    <TextBlock Text="Dateien im Eingang - klicke eine Datei als Vorlage:"
-                               Foreground="{DynamicResource BpmTextSecondary}"
-                               FontSize="12" Margin="0,0,0,4"
-                               Visibility="{Binding HasInboxFiles, Converter={StaticResource BoolToVis}}"/>
-                    <ListBox ItemsSource="{Binding InboxFiles}"
-                             SelectedItem="{Binding SelectedInboxFile}"
-                             MaxHeight="140"
-                             Background="{DynamicResource BpmBgSurface}"
-                             Foreground="{DynamicResource BpmTextPrimary}"
-                             BorderBrush="{DynamicResource BpmBorderDefault}"
-                             BorderThickness="1"
-                             FontSize="12" FontFamily="Consolas"
-                             Margin="0,0,0,12"
-                             Visibility="{Binding HasInboxFiles, Converter={StaticResource BoolToVis}}"/>
-
-                    <TextBlock Text="Beispiel-Dateiname"
-                               Foreground="{DynamicResource BpmTextSecondary}"
-                               FontSize="12" Margin="0,0,0,4"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBox Grid.Column="0"
-                                 Text="{Binding SampleFileName, UpdateSourceTrigger=PropertyChanged}"
-                                 FontSize="13"
-                                 Background="{DynamicResource BpmBgInput}"
-                                 Foreground="{DynamicResource BpmTextPrimary}"
-                                 BorderBrush="{DynamicResource BpmBorderDefault}"
-                                 Padding="8,6" KeyDown="OnFileNameKeyDown"/>
-                        <Button Grid.Column="1" Content="Parsen"
-                                Style="{DynamicResource BpmButtonSecondary}"
-                                Command="{Binding ParseFileNameCommand}"
-                                Margin="8,0,0,0" VerticalAlignment="Stretch"/>
-                    </Grid>
-
-                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-                        <TextBlock Text="Trennzeichen:"
-                                   Foreground="{DynamicResource BpmTextSecondary}"
-                                   FontSize="12" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding DelimiterText, UpdateSourceTrigger=PropertyChanged}"
-                                 Width="80" Margin="8,0,0,0"
-                                 FontSize="13" FontFamily="Consolas"
-                                 Background="{DynamicResource BpmBgInput}"
-                                 Foreground="{DynamicResource BpmTextPrimary}"
-                                 BorderBrush="{DynamicResource BpmBorderDefault}"
-                                 Padding="6,4"/>
-                        <TextBlock Text="(Leerzeichen-getrennt, z.B.: - _ .)"
-                                   Foreground="{DynamicResource BpmTextSecondary}"
-                                   FontSize="11" VerticalAlignment="Center"
-                                   Margin="8,0,0,0"/>
-                    </StackPanel>
-
-                    <!-- Parse-Info: gruen + Haken wenn erfolgreich (UI-UX P6 Feedback Always) -->
-                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                        <TextBlock Text="&#10003; "
-                                   Foreground="{DynamicResource BpmSuccess}"
-                                   FontSize="11" FontWeight="Bold"
-                                   Visibility="{Binding Segments.Count, Converter={StaticResource CountToVisInverse}}"/>
-                        <TextBlock Text="{Binding ParseInfo}"
-                                   FontSize="11">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="{DynamicResource BpmTextSecondary}"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Segments.Count, Converter={StaticResource CountToVisInverse}}" Value="Visible">
-                                            <Setter Property="Foreground" Value="{DynamicResource BpmSuccess}"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </StackPanel>
-
-                    <!-- Segment-Vorschau (nur Anzeige, keine Dropdowns) -->
-                    <TextBlock Text="Erkannte Segmente:"
-                               Foreground="{DynamicResource BpmTextSecondary}"
-                               FontSize="12" Margin="0,16,0,8"
-                               Visibility="{Binding Segments.Count, Converter={StaticResource CountToVisInverse}}"/>
-                    <ItemsControl ItemsSource="{Binding Segments}"
-                                  Visibility="{Binding Segments.Count, Converter={StaticResource CountToVisInverse}}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Background="{DynamicResource BpmBgSurface}"
-                                        BorderBrush="{DynamicResource BpmBorderDefault}"
-                                        BorderThickness="1" CornerRadius="3"
-                                        Padding="10,6" Margin="0,0,6,6">
-                                    <TextBlock Text="{Binding RawValue}"
-                                               Foreground="{DynamicResource BpmTextBright}"
-                                               FontSize="13" FontFamily="Consolas"/>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
-            </ScrollViewer>
-
-            <!-- === SCHRITT 2: Segmente zuweisen (Token-Drag&Drop nach Mockup 02_Segmente.html) === -->
-            <ScrollViewer x:Name="Step2Panel" VerticalScrollBarVisibility="Auto" Padding="16"
-                          Visibility="Collapsed">
-                <StackPanel>
-                    <TextBlock Text="Welcher Teil des Dateinamens ist was?"
-                               Foreground="{DynamicResource BpmTextBright}"
-                               FontSize="14" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                    <TextBlock Text="Ziehe einen Feldtyp aus der Liste unten auf ein Segment, um es zuzuweisen."
-                               Foreground="{DynamicResource BpmTextSecondary}"
-                               FontSize="11" Margin="0,0,0,12"
-                               TextWrapping="Wrap"/>
-
-                    <!-- Beispiel-Block mit farbigen Tokens (Drop-Targets) -->
-                    <Border Background="{DynamicResource BpmBgSurface}"
-                            BorderBrush="{DynamicResource BpmBorderDefault}"
-                            BorderThickness="1" CornerRadius="4"
-                            Padding="12" Margin="0,0,0,14">
-                        <StackPanel>
-                            <TextBlock Text="BEISPIEL-DATEI"
-                                       Foreground="{DynamicResource BpmTextSecondary}"
-                                       FontSize="10" FontWeight="SemiBold"
-                                       Margin="0,0,0,4"/>
-                            <TextBlock Text="{Binding SampleFileName, Mode=OneWay}"
-                                       Foreground="{DynamicResource BpmTextSecondary}"
-                                       FontSize="11" FontFamily="Consolas"
-                                       Margin="0,0,0,10"/>
-                            <ItemsControl ItemsSource="{Binding Segments}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border BorderThickness="1"
-                                                CornerRadius="4"
-                                                Padding="14,7"
-                                                MinWidth="84"
-                                                Margin="0,0,5,5"
-                                                AllowDrop="True"
-                                                DragOver="OnSegmentDragOver"
-                                                Drop="OnSegmentDrop"
-                                                MouseRightButtonDown="OnTokenRightClick"
-                                                ToolTip="Rechtsklick zum Zuruecksetzen"
-                                                Opacity="{Binding FieldTypeId, Converter={StaticResource FieldTypeToOpacity}}">
-                                            <Border.Style>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="Background" Value="{Binding FieldTypeId, Converter={StaticResource FieldTypeToBrush}}"/>
-                                                    <Setter Property="BorderBrush" Value="{Binding FieldTypeId, Converter={StaticResource FieldTypeToBrush}}"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding FieldTypeId, Converter={StaticResource FieldTypeIsUnset}}" Value="True">
-                                                            <Setter Property="BorderBrush" Value="{DynamicResource BpmTextSecondary}"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Border.Style>
-                                            <StackPanel HorizontalAlignment="Center">
-                                                <TextBlock Text="{Binding RawValue}"
-                                                           Foreground="{DynamicResource BpmTextBright}"
-                                                           FontSize="14" FontFamily="Consolas"
-                                                           FontWeight="SemiBold"
-                                                           HorizontalAlignment="Center"/>
-                                                <TextBlock Text="{Binding FieldTypeId, Converter={StaticResource FieldTypeToLabel}}"
-                                                           Foreground="{DynamicResource BpmTextOnAccent}"
-                                                           FontSize="10"
-                                                           HorizontalAlignment="Center"
-                                                           Opacity="0.9"/>
-                                            </StackPanel>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
+                    <TextBlock Text="Dokumenttyp" Style="{StaticResource WizLabel}" Margin="0,0,0,4"/>
+                    <ComboBox ItemsSource="{Binding DocumentTypeOptions}" SelectedItem="{Binding SelectedDocumentType}"
+                              DisplayMemberPath="Name" Width="360" HorizontalAlignment="Left"
+                              Style="{DynamicResource BpmComboBox}"/>
+                    <TextBlock Margin="0,4,0,0" Style="{StaticResource WizHint}"
+                               Text="Die Erkennung gehört zum Dokumenttyp – der Name und der Ablageordner kommen von dort."/>
+                    <Border Style="{StaticResource WizNote}" BorderBrush="{DynamicResource BpmWarning}"
+                            Visibility="{Binding ExistingProfileNote, Converter={x:Static views:ProfileWizardDialog.TextToVis}}">
+                        <TextBlock Text="{Binding ExistingProfileNote}" TextWrapping="Wrap" FontSize="{DynamicResource BpmFontSizeLabel}"/>
                     </Border>
 
-                    <!-- Drop-Hint -->
-                    <TextBlock Foreground="{DynamicResource BpmAccentPrimary}"
-                               FontSize="11" Margin="0,0,0,8"
-                               TextWrapping="Wrap"
-                               Text="Drop-Ziel: ein Segment-Token oben — Feldtyp wird sofort uebernommen"/>
-
-                    <!-- Feldtyp-Chips als Drag-Quellen -->
-                    <Grid Margin="0,0,0,6">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0"
-                                   Text="Segmenttypen (ziehen):"
-                                   Foreground="{DynamicResource BpmTextSecondary}"
-                                   FontSize="12"/>
-                        <TextBlock Grid.Column="1"
-                                   x:Name="ManagerLink"
-                                   Text="⚙ Segmenttypen verwalten…"
-                                   Foreground="{DynamicResource BpmAccentPrimary}"
-                                   FontSize="11"
-                                   Cursor="Hand"
-                                   MouseLeftButtonUp="OnOpenManagerClick"
-                                   ToolTip="Manager-Dialog öffnen (BPM-108)"/>
-                    </Grid>
-                    <ItemsControl ItemsSource="{Binding FieldTypeOptions}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border BorderThickness="1" CornerRadius="3"
-                                        Padding="11,6" Margin="0,0,5,5"
-                                        Cursor="Hand"
-                                        PreviewMouseLeftButtonDown="OnChipPreviewMouseDown"
-                                        PreviewMouseMove="OnChipPreviewMouseMove">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="{DynamicResource BpmBgElevated}"/>
-                                            <Setter Property="BorderBrush" Value="{DynamicResource BpmBorderDefault}"/>
-                                            <Style.Triggers>
-                                                <!-- "Reset"-Option (FieldTypeId=null, kein Custom) versteckt -->
-                                                <MultiDataTrigger>
-                                                    <MultiDataTrigger.Conditions>
-                                                        <Condition Binding="{Binding FieldTypeId}" Value="{x:Null}"/>
-                                                        <Condition Binding="{Binding IsCustomCreate}" Value="False"/>
-                                                    </MultiDataTrigger.Conditions>
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                </MultiDataTrigger>
-                                                <DataTrigger Binding="{Binding IsAssigned}" Value="True">
-                                                    <Setter Property="Background" Value="{DynamicResource BpmBgActive}"/>
-                                                    <Setter Property="BorderBrush" Value="{DynamicResource BpmAccentPrimary}"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding IsCustomCreate}" Value="True">
-                                                    <Setter Property="Background" Value="Transparent"/>
-                                                    <Setter Property="BorderBrush" Value="{DynamicResource BpmWarning}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <TextBlock Text="{Binding DisplayName}" FontSize="13">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="{DynamicResource BpmTextPrimary}"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsAssigned}" Value="True">
-                                                        <Setter Property="Foreground" Value="{DynamicResource BpmAccentPrimary}"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding IsCustomCreate}" Value="True">
-                                                        <Setter Property="Foreground" Value="{DynamicResource BpmWarning}"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-
-                    <TextBlock Text="⚠ Pflicht: Mindestens Plannummer (★) muss zugewiesen werden."
-                               Foreground="{DynamicResource BpmWarning}"
-                               FontSize="11" Margin="0,12,0,0"/>
+                    <TextBlock Text="Beispieldatei aus dem Eingang" Style="{StaticResource WizLabel}" Margin="0,16,0,4"/>
+                    <ListBox ItemsSource="{Binding InboxFiles}" SelectedItem="{Binding SelectedInboxFile}"
+                             MaxHeight="200" FontFamily="Consolas" FontSize="{DynamicResource BpmFontSizeLabel}"
+                             Background="{DynamicResource BpmBgBase}" Foreground="{DynamicResource BpmTextPrimary}"
+                             BorderBrush="{DynamicResource BpmBorderDefault}"
+                             Visibility="{Binding HasInboxFiles, Converter={StaticResource BoolToVis}}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                        <TextBlock Style="{StaticResource WizHint}" Text="Oder "/>
+                        <TextBlock Text="andere Datei wählen …" Cursor="Hand" FontSize="{DynamicResource BpmFontSizeSmall}"
+                                   Foreground="{DynamicResource BpmAccentPrimary}" MouseLeftButtonUp="OnPickFileClick"/>
+                        <TextBlock Style="{StaticResource WizHint}" Text=" · Endung und Kopiermarker werden nicht zerlegt."/>
+                    </StackPanel>
+                    <TextBlock Margin="0,6,0,0" FontFamily="Consolas" FontSize="{DynamicResource BpmFontSizeLabel}"
+                               Foreground="{DynamicResource BpmTextBright}" Text="{Binding SampleFileName}"/>
                 </StackPanel>
             </ScrollViewer>
 
-            <!-- === SCHRITT 3: IndexSource === -->
-            <ScrollViewer x:Name="Step3Panel" VerticalScrollBarVisibility="Auto" Padding="16"
-                          Visibility="Collapsed">
+            <!-- === SCHRITT 2: Segmente (Segment-Editor, BPM-126c) === -->
+            <ScrollViewer x:Name="Step2Panel" VerticalScrollBarVisibility="Auto" Padding="20,16" Visibility="Collapsed">
                 <StackPanel>
-                    <TextBlock Text="Wie wird der Index (Revision) erkannt?"
-                               Foreground="{DynamicResource BpmTextBright}"
-                               FontSize="14" FontWeight="SemiBold" Margin="0,0,0,16"/>
+                    <TextBlock FontFamily="Consolas" FontSize="{DynamicResource BpmFontSizeSmall}" Margin="0,0,0,8"
+                               Foreground="{DynamicResource BpmTextSecondary}" Text="{Binding SampleFileName}"/>
+                    <views:SegmentEditorControl x:Name="SegmentEditor"/>
+                    <TextBlock Margin="0,6,0,0" Style="{StaticResource WizHint}"
+                               Visibility="{Binding CopyMarker, Converter={x:Static views:ProfileWizardDialog.TextToVis}}">
+                        <Run Text="Kopiermarker"/> <Run Text="{Binding CopyMarker, Mode=OneWay}" FontFamily="Consolas"/>
+                        <Run Text="wird ignoriert – er ist nie ein Segment."/>
+                    </TextBlock>
+                    <Border x:Name="Step2Note" Style="{StaticResource WizNote}">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Step2Message}" TextWrapping="Wrap" FontSize="{DynamicResource BpmFontSizeLabel}"/>
+                            <TextBlock Text="Alle offenen auf „Ignorieren“" Cursor="Hand" Margin="0,4,0,0"
+                                       FontSize="{DynamicResource BpmFontSizeLabel}" Foreground="{DynamicResource BpmAccentPrimary}"
+                                       Visibility="{Binding CanIgnoreOpen, Converter={StaticResource BoolToVis}}"
+                                       MouseLeftButtonUp="OnIgnoreOpenClick"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
 
+            <!-- === SCHRITT 3: Index === -->
+            <ScrollViewer x:Name="Step3Panel" VerticalScrollBarVisibility="Auto" Padding="20,16" Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock Text="Wo steht der Index?" Style="{StaticResource WizLabel}" Margin="0,0,0,8"/>
                     <ItemsControl ItemsSource="{Binding IndexSourceOptions}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Padding="0,0,0,12">
-                                    <StackPanel>
-                                        <RadioButton GroupName="IndexSource"
-                                                     IsEnabled="{Binding IsEnabled}"
-                                                     Checked="OnIndexSourceChecked"
-                                                     Foreground="{DynamicResource BpmTextPrimary}"
-                                                     FontSize="13">
-                                            <TextBlock Text="{Binding Label}" FontWeight="SemiBold"/>
-                                        </RadioButton>
-                                        <TextBlock Text="{Binding Description}"
-                                                   Foreground="{DynamicResource BpmTextSecondary}"
-                                                   FontSize="11" Margin="20,2,0,0"
-                                                   TextWrapping="Wrap"/>
-                                    </StackPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-
-                    <Border Margin="0,8,0,0" Padding="12"
-                            Background="{DynamicResource BpmBgSurface}"
-                            BorderBrush="{DynamicResource BpmBorderDefault}"
-                            BorderThickness="1" CornerRadius="4"
-                            Visibility="{Binding ShowIndexModeOptions, Converter={StaticResource BoolToVis}}">
-                        <StackPanel>
-                            <TextBlock Text="Index-Modus"
-                                       Foreground="{DynamicResource BpmTextBright}"
-                                       FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                            <RadioButton GroupName="IndexMode"
-                                         IsChecked="{Binding IndexModeOptional}"
-                                         Foreground="{DynamicResource BpmTextPrimary}"
-                                         FontSize="12" Margin="0,0,0,6">
-                                <TextBlock Text="Optional (Erstausgabe kann ohne Index sein)"/>
-                            </RadioButton>
-                            <RadioButton GroupName="IndexMode"
-                                         Foreground="{DynamicResource BpmTextPrimary}"
-                                         FontSize="12">
-                                <TextBlock Text="Pflicht (Jedes Dokument muss einen Index haben)"/>
-                            </RadioButton>
-                            <Separator Margin="0,12,0,12"
-                                       Background="{DynamicResource BpmBorderDefault}"/>
-                            <CheckBox IsChecked="{Binding IndexCaseInsensitive}"
-                                      Foreground="{DynamicResource BpmTextPrimary}"
-                                      FontSize="12">
-                                <TextBlock Text="Gross-/Kleinschreibung ignorieren (A = a)"/>
-                            </CheckBox>
-                        </StackPanel>
-                    </Border>
-
-                    <Border Margin="0,12,0,0" Padding="10"
-                            Background="{DynamicResource BpmBgSurface}"
-                            BorderBrush="{DynamicResource BpmWarning}"
-                            BorderThickness="1" CornerRadius="4"
-                            Visibility="{Binding ShowIndexWarning, Converter={StaticResource BoolToVis}}">
-                        <TextBlock Foreground="{DynamicResource BpmWarning}"
-                                   FontSize="12" TextWrapping="Wrap"
-                                   Text="In Schritt 2 wurde kein Index-Segment zugewiesen. Gehe zurueck und weise einem Segment den Typ 'Index' zu, oder waehle 'Kein Index'."/>
-                    </Border>
-                </StackPanel>
-            </ScrollViewer>
-
-            <!-- === SCHRITT 4: Zielordner === -->
-            <ScrollViewer x:Name="Step4Panel" VerticalScrollBarVisibility="Auto" Padding="16"
-                          Visibility="Collapsed">
-                <StackPanel>
-                    <TextBlock Text="Wohin sollen die Dokumente sortiert werden?"
-                               Foreground="{DynamicResource BpmTextBright}"
-                               FontSize="14" FontWeight="SemiBold" Margin="0,0,0,16"/>
-
-                    <TextBlock Text="Dokumenttyp"
-                               Foreground="{DynamicResource BpmTextSecondary}"
-                               FontSize="12" Margin="0,0,0,4"/>
-                    <ComboBox ItemsSource="{Binding DocumentTypeOptions}"
-                              SelectedItem="{Binding SelectedDocumentType}"
-                              DisplayMemberPath="Name"
-                              Background="{DynamicResource BpmBgInput}"
-                              Foreground="{DynamicResource BpmTextPrimary}"
-                              BorderBrush="{DynamicResource BpmBorderDefault}"
-                              FontSize="13" Margin="0,0,0,8"/>
-                    <TextBlock Text="Keine Dokumenttypen vorhanden — bitte zuerst in den Stammdaten anlegen."
-                               Foreground="{DynamicResource BpmTextSecondary}"
-                               FontSize="11" FontStyle="Italic" Margin="0,0,0,12"
-                               Visibility="{Binding DocumentTypeOptions.Count, Converter={StaticResource CountToVisZero}}"/>
-
-                    <TextBlock Text="Unterordner-Ebenen (optional)"
-                               Foreground="{DynamicResource BpmTextBright}"
-                               FontSize="13" FontWeight="SemiBold" Margin="0,8,0,4"/>
-                    <TextBlock Text="Dokumente werden in Unterordner sortiert nach:"
-                               Foreground="{DynamicResource BpmTextSecondary}"
-                               FontSize="11" Margin="0,0,0,8"/>
-
-                    <ItemsControl ItemsSource="{Binding AvailableHierarchyLevels}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <CheckBox IsChecked="{Binding IsSelected}"
-                                          Checked="OnHierarchyCheckChanged"
-                                          Unchecked="OnHierarchyCheckChanged"
-                                          Foreground="{DynamicResource BpmTextPrimary}"
-                                          FontSize="12" Margin="0,0,0,6">
-                                    <StackPanel Orientation="Horizontal">
+                                <StackPanel Margin="0,0,0,10">
+                                    <RadioButton GroupName="IndexSource" Checked="OnIndexSourceChecked" Loaded="OnIndexSourceLoaded"
+                                                 Foreground="{DynamicResource BpmTextPrimary}" FontSize="{DynamicResource BpmFontSizeBody}">
                                         <TextBlock Text="{Binding Label}" FontWeight="SemiBold"/>
-                                        <TextBlock Text=" (z.B. "
-                                                   Foreground="{DynamicResource BpmTextSecondary}"/>
-                                        <TextBlock Text="{Binding SampleValue}"
-                                                   Foreground="{DynamicResource BpmAccentPrimary}"
-                                                   FontFamily="Consolas"/>
-                                        <TextBlock Text=")"
-                                                   Foreground="{DynamicResource BpmTextSecondary}"/>
-                                    </StackPanel>
-                                </CheckBox>
+                                    </RadioButton>
+                                    <TextBlock Text="{Binding Description}" Margin="20,2,0,0" Style="{StaticResource WizHint}"/>
+                                </StackPanel>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-
-                    <TextBlock Text="Keine Segmente mit Ordner-Ebenen in Schritt 2 zugewiesen."
-                               Foreground="{DynamicResource BpmTextSecondary}"
-                               FontSize="11" FontStyle="Italic" Margin="0,4,0,0"
-                               Visibility="{Binding AvailableHierarchyLevels.Count, Converter={StaticResource CountToVisZero}}"/>
-
-                    <Border Margin="0,16,0,0" Padding="12"
-                            Background="{DynamicResource BpmBgSurface}"
-                            BorderBrush="{DynamicResource BpmBorderDefault}"
-                            BorderThickness="1" CornerRadius="4">
-                        <StackPanel>
-                            <TextBlock Text="Vorschau Zielpfad"
-                                       Foreground="{DynamicResource BpmTextSecondary}"
-                                       FontSize="11" Margin="0,0,0,4"/>
-                            <TextBlock Text="{Binding FolderPreview}"
-                                       Foreground="{DynamicResource BpmAccentPrimary}"
-                                       FontSize="14" FontFamily="Consolas"
-                                       FontWeight="SemiBold"/>
-                        </StackPanel>
+                    <Border Style="{StaticResource WizNote}" BorderBrush="{DynamicResource BpmWarning}"
+                            Visibility="{Binding ShowIndexWarning, Converter={StaticResource BoolToVis}}">
+                        <TextBlock TextWrapping="Wrap" FontSize="{DynamicResource BpmFontSizeLabel}"
+                                   Text="In der Beispieldatei ist kein Index-Segment zugewiesen. Das ist erlaubt – weiter geht es trotzdem."/>
                     </Border>
                 </StackPanel>
             </ScrollViewer>
 
-            <!-- === SCHRITT 5: Erkennung (klickbare Segmente) === -->
-            <ScrollViewer x:Name="Step5Panel" VerticalScrollBarVisibility="Auto" Padding="16"
-                          Visibility="Collapsed">
+            <!-- === SCHRITT 4: Erkennung === -->
+            <ScrollViewer x:Name="Step4Panel" VerticalScrollBarVisibility="Auto" Padding="20,16" Visibility="Collapsed">
                 <StackPanel>
-                    <!-- Dokumenttyp-Name -->
-                    <TextBlock Text="Dokumenttyp-Name"
-                               Foreground="{DynamicResource BpmTextSecondary}"
-                               FontSize="12" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding DocumentTypeName, UpdateSourceTrigger=PropertyChanged}"
-                             FontSize="13"
-                             Background="{DynamicResource BpmBgInput}"
-                             Foreground="{DynamicResource BpmTextPrimary}"
-                             BorderBrush="{DynamicResource BpmBorderDefault}"
-                             Padding="8,6" Margin="0,0,0,16"/>
-
-                    <!-- Klickbare Segmente -->
-                    <TextBlock Text="Welche Teile identifizieren diesen Dokumenttyp?"
-                               Foreground="{DynamicResource BpmTextBright}"
-                               FontSize="13" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                    <TextBlock Text="Klicke auf die Teile die bei diesem Typ immer gleich sind:"
-                               Foreground="{DynamicResource BpmTextSecondary}"
-                               FontSize="11" Margin="0,0,0,10"/>
-
+                    <TextBlock Style="{StaticResource WizHint}" Margin="0,0,0,8"
+                               Text="Welche Teile zeigen, dass es dieser Dokumenttyp ist? Anklicken (mehrere möglich)."/>
                     <ItemsControl ItemsSource="{Binding RecognitionSegments}">
                         <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel/>
-                            </ItemsPanelTemplate>
+                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Button Click="OnRecognitionSegmentClick"
-                                        Margin="0,0,6,6" Padding="10,6"
-                                        FontSize="13" FontFamily="Consolas"
-                                        Cursor="Hand">
-                                    <Button.Style>
-                                        <Style TargetType="Button">
-                                            <Setter Property="Background"
-                                                    Value="{DynamicResource BpmBgSurface}"/>
-                                            <Setter Property="Foreground"
-                                                    Value="{DynamicResource BpmTextSecondary}"/>
-                                            <Setter Property="BorderBrush"
-                                                    Value="{DynamicResource BpmBorderDefault}"/>
-                                            <Setter Property="BorderThickness" Value="1"/>
-                                            <Setter Property="Template">
-                                                <Setter.Value>
-                                                    <ControlTemplate TargetType="Button">
-                                                        <Border Background="{TemplateBinding Background}"
-                                                                BorderBrush="{TemplateBinding BorderBrush}"
-                                                                BorderThickness="{TemplateBinding BorderThickness}"
-                                                                CornerRadius="4"
-                                                                Padding="{TemplateBinding Padding}">
-                                                            <ContentPresenter HorizontalAlignment="Center"
-                                                                              VerticalAlignment="Center"/>
-                                                        </Border>
-                                                    </ControlTemplate>
-                                                </Setter.Value>
-                                            </Setter>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                    <Setter Property="Background"
-                                                            Value="{DynamicResource BpmAccentPrimary}"/>
-                                                    <Setter Property="Foreground"
-                                                            Value="{DynamicResource BpmTextBright}"/>
-                                                    <Setter Property="BorderBrush"
-                                                            Value="{DynamicResource BpmAccentPrimary}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Button.Style>
-                                    <TextBlock Text="{Binding RawValue}"/>
-                                </Button>
+                                <ToggleButton IsChecked="{Binding IsSelected}" Click="OnRecognitionSegmentClick"
+                                              Content="{Binding RawValue}" Margin="0,0,6,6" Padding="10,6" Cursor="Hand"
+                                              FontFamily="Consolas" FontSize="{DynamicResource BpmFontSizeBody}">
+                                    <ToggleButton.Template>
+                                        <ControlTemplate TargetType="ToggleButton">
+                                            <Border x:Name="Bd" CornerRadius="4" BorderThickness="1" Padding="{TemplateBinding Padding}"
+                                                    Background="{DynamicResource BpmBgSurface}" BorderBrush="{DynamicResource BpmBorderDefault}">
+                                                <ContentPresenter x:Name="Cp" TextElement.Foreground="{DynamicResource BpmTextSecondary}"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsChecked" Value="True">
+                                                    <Setter TargetName="Bd" Property="Background" Value="{DynamicResource BpmAccentPrimary}"/>
+                                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource BpmAccentPrimary}"/>
+                                                    <Setter TargetName="Cp" Property="TextElement.Foreground" Value="{DynamicResource BpmTextBright}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </ToggleButton.Template>
+                                </ToggleButton>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-
-                    <!-- Erkennungsmuster + Test -->
-                    <Border Margin="0,12,0,0" Padding="12"
-                            Background="{DynamicResource BpmBgSurface}"
-                            BorderBrush="{DynamicResource BpmBorderDefault}"
-                            BorderThickness="1" CornerRadius="4">
+                    <Border Style="{StaticResource WizNote}" BorderBrush="{DynamicResource BpmSuccess}"
+                            Visibility="{Binding RecognitionPattern, Converter={x:Static views:ProfileWizardDialog.TextToVis}}">
                         <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                <TextBlock Text="Erkennungsmuster: "
-                                           Foreground="{DynamicResource BpmTextSecondary}"
-                                           FontSize="12"/>
-                                <TextBlock Text="{Binding RecognitionPattern}"
-                                           Foreground="{DynamicResource BpmAccentPrimary}"
-                                           FontSize="12" FontFamily="Consolas"
-                                           FontWeight="SemiBold"/>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                <TextBlock Text="Erkennung: "
-                                           Foreground="{DynamicResource BpmTextSecondary}"
-                                           FontSize="11"/>
-                                <TextBlock Text="Position-genauer Token-Vergleich"
-                                           Foreground="{DynamicResource BpmTextPrimary}"
-                                           FontSize="11"/>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                <TextBlock Text="Test: "
-                                           Foreground="{DynamicResource BpmTextSecondary}"
-                                           FontSize="11"/>
-                                <TextBlock Text="{Binding SampleFileName, Mode=OneWay}"
-                                           Foreground="{DynamicResource BpmTextPrimary}"
-                                           FontSize="11" FontFamily="Consolas"/>
-                            </StackPanel>
-                            <TextBlock FontSize="13" FontWeight="SemiBold"
-                                       Text="{Binding PatternTestResult}">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground"
-                                                Value="{DynamicResource BpmError}"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding PatternTestSuccess}"
-                                                         Value="True">
-                                                <Setter Property="Foreground"
-                                                        Value="{DynamicResource BpmSuccess}"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-
-                            <!-- BPM-082.04 U3: Variable-Segment-Warnung -->
-                            <TextBlock Text="{Binding RecognitionWarning}"
-                                       Foreground="{DynamicResource BpmWarning}"
-                                       FontSize="11"
-                                       TextWrapping="Wrap"
-                                       Margin="0,8,0,0">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding RecognitionWarning}"
-                                                         Value="">
-                                                <Setter Property="Visibility"
-                                                        Value="Collapsed"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
+                            <TextBlock Text="{Binding RecognitionPattern}" TextWrapping="Wrap" FontSize="{DynamicResource BpmFontSizeLabel}"/>
+                            <TextBlock Text="{Binding PatternTestResult}" Margin="0,4,0,0" Style="{StaticResource WizHint}"/>
                         </StackPanel>
                     </Border>
-
-                    <!-- Prioritaet -->
-                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-                        <TextBlock Text="Prioritaet (hoeher = wird zuerst geprueft)"
-                                   Foreground="{DynamicResource BpmTextSecondary}"
-                                   FontSize="12" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding RecognitionPriority, UpdateSourceTrigger=PropertyChanged}"
-                                 Width="60" Margin="12,0,0,0"
-                                 FontSize="13" FontFamily="Consolas"
-                                 Background="{DynamicResource BpmBgInput}"
-                                 Foreground="{DynamicResource BpmTextPrimary}"
-                                 BorderBrush="{DynamicResource BpmBorderDefault}"
-                                 Padding="6,4"/>
-                    </StackPanel>
+                    <Border Style="{StaticResource WizNote}" BorderBrush="{DynamicResource BpmWarning}"
+                            Visibility="{Binding RecognitionWarning, Converter={x:Static views:ProfileWizardDialog.TextToVis}}">
+                        <TextBlock Text="{Binding RecognitionWarning}" TextWrapping="Wrap" FontSize="{DynamicResource BpmFontSizeLabel}"/>
+                    </Border>
+                    <TextBlock Margin="0,12,0,0" Style="{StaticResource WizHint}"
+                               Text="Gespeichert wird am Dokumenttyp. Gibt es dort schon eine Erkennung, wird sie ersetzt."/>
+                    <TextBlock Margin="0,8,0,0" Text="{Binding SaveError}" TextWrapping="Wrap"
+                               Foreground="{DynamicResource BpmError}" FontSize="{DynamicResource BpmFontSizeLabel}"
+                               Visibility="{Binding SaveError, Converter={x:Static views:ProfileWizardDialog.TextToVis}}"/>
                 </StackPanel>
             </ScrollViewer>
-
-            <!-- === BPM-108 Phase C Teil 2: Inline-Popover "+ Eigenes" === -->
-            <!-- Overlay-Grid liegt ueber den Step-Panels. Klick auf Hintergrund schliesst NICHT
-                 — User muss Abbrechen oder Anlegen druecken. -->
-            <Grid x:Name="CustomPopoverOverlay"
-                  Grid.Row="1"
-                  Panel.ZIndex="10"
-                  Visibility="{Binding ShowCustomPopover, Converter={StaticResource BoolToVis}}"
-                  Background="#88000000">
-                <Border Background="{DynamicResource BpmBgSurface}"
-                        BorderBrush="{DynamicResource BpmAccentPrimary}"
-                        BorderThickness="1"
-                        CornerRadius="6"
-                        Width="320"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Padding="16">
-                    <StackPanel>
-                        <TextBlock Text="+ Neuer Segmenttyp"
-                                   Foreground="{DynamicResource BpmTextBright}"
-                                   FontSize="14" FontWeight="SemiBold"
-                                   Margin="0,0,0,12"/>
-
-                        <TextBlock Text="Name"
-                                   Foreground="{DynamicResource BpmTextSecondary}"
-                                   FontSize="11" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding CustomTypeName, UpdateSourceTrigger=PropertyChanged}"
-                                 FontSize="13"
-                                 Padding="6,5"
-                                 Background="{DynamicResource BpmBgInput}"
-                                 Foreground="{DynamicResource BpmTextPrimary}"
-                                 BorderBrush="{DynamicResource BpmAccentPrimary}"
-                                 BorderThickness="1"
-                                 Margin="0,0,0,8"/>
-
-                        <TextBlock Text="{Binding CustomTypeError}"
-                                   Foreground="{DynamicResource BpmError}"
-                                   FontSize="11" Margin="0,0,0,8"
-                                   Visibility="{Binding CustomTypeError, Converter={StaticResource EmptyToVisInverse}}"/>
-
-                        <TextBlock Text="Token (read-only, in Templates verwendbar)"
-                                   Foreground="{DynamicResource BpmTextSecondary}"
-                                   FontSize="11" Margin="0,0,0,4"/>
-                        <Border Background="{DynamicResource BpmBgInput}"
-                                BorderBrush="{DynamicResource BpmBorderDefault}"
-                                BorderThickness="1" CornerRadius="3"
-                                Padding="6,5" Margin="0,0,0,12">
-                            <TextBlock Text="{Binding CustomTypeTokenPreview}"
-                                       FontFamily="Consolas" FontSize="12"
-                                       Foreground="{DynamicResource BpmAccentPrimary}"/>
-                        </Border>
-
-                        <TextBlock Text="Farbe"
-                                   Foreground="{DynamicResource BpmTextSecondary}"
-                                   FontSize="11" Margin="0,0,0,4"/>
-                        <ItemsControl ItemsSource="{Binding CustomTypePalette}" Margin="0,0,0,12">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <UniformGrid Columns="6" Rows="2"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Width="32" Height="24"
-                                            Margin="2"
-                                            CornerRadius="3"
-                                            Cursor="Hand"
-                                            MouseLeftButtonUp="OnCustomColorClick"
-                                            Tag="{Binding}">
-                                        <Border.Background>
-                                            <SolidColorBrush Color="{Binding Converter={StaticResource HexToColor}}"/>
-                                        </Border.Background>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button Content="Abbrechen"
-                                    Style="{DynamicResource BpmButtonSecondary}"
-                                    Margin="0,0,8,0"
-                                    Command="{Binding CancelCustomPopoverCommand}"/>
-                            <Button Content="Anlegen"
-                                    Style="{DynamicResource BpmButtonPrimary}"
-                                    Command="{Binding CreateCustomTypeCommand}"/>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-            </Grid>
-
         </Grid>
 
-        <!-- Footer -->
+        <!-- Fuss -->
         <Border Grid.Row="2" Background="{DynamicResource BpmBgSurface}" Padding="16,10">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -719,19 +192,11 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <Button Grid.Column="0" Content="Abbrechen"
-                        Style="{DynamicResource BpmButtonSecondary}"
-                        Click="OnCancel"/>
-                <Button Grid.Column="1" Content="Zurueck"
-                        Style="{DynamicResource BpmButtonSecondary}"
-                        HorizontalAlignment="Right" Margin="0,0,8,0"
-                        IsEnabled="{Binding CanGoBack}"
-                        Click="OnBack"
-                        ToolTip="Erster Schritt — kein Zurueck"/>
-                <Button x:Name="NextButton" Grid.Column="2" Content="Weiter"
-                        Style="{DynamicResource BpmButtonPrimary}"
-                        IsEnabled="{Binding CanGoNext}"
-                        Click="OnNext"/>
+                <Button Grid.Column="0" Content="Abbrechen" Style="{DynamicResource BpmButtonSecondary}" Click="OnCancel"/>
+                <Button Grid.Column="1" Content="Zurück" Style="{DynamicResource BpmButtonSecondary}"
+                        HorizontalAlignment="Right" Margin="0,0,8,0" IsEnabled="{Binding CanGoBack}" Click="OnBack"/>
+                <Button x:Name="NextButton" Grid.Column="2" Content="Weiter" Style="{DynamicResource BpmButtonPrimary}"
+                        IsEnabled="{Binding CanGoNext}" Click="OnNext"/>
             </Grid>
         </Border>
     </Grid>

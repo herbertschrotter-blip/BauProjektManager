@@ -28,21 +28,4 @@ public interface IProfileManager
     /// Deletes a profile by ID.
     /// </summary>
     bool Delete(string projectRootPath, string profileId);
-
-    /// <summary>
-    /// Builds a RecognitionProfile from the current wizard state.
-    /// Called by ProfileWizardViewModel.SaveProfile().
-    /// </summary>
-    RecognitionProfile BuildFromWizard(
-        string documentTypeName,
-        IndexSourceType indexSource,
-        bool indexModeOptional,
-        bool indexCaseInsensitive,
-        List<FileNameSegment> segments,
-        List<string> delimiters,
-        List<string> folderHierarchy,
-        List<RecognitionRule> recognition,
-        int recognitionPriority,
-        string? existingProfileId = null,
-        string? documentTypeId = null);
 }

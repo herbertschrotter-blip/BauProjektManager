@@ -12,7 +12,7 @@ namespace BauProjektManager.PlanManager.Services;
 /// Pure Logic: keine Disk-Zugriffe, System.IO.Path nur fuer String-Ops
 /// (ADR-060-Praezisierung, Teil 49).
 /// </summary>
-public static class FileNameSegmentation
+public static partial class FileNameSegmentation
 {
     /// <summary>Trennzeichen, an denen grundsaetzlich zerlegt wird.</summary>
     public const string SeparatorChars = "-_. ";
@@ -22,6 +22,24 @@ public static class FileNameSegmentation
     /// abgetrennt und separat gefuehrt (der Punkt davor ist kein Trenner):
     /// sie beschreibt das Format, nicht den Inhalt des Namens.
     /// </summary>
+    /// <summary>
+    /// Trennt einen Kopiermarker vom Dateinamen ab (BPM-130): „_(1)“, „ (2)“, „-(3)“, „ - Kopie“, „ - Kopie (2)“.
+    /// Liefert den Namen ohne Marker (mit Endung) und den Marker selbst (NULL = keiner). Der Marker ist nie ein Segment.
+    /// </summary>
+    public static (string FileName, string? CopyMarker) StripCopyMarker(string fileName)
+    {
+        var extension = System.IO.Path.GetExtension(fileName);
+        var stem = fileName[..^extension.Length];
+        var match = CopyMarkerRegex().Match(stem);
+        if (!match.Success || match.Index == 0)
+            return (fileName, null);
+        return (stem[..match.Index] + extension, match.Value);
+    }
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"(?:[ _\-]*\(\d+\)|\s*-\s*Kopie(?:\s*\(\d+\))?)$",
+        System.Text.RegularExpressions.RegexOptions.IgnoreCase)]
+    private static partial System.Text.RegularExpressions.Regex CopyMarkerRegex();
+
     public static SegmentationResult Split(string fileName)
     {
         // Pure String-Operation (ADR-060-Praezisierung): kein Disk-Zugriff.

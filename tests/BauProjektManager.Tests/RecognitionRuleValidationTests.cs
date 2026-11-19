@@ -41,8 +41,9 @@ public class RecognitionRuleValidationTests
     }
 
     [Fact]
-    public void IsValid_Segment_PositionNull_ReturnsFalse()
+    public void IsValid_Segment_PositionNull_IsValid_AnyPosition()
     {
+        // BPM-130: ohne Position darf der Token an beliebiger Stelle stehen (ADR-065, Positions-Falle)
         var rule = new RecognitionRule
         {
             Method = "segment",
@@ -50,8 +51,7 @@ public class RecognitionRuleValidationTests
             SegmentPosition = null
         };
 
-        Assert.False(rule.IsValid(out var reason));
-        Assert.Contains("SegmentPosition", reason);
+        Assert.True(rule.IsValid(out _));
     }
 
     [Fact]

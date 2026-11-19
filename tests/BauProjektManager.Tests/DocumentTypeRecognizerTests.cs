@@ -262,13 +262,13 @@ public class DocumentTypeRecognizerTests
     }
 
     [Fact]
-    public void Recognize_SegmentRule_MissingPosition_RejectedByIsValid_NoMatch()
+    public void Recognize_SegmentRule_WithoutPosition_MatchesTokenAnywhere()
     {
-        // segment ohne SegmentPosition ist invalid
+        // BPM-130: ohne Position zaehlt der Token an beliebiger Stelle — ein optionaler Index verschiebt alles dahinter
         var profile = new RecognitionProfile
         {
-            Id = "broken",
-            DocumentTypeName = "Broken",
+            Id = "anywhere",
+            DocumentTypeName = "Protokoll",
             RecognitionPriority = 100,
             Tokenization = new TokenizationConfig(),
             Recognition =
@@ -282,9 +282,9 @@ public class DocumentTypeRecognizerTests
             }
         };
 
-        var r = _sut.Recognize("PROJ-PROT-2025-01.pdf", [profile]);
-
-        Assert.Null(r.MatchedProfile);
+        Assert.Same(profile, _sut.Recognize("PROJ-PROT-2025-01.pdf", [profile]).MatchedProfile);
+        Assert.Same(profile, _sut.Recognize("PROJ-B-PROT-2025-01.pdf", [profile]).MatchedProfile);
+        Assert.Null(_sut.Recognize("PROJ-PROTOKOLL-2025.pdf", [profile]).MatchedProfile);
     }
 
     // === Cache-Verhalten (indirekt: viele Profile, gleiche Datei) ===

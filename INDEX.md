@@ -14,7 +14,7 @@
 
 ## Projekt-Metadaten
 
-- **Projekt:** BauProjektManager (BPM) / baulotse (ob „baulotse“ der künftige Produktname wird, ist offen — Entscheidung separat, dann GLOSSAR/VISION; Audit Review 01, R01-001 E17, entschieden 2026-09-24)
+- **Projekt:** BauProjektManager (BPM) — „baulotse“ als Produktname verworfen (Herbert 2026-11-19, R01-063); „Baulotse-Modus“ im Dashboard-Konzept ist nur ein Modusname
 - **Tech-Stack:** C# / .NET 10 LTS, WPF, SQLite, CommunityToolkit.Mvvm, Serilog, ClosedXML
 - **Typ:** WPF Desktop-Anwendung, modularer Monolith, offline-first
 - **Repo:** github.com/herbertschrotter-blip/BauProjektManager, Branch: main

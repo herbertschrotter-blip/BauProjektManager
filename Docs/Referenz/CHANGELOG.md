@@ -32,6 +32,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.257] — 2026-11-19
+
+### Docs: Produktname „baulotse“ verworfen (R01-063)
+
+Entscheidung Herbert 2026-11-19: „baulotse“ wird nicht der Produktname. INDEX.md führt das Projekt nur noch als
+BauProjektManager (BPM); der „Baulotse-Modus“ im Dashboard-Konzept bleibt als reiner Modusname. Die sechs alten
+Baulotse-HTML-Dateien waren schon vorher gelöscht.
+
 ## [v0.28.256] — 2026-11-19
 
 ### Docs: VISION auf ADR-053/059/065 nachgezogen (R01-077)

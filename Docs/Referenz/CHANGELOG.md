@@ -32,6 +32,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.249] — 2026-11-19
+
+### Docs: DOC-STANDARD Kap. 8 – Skill-Liste aktualisiert (R01-078)
+
+„Betroffene Skills“ um mockup-erstellen ergänzt (lädt Designquelle und UI-Docs nach der Ladereihenfolge); bei „Nicht
+betroffen“ den nicht mehr vorhandenen Skill suche-ersetze gestrichen und tracker ergänzt.
+
 ## [v0.28.248] — 2026-11-19
 
 ### Docs: DEPENDENCY-MAP – Sicherheitsupdate SQLitePCLRaw festgehalten (R01-036)

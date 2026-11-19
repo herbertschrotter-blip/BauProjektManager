@@ -351,9 +351,10 @@ Alle Skills die Docs lesen MÜSSEN diese Reihenfolge einhalten:
 - **doc-pflege** — Beim Validieren, bei neuen Docs, bei Refactoring
 - **audit** — Beim systematischen Prüfen aller Docs
 - **chatgpt-review** — Quickloads verwandter Docs als Kontext im Prompt
+- **mockup-erstellen** — Designquelle und UI-Docs (UI_UX_Guidelines, WPF_UI_Architecture) nach dieser Ladereihenfolge
 
 ### Nicht betroffen:
-- git-commit-helper, chat-wechsel, cc-steuerung, suche-ersetze
+- git-commit-helper, tracker, chat-wechsel, cc-steuerung
 
 ### Blocking Condition:
 Wenn ein Pflichtlesen-Kapitel nicht geladen wurde und das Modul betroffen ist

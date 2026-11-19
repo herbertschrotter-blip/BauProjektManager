@@ -27,7 +27,7 @@ supersedes: []
 
 ---
 
-﻿# BauProjektManager — Dependency Map
+# BauProjektManager — Dependency Map
 
 **Erstellt:** 29.03.2026  
 **Aktualisiert:** 08.04.2026  

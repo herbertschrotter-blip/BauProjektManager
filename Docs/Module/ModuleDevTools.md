@@ -24,7 +24,7 @@ supersedes: []
 
 ---
 
-﻿# DevTools-Modul — Dokumentation
+# DevTools-Modul — Dokumentation
 
 **Letzte Änderung:** v0.19.0  
 **Status:** Implementiert (DEBUG-only)  

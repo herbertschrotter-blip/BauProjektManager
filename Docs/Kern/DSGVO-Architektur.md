@@ -51,7 +51,7 @@ supersedes: []
 
 ---
 
-﻿# BauProjektManager — DSGVO-Architektur & Privacy Engineering
+# BauProjektManager — DSGVO-Architektur & Privacy Engineering
 
 **Version:** 1.7  
 **Erstellt:** 03.04.2026  

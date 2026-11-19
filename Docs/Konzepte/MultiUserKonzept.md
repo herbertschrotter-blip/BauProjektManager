@@ -44,7 +44,7 @@ supersedes: []
 
 ## Inhalt unten ist HISTORISCH
 
-﻿# BauProjektManager — Konzept: Multi-User Support
+# BauProjektManager — Konzept: Multi-User Support
 
 **Erstellt:** 30.03.2026  
 **Aktualisiert:** 03.04.2026  

@@ -44,7 +44,7 @@ supersedes: []
 
 ---
 
-﻿# BauProjektManager — WPF UI Architecture
+# BauProjektManager — WPF UI Architecture
 
 **Version:** 2.2  
 **Datum:** 12.11.2026  

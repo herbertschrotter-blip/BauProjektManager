@@ -27,7 +27,7 @@ supersedes: []
 
 ---
 
-﻿# Projekt-Modul — Dokumentation
+# Projekt-Modul — Dokumentation
 
 **Letzte Änderung:** v0.19.2  
 **Status:** Implementiert  

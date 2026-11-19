@@ -40,7 +40,7 @@ supersedes: []
 
 ---
 
-﻿# BauProjektManager — Architektur & Spezifikation
+# BauProjektManager — Architektur & Spezifikation
 
 **Version:** 3.0.0  
 **Datum:** 11.04.2026  

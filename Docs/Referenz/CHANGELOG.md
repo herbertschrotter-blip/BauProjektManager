@@ -25,12 +25,20 @@ supersedes: []
 
 ---
 
-﻿# BauProjektManager — Changelog
+# BauProjektManager — Changelog
 
 Alle Änderungen am Projekt, chronologisch dokumentiert.  
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versioning.
 
 ---
+
+## [v0.28.250] — 2026-11-19
+
+### Docs: BOM aus 18 Docs entfernt (R01-083)
+
+Das Zeichen U+FEFF stand in 17 Docs mitten im Text vor der H1 (BACKLOG, Architektur, DSGVO-Architektur, ADR, CHANGELOG,
+DEPENDENCY-MAP, VISION, WPF_UI_Architecture, ModuleDevTools, ModuleProjekt und 7 Konzept-Docs) und in ModuleDashboard
+vor dem Frontmatter. Alle entfernt; Docs sind UTF-8 ohne BOM (CODING_STANDARDS, Ausnahmen E8). Kein Inhalt geändert.
 
 ## [v0.28.249] — 2026-11-19
 

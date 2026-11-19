@@ -25,7 +25,7 @@ supersedes: []
 
 ---
 
-﻿# BauProjektManager — Backlog
+# BauProjektManager — Backlog
 
 **Letzte Aktualisierung:** 15.04.2026  
 **Aktuelle Version:** v0.25.16

@@ -1,4 +1,4 @@
-﻿---
+---
 doc_id: konzept-dashboard
 doc_type: concept
 authority: secondary

@@ -27,7 +27,7 @@ supersedes: []
 
 ---
 
-﻿# BauProjektManager — Architecture Decision Records (ADR)
+# BauProjektManager — Architecture Decision Records (ADR)
 
 **Erstellt:** 29.03.2026
 **Aktualisiert:** 13.04.2026

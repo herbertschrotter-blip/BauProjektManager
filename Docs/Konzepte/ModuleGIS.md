@@ -27,7 +27,7 @@ supersedes: []
 
 > ⚠️ **Eingefroren – Stand vor ADR-053/058–066** (Audit Review 01, R01-001 E17, entschieden 2026-09-24): Dieses Konzept beschreibt den Planungsstand vor diesen ADRs. Vor der Umsetzung gegen die aktuellen ADRs abgleichen. Bereits verbindlich korrigiert: DSGVO-Datenwege, keine KI im Importpfad, ULIDs.
 
-﻿# BauProjektManager — Konzept: GIS-Integration
+# BauProjektManager — Konzept: GIS-Integration
 
 **Erstellt:** 29.03.2026  
 **Version:** 0.1 (Konzeptentwurf)  

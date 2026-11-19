@@ -37,7 +37,7 @@ supersedes: []
 
 ---
 
-﻿# BauProjektManager — Vision & Produktstrategie
+# BauProjektManager — Vision & Produktstrategie
 
 **Erstellt:** 29.03.2026  
 **Version:** 1.0  

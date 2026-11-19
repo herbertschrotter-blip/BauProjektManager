@@ -72,12 +72,10 @@
                 <views:PlanDataView x:Name="PlanDataHost" Margin="0,12,0,0"/>
             </TabItem>
 
-            <!-- Tab 4: Profile — Dokumenttyp-Übersicht (BPM-006, Zielbild ADR-065 P.7:
-                 document_types ist das fachliche Hauptobjekt, keine getrennte
-                 Profil-Verwaltung). Ring 2 (Bauteil/Geschoss) bleibt bewusst draußen —
-                 das sind Stammdaten ohne Erkennung. Der Erkennungs-Status wird erst
-                 mit BPM-121 Stufe B (Mining) echt. -->
-            <TabItem Header="Profile">
+            <!-- Tab 4: Erkennung (Seitenliste 3.6 v2.1, BPM-121.00; Zielbild ADR-065 P.7): Dokumenttyp-Ansicht -
+                 document_types ist das fachliche Hauptobjekt, die Erkennung (Profil) haengt 0..1 daran. Ring 2
+                 (Bauteil/Geschoss) bleibt draussen - Stammdaten ohne Erkennung. -->
+            <TabItem Header="Erkennung">
                 <Grid Margin="0,12,0,0" DataContext="{Binding DocumentTypes}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -114,11 +112,59 @@
                                                             BorderThickness="1" CornerRadius="4"
                                                             Padding="12,8" Margin="0,0,0,6">
                                                         <DockPanel>
-                                                            <TextBlock DockPanel.Dock="Right" FontSize="11"
-                                                                       VerticalAlignment="Center"
-                                                                       Foreground="{DynamicResource BpmTextSecondary}"
-                                                                       Text="{Binding RecognitionText}"
-                                                                       ToolTip="Die Erkennung lernt aus den manuellen Zuordnungen (BPM-121) — noch nicht aktiv"/>
+                                                            <!-- Aktionen: ohne Erkennung nur anlernen, sonst Bearbeiten / Regex / Loeschen -->
+                                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
+                                                                        VerticalAlignment="Center" Margin="12,0,0,0">
+                                                                <Button Content="Erkennung anlernen" Padding="12,3"
+                                                                        Style="{DynamicResource BpmButtonPrimary}"
+                                                                        Tag="{Binding}" Click="OnLearnRecognition"
+                                                                        Visibility="{Binding HasProfile, Converter={StaticResource InverseBoolToVis}}"/>
+                                                                <StackPanel Orientation="Horizontal"
+                                                                            Visibility="{Binding HasProfile, Converter={StaticResource BoolToVis}}">
+                                                                    <Button Content="✎ Bearbeiten" Padding="10,3"
+                                                                            Style="{DynamicResource BpmButtonSecondary}"
+                                                                            Tag="{Binding}" Click="OnEditRecognition"/>
+                                                                    <Button Content="Regex-Regel…" Padding="10,3" Margin="6,0,0,0"
+                                                                            Style="{DynamicResource BpmButtonSecondary}"
+                                                                            Tag="{Binding}" Click="OnRegexRule"/>
+                                                                    <Button Content="🗑" Width="28" Padding="0,3" Margin="6,0,0,0"
+                                                                            Style="{DynamicResource BpmButtonGhost}"
+                                                                            ToolTip="Erkennung löschen (Dokumenttyp und Dokumente bleiben)"
+                                                                            Tag="{Binding}" Click="OnDeleteRecognition"/>
+                                                                </StackPanel>
+                                                            </StackPanel>
+                                                            <!-- Status der Erkennung -->
+                                                            <Border DockPanel.Dock="Right" CornerRadius="10" Padding="8,2"
+                                                                    VerticalAlignment="Center" Margin="12,0,0,0">
+                                                                <Border.Style>
+                                                                    <Style TargetType="Border">
+                                                                        <Setter Property="Background" Value="{DynamicResource BpmBgElevated}"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding Status}" Value="Active">
+                                                                                <Setter Property="Background" Value="{DynamicResource BpmBadgeBgSuccess}"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding Status}" Value="Defect">
+                                                                                <Setter Property="Background" Value="{DynamicResource BpmBadgeBgError}"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </Border.Style>
+                                                                <TextBlock Text="{Binding StatusText}" FontSize="11">
+                                                                    <TextBlock.Style>
+                                                                        <Style TargetType="TextBlock">
+                                                                            <Setter Property="Foreground" Value="{DynamicResource BpmTextSecondary}"/>
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding Status}" Value="Active">
+                                                                                    <Setter Property="Foreground" Value="{DynamicResource BpmSuccess}"/>
+                                                                                </DataTrigger>
+                                                                                <DataTrigger Binding="{Binding Status}" Value="Defect">
+                                                                                    <Setter Property="Foreground" Value="{DynamicResource BpmError}"/>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </TextBlock.Style>
+                                                                </TextBlock>
+                                                            </Border>
                                                             <StackPanel>
                                                                 <StackPanel Orientation="Horizontal">
                                                                     <TextBlock Text="{Binding Name}" FontSize="13"
@@ -126,17 +172,8 @@
                                                                                Foreground="{DynamicResource BpmTextBright}"/>
                                                                     <Border Background="{DynamicResource BpmBgElevated}"
                                                                             CornerRadius="3" Padding="6,1" Margin="8,0,0,0"
-                                                                            VerticalAlignment="Center">
-                                                                        <Border.Style>
-                                                                            <Style TargetType="Border">
-                                                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                                                                <Style.Triggers>
-                                                                                    <DataTrigger Binding="{Binding IsBuiltin}" Value="True">
-                                                                                        <Setter Property="Visibility" Value="Visible"/>
-                                                                                    </DataTrigger>
-                                                                                </Style.Triggers>
-                                                                            </Style>
-                                                                        </Border.Style>
+                                                                            VerticalAlignment="Center"
+                                                                            Visibility="{Binding IsBuiltin, Converter={StaticResource BoolToVis}}">
                                                                         <TextBlock Text="Vorlage" FontSize="9"
                                                                                    Foreground="{DynamicResource BpmTextSecondary}"/>
                                                                     </Border>
@@ -148,6 +185,10 @@
                                                                                Margin="10,0,0,0"
                                                                                Foreground="{DynamicResource BpmTextSecondary}"/>
                                                                 </StackPanel>
+                                                                <TextBlock Text="{Binding RuleText}" FontFamily="Consolas" FontSize="11"
+                                                                           Margin="0,3,0,0" TextTrimming="CharacterEllipsis"
+                                                                           Foreground="{DynamicResource BpmTextSecondary}"
+                                                                           Visibility="{Binding HasProfile, Converter={StaticResource BoolToVis}}"/>
                                                             </StackPanel>
                                                         </DockPanel>
                                                     </Border>

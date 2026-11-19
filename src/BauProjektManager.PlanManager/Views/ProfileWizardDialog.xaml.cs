@@ -37,13 +37,16 @@ public partial class ProfileWizardDialog : Window
         ISegmentTypeCatalog? segmentTypeCatalog = null,
         ISegmentTypeRepository? segmentTypeRepository = null,
         IIdGenerator? idGenerator = null,
-        ProjectDatabase? bpmDb = null)
+        ProjectDatabase? bpmDb = null,
+        string? documentTypeId = null)
     {
         InitializeComponent();
         _segmentTypeCatalog = segmentTypeCatalog;
         _segmentTypeRepository = segmentTypeRepository;
         _idGenerator = idGenerator;
         _vm = new ProfileWizardViewModel(project, profileManager, templateService, appDataPath, segmentTypeCatalog, bpmDb);
+        if (documentTypeId is not null)
+            _vm.Preselect(documentTypeId);
         DataContext = _vm;
 
         // Jede Aenderung im Editor (Zuweisung, Verbinden/Trennen) baut die Kacheln neu → Stand ans ViewModel
@@ -75,10 +78,12 @@ public partial class ProfileWizardDialog : Window
     /// <summary>Editor nur neu laden, wenn sich die Beispieldatei geaendert hat (Zurueck/Weiter behaelt die Zuweisungen).</summary>
     private void LadeEditorBeiBedarf()
     {
-        if (_editorFile != _vm.EditorFileName)
+        // Neu laden bei anderer Datei oder anderem Dokumenttyp (dessen vorhandenes Profil belegt die Kacheln vor)
+        var schluessel = $"{_vm.SelectedDocumentType?.Id}|{_vm.EditorFileName}";
+        if (_editorFile != schluessel)
         {
-            _editorFile = _vm.EditorFileName;
-            SegmentEditor.Load(_vm.EditorFileName, _segmentTypeCatalog, null);
+            _editorFile = schluessel;
+            SegmentEditor.Load(_vm.EditorFileName, _segmentTypeCatalog, _vm.ExistingEditorAssignments());
         }
         // Immer neu uebergeben: ein Dateiwechsel in Schritt 1 hat die Segmente im ViewModel geleert
         SchiebeEditorStand();

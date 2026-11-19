@@ -32,6 +32,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.242] — 2026-11-19
+
+### Feature: BPM-121.00 Tab „Erkennung“ (Seitenliste 3.6 v2.1)
+
+- Der Tab „Profile“ heißt „Erkennung“ und zeigt je Dokumenttyp den Status: Aktiv / Nicht angelernt / Defekt (mit fehlendem Segmenttyp aus `ProfileHealth`) und die Regeln („enthält „X““, „Regex …“).
+- „Erkennung anlernen“ und „✎ Bearbeiten“ öffnen den Wizard mit vorgewähltem Dokumenttyp; beim Bearbeiten übernimmt er Index-Einstellungen, Erkennungs-Kacheln und – bei gleich aufgebauter Beispieldatei – die Segmenttypen des vorhandenen Profils. Eine Regex-Regel bleibt beim erneuten Speichern erhalten.
+- Neuer Dialog „Regex-Regel…“ (`RegexRuleDialog`, `RegexRuleViewModel`): Prüfung mit derselben Zeitgrenze wie der Recognizer, „Ungültiges Regex-Pattern: …“ sperrt Speichern, Live-Test gegen eine Beispieldatei aus dem Eingang. Nur bei Typen mit Erkennung (Entscheidung Herbert).
+- „🗑“ löscht nur die Erkennung; Dokumenttyp, Ablageordner und Dokumente bleiben (ADR-065 P.7).
+- `DocumentTypeRecognizer`: Regex-Regeln prüfen jetzt den Dateinamen ohne Endung (`RegexSubject`, `RegexTimeout`).
+- Tests: `ErkennungTabTests` (15), Ladetest `RegexRuleDialog`.
+
 ## [v0.28.241] — 2026-11-19
 
 ### Docs: Mockup 3.6 „Erkennung“ v2.1 abgenommen (BPM-121.00)

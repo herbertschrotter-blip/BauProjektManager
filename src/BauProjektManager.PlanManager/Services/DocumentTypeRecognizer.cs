@@ -182,8 +182,18 @@ public class DocumentTypeRecognizer
                 StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <summary>Zeitgrenze fuer Regex-Regeln (ReDoS-Schutz); gilt auch fuer Pruefung und Live-Test im Tab „Erkennung“.</summary>
+    public static readonly TimeSpan RegexTimeout = TimeSpan.FromMilliseconds(100);
+
+    /// <summary>Wogegen eine Regex-Regel prueft: der Dateiname ohne Endung (BPM-121.00).</summary>
+    public static string RegexSubject(string fileName)
+    {
+        var extension = FileNameSegmentation.Split(fileName).Extension;
+        return extension.Length > 0 ? fileName[..^extension.Length] : fileName;
+    }
+
     /// <summary>
-    /// Checks a file name against a regex pattern.
+    /// Checks a file name (without extension) against a regex pattern.
     /// Invalid patterns and timeouts are logged and treated as no-match (no crash).
     /// Timeout protects against ReDoS attacks from user-supplied patterns.
     /// </summary>
@@ -192,10 +202,10 @@ public class DocumentTypeRecognizer
         try
         {
             return Regex.IsMatch(
-                fileName,
+                RegexSubject(fileName),
                 pattern,
                 RegexOptions.IgnoreCase,
-                TimeSpan.FromMilliseconds(100));
+                RegexTimeout);
         }
         catch (ArgumentException ex)
         {

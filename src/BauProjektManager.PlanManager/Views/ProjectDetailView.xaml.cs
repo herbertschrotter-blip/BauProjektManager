@@ -80,8 +80,8 @@ public partial class ProjectDetailView : UserControl
             PlanDataHost.Initialize(_manualSortDb, project.Id, _bpmDb, project.Paths.Root, _fileLauncher,
                 _segmentTypeCatalog, _segmentTypeRepository, _idGenerator, _settingsService);
 
-        // BPM-006: Dokumenttyp-Uebersicht im Profile-Tab (Zielbild ADR-065 P.7)
-        vm.DocumentTypes = new DocumentTypeOverviewViewModel(project.Id, _bpmDb);
+        // BPM-006/121.00: Tab „Erkennung“ — Dokumenttypen mit ihrer Erkennung (Zielbild ADR-065 P.7)
+        vm.DocumentTypes = new DocumentTypeOverviewViewModel(project.Id, _bpmDb, _profileManager, project.Paths.Root);
         vm.DocumentTypes.Load();
 
         // PlanManagerDatabase + Explorer-Watcher beim Verlassen der Ansicht freigeben
@@ -173,13 +173,57 @@ public partial class ProjectDetailView : UserControl
         }
     }
 
-    private void OnNewProfile(object sender, System.Windows.RoutedEventArgs e)
+    private void OnNewProfile(object sender, System.Windows.RoutedEventArgs e) => OpenWizard(null);
+
+    // === Tab „Erkennung“ (Seitenliste 3.6 v2.1, BPM-121.00) ===
+
+    private void OnLearnRecognition(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: DocumentTypeRow row })
+            OpenWizard(row.Type.Id);
+    }
+
+    /// <summary>Bearbeiten = Wizard mit vorgewaehltem Typ; er laedt das vorhandene Profil und ersetzt es beim Speichern.</summary>
+    private void OnEditRecognition(object sender, RoutedEventArgs e) => OnLearnRecognition(sender, e);
+
+    private void OpenWizard(string? documentTypeId)
     {
         var dialog = new ProfileWizardDialog(
             ViewModel.Project, _profileManager, _templateService, _appDataPath,
-            _segmentTypeCatalog, _segmentTypeRepository, _idGenerator, _bpmDb);
-        dialog.Owner = System.Windows.Window.GetWindow(this);
-        dialog.ShowDialog();
+            _segmentTypeCatalog, _segmentTypeRepository, _idGenerator, _bpmDb, documentTypeId)
+        {
+            Owner = Window.GetWindow(this)
+        };
+        if (dialog.ShowDialog() == true)
+            ViewModel.DocumentTypes?.Load();
+    }
+
+    private void OnRegexRule(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { Tag: DocumentTypeRow { Profile: { } profile } })
+            return;
+        var project = ViewModel.Project;
+        var sample = ProfileWizardViewModel.ListInboxFiles(project).FirstOrDefault() ?? "";
+        var dialog = new RegexRuleDialog(new RegexRuleViewModel(_profileManager, project.Paths.Root, profile, sample))
+        {
+            Owner = Window.GetWindow(this)
+        };
+        if (dialog.ShowDialog() == true)
+            ViewModel.DocumentTypes?.Load();
+    }
+
+    /// <summary>Loescht nur die Erkennung; Dokumenttyp, Ablageordner und Dokumente bleiben (asymmetrisch, P.7).</summary>
+    private void OnDeleteRecognition(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { Tag: DocumentTypeRow row } || ViewModel.DocumentTypes is null)
+            return;
+        var antwort = MessageBox.Show(
+            $"Die Erkennung für „{row.Name}“ wird entfernt. Der Dokumenttyp, sein Ablageordner und alle Dokumente " +
+            "bleiben. Danach steht der Typ auf „Nicht angelernt“ und kann neu angelernt werden.",
+            $"Erkennung für „{row.Name}“ löschen?", MessageBoxButton.OKCancel, MessageBoxImage.Question,
+            MessageBoxResult.Cancel);
+        if (antwort == MessageBoxResult.OK)
+            ViewModel.DocumentTypes.DeleteRecognition(row);
     }
 
     /// <summary>

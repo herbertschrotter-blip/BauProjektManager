@@ -833,7 +833,7 @@
     "nr": "3.6",
     "name": "Erkennung",
     "art": "Blatt",
-    "schluessel": "projektdetail:Profile",
+    "schluessel": "projektdetail:Erkennung",
     "code": "BauProjektManager.PlanManager/Views/ProjectDetailView.xaml, BauProjektManager.PlanManager/Views/ProjectDetailView.xaml.cs, BauProjektManager.PlanManager/ViewModels/ProjectDetailViewModel.cs, BauProjektManager.PlanManager/ViewModels/DocumentTypeOverviewViewModel.cs",
     "version_code": "1.1",
     "verlauf": [

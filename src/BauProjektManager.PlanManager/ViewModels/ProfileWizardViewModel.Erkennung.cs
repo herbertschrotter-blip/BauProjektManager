@@ -42,6 +42,10 @@ public partial class ProfileWizardViewModel
     {
         var vorher = RecognitionSegments.Where(s => s.IsSelected).Select(s => s.RawValue)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (vorher.Count == 0 && _existingProfile is not null)
+            // „Erkennung bearbeiten“: die Kacheln der vorhandenen Segment-Regeln vorwaehlen
+            vorher = _existingProfile.Recognition.Where(r => !IsRegexRule(r)).Select(r => r.Pattern)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
         var typName = SelectedDocumentType?.Name;
         RecognitionSegments = new ObservableCollection<RecognitionSegment>(Segments
             .Where(s => GetRoleForFieldTypeId(s.FieldTypeId) != SegmentSemanticRole.Ignore)
@@ -92,6 +96,9 @@ public partial class ProfileWizardViewModel
         PatternTestResult = PatternTestSuccess ? "Treffer bei der Beispieldatei" : "Kein Treffer bei der Beispieldatei";
     }
 
+    private static bool IsRegexRule(RecognitionRule rule)
+        => string.Equals(rule.Method, "regex", StringComparison.OrdinalIgnoreCase);
+
     /// <summary>
     /// BPM-082.04: Heuristik — Kachel ist vermutlich variabel (waechst pro Datei mit). Warnung, kein Hard-Fail.
     /// </summary>
@@ -123,6 +130,9 @@ public partial class ProfileWizardViewModel
             .Where(s => s.IsSelected && !string.IsNullOrWhiteSpace(s.RawValue))
             .Select(s => new RecognitionRule { Method = "segment", Pattern = s.RawValue, SegmentPosition = null })
             .ToList();
+        // Regex-Regel aus dem Tab „Erkennung“ (BPM-121.00) bleibt beim Ersetzen erhalten
+        if (_existingProfile is not null)
+            recognition.AddRange(_existingProfile.Recognition.Where(IsRegexRule));
         var profile = ProfileBuilder.Build(_segmentTypeCatalog, SelectedDocumentType, SelectedIndexSource,
             indexModeOptional: true, IndexCaseInsensitive, [.. Segments], Delimiters, recognition,
             RecognitionPriority, _existingProfile?.Id);

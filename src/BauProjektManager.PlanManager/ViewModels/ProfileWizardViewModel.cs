@@ -149,7 +149,37 @@ public partial class ProfileWizardViewModel : ObservableObject
         ExistingProfileNote = _existingProfile is null
             ? ""
             : $"„{value!.Name}“ hat schon eine Erkennung – sie wird beim Speichern ersetzt.";
+        if (_existingProfile is not null)
+        {
+            // „Erkennung bearbeiten“ (BPM-121.00): Index-Einstellungen des vorhandenen Profils uebernehmen
+            SelectedIndexSource = _existingProfile.IndexSource;
+            IndexCaseInsensitive = _existingProfile.IndexComparison.CaseInsensitive;
+        }
         ValidateCurrentStep();
+    }
+
+    /// <summary>Dokumenttyp vorwaehlen (Tab „Erkennung“: anlernen / bearbeiten, BPM-121.00).</summary>
+    public void Preselect(string documentTypeId)
+        => SelectedDocumentType = DocumentTypeOptions.FirstOrDefault(
+            t => string.Equals(t.Id, documentTypeId, StringComparison.Ordinal)) ?? SelectedDocumentType;
+
+    /// <summary>
+    /// Segmenttypen des vorhandenen Profils fuer den Segment-Editor (Zuordnung ueber die Position). Passt nur, wenn
+    /// die Beispieldatei mit den Trennern des Profils gleich viele Teile hat; sonst NULL (Editor startet leer).
+    /// </summary>
+    public IReadOnlyList<PlanDocumentSegment>? ExistingEditorAssignments()
+    {
+        if (_existingProfile is null || string.IsNullOrWhiteSpace(EditorFileName) || _existingProfile.Segments.Count == 0)
+            return null;
+        var tokens = FileNameParser.Parse(EditorFileName, _existingProfile.Tokenization).Segments
+            .Select(s => s.RawValue).ToList();
+        if (tokens.Count != _existingProfile.Segments.Count)
+            return null;
+        return [.. _existingProfile.Segments
+            .Where(s => s.Position >= 0 && s.Position < tokens.Count && s.FieldTypeId.Length > 0)
+            .Select(s => new PlanDocumentSegment("", "", s.FieldTypeId,
+                _segmentTypeCatalog?.GetIncludingDeleted(s.FieldTypeId)?.TokenKey ?? "",
+                tokens[s.Position], tokens[s.Position]))];
     }
 
     /// <summary>Vorhandenes Profil desselben Dokumenttyps (ersetzen statt verdoppeln).</summary>
@@ -171,25 +201,31 @@ public partial class ProfileWizardViewModel : ObservableObject
 
     private void LoadInboxFiles(Project project)
     {
+        var files = ListInboxFiles(project);
+        InboxFiles = new ObservableCollection<string>(files);
+        HasInboxFiles = files.Count > 0;
+        Log.Information("Wizard: {Count} Dateien im Eingang geladen", files.Count);
+    }
+
+    /// <summary>Dateinamen im Eingang des Projekts (Beispieldateien fuer Wizard und Regex-Live-Test).</summary>
+    public static IReadOnlyList<string> ListInboxFiles(Project project)
+    {
         try
         {
             if (string.IsNullOrWhiteSpace(project.Paths.Root))
-                return;
+                return [];
             var inboxPath = _fs.Combine(project.Paths.Root, project.Paths.Inbox);
             if (!_fs.DirectoryExists(inboxPath))
-                return;
-            var files = _fs.EnumerateFiles(inboxPath, "*", recursive: true)
+                return [];
+            return [.. _fs.EnumerateFiles(inboxPath, "*", recursive: true)
                 .Select(f => _fs.GetFileName(f))
                 .OfType<string>()
-                .OrderBy(f => f)
-                .ToList();
-            InboxFiles = new ObservableCollection<string>(files);
-            HasInboxFiles = files.Count > 0;
-            Log.Information("Wizard: {Count} Dateien im Eingang geladen", files.Count);
+                .OrderBy(f => f)];
         }
         catch (Exception ex)
         {
             Log.Warning(ex, "Eingang konnte nicht geladen werden");
+            return [];
         }
     }
 

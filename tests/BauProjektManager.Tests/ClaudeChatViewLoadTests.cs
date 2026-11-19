@@ -41,4 +41,23 @@ public class ClaudeChatViewLoadTests
         Assert.Equal(4, ((BauProjektManager.PlanManager.ViewModels.ProfileWizardViewModel)dialog.DataContext).TotalSteps);
         dialog.Close();
     });
+
+    /// <summary>Regex-Regel-Dialog 3.6 (BPM-121.00): XAML laesst sich erzeugen, Speichern ist ohne Muster gesperrt.</summary>
+    [Fact]
+    public void RegexRuleDialog_LoadsXaml() => OnSta(() =>
+    {
+        var profile = new BauProjektManager.Domain.Models.PlanManager.RecognitionProfile { Id = "P-1", DocumentTypeName = "Bewehrungsplan" };
+        var vm = new BauProjektManager.PlanManager.ViewModels.RegexRuleViewModel(new LeererProfileManager(), "C:/x", profile, "");
+        var dialog = new BauProjektManager.PlanManager.Views.RegexRuleDialog(vm);
+        Assert.False(vm.CanSave);
+        dialog.Close();
+    });
+
+    private sealed class LeererProfileManager : BauProjektManager.Domain.Interfaces.IProfileManager
+    {
+        public List<BauProjektManager.Domain.Models.PlanManager.RecognitionProfile> LoadAll(string projectRootPath) => [];
+        public BauProjektManager.Domain.Models.PlanManager.RecognitionProfile? LoadById(string projectRootPath, string profileId) => null;
+        public bool Delete(string projectRootPath, string profileId) => false;
+        public void Save(string projectRootPath, BauProjektManager.Domain.Models.PlanManager.RecognitionProfile profile) { }
+    }
 }

@@ -1,0 +1,75 @@
+<Window x:Class="BauProjektManager.PlanManager.Views.RegexRuleDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:BauProjektManager.PlanManager.Views"
+        Title="{Binding Title}"
+        Width="560" SizeToContent="Height"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BpmBgSurface}"
+        Foreground="{DynamicResource BpmTextPrimary}">
+    <!-- Dialog „Regex-Regel…“ im Tab „Erkennung“ (Seitenliste 3.6 v2.1, BPM-121.00) -->
+    <Window.Resources>
+        <Style x:Key="RxLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource BpmTextSecondary}"/>
+            <Setter Property="FontSize" Value="{DynamicResource BpmFontSizeLabel}"/>
+            <Setter Property="Margin" Value="0,10,0,4"/>
+        </Style>
+        <Style x:Key="RxHint" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource BpmTextSecondary}"/>
+            <Setter Property="FontSize" Value="{DynamicResource BpmFontSizeSmall}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,4,0,0"/>
+        </Style>
+        <Style x:Key="RxNote" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource BpmBgBase}"/>
+            <Setter Property="BorderThickness" Value="3,0,0,0"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Margin" Value="0,10,0,0"/>
+        </Style>
+    </Window.Resources>
+    <StackPanel>
+        <StackPanel Margin="16,14,16,14">
+            <TextBlock Text="Muster" Style="{StaticResource RxLabel}" Margin="0,0,0,4"/>
+            <TextBox x:Name="PatternBox" FontFamily="Consolas"
+                     Text="{Binding Pattern, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBlock Style="{StaticResource RxHint}"
+                       Text="Regulärer Ausdruck, ohne Groß-/Kleinschreibung, gegen den Dateinamen ohne Endung. Die Regel gilt zusätzlich zu den Regeln aus dem Wizard („enthält …“)."/>
+            <Border Style="{StaticResource RxNote}" BorderBrush="{DynamicResource BpmError}"
+                    Visibility="{Binding ValidationError, Converter={x:Static views:ProfileWizardDialog.TextToVis}}">
+                <TextBlock Text="{Binding ValidationError}" TextWrapping="Wrap" Foreground="{DynamicResource BpmError}"/>
+            </Border>
+
+            <TextBlock Text="Beispiel-Dateiname" Style="{StaticResource RxLabel}"/>
+            <TextBox FontFamily="Consolas" Text="{Binding SampleFileName, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBlock Style="{StaticResource RxHint}" Text="Aus dem Eingang vorbelegt, frei änderbar."/>
+            <Border x:Name="TestNote" Style="{StaticResource RxNote}"
+                    Visibility="{Binding TestResult, Converter={x:Static views:ProfileWizardDialog.TextToVis}}">
+                <TextBlock x:Name="TestText" Text="{Binding TestResult}" TextWrapping="Wrap"/>
+            </Border>
+
+            <StackPanel Visibility="{Binding ExistingRuleText, Converter={x:Static views:ProfileWizardDialog.TextToVis}}">
+                <TextBlock Text="Regex-Regel dieser Erkennung" Style="{StaticResource RxLabel}"/>
+                <TextBlock FontFamily="Consolas" FontSize="{DynamicResource BpmFontSizeSmall}"
+                           Foreground="{DynamicResource BpmTextSecondary}">
+                    <Run Text="{Binding ExistingRuleText, Mode=OneWay}"/><Run Text="  (wird ersetzt)"/>
+                </TextBlock>
+            </StackPanel>
+
+            <TextBlock Text="{Binding SaveError}" Foreground="{DynamicResource BpmError}" TextWrapping="Wrap"
+                       Margin="0,10,0,0"
+                       Visibility="{Binding SaveError, Converter={x:Static views:ProfileWizardDialog.TextToVis}}"/>
+        </StackPanel>
+
+        <Border Background="{DynamicResource BpmBgBase}" Padding="16,10"
+                BorderBrush="{DynamicResource BpmBorderDefault}" BorderThickness="0,1,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Abbrechen" Padding="14,5" Style="{DynamicResource BpmButtonSecondary}"
+                        IsCancel="True"/>
+                <Button Content="Speichern" Padding="14,5" Margin="8,0,0,0"
+                        Style="{DynamicResource BpmButtonPrimary}"
+                        IsEnabled="{Binding CanSave}" Click="OnSaveClick"/>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</Window>

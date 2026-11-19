@@ -571,7 +571,7 @@ const SHELL = `<div class="shell" style="user-select:none">
 </div>
 </div>`;
 let erster = true;
-M.start({ nr: '3.3', titel: 'Manuell sortieren', version: '0.2',
+M.start({ nr: '3.3', titel: 'Manuell sortieren', version: '1.1',
   zustaende: [['neu','Neue Pläne'],['archiv','Archiv']],
   zeige: (s) => {
     if (erster || s.z !== TAB) { setzeZustand(s.z); erster = false; }

@@ -9,7 +9,7 @@
     "art": "Seite",
     "schluessel": "fenster:MainWindow",
     "code": "BauProjektManager.App/MainWindow.xaml, BauProjektManager.App/MainWindow.xaml.cs",
-    "version_code": "0.2",
+    "version_code": "1.1",
     "verlauf": [
      {
       "v": "0.1",
@@ -35,6 +35,18 @@
       "datum": "19.11.2026",
       "was": "Zugeklappte Sidebar zeigt die Symbole (Fehler aus dem alten Mockup: die Regel zum Ausblenden der Texte traf auch die Symbole)",
       "art": "mockup"
+     },
+     {
+      "v": "1.1",
+      "datum": "19.11.2026",
+      "was": "Durchgegangen und abgenommen nach dem Umzug ins Seitenformat (1.0 = abgenommen, +0.1 Umzug) – Entscheidung Herbert",
+      "art": "mockup"
+     },
+     {
+      "v": "1.1",
+      "datum": "19.11.2026",
+      "was": "Code entspricht dem abgenommenen Mockup 1.1 (App zeigt die Seite schon so) – Entscheidung Herbert",
+      "art": "code"
      }
     ],
     "mockup_alt": "App/01_Shell/01_Sidebar.html",
@@ -45,10 +57,10 @@
     ],
     "nutzt": [],
     "stand_commit": "25e51e3",
-    "version_abgenommen": null,
-    "code_stand": "1dc0a26ec0",
+    "version_abgenommen": "1.1",
+    "code_stand": "44babab2f7",
     "mockup": "seiten/hauptfenster.html",
-    "version_mockup": "0.2"
+    "version_mockup": "1.1"
    },
    {
     "nr": "1.2",
@@ -127,7 +139,7 @@
     "art": "Formular",
     "schluessel": "dialog:DevToolsDialog",
     "code": "BauProjektManager.App/DevToolsDialog.xaml, BauProjektManager.App/DevToolsDialog.xaml.cs",
-    "version_code": "0.1",
+    "version_code": "1.1",
     "verlauf": [
      {
       "v": "0.1",
@@ -140,6 +152,18 @@
       "datum": "19.11.2026",
       "was": "aus altem Mockup übernommen (seiten/dev-log.html, Theme; Inhalt unverändert)",
       "art": "mockup"
+     },
+     {
+      "v": "1.1",
+      "datum": "19.11.2026",
+      "was": "Durchgegangen und abgenommen nach dem Umzug ins Seitenformat (1.0 = abgenommen, +0.1 Umzug) – Entscheidung Herbert",
+      "art": "mockup"
+     },
+     {
+      "v": "1.1",
+      "datum": "19.11.2026",
+      "was": "Code entspricht dem abgenommenen Mockup 1.1 (App zeigt die Seite schon so) – Entscheidung Herbert",
+      "art": "code"
      }
     ],
     "mockup_alt": "Settings/02_DevTools/01_Log.html",
@@ -150,10 +174,10 @@
      "Dialograhmen"
     ],
     "stand_commit": "25e51e3",
-    "version_abgenommen": null,
+    "version_abgenommen": "1.1",
     "code_stand": "710fc123d4",
     "mockup": "seiten/dev-log.html",
-    "version_mockup": "0.1"
+    "version_mockup": "1.1"
    },
    {
     "nr": "1.6",
@@ -161,7 +185,7 @@
     "art": "Formular",
     "schluessel": "dialog:DevToolsDialog#reset",
     "code": "BauProjektManager.App/DevToolsDialog.xaml, BauProjektManager.App/DevToolsDialog.xaml.cs",
-    "version_code": "0.1",
+    "version_code": "1.1",
     "verlauf": [
      {
       "v": "0.1",
@@ -174,6 +198,18 @@
       "datum": "19.11.2026",
       "was": "aus altem Mockup übernommen (seiten/dev-zuruecksetzen.html, Theme; Inhalt unverändert)",
       "art": "mockup"
+     },
+     {
+      "v": "1.1",
+      "datum": "19.11.2026",
+      "was": "Durchgegangen und abgenommen nach dem Umzug ins Seitenformat (1.0 = abgenommen, +0.1 Umzug) – Entscheidung Herbert",
+      "art": "mockup"
+     },
+     {
+      "v": "1.1",
+      "datum": "19.11.2026",
+      "was": "Code entspricht dem abgenommenen Mockup 1.1 (App zeigt die Seite schon so) – Entscheidung Herbert",
+      "art": "code"
      }
     ],
     "mockup_alt": "Settings/02_DevTools/02_Reset.html",
@@ -182,10 +218,10 @@
      "Dialograhmen"
     ],
     "stand_commit": "25e51e3",
-    "version_abgenommen": null,
+    "version_abgenommen": "1.1",
     "code_stand": "710fc123d4",
     "mockup": "seiten/dev-zuruecksetzen.html",
-    "version_mockup": "0.1"
+    "version_mockup": "1.1"
    }
   ]
  },
@@ -199,7 +235,7 @@
     "art": "Blatt",
     "schluessel": "einstellungen:Allgemein",
     "code": "BauProjektManager.Settings/Views/SettingsView.xaml, BauProjektManager.Settings/Views/SettingsView.xaml.cs, BauProjektManager.Settings/ViewModels/SettingsViewModel.cs",
-    "version_code": "0.3",
+    "version_code": "1.1",
     "verlauf": [
      {
       "v": "0.1",
@@ -232,6 +268,18 @@
       "datum": "19.11.2026",
       "was": "aus altem Mockup übernommen (seiten/einstellungen-allgemein.html, Theme; Inhalt unverändert)",
       "art": "mockup"
+     },
+     {
+      "v": "1.1",
+      "datum": "19.11.2026",
+      "was": "Durchgegangen und abgenommen nach dem Umzug ins Seitenformat (1.0 = abgenommen, +0.1 Umzug) – Entscheidung Herbert",
+      "art": "mockup"
+     },
+     {
+      "v": "1.1",
+      "datum": "19.11.2026",
+      "was": "Code entspricht dem abgenommenen Mockup 1.1 (App zeigt die Seite schon so) – Entscheidung Herbert",
+      "art": "code"
      }
     ],
     "mockup_alt": "Settings/01_Einstellungen/01_Allgemein.html",
@@ -243,9 +291,9 @@
     ],
     "nutzt": [],
     "stand_commit": "25e51e3",
-    "version_abgenommen": "0.3",
+    "version_abgenommen": "1.1",
     "code_stand": "01d622dd6b",
-    "version_mockup": "0.3",
+    "version_mockup": "1.1",
     "mockup": "seiten/einstellungen-allgemein.html"
    },
    {
@@ -471,7 +519,7 @@
     "art": "Seite",
     "schluessel": "view:PlanManagerView",
     "code": "BauProjektManager.PlanManager/Views/PlanManagerView.xaml, BauProjektManager.PlanManager/Views/PlanManagerView.xaml.cs, BauProjektManager.PlanManager/ViewModels/PlanManagerViewModel.cs",
-    "version_code": "0.2",
+    "version_code": "1.1",
     "verlauf": [
      {
       "v": "0.1",
@@ -491,6 +539,18 @@
       "datum": "19.11.2026",
       "was": "aus altem Mockup übernommen (seiten/projektuebersicht.html, Theme; Inhalt unverändert)",
       "art": "mockup"
+     },
+     {
+      "v": "1.1",
+      "datum": "19.11.2026",
+      "was": "Durchgegangen und abgenommen nach dem Umzug ins Seitenformat (1.0 = abgenommen, +0.1 Umzug) – Entscheidung Herbert",
+      "art": "mockup"
+     },
+     {
+      "v": "1.1",
+      "datum": "19.11.2026",
+      "was": "Code entspricht dem abgenommenen Mockup 1.1 (App zeigt die Seite schon so) – Entscheidung Herbert",
+      "art": "code"
      }
     ],
     "mockup_alt": "PlanManager/01_Projektuebersicht/01_Projektuebersicht.html",
@@ -499,10 +559,10 @@
     ],
     "nutzt": [],
     "stand_commit": "25e51e3",
-    "version_abgenommen": null,
-    "code_stand": "5b8667e11e",
+    "version_abgenommen": "1.1",
+    "code_stand": "8272f50c05",
     "mockup": "seiten/projektuebersicht.html",
-    "version_mockup": "0.1"
+    "version_mockup": "1.1"
    },
    {
     "nr": "3.2",
@@ -510,7 +570,7 @@
     "art": "Blatt",
     "schluessel": "projektdetail:Explorer",
     "code": "BauProjektManager.PlanManager/Views/ProjectDetailView.xaml, BauProjektManager.PlanManager/Views/ProjectDetailView.xaml.cs, BauProjektManager.PlanManager/ViewModels/ProjectDetailViewModel.cs, BauProjektManager.PlanManager/Views/ExplorerView.xaml, BauProjektManager.PlanManager/Views/ExplorerView.xaml.cs, BauProjektManager.PlanManager/ViewModels/ExplorerViewModel.cs, BauProjektManager.PlanManager/ViewModels/ArchiveRowViewModel.cs",
-    "version_code": "0.1",
+    "version_code": "1.1",
     "verlauf": [
      {
       "v": "0.1",
@@ -523,6 +583,18 @@
       "datum": "19.11.2026",
       "was": "aus altem Mockup übernommen (seiten/explorer.html, Theme; Inhalt unverändert)",
       "art": "mockup"
+     },
+     {
+      "v": "1.1",
+      "datum": "19.11.2026",
+      "was": "Durchgegangen und abgenommen nach dem Umzug ins Seitenformat (1.0 = abgenommen, +0.1 Umzug) – Entscheidung Herbert",
+      "art": "mockup"
+     },
+     {
+      "v": "1.1",
+      "datum": "19.11.2026",
+      "was": "Code entspricht dem abgenommenen Mockup 1.1 (App zeigt die Seite schon so) – Entscheidung Herbert",
+      "art": "code"
      }
     ],
     "mockup_alt": "PlanManager/02_Projektdetail/04_Explorer.html",
@@ -536,10 +608,10 @@
     ],
     "nutzt": [],
     "stand_commit": "25e51e3",
-    "version_abgenommen": null,
-    "code_stand": "f0c510658d",
+    "version_abgenommen": "1.1",
+    "code_stand": "562ecb3803",
     "mockup": "seiten/explorer.html",
-    "version_mockup": "0.1"
+    "version_mockup": "1.1"
    },
    {
     "nr": "3.3",
@@ -547,7 +619,7 @@
     "art": "Blatt",
     "schluessel": "projektdetail:Manuell sortieren",
     "code": "BauProjektManager.PlanManager/Views/ProjectDetailView.xaml, BauProjektManager.PlanManager/Views/ProjectDetailView.xaml.cs, BauProjektManager.PlanManager/ViewModels/ProjectDetailViewModel.cs, BauProjektManager.PlanManager/Views/ManualCaptureView.xaml, BauProjektManager.PlanManager/Views/ManualCaptureView.xaml.cs, BauProjektManager.PlanManager/ViewModels/ManualCaptureViewModel.cs, BauProjektManager.PlanManager/ViewModels/CaptureDetailViewModel.cs, BauProjektManager.PlanManager/Controls/RadialCaptureControl.xaml, BauProjektManager.PlanManager/Controls/RadialCaptureControl.xaml.cs, BauProjektManager.PlanManager/Views/PlanPreviewPanel.xaml, BauProjektManager.PlanManager/Views/PlanPreviewPanel.xaml.cs",
-    "version_code": "0.6",
+    "version_code": "1.1",
     "verlauf": [
      {
       "v": "0.1",
@@ -601,6 +673,18 @@
       "datum": "19.11.2026",
       "was": "Badges Paar/Kombi bleiben in der Zeile des Dateinamens (kein Zeilensprung bei 1280 px)",
       "art": "mockup"
+     },
+     {
+      "v": "1.1",
+      "datum": "19.11.2026",
+      "was": "Durchgegangen und abgenommen nach dem Umzug ins Seitenformat (1.0 = abgenommen, +0.1 Umzug) – Entscheidung Herbert",
+      "art": "mockup"
+     },
+     {
+      "v": "1.1",
+      "datum": "19.11.2026",
+      "was": "Code entspricht dem abgenommenen Mockup 1.1 (App zeigt die Seite schon so) – Entscheidung Herbert",
+      "art": "code"
      }
     ],
     "mockup_alt": "PlanManager/02_Projektdetail/02_ManuellSortieren.html",
@@ -613,10 +697,10 @@
      "Radial-Erfassung"
     ],
     "stand_commit": "25e51e3",
-    "version_abgenommen": null,
-    "code_stand": "71b3017e98",
+    "version_abgenommen": "1.1",
+    "code_stand": "47e5ae04cb",
     "mockup": "seiten/manuell-sortieren.html",
-    "version_mockup": "0.2"
+    "version_mockup": "1.1"
    },
    {
     "nr": "3.4",
@@ -705,7 +789,7 @@
     "art": "Blatt",
     "schluessel": "projektdetail:Plandaten",
     "code": "BauProjektManager.PlanManager/Views/ProjectDetailView.xaml, BauProjektManager.PlanManager/Views/ProjectDetailView.xaml.cs, BauProjektManager.PlanManager/ViewModels/ProjectDetailViewModel.cs, BauProjektManager.PlanManager/Views/PlanDataView.xaml, BauProjektManager.PlanManager/Views/PlanDataView.xaml.cs, BauProjektManager.PlanManager/ViewModels/PlanDataViewModel.cs, BauProjektManager.PlanManager/Views/SegmentEditorControl.xaml, BauProjektManager.PlanManager/Views/SegmentEditorControl.xaml.cs, BauProjektManager.PlanManager/ViewModels/SegmentEditorViewModel.cs",
-    "version_code": "0.1",
+    "version_code": "1.1",
     "verlauf": [
      {
       "v": "0.1",
@@ -718,6 +802,18 @@
       "datum": "19.11.2026",
       "was": "aus altem Mockup übernommen (seiten/plandaten.html, Theme; Inhalt unverändert)",
       "art": "mockup"
+     },
+     {
+      "v": "1.1",
+      "datum": "19.11.2026",
+      "was": "Durchgegangen und abgenommen nach dem Umzug ins Seitenformat (1.0 = abgenommen, +0.1 Umzug) – Entscheidung Herbert",
+      "art": "mockup"
+     },
+     {
+      "v": "1.1",
+      "datum": "19.11.2026",
+      "was": "Code entspricht dem abgenommenen Mockup 1.1 (App zeigt die Seite schon so) – Entscheidung Herbert",
+      "art": "code"
      }
     ],
     "mockup_alt": "PlanManager/02_Projektdetail/05_Plandaten.html",
@@ -728,10 +824,10 @@
      "Segment-Editor"
     ],
     "stand_commit": "25e51e3",
-    "version_abgenommen": null,
-    "code_stand": "7b388bb170",
+    "version_abgenommen": "1.1",
+    "code_stand": "c9aa146113",
     "mockup": "seiten/plandaten.html",
-    "version_mockup": "0.1"
+    "version_mockup": "1.1"
    },
    {
     "nr": "3.6",
@@ -739,7 +835,7 @@
     "art": "Blatt",
     "schluessel": "projektdetail:Profile",
     "code": "BauProjektManager.PlanManager/Views/ProjectDetailView.xaml, BauProjektManager.PlanManager/Views/ProjectDetailView.xaml.cs, BauProjektManager.PlanManager/ViewModels/ProjectDetailViewModel.cs, BauProjektManager.PlanManager/ViewModels/DocumentTypeOverviewViewModel.cs",
-    "version_code": "0.1",
+    "version_code": "1.1",
     "verlauf": [
      {
       "v": "0.1",
@@ -752,6 +848,18 @@
       "datum": "19.11.2026",
       "was": "aus altem Mockup übernommen (seiten/profile.html, Theme; Inhalt unverändert)",
       "art": "mockup"
+     },
+     {
+      "v": "1.1",
+      "datum": "19.11.2026",
+      "was": "Durchgegangen und abgenommen nach dem Umzug ins Seitenformat (1.0 = abgenommen, +0.1 Umzug) – Entscheidung Herbert",
+      "art": "mockup"
+     },
+     {
+      "v": "1.1",
+      "datum": "19.11.2026",
+      "was": "Code entspricht dem abgenommenen Mockup 1.1 (App zeigt die Seite schon so) – Entscheidung Herbert",
+      "art": "code"
      }
     ],
     "mockup_alt": "PlanManager/02_Projektdetail/01_Profile.html",
@@ -760,10 +868,10 @@
     ],
     "nutzt": [],
     "stand_commit": "25e51e3",
-    "version_abgenommen": null,
-    "code_stand": "eb5ef2c9cb",
+    "version_abgenommen": "1.1",
+    "code_stand": "4528460413",
     "mockup": "seiten/profile.html",
-    "version_mockup": "0.1"
+    "version_mockup": "1.1"
    },
    {
     "nr": "3.7",
@@ -849,7 +957,7 @@
     "art": "Formular",
     "schluessel": "dialog:SegmentTypeManagerDialog",
     "code": "BauProjektManager.PlanManager/Views/SegmentTypeManagerDialog.xaml, BauProjektManager.PlanManager/Views/SegmentTypeManagerDialog.xaml.cs, BauProjektManager.PlanManager/ViewModels/SegmentTypeManagerViewModel.cs",
-    "version_code": "0.1",
+    "version_code": "1.1",
     "verlauf": [
      {
       "v": "0.1",
@@ -862,6 +970,18 @@
       "datum": "19.11.2026",
       "was": "aus altem Mockup übernommen (seiten/segmenttypen.html, Theme; Inhalt unverändert)",
       "art": "mockup"
+     },
+     {
+      "v": "1.1",
+      "datum": "19.11.2026",
+      "was": "Durchgegangen und abgenommen nach dem Umzug ins Seitenformat (1.0 = abgenommen, +0.1 Umzug) – Entscheidung Herbert",
+      "art": "mockup"
+     },
+     {
+      "v": "1.1",
+      "datum": "19.11.2026",
+      "was": "Code entspricht dem abgenommenen Mockup 1.1 (App zeigt die Seite schon so) – Entscheidung Herbert",
+      "art": "code"
      }
     ],
     "mockup_alt": "PlanManager/04_FeldtypManager/01_Uebersicht.html",
@@ -870,10 +990,10 @@
      "Dialograhmen"
     ],
     "stand_commit": "25e51e3",
-    "version_abgenommen": null,
+    "version_abgenommen": "1.1",
     "code_stand": "e1fda6fd68",
     "mockup": "seiten/segmenttypen.html",
-    "version_mockup": "0.1"
+    "version_mockup": "1.1"
    },
    {
     "nr": "3.10",

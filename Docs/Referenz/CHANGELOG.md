@@ -32,6 +32,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.240] — 2026-11-19
+
+### Docs: Seitenliste – umgezogene Seiten auf 1.1 abgenommen
+
+Entscheidung Herbert: Die in v0.28.239 umgezogenen und von ihm durchgegangenen Seiten 1.1, 1.5, 1.6, 2.1, 3.1, 3.2, 3.3, 3.5, 3.6 und 3.9 gelten als abgenommen (1.0) plus Umzug (+0.1): Mockup, Abnahme und Code auf 1.1, weil die App sie schon so zeigt. Version auch in den Seitendateien.
+
 ## [v0.28.239] — 2026-11-19
 
 ### Docs: Alle alten Mockups ins Seitenformat übernommen

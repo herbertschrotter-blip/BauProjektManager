@@ -105,7 +105,7 @@ const M = Mockup;
 const APP = document.getElementById('t-app').innerHTML;
 let zustand = 'a';
 function toggleSidebar(){ M.setz('z', zustand === 'b' ? 'a' : 'b'); }
-M.start({ nr: '1.1', titel: 'Hauptfenster', version: '0.2',
+M.start({ nr: '1.1', titel: 'Hauptfenster', version: '1.1',
   zustaende: [['a','Zustand A · aufgeklappt 220px'],['b','Zustand B · zugeklappt 56px']],
   zeige: (s) => {
     zustand = s.z;

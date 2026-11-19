@@ -216,7 +216,7 @@ Tab System-Info ist ein toter Pfad (gestrichelt, „Mockup folgt“). Schließen
 const T = (id) => document.getElementById(id).innerHTML;
 const KOPF = T('t-kopf'), FUSS = T('t-fuss');
 const INHALT = { v1: T('t-v1'), v2: T('t-v2'), v3: T('t-v3') };
-Mockup.start({ nr: '1.5', titel: 'Entwicklerwerkzeuge – Log', version: '0.1',
+Mockup.start({ nr: '1.5', titel: 'Entwicklerwerkzeuge – Log', version: '1.1',
   zustaende: [['v1','1 Eigene Zeilenzahl'],['v2','2 Dropdown geöffnet'],['v3','3 Keine vorherige Session']],
   zeige: (s) => `<div class="dialog">${KOPF}${INHALT[s.z]}${FUSS}</div>`,
 });

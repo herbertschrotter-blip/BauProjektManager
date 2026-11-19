@@ -32,7 +32,7 @@
      "3.1"
     ],
     "nutzt": [],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": null,
     "code_stand": "1dc0a26ec0"
    },
@@ -57,7 +57,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": null,
     "code_stand": "313084ddb6"
    },
@@ -80,7 +80,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": null,
     "code_stand": "ef7f6eb1ea"
    },
@@ -103,7 +103,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": null,
     "code_stand": "5cafb06a88"
    },
@@ -129,7 +129,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": null,
     "code_stand": "710fc123d4"
    },
@@ -153,7 +153,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": null,
     "code_stand": "710fc123d4"
    }
@@ -206,7 +206,7 @@
      "2.5"
     ],
     "nutzt": [],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": "0.3",
     "code_stand": "01d622dd6b",
     "version_mockup": "0.3"
@@ -232,7 +232,7 @@
      "2.6"
     ],
     "nutzt": [],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": null,
     "code_stand": "516f97f287"
    },
@@ -255,7 +255,7 @@
     "nutzt": [
      "Ordnervorlage"
     ],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": null,
     "code_stand": "1399d29b19"
    },
@@ -276,7 +276,7 @@
     ],
     "zu": [],
     "nutzt": [],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": null,
     "code_stand": "516f97f287"
    },
@@ -297,7 +297,7 @@
     ],
     "zu": [],
     "nutzt": [],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": null,
     "code_stand": "516f97f287"
    },
@@ -325,7 +325,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": null,
     "code_stand": "27d7a90892"
    },
@@ -348,7 +348,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": null,
     "code_stand": "673fcb483d"
    },
@@ -371,7 +371,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": null,
     "code_stand": "8ce496ff4e"
    },
@@ -394,7 +394,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": null,
     "code_stand": "b1a855c477"
    },
@@ -418,7 +418,7 @@
      "Ordnervorlage",
      "Dialograhmen"
     ],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": null,
     "code_stand": "23d914694a"
    }
@@ -455,7 +455,7 @@
      "3.2"
     ],
     "nutzt": [],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": null,
     "code_stand": "5b8667e11e"
    },
@@ -484,7 +484,7 @@
      "3.11"
     ],
     "nutzt": [],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": null,
     "code_stand": "f0c510658d"
    },
@@ -547,7 +547,7 @@
      "Plan-Vorschau",
      "Radial-Erfassung"
     ],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": null,
     "code_stand": "71b3017e98"
    },
@@ -613,7 +613,7 @@
     "nutzt": [
      "Plan-Vorschau"
     ],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": "1.3",
     "code": "BauProjektManager.PlanManager/Views/ClaudeChatPanel.xaml, BauProjektManager.PlanManager/Views/ClaudeChatPanel.xaml.cs, BauProjektManager.PlanManager/Views/ManualCaptureView.Claude.cs, BauProjektManager.PlanManager/ViewModels/ClaudeSortViewModel.cs, BauProjektManager.PlanManager/ViewModels/ClaudeSortViewModel.Events.cs, BauProjektManager.PlanManager/ViewModels/ClaudeChatModels.cs, BauProjektManager.PlanManager/ViewModels/ManualCaptureViewModel.Claude.cs",
     "code_stand": "d3e32f29ad",
@@ -641,7 +641,7 @@
     "nutzt": [
      "Segment-Editor"
     ],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": null,
     "code_stand": "7b388bb170"
    },
@@ -665,7 +665,7 @@
      "3.8"
     ],
     "nutzt": [],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": null,
     "code_stand": "eb5ef2c9cb"
    },
@@ -686,7 +686,7 @@
     ],
     "zu": [],
     "nutzt": [],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": null,
     "code_stand": "95a348437e"
    },
@@ -696,7 +696,7 @@
     "art": "Formular",
     "schluessel": "dialog:ProfileWizardDialog",
     "code": "BauProjektManager.PlanManager/Views/ProfileWizardDialog.xaml, BauProjektManager.PlanManager/Views/ProfileWizardDialog.xaml.cs, BauProjektManager.PlanManager/ViewModels/ProfileWizardViewModel.cs",
-    "version_code": "0.1",
+    "version_code": "0.2",
     "verlauf": [
      {
       "v": "0.1",
@@ -709,6 +709,14 @@
       "datum": "18.11.2026",
       "was": "Neuzuschnitt BPM-130: 4 Schritte (Dokumenttyp + Beispieldatei, Segmente über Segment-Editor, Index optional, Erkennung + Speichern), kein Namensfeld, kein Zielordner-Schritt; neue Seite nach Seitenlisten-Standard (aus altem Mockup übernommen) – Mockup abgenommen (Herbert)",
       "art": "mockup"
+     },
+     {
+      "v": "0.2",
+      "datum": "19.11.2026",
+      "was": "Profil-Wizard mit 4 Schritten nach Mockup 0.2 gebaut: Dokumenttyp + Beispieldatei, Segment-Editor, Index optional, positionsfreie Erkennung",
+      "art": "code",
+      "ticket": "BPM-130",
+      "commit": "5721d74"
      }
     ],
     "mockup_alt": "PlanManager/03_ProfilWizard/01_Datei.html",
@@ -718,9 +726,9 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": "0.2",
-    "code_stand": "5f4d263f4f",
+    "code_stand": "ef3bfbc61c",
     "mockup": "seiten/profil-wizard.html",
     "version_mockup": "0.2"
    },
@@ -744,7 +752,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": null,
     "code_stand": "e1fda6fd68"
    },
@@ -767,7 +775,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": null,
     "code_stand": "fd8115c115"
    },
@@ -790,7 +798,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "be5ad51",
+    "stand_commit": "5721d74",
     "version_abgenommen": null,
     "code_stand": "2cfe320b9b"
    }

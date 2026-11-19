@@ -32,6 +32,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.236] — 2026-11-19
+
+### Docs: Seitenliste – 3.8 Profil-Wizard Code 0.2 gebaut (BPM-130)
+
+Seite 3.8 Code auf die abgenommene Mockup-Version 0.2 nachgezogen (Commit 5721d74), Seitenliste neu erzeugt.
+
 ## [v0.28.235] — 2026-11-19
 
 ### Feature: BPM-130 Profil-Wizard mit 4 Schritten (Seitenliste 3.8 v0.2)

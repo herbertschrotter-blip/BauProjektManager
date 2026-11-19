@@ -194,7 +194,7 @@ Jedes wird ein eigenes WPF Class Library Projekt, referenziert Domain + Infrastr
 | Paket | Zweck | Verwendet in |
 |-------|-------|-------------|
 | CommunityToolkit.Mvvm | MVVM Boilerplate | Settings, PlanManager |
-| Microsoft.Data.Sqlite | SQLite-Zugriff | Infrastructure |
+| Microsoft.Data.Sqlite (≥ 10.0.15, zieht SQLitePCLRaw ≥ 2.1.13) | SQLite-Zugriff | Infrastructure, Tests |
 | Microsoft.Extensions.DependencyInjection | DI-Container | App |
 | Serilog + Serilog.Sinks.File + Serilog.Sinks.Console | Logging | Infrastructure, App |
 | System.Text.Json | JSON Serialisierung | Infrastructure |
@@ -213,6 +213,14 @@ Jedes wird ein eigenes WPF Class Library Projekt, referenziert Domain + Infrastr
 | Microsoft Outlook | Optional | Nur für Outlook-COM-Modul (nach V1) |
 | Microsoft Word | Optional | Nur für Vorlagen-Modul (nach V1) |
 | Internet | Optional | Für Wetter-API, Mobile PWA und KI-API (ChatGPT/Claude) |
+
+### 3.3 Sicherheitslücken in Paketen
+
+- **Regel:** NuGet-Audit prüft direkte und transitive Pakete; ab Schweregrad „moderate“ bricht der Build ab
+  (`NuGetAuditMode=all`, NU1902–NU1904 als Fehler in `Directory.Build.props`). Dependabot meldet neue Versionen.
+- **SQLitePCLRaw (GHSA-2m69-gcr7-jv3q, NU1903):** `SQLitePCLRaw.lib.e_sqlite3` bis 2.1.11 war betroffen. Behoben durch
+  das Patch-Update `Microsoft.Data.Sqlite` 10.0.15 (Infrastructure und Tests), das SQLitePCLRaw 2.1.13 nachzieht – kein
+  expliziter Pin, keine neue Bibliothek. Freigabe: Audit Review 01, R01-001 E20 (TE-30), umgesetzt in v0.28.204.
 
 ---
 

@@ -32,6 +32,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.248] — 2026-11-19
+
+### Docs: DEPENDENCY-MAP – Sicherheitsupdate SQLitePCLRaw festgehalten (R01-036)
+
+Neues Kapitel 3.3 „Sicherheitslücken in Paketen“: NuGet-Audit-Regel (direkt + transitiv, ab „moderate“ Build-Fehler,
+Dependabot) und die Entscheidung zu GHSA-2m69-gcr7-jv3q (Microsoft.Data.Sqlite 10.0.15 zieht SQLitePCLRaw 2.1.13,
+Freigabe R01-001 E20, umgesetzt v0.28.204). Paketzeile Microsoft.Data.Sqlite mit Mindestversion und Tests ergänzt.
+
 ## [v0.28.247] — 2026-11-19
 
 ### Feature: Bauteil-Aliasse an Claude (Folge BPM-121.03)

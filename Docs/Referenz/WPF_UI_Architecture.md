@@ -836,7 +836,7 @@ Die Datenschutz-Entscheidung trifft die Policy, nicht das ViewModel. Das ViewMod
 
 ## 16. Modul-Projekte: XAML-Regeln (PFLICHT)
 
-### 15.1 Static-/DynamicResource (Verweis)
+### 16.1 Static-/DynamicResource (Verweis)
 
 Modul-Projekte (BauProjektManager.PlanManager, .Settings etc.) haben zur Kompilierzeit
 **keinen Zugriff** auf die App-ResourceDictionaries (Colors.xaml, Buttons.xaml etc.).
@@ -846,7 +846,7 @@ Welcher Resource-Typ in Modul-XAML, App/Shell-XAML und Custom-Dialog-Windows gil
 ausschließlich [CODING_STANDARDS.md](../Kern/CODING_STANDARDS.md) Kap. 10.5 (Static-/DynamicResource-Regel).
 Dieses Dokument wiederholt die Regel nicht (Audit Review 01, R01-001 E14, entschieden 2026-09-24).
 
-### 15.2 BAML-Cache bei XAML-Aenderungen
+### 16.2 BAML-Cache bei XAML-Aenderungen
 
 Nach Aenderungen an XAML-Dateien in Modul-Projekten kann der BAML-Cache veraltet sein.
 
@@ -857,7 +857,7 @@ dotnet restore src\BauProjektManager.PlanManager\BauProjektManager.PlanManager.c
 ```
 Oder in Visual Studio: `Erstellen → Projektmappe bereinigen` vor dem Build.
 
-### 15.3 Typografische Anfuehrungszeichen
+### 16.3 Typografische Anfuehrungszeichen
 
 Typografische Anfuehrungszeichen (z.B. `„"`) sind in XAML-Text-Attributen verboten.
 Sie verursachen XML-Parser-Fehler. Stattdessen einfache gerade Anfuehrungszeichen verwenden.

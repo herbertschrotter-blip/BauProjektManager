@@ -32,6 +32,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.251] — 2026-11-19
+
+### Docs: Kapitelnummern in fünf Docs bereinigt (R01-081)
+
+- Architektur: zweites H3 3.6 („Automatische Projektordner-Erstellung“) → 3.7.
+- CODING_STANDARDS: doppeltes 10.4 „Data Binding Regeln“ → 10.6, hinter 10.5 verschoben (10.5 bleibt die
+  referenzierte „einzige Regelstelle“); „Zusammenfassung“ → H2 20, im Quickload ergänzt.
+- DB-SCHEMA: 9.2 steht wieder vor 9.3 (nur umgeordnet).
+- DSGVO-Architektur: „Dokumentklassifizierung“ → H2 0, „Änderungshistorie“ → H2 20, Quickload angepasst.
+- WPF_UI_Architecture: H3 unter Kap. 16 von 15.1–15.3 auf 16.1–16.3.
+
+Kein Inhalt geändert.
+
 ## [v0.28.250] — 2026-11-19
 
 ### Docs: BOM aus 18 Docs entfernt (R01-083)

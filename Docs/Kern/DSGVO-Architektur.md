@@ -17,7 +17,7 @@ supersedes: []
 - Lesen wenn: Externe API, Personendaten verarbeiten, neues Online-Modul, Registry-Export, Logging mit Personenbezug
 - Nicht zuständig für: Code-Style-Regeln (→ CODING_STANDARDS.md Kap. 17), DB-Schema (→ DB-SCHEMA.md)
 - Kapitel:
-  - Dokumentklassifizierung
+  - 0. Dokumentklassifizierung
   - 1. Ziel & Geltungsbereich
   - 2. Kernprinzipien (PFLICHT)
   - 3. Datenklassifizierung
@@ -37,7 +37,7 @@ supersedes: []
   - 17. Organisatorische Maßnahmen
   - 18. Modul-Implementierungs-Checkliste
   - 19. Verwandte ADRs
-  - Änderungshistorie
+  - 20. Änderungshistorie
 - Pflichtlesen:
   - Kapitel 2 (Kernprinzipien) bei JEDEM externen API-Call
   - Kapitel 3 (Datenklassifizierung) bei neuem Datentyp
@@ -68,7 +68,7 @@ supersedes: []
 
 ---
 
-## Dokumentklassifizierung
+## 0. Dokumentklassifizierung
 
 Dieses Dokument unterscheidet:
 
@@ -1118,7 +1118,7 @@ Vor Implementierung jedes Moduls mit externem Kontakt oder Klasse-B/C-Daten dies
 
 ---
 
-## Änderungshistorie
+## 20. Änderungshistorie
 
 | Version | Datum | Änderung |
 |---|---|---|

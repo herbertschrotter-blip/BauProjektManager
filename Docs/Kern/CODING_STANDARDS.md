@@ -36,6 +36,7 @@ supersedes: []
   - 17. Datenschutz im Code (PFLICHT)
   - 18. WPF Code-Behind Dialoge
   - 19. Sync-Vorbereitung & Datenkonventionen (PFLICHT)
+  - 20. Zusammenfassung — Die 10 wichtigsten Regeln
 - Pflichtlesen:
   - Kapitel 7 (MVVM) bei neuem ViewModel oder View
   - Kapitel 10 (XAML) bei neuer XAML-Datei
@@ -1274,22 +1275,6 @@ Alle Farben, Styles und Templates in zentralen Resource Dictionaries:
 </ResourceDictionary>
 ```
 
-### 10.4 Data Binding Regeln
-
-```xml
-<!-- RICHTIG — Binding mit Mode angeben wenn nicht Default -->
-<TextBox Text="{Binding PlanNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-
-<!-- RICHTIG — Binding mit FallbackValue für Null-Sicherheit -->
-<TextBlock Text="{Binding Description, FallbackValue='Keine Beschreibung'}"/>
-
-<!-- RICHTIG — Binding mit StringFormat -->
-<TextBlock Text="{Binding LastImport, StringFormat='Letzter Import: {0:dd.MM.yyyy HH:mm}'}"/>
-
-<!-- FALSCH — Logik im Code-Behind statt Binding -->
-<!-- projectNameLabel.Text = viewModel.ProjectName;  // Nicht so! -->
-```
-
 ### 10.5 StaticResource vs. DynamicResource (einzige Regelstelle)
 
 (Audit Review 01, R01-001 E14, entschieden 2026-09-24)
@@ -1308,6 +1293,22 @@ Gilt für alle Ressourcen aus den App-Dictionaries (Farben/Brushes, Typografie, 
 - **Grund:** Modul-Projekte und Custom-Dialog-Windows haben zur Kompilierzeit keinen Zugriff auf die App-Dictionaries; die Ressourcen stehen erst zur Laufzeit bereit. `StaticResource` kann dort je nach Ladezeitpunkt zur `XamlParseException` führen, daher gilt `DynamicResource` verbindlich.
 - **Nie** hardcodierte Farbwerte (Hex) oder Schriftgrößen statt Tokens.
 - **Laufzeit-Theme-Wechsel** (Light Theme, nach V1): Dann wird auch App/Shell-XAML auf `DynamicResource` umgestellt; die Regel wird hier angepasst.
+
+### 10.6 Data Binding Regeln
+
+```xml
+<!-- RICHTIG — Binding mit Mode angeben wenn nicht Default -->
+<TextBox Text="{Binding PlanNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+<!-- RICHTIG — Binding mit FallbackValue für Null-Sicherheit -->
+<TextBlock Text="{Binding Description, FallbackValue='Keine Beschreibung'}"/>
+
+<!-- RICHTIG — Binding mit StringFormat -->
+<TextBlock Text="{Binding LastImport, StringFormat='Letzter Import: {0:dd.MM.yyyy HH:mm}'}"/>
+
+<!-- FALSCH — Logik im Code-Behind statt Binding -->
+<!-- projectNameLabel.Text = viewModel.ProjectName;  // Nicht so! -->
+```
 
 ---
 
@@ -1988,7 +1989,7 @@ Server-Kommunikation nur über `IExternalCommunicationService` (ADR-035).
 ❌ `DELETE FROM children WHERE parent=X; INSERT all` in Save-Methoden
 ❌ Multi-Tenant-RLS (BPM ist Single-Tenant pro Installation)
 
-## Zusammenfassung — Die 10 wichtigsten Regeln
+## 20. Zusammenfassung — Die 10 wichtigsten Regeln
 
 1. **PascalCase** für Klassen/Methoden, **camelCase** für Variablen, **_camelCase** für private Instanzfelder (`static readonly` und Konstanten: PascalCase, 1.1)
 2. **Allman-Style** Klammern (jede Klammer eigene Zeile)

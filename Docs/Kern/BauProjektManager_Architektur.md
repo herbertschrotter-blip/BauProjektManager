@@ -539,7 +539,7 @@ Projektordner/
 
 Bei Ordner-Umbenennung: BPM sucht über `.bpm/manifest.json` automatisch den neuen Pfad und aktualisiert die DB. Vorwärtsmigration (`ManifestService.EnsureMigrated`, idempotent): alte `.bpm-manifest`-Datei → beide Dateien schreiben, alte Datei löschen; `manifest.json` mit SchemaVersion 1 (früherer Vollexport) → in `project.json` + schlankes `manifest.json` aufteilen. Ein bestehendes `project.json` wird nie überschrieben. Auslöser: Projekt-Import in den Einstellungen und jedes Speichern im Projektdialog. Diese Migration ist eine ausdrücklich freigegebene Ausnahme von der Projekt-Phase (INDEX.md „Projekt-Phase“; Audit Review 01, R01-001 E6, entschieden 2026-09-24) und entfällt, sobald alle eigenen Projektordner auf `manifest.json` v2 + `project.json` umgestellt sind.
 
-### 3.6 Automatische Projektordner-Erstellung
+### 3.7 Automatische Projektordner-Erstellung
 
 Beim Anlegen eines neuen Projekts erstellt BPM automatisch die Ordnerstruktur:
 

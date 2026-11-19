@@ -1452,6 +1452,19 @@ Jede Tabelle hat genau eine ID-Spalte:
 - Keine `seq` Spalte, kein `INTEGER PRIMARY KEY`, keine Präfix-IDs
 - `created_at` und `updated_at` auf jede Tabelle (Pflicht)
 
+### 9.2 Lesbarkeit ohne Präfix-IDs
+
+ULIDs sind nicht menschenlesbar. Die Lesbarkeit wird über fachliche Felder sichergestellt:
+
+| Entität | Lesbare Identifikation |
+|---------|----------------------|
+| Projekt | `project_number` + `name` |
+| Bauteil | `short_name` + `description` |
+| Geschoss | `name` |
+| Beteiligter | `role` + `company` |
+| Arbeitspaket | `activity` + Bauteil + Geschoss |
+| In Logs | Fachlicher Kontext + ULID-Kurzform |
+
 ### 9.3 Sync-Felder-Konvention (ADR-050, ab v0.24.3)
 
 Jede **neue** fachliche Tabelle bekommt folgende Pflicht-Spalten:
@@ -1472,19 +1485,6 @@ is_deleted          INTEGER NOT NULL DEFAULT 0
 - `sync_version` wird bei jeder Mutation hochgezählt
 - Bestehende Tabellen werden bei nächster Migration nachgerüstet
 - Identity-Tabellen (ASP.NET, nur Server) folgen eigenen Konventionen
-
-### 9.2 Lesbarkeit ohne Präfix-IDs
-
-ULIDs sind nicht menschenlesbar. Die Lesbarkeit wird über fachliche Felder sichergestellt:
-
-| Entität | Lesbare Identifikation |
-|---------|----------------------|
-| Projekt | `project_number` + `name` |
-| Bauteil | `short_name` + `description` |
-| Geschoss | `name` |
-| Beteiligter | `role` + `company` |
-| Arbeitspaket | `activity` + Bauteil + Geschoss |
-| In Logs | Fachlicher Kontext + ULID-Kurzform |
 
 ---
 

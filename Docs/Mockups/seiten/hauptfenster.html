@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1.1 Hauptfenster</title>
+<link rel="stylesheet" href="../theme-app.css">
+<script src="../theme.js"></script>
+<!--
+1.1 Hauptfenster – aus altem Mockup App/01_Shell/01_Sidebar.html übernommen
+(alter Titel: „BPM App — Shell / Sidebar klappbar (BPM-067)“).
+
+Kommentar des alten Mockups:
+  BPM Dark Theme Tokens — aus Colors.xaml geladen (Stand v0.28.179)
+  bg-base #1E1E1E · bg-surface #252526 · bg-elevated #2D2D30 · bg-hover #37373D · bg-active #04395E
+  text-primary #CCCCCC · text-secondary #858585 · text-bright #FFFFFF
+  accent-primary #0078D4 · warning #F0AD4E · border-default #3C3C3C · border-subtle #2D2D30
+  (hier jetzt als var(--Bpm…) aus theme-app.css)
+
+Zustände (früher Schild oben rechts „Zustand A · aufgeklappt 220px“ / „Zustand B · zugeklappt 56px“, jetzt in der
+Vorführleiste): A = Sidebar aufgeklappt 220px, B = zugeklappt 56px. Chevron oben oder Doppelklick auf den Titel schaltet um.
+Die Erläuterungen zur klappbaren Sidebar stehen wie im alten Mockup im Inhaltsbereich des Fensters.
+-->
+<style>
+.rahmen{background:var(--BpmBgBase);font-family:'Segoe UI',sans-serif;color:var(--BpmTextPrimary);font-size:13px}
+.app{display:flex;height:100%}
+.sb{background:var(--BpmBgSurface);border-right:1px solid var(--BpmBorderSubtle);display:flex;flex-direction:column;flex-shrink:0;transition:width .18s ease;width:220px;overflow:hidden}
+.sb.c{width:56px}
+.top{display:flex;align-items:center;height:40px;padding:0 8px 0 14px;color:var(--BpmTextBright);font-weight:600;white-space:nowrap}
+.top .t{flex:1;overflow:hidden}
+.sb.c .top{padding:0;justify-content:center}
+.sb.c .top .t{display:none}
+.tg{background:transparent;border:0;color:var(--BpmTextSecondary);width:28px;height:28px;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-size:14px;font-family:inherit}
+.tg:hover{background:var(--BpmBgHover);color:var(--BpmTextPrimary)}
+.it{position:relative;display:flex;align-items:center;gap:10px;height:36px;padding:0 14px;cursor:pointer;color:var(--BpmTextPrimary);white-space:nowrap;font-size:14px}
+.it:hover{background:var(--BpmBgHover)}
+.it.act{background:var(--BpmBgActive);color:var(--BpmTextBright);box-shadow:inset 3px 0 0 var(--BpmAccentPrimary)}
+.it.dis{opacity:.35;cursor:default}
+.it.dis:hover{background:transparent}
+.it .ic{font-size:18px;width:28px;text-align:center;flex-shrink:0}
+.sb.c .it{padding:0;justify-content:center;gap:0}
+.sb.c .it span:not(.ic){display:none}
+.bd{background:var(--BpmWarning);color:var(--BpmBgBase);font-size:10px;font-weight:600;border-radius:9px;padding:1px 6px;margin-left:auto;line-height:14px}
+.sb.c .bd{position:absolute;top:4px;right:7px;margin:0;padding:0 4px;line-height:13px;min-width:13px;text-align:center}
+.sep{height:1px;background:var(--BpmBorderDefault);margin:5px 10px}
+.grp{color:var(--BpmTextSecondary);font-size:11px;padding:6px 14px 2px;white-space:nowrap}
+.sb.c .grp{display:none}
+.bot{margin-top:auto;padding:8px 14px 10px;color:var(--BpmTextSecondary);font-size:11px;white-space:nowrap;display:flex;align-items:center;gap:8px}
+.sb.c .bot{padding:8px 0 10px;justify-content:center}
+.sb.c .bot span:not(.ic){display:none}
+.tip{position:absolute;left:62px;top:50%;transform:translateY(-50%);background:var(--BpmBgElevated);border:1px solid var(--BpmBorderDefault);color:var(--BpmTextPrimary);padding:3px 8px;border-radius:4px;font-size:12px;display:none;white-space:nowrap;z-index:2}
+.sb.c .it:hover .tip{display:block}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.tb{height:34px;background:var(--BpmBgSurface);border-bottom:1px solid var(--BpmBorderSubtle);display:flex;align-items:center;padding:0 14px;color:var(--BpmTextBright);font-weight:600;flex-shrink:0}
+.ct{flex:1;padding:20px 24px;color:var(--BpmTextSecondary);line-height:1.6;overflow-y:auto}
+.ct h3{color:var(--BpmAccentPrimary);font-size:13px;margin:0 0 8px}
+.ct p{margin:0 0 12px;max-width:640px}
+.ct code{background:var(--BpmBgInput);color:var(--BpmTextPrimary);padding:1px 5px;border-radius:3px;font-size:12px}
+.status{height:24px;background:var(--BpmAccentPrimary);color:var(--BpmTextOnAccent);font-size:10px;display:flex;align-items:center;padding:0 12px;flex-shrink:0}
+</style>
+</head>
+<body>
+<template id="t-app">
+<div class="app">
+  <div class="sb" id="sb">
+    <div class="top"><div class="t" ondblclick="toggleSidebar()">BauProjektManager</div><button class="tg" id="chev" onclick="toggleSidebar()" title="Sidebar zuklappen">◀</button></div>
+
+    <div class="it" onclick="alert('Mockup folgt: Home (Dashboard)')" style="border:1px dashed var(--BpmTextSecondary);opacity:.7"><span class="ic">🏠</span><span>Home</span><div class="tip">Home</div></div>
+    <div class="it act" onclick="Mockup.geh('projektuebersicht')"><span class="ic">📁</span><span>PlanManager</span><em class="bd" style="font-style:normal">3</em><div class="tip">PlanManager · 3 im Eingang</div></div>
+
+    <div class="sep"></div>
+    <div class="grp">Nach V1</div>
+    <div class="it dis"><span class="ic">📷</span><span>Fotos</span><div class="tip">Fotos (post-V1)</div></div>
+    <div class="it dis"><span class="ic">⏱</span><span>Zeiterfassung</span><div class="tip">Zeiterfassung (post-V1)</div></div>
+    <div class="it dis"><span class="ic">📓</span><span>Bautagebuch</span><div class="tip">Bautagebuch (post-V1)</div></div>
+    <div class="it dis"><span class="ic">🧮</span><span>Kalkulation</span><div class="tip">Kalkulation (post-V1)</div></div>
+    <div class="it dis"><span class="ic">🌤</span><span>Wetter</span><div class="tip">Wetter (post-V1)</div></div>
+    <div class="it dis"><span class="ic">📧</span><span>Outlook</span><div class="tip">Outlook (post-V1)</div></div>
+    <div class="it dis"><span class="ic">📄</span><span>Vorlagen</span><div class="tip">Vorlagen (post-V1)</div></div>
+    <div class="it dis"><span class="ic">📋</span><span>Aufgaben</span><div class="tip">Aufgaben und Material (post-V1)</div></div>
+    <div class="it dis"><span class="ic">🗺</span><span>GIS</span><div class="tip">GIS (post-V1)</div></div>
+    <div class="it dis"><span class="ic">🤖</span><span>KI-Assistent</span><div class="tip">KI-Assistent (post-V1)</div></div>
+
+    <div class="sep"></div>
+    <div class="it" onclick="Mockup.geh('einstellungen-allgemein')"><span class="ic">⚙</span><span>Einstellungen</span><div class="tip">Einstellungen</div></div>
+    <div class="it" style="color:var(--BpmWarning)" onclick="Mockup.geh('dev-log')"><span class="ic">🛠</span><span>Dev Tools</span><div class="tip">Dev Tools (nur Debug)</div></div>
+    <div class="bot"><span class="ic" style="font-size:14px">👤</span><span>Herbert · v0.28.179</span></div>
+  </div>
+
+  <div class="main">
+    <div class="tb">PlanManager</div>
+    <div class="ct">
+      <h3>Klappbare Sidebar (BPM-067)</h3>
+      <p>Chevron oben oder Doppelklick auf den Titel schaltet zwischen <b>Zustand A</b> (220px, Emoji + Text, Badge neben dem Text) und <b>Zustand B</b> (56px, nur Emoji mit Tooltip, Badge als Ecke am Icon) um. Default beim ersten Start: aufgeklappt. Der Zustand wird gerätelokal gemerkt (<code>DeviceSettings.UiLayout.SidebarCollapsed</code>).</p>
+      <p>Aktives Modul: <code>bg-active</code> + <code>text-bright</code> + 3px <code>accent-primary</code>-Balken links. Hover: <code>bg-hover</code>. Post-V1-Module: <code>opacity .35</code>, nicht klickbar — werden später über Ansichtsprofile ein-/ausgeblendet (Architektur Kap. 1.4).</p>
+      <p>Emoji-Quellen: 📁 ⚙ 🛠 👤 aus Icons.xaml · 📷 ⏱ 📓 📧 🌤 📄 aus dem Modulbaum der Architektur · 🏠 🧮 📋 🗺 🤖 neu (beim WPF-Umbau in Icons.xaml anlegen). Segoe Fluent Icons bleiben eine getrennte Entscheidung.</p>
+      <p>Einstellungen und Dev Tools stehen unten (Entscheidung Herbert, Teil 52). Home ganz oben übernimmt die Dashboard-Rolle.</p>
+    </div>
+    <div class="status">Bereit · 3 Dateien im Eingang</div>
+  </div>
+</div>
+</template>
+<script>
+const M = Mockup;
+const APP = document.getElementById('t-app').innerHTML;
+let zustand = 'a';
+function toggleSidebar(){ M.setz('z', zustand === 'b' ? 'a' : 'b'); }
+M.start({ nr: '1.1', titel: 'Hauptfenster', version: '0.2',
+  zustaende: [['a','Zustand A · aufgeklappt 220px'],['b','Zustand B · zugeklappt 56px']],
+  zeige: (s) => {
+    zustand = s.z;
+    if (s.z !== 'b') return APP;
+    return APP.replace('class="sb" id="sb"', 'class="sb c" id="sb"')
+      .replace('title="Sidebar zuklappen">◀', 'title="Sidebar aufklappen">▶');
+  },
+});
+</script>
+</body>
+</html>

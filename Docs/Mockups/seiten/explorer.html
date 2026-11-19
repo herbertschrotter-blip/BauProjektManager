@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3.2 Explorer</title>
+<link rel="stylesheet" href="../theme-app.css">
+<script src="../theme.js"></script>
+<!--
+3.2 Explorer – aus altem Mockup PlanManager/02_Projektdetail/04_Explorer.html übernommen
+(alter Titel „BPM PlanManager — Projektdetail Explorer“). Kommentar des alten Mockups:
+  BPM-112.06 In-App-Explorer (ADR-060 Slice 6) — Variante A: 4. Tab in Projektdetail.
+  Spezifikation:
+  - Live-Dateisystem des Projektroots via IFileSystemReader (ADR-061 P.6 Modell A:
+    DB = kuratierter Index NUR der erfassten Plandokumente, KEIN Vollspiegel).
+  - Getrackte Dateien (plan_documents/plan_revisions) tragen Badge "Getrackt · <Index>";
+    Verschieben AKTIV über den journalisierten ArchiveMoveService (Ordner-Wahl, alle Dateien
+    der Revision gemeinsam, Journal-Action VOR Move — Entscheidung Herbert Teil 50).
+    Freies Verschieben und Löschen GESPERRT (kein Lösch-Workflow in V1 außer Import-Undo).
+    Reklassifizierung (Move ändert fachliche Zuordnung) bleibt Domain-Workflow, ADR-064 P.11.
+  - Drift-Badges aus Startup-Reconcile (nur getrackte Teilmenge, Exists+Size first):
+    "Fehlt auf Disk" (MissingOnDisk, rot) · "Geändert" (ChangedOnDisk, orange) ·
+    RelinkCandidate erscheint als Vorschlag im PlanManager, nicht als Explorer-Aktion.
+  - Toolbar: Öffnen (IFileLauncher.OpenFile) · Im Windows-Explorer (RevealInExplorer/OpenFolder)
+    · Pfad kopieren (CopyPathToClipboard) — ADR-060 P.3-Ergänzungen.
+  - IShareService (Windows-Share-Sheet) später; Cloud-Share-Links out-of-scope (ADR-064 P.11).
+Rahmen: .shell füllt den Rahmen (statt 1100 px / min. 560 px), Rand und Rundung kommen vom Rahmen.
+Wege: ← und PlanManager → 3.1, Einstellungen → 2.1, Tabs → 3.3 / 3.5 / 3.6, „Im PlanManager anzeigen (Archiv)“ → 3.3;
+Sync bleibt alert (noch kein Mockup).
+-->
+<style>
+  .rahmen *{box-sizing:border-box;margin:0;padding:0}
+  .shell{background:var(--BpmBgBase);border-radius:10px;overflow:hidden;border:1px solid var(--BpmBorderSubtle);font-size:13px;color:var(--BpmTextPrimary);display:flex;flex-direction:column;width:100%;height:100%;border-radius:0;border:none}
+  .tree-row{padding:3px 12px;font-size:11px;color:var(--BpmTextPrimary);cursor:pointer;white-space:nowrap}
+  .tree-row:hover{background:var(--BpmBgHover)}
+  .file-row{display:flex;align-items:center;padding:5px 12px;font-size:11px;color:var(--BpmTextPrimary);cursor:default}
+  .file-row:hover{background:var(--BpmBgHover)}
+  .badge{border-radius:3px;padding:1px 7px;font-size:9px;font-weight:600}
+  .tbtn{background:transparent;color:var(--BpmTextPrimary);border:1px solid var(--BpmBorderDefault);padding:4px 10px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit}
+  .tbtn:hover{background:var(--BpmBgHover)}
+  .menu-item{padding:6px 12px;font-size:11px;color:var(--BpmTextPrimary);cursor:pointer}
+  .menu-item:hover{background:var(--BpmBgActive)}
+  .menu-item.locked{color:#5A5A5A;cursor:not-allowed}
+</style>
+</head>
+<body>
+<script>
+const M = Mockup;
+const SEITE = `<div class="shell">
+<div style="display:flex;flex:1;min-height:0">
+
+<div style="width:200px;background:var(--BpmBgSurface);border-right:1px solid var(--BpmBorderSubtle);display:flex;flex-direction:column;padding:12px 0;flex-shrink:0">
+<div style="font-size:13px;font-weight:600;color:var(--BpmTextBright);padding:4px 16px 14px">BauProjektManager</div>
+<div style="background:var(--BpmBgActive);color:var(--BpmAccentPrimary);padding:7px 16px;font-size:12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="M.geh('projektuebersicht')">
+<span>&#128193; PlanManager</span>
+<span style="background:var(--BpmWarning);color:var(--BpmBgBase);font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px">15</span>
+</div>
+<div style="color:var(--BpmTextSecondary);padding:7px 16px;font-size:12px;cursor:pointer" onclick="M.geh('einstellungen-allgemein')">&#9881; Einstellungen</div>
+</div>
+
+<div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+<div style="display:flex;align-items:center;gap:8px;padding:6px 14px;background:var(--BpmBgSurface);border-bottom:1px solid var(--BpmBorderSubtle);min-height:36px">
+<button style="background:none;border:none;color:var(--BpmTextSecondary);cursor:pointer;font-size:14px;font-family:inherit;padding:2px 6px;border-radius:3px" onclick="M.geh('projektuebersicht')">&#8592;</button>
+<span style="font-size:13px;font-weight:500;color:var(--BpmTextBright);flex:1">&#214;WG Dobl-Zwaring</span>
+</div>
+<div style="padding:5px 14px;background:#2a2418;border-bottom:1px solid var(--BpmBorderSubtle);font-size:11px;color:var(--BpmWarning)">&#9889; 15 im Eingang &middot; 3 vom Server-Sync</div>
+<div style="display:flex;gap:0;border-bottom:1px solid var(--BpmBorderSubtle);background:var(--BpmBgSurface)">
+<button style="background:none;border:none;color:var(--BpmAccentPrimary);padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px solid var(--BpmAccentPrimary);font-family:inherit">Explorer</button>
+<button style="background:none;border:none;color:var(--BpmTextSecondary);padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit" onclick="M.geh('manuell-sortieren')">Manuell sortieren</button>
+<button style="background:none;border:none;color:var(--BpmTextSecondary);padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit" onclick="M.geh('plandaten')">Plandaten</button>
+<button style="background:none;border:none;color:var(--BpmTextSecondary);padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit" onclick="M.geh('profile')">Profile</button>
+<button style="background:none;border:none;color:var(--BpmTextSecondary);padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px dashed var(--BpmTextSecondary);opacity:0.7;font-family:inherit" onclick="alert('Mockup folgt: 02_Projektdetail/03_Sync.html (BPM-005)')">Sync</button>
+</div>
+
+<div style="display:flex;align-items:center;gap:8px;padding:7px 14px;background:var(--BpmBgBase);border-bottom:1px solid var(--BpmBorderSubtle)">
+<span style="font-size:11px;color:var(--BpmTextPrimary)">01 Planunterlagen &#8250; 01 Polierpl&#228;ne &#8250; H68 &#8250; EG</span>
+<span style="flex:1"></span>
+<button class="tbtn" onclick="alert('App-Aktion: Datei in Standard-App öffnen (IFileLauncher.OpenFile)')">&#8599; &#214;ffnen</button>
+<button class="tbtn" onclick="alert('App-Aktion: Ordner im Windows-Explorer zeigen (RevealInExplorer / OpenFolder)')">&#128194; Im Windows-Explorer</button>
+<button class="tbtn" onclick="alert('App-Aktion: Pfad in Zwischenablage (CopyPathToClipboard)')">&#128203; Pfad kopieren</button>
+</div>
+
+<div style="display:flex;flex:1;min-height:0;position:relative">
+<div style="width:230px;background:var(--BpmBgSurface);border-right:1px solid var(--BpmBorderSubtle);padding:8px 0;overflow-y:auto;flex-shrink:0">
+<div class="tree-row">&#9662; 01 Planunterlagen</div>
+<div class="tree-row" style="padding-left:26px;color:var(--BpmTextSecondary)">_Eingang <span style="color:var(--BpmWarning)">(15)</span></div>
+<div class="tree-row" style="padding-left:26px">&#9662; 01 Polierpl&#228;ne</div>
+<div class="tree-row" style="padding-left:40px">&#9662; H68</div>
+<div class="tree-row" style="padding-left:54px;background:var(--BpmBgActive);color:var(--BpmTextBright)">EG</div>
+<div class="tree-row" style="padding-left:54px;color:var(--BpmTextSecondary)">OG1</div>
+<div class="tree-row" style="padding-left:54px;color:var(--BpmTextSecondary)">KG</div>
+<div class="tree-row" style="padding-left:40px;color:var(--BpmTextSecondary)">&#9656; H69</div>
+<div class="tree-row" style="padding-left:26px;color:var(--BpmTextSecondary)">&#9656; 02 Schalungspl&#228;ne</div>
+<div class="tree-row" style="padding-left:26px;color:var(--BpmTextSecondary)">&#9656; 03 Bewehrungspl&#228;ne</div>
+<div class="tree-row" style="color:var(--BpmTextSecondary)">&#9656; 02 Fotos</div>
+<div class="tree-row" style="color:var(--BpmTextSecondary)">&#9656; 04 Lieferscheine</div>
+<div class="tree-row" style="color:var(--BpmTextSecondary)">&#9656; 06 Protokolle</div>
+</div>
+
+<div style="flex:1;background:var(--BpmBgBase);overflow-y:auto">
+<div style="display:flex;padding:6px 12px;color:var(--BpmTextSecondary);border-bottom:1px solid var(--BpmBorderSubtle);font-size:10px;text-transform:uppercase;letter-spacing:.4px">
+<span style="flex:1">Name</span><span style="width:64px">Gr&#246;&#223;e</span><span style="width:76px">Ge&#228;ndert</span><span style="width:110px">Status</span>
+</div>
+<div class="file-row" style="background:var(--BpmBgHover)">
+<span style="flex:1;color:var(--BpmTextBright)">&#128196; 5998-101_Polierplan_H1_EG.pdf</span>
+<span style="width:64px;color:var(--BpmTextSecondary)">412 KB</span><span style="width:76px;color:var(--BpmTextSecondary)">31.08.26</span>
+<span style="width:110px"><span class="badge" style="background:#3794FF22;color:var(--BpmInfo)">Getrackt &middot; B</span></span>
+</div>
+<div class="file-row">
+<span style="flex:1">&#128196; 5998-101_Polierplan_H1_EG.dwg</span>
+<span style="width:64px;color:var(--BpmTextSecondary)">1,2 MB</span><span style="width:76px;color:var(--BpmTextSecondary)">31.08.26</span>
+<span style="width:110px"><span class="badge" style="background:#3794FF22;color:var(--BpmInfo)">Getrackt &middot; B</span></span>
+</div>
+<div class="file-row">
+<span style="flex:1">&#128196; 5998-102_Polierplan_H1_EG_alt.pdf</span>
+<span style="width:64px;color:var(--BpmTextSecondary)">398 KB</span><span style="width:76px;color:var(--BpmTextSecondary)">12.06.26</span>
+<span style="width:110px"><span class="badge" style="background:var(--BpmBadgeBgWarning);color:var(--BpmWarning)">Ge&#228;ndert</span></span>
+</div>
+<div class="file-row" style="opacity:0.65">
+<span style="flex:1">&#128196; 5998-103_Polierplan_H1_OG1.pdf</span>
+<span style="width:64px;color:var(--BpmTextSecondary)">&#8212;</span><span style="width:76px;color:var(--BpmTextSecondary)">&#8212;</span>
+<span style="width:110px"><span class="badge" style="background:var(--BpmBadgeBgError);color:var(--BpmError)">Fehlt auf Disk</span></span>
+</div>
+<div class="file-row">
+<span style="flex:1;color:var(--BpmTextSecondary)">&#128196; Notiz_Polier_Achse2.txt</span>
+<span style="width:64px;color:var(--BpmTextSecondary)">2 KB</span><span style="width:76px;color:var(--BpmTextSecondary)">14.07.26</span>
+<span style="width:110px"></span>
+</div>
+<div class="file-row">
+<span style="flex:1;color:var(--BpmTextSecondary)">&#128196; Aufmass_EG_Skizze.jpg</span>
+<span style="width:64px;color:var(--BpmTextSecondary)">3,4 MB</span><span style="width:76px;color:var(--BpmTextSecondary)">02.08.26</span>
+<span style="width:110px"></span>
+</div>
+<div style="margin:10px 12px;padding:7px 10px;background:var(--BpmBgSurface);border-left:3px solid var(--BpmWarning);color:var(--BpmTextPrimary);font-size:10px">
+&#128274; Getrackte Pl&#228;ne: Verschieben l&#228;uft journalisiert &#252;ber den PlanManager-Dienst (ADR-061) &mdash; freies Verschieben und L&#246;schen sind im Explorer gesperrt.
+</div>
+</div>
+
+<div style="position:absolute;right:36px;top:44px;width:230px;background:var(--BpmBgElevated);border:1px solid var(--BpmBorderDefault);border-radius:6px;padding:4px 0;box-shadow:0 4px 14px rgba(0,0,0,.5)">
+<div style="padding:4px 12px 6px;font-size:9px;color:var(--BpmTextSecondary);border-bottom:1px solid var(--BpmBorderDefault)">5998-101_Polierplan_H1_EG.pdf &middot; getrackt</div>
+<div class="menu-item" onclick="alert('App-Aktion: Datei öffnen')">&#8599; &#214;ffnen</div>
+<div class="menu-item" onclick="alert('App-Aktion: Im Windows-Explorer zeigen')">&#128194; Im Windows-Explorer zeigen</div>
+<div class="menu-item" onclick="alert('App-Aktion: Pfad kopieren')">&#128203; Pfad kopieren</div>
+<div class="menu-item" onclick="M.geh('manuell-sortieren')">&#128203; Im PlanManager anzeigen (Archiv)</div>
+<div style="height:1px;background:var(--BpmBorderDefault);margin:3px 0"></div>
+<div class="menu-item" onclick="alert('App-Aktion: Journalisierter Move — Ordner-Wahl, alle Dateien der Revision ziehen gemeinsam um (ArchiveMoveService, ADR-061)')">&#10132; Verschieben&#8230; <span style="color:var(--BpmTextSecondary);font-size:9px">(journalisiert)</span></div>
+<div class="menu-item locked" title="Kein L&#246;sch-Workflow in V1 &mdash; nur Import-Undo (ADR-061/064)">&#128274; L&#246;schen &mdash; nicht im Explorer</div>
+</div>
+
+</div>
+</div>
+</div>
+<div style="height:24px;background:var(--BpmAccentPrimary);display:flex;align-items:center;padding:0 12px;font-size:10px;color:var(--BpmTextOnAccent);flex-shrink:0">
+<span>&#214;WG &middot; Explorer: EG &middot; 6 Elemente &middot; 4 getrackt</span>
+<span style="margin-left:auto">1&#215; fehlt auf Disk &middot; 1&#215; ge&#228;ndert</span>
+</div>
+</div>`;
+M.start({ nr: '3.2', titel: 'Explorer', version: '0.1', zeige: () => SEITE });
+</script>
+</body>
+</html>

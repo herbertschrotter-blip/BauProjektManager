@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3.3 Manuell sortieren</title>
+<link rel="stylesheet" href="../theme-app.css">
+<script src="../theme.js"></script>
+<!--
+Seite 3.3 Manuell sortieren (aus altem Mockup PlanManager/02_Projektdetail/02_ManuellSortieren.html übernommen)
+alter Titel: BPM PlanManager — Projektdetail Manuell sortieren (Radial-Erfassung)
+Übernahme: nur der Rahmen ist neu (Vorführleiste aus theme.js, App-Fenster füllt den Rahmen, Farben als
+Theme-Tokens Bpm*). Die Sub-Tabs „Neue Pläne“ / „Archiv“ sind die Zustände der Vorführleiste.
+───────────────────────────────────────────────────────────────────────────
+═══════════════════════════════════════════════════════════════════════════
+BPM-111.01 — Manuelle Erstaufnahme + Radial-UI — Mockup-Spezifikation
+Stand: 2026-08-27 (Teil 48) · ADR-059 · ersetzt Listenvariante (_Archiv)
+Interaktion Teil 46 ueberarbeitet: Sticky-Radial (Einrasten + Klick-Commit)
+Teil 47: Vorschau = INTEGRIERTES PANEL rechts aussen (statt Fenster), ADR-062
+Teil 48: PDF+DWG-Paare (BPM-111.07 Slice A)
+═══════════════════════════════════════════════════════════════════════════
+
+INTERAKTION (verbindlich für WPF-Umsetzung BPM-111.05) — Sticky-Radial (Teil 46):
+- Tabelle Eingang: Klick = Auswahl · Strg+Klick = Mehrfachauswahl ·
+  Rechtsklick (bei GESCHLOSSENEM Radial) = Kontextmenü (Vorschau /
+  Datei öffnen / Im Explorer zeigen, BPM-111.06).
+- Linke Maustaste KURZ HALTEN (260 ms) auf Auswahl → Radial rastet EIN und
+  bleibt offen; die Taste DARF losgelassen werden (kein Dauerhalten mehr).
+  Abbruch der Öffnung, wenn vor Ablauf >40 px bewegt wird.
+- Danach FREIE Navigation (Taste losgelassen): Maus über die Ringe ziehen →
+  Ebenen öffnen per Dwell 110 ms TIMERBASIERT (DispatcherTimer pro Segment-
+  Eintritt — NIE an MouseMove koppeln). Verweilen auf Ring 1 schließt Ring 3
+  (Ring-Tiefe folgt der Ebene, auf der man steht).
+- MAUSRAD dreht NUR die Ebene UNTER dem Cursor (Ring 1 Typen / Ring 2 Bauteile
+  bzw. Kategorien / Ring 3 Geschosse) — feld-stabil (jedes Feld behält
+  Position + Farbe, der Verlauf dreht mit). Für viele Einträge.
+- LINKSKLICK auf ein Segment = Zuordnung (Pending, KEIN Move). Klick ins Leere
+  = nichts (Radial bleibt offen). Auf Plantyp = nur Typ · auf Bauteil = ohne
+  Geschoss.
+- RECHTSKLICK (bei OFFENEM Radial) = Dateien lösen + Radial schließen (Abbruch).
+- Ring-Animation (Scale 0.7→1 + Fade, 140 ms ease-out) NUR bei Erscheinen/
+  Verschwinden eines Rings. Inhaltswechsel (anderer Plantyp) tauscht stumm.
+- Drag-Ghost (Name bzw. "N Dateien") folgt dem Cursor, solange das Radial offen ist.
+- OPTIK: Ring 1 = Typfarben. Ring 2/3 = Typfarbe mit feld-stabiler Helligkeits-
+  Rampe (dunkel→hell über die Felder), VOLL DECKEND (keine Transparenz). Text
+  passt sich an (dunkel auf hell, weiß auf dunkel/markiert). Rampe/Farben
+  später projektspezifisch konfigurierbar (BPM-116).
+
+DATENMODELL (BPM-111.03):
+- Ringe kommen aus DB-STAMMDATEN, nie aus dem Dateisystem (kein Drift).
+  Ring 1 = Dokumenttypen · Ring 2 TYPABHÄNGIG: building_parts (räumliches
+  Schema) ODER document_type_categories (z.B. Protokollarten, Fertigteil-
+  Kategorien) · Ring 3 = building_levels je Bauteil (nur räumliches Schema).
+- Segmentanzahl variabel → immer gleichmäßig über volle 360° verteilt.
+- "+ Neu…" in JEDER Ringebene: legt Stammdaten-Eintrag + physischen Ordner
+  an und ordnet die gezogenen Dateien direkt zu (Schnellanlage; Umbenennen/
+  Löschen/Sortieren in den Projekt-Einstellungen).
+- Ordnername wird EINMAL beim Anlegen erzeugt und in der DB gespeichert
+  (Präfix wie "00 " bleibt erhalten); Zuordnung läuft über IDs.
+
+WORKFLOW (BPM-111.04):
+- Pending (gelb) → "Import bestätigen" = Journal → Move → DB
+  (plan_documents / plan_revisions, Schema v2.0).
+- Update-Erkennung (blau): bekannter Plan + neuer Index überspringt das
+  Radial; Detail-Panel zeigt Index-Historie + "Update übernehmen".
+- Tab Archiv: alle importierten Dokumente. Kurz halten = Radial (Verschieben,
+  eigene Journal-Aktion). Undo NUR letzter Import (Invariante), grün markiert.
+- Vorschau (BPM-111.06, GEÄNDERT Teil 47 — Variante B): Rechtsklick →
+  INTEGRIERTES PANEL rechts außen im Tab (Spalten: Tabelle | Detail-Panel |
+  Vorschau-Panel; GridSplitter links am Panel, ✕ im Panel-Kopf schließt).
+  KEIN separates Fenster / kein Andocken mehr. Toolbar im Panel-Kopf:
+  ◀ Seite ▶ · Plankopf · Ganzes Blatt · ↗ In Standard-App öffnen
+  (IFileLauncher/ADR-060 — Bearbeiten passiert bewusst EXTERN).
+  Start = Plankopf (rechte untere Blattecke, A4-Ausschnitt); Mausrad = Zoom
+  (cursorzentriert), mittlere Maustaste = Pan; Seitenwechsel behält Zoom.
+  PDF-Rendering via IPdfRenderService/ADR-062 (Windows.Data.Pdf, kein
+  Drittanbieter); DWG: gepaarte PDF-Datei anzeigen. Vorschau-Breite wird
+  geräte-lokal gemerkt (device-settings.json uiLayout.planPreviewWidth).
+- DETAIL-PANEL (GEÄNDERT Teil 47): Breite 320px. Editierbare Felder
+  Plannummer / Index / Bezeichnung (Re-Match = Identitätswechsel, Slice A2).
+  INDEX-HISTORIE IMMER sichtbar (auch bei nur einer Version), DREI Spalten
+  nebeneinander: Revision | Datum | Änderung (plan_revisions: plan_index,
+  released_at, change_note NEU). Aktuelle/neue Revision hervorgehoben
+  ("B (neu)"), Erstausgabe als "—"-Zeile. Kopfzeile: Plannummer + Zielkontext.
+- TEXT-ZUWEISUNG aus der Vorschau (BPM-118, ADR-063, PdfPig freigegeben):
+  Rechteck über Text im Plan aufziehen → Rechtsklick → Kontextmenü mit zwei
+  Gruppen: Revisions-Ziele (Änderungshinweis → change_note, Index-Datum →
+  released_at) + "Zuweisen als Segment" DYNAMISCH aus dem Segmenttyp-Katalog
+  (ISegmentTypeCatalog/BPM-108, inkl. benutzerdefinierter Typen). KEIN OCR —
+  Textebene vorausgesetzt; ohne Textebene Hinweis + manuelle Eingabe.
+  (Demo hier: Klick auf den Änderungstext markiert, Rechtsklick = Zuweisen.)
+- PDF+DWG-PAAR (BPM-111.07 Slice A, Teil 48): Dateien mit gleichem
+  Dateinamens-Stamm = EIN Dokument. Radial-Zuordnung/Update-Übernahme nimmt
+  den nicht selektierten Partner AUTOMATISCH mit (Meldung "⛓ N gepaarte
+  Datei(en) automatisch mit zugeordnet"); Duplikate/Update-Zeilen werden
+  nicht mitgenommen. Import = EINE Revision mit ZWEI Dateien: PDF führend
+  (is_primary), DWG angehängt — BuildDecisions sortiert PDF vor DWG, ein
+  Import-Guard verhindert Doppel-Supersede im Update-Fall (v0.28.125/.126).
+  Tabelle: "⛓ Paar"-Pill-Badge an beiden Zeilen (Stil wie Eingang-Badge der
+  Projektübersicht). Detail-Panel: Paar-Hinweis "eine Revision, zwei
+  Dateien". Vorschau einer DWG zeigt die gepaarte PDF (Slice C3, read-only
+  bei Archiv-Revision).
+- KOMBI-PLAENE (BPM-111.07 Slice C, Teil 48): IsCombi (mehrere Plantyp-
+  Keywords im Dateinamen, Extractor BPM-111.02) wird sichtbar: "⚠ Kombi"-
+  Pill-Badge in der Tabelle + Warnhinweis im Detail-Panel. V1: KEIN
+  Auto-Split in mehrere plan_documents — als EIN Dokument erfassen,
+  Empfehlung Typ "Kombiplan/Sonstiges" (via "+ Neu…" anlegbar), Inhalte
+  per Text-Zuweisung als Segmente (plan_document_segments). Radial-Zentrum
+  zeigt "⚠ Kombi-Plan" als Untertitel, solange kein Typ gewählt ist.
+═══════════════════════════════════════════════════════════════════════════
+-->
+<style>
+  .rahmen *{box-sizing:border-box;margin:0;padding:0}
+  .shell{background:var(--BpmBgBase);border-radius:0;overflow:hidden;border:none;font-size:13px;color:var(--BpmTextPrimary);display:flex;flex-direction:column;width:100%;height:100%}
+  @keyframes ringIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+  .ringAnim{transform-origin:260px 260px;animation:ringIn 140ms ease-out}
+  .tab{display:inline-block;border-bottom:3px solid transparent;margin-bottom:-1px;padding:12px 20px;font-size:13px;font-weight:500;color:var(--BpmTextSecondary);cursor:pointer;line-height:1;user-select:none}
+  .tab:hover{background:var(--BpmBgHover);color:var(--BpmTextPrimary)}
+  .tab.on{background:var(--BpmBgBase);color:var(--BpmTextBright);font-weight:600;border-bottom:3px solid var(--BpmAccentPrimary)}
+  .tab.on:hover{background:var(--BpmBgBase);color:var(--BpmTextBright)}
+  .tab.tot{border-bottom:2px dashed var(--BpmTextSecondary);opacity:.7}
+  .inp{background:var(--BpmBgInput);border:1px solid var(--BpmBorderDefault);color:var(--BpmTextBright);font-size:13px;padding:0 8px;border-radius:3px;width:100%;height:28px;font-family:inherit}
+  .inp:focus{border-color:var(--BpmBorderFocus);outline:none}
+  .lbl{color:var(--BpmTextSecondary);font-size:12px;font-weight:500;margin-bottom:2px}
+  .btn{background:transparent;border:1px solid var(--BpmBorderDefault);color:var(--BpmTextPrimary);font-size:13px;padding:0 14px;height:32px;border-radius:3px;cursor:pointer;font-family:inherit}
+  .btn:hover{background:var(--BpmBgHover)}
+  .btnP{background:var(--BpmAccentPrimary);border:none;color:var(--BpmTextBright);font-size:13px;height:32px;border-radius:3px;cursor:pointer;font-family:inherit;width:100%}
+  .btnP:hover{background:var(--BpmAccentHover)}
+  .ub{background:transparent;border:1px solid var(--BpmBorderDefault);color:var(--BpmTextPrimary);font-size:12px;padding:2px 10px;border-radius:3px;cursor:pointer;font-family:inherit}
+  .ub:hover{background:var(--BpmBgHover)}
+  .ub:disabled{opacity:.35;cursor:default}
+  .cmi{padding:8px 14px;color:var(--BpmTextPrimary);font-size:13px;cursor:pointer;display:flex;gap:10px;align-items:center;user-select:none}
+  .cmi:hover{background:var(--BpmBgActive);color:var(--BpmTextBright)}
+  .cmh{padding:4px 14px;color:var(--BpmTextSecondary);font-size:10px;text-transform:uppercase;letter-spacing:.4px;user-select:none}
+  .tbx{display:inline-block;background:var(--BpmBgInput);color:var(--BpmTextBright);height:26px;line-height:26px;border-radius:3px;cursor:pointer;font-size:12px;padding:0 10px;user-select:none}
+  .tbx:hover{background:#4a4a4a}
+  .tbx.on{background:var(--BpmBgActive)}
+  table{border-collapse:collapse;width:100%}
+  td{border-top:1px solid var(--BpmBorderSubtle)}
+</style>
+</head>
+<body>
+<script>
+const M = Mockup;
+var FILES=[
+{id:1,n:'5998-200_EG_Polierplan.dwg',s:'144 KB',g:'EG',t:'Polierplan',nr:'5998-200',idx:'—',bez:'Polierplan EG'},
+{id:2,n:'5998-201_OG1_Polierplan.dwg',s:'147 KB',g:'OG1',t:'Polierplan',nr:'5998-201',idx:'—',bez:'Polierplan OG1'},
+{id:3,n:'5998-203_OG3_Polierplan.dwg',s:'148 KB',g:'OG3',t:'Polierplan',nr:'5998-203',idx:'—',bez:'Polierplan OG3'},
+{id:11,n:'5998-202_OG2_Polierplan.pdf',s:'146 KB',g:'OG2',t:'Polierplan',nr:'5998-202',idx:'—',bez:'Polierplan OG2'},
+{id:12,n:'5998-202_OG2_Polierplan.dwg',s:'151 KB',g:'OG2',t:'Polierplan',nr:'5998-202',idx:'—',bez:'Polierplan OG2'},
+{id:13,n:'5998-150_Polierplan+Schalung_H1_EG.pdf',s:'188 KB',g:'EG',t:'Polierplan',nr:'5998-150',idx:'—',bez:'Polierplan + Schalung EG',combi:1},
+{id:5,n:'5998-100-B_KG_Polierplan.dwg',s:'151 KB',kind:'update',newIdx:'B',newD:'heute',newC:'',nr:'5998-100',idx:'B',bez:'Polierplan KG',target:'Pläne/Polierplan/Haus 1/KG/',hist:[{i:'A',d:'12.05.2026',c:'Seilsicherungssystem durch Auflastgeländer ersetzt'},{i:'—',d:'02.04.2026',c:'Erstausgabe'}]},
+{id:6,n:'B-101_Bewehrung_OG1.pdf',s:'98 KB',g:'OG1',t:'Bewehrung',nr:'B-101',idx:'—',bez:'Bewehrung Decke OG1'},
+{id:7,n:'FT_W04_Wandelemente_H2.pdf',s:'204 KB',g:'',t:'Fertigteile',nr:'FT-W04',idx:'—',bez:'Wandelemente Haus 2'},
+{id:8,n:'BB_2026-04-15_Baubesprechung.pdf',s:'412 KB',g:'',t:'Protokolle',nr:'',idx:'',bez:'Baubesprechung 15.04.'},
+{id:9,n:'SiPro_2026-05-02_Geruest.pdf',s:'180 KB',g:'',t:'Protokolle',nr:'',idx:'',bez:'Sicherheitsprotokoll Gerüst'},
+{id:10,n:'Statik_2026-03_Hauptberechnung.pdf',s:'2.1 MB',g:'',t:'Statik',nr:'ST-2026-03',idx:'—',bez:'Hauptberechnung'}];
+var ARCHIV=[
+{f:{id:101,n:'5998-100-A_KG_Polierplan.pdf',s:'149 KB',g:'KG',t:'Polierplan',nr:'5998-100',idx:'A',bez:'Polierplan KG'},target:'Pläne/Polierplan/Haus 1/KG/',date:'12.05.2026',last:false},
+{f:{id:102,n:'5998-104_EG_Polierplan.pdf',s:'139 KB',g:'EG',t:'Polierplan',nr:'5998-104',idx:'—',bez:'Polierplan EG'},target:'Pläne/Polierplan/Haus 1/EG/',date:'12.05.2026',last:false},
+{f:{id:103,n:'BB_2026-03-20_Baubesprechung.pdf',s:'388 KB',g:'',t:'Protokolle',nr:'',idx:'',bez:'Baubesprechung 20.03.'},target:'Pläne/Protokolle/Baubesprechung/',date:'20.03.2026',last:false},
+{f:{id:104,n:'S-190_Schalung_EG.pdf',s:'121 KB',g:'EG',t:'Schalung',nr:'S-190',idx:'—',bez:'Schalung Decke EG'},target:'Pläne/Schalung/Haus 2/EG/',date:'09.06.2026',last:true},
+{f:{id:105,n:'B-099_Bewehrung_EG.pdf',s:'102 KB',g:'EG',t:'Bewehrung',nr:'B-099',idx:'—',bez:'Bewehrung Decke EG'},target:'Pläne/Bewehrung/Haus 2/EG/',date:'09.06.2026',last:true}];
+var sel=new Set(),pend={},TAB='neu',pvId=null,vb={x:500,y:320,w:356,h:270},pvSel=false;
+var SEGMENTE=['Plannummer','Planindex','Bezeichnung','Planart','Datum','Bauteil','Geschoss'];
+var TYPEN=[{n:'Polierplan',c:'#185FA5'},{n:'Statik',c:'#534AB7'},{n:'Bewehrung',c:'#993C1D'},{n:'Schalung',c:'#1F7280'},{n:'Architektur',c:'#0F6E56'},{n:'Fertigteile',c:'#6E6E6E',sub:'cat'},{n:'Protokolle',c:'#555555',sub:'cat'},{n:'Mehr …',c:'#3C3C3C',m:1}];
+var BAUTEILE=[{n:'Haus 1'},{n:'Haus 2'},{n:'Haus 3'},{n:'TG'},{n:'Allgemein'},{n:'Aussenanl.'}];
+var CATMAP={'Protokolle':['Baubesprechung','Bautagesbericht','Sicherheit','Abnahme'],'Fertigteile':['Wände','Decken','Stiegen']};
+var GESCH_MAP={'Haus 1':['KG','EG','OG1','OG2'],'Haus 2':['KG','EG','OG1','OG2','OG3','DG'],'Haus 3':['EG','OG1'],'TG':['UG1','UG2'],'Allgemein':[],'Aussenanl.':[]};
+var R={open:false,typ:null,bau:null,ges:null,hov:null,cand:null,candG:null,move:null};
+var DWELL=110,HOLD=260,vis={bau:false,ges:false},addCtx=null;
+var ADD={n:'+ Neu…',add:1};
+var rotOff={typ:0,bau:0,ges:0};
+var CX=260,RING1=[72,138],RING2=[146,204],RING3=[212,256],CR=62;
+var SELTXT='erg. Deckendurchbruch 20/20cm (S2)';
+function byId(id){return FILES.find(function(f){return f.id===id;});}
+function stem(n){return n.replace(/\.[^.]+$/,'').toLowerCase();}
+function ext(n){var m=n.match(/\.[^.]+$/);return m?m[0].toLowerCase():'';}
+function pairOf(f){var e=ext(f.n),want=e==='.pdf'?'.dwg':e==='.dwg'?'.pdf':null;
+if(!want)return null;
+return FILES.find(function(o){return o.id!==f.id&&ext(o.n)===want&&stem(o.n)===stem(f.n);})||null;}
+var PAIRBADGE=' <span style="background:#85b8d9;color:var(--BpmBgBase);font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;font-family:\'Segoe UI\',sans-serif">⛓ Paar</span>';
+var COMBIBADGE=' <span style="background:var(--BpmWarning);color:var(--BpmBgBase);font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;font-family:\'Segoe UI\',sans-serif">⚠ Kombi</span>';
+function arcById(id){return ARCHIV.find(function(a){return a.f.id===id;});}
+function anyById(id){return byId(id)||(arcById(id)||{}).f;}
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+function typDef(n){return TYPEN.find(function(t){return t.n===n;});}
+function isCat(n){var t=typDef(n);return t&&t.sub==='cat';}
+function applyOff(list,off){if(!list.length)return list;off=((off%list.length)+list.length)%list.length;return list.slice(off).concat(list.slice(0,off));}
+function rampCol(hex,t){hex=(hex||'#185FA5').replace('#','');function ch(o){var v=parseInt(hex.substr(o,2),16);var d=v*0.45,l=v+(255-v)*0.65;return Math.round(d+(l-d)*t);}return 'rgb('+ch(0)+','+ch(2)+','+ch(4)+')';}
+function grade(list){var N=list.length;list.forEach(function(it,i){it._t=N>1?i/(N-1):0;});return list;}
+function ring1Items(){return applyOff(TYPEN,rotOff.typ).concat([ADD]);}
+function ring2Items(){if(!R.typ)return[];
+var base=isCat(R.typ)?CATMAP[R.typ].map(function(c){return{n:c};}):BAUTEILE.map(function(b){return{n:b.n};});
+grade(base);return applyOff(base,rotOff.bau).concat([ADD]);}
+function ring3Items(){if(!R.bau||isCat(R.typ))return[];
+var base=(GESCH_MAP[R.bau]||[]).map(function(g){return{n:g};});if(!base.length)return[ADD];
+grade(base);return applyOff(base,rotOff.ges).concat([ADD]);}
+function sheet(f){var isUpd=f.kind==='update';
+return '<rect x="0" y="0" width="840" height="594" fill="#F5F4EF"/>'+
+'<rect x="14" y="14" width="812" height="566" fill="none" stroke="#999" stroke-width="2"/>'+
+'<rect x="70" y="70" width="430" height="260" fill="none" stroke="#444" stroke-width="5"/>'+
+'<line x1="70" y1="200" x2="500" y2="200" stroke="#444" stroke-width="3"/>'+
+'<line x1="280" y1="70" x2="280" y2="330" stroke="#444" stroke-width="3"/>'+
+'<rect x="120" y="105" width="60" height="40" fill="none" stroke="#777" stroke-width="2"/>'+
+'<rect x="330" y="240" width="80" height="50" fill="none" stroke="#777" stroke-width="2"/>'+
+'<rect x="530" y="336" width="296" height="92" fill="#FFF" stroke="#333" stroke-width="2"/>'+
+'<line x1="530" y1="354" x2="826" y2="354" stroke="#333" stroke-width="1"/>'+
+'<line x1="568" y1="336" x2="568" y2="428" stroke="#888" stroke-width="0.5"/>'+
+'<line x1="634" y1="336" x2="634" y2="428" stroke="#888" stroke-width="0.5"/>'+
+'<line x1="660" y1="336" x2="660" y2="428" stroke="#888" stroke-width="0.5"/>'+
+'<text x="536" y="349" font-size="10" fill="#333" font-weight="500">Revision</text>'+
+'<text x="574" y="349" font-size="10" fill="#333" font-weight="500">Datum</text>'+
+'<text x="639" y="349" font-size="10" fill="#333" font-weight="500">gez.</text>'+
+'<text x="666" y="349" font-size="10" fill="#333" font-weight="500">Änderung</text>'+
+(isUpd?'<text x="545" y="372" font-size="10" fill="#222">A</text>'+
+'<text x="574" y="372" font-size="10" fill="#222">04.12.2025</text>'+
+'<text x="640" y="372" font-size="10" fill="#222">gp</text>'+
+'<text x="666" y="372" font-size="9" fill="#222">Seilsicherung → Auflastgeländer</text>'+
+'<text x="545" y="390" font-size="10" fill="#222">B</text>'+
+'<text x="574" y="390" font-size="10" fill="#222">20.01.2026</text>'+
+'<text x="640" y="390" font-size="10" fill="#222">hf</text>'+
+(pvSel?'<rect x="664" y="381" width="160" height="12" fill="#78b4e6"/>':'')+
+'<text id="selTxt" x="666" y="390" font-size="9" fill="#111" style="cursor:text;pointer-events:auto">'+esc(SELTXT)+'</text>':'')+
+'<rect x="530" y="440" width="296" height="140" fill="#FFF" stroke="#333" stroke-width="2"/>'+
+'<line x1="530" y1="468" x2="826" y2="468" stroke="#333" stroke-width="1"/>'+
+'<line x1="530" y1="502" x2="826" y2="502" stroke="#333" stroke-width="1"/>'+
+'<line x1="530" y1="544" x2="826" y2="544" stroke="#333" stroke-width="1"/>'+
+'<line x1="680" y1="502" x2="680" y2="580" stroke="#333" stroke-width="1"/>'+
+'<text x="538" y="460" font-size="11" fill="#666">Bauvorhaben: ÖWG Dobl-Zwaring</text>'+
+'<text x="538" y="492" font-size="16" fill="#222" font-weight="500">'+esc(f.bez)+'</text>'+
+'<text x="538" y="522" font-size="11" fill="#666">Plan-Nr</text><text x="538" y="538" font-size="14" fill="#222">'+esc(f.nr||'—')+'</text>'+
+'<text x="688" y="522" font-size="11" fill="#666">Index</text><text x="688" y="538" font-size="14" fill="#222">'+esc(f.idx||'—')+'</text>'+
+'<text x="538" y="560" font-size="10" fill="#666">Maßstab 1:50</text>'+
+'<text x="688" y="560" font-size="10" fill="#666">Datum 10.06.2026</text>';}
+function pvDraw(){if(!pvId)return;var f=anyById(pvId);if(!f){closePv();return;}
+var s=document.getElementById('pvSvg');
+s.setAttribute('viewBox',vb.x+' '+vb.y+' '+vb.w+' '+vb.h);s.innerHTML=sheet(f);
+var st=document.getElementById('selTxt');
+if(st)st.addEventListener('pointerdown',function(e){if(e.button!==0)return;e.stopPropagation();pvSel=!pvSel;pvDraw();
+document.getElementById('pvStatus').textContent=pvSel?'„'+SELTXT+'" markiert · Rechtsklick = Zuweisen':'Klick auf Text = markieren · Rechtsklick = Zuweisen · Rad = Zoom · Mitteltaste = Pan';});}
+function openPv(id){pvId=id;pvSel=false;document.getElementById('pvPanel').style.display='flex';kopfView();}
+function closePv(){pvId=null;pvSel=false;document.getElementById('pvPanel').style.display='none';}
+function pvOpenExt(){if(pvId)document.getElementById('dMsg').textContent='▶ würde '+anyById(pvId).n+' in Standard-App öffnen (IFileLauncher)';}
+function kopfView(){vb={x:500,y:320,w:356,h:270};pvDraw();}
+function fitView(){vb={x:0,y:0,w:840,h:594};pvDraw();}
+function zoom(f){var nw=vb.w/f,nh=vb.h/f;vb.x+=(vb.w-nw)/2;vb.y+=(vb.h-nh)/2;vb.w=nw;vb.h=nh;pvDraw();}
+function pan(dx,dy){vb.x+=dx*(vb.w/840);vb.y+=dy*(vb.h/594);pvDraw();}
+function setTab(t){sel.clear();M.setz('z',t);}
+function render(){
+var tn=document.getElementById('tabNeu'),ta=document.getElementById('tabArc');
+tn.className='tab'+(TAB==='neu'?' on':'');ta.className='tab'+(TAB==='archiv'?' on':'');
+tn.textContent='Neue Pläne ('+FILES.length+')';ta.textContent='Archiv ('+ARCHIV.length+')';
+document.getElementById('hint').innerHTML=TAB==='neu'?'Kurz <b>halten</b> = Radial einrasten (Taste loslassen ok) · Maus ziehen = navigieren · <b>Mausrad</b> = Ring 2 drehen · <b>Linksklick</b> = zuordnen · <b>Rechtsklick</b> = abbrechen bzw. Kontextmenü · + Neu… in jedem Ring':'Kurz <b>halten</b> = Radial (Verschieben) · <b>Mausrad</b>/<b>Links</b>/<b>Rechtsklick</b> wie links · ↩ Undo nur letzter Import (Journal)';
+document.getElementById('legend').innerHTML=TAB==='neu'?'<span style="color:var(--BpmWarning)">■ Pending (zugewiesen, nicht bestätigt)</span><span style="color:var(--BpmInfo)">■ Update — bekannter Plan, neuer Index</span><span style="color:#5a5a5a">■ offen</span>':'<span style="color:var(--BpmSuccess)">■ letzter Import (Undo möglich)</span><span style="color:#5a5a5a">■ ältere Importe</span>';
+if(TAB==='neu')tblNeu();else tblArc();
+var pc=Object.keys(pend).length;
+document.getElementById('dPend').textContent=pc?pc+' Datei(en)':'—';
+document.getElementById('sbInfo').textContent=pc?pc+' pending':'bereit';
+var ok=document.getElementById('dOk');ok.textContent='Import bestätigen ('+pc+')';ok.style.opacity=pc?1:0.4;
+document.getElementById('selBadge').textContent=sel.size+' ausgewählt';
+document.getElementById('cntBadge').textContent=FILES.length+' neu';
+panel();}
+function tblNeu(){var h='<tr style="color:var(--BpmTextSecondary);font-size:11px;text-transform:uppercase;letter-spacing:.4px"><td style="padding:6px 8px;width:30px;border-top:none"></td><td style="padding:6px 8px;border-top:none">Datei</td><td style="padding:6px 8px;width:80px;border-top:none">Größe</td><td style="padding:6px 8px;width:260px;border-top:none">Zuordnung</td></tr>';
+FILES.forEach(function(f){var on=sel.has(f.id),p=pend[f.id];
+var bg=on?'var(--BpmBgActive)':p?'#2a2418':f.kind==='update'?'#0c2438':'transparent';
+var bl=p?'3px solid var(--BpmWarning)':f.kind==='update'?'3px solid var(--BpmInfo)':'3px solid transparent';
+var zu=p?'<span style="color:var(--BpmWarning)">⏳ '+p+'</span>':f.kind==='update'?'<span style="color:var(--BpmInfo)">⬆ Index '+f.newIdx+' neu — bekannter Plan</span>':(f.t?'<span style="color:#5a5a5a">Kandidat: '+f.t+(f.g?' / '+f.g:'')+'</span>':'<span style="color:#5a5a5a">—</span>');
+h+='<tr data-i="'+f.id+'" style="cursor:pointer;background:'+bg+';height:36px"><td style="padding:6px 6px 6px 8px;border-left:'+bl+';color:'+(on?'var(--BpmAccentPrimary)':'#5a5a5a')+'">'+(on?'✓':'☐')+'</td>'+
+'<td style="padding:6px 8px;color:var(--BpmTextBright);font-family:Consolas,monospace;font-size:12px;white-space:nowrap">'+f.n+(pairOf(f)?PAIRBADGE:'')+(f.combi?COMBIBADGE:'')+'</td>'+
+'<td style="padding:6px 8px;color:var(--BpmTextSecondary);font-size:12px">'+f.s+'</td>'+
+'<td style="padding:6px 8px;font-size:11px">'+zu+'</td></tr>';});
+document.getElementById('tbl').innerHTML=h;}
+function tblArc(){var h='<tr style="color:var(--BpmTextSecondary);font-size:11px;text-transform:uppercase;letter-spacing:.4px"><td style="padding:6px 8px;border-top:none">Datei</td><td style="padding:6px 8px;width:250px;border-top:none">Ordner</td><td style="padding:6px 8px;width:100px;border-top:none">Hinzugefügt</td><td style="padding:6px 8px;width:60px;border-top:none"></td></tr>';
+ARCHIV.forEach(function(a){var on=sel.has(a.f.id);
+h+='<tr data-a="'+a.f.id+'" style="cursor:grab;background:'+(on?'var(--BpmBgActive)':'transparent')+';height:36px">'+
+'<td style="padding:6px 8px;border-left:3px solid '+(a.last?'var(--BpmSuccess)':'transparent')+';color:var(--BpmTextBright);font-family:Consolas,monospace;font-size:12px">'+a.f.n+'</td>'+
+'<td style="padding:6px 8px;color:var(--BpmTextSecondary);font-size:11px">'+a.target+'</td>'+
+'<td style="padding:6px 8px;color:'+(a.last?'var(--BpmSuccess)':'var(--BpmTextSecondary)')+';font-size:11px">'+a.date+'</td>'+
+'<td style="padding:6px 8px"><button class="ub" '+(a.last?'onclick="undoA('+a.f.id+')"':'disabled title="Undo nur letzter Import"')+'>↩</button></td></tr>';});
+document.getElementById('tbl').innerHTML=h;}
+function undoA(id){var a=arcById(id);if(!a||!a.last)return;
+ARCHIV=ARCHIV.filter(function(x){return x.f.id!==id;});
+FILES.push(a.f);if(pvId===id)closePv();
+document.getElementById('dMsg').textContent='↩ '+a.f.n+' zurück in den Eingang (Undo-Journal)';
+render();}
+function histRows(f,a){
+var rows='';
+if(f.kind==='update'){
+rows+='<tr style="background:var(--BpmBgActive)"><td style="padding:4px 6px;border:none;color:#85b8d9;vertical-align:top">'+f.newIdx+' (neu)</td><td style="padding:4px 6px;border:none;color:#85b8d9;vertical-align:top">'+f.newD+'</td><td style="padding:4px 6px;border:none;color:var(--BpmTextBright)">'+esc(f.newC||'—')+'</td></tr>';
+f.hist.forEach(function(r){rows+='<tr><td style="padding:4px 6px;border:none;color:var(--BpmTextBright);vertical-align:top">'+r.i+'</td><td style="padding:4px 6px;border:none;color:var(--BpmTextSecondary);vertical-align:top">'+r.d+'</td><td style="padding:4px 6px;border:none;color:'+(r.c==='Erstausgabe'?'var(--BpmTextSecondary)':'var(--BpmTextPrimary)')+'">'+esc(r.c)+'</td></tr>';});}
+else{
+var ix=(f.idx&&f.idx!=='—'&&f.idx!=='')?f.idx:'—';
+rows+='<tr><td style="padding:4px 6px;border:none;color:var(--BpmTextBright)">'+ix+'</td><td style="padding:4px 6px;border:none;color:var(--BpmTextSecondary)">'+(a?a.date:'heute')+'</td><td style="padding:4px 6px;border:none;color:var(--BpmTextSecondary)">Erstausgabe</td></tr>';}
+return rows;}
+function panel(){var ed=document.getElementById('dEdit'),hd=document.getElementById('dHist');hd.innerHTML='';
+if(sel.size===1){var id=sel.values().next().value;var f=anyById(id);
+if(!f){ed.innerHTML='';return;}
+var a=arcById(id);
+ed.innerHTML='<div style="display:grid;grid-template-columns:1fr 64px;gap:8px;margin-bottom:8px">'+
+'<div><div class="lbl">Plannummer</div><input class="inp" value="'+esc(f.nr)+'" onchange="updF('+f.id+',\'nr\',this.value)"></div>'+
+'<div><div class="lbl">Index</div><input class="inp" value="'+esc(f.idx)+'" onchange="updF('+f.id+',\'idx\',this.value)"></div></div>'+
+'<div style="margin-bottom:8px"><div class="lbl">Bezeichnung</div><input class="inp" value="'+esc(f.bez)+'" onchange="updF('+f.id+',\'bez\',this.value)"></div>'+
+(a?'<div style="color:var(--BpmTextSecondary);font-size:12px">Ordner: <span style="color:var(--BpmTextPrimary)">'+a.target+'</span></div><div style="color:var(--BpmTextSecondary);font-size:12px;margin-bottom:8px">Hinzugefügt: <span style="color:'+(a.last?'var(--BpmSuccess)':'var(--BpmTextPrimary)')+'">'+a.date+'</span></div>':'')+
+(function(){var pr=a?null:pairOf(f);return pr?'<div style="background:#1c2b38;border-left:3px solid var(--BpmInfo);padding:7px 9px;font-size:11px;color:#85b8d9;line-height:1.5;margin-bottom:8px">⛓ Gepaart mit <span style="font-family:Consolas,monospace;color:var(--BpmTextPrimary)">'+pr.n+'</span><br>Import als <span style="color:var(--BpmTextBright)">EINE Revision mit zwei Dateien</span> (PDF führend, DWG angehängt)</div>':'';})()+
+(f.combi&&!a?'<div style="background:#2a2418;border-left:3px solid var(--BpmWarning);padding:7px 9px;font-size:11px;color:var(--BpmWarning);line-height:1.5;margin-bottom:8px">⚠ <span style="color:var(--BpmTextBright)">Kombi-Plan erkannt</span> (mehrere Plantypen im Namen)<br>V1: kein Auto-Split — als EIN Dokument erfassen, Typ „Kombiplan/Sonstiges" empfohlen (+ Neu…), Inhalte per Text-Zuweisung als Segmente</div>':'')+
+(pend[f.id]?'<div style="color:var(--BpmWarning);font-size:12px;margin-bottom:8px">⏳ '+pend[f.id]+'</div>':'');
+var ctx=f.kind==='update'?' · Haus 1/KG':(a?' · '+a.target.replace('Pläne/',''):'');
+hd.innerHTML='<div class="lbl">Index-Historie · '+(f.nr||'—')+ctx+'</div>'+
+'<div style="background:var(--BpmBgElevated);border-radius:3px;padding:4px 4px;margin-bottom:8px;font-size:12px">'+
+'<table style="width:100%;font-size:11px"><tr style="color:var(--BpmTextSecondary);font-size:10px;text-transform:uppercase;letter-spacing:.3px"><td style="padding:2px 6px;border:none;width:56px">Revision</td><td style="padding:2px 6px;border:none;width:72px">Datum</td><td style="padding:2px 6px;border:none">Änderung</td></tr>'+
+histRows(f,a)+'</table></div>'+
+(f.kind==='update'&&!pend[f.id]?'<button onclick="takeUpdate('+f.id+')" style="width:100%;background:#0a3a5e;border:1px solid var(--BpmInfo);color:var(--BpmTextBright);font-size:12px;padding:7px;border-radius:3px;cursor:pointer;margin-bottom:8px;font-family:inherit">⬆ Update übernehmen → bekannter Ordner</button>':'');}
+else ed.innerHTML='<div style="color:#5a5a5a;font-size:12px">'+(sel.size?sel.size+' Datei(en) ausgewählt — halten &amp; ziehen':'Keine Auswahl')+'</div>';}
+function updF(id,k,v){var f=anyById(id);if(f){f[k]=v;if(pvId===id)pvDraw();}}
+function takeUpdate(id){var f=byId(id);if(f)pend[id]=f.target;render();}
+function clearPend(){pend={};document.getElementById('dMsg').textContent='';render();}
+function onOk(){var ids=Object.keys(pend);if(!ids.length)return;
+ARCHIV.forEach(function(a){a.last=false;});
+FILES=FILES.filter(function(f){if(pend[f.id]){ARCHIV.unshift({f:f,target:pend[f.id],date:'heute',last:true});return false;}return true;});
+document.getElementById('dMsg').textContent='✓ '+ids.length+' verschoben + in DB (neuer letzter Import)';
+pend={};sel.clear();render();}
+function openAdd(level,files){addCtx={level:level,typ:R.typ,bau:R.bau,files:files,move:R.move};
+var t=level==='typ'?'Neuer Plantyp':level==='ges'?'Neues Geschoss — '+R.bau:(isCat(R.typ)?'Neue '+(R.typ==='Protokolle'?'Protokollart':'Kategorie')+' — '+R.typ:'Neues Bauteil');
+document.getElementById('addTitle').textContent=t;
+document.getElementById('addInp').value='';
+document.getElementById('addBox').style.display='block';
+setTimeout(function(){document.getElementById('addInp').focus();},50);}
+function closeAdd(){addCtx=null;document.getElementById('addBox').style.display='none';}
+function applyTarget(path,files,move){if(move!=null){var a=arcById(move);if(a){a.target=path;document.getElementById('dMsg').textContent='↷ verschoben nach '+path+' (Journal)';}}
+else{var extra=0;files.forEach(function(id){pend[id]=path;
+var f=byId(id),pr=f&&pairOf(f);
+if(pr&&!pr.kind&&files.indexOf(pr.id)<0&&!pend[pr.id]){pend[pr.id]=path;extra++;}});
+if(extra)document.getElementById('dMsg').textContent='⛓ '+extra+' gepaarte Datei(en) automatisch mit zugeordnet';}sel.clear();}
+function confirmAdd(){if(!addCtx)return;var name=document.getElementById('addInp').value.trim();if(!name){closeAdd();return;}
+var path;
+if(addCtx.level==='typ'){TYPEN.splice(TYPEN.length-1,0,{n:name,c:'#6E6E6E'});path='Pläne/'+name+'/';}
+else if(addCtx.level==='ges'){(GESCH_MAP[addCtx.bau]=GESCH_MAP[addCtx.bau]||[]).push(name);path='Pläne/'+addCtx.typ+'/'+addCtx.bau+'/'+name+'/';}
+else{if(isCat(addCtx.typ))CATMAP[addCtx.typ].push(name);else{BAUTEILE.push({n:name});GESCH_MAP[name]=[];}
+path='Pläne/'+addCtx.typ+'/'+name+'/';}
+applyTarget(path,addCtx.files,addCtx.move);
+document.getElementById('dMsg').textContent='✓ "'+name+'" in Projektdaten angelegt + Ordner erstellt';
+closeAdd();render();}
+var cm=null;
+function showCm(x,y,html){var fr=document.getElementById('frame').getBoundingClientRect();
+cm.innerHTML=html;
+cm.style.left=Math.min(x-fr.left,fr.width-260)+'px';cm.style.top=Math.min(y-fr.top,fr.height-320)+'px';cm.style.display='block';}
+function onTblCm(e){var tr=e.target.closest('tr[data-i],tr[data-a]');if(!tr)return;e.preventDefault();
+var id=+(tr.dataset.i||tr.dataset.a);sel.clear();sel.add(id);render();
+showCm(e.clientX,e.clientY,'<div class="cmi" onclick="cmPv('+id+')">\u{1F441} Vorschau</div>'+
+'<div style="border-top:1px solid var(--BpmBorderSubtle);margin:4px 0"></div>'+
+'<div class="cmi" onclick="cmOpen('+id+')">\u{1F4C2} Datei öffnen</div>'+
+'<div class="cmi" onclick="cmRev('+id+')">\u{1F4C1} Im Explorer zeigen</div>');}
+function cmOpen(id){cm.style.display='none';document.getElementById('dMsg').textContent='▶ würde '+anyById(id).n+' in Standard-App öffnen (IFileLauncher)';}
+function cmRev(id){cm.style.display='none';document.getElementById('dMsg').textContent='▶ würde '+anyById(id).n+' im Explorer zeigen (IFileLauncher)';}
+function cmPv(id){cm.style.display='none';openPv(id);}
+function onPvCm(e){e.preventDefault();
+if(!pvSel){document.getElementById('pvStatus').textContent='Erst Text anklicken (markieren), dann Rechtsklick zum Zuweisen';return;}
+var segs=SEGMENTE.map(function(s){return '<div class="cmi" onclick="assignPv(\''+s+'\')">'+s+'</div>';}).join('');
+showCm(e.clientX,e.clientY,'<div style="padding:6px 14px;color:var(--BpmTextSecondary);font-size:11px;border-bottom:1px solid var(--BpmBorderSubtle);font-style:italic">„'+SELTXT+'"</div>'+
+'<div class="cmh">Revision · Index B</div>'+
+'<div class="cmi" onclick="assignPv(\'Änderungshinweis\')">Änderungshinweis übernehmen</div>'+
+'<div class="cmi" onclick="assignPv(\'Index-Datum\')">Index-Datum übernehmen</div>'+
+'<div class="cmh" style="border-top:1px solid var(--BpmBorderSubtle);margin-top:4px;padding-top:8px">Zuweisen als Segment (Katalog BPM-108)</div>'+segs+
+'<div class="cmi" style="color:var(--BpmTextSecondary)">Weitere Segmenttypen …</div>'+
+'<div style="border-top:1px solid var(--BpmBorderSubtle);margin:4px 0"></div>'+
+'<div class="cmi" style="color:var(--BpmTextSecondary)">Kopieren</div>');}
+function assignPv(target){cm.style.display='none';if(!pvId)return;var f=anyById(pvId);
+if(target==='Änderungshinweis'&&f.kind==='update'){f.newC=SELTXT;}
+else if(target==='Bezeichnung'){f.bez=SELTXT;}
+else if(target==='Index-Datum'&&f.kind==='update'){f.newD='20.01.2026';}
+document.getElementById('dMsg').textContent='✓ „'+SELTXT.substring(0,26)+'…" → '+target+' übernommen';
+pvSel=false;pvDraw();render();}
+document.addEventListener('pointerdown',function(e){if(cm&&!e.target.closest('#cmenu'))cm.style.display='none';},true);
+function arcP(r0,r1,a0,a1){var g=0.012;a0+=g;a1-=g;function p(r,a){return (CX+r*Math.cos(a)).toFixed(1)+' '+(CX+r*Math.sin(a)).toFixed(1);}var la=(a1-a0)>Math.PI?1:0;return 'M'+p(r0,a0)+' A'+r0+' '+r0+' 0 '+la+' 1 '+p(r0,a1)+' L'+p(r1,a1)+' A'+r1+' '+r1+' 0 '+la+' 0 '+p(r1,a0)+' Z';}
+function ring(svg,rr,items,ringId,selName,candName,anim){var n=items.length;if(!n)return;var full=2*Math.PI,st=-Math.PI/2,r0=rr[0],r1=rr[1];
+var grp=document.createElementNS('http://www.w3.org/2000/svg','g');
+if(anim)grp.setAttribute('class','ringAnim');
+items.forEach(function(it,i){var a0=st+i*full/n,a1=st+(i+1)*full/n,mid=(a0+a1)/2,rm=(r0+r1)/2;
+var p=document.createElementNS('http://www.w3.org/2000/svg','path');
+p.setAttribute('d',arcP(r0,r1,a0,a1));
+var isSel=selName===it.n,isHov=R.hov&&R.hov.ring===ringId&&R.hov.name===it.n;
+var graded=(ringId==='bau'||ringId==='ges')&&!it.add;
+var typeCol=(typDef(R.typ)&&typDef(R.typ).c)||'#185FA5';
+var baseFill=graded?rampCol(typeCol,it._t!=null?it._t:0):(it.c||'var(--BpmBgElevated)');
+p.style.fill=isSel?'var(--BpmBgActive)':baseFill;
+p.setAttribute('fill-opacity','1');
+p.style.stroke=isSel?'var(--BpmAccentPrimary)':isHov?'var(--BpmTextBright)':(candName===it.n?'var(--BpmWarning)':'var(--BpmBgBase)');
+p.setAttribute('stroke-width',isSel||isHov?2:1.5);
+if(candName===it.n&&!isSel)p.setAttribute('stroke-dasharray','4 3');
+if(it.add){p.style.fill='var(--BpmBgBase)';p.setAttribute('fill-opacity','0.7');p.style.stroke=isHov?'var(--BpmTextBright)':'var(--BpmWarning)';p.setAttribute('stroke-dasharray','4 3');}
+p.style.pointerEvents='auto';p.dataset.ring=ringId;p.dataset.name=it.n;
+if(it.m)p.dataset.inert='1';if(it.add)p.dataset.add='1';
+grp.appendChild(p);
+var t=document.createElementNS('http://www.w3.org/2000/svg','text');
+t.setAttribute('x',CX+rm*Math.cos(mid));t.setAttribute('y',CX+rm*Math.sin(mid)+4);
+t.setAttribute('text-anchor','middle');t.setAttribute('font-size','12');
+t.style.fill=it.add?'var(--BpmWarning)':(isSel?'var(--BpmTextBright)':((ringId==='bau'||ringId==='ges')&&it._t>0.55?'#14202b':'var(--BpmTextBright)'));t.style.pointerEvents='none';t.textContent=it.n;grp.appendChild(t);});
+svg.appendChild(grp);}
+function renderRadial(){var svg=document.getElementById('radial');svg.innerHTML='';
+var c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+c.setAttribute('cx',CX);c.setAttribute('cy',CX);c.setAttribute('r',CR);
+c.style.fill='var(--BpmBgActive)';c.setAttribute('fill-opacity','0.9');c.style.stroke='var(--BpmAccentPrimary)';svg.appendChild(c);
+var t1=document.createElementNS('http://www.w3.org/2000/svg','text');
+t1.setAttribute('x',CX);t1.setAttribute('y',CX-4);t1.setAttribute('text-anchor','middle');t1.setAttribute('font-size','13');t1.style.fill='var(--BpmTextBright)';
+t1.textContent=R.move!=null?'Verschieben':sel.size+' Datei(en)';svg.appendChild(t1);
+var t2=document.createElementNS('http://www.w3.org/2000/svg','text');
+t2.setAttribute('x',CX);t2.setAttribute('y',CX+14);t2.setAttribute('text-anchor','middle');t2.setAttribute('font-size','11');t2.style.fill=R.typ||!R.combi?'#85b8d9':'var(--BpmWarning)';t2.textContent=R.typ?(R.typ+(R.bau?' › '+R.bau:'')):(R.combi?'⚠ Kombi-Plan':'');svg.appendChild(t2);
+ring(svg,RING1,ring1Items(),'typ',R.typ,R.cand,false);
+var showBau=!!R.typ;
+if(showBau)ring(svg,RING2,ring2Items(),'bau',R.bau,null,!vis.bau);
+var gl=ring3Items();
+var showGes=gl.length>1;
+if(showGes)ring(svg,RING3,gl,'ges',R.ges,R.cand==='Polierplan'?R.candG:null,!vis.ges);
+vis.bau=showBau;vis.ges=showGes;}
+function commit(h){if(h.add)return;
+if(h.ring==='typ'){if(R.typ!==h.name){R.typ=h.name;R.bau=null;R.ges=null;rotOff.bau=0;rotOff.ges=0;renderRadial();}
+else if(R.bau||R.ges){R.bau=null;R.ges=null;rotOff.ges=0;renderRadial();}}
+else if(h.ring==='bau'&&R.bau!==h.name){R.bau=h.name;R.ges=null;rotOff.ges=0;renderRadial();}
+else if(h.ring==='ges'&&R.ges!==h.name){R.ges=h.name;renderRadial();}}
+var holdT=null,dwellT=null,downId=-1,downXY=null,downArc=false,justOpened=false;
+var frame=null;
+function moveGhost(cx,cy){var fr=frame.getBoundingClientRect();var g=document.getElementById('ghost');
+g.style.left=(cx-fr.left+16)+'px';g.style.top=(cy-fr.top+14)+'px';}
+function showGhost(cx,cy,label){document.getElementById('ghostTxt').textContent=label;
+document.getElementById('ghost').style.display='flex';moveGhost(cx,cy);}
+function startRadial(f,moveId){R.open=true;R.move=moveId!=null?moveId:null;
+R.typ=null;R.bau=null;R.ges=null;R.hov=null;R.cand=f.t||null;R.candG=f.g||null;R.combi=!!f.combi;
+vis={bau:false,ges:false};rotOff={typ:0,bau:0,ges:0};
+var fr=frame.getBoundingClientRect();var x=downXY[0]-fr.left,y=downXY[1]-fr.top;
+x=Math.max(255,Math.min(fr.width-255,x));y=Math.max(252,Math.min(fr.height-252,y));
+var o=document.getElementById('ovl');o.style.left=(x-250)+'px';o.style.top=(y-250)+'px';o.style.display='block';
+renderRadial();}
+function onTblDown(e){if(e.button!==0)return;
+var tr=e.target.closest('tr[data-i],tr[data-a]');if(!tr||e.target.closest('button'))return;e.preventDefault();
+downArc=tr.hasAttribute('data-a');
+downId=+(tr.dataset.i||tr.dataset.a);downXY=[e.clientX,e.clientY];
+if(!downArc){var f=byId(downId);if(f.kind==='update')return;
+holdT=setTimeout(function(){if(!sel.has(downId)){sel.clear();sel.add(downId);render();}
+var n=sel.size;startRadial(f,null);justOpened=true;
+showGhost(downXY[0],downXY[1],n===1?f.n:n+' Dateien');},HOLD);}
+else{var a=arcById(downId);
+holdT=setTimeout(function(){sel.clear();sel.add(downId);render();
+startRadial(a.f,downId);justOpened=true;
+showGhost(downXY[0],downXY[1],'↷ '+a.f.n);},HOLD);}}
+document.addEventListener('pointermove',function(e){if(!R.open){if(holdT&&downXY&&Math.hypot(e.clientX-downXY[0],e.clientY-downXY[1])>40){clearTimeout(holdT);holdT=null;}return;}
+moveGhost(e.clientX,e.clientY);
+var el=document.elementFromPoint(e.clientX,e.clientY);
+var seg=el&&el.dataset&&el.dataset.ring&&!el.dataset.inert?{ring:el.dataset.ring,name:el.dataset.name,add:el.dataset.add}:null;
+if(seg&&(!R.hov||R.hov.ring!==seg.ring||R.hov.name!==seg.name)){
+clearTimeout(dwellT);R.hov=seg;renderRadial();
+dwellT=setTimeout(function(){commit(seg);},DWELL);}
+else if(!seg&&R.hov){clearTimeout(dwellT);R.hov=null;renderRadial();}});
+document.addEventListener('pointerup',function(e){if(e.button!==0)return;clearTimeout(holdT);holdT=null;clearTimeout(dwellT);
+if(R.open){
+if(justOpened){justOpened=false;downId=-1;downXY=null;downArc=false;return;}
+var el=document.elementFromPoint(e.clientX,e.clientY);
+var seg=el&&el.dataset&&el.dataset.ring&&!el.dataset.inert?{ring:el.dataset.ring,name:el.dataset.name,add:el.dataset.add}:null;
+if(!seg){downId=-1;downXY=null;downArc=false;return;}
+var files=[];sel.forEach(function(id){files.push(id);});
+if(seg.add){R.open=false;justOpened=false;document.getElementById('ovl').style.display='none';document.getElementById('ghost').style.display='none';openAdd(seg.ring,files);downId=-1;downXY=null;return;}
+if(seg.ring==='typ')R.typ=seg.name;if(seg.ring==='bau')R.bau=seg.name;if(seg.ring==='ges')R.ges=seg.name;
+if(R.typ){var path='Pläne/'+R.typ+(R.bau?'/'+R.bau:'')+(R.ges?'/'+R.ges:'')+'/';applyTarget(path,files,R.move);}
+closeRadial();downId=-1;downXY=null;downArc=false;return;}
+document.getElementById('ghost').style.display='none';
+if(downId>=0&&!downArc&&!e.target.closest('#addBox')&&!e.target.closest('#cmenu')){if(e.ctrlKey){if(sel.has(downId))sel.delete(downId);else sel.add(downId);}
+else{if(sel.size===1&&sel.has(downId))sel.clear();else{sel.clear();sel.add(downId);}}render();}
+else if(downId>=0&&downArc&&!e.target.closest('#cmenu')){sel.clear();sel.add(downId);render();}
+downId=-1;downXY=null;downArc=false;});
+function closeRadial(){R.open=false;R.move=null;justOpened=false;R.hov=null;clearTimeout(dwellT);document.getElementById('ovl').style.display='none';document.getElementById('ghost').style.display='none';render();}
+document.addEventListener('wheel',function(e){if(!R.open)return;var el=document.elementFromPoint(e.clientX,e.clientY);var ring=el&&el.dataset?el.dataset.ring:null;if(!ring)return;e.preventDefault();var d=e.deltaY>0?1:-1;
+if(ring==='typ')rotOff.typ+=d;else if(ring==='bau')rotOff.bau+=d;else if(ring==='ges')rotOff.ges+=d;
+renderRadial();},{passive:false});
+document.addEventListener('contextmenu',function(e){if(R.open){e.preventDefault();e.stopPropagation();closeRadial();}},true);
+
+/* Zustand = Sub-Tab (neu | archiv); die Vorführleiste (theme.js) zeichnet den Rahmen neu, zeige() ruft dann init() */
+function setzeZustand(t){TAB=t;sel.clear();R.open=false;R.move=null;R.hov=null;addCtx=null;clearTimeout(holdT);holdT=null;clearTimeout(dwellT);}
+/* Element-Listener nach jedem Neuzeichnen binden; offenes Vorschau-Panel bleibt offen */
+function init(){cm=document.getElementById('cmenu');frame=document.getElementById('frame');
+document.getElementById('dOk').addEventListener('click',onOk);
+document.getElementById('tbl').addEventListener('contextmenu',onTblCm);
+document.getElementById('tbl').addEventListener('pointerdown',onTblDown);
+document.getElementById('pvSvg').addEventListener('contextmenu',onPvCm);
+if(pvId){document.getElementById('pvPanel').style.display='flex';pvDraw();}
+render();}
+
+const SHELL = `<div class="shell" style="user-select:none">
+
+<!-- Header -->
+<div style="display:flex;align-items:center;gap:10px;padding:8px 16px;background:var(--BpmBgSurface);border-bottom:1px solid var(--BpmBorderSubtle);min-height:40px">
+<button class="btn" style="border:none;height:auto;padding:2px 8px;font-size:15px;color:var(--BpmTextSecondary)" onclick="M.geh('projektuebersicht')">&#8592;</button>
+<span style="font-size:14px;font-weight:500;color:var(--BpmTextBright);flex:1">&Ouml;WG Dobl-Zwaring</span>
+<span id="selBadge" style="background:var(--BpmBgActive);color:#85b8d9;font-size:12px;padding:3px 10px;border-radius:2px">0 ausgew&auml;hlt</span>
+<span id="cntBadge" style="background:#2a2418;color:var(--BpmWarning);font-size:12px;padding:3px 10px;border-radius:2px">9 neu</span>
+</div>
+
+<!-- Projektdetail-Tabs (Guideline 8.6 / BpmTabItem) -->
+<div style="display:flex;gap:0;background:var(--BpmBgSurface);border-bottom:1px solid var(--BpmBorderDefault)">
+<div class="tab" onclick="M.geh('explorer')">Explorer</div>
+<div class="tab on">Manuell sortieren</div>
+<div class="tab" onclick="M.geh('plandaten')">Plandaten</div>
+<div class="tab" onclick="M.geh('profile')">Profile</div>
+<div class="tab tot" onclick="alert('Mockup folgt: 02_Projektdetail/03_Sync.html (BPM-005)')">Sync</div>
+</div>
+
+<!-- Sub-Tabs -->
+<div style="display:flex;gap:0;background:var(--BpmBgSurface);border-bottom:1px solid var(--BpmBorderDefault)">
+<div id="tabNeu" class="tab on" onclick="setTab('neu')">Neue Pl&auml;ne (9)</div>
+<div id="tabArc" class="tab" onclick="setTab('archiv')">Archiv (5)</div>
+</div>
+
+<div id="hint" style="padding:7px 16px;background:var(--BpmBgBase);border-bottom:1px solid var(--BpmBorderSubtle);font-size:12px;color:var(--BpmAccentPrimary)"></div>
+
+<!-- Content: Tabelle | Detail-Panel (320) | Vorschau-Panel (einblendbar) -->
+<div id="frame" style="position:relative;display:flex;flex:1;min-height:0">
+<div style="flex:1;padding:12px 16px;min-width:0;overflow:auto">
+<table id="tbl" style="font-size:13px"></table>
+<div id="legend" style="margin-top:10px;font-size:11px;display:flex;gap:18px"></div>
+</div>
+
+<!-- Detail-Panel (Teil 47: 320px, Historie 3-spaltig immer sichtbar) -->
+<div style="width:320px;background:var(--BpmBgSurface);border-left:1px solid var(--BpmBorderSubtle);padding:12px 14px;font-size:13px;flex-shrink:0;overflow:auto">
+<div style="color:var(--BpmTextSecondary);font-size:11px;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Detail-Panel</div>
+<div id="dEdit"><div style="color:#5a5a5a;font-size:12px">Keine Auswahl</div></div>
+<div id="dHist"></div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0"><span class="lbl" style="margin:0">Pending</span><span id="dPend" style="color:var(--BpmTextPrimary);font-size:12px">&mdash;</span></div>
+<div id="dMsg" style="color:var(--BpmSuccess);font-size:11px;margin-bottom:8px;min-height:14px"></div>
+<button id="dOk" class="btnP" style="opacity:.4">Import best&auml;tigen (0)</button>
+<button class="btn" style="width:100%;margin-top:6px" onclick="clearPend()">Pending verwerfen</button>
+</div>
+
+<!-- Vorschau-Panel (Teil 47 Variante B: integriert rechts aussen, ADR-062/063) -->
+<div id="pvPanel" style="display:none;width:460px;flex-shrink:0;background:#1A1A1B;border-left:1px solid var(--BpmBorderSubtle);flex-direction:column">
+<div style="display:flex;align-items:center;gap:5px;padding:6px 10px;background:var(--BpmBgSurface);border-bottom:1px solid var(--BpmBorderSubtle)">
+<span style="color:var(--BpmTextSecondary);font-size:11px;text-transform:uppercase;letter-spacing:.4px;flex:1">Vorschau</span>
+<span class="tbx" style="padding:0 8px">&#9664;</span><span style="color:var(--BpmTextSecondary);font-size:12px">1/1</span><span class="tbx" style="padding:0 8px">&#9654;</span>
+<span class="tbx on" onclick="kopfView()">Plankopf</span>
+<span class="tbx" onclick="fitView()">Blatt</span>
+<span class="tbx" onclick="zoom(1.25)">+</span>
+<span class="tbx" onclick="zoom(0.8)">&minus;</span>
+<span class="tbx" onclick="pvOpenExt()" title="In Standard-App &ouml;ffnen">&#8599;</span>
+<span onclick="closePv()" style="color:var(--BpmTextSecondary);cursor:pointer;font-size:14px;padding:0 4px">&#10005;</span>
+</div>
+<div style="flex:1;background:#111;display:flex;align-items:center;justify-content:center;padding:8px;min-height:0">
+<svg id="pvSvg" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"></svg>
+</div>
+<div id="pvStatus" style="padding:6px 12px;background:var(--BpmBgSurface);border-top:1px solid var(--BpmBorderSubtle);font-size:11px;color:var(--BpmTextSecondary)">Klick auf Text = markieren &middot; Rechtsklick = Zuweisen &middot; Rad = Zoom &middot; Mitteltaste = Pan</div>
+</div>
+
+<!-- Radial-Overlay -->
+<div id="ovl" style="position:absolute;display:none;z-index:50;pointer-events:none"><svg id="radial" viewBox="0 0 520 520" width="500" height="500"></svg></div>
+<!-- Drag-Ghost -->
+<div id="ghost" style="position:absolute;display:none;z-index:60;pointer-events:none;background:var(--BpmBgActive);border:1px solid var(--BpmAccentPrimary);border-radius:3px;padding:5px 10px;color:var(--BpmTextBright);font-size:12px;white-space:nowrap;align-items:center;gap:6px">&#128196; <span id="ghostTxt"></span></div>
+<!-- Kontextmenü -->
+<div id="cmenu" style="position:absolute;display:none;z-index:70;background:var(--BpmBgSurface);border:1px solid var(--BpmBorderDefault);border-radius:4px;padding:4px 0;min-width:230px"></div>
+<!-- Anlage-Dialog -->
+<div id="addBox" style="position:absolute;display:none;z-index:90;left:50%;top:42%;transform:translate(-50%,-50%);background:var(--BpmBgSurface);border:1px solid var(--BpmAccentPrimary);border-radius:4px;padding:16px;width:290px">
+<div id="addTitle" style="color:var(--BpmTextBright);font-size:14px;font-weight:500;margin-bottom:8px"></div>
+<input id="addInp" class="inp" placeholder="Bezeichnung">
+<div style="color:var(--BpmTextSecondary);font-size:11px;margin:8px 0">Wird in den Projektdaten angelegt, Ordner wird erstellt, Dateien werden zugeordnet. Pflege: Projekt-Einstellungen.</div>
+<div style="display:flex;gap:8px;justify-content:flex-end">
+<button class="btn" onclick="closeAdd()">Abbrechen</button>
+<button class="btnP" style="width:auto;padding:0 14px" onclick="confirmAdd()">Anlegen &amp; zuordnen</button>
+</div>
+</div>
+</div>
+
+<!-- Statusleiste (Guideline 0.1: 28px) -->
+<div style="height:28px;background:var(--BpmAccentPrimary);display:flex;align-items:center;padding:0 16px;font-size:11px;color:var(--BpmTextBright);flex-shrink:0">
+<span>&Ouml;WG &middot; 119 Dok.</span><span style="margin-left:auto" id="sbInfo">bereit</span>
+</div>
+</div>`;
+let erster = true;
+M.start({ nr: '3.3', titel: 'Manuell sortieren', version: '0.2',
+  zustaende: [['neu','Neue Pläne'],['archiv','Archiv']],
+  zeige: (s) => {
+    if (erster || s.z !== TAB) { setzeZustand(s.z); erster = false; }
+    setTimeout(init);
+    return SHELL;
+  },
+});
+</script>
+</body>
+</html>

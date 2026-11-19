@@ -113,3 +113,18 @@ Wird vor jedem neuen Mockup gelesen und nach Mockup-Änderungen aktualisiert.
 - **BPM-007.02** — Mockup `03_ProfilWizard/05_Erkennung.html` (Toggle Segmente/Regex) — ✅ Segmente-Modus erledigt, Regex-Modus-Variante (`05_Erkennung_Regex.html`) noch offen
 - **BPM-080.05** — WPF-Umsetzung des kompletten Wizards
 - **BPM-108** — Segmenttyp-Verwaltung DB-basiert (Architektur abgeschlossen via CGR-2026-05-12-segmenttyp-architektur). Mockups: `04_FeldtypManager/01_Uebersicht.html` (Manager mit Built-in Fachrolle + Token read-only) + `03_ProfilWizard/02_Segmente_NeuerCustom.html` (Inline-Popover). WPF-Umsetzung: 3-Phasen-Plan (Phase A Domain → B Profilformat v4 → C Wizard/UI)
+
+## Abgelöst durch die Seitenliste
+
+Diese Mockups sind seit 2026-11-19 durch Seiten im Seitenformat abgelöst (`Docs/Mockups/seiten/`, Wahrheit: `Docs/Mockups/seiten.json`). Die alten Dateien bleiben unverändert als Herkunft liegen; Änderungen nur noch an der neuen Seite.
+
+| Altes Mockup | Seite | Neue Datei |
+|---|---|---|
+| 01_Projektuebersicht/01_Projektuebersicht.html | 3.1 Projektübersicht | `seiten/projektuebersicht.html` |
+| 02_Projektdetail/04_Explorer.html | 3.2 Explorer | `seiten/explorer.html` |
+| 02_Projektdetail/02_ManuellSortieren.html | 3.3 Manuell sortieren | `seiten/manuell-sortieren.html` |
+| 02_Projektdetail/02_ManuellSortieren_Claude.html | 3.4 Mit Claude sortieren | `seiten/mit-claude-sortieren.html` |
+| 02_Projektdetail/05_Plandaten.html | 3.5 Plandaten | `seiten/plandaten.html` |
+| 02_Projektdetail/01_Profile.html | 3.6 Profile | `seiten/profile.html` |
+| 03_ProfilWizard/*.html | 3.8 Profil-Wizard | `seiten/profil-wizard.html` |
+| 04_FeldtypManager/01_Uebersicht.html | 3.9 Segmenttypen | `seiten/segmenttypen.html` |

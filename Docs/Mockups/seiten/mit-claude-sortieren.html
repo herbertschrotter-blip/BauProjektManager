@@ -226,9 +226,9 @@ FILES.forEach(function(f){var on=hasDraft()&&selId===f.id;
  if(pend)z='<span style="color:var(--BpmWarning);margin-right:4px">&#9203;</span>'+z;
  h+='<tr onclick="pick('+f.id+')" style="cursor:pointer;height:36px;background:'+bg+'">'+
  '<td style="padding:6px 6px 6px 8px;border-left:'+bl+';color:'+(on?'var(--BpmAccentPrimary)':'var(--BpmTextSecondary)')+'">'+(on?'&#10003;':'&#9744;')+'</td>'+
- '<td style="padding:6px 8px;color:var(--BpmTextBright);font-family:Consolas,monospace;font-size:12px">'+esc(f.n)+(f.pair?' <span class="pill pPair">&#9939; Paar</span>':'')+(f.combi?' <span class="pill pCombi">&#9888; Kombi</span>':'')+tag+'</td>'+
+ '<td style="padding:6px 8px;color:var(--BpmTextBright);font-family:Consolas,monospace;font-size:12px;white-space:nowrap">'+esc(f.n)+(f.pair?' <span class="pill pPair">&#9939; Paar</span>':'')+(f.combi?' <span class="pill pCombi">&#9888; Kombi</span>':'')+tag+'</td>'+
  '<td style="padding:6px 8px;color:var(--BpmTextSecondary);font-size:12px">'+f.s+'</td>'+
- '<td style="padding:6px 8px;font-size:11px">'+z+'</td></tr>';});
+ '<td style="padding:6px 8px;font-size:11px;white-space:nowrap">'+z+'</td></tr>';});
 $('tbl').innerHTML=h;
 $('legend').innerHTML=hasDraft()?
  (state===6?'<span style="color:var(--BpmWarning)">&#9632; Pending (aus Claude-Vorschlag, &#10022;)</span>':'<span style="color:var(--BpmAccentPrimary)">&#9476; Vorschlag von Claude (noch nicht &uuml;bernommen)</span>')+
@@ -244,7 +244,7 @@ var b=$('claudeBtn'),bt=$('claudeBtnTxt'),oh=$('offHint');
 b.disabled=(state===7||state===8);b.className='claudeBtn'+(running()?' run':'');
 oh.style.display=(state===7||state===8)?'inline':'none';
 if(state===7){bt.textContent='Mit Claude sortieren';b.title='Claude Code nicht erreichbar: „claude“ nicht gefunden oder nicht angemeldet';oh.innerHTML='<span style="color:var(--BpmError)">&#9679;</span> Claude nicht erreichbar';}
-else if(state===8){bt.textContent='Mit Claude sortieren';b.title='In den Einstellungen ausgeschaltet';oh.innerHTML='Claude ist ausgeschaltet &middot; <a href="#" style="color:var(--BpmAccentPrimary)" onclick="M.geh(\'../Settings/01_Einstellungen/01_Allgemein\');return false">Einstellungen</a>';}
+else if(state===8){bt.textContent='Mit Claude sortieren';b.title='In den Einstellungen ausgeschaltet';oh.innerHTML='Claude ist ausgeschaltet &middot; <a href="#" style="color:var(--BpmAccentPrimary)" onclick="M.geh(\'einstellungen-allgemein\');return false">Einstellungen</a>';}
 else if(running()){bt.textContent=chatOpen?'Claude-Sitzung S-0003':'Sitzung fortsetzen';b.title='';}
 else {bt.textContent='Mit Claude sortieren';b.title='11 Dateien (Erstaufnahme) von Claude vorsortieren lassen';}
 $('startPop').style.display=state===1?'block':'none';
@@ -320,7 +320,7 @@ if(state===7){h=START.replace('Claude Code gestartet','Start versucht')+
  '<div style="color:var(--BpmTextPrimary)">&bdquo;claude&ldquo; wurde auf diesem PC nicht gefunden oder ist nicht angemeldet.</div>'+
  '<div style="color:var(--BpmTextSecondary);margin:8px 0">Abhilfe: Claude Code installieren, im Terminal einmal <span style="font-family:Consolas,monospace;color:var(--BpmTextPrimary)">claude</span> starten und anmelden.</div>'+
  '<div style="color:var(--BpmTextSecondary);font-size:11px;margin-bottom:10px">Deine Dateien sind unver&auml;ndert &ndash; von Hand sortieren geht weiter.</div>'+
- '<div style="display:flex;gap:8px"><button class="btnP" style="height:28px" onclick="go(2)">Erneut pr&uuml;fen</button><button class="btn" style="height:28px" onclick="M.geh(\'../Settings/01_Einstellungen/01_Allgemein\')">Einstellungen</button></div></div>';
+ '<div style="display:flex;gap:8px"><button class="btnP" style="height:28px" onclick="go(2)">Erneut pr&uuml;fen</button><button class="btn" style="height:28px" onclick="M.geh(\'einstellungen-allgemein\')">Einstellungen</button></div></div>';
  lg.innerHTML=h;inp.disabled=true;sb.disabled=true;return;}
 inp.disabled=!(state>=3);sb.disabled=!(state>=3);
 h+=START+READ;
@@ -371,24 +371,24 @@ const SHELL = `<div class="shell" style="user-select:none">
 
 <!-- Header -->
 <div style="display:flex;align-items:center;gap:10px;padding:8px 16px;background:var(--BpmBgSurface);border-bottom:1px solid var(--BpmBorderSubtle);min-height:40px">
-<button class="btn" style="border:none;height:auto;padding:2px 8px;font-size:15px;color:var(--BpmTextSecondary)" onclick="M.geh('../PlanManager/01_Projektuebersicht/01_Projektuebersicht')">&#8592;</button>
+<button class="btn" style="border:none;height:auto;padding:2px 8px;font-size:15px;color:var(--BpmTextSecondary)" onclick="M.geh('projektuebersicht')">&#8592;</button>
 <span style="font-size:14px;font-weight:500;color:var(--BpmTextBright);flex:1">&Ouml;WG Dobl-Zwaring</span>
 <span id="cntBadge" style="background:var(--BpmBgElevated);color:var(--BpmWarning);font-size:12px;padding:3px 10px;border-radius:2px">12 neu</span>
 </div>
 
 <!-- Projektdetail-Tabs -->
 <div style="display:flex;background:var(--BpmBgSurface);border-bottom:1px solid var(--BpmBorderDefault)">
-<div class="tab" onclick="M.geh('../PlanManager/02_Projektdetail/04_Explorer')">Explorer</div>
-<div class="tab on" onclick="M.geh('../PlanManager/02_Projektdetail/02_ManuellSortieren')" title="zur Grundvariante (Radial)">Manuell sortieren</div>
-<div class="tab" onclick="M.geh('../PlanManager/02_Projektdetail/05_Plandaten')">Plandaten</div>
-<div class="tab" onclick="M.geh('../PlanManager/02_Projektdetail/01_Profile')">Profile</div>
+<div class="tab" onclick="M.geh('explorer')">Explorer</div>
+<div class="tab on" onclick="M.geh('manuell-sortieren')" title="zur Grundvariante (Radial)">Manuell sortieren</div>
+<div class="tab" onclick="M.geh('plandaten')">Plandaten</div>
+<div class="tab" onclick="M.geh('profile')">Profile</div>
 <div class="tab tot" onclick="alert('Mockup folgt: 02_Projektdetail/03_Sync.html (BPM-005)')">Sync</div>
 </div>
 
 <!-- Sub-Tabs -->
 <div style="display:flex;background:var(--BpmBgSurface);border-bottom:1px solid var(--BpmBorderDefault)">
 <div class="tab on">Neue Pl&auml;ne (12)</div>
-<div class="tab" onclick="M.geh('../PlanManager/02_Projektdetail/02_ManuellSortieren')">Archiv (5)</div>
+<div class="tab" onclick="M.geh('manuell-sortieren')">Archiv (5)</div>
 </div>
 
 <!-- Hinweis + Toolbar-Knopf -->
@@ -477,7 +477,7 @@ Claude bekommt <b style="color:var(--BpmTextBright)">11 Dateien</b> (Erstaufnahm
 </div>
 </div>`;
 let erster = true;
-M.start({ nr: '3.4', titel: 'Mit Claude sortieren', version: '1.3',
+M.start({ nr: '3.4', titel: 'Mit Claude sortieren', version: '1.4',
   zustaende: [['0','0 Ausgangslage'],['1','1 Start bestätigen'],['2','2 Liest Pläne'],['3','3 Rückfrage'],['4','4 Rückfrage (mehrere)'],['5','5 Entwurf bereit'],['6','6 Übernommen'],['7','7 Nicht erreichbar'],['8','8 Claude aus'],['9','9 Fehlt: Bauteil'],['10','10 Fehlt: Dokumenttyp'],['11','11 Angelegt, neu zugeordnet']],
   zeige: (s) => {
     const n = +s.z;

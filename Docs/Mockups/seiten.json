@@ -23,6 +23,18 @@
       "was": "Claude-Port wird an den PlanManager weitergereicht (keine sichtbare Änderung)",
       "art": "code",
       "commit": "f9b2628"
+     },
+     {
+      "v": "0.1",
+      "datum": "19.11.2026",
+      "was": "aus altem Mockup übernommen (seiten/hauptfenster.html, Theme; Inhalt unverändert)",
+      "art": "mockup"
+     },
+     {
+      "v": "0.2",
+      "datum": "19.11.2026",
+      "was": "Zugeklappte Sidebar zeigt die Symbole (Fehler aus dem alten Mockup: die Regel zum Ausblenden der Texte traf auch die Symbole)",
+      "art": "mockup"
      }
     ],
     "mockup_alt": "App/01_Shell/01_Sidebar.html",
@@ -32,9 +44,11 @@
      "3.1"
     ],
     "nutzt": [],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": null,
-    "code_stand": "1dc0a26ec0"
+    "code_stand": "1dc0a26ec0",
+    "mockup": "seiten/hauptfenster.html",
+    "version_mockup": "0.2"
    },
    {
     "nr": "1.2",
@@ -57,7 +71,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": null,
     "code_stand": "313084ddb6"
    },
@@ -80,7 +94,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": null,
     "code_stand": "ef7f6eb1ea"
    },
@@ -103,7 +117,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": null,
     "code_stand": "5cafb06a88"
    },
@@ -120,6 +134,12 @@
       "datum": "16.11.2026",
       "was": "Bestand beim Anlegen der Seitenliste",
       "art": "code"
+     },
+     {
+      "v": "0.1",
+      "datum": "19.11.2026",
+      "was": "aus altem Mockup übernommen (seiten/dev-log.html, Theme; Inhalt unverändert)",
+      "art": "mockup"
      }
     ],
     "mockup_alt": "Settings/02_DevTools/01_Log.html",
@@ -129,9 +149,11 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": null,
-    "code_stand": "710fc123d4"
+    "code_stand": "710fc123d4",
+    "mockup": "seiten/dev-log.html",
+    "version_mockup": "0.1"
    },
    {
     "nr": "1.6",
@@ -146,6 +168,12 @@
       "datum": "16.11.2026",
       "was": "Bestand beim Anlegen der Seitenliste",
       "art": "code"
+     },
+     {
+      "v": "0.1",
+      "datum": "19.11.2026",
+      "was": "aus altem Mockup übernommen (seiten/dev-zuruecksetzen.html, Theme; Inhalt unverändert)",
+      "art": "mockup"
      }
     ],
     "mockup_alt": "Settings/02_DevTools/02_Reset.html",
@@ -153,9 +181,11 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": null,
-    "code_stand": "710fc123d4"
+    "code_stand": "710fc123d4",
+    "mockup": "seiten/dev-zuruecksetzen.html",
+    "version_mockup": "0.1"
    }
   ]
  },
@@ -196,6 +226,12 @@
       "was": "Auswahl „Modell“ (Standard von Claude Code / Sonnet / Opus) unter „Mit Claude sortieren“ – Mockup 0.3 gebaut",
       "art": "code",
       "commit": "be5ad51"
+     },
+     {
+      "v": "0.3",
+      "datum": "19.11.2026",
+      "was": "aus altem Mockup übernommen (seiten/einstellungen-allgemein.html, Theme; Inhalt unverändert)",
+      "art": "mockup"
      }
     ],
     "mockup_alt": "Settings/01_Einstellungen/01_Allgemein.html",
@@ -206,10 +242,11 @@
      "2.5"
     ],
     "nutzt": [],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": "0.3",
     "code_stand": "01d622dd6b",
-    "version_mockup": "0.3"
+    "version_mockup": "0.3",
+    "mockup": "seiten/einstellungen-allgemein.html"
    },
    {
     "nr": "2.2",
@@ -232,7 +269,7 @@
      "2.6"
     ],
     "nutzt": [],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": null,
     "code_stand": "516f97f287"
    },
@@ -255,7 +292,7 @@
     "nutzt": [
      "Ordnervorlage"
     ],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": null,
     "code_stand": "1399d29b19"
    },
@@ -276,7 +313,7 @@
     ],
     "zu": [],
     "nutzt": [],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": null,
     "code_stand": "516f97f287"
    },
@@ -297,7 +334,7 @@
     ],
     "zu": [],
     "nutzt": [],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": null,
     "code_stand": "516f97f287"
    },
@@ -325,7 +362,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": null,
     "code_stand": "27d7a90892"
    },
@@ -348,7 +385,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": null,
     "code_stand": "673fcb483d"
    },
@@ -371,7 +408,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": null,
     "code_stand": "8ce496ff4e"
    },
@@ -394,7 +431,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": null,
     "code_stand": "b1a855c477"
    },
@@ -418,7 +455,7 @@
      "Ordnervorlage",
      "Dialograhmen"
     ],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": null,
     "code_stand": "23d914694a"
    }
@@ -448,6 +485,12 @@
       "was": "Claude-Port wird an das Projektdetail weitergereicht (keine sichtbare Änderung)",
       "art": "code",
       "commit": "f9b2628"
+     },
+     {
+      "v": "0.1",
+      "datum": "19.11.2026",
+      "was": "aus altem Mockup übernommen (seiten/projektuebersicht.html, Theme; Inhalt unverändert)",
+      "art": "mockup"
      }
     ],
     "mockup_alt": "PlanManager/01_Projektuebersicht/01_Projektuebersicht.html",
@@ -455,9 +498,11 @@
      "3.2"
     ],
     "nutzt": [],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": null,
-    "code_stand": "5b8667e11e"
+    "code_stand": "5b8667e11e",
+    "mockup": "seiten/projektuebersicht.html",
+    "version_mockup": "0.1"
    },
    {
     "nr": "3.2",
@@ -472,6 +517,12 @@
       "datum": "16.11.2026",
       "was": "Bestand beim Anlegen der Seitenliste",
       "art": "code"
+     },
+     {
+      "v": "0.1",
+      "datum": "19.11.2026",
+      "was": "aus altem Mockup übernommen (seiten/explorer.html, Theme; Inhalt unverändert)",
+      "art": "mockup"
      }
     ],
     "mockup_alt": "PlanManager/02_Projektdetail/04_Explorer.html",
@@ -484,9 +535,11 @@
      "3.11"
     ],
     "nutzt": [],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": null,
-    "code_stand": "f0c510658d"
+    "code_stand": "f0c510658d",
+    "mockup": "seiten/explorer.html",
+    "version_mockup": "0.1"
    },
    {
     "nr": "3.3",
@@ -536,6 +589,18 @@
       "was": "Zeile zeigt „＋ fehlt im Projekt – siehe Chat“ (Warnfarbe), wenn Claude fehlende Stammdaten vorschlägt",
       "art": "code",
       "commit": "20e4249"
+     },
+     {
+      "v": "0.1",
+      "datum": "19.11.2026",
+      "was": "aus altem Mockup übernommen (seiten/manuell-sortieren.html, Theme; Inhalt unverändert)",
+      "art": "mockup"
+     },
+     {
+      "v": "0.2",
+      "datum": "19.11.2026",
+      "was": "Badges Paar/Kombi bleiben in der Zeile des Dateinamens (kein Zeilensprung bei 1280 px)",
+      "art": "mockup"
      }
     ],
     "mockup_alt": "PlanManager/02_Projektdetail/02_ManuellSortieren.html",
@@ -547,9 +612,11 @@
      "Plan-Vorschau",
      "Radial-Erfassung"
     ],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": null,
-    "code_stand": "71b3017e98"
+    "code_stand": "71b3017e98",
+    "mockup": "seiten/manuell-sortieren.html",
+    "version_mockup": "0.2"
    },
    {
     "nr": "3.4",
@@ -557,7 +624,7 @@
     "art": "Blatt",
     "schluessel": "projektdetail:Manuell sortieren#claude",
     "mockup_alt": "PlanManager/02_Projektdetail/02_ManuellSortieren_Claude.html",
-    "version_mockup": "1.3",
+    "version_mockup": "1.4",
     "verlauf": [
      {
       "v": "1.0",
@@ -611,6 +678,12 @@
       "datum": "19.11.2026",
       "was": "aus altem Mockup übernommen (seiten/mit-claude-sortieren.html, Theme, 12 Zustände in der Vorführleiste; Inhalt unverändert)",
       "art": "mockup"
+     },
+     {
+      "v": "1.4",
+      "datum": "19.11.2026",
+      "was": "Badges Paar/Kombi und Zuordnungs-Chips ohne Zeilensprung; bei offenem Chat scrollt die Tabelle waagrecht – abgenommen (Herbert)",
+      "art": "mockup"
      }
     ],
     "zu": [
@@ -619,8 +692,8 @@
     "nutzt": [
      "Plan-Vorschau"
     ],
-    "stand_commit": "5721d74",
-    "version_abgenommen": "1.3",
+    "stand_commit": "25e51e3",
+    "version_abgenommen": "1.4",
     "code": "BauProjektManager.PlanManager/Views/ClaudeChatPanel.xaml, BauProjektManager.PlanManager/Views/ClaudeChatPanel.xaml.cs, BauProjektManager.PlanManager/Views/ManualCaptureView.Claude.cs, BauProjektManager.PlanManager/ViewModels/ClaudeSortViewModel.cs, BauProjektManager.PlanManager/ViewModels/ClaudeSortViewModel.Events.cs, BauProjektManager.PlanManager/ViewModels/ClaudeChatModels.cs, BauProjektManager.PlanManager/ViewModels/ManualCaptureViewModel.Claude.cs",
     "code_stand": "d3e32f29ad",
     "version_code": "1.3",
@@ -639,6 +712,12 @@
       "datum": "16.11.2026",
       "was": "Bestand beim Anlegen der Seitenliste",
       "art": "code"
+     },
+     {
+      "v": "0.1",
+      "datum": "19.11.2026",
+      "was": "aus altem Mockup übernommen (seiten/plandaten.html, Theme; Inhalt unverändert)",
+      "art": "mockup"
      }
     ],
     "mockup_alt": "PlanManager/02_Projektdetail/05_Plandaten.html",
@@ -648,9 +727,11 @@
     "nutzt": [
      "Segment-Editor"
     ],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": null,
-    "code_stand": "7b388bb170"
+    "code_stand": "7b388bb170",
+    "mockup": "seiten/plandaten.html",
+    "version_mockup": "0.1"
    },
    {
     "nr": "3.6",
@@ -665,6 +746,12 @@
       "datum": "16.11.2026",
       "was": "Bestand beim Anlegen der Seitenliste",
       "art": "code"
+     },
+     {
+      "v": "0.1",
+      "datum": "19.11.2026",
+      "was": "aus altem Mockup übernommen (seiten/profile.html, Theme; Inhalt unverändert)",
+      "art": "mockup"
      }
     ],
     "mockup_alt": "PlanManager/02_Projektdetail/01_Profile.html",
@@ -672,9 +759,11 @@
      "3.8"
     ],
     "nutzt": [],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": null,
-    "code_stand": "eb5ef2c9cb"
+    "code_stand": "eb5ef2c9cb",
+    "mockup": "seiten/profile.html",
+    "version_mockup": "0.1"
    },
    {
     "nr": "3.7",
@@ -693,7 +782,7 @@
     ],
     "zu": [],
     "nutzt": [],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": null,
     "code_stand": "95a348437e"
    },
@@ -748,7 +837,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": "1.0",
     "code_stand": "ef3bfbc61c",
     "mockup": "seiten/profil-wizard.html",
@@ -767,6 +856,12 @@
       "datum": "16.11.2026",
       "was": "Bestand beim Anlegen der Seitenliste",
       "art": "code"
+     },
+     {
+      "v": "0.1",
+      "datum": "19.11.2026",
+      "was": "aus altem Mockup übernommen (seiten/segmenttypen.html, Theme; Inhalt unverändert)",
+      "art": "mockup"
      }
     ],
     "mockup_alt": "PlanManager/04_FeldtypManager/01_Uebersicht.html",
@@ -774,9 +869,11 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": null,
-    "code_stand": "e1fda6fd68"
+    "code_stand": "e1fda6fd68",
+    "mockup": "seiten/segmenttypen.html",
+    "version_mockup": "0.1"
    },
    {
     "nr": "3.10",
@@ -797,7 +894,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": null,
     "code_stand": "fd8115c115"
    },
@@ -820,7 +917,7 @@
     "nutzt": [
      "Dialograhmen"
     ],
-    "stand_commit": "5721d74",
+    "stand_commit": "25e51e3",
     "version_abgenommen": null,
     "code_stand": "2cfe320b9b"
    }

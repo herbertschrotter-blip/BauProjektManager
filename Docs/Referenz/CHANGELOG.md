@@ -32,6 +32,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.239] — 2026-11-19
+
+### Docs: Alle alten Mockups ins Seitenformat übernommen
+
+- Zehn Seiten haben jetzt eine eigene Datei unter `Docs/Mockups/seiten/` mit gemeinsamem Theme: 1.1 `hauptfenster`, 1.5 `dev-log`, 1.6 `dev-zuruecksetzen`, 2.1 `einstellungen-allgemein`, 3.1 `projektuebersicht`, 3.2 `explorer`, 3.3 `manuell-sortieren`, 3.5 `plandaten`, 3.6 `profile`, 3.9 `segmenttypen`. Inhalt aus den alten Mockups übernommen, Varianten als Zustände der Vorführleiste, Wege zwischen den Seiten über `Mockup.geh`.
+- Farben auf Theme-Tokens, wo der Wert im Theme steht. Entscheidung Herbert: WPF-ARGB-Werte (Deckkraft vorn, im Browser falsch) auf die Badge-Tokens bzw. Browser-Schreibweise, #007ACC/#1A8AE0 auf die Akzent-Tokens, Kennzeichen „PROJEKT“ (1.6) bleibt fester Wert.
+- Versionen: unverändert übernommen (0.1, 2.1 bleibt 0.3); geändert und neu gezählt: 1.1 → 0.2 (Symbole der zugeklappten Sidebar sichtbar, Fehler aus dem alten Mockup), 3.3 → 0.2 und 3.4 → 1.4 abgenommen (Badges Paar/Kombi ohne Zeilensprung).
+- 3.4 führt jetzt auf die neuen Seiten statt auf die alten Mockups. In `App/`, `Settings/` und `PlanManager/_SITEMAP.md` steht ein Abschnitt „Abgelöst durch die Seitenliste“; die alten Dateien bleiben unverändert liegen.
+
 ## [v0.28.238] — 2026-11-19
 
 ### Docs: Mockup 3.4 „Mit Claude sortieren“ ins Seitenformat übernommen

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3.5 Plandaten</title>
+<link rel="stylesheet" href="../theme-app.css">
+<script src="../theme.js"></script>
+<!--
+3.5 Plandaten – aus altem Mockup PlanManager/02_Projektdetail/05_Plandaten.html übernommen
+(alter Titel „BPM PlanManager — Projektdetail Plandaten“). Inhalt unverändert, nur Rahmen und Farben als Theme-Tokens.
+
+  BPM-112.06-Umfeld — DB-Ansicht "Plandaten" (eigener Tab in Projektdetail).
+  Spezifikation:
+  - Read-only-Tabellensicht auf den kuratierten Planindex (plan_documents + aktuelle
+    plan_revisions + plan_document_segments, Schema v2.0 / ADR-058).
+  - Spalten: Plan-Nr · Idx · Bezeichnung · Typ · Bauteil · Geschoss · Index-Datum ·
+    Änderungshinweis · Dateien · Segmente (Anzahl-Chip; Details im Panel).
+  - KLARSTELLUNG (Herbert, Teil 50): Segmente = DATEINAMENS-Segmente (BPM-108-Typen:
+    Plannummer/Planindex/Planart/Bauteil/Geschoss/Bezeichnung...) mit Wert + Quelle
+    (Dateiname geparst / Radial-Zuordnung / PDF-Markierung / manuell). Inhaltliche
+    Auszeichnungen wie "Beton: C25/30" sind TAGS — NEUES Konzept (Entscheidung Herbert
+    Teil 50, eigener Task): freie Tags pro Dokument, neue Tabelle plan_document_tags,
+    Vorschläge aus bereits verwendeten Projekt-Tags, Filter-/Suchintegration im Tab.
+  - Zeile selektieren -> Detail-Panel unten: alle Eigenschaften (document_key, Pfad,
+    Dateien mit Größe/MD5, Revisions-Historie, Segmente mit Quelle/Datum, Import-Info).
+  - Toolbar: Suche + Filter (Dokumenttyp, Bauteil). Export bewusst NICHT hier —
+    Planlisten-Export Excel+PDF ist ein eigener Task (BPM-031, post-V1).
+  - Segmente nachträglich editierbar (Entscheidung Herbert Teil 50) — Interaktionsmuster
+    = Segment-Wizard aus ProfilWizard Schritt 2 (02_Segmente.html), NICHT neu erfinden.
+    EINE kombinierte Fläche (Entscheidung Herbert Teil 50):
+    (1) Token-Flächen (Wert + Typ-Label, Feldtyp-Farben aus Colors.xaml) tragen die
+        klickbaren TRENNZEICHEN direkt zwischen sich — Trenner-Klick deaktiviert ihn
+        (Nachbar-Segmente verschmelzen) bzw. aktiviert ihn wieder (teilen). Globale
+        Trenner-Chips (- _ . Leerzeichen) rechts. Beispiel "5998-130" = Plannr.-Token
+        mit intern deaktiviertem '-'.
+    (2) Segmenttyp per Drag & Drop aus der Chip-Palette auf eine Token-Fläche ziehen.
+    (3) "⚙ Segmenttypen verwalten…" öffnet den BESTEHENDEN FeldtypManager (BPM-108);
+        Palette aus ISegmentTypeCatalog.GetEffectiveActive(), "+ Eigenes" = Inline-Popover.
+    WPF: Wizard-Segmentfläche als wiederverwendbares Control bauen (080.05 steht noch aus —
+    ein Control für Wizard UND Plandaten). Persistenz via PlanManagerDatabase.UpsertSegment
+    (reiner DB-Write, kein Journal — BPM-118-Metadaten bewusst außerhalb der Import-TX, ADR-064).
+  - Struktur-Änderungen (Pfad, Revision, Dateien) weiter NUR über Import/Radial/Archiv-Workflows.
+
+Wege: Sidebar PlanManager und ← → 3.1 Projektübersicht · Einstellungen → 2.1 Allgemein · Tabs Explorer / Manuell
+sortieren / Profile → 3.2 / 3.3 / 3.6 · „Im Explorer zeigen“ → 3.2 · „Segmenttypen verwalten…“ → 3.9 · Sync bleibt
+alert (Mockup folgt, BPM-005).
+Farben ohne Theme-Token (Hex stehen gelassen): #2a2418 (Eingang-Hinweis), #D6F2F7/#D9F4E9/#E7E5FA (Chip-Schrift),
+#224EC94E (Badge „aktuelle Revision“, WPF-ARGB) → jetzt --BpmBadgeBgSuccess (Entscheidung Herbert 2026-11-19),
+rgba(0,120,212,0.3) (Hover-Schatten).
+-->
+<style>
+.rahmen *{box-sizing:border-box;margin:0;padding:0}
+.shell{background:var(--BpmBgBase);border-radius:10px;overflow:hidden;border:1px solid var(--BpmBorderSubtle);font-size:13px;color:var(--BpmTextPrimary);display:flex;flex-direction:column;width:100%;height:100%;font-family:'Segoe UI',sans-serif;border-radius:0;border:none}
+.tbtn{background:transparent;color:var(--BpmTextPrimary);border:1px solid var(--BpmBorderDefault);padding:4px 10px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit}
+.tbtn:hover{background:var(--BpmBgHover)}
+.rahmen table{border-collapse:collapse;width:100%;font-size:11px}
+.rahmen th{text-align:left;color:var(--BpmTextSecondary);font-size:10px;text-transform:uppercase;letter-spacing:.4px;padding:6px 8px;border-bottom:1px solid var(--BpmBorderSubtle);white-space:nowrap;font-weight:600}
+.rahmen td{padding:5px 8px;border-bottom:1px solid var(--BpmBgSurface);white-space:nowrap;vertical-align:top}
+.rahmen tr.sel td{background:var(--BpmBgActive);color:var(--BpmTextBright)}
+.rahmen tr:hover td{background:var(--BpmBgHover)}
+.chip{display:inline-block;background:var(--BpmFieldPlanart);color:#D6F2F7;border-radius:3px;padding:1px 6px;font-size:9px;margin:1px 2px 1px 0}
+.chip2{display:inline-block;background:var(--BpmFieldPlanNumber);color:#D9F4E9;border-radius:3px;padding:1px 6px;font-size:9px;margin:1px 2px 1px 0}
+.chip3{display:inline-block;background:var(--BpmFieldProjectNumber);color:#E7E5FA;border-radius:3px;padding:1px 6px;font-size:9px;margin:1px 2px 1px 0}
+.klabel{color:var(--BpmTextSecondary);font-size:10px;width:130px;display:inline-block}
+.raw{display:inline-block;background:var(--BpmBgElevated);border:1px solid var(--BpmBorderDefault);border-radius:3px;padding:3px 8px;font-family:Consolas,monospace;font-size:11px;color:var(--BpmTextBright);cursor:pointer}
+.raw:hover{border-color:var(--BpmAccentPrimary)}
+.raw.joined{border-color:var(--BpmAccentPrimary);border-style:solid}
+.rawsep{color:var(--BpmAccentPrimary);font-family:Consolas,monospace;font-size:12px;padding:0 3px;cursor:pointer;font-weight:600}
+.rawsep.off{color:var(--BpmFieldDefault);font-weight:400}
+.sepchip{display:inline-block;background:var(--BpmBgElevated);border:1px solid var(--BpmBorderDefault);border-radius:3px;padding:1px 7px;font-family:Consolas,monospace;font-size:10px;color:var(--BpmTextPrimary);cursor:pointer;margin-right:3px}
+.sepchip.on{background:var(--BpmBgActive);color:var(--BpmAccentPrimary);border-color:var(--BpmBgActive)}
+.token{display:inline-flex;flex-direction:column;align-items:center;padding:4px 9px;border-radius:4px;min-width:44px;cursor:pointer;vertical-align:middle}
+.token:hover{transform:translateY(-1px);box-shadow:0 2px 6px rgba(0,120,212,0.3)}
+.token-val{color:var(--BpmTextBright);font-size:11px;font-family:Consolas,monospace;font-weight:500}
+.token-type{color:var(--BpmTextBright);font-size:8px;opacity:0.85;margin-top:1px}
+.token.unset{background:var(--BpmBgElevated);border:1px dashed var(--BpmTextSecondary)}
+.token.unset .token-val{color:var(--BpmTextPrimary)}
+.token.unset .token-type{color:var(--BpmTextSecondary);font-style:italic}
+.t-num{background:var(--BpmFieldPlanNumber)}.t-idx{background:var(--BpmFieldPlanIndex)}.t-gesch{background:var(--BpmFieldGeschoss)}.t-art{background:var(--BpmFieldPlanart)}.t-bez{background:var(--BpmFieldDescription)}.t-ign{background:var(--BpmFieldIgnore);opacity:0.55}
+.sep{font-size:12px;color:var(--BpmFieldDefault);padding:0 1px;font-family:Consolas,monospace}
+.type-chip{display:inline-block;background:var(--BpmBgElevated);color:var(--BpmTextPrimary);font-size:10px;padding:3px 8px;border-radius:3px;cursor:grab;border:1px solid transparent;user-select:none;margin:0 3px 3px 0}
+.type-chip:hover{background:var(--BpmBgHover);border-color:var(--BpmAccentPrimary)}
+.type-chip.assigned{background:var(--BpmBgActive);color:var(--BpmAccentPrimary);border-color:var(--BpmBgActive)}
+.type-chip.custom{color:var(--BpmWarning);border:1px dashed var(--BpmWarning);background:transparent}
+</style>
+</head>
+<body>
+<script>
+const SHELL = `<div class="shell">
+<div style="display:flex;flex:1;min-height:0">
+
+<div style="width:200px;background:var(--BpmBgSurface);border-right:1px solid var(--BpmBorderSubtle);display:flex;flex-direction:column;padding:12px 0;flex-shrink:0">
+<div style="font-size:13px;font-weight:600;color:var(--BpmTextBright);padding:4px 16px 14px">BauProjektManager</div>
+<div style="background:var(--BpmBgActive);color:var(--BpmAccentPrimary);padding:7px 16px;font-size:12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="Mockup.geh('projektuebersicht')">
+<span>&#128193; PlanManager</span>
+<span style="background:var(--BpmWarning);color:var(--BpmBgBase);font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px">15</span>
+</div>
+<div style="color:var(--BpmTextSecondary);padding:7px 16px;font-size:12px;cursor:pointer" onclick="Mockup.geh('einstellungen-allgemein')">&#9881; Einstellungen</div>
+</div>
+
+<div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+<div style="display:flex;align-items:center;gap:8px;padding:6px 14px;background:var(--BpmBgSurface);border-bottom:1px solid var(--BpmBorderSubtle);min-height:36px">
+<button style="background:none;border:none;color:var(--BpmTextSecondary);cursor:pointer;font-size:14px;font-family:inherit;padding:2px 6px;border-radius:3px" onclick="Mockup.geh('projektuebersicht')">&#8592;</button>
+<span style="font-size:13px;font-weight:500;color:var(--BpmTextBright);flex:1">&#214;WG Dobl-Zwaring</span>
+</div>
+<div style="padding:5px 14px;background:#2a2418;border-bottom:1px solid var(--BpmBorderSubtle);font-size:11px;color:var(--BpmWarning)">&#9889; 15 im Eingang &middot; 3 vom Server-Sync</div>
+<div style="display:flex;gap:0;border-bottom:1px solid var(--BpmBorderSubtle);background:var(--BpmBgSurface)">
+<button style="background:none;border:none;color:var(--BpmTextSecondary);padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit" onclick="Mockup.geh('explorer')">Explorer</button>
+<button style="background:none;border:none;color:var(--BpmTextSecondary);padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit" onclick="Mockup.geh('manuell-sortieren')">Manuell sortieren</button>
+<button style="background:none;border:none;color:var(--BpmAccentPrimary);padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px solid var(--BpmAccentPrimary);font-family:inherit">Plandaten</button>
+<button style="background:none;border:none;color:var(--BpmTextSecondary);padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit" onclick="Mockup.geh('profile')">Profile</button>
+<button style="background:none;border:none;color:var(--BpmTextSecondary);padding:7px 14px;font-size:11px;cursor:pointer;border-bottom:2px dashed var(--BpmTextSecondary);opacity:0.7;font-family:inherit" onclick="alert('Mockup folgt: 02_Projektdetail/03_Sync.html (BPM-005)')">Sync</button>
+</div>
+
+<div style="display:flex;align-items:center;gap:8px;padding:7px 14px;background:var(--BpmBgBase);border-bottom:1px solid var(--BpmBorderSubtle)">
+<input style="background:var(--BpmBgInput);border:1px solid var(--BpmBorderDefault);color:var(--BpmTextPrimary);border-radius:4px;padding:4px 10px;font-size:11px;width:200px;font-family:inherit" placeholder="&#128269; Suchen (Nr, Bezeichnung, Hinweis)">
+<select style="background:var(--BpmBgInput);border:1px solid var(--BpmBorderDefault);color:var(--BpmTextPrimary);border-radius:4px;padding:4px 6px;font-size:11px;font-family:inherit"><option>Typ: alle</option><option>Polierplan</option><option>Schalungsplan</option><option>Bewehrungsplan</option></select>
+<select style="background:var(--BpmBgInput);border:1px solid var(--BpmBorderDefault);color:var(--BpmTextPrimary);border-radius:4px;padding:4px 6px;font-size:11px;font-family:inherit"><option>Bauteil: alle</option><option>H68</option><option>H69</option></select>
+<span style="flex:1"></span>
+
+</div>
+
+<div style="flex:1;overflow:auto;min-height:0">
+<table>
+<tr><th>Plan-Nr</th><th>Idx</th><th>Bezeichnung</th><th>Typ</th><th>Bauteil</th><th>Geschoss</th><th>Index-Datum</th><th>&#196;nderungshinweis</th><th>Dateien</th><th>Segmente</th><th>Tags</th></tr>
+<tr class="sel">
+<td>5998-130</td><td>B</td><td>Polierplan Haus 1 KG</td><td>Polierplan</td><td>H68</td><td>KG</td><td>20.08.2026</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis">Deckendurchbruch 20/20 bei Achse S2</td><td>PDF &#9679; DWG &#9679;</td>
+<td><span class="chip" style="background:var(--BpmBgElevated);color:var(--BpmTextPrimary)">6 Segmente</span></td>
+<td><span class="chip" style="background:var(--BpmBgHover);color:var(--BpmTextPrimary);border:1px solid var(--BpmBorderDefault)">Beton C25/30</span><span class="chip" style="background:var(--BpmBgHover);color:var(--BpmTextPrimary);border:1px solid var(--BpmBorderDefault)">Deckendurchbruch</span></td>
+</tr>
+<tr>
+<td>5998-101</td><td>B</td><td>Polierplan Haus 1 EG</td><td>Polierplan</td><td>H68</td><td>EG</td><td>18.08.2026</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis">W&#228;nde Achse 1&#8211;4 angepasst</td><td>PDF &#9679; DWG &#9679;</td>
+<td><span class="chip" style="background:var(--BpmBgElevated);color:var(--BpmTextPrimary)">6 Segmente</span></td>
+<td></td>
+</tr>
+<tr>
+<td>5998-110</td><td>&#8212;</td><td>Schalung Haus 1 EG</td><td>Schalungsplan</td><td>H68</td><td>EG</td><td>02.07.2026</td><td style="color:var(--BpmTextSecondary)">Erstausgabe</td><td>PDF &#9679;</td>
+<td><span class="chip" style="background:var(--BpmBgElevated);color:var(--BpmTextPrimary)">5 Segmente</span></td>
+<td><span class="chip" style="background:var(--BpmBgHover);color:var(--BpmTextPrimary);border:1px solid var(--BpmBorderDefault)">Beton C30/37</span></td>
+</tr>
+<tr>
+<td>5998-111</td><td>&#8212;</td><td>Bewehrung Haus 1 EG</td><td>Bewehrungsplan</td><td>H68</td><td>EG</td><td>02.07.2026</td><td style="color:var(--BpmTextSecondary)">Erstausgabe</td><td>PDF &#9679;</td>
+<td><span class="chip" style="background:var(--BpmBgElevated);color:var(--BpmTextPrimary)">4 Segmente</span></td>
+<td></td>
+</tr>
+<tr>
+<td>5998-210</td><td>A</td><td>Polierplan Haus 2 KG</td><td>Polierplan</td><td>H69</td><td>KG</td><td>11.08.2026</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis">Fundamentplatte verst&#228;rkt</td><td>PDF &#9679;</td>
+<td><span class="chip" style="background:var(--BpmBgElevated);color:var(--BpmTextPrimary)">5 Segmente</span></td>
+<td><span class="chip" style="background:var(--BpmBgHover);color:var(--BpmTextPrimary);border:1px solid var(--BpmBorderDefault)">Fundament</span></td>
+</tr>
+</table>
+</div>
+
+<div style="border-top:1px solid var(--BpmBorderSubtle);background:var(--BpmBgSurface);padding:10px 14px;max-height:380px;overflow-y:auto;flex-shrink:0">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+<span style="color:var(--BpmTextBright);font-size:12px;font-weight:500">5998-130 &middot; Index B &middot; Polierplan Haus 1 KG</span>
+<span style="background:var(--BpmBadgeBgSuccess);color:var(--BpmSuccess);border-radius:3px;padding:1px 7px;font-size:9px">aktuelle Revision</span>
+<span style="flex:1"></span>
+<button class="tbtn" onclick="alert('App-Aktion: PDF-Vorschau (read-only)')">Vorschau</button>
+<button class="tbtn" onclick="Mockup.geh('explorer')">Im Explorer zeigen</button>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:8px;margin-bottom:8px">
+
+<div style="background:var(--BpmBgBase);border:1px solid var(--BpmBorderSubtle);border-radius:5px;padding:8px 10px">
+<div style="font-size:9px;color:var(--BpmTextSecondary);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Dokument</div>
+<div style="display:grid;grid-template-columns:78px 1fr;gap:3px 8px;font-size:10px;color:var(--BpmTextPrimary)">
+<span style="color:var(--BpmTextSecondary)">Plan-Nr</span><span style="color:var(--BpmTextBright)">5998-130 &middot; Index B</span>
+<span style="color:var(--BpmTextSecondary)">Bezeichnung</span><span>Polierplan Haus 1 KG</span>
+<span style="color:var(--BpmTextSecondary)">Typ</span><span>Polierplan</span>
+<span style="color:var(--BpmTextSecondary)">Bauteil</span><span>H68 &middot; KG</span>
+<span style="color:var(--BpmTextSecondary)">Key</span><span style="font-family:Consolas,monospace;font-size:9px;color:var(--BpmTextSecondary)">polierplan|5998-130|h68|kg</span>
+</div>
+</div>
+
+<div style="background:var(--BpmBgBase);border:1px solid var(--BpmBorderSubtle);border-radius:5px;padding:8px 10px">
+<div style="font-size:9px;color:var(--BpmTextSecondary);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Ablage &amp; Dateien</div>
+<div style="display:grid;grid-template-columns:78px 1fr;gap:3px 8px;font-size:10px;color:var(--BpmTextPrimary)">
+<span style="color:var(--BpmTextSecondary)">Pfad</span><span>01 Planunterlagen\\01 Polierpl&#228;ne\\H68\\KG</span>
+<span style="color:var(--BpmTextSecondary)">PDF</span><span>412 KB <span style="color:var(--BpmTextSecondary);font-size:9px">&middot; md5 9f3a&#8230;</span></span>
+<span style="color:var(--BpmTextSecondary)">DWG</span><span>1,2 MB <span style="color:var(--BpmTextSecondary);font-size:9px">&middot; md5 77c1&#8230;</span></span>
+<span style="color:var(--BpmTextSecondary)">Importiert</span><span>31.08.2026 <span style="color:var(--BpmTextSecondary);font-size:9px">&middot; Import #12 &middot; Radial</span></span>
+</div>
+</div>
+
+<div style="background:var(--BpmBgBase);border:1px solid var(--BpmBorderSubtle);border-radius:5px;padding:8px 10px">
+<div style="font-size:9px;color:var(--BpmTextSecondary);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Revisionen</div>
+<div style="display:grid;grid-template-columns:24px 66px 1fr;gap:3px 8px;font-size:10px;color:var(--BpmTextPrimary)">
+<span style="color:var(--BpmSuccess);font-weight:600">B</span><span style="color:var(--BpmTextSecondary)">20.08.2026</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Deckendurchbruch 20/20 bei Achse S2</span>
+<span style="color:var(--BpmTextSecondary)">A</span><span style="color:var(--BpmTextSecondary)">05.06.2026</span><span style="color:var(--BpmTextSecondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">W&#228;nde Achse 1&#8211;4 angepasst</span>
+<span style="color:var(--BpmTextSecondary)">&#8212;</span><span style="color:var(--BpmTextSecondary)">12.04.2026</span><span style="color:var(--BpmTextSecondary)">Erstausgabe</span>
+</div>
+</div>
+
+</div>
+
+<div style="background:var(--BpmBgBase);border:1px solid var(--BpmBorderSubtle);border-radius:5px;padding:8px 10px">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+<span style="font-size:9px;color:var(--BpmTextSecondary);text-transform:uppercase;letter-spacing:.4px">Dateinamens-Segmente</span>
+<span style="flex:1"></span>
+<span style="color:var(--BpmAccentPrimary);font-size:10px;cursor:pointer" onclick="Mockup.geh('segmenttypen')">&#9881; Segmenttypen verwalten&#8230;</span>
+</div>
+
+<div style="font-size:9px;color:var(--BpmTextSecondary);margin-bottom:4px">Trennzeichen klicken = teilen/verbinden &middot; Segmenttyp per Drag &amp; Drop auf eine Fl&#228;che ziehen (wie im Profil-Wizard)</div>
+<div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap;background:var(--BpmBgSurface);border:1px solid var(--BpmBorderSubtle);border-radius:4px;padding:8px 10px;margin-bottom:10px">
+<span class="token t-num" title="Aus '5998' + '-' + '130' verbunden — Trenner-Klick trennt wieder"><span class="token-val">5998-130</span><span class="token-type">Plannr. &#9733;</span></span>
+<span class="rawsep" title="Aktiver Trenner — Klick deaktiviert (Teile verschmelzen)" onclick="alert('App-Aktion: Trenner deaktivieren — Nachbar-Segmente verschmelzen')">_</span>
+<span class="token t-idx"><span class="token-val">B</span><span class="token-type">Index</span></span>
+<span class="rawsep" onclick="alert('App-Aktion: Trenner deaktivieren — Nachbar-Segmente verschmelzen')">_</span>
+<span class="token t-art"><span class="token-val">Polierplan</span><span class="token-type">Planart</span></span>
+<span class="rawsep" onclick="alert('App-Aktion: Trenner deaktivieren — Nachbar-Segmente verschmelzen')">_</span>
+<span class="token unset"><span class="token-val">H1</span><span class="token-type">? Typ w&#228;hlen</span></span>
+<span class="rawsep" onclick="alert('App-Aktion: Trenner deaktivieren — Nachbar-Segmente verschmelzen')">_</span>
+<span class="token t-gesch"><span class="token-val">KG</span><span class="token-type">Geschoss</span></span>
+<span class="rawsep" onclick="alert('App-Aktion: Trenner deaktivieren — Nachbar-Segmente verschmelzen')">.</span>
+<span class="token t-ign"><span class="token-val">pdf</span><span class="token-type">Ignorieren</span></span>
+<span style="flex:1"></span>
+<span style="font-size:9px;color:var(--BpmTextSecondary)">Trenner:</span>
+<span class="sepchip on" title="Innerhalb 'Plannr.' deaktiviert (verbunden)" onclick="alert('App-Aktion: Trenner - global umschalten')">-</span>
+<span class="sepchip on" onclick="alert('App-Aktion: Trenner _ global umschalten')">_</span>
+<span class="sepchip on" onclick="alert('App-Aktion: Trenner . global umschalten')">.</span>
+<span class="sepchip" onclick="alert('App-Aktion: Trenner Leerzeichen global umschalten')">&#9251;</span>
+</div>
+
+<div style="display:flex;align-items:center;flex-wrap:wrap;margin-bottom:2px">
+<span class="type-chip assigned">Plannummer</span>
+<span class="type-chip assigned">Index</span>
+<span class="type-chip">Projektnummer</span>
+<span class="type-chip">Bezeichnung</span>
+<span class="type-chip">Datum</span>
+<span class="type-chip assigned">Geschoss</span>
+<span class="type-chip">Haus</span>
+<span class="type-chip assigned">Planart</span>
+<span class="type-chip">Bauteil</span>
+<span class="type-chip">Stiege</span>
+<span class="type-chip assigned">Ignorieren</span>
+<span class="type-chip custom" onclick="alert('App-Aktion: Eigenen Segmenttyp anlegen (Inline-Popover, BPM-108)')">+ Eigenes</span>
+</div>
+</div>
+
+<div style="background:var(--BpmBgBase);border:1px solid var(--BpmBorderSubtle);border-radius:5px;padding:8px 10px;margin-top:8px">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+<span style="font-size:9px;color:var(--BpmTextSecondary);text-transform:uppercase;letter-spacing:.4px">Tags (2)</span>
+<span style="flex:1"></span>
+<button class="tbtn" style="padding:2px 8px;font-size:9px" onclick="alert('App-Aktion: Tag hinzufuegen — Freitext mit Vorschlaegen aus bereits verwendeten Projekt-Tags')">+ Tag</button>
+</div>
+<div>
+<span class="chip" style="background:var(--BpmBgHover);color:var(--BpmTextPrimary);border:1px solid var(--BpmBorderDefault);font-size:10px;padding:2px 8px">Beton C25/30 <span style="cursor:pointer;color:var(--BpmTextSecondary)" onclick="alert('App-Aktion: Tag entfernen')">&#10005;</span></span>
+<span class="chip" style="background:var(--BpmBgHover);color:var(--BpmTextPrimary);border:1px solid var(--BpmBorderDefault);font-size:10px;padding:2px 8px">Deckendurchbruch <span style="cursor:pointer;color:var(--BpmTextSecondary)" onclick="alert('App-Aktion: Tag entfernen')">&#10005;</span></span>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+<div style="height:24px;background:var(--BpmAccentPrimary);display:flex;align-items:center;padding:0 12px;font-size:10px;color:var(--BpmTextOnAccent);flex-shrink:0">
+<span>&#214;WG &middot; Plandaten: 119 Dokumente &middot; Filter: alle</span>
+<span style="margin-left:auto">Segmente editierbar &middot; Struktur-&#196;nderungen &#252;ber Import/Archiv-Workflows</span>
+</div>
+</div>`;
+
+Mockup.start({ nr: '3.5', titel: 'Plandaten', version: '0.1', zeige: () => SHELL });
+</script>
+</body>
+</html>

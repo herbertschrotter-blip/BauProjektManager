@@ -46,3 +46,11 @@ Keine. Das Shell-Mockup ist ein Referenz-Entwurf für die Sidebar; die bestehend
 - **Post-V1-Module** (Fotos, Zeiterfassung, Bautagebuch, Kalkulation, Wetter, Outlook, Vorlagen, Aufgaben, GIS, KI-Assistent) sind ausgegraut und nicht klickbar — Sichtbarkeit später über Ansichtsprofile (Architektur Kap. 1.4).
 - **Emoji-Quellen:** 📁 ⚙ 🛠 👤 aus `Icons.xaml`; 📷 ⏱ 📓 📧 🌤 📄 aus dem Modulbaum in `BauProjektManager_Architektur.md`; 🏠 🧮 📋 🗺 🤖 neu vorgeschlagen (Icons.xaml-Keys beim WPF-Umbau anlegen).
 - **Einstellungen + Dev Tools unten** (Entscheidung Herbert, Teil 52), Home ganz oben übernimmt die Dashboard-Rolle.
+
+## Abgelöst durch die Seitenliste
+
+Diese Mockups sind seit 2026-11-19 durch Seiten im Seitenformat abgelöst (`Docs/Mockups/seiten/`, Wahrheit: `Docs/Mockups/seiten.json`). Die alten Dateien bleiben unverändert als Herkunft liegen; Änderungen nur noch an der neuen Seite.
+
+| Altes Mockup | Seite | Neue Datei |
+|---|---|---|
+| 01_Shell/01_Sidebar.html | 1.1 Hauptfenster | `seiten/hauptfenster.html` |

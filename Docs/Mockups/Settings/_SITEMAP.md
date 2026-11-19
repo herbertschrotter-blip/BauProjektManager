@@ -60,3 +60,13 @@ Wird vor jedem neuen Mockup gelesen und nach Mockup-Änderungen aktualisiert.
 - **Einstellungs-Tabs als gestrichelte Underline** mit Inline-Style — die `.tab`-Klasse hatte `border-bottom:3px solid transparent`, der gestrichelte Override macht den toten Zustand sichtbar.
 - **Implementiert ohne Mockup** (Audit Review 01, R01-001 E14, entschieden 2026-09-24): Die Tabs Projekte, Standard-Ordnerstruktur und Über, der Dev-Tools-Tab System-Info und der ProjectEditDialog sind im Code fertig; für sie werden keine Mockups nachgezogen, der Code gilt als Ist. Die Kanten bleiben im Mockup als `alert('Mockup folgt: …')` stehen. Offen bleibt nur der Tab Sync-Defaults (Inhalt mit 079.06).
 - **DevTools-Aufruf aus PlanManager:** Aktuell nicht direkt in der PlanManager-Sidebar verlinkt. Indirekter Pfad: PlanManager → Einstellungen → Dev Tools.
+
+## Abgelöst durch die Seitenliste
+
+Diese Mockups sind seit 2026-11-19 durch Seiten im Seitenformat abgelöst (`Docs/Mockups/seiten/`, Wahrheit: `Docs/Mockups/seiten.json`). Die alten Dateien bleiben unverändert als Herkunft liegen; Änderungen nur noch an der neuen Seite.
+
+| Altes Mockup | Seite | Neue Datei |
+|---|---|---|
+| 01_Einstellungen/01_Allgemein.html | 2.1 Allgemein | `seiten/einstellungen-allgemein.html` |
+| 02_DevTools/01_Log.html | 1.5 Entwicklerwerkzeuge – Log | `seiten/dev-log.html` |
+| 02_DevTools/02_Reset.html | 1.6 Entwicklerwerkzeuge – Zurücksetzen | `seiten/dev-zuruecksetzen.html` |

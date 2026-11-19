@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3.1 Projektübersicht</title>
+<link rel="stylesheet" href="../theme-app.css">
+<script src="../theme.js"></script>
+<!--
+3.1 Projektübersicht – aus altem Mockup PlanManager/01_Projektuebersicht/01_Projektuebersicht.html übernommen
+(dort Visualizer-Fragment ohne <html>/<head>).
+Überschrift des alten Mockups (sr-only): „BPM PlanManager Projektliste — Karten mit rundem Rand und breiterem Farbstreifen“
+Rahmen: Das alte App-Fenster hatte border-radius:var(--border-radius-lg), border:0.5px solid var(--color-border-tertiary),
+min-height:440px und font-family:'Segoe UI',var(--font-sans) (Variablen der Visualizer-Umgebung). Jetzt füllt es den Rahmen
+(width/height 100 %), Rand und Rundung kommen vom Rahmen, Schrift = --BpmFontFamily.
+Wege: Projektkarte → 3.6 Profile, Einstellungen → 2.1 Allgemein.
+-->
+</head>
+<body>
+<script>
+const M = Mockup;
+const SEITE = `<div style="background:var(--BpmBgBase);overflow:hidden;font-family:var(--BpmFontFamily);font-size:13px;color:var(--BpmTextPrimary);display:flex;flex-direction:column;width:100%;height:100%">
+<div style="display:flex;flex:1;min-height:0">
+<div style="width:200px;background:var(--BpmBgSurface);border-right:1px solid var(--BpmBorderSubtle);display:flex;flex-direction:column;padding:12px 0;flex-shrink:0">
+<div style="font-size:13px;font-weight:600;color:var(--BpmTextBright);padding:4px 16px 14px">BauProjektManager</div>
+<div style="background:var(--BpmBgActive);color:var(--BpmAccentPrimary);padding:7px 16px;font-size:12px;display:flex;align-items:center;justify-content:space-between">
+<span>📁 PlanManager</span>
+<span style="background:var(--BpmWarning);color:var(--BpmBgBase);font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px">50</span>
+</div>
+<div style="color:var(--BpmTextSecondary);padding:7px 16px;font-size:12px;cursor:pointer" onclick="M.geh('einstellungen-allgemein')">⚙ Einstellungen</div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+<div style="padding:16px 20px 0">
+<div style="font-size:20px;font-weight:600;color:var(--BpmTextBright);margin-bottom:4px">📁 PlanManager</div>
+<div style="font-size:10px;color:var(--BpmTextSecondary);margin-bottom:12px">3 aktive Projekte · 50 Dateien im Eingang</div>
+<div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
+<div style="flex:1;background:var(--BpmBgInput);border:1px solid var(--BpmBorderDefault);border-radius:4px;padding:6px 10px;font-size:12px;color:var(--BpmTextSecondary);display:flex;align-items:center;gap:6px">
+<span style="font-size:13px">🔍</span>
+<span>Suche in Projekten...</span>
+</div>
+<div style="background:var(--BpmAccentPrimary);color:var(--BpmTextOnAccent);padding:6px 12px;border-radius:4px;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap">⟳ Aktualisieren</div>
+</div>
+</div>
+<div style="padding:0 20px 0 20px;font-size:10px;color:var(--BpmTextSecondary);display:flex;gap:0;margin-bottom:4px;padding-left:30px">
+<span style="flex:2">Projekt</span>
+<span style="width:70px;text-align:center">Nr.</span>
+<span style="width:110px;text-align:center">Eingang</span>
+<span style="width:80px;text-align:center">Status</span>
+</div>
+<div style="padding:0 20px;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px">
+<div style="display:flex;border-radius:6px;overflow:hidden;cursor:pointer" onmouseover="this.querySelector('.cc').style.background='var(--BpmBgHover)'" onmouseout="this.querySelector('.cc').style.background='var(--BpmBgElevated)'" onclick="M.geh('profile')">
+<div style="width:5px;background:var(--BpmWarning);flex-shrink:0;border-radius:6px 0 0 6px"></div>
+<div class="cc" style="flex:1;background:var(--BpmBgElevated);padding:10px 12px;display:flex;align-items:center;border-radius:0 6px 6px 0">
+<div style="flex:2;color:var(--BpmTextBright);font-weight:500;font-size:13px">ÖWG Dobl-Zwaring</div>
+<div style="width:70px;text-align:center;color:var(--BpmTextSecondary);font-size:12px">202603</div>
+<div style="width:110px;text-align:center"><span style="background:var(--BpmWarning);color:var(--BpmBgBase);font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px">50 unsortiert</span></div>
+<div style="width:80px;text-align:center;color:var(--BpmSuccess);font-size:11px">● Aktiv</div>
+</div>
+</div>
+<div style="display:flex;border-radius:6px;overflow:hidden;cursor:pointer" onmouseover="this.querySelector('.cc').style.background='var(--BpmBgHover)'" onmouseout="this.querySelector('.cc').style.background='var(--BpmBgElevated)'" onclick="M.geh('profile')">
+<div style="width:5px;background:var(--BpmSuccess);flex-shrink:0;border-radius:6px 0 0 6px"></div>
+<div class="cc" style="flex:1;background:var(--BpmBgElevated);padding:10px 12px;display:flex;align-items:center;border-radius:0 6px 6px 0">
+<div style="flex:2;color:var(--BpmTextBright);font-weight:500;font-size:13px">Reihenhäuser Kapfenberg</div>
+<div style="width:70px;text-align:center;color:var(--BpmTextSecondary);font-size:12px">202302</div>
+<div style="width:110px;text-align:center"><span style="background:var(--BpmSuccess);color:var(--BpmBgBase);font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px">✓ Aktuell</span></div>
+<div style="width:80px;text-align:center;color:var(--BpmSuccess);font-size:11px">● Aktiv</div>
+</div>
+</div>
+<div style="display:flex;border-radius:6px;overflow:hidden;cursor:pointer" onmouseover="this.querySelector('.cc').style.background='var(--BpmBgHover)'" onmouseout="this.querySelector('.cc').style.background='var(--BpmBgElevated)'" onclick="M.geh('profile')">
+<div style="width:5px;background:var(--BpmWarning);flex-shrink:0;border-radius:6px 0 0 6px"></div>
+<div class="cc" style="flex:1;background:var(--BpmBgElevated);padding:10px 12px;display:flex;align-items:center;border-radius:0 6px 6px 0">
+<div style="flex:2;color:var(--BpmTextBright);font-weight:500;font-size:13px">Sanierung Leoben</div>
+<div style="width:70px;text-align:center;color:var(--BpmTextSecondary);font-size:12px">202201</div>
+<div style="width:110px;text-align:center"><span style="background:var(--BpmWarning);color:var(--BpmBgBase);font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px">3 unsortiert</span></div>
+<div style="width:80px;text-align:center;color:var(--BpmSuccess);font-size:11px">● Aktiv</div>
+</div>
+</div>
+</div>
+<div style="padding:10px 20px;font-size:10px;color:var(--BpmTextSecondary)">3 Projekte geladen</div>
+</div>
+</div>
+<div style="height:24px;background:var(--BpmAccentPrimary);display:flex;align-items:center;padding:0 12px;font-size:10px;color:var(--BpmTextOnAccent);flex-shrink:0">
+<span>PlanManager | 3 aktive Projekte</span>
+</div>
+</div>`;
+M.start({ nr: '3.1', titel: 'Projektübersicht', version: '0.1', zeige: () => SEITE });
+</script>
+</body>
+</html>

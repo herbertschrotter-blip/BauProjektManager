@@ -45,7 +45,7 @@ supersedes: []
 **Version:** 3.0.0  
 **Datum:** 11.04.2026  
 **Sprache:** C# (.NET 10 LTS), WPF (XAML), MVVM  
-**Frameworks:** CommunityToolkit.Mvvm, Serilog, ClosedXML, PdfPig, QuestPDF  
+**Frameworks:** CommunityToolkit.Mvvm, Serilog, Docnet.Core (PDFium: PDF-Vorschau und Textebene, ADR-063-Addendum); geplant: ClosedXML, QuestPDF (Planlisten, nach V1)  
 **Basis:** v1.4 + Phase 0/1 Implementierung + Herberts Feedback + Docs-Reorganisation  
 **Autor:** Herbert + Claude  
 
@@ -111,7 +111,7 @@ BauProjektManager.exe
 | **Outlook** | COM Interop, Anhänge extrahieren | Nach V1 | [Konzepte/ModuleOutlook.md](../Konzepte/ModuleOutlook.md) |
 | **Wetter** | API-Anbindung pro Baustelle | Nach V1 | [Konzepte/ModuleWetter.md](../Konzepte/ModuleWetter.md) |
 | **Vorlagen** | Excel/Word mit Projektdaten befüllen | Nach V1 | [Konzepte/ModuleVorlagen.md](../Konzepte/ModuleVorlagen.md) |
-| **Plankopf-Extraktion** | Revisionstabelle aus PDF lesen (PdfPig) — keine KI im Importpfad (ADR-065 P.2; Audit Review 01, R01-001 E17, entschieden 2026-09-24) | Nach V1 | [Konzepte/Moduleplanheader.md](../Konzepte/Moduleplanheader.md) |
+| **Plankopf-Extraktion** | Revisionstabelle aus PDF lesen (PDFium via `IPdfTextService`) — keine KI im Importpfad (ADR-065 P.2; Audit Review 01, R01-001 E17, entschieden 2026-09-24) | Nach V1 | [Konzepte/Moduleplanheader.md](../Konzepte/Moduleplanheader.md) |
 | **GIS-Integration** | Katasterdaten, Koordinaten automatisch befüllen | Nach V1 | [Konzepte/ModuleGIS.md](../Konzepte/ModuleGIS.md) |
 | **KI-Assistent** | LV-Analyse, Dokumentensuche, ChatGPT/Claude API | Nach V1 | [Konzepte/ModuleKiAssistent.md](../Konzepte/ModuleKiAssistent.md) |
 | **Mobile PWA** | Bautagebuch + Plan-Viewer am Handy | Nach V1 | BPM-Mobile-Konzept.md |

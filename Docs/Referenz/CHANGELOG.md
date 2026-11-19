@@ -32,6 +32,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.255] — 2026-11-19
+
+### Docs: PDF-Engine PDFium/Docnet in den Docs nachgezogen (R01-058)
+
+- Architektur: Frameworks nennen Docnet.Core (PDFium) statt PdfPig; ClosedXML/QuestPDF als geplant markiert;
+  Plankopf-Extraktion über `IPdfTextService`.
+- PlanManager.md: PDF-Vorschau als umgesetzt (PDFium/Docnet), Plankopf-Extraktion und PDF-Planlisten-Import über
+  `IPdfTextService`, keine KI im Importpfad.
+- Moduleplanheader: PdfPig durchgehend durch PDFium (Docnet.Core) ersetzt.
+- ADR-063: Deckel 7200 px liegt im Viewer `PlanPreviewPanel`, nicht im Service; „PDFium-Wrapper verworfen“ mit
+  Verweis auf das spätere Engine-Addendum.
+
+PdfPig bleibt nur als Test-Builder freigegeben (ADR-063-Addendum).
+
 ## [v0.28.254] — 2026-11-19
 
 ### Docs: Frontmatter und Quickloads historischer Docs bereinigt (R01-068)

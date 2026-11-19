@@ -12,7 +12,7 @@ supersedes: []
 ---
 
 ## AI-Quickload
-- Zweck: Konzept für Plankopf-Erkennung — Revisionstabelle aus PDF lesen (PdfPig, keine KI-API)
+- Zweck: Konzept für Plankopf-Erkennung — Revisionstabelle aus PDF lesen (PDFium via Docnet.Core, keine KI-API)
 - Autorität: secondary
 - Lesen wenn: PlanHeader-Feature, Plankopf-Extraktion, PDF-Parsing, IndexSource.PlanHeader
 - Nicht zuständig für: Dateinamen-Parsing (→ PlanManager.md Kap. 13), KI-API allgemein (→ ModuleKiAssistent.md)
@@ -31,7 +31,7 @@ supersedes: []
 - Fachliche Invarianten:
   - Post-V1 Feature — IndexSource.PlanHeader Enum existiert, Implementierung offen
   - Keine KI im Importpfad (ADR-065 P.2) — BPM ruft keine KI-API auf; ein LLM nutzt nur der User extern beim Anlernen (Kap. 2/10)
-  - PdfPig für lokale Extraktion, kein KI-Fallback
+  - PDFium (Docnet.Core, `IPdfTextService`) für lokale Extraktion, kein KI-Fallback
 
 ---
 
@@ -42,7 +42,7 @@ supersedes: []
 **Erstellt:** 29.03.2026  
 **Version:** 0.1 (Konzeptentwurf)  
 **Status:** Vision — Umsetzung nach V1 (PlanManager-Basis muss stehen)  
-**Abhängigkeit:** PdfPig (bereits im Tech-Stack), PlanManager Import-Workflow
+**Abhängigkeit:** PDFium via Docnet.Core (bereits im Tech-Stack, ADR-063-Addendum), PlanManager Import-Workflow
 
 ---
 
@@ -108,7 +108,7 @@ BEKANNTES BÜRO (Layout bereits angelernt)
     ▼
 ┌────────────────────────────────────┐
 │ BPM: Plan-Import läuft            │
-│ → PdfPig liest Text + Positionen │
+│ → PDFium liest Text + Positionen │
 │ → Firmenname im Plankopf erkannt │
 │ → Passendes Template angewendet  │
 │ → Revisions-Info extrahiert      │
@@ -291,7 +291,7 @@ REGELN:
 PDF wird importiert
     │
     ▼
-PdfPig: Extrahiere alle Wörter aus unterem 25% der Seite
+PDFium: Extrahiere alle Wörter aus unterem 25% der Seite
     │
     ▼
 Vergleiche Wörter mit identifyingTexts aller Templates
@@ -419,7 +419,7 @@ public class RevisionEntry
 
 | Vorteil | Erklärung |
 |---------|-----------|
-| **Minimaler Entwicklungsaufwand** | Kein komplexes GUI-Anlernsystem nötig. PdfPig + JSON-Matching reicht |
+| **Minimaler Entwicklungsaufwand** | Kein komplexes GUI-Anlernsystem nötig. PDFium + JSON-Matching reicht |
 | **Claude macht die schwere Arbeit** | Layout-Analyse, Feld-Erkennung, Regex-Erstellung — alles im Prompt |
 | **Editierbar** | User kann JSON jederzeit anpassen wenn Claude was falsch erkannt hat |
 | **Skaliert** | Neues Büro = ein neuer Claude-Chat. 5 Minuten statt Stunden Entwicklung |
@@ -431,7 +431,7 @@ public class RevisionEntry
 ## 9. Architektur-Implikationen
 
 - **Neues JSON-File:** `header-templates.json` auf OneDrive (syncht)
-- **PdfPig bereits im Stack:** Kein neues NuGet-Paket nötig
+- **PDFium/Docnet bereits im Stack:** Kein neues NuGet-Paket nötig
 - **Erweiterung planmanager.db:** Neue Tabelle/Spalten für PlanHeaderData + Revisions
 - **Dashboard-Integration:** Revisions-Info als Datenquelle für "Letzte Planänderungen"
 - **Import-Workflow:** Schritt 2 (Parse) wird erweitert um Plankopf-Analyse (optional, nur wenn Template vorhanden)

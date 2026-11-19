@@ -339,7 +339,7 @@ Für Scans (`20260409_143522.pdf`), Fotos, nicht erkannte Dateien.
 
 Links: Nicht erkannte Dateien. Rechts: Zuweisungs-Formular:
 
-1. PDF-Vorschau (Post-V1 via PdfPig)
+1. PDF-Vorschau (umgesetzt mit PDFium/Docnet, ADR-062/063)
 2. Dokumenttyp-Dropdown (aus angelernten Profilen)
 3. Eingabefelder je nach Profil (Dropdown/Vorschläge aus Bestand, nicht nur Freitext)
 4. Umbenennen-Toggle mit Live-Vorschau über `RenameSchemaEngine`
@@ -1213,8 +1213,8 @@ BauProjektManager.PlanManager/
 
 | Feature | Abhängigkeit | Priorität |
 |---------|-------------|-----------|
-| PlanHeader-Extraktion (IndexSource) | PdfPig / KI-API (ADR-027) | Hoch |
-| PDF-Vorschau im Import + manueller Sortierung | PdfPig (Seite als Bild) | Hoch |
+| PlanHeader-Extraktion (IndexSource) | PDFium/Docnet über `IPdfTextService`, keine KI im Importpfad (ADR-065 P.2) | Hoch |
+| ~~PDF-Vorschau im Import + manueller Sortierung~~ | umgesetzt mit PDFium/Docnet (`IPdfRenderService`) | — |
 | fieldRules (Regex/allowedValues pro Feld) | Profil-System V1 | Mittel |
 | Planlisten Import/Export | ClosedXML + QuestPDF | V1.1 |
 | ~~Plan-Sammler (#34)~~ | gestrichen Teil 52 (BPM-021, kein Bedarf) | — |
@@ -1225,7 +1225,7 @@ BauProjektManager.PlanManager/
 
 ### 19.1 Planlisten Import/Export (V1.1 — Details)
 
-**Import-Formate:** Excel (.xlsx), CSV. PDF (Best Effort mit PdfPig) → Post-V1.
+**Import-Formate:** Excel (.xlsx), CSV. PDF (Best Effort über `IPdfTextService`/PDFium) → Post-V1.
 
 **Spalten-Zuordnung:** Angelernt pro Plantyp. User weist Spalten den Feldern zu.
 

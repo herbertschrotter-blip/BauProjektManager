@@ -137,7 +137,7 @@ public partial class SetupDialog : Window
         Settings.ArchivePath = TxtArchivePath.Text;
         Settings.MachineName = Environment.MachineName;
         Settings.IsFirstRun = false;
-        Settings.SetupCompletedAt = DateTime.Now;
+        Settings.SetupCompletedAt = DateTime.UtcNow;
 
         // Determine export path
         Settings.ExportPath = System.IO.Path.Combine(Settings.BasePath, ".AppData", "BauProjektManager");

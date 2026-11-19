@@ -130,6 +130,24 @@ public class SegmentTypeRepositoryTests : IDisposable
     }
 
     [Fact]
+    public void LoadedTimestamps_AreUtc()
+    {
+        // R01-059 (DB-29): gespeichert als UTC "o" — beim Lesen darf Kind nicht zu Local werden
+        _sut.SaveGroup(new SegmentTypeGroupDefinition { Id = "grp_a", Name = "A", SortOrder = 10 });
+        var before = DateTime.UtcNow.AddSeconds(-5);
+        _sut.SaveType(new SegmentTypeDefinition
+        {
+            Id = "t_utc", Name = "Zeit", Color = "#000000", TokenKey = "t_utc", GroupId = "grp_a", SortOrder = 1
+        });
+
+        var loaded = _sut.GetType("t_utc")!;
+
+        Assert.Equal(DateTimeKind.Utc, loaded.CreatedAt.Kind);
+        Assert.Equal(DateTimeKind.Utc, loaded.LastModifiedAt.Kind);
+        Assert.InRange(loaded.CreatedAt, before, DateTime.UtcNow.AddSeconds(5));
+    }
+
+    [Fact]
     public void SaveType_CustomWithNullSemanticRole_LoadsAsNull()
     {
         _sut.SaveGroup(new SegmentTypeGroupDefinition { Id = "grp_custom", Name = "Custom", SortOrder = 50 });

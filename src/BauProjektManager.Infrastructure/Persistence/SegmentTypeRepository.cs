@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Data.Sqlite;
 using BauProjektManager.Domain.Enums.PlanManager;
 using BauProjektManager.Domain.Interfaces;
@@ -202,9 +203,9 @@ public class SegmentTypeRepository : ISegmentTypeRepository
         UserModifiedName = r.GetInt32(r.GetOrdinal("user_modified_name")) == 1,
         UserModifiedSort = r.GetInt32(r.GetOrdinal("user_modified_sort")) == 1,
         UserModifiedActive = r.GetInt32(r.GetOrdinal("user_modified_active")) == 1,
-        CreatedAt = DateTime.Parse(r.GetString(r.GetOrdinal("created_at"))),
+        CreatedAt = ParseUtc(r.GetString(r.GetOrdinal("created_at"))),
         CreatedBy = r.GetString(r.GetOrdinal("created_by")),
-        LastModifiedAt = DateTime.Parse(r.GetString(r.GetOrdinal("last_modified_at"))),
+        LastModifiedAt = ParseUtc(r.GetString(r.GetOrdinal("last_modified_at"))),
         LastModifiedBy = r.GetString(r.GetOrdinal("last_modified_by")),
         SyncVersion = r.GetInt32(r.GetOrdinal("sync_version")),
         IsDeleted = r.GetInt32(r.GetOrdinal("is_deleted")) == 1
@@ -331,6 +332,10 @@ public class SegmentTypeRepository : ISegmentTypeRepository
         return count > 0;
     }
 
+    /// <summary>Gespeicherte Zeitstempel sind UTC im Format "o" — Kind bleibt Utc (CODING_STANDARDS 19.2).</summary>
+    private static DateTime ParseUtc(string value)
+        => DateTime.Parse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
+
     private static SegmentTypeDefinition ReadType(SqliteDataReader r)
     {
         var roleOrdinal = r.GetOrdinal("semantic_role");
@@ -355,9 +360,9 @@ public class SegmentTypeRepository : ISegmentTypeRepository
             UserModifiedSort = r.GetInt32(r.GetOrdinal("user_modified_sort")) == 1,
             UserModifiedActive = r.GetInt32(r.GetOrdinal("user_modified_active")) == 1,
             UserModifiedGroup = r.GetInt32(r.GetOrdinal("user_modified_group")) == 1,
-            CreatedAt = DateTime.Parse(r.GetString(r.GetOrdinal("created_at"))),
+            CreatedAt = ParseUtc(r.GetString(r.GetOrdinal("created_at"))),
             CreatedBy = r.GetString(r.GetOrdinal("created_by")),
-            LastModifiedAt = DateTime.Parse(r.GetString(r.GetOrdinal("last_modified_at"))),
+            LastModifiedAt = ParseUtc(r.GetString(r.GetOrdinal("last_modified_at"))),
             LastModifiedBy = r.GetString(r.GetOrdinal("last_modified_by")),
             SyncVersion = r.GetInt32(r.GetOrdinal("sync_version")),
             IsDeleted = r.GetInt32(r.GetOrdinal("is_deleted")) == 1

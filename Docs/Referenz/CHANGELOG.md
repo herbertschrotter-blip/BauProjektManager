@@ -32,6 +32,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.260] — 2026-11-19
+
+### Fix: Gespeicherte Zeitstempel konsequent UTC (R01-059)
+
+- `SetupCompletedAt` (device-settings.json) wird mit `DateTime.UtcNow` gesetzt.
+- `registry.json`: `generatedAt` in UTC mit `Z` (InvariantCulture) statt Lokalzeit ohne Offset.
+- `SegmentTypeRepository` liest `created_at`/`last_modified_at` mit `DateTimeStyles.RoundtripKind` – die Werte
+  bleiben `DateTimeKind.Utc` statt in Lokalzeit umgerechnet zu werden. Test `LoadedTimestamps_AreUtc`.
+
+Lokalzeit bleibt erlaubt für Log-Marker, Logdateinamen und Archiv-Dateinamen (CODING_STANDARDS 19.2, Ausnahme E8;
+bestätigt Herbert 2026-11-19). Frühphase: eine bestehende device-settings.json mit Lokalzeit wird nicht migriert.
+
 ## [v0.28.259] — 2026-11-19
 
 ### Build+Docs: Testprojekt in der Solution, CLAUDE.md-Stack aktualisiert (R01-030)

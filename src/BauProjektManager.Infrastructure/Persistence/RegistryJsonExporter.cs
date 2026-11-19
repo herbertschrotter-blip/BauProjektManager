@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Globalization;
+using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using BauProjektManager.Domain.Enums;
@@ -39,7 +40,7 @@ public class RegistryJsonExporter
         var registry = new RegistryRoot
         {
             RegistryVersion = "1.0",
-            GeneratedAt = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss"),
+            GeneratedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss'Z'", CultureInfo.InvariantCulture),
             PlanTypes = new List<string>
             {
                 "Polierplan", "Schalungsplan", "Bewehrungsplan", "Elektroplan",

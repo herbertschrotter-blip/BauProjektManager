@@ -7,7 +7,7 @@ superseded_by: [adr-053]
 owner: herbert
 topics: [historisch, sync, datenarchitektur, outbox-inbox]
 read_when: [historische-referenz]
-related_docs: [adr-053]
+related_docs: [adr]
 related_code: []
 supersedes: []
 ---
@@ -48,7 +48,7 @@ supersedes: []
 ## AI-Quickload (HISTORISCH)
 - Zweck: ⚠️ SUPERSEDED durch ADR-053. Nicht mehr als gültiges Konzept laden.
 - Autorität: historical
-- Lesen wenn: Sync-Feature, Multi-User, Change-Tracking, Snapshot, Konflikt-Behandlung
+- Lesen wenn: nur zur Nachvollziehbarkeit (Sync-Konzept vor ADR-053), nie als gültiges Konzept
 - Nicht zuständig für: DB-Tabellen-Details (→ DB-SCHEMA.md), Datenschutz (→ DSGVO-Architektur.md)
 - Kapitel:
   - 1. Zweck und Zielzustand
@@ -58,14 +58,8 @@ supersedes: []
   - 5. Abhängigkeiten
   - 6. No-Gos / Einschränkungen
   - 7. Offene Fragen
-- Pflichtlesen:
-  - Kapitel 2.1 (Datenklassifizierung) bei neuer Tabelle
-  - Kapitel 6 (Leitplanken) bei Architektur-Entscheidung
-- Fachliche Invarianten:
-  - SQLite = einzige lokale Wahrheit — Events sind Replikationsartefakte
-  - Transaktionale Mutation Boundary: Domain-Write + change_log + sync_outbox in einer Transaktion
-  - Shared vs. restricted physisch getrennt (eigene Tabellen)
-  - Phase 2 (FolderSync) bewusst temporär — Phase 3 (Server) ist Zielbild
+- Pflichtlesen: keine (historisch)
+- Fachliche Invarianten: keine — gültig sind ADR-053, CODING_STANDARDS Kap. 19.8 und die Sync-Kategorie nach ADR-047
 
 ---
 

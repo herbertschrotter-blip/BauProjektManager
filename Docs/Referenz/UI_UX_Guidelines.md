@@ -1,6 +1,6 @@
 ---
 doc_id: ui-ux-guidelines
-doc_type: reference
+doc_type: policy
 authority: source_of_truth
 status: active
 owner: herbert

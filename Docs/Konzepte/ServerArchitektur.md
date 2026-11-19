@@ -7,7 +7,7 @@ superseded_by: [adr-053]
 owner: herbert
 topics: [server, auth, rbac, postgresql, jwt, nachkalkulation]
 read_when: [server-auth-rbac-details-phase-verkauf]
-related_docs: [adr-053]
+related_docs: [adr]
 related_code: []
 supersedes: []
 ---
@@ -44,7 +44,7 @@ supersedes: []
 ## AI-Quickload (Auth/RBAC bleibt gültig, Hosting/Sync superseded)
 - Zweck: ⚠️ Hosting + Sync-Mechanik durch ADR-053 ersetzt. Auth/RBAC/Nachkalkulation/Audit-Trail-Inhalte bleiben gültig für Phase Verkauf.
 - Autorität: secondary
-- Lesen wenn: Server-Modus, Multi-User, Auth, Sync, API-Design, Nachkalkulation
+- Lesen wenn: Auth, RBAC, Nachkalkulation und Audit-Trail im Server-Modus (Phase Verkauf) — Hosting und Sync stehen in ADR-053
 - Nicht zuständig für: Sync-Tabellen/Events (→ DatenarchitekturSync.md), Mobile-App (→ BPM-Mobile-Konzept.md)
 - Kapitel:
   - 1. Zweck und Zielzustand
@@ -54,6 +54,7 @@ supersedes: []
   - 5. Abhängigkeiten
   - 6. No-Gos / Einschränkungen
   - 7. Offene Fragen
+  - 8. Änderungshistorie
 - Pflichtlesen:
   - Kapitel 1.2 (Sofort gültige Regeln) bei jeder neuen Tabelle/Service
   - Kapitel 4.2 (Auth) bei Login/Rollen-Implementierung
@@ -419,7 +420,7 @@ Spike-Umfang:
 
 ---
 
-## Änderungshistorie
+## 8. Änderungshistorie
 
 | Datum | Version | Änderung |
 |-------|---------|----------|

@@ -32,6 +32,21 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.254] — 2026-11-19
+
+### Docs: Frontmatter und Quickloads historischer Docs bereinigt (R01-068)
+
+- DatenarchitekturSync, MultiUserKonzept, ServerArchitektur: `related_docs` verweist auf die doc_id `adr` statt
+  `adr-053`.
+- DatenarchitekturSync (historisch): Quickload auf einen Historien-Hinweis gekürzt – „Lesen wenn“ nur Nachvollziehbarkeit,
+  keine Pflichtlesen, statt der alten Invarianten ein Verweis auf ADR-053, CODING_STANDARDS 19.8 und ADR-047.
+- ServerArchitektur: „Lesen wenn“ auf Auth/RBAC/Nachkalkulation/Audit-Trail eingeschränkt, „Änderungshistorie“ als
+  Kap. 8 nummeriert und im Quickload ergänzt.
+- UI_UX_Guidelines: `doc_type` von `reference` auf `policy` (verbindliche Norm; `reference` ist laut DOC-STANDARD 4.2
+  nie Source of Truth).
+
+Die BOM in ModuleDashboard (RF-27) ist seit v0.28.250 entfernt.
+
 ## [v0.28.253] — 2026-11-19
 
 ### Docs: Kapitel-Zeile in 13 Quickloads ergänzt (R01-062)

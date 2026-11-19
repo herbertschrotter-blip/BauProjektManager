@@ -7,7 +7,7 @@ superseded_by: [adr-053]
 owner: herbert
 topics: [multi-user, write-lock, heartbeat, phasen-modell, server, rbac]
 read_when: [historische-referenz]
-related_docs: [adr-053, konzept-server-architektur]
+related_docs: [adr, konzept-server-architektur]
 related_code: []
 supersedes: []
 ---

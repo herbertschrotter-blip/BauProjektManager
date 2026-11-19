@@ -32,6 +32,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Semantic Versi
 
 ---
 
+## [v0.28.252] — 2026-11-19
+
+### Docs: Quickload-Kapitel und Pflichtlesen korrigiert (R01-016)
+
+- UI_UX_Guidelines: Invariante nennt die 5 Screen States wie Kap. 7 (Loading, Data, Empty, Error, Offline).
+- ModuleProjekt: Pflichtlesen Ordnerstruktur zeigt auf Kap. 8 (FolderTemplateControl) statt Kap. 7.
+- UI_Navigation: Kapitelliste 5–7 an die H2 angeglichen (Tabs im Projektdetail, Statusleiste, Regeln).
+- DB-SCHEMA: H3-Liste 10.1–10.8 aus dem Quickload entfernt (Quickload listet nur H2).
+- Recovery-Szenarien: „Nicht zuständig für“ ergänzt, „Hinweise“ als Kap. 6 nummeriert.
+
+Die übrigen R01-016-Befunde (Zusammenfassung in CODING_STANDARDS, H3 unter WPF_UI Kap. 16) sind mit v0.28.251 erledigt.
+
 ## [v0.28.251] — 2026-11-19
 
 ### Docs: Kapitelnummern in fünf Docs bereinigt (R01-081)

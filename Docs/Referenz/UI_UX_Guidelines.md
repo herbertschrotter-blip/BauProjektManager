@@ -45,7 +45,7 @@ supersedes: []
   - Kapitel 15 (Accessibility, Mindeststandard V1) bei neuem Screen, Dialog oder Overlay
 - Fachliche Invarianten:
   - Alle Farben über Theme-Tokens — nie hardcoded Hex
-  - 5 Screen States Pflicht: Loading, Empty, Content, Error, Disabled
+  - 5 Screen States Pflicht: Loading, Data, Empty, Error, Offline (Kap. 7)
   - Max. 1 Primary-Button je Dialog-Footer
   - Alle UI-Texte Deutsch (Bau-Fachsprache österreichisch, z. B. „Geschoß“), interne Pattern-Begriffe dürfen Englisch sein
   - A11y-Mindeststandard V1 (hart): sichtbarer Fokus, Tastaturpfad für Kernabläufe, Escape schließt Overlays, Kontrast ≥ 4,5:1

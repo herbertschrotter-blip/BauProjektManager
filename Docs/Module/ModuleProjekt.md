@@ -18,7 +18,7 @@ supersedes: []
 - Nicht zuständig für: PlanManager (→ PlanManager.md), DB-Schema-Details (→ DB-SCHEMA.md), Architektur (→ Architektur.md)
 - Pflichtlesen:
   - Kapitel 3 (Datenmodell) bei Projekt-Entitäts-Änderung
-  - Kapitel 7 (Ordnerstruktur) bei FolderTemplate-Änderung
+  - Kapitel 8 (FolderTemplateControl, Ordnerstruktur) bei FolderTemplate-Änderung
 - Fachliche Invarianten:
   - ProjectNumber wird aus ProjectStart generiert (YYYYMM) — nie manuell
   - registry.json ist generierter Export — VBA liest nur, schreibt nie

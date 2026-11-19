@@ -15,6 +15,7 @@ supersedes: []
 - Zweck: Manuelle Test-Anleitung für die 5 Recovery-Szenarien (BPM-016 / 016.05)
 - Autorität: secondary
 - Lesen wenn: Recovery-Code wurde geändert, vor V1-Release, Regressions-Verdacht
+- Nicht zuständig für: Recovery-Logik und Entscheidungsregeln (→ ADR-064, RecoveryDecisionService), automatisierte Tests (→ tests/)
 - Pflichtlesen: keine — kapitelweise nutzen
 - Kapitel:
   - 1. Zweck
@@ -22,7 +23,7 @@ supersedes: []
   - 3. Setup vor jedem Szenario
   - 4. Szenarien
   - 5. Cleanup nach Tests
-  - Hinweise
+  - 6. Hinweise
 - Fachliche Invarianten:
   - Recovery-Empfehlung ist deterministisch aus PendingImportInfo-Counts (siehe RecoveryDecisionService)
   - Forward bei IsRollbackTrivial oder IsForwardTrivial → IsAutomaticAllowed=true
@@ -277,7 +278,7 @@ Nach Abschluss aller 5 Szenarien:
 
 ---
 
-## Hinweise
+## 6. Hinweise
 
 - Wenn der Recovery-Dialog **nicht erscheint**: Pre-Condition prüfen
   (`SELECT COUNT(*) FROM import_journal WHERE status = 'pending'` muss > 0 sein)

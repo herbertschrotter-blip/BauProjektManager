@@ -21,9 +21,9 @@ supersedes: []
   - 2. Sidebar
   - 3. Toolbar
   - 4. Screen-Hierarchie
-  - 5. Navigationsregeln
-  - 6. Breadcrumb
-  - 7. Offene Punkte
+  - 5. Tabs im Projektdetail
+  - 6. Statusleiste
+  - 7. Regeln
 - Pflichtlesen: keine
 - Fachliche Invarianten:
   - Sidebar links (klappbar 220px ↔ 56px) für Modul-Wechsel — keine Top-Level-Toolbar dafür
